@@ -6,6 +6,8 @@ import org.apache.catalina.Host;
 import org.apache.catalina.startup.Tomcat;
 import qingzhou.console.servlet.ServletProcessor;
 import qingzhou.console.servlet.ServletService;
+import qingzhou.console.util.ClassLoaderUtil;
+import qingzhou.framework.pattern.Callback;
 
 import java.nio.charset.StandardCharsets;
 
@@ -14,14 +16,17 @@ public class ServletImpl implements ServletService {
 
     @Override
     public void start(int port, String baseDir) throws Exception {
-        tomcat = new Tomcat();
-        if (null != baseDir && !"".equals(baseDir)) {
-            tomcat.setBaseDir(baseDir);
-        }
-        tomcat.setPort(port); // 设置默认连接器端口
-        tomcat.getHost().setParentClassLoader(Tomcat.class.getClassLoader());// 应用需要依赖 tomcat 里面的 javax.servlet api
-        tomcat.getConnector(); // 建立连接器
-        tomcat.start(); // 启动服务器
+        ClassLoaderUtil.runUnderClassLoader((Callback<Void, Void>) args -> {
+            tomcat = new Tomcat();
+            if (null != baseDir && !"".equals(baseDir)) {
+                tomcat.setBaseDir(baseDir);
+            }
+            tomcat.setPort(port); // 设置默认连接器端口
+            tomcat.getHost().setParentClassLoader(Tomcat.class.getClassLoader());// 应用需要依赖 tomcat 里面的 javax.servlet api
+            tomcat.getConnector(); // 建立连接器
+            tomcat.start(); // 启动服务器
+            return null;
+        }, ServletImpl.class.getClassLoader());
     }
 
     @Override

@@ -14,6 +14,11 @@ public class LoggerServiceImpl implements LoggerService {
     private static class LoggerImpl implements Logger {
 
         @Override
+        public boolean isDebugEnabled() {
+            return org.tinylog.Logger.isDebugEnabled();
+        }
+
+        @Override
         public void debug(String msg) {
             org.tinylog.Logger.debug(msg);
         }
@@ -21,6 +26,11 @@ public class LoggerServiceImpl implements LoggerService {
         @Override
         public void debug(String msg, Throwable t) {
             org.tinylog.Logger.debug(t, msg);
+        }
+
+        @Override
+        public boolean isInfoEnabled() {
+            return org.tinylog.Logger.isInfoEnabled();
         }
 
         @Override
@@ -34,6 +44,11 @@ public class LoggerServiceImpl implements LoggerService {
         }
 
         @Override
+        public boolean isWarnEnabled() {
+            return org.tinylog.Logger.isWarnEnabled();
+        }
+
+        @Override
         public void warn(String msg) {
             org.tinylog.Logger.warn(msg);
         }
@@ -41,6 +56,11 @@ public class LoggerServiceImpl implements LoggerService {
         @Override
         public void warn(String msg, Throwable t) {
             org.tinylog.Logger.warn(t, msg);
+        }
+
+        @Override
+        public boolean isErrorEnabled() {
+            return org.tinylog.Logger.isErrorEnabled();
         }
 
         @Override
