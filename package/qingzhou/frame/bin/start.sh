@@ -1,0 +1,1 @@
+exec $(cd "$(dirname "$0")";pwd)/admin.sh server start "$@"

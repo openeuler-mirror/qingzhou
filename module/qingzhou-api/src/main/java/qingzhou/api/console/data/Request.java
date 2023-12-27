@@ -1,0 +1,21 @@
+package qingzhou.api.console.data;
+
+public interface Request {
+    String getAppName();
+
+    String getModelName();
+
+    String getActionName();
+
+    String getViewName();
+
+    String getId();
+
+    String getParameter(String parameterName);
+
+    String getClientIp();
+
+    String getUri();
+
+    String getLoginUser();
+}

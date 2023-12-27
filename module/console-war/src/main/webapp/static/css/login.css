@@ -1,0 +1,151 @@
+@charset "utf-8";
+html,body {height: 100%;}
+@font-face {
+    font-family: "text-security-disc";
+    src: url("../fonts/text-security/text-security-disc.eot");
+    src: url("../fonts/text-security/text-security-disc.eot?#iefix") format("embedded-opentype"), url("../fonts/text-security/text-security-disc.ttf") format("truetype");
+}
+[dotted] {font-family: "text-security-disc"; font-size: 15px;}
+/* login  */
+.login_body {
+    width:100%;
+    min-width:600px;
+    background:url(../images/login/login_bg.png) no-repeat center;
+    background-size:100% 100%;
+    background-attachment:fixed;
+    background-repeat:no-repeat;
+    background-size:cover;
+    -moz-background-size:cover;
+    -webkit-background-size:cover;
+}
+.login-header { width:100%; height: 60px; background-color:#FFF; opacity:0.9; border: 0px;}
+.login-header .login-top-logo {width:100px; height: 30px; border:0px; margin-top:15px; margin-left: 48px;}
+.login-header .login-right-lang {display:inline-block; float:right; margin-right:25px; width:250px; height: 50px; margin-top: 5px;}
+.page-login {padding-top: 10%;}
+.page-login .panel {width: 480px; width: 480px; height:420px; margin: 0 auto;}
+.page-login .panel-body {
+    width: 480px;
+    min-width: 480px;
+    min-height: 350px;
+    float: right;
+    margin-right: 15%;
+    border-top: 4px solid #D6000F;
+    top: 180px;
+    padding: 30px 30px 25px;
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px 0 rgba(204,204,204,0.50);
+}
+.page-login .panel-body input[type="text"] {font-size:15px;}
+.page-login .logo {font-size: 20px; color: #262626; letter-spacing: 0; text-align: center;}
+.page-login .logo img {width: 36px; height: 36px;}
+.page-login .logo a {text-decoration: none; margin-top: 8px; font-size: 28px; color: #37474f; text-shadow: rgba(0, 0, 0, .15) 0 0 1px;}
+.page-login .body_left {position: absolute; left:20%;margin-top: 8%;}
+.page-login .body_left .body_logo {
+    position: absolute;
+    margin-top: -100px;
+    width: 330px;
+    height: 133px;
+    display: block;
+    background: url(../images/login/body_logo.png) no-repeat center;
+    background-size:100% 100%;
+}
+.page-login .body_left .body_img {
+    width: 290px;
+    height: 100px;
+    display: block;
+    margin-top: 90px;
+    background: url(../images/login/body_img.png) no-repeat center;
+    background-size: 100% 100%;
+}
+.page-login form i{font-size:15px;}
+.page-login form .input-control {background: #FFFFFF; margin-top: 25px; margin-left: 30px;}
+.page-login form .form-control { width: 360px; height: 44px; border-radius: 0; box-shadow: none;}
+.page-login form input.form-control:focus {border: 1px solid #595959; color: #595959;}
+.page-login form .captcha {
+    width:100px;
+    height:40px;
+    float: right;
+    margin-top:1px;
+    margin-right:30px;
+    display:inline-block;
+    border-radius:2px;
+    cursor:pointer;
+}
+.page-login .login_btn {
+    width: 360px;
+    height: 44px;
+    border: 0px;
+    border-radius: 0;
+    margin-top: 50px;
+    color: #FFFFFF;
+    font-size: 16px;
+    letter-spacing: 0;
+    background: #D6000F;
+    text-align: center;
+}
+
+input.login_btn:hover {
+    background: #DE333F;
+}
+/* copyright */
+.page-copyright {
+    position: fixed;
+    width: 100%;
+    height: 42px;
+    line-height: 42px;
+    color: grey;
+    background: #F8F8F8;
+    font-size: 15px;
+    text-align: center;
+    z-index: 998;
+    cursor: default;
+    bottom: 0px;
+    /* letter-spacing: 1px; */
+}
+.page-copyright a {text-decoration: none; color: grey; font-size: 15px;}
+
+.tab-title {height: 65px; margin: auto;}
+.tab-title .tab-title-item { width: 110px; height: 42px; line-height: 42px; text-align: center; display: inline-block;}
+.tab-title .tab-title-item:hover{color: #2F4056; border-bottom: 2px solid #01AAED;}
+.tab-title .tab-title-item-cur {font-size: 14px; border-bottom: 2px solid #01AAED;}
+.tipContent{height: 30px;}
+.tipContent>span{margin-left: -12px; margin-right: 10px; font-size: 20px; color: #FFC125;}
+.tipContent>span>i{font-size: 30px;}
+.tipContent>div{vertical-align: middle; margin-top: -12px; display: inline-block;}
+.msg-badge {
+    position: absolute;
+    display: none;
+    min-width: 15px;
+    font-size: .3em;
+    line-height: 1;
+    border-radius: 9px;
+    padding: .2em .6em .2em;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: grey;
+    margin-top: -35px;
+    margin-left: -20px;
+}
+@-moz-document url-prefix() {.msg-badge{font-size:.8em;}}
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {.msg-badge{font-size:.8em; margin-top: -22px;}}
+/**响应式*/
+@media (max-width: 1280px) {.page-login .panel-body {margin-right: 4%;}}
+@media (max-width: 1100px) {
+    .page-login .body_left {left: 19%;}
+    .page-login .panel-body {margin-right: 25px;}
+}
+@media (max-width: 980px) {
+    .page-login .body_left {display: none;}
+    .page-login .panel-body {margin-right:25%;}
+}
+@media (max-width: 890px) {
+    .page-login .panel-body {margin-right:20%;}
+}
+@media (max-width: 800px) {
+    .page-login .panel-body {margin-right:15%;}
+}
+@media (max-width: 660px) {
+    .page-login .panel-body {margin-right:11%;}
+}
