@@ -27,7 +27,6 @@ import qingzhou.console.util.ExceptionUtil;
 import qingzhou.console.util.ObjectUtil;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.util.XmlUtil;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -165,9 +164,7 @@ public class Role extends MasterModelBase implements AddModel {
         }
         if (Constants.MODEL_NAME_classloaded.equals(model)) {
             if (disabledActions.contains(appName + "/" + model + "/find")) {
-                if (action.equals(EditModel.ACTION_NAME_EDIT)) {
-                    return true;
-                }
+                return action.equals(EditModel.ACTION_NAME_EDIT);
             }
         }
 
@@ -183,7 +180,7 @@ public class Role extends MasterModelBase implements AddModel {
 
         Map<String, String> properties = prepareParameters(request);
         String expression = ServerXml.getTenantRoleNodeExpression(ServerXml.getTenant(request.getLoginUser()), null);
-        XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
         xmlUtil.addNew(expression, Constants.MODEL_NAME_role, properties);
         xmlUtil.write();
     }
@@ -197,8 +194,8 @@ public class Role extends MasterModelBase implements AddModel {
         String tenant = ServerXml.getTenant(request.getLoginUser());
         String role = request.getId();
         String expression = ServerXml.getTenantRoleNodeExpression(tenant, role);
-        XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
-        Map<String, String> oldPro = new XmlUtil(ServerUtil.getServerXml()).getAttributes(expression);
+        XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
+        Map<String, String> oldPro = new XmlUtil(ConsoleWarHelper.getServerXml()).getAttributes(expression);
         Map<String, String> properties = prepareParameters(request);
         xmlUtil.setAttributes(expression, properties);
         xmlUtil.write();
@@ -222,7 +219,7 @@ public class Role extends MasterModelBase implements AddModel {
             return;
         }
 
-        XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
         xmlUtil.delete(ServerXml.getTenantRoleNodeExpression(ServerXml.getTenant(request.getLoginUser()), request.getId()));
         xmlUtil.write();
     }
@@ -253,7 +250,7 @@ public class Role extends MasterModelBase implements AddModel {
             }
         }
         if (results.size() < size) {
-            XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+            XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
             List<String> tenantRoleIds = xmlUtil.getAttributeList(getAllRoleIdExpression(request.getLoginUser()));
             int tenantRoleSize = tenantRoleIds == null ? 0 : tenantRoleIds.size();
             String tenant = ServerXml.getTenant(request.getLoginUser());
@@ -270,7 +267,7 @@ public class Role extends MasterModelBase implements AddModel {
 
     @Override
     public int getTotalSize(Request request) throws Exception {
-        XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
         List<String> tenantRoleIds = xmlUtil.getAttributeList(getAllRoleIdExpression(request.getLoginUser()));
         int systemRoleSize = ServerXml.ConsoleRole.BuiltinRoleEnum.values().length;
         int tenantRoleSize = tenantRoleIds == null ? 0 : tenantRoleIds.size();
@@ -296,7 +293,7 @@ public class Role extends MasterModelBase implements AddModel {
         }
         String roleId = request.getId();
         String expression = ServerXml.getTenantRoleNodeExpression(ServerXml.getTenant(loginUser), roleId);
-        XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
         Map<String, String> role = xmlUtil.getAttributes(expression);
         if (role == null || role.isEmpty()) {
             for (ServerXml.ConsoleRole.BuiltinRoleEnum xRole : ServerXml.ConsoleRole.BuiltinRoleEnum.values()) {

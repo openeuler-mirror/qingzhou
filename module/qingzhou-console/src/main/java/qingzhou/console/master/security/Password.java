@@ -16,7 +16,6 @@ import qingzhou.console.util.Constants;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.util.TimeUtil;
 import qingzhou.console.util.XmlUtil;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -143,7 +142,7 @@ public class Password extends MasterModelBase implements EditModel {
             p.put("oldPasswords", oldPasswords);
         }
 
-        XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
         xmlUtils.setAttributes(ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(loginUser), ServerXml.getLoginUserName(loginUser)), p);
         xmlUtils.write();
 

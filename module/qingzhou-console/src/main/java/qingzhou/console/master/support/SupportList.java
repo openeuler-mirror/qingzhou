@@ -1,6 +1,8 @@
 package qingzhou.console.master.support;
 
-import qingzhou.api.console.*;
+import qingzhou.api.console.ConsoleContext;
+import qingzhou.api.console.Model;
+import qingzhou.api.console.ModelField;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.DownloadModel;
@@ -11,7 +13,6 @@ import qingzhou.console.master.MasterModelBase;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.FileUtil;
 import qingzhou.console.util.StringUtil;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -564,7 +565,7 @@ public class SupportList extends MasterModelBase implements ListModel, EditModel
         HashMap<String, List<String[]>> result = new HashMap<>();
         String downloadName = getDownloadName(request.getId());
         if (StringUtil.notBlank(downloadName)) {
-            File tool = FileUtil.newFile(ServerUtil.getLib(), "tools", downloadName);
+            File tool = FileUtil.newFile(ConsoleWarHelper.getLibDir(), "tools", downloadName);
             if (tool.isDirectory()) {
                 int subPathLen = (tool.getAbsolutePath() + File.separator).length();
                 for (File f : Objects.requireNonNull(tool.listFiles())) {
@@ -597,7 +598,7 @@ public class SupportList extends MasterModelBase implements ListModel, EditModel
         String[] files = downloadFileNames.split(Constants.DATA_SEPARATOR);
         String downloadName = getDownloadName(request.getId());
         if (StringUtil.notBlank(downloadName)) {
-            File tool = FileUtil.newFile(ServerUtil.getLib(), "tools", downloadName);
+            File tool = FileUtil.newFile(ConsoleWarHelper.getLibDir(), "tools", downloadName);
             for (String file : files) {
                 downloadFiles.add(FileUtil.newFile(tool, file));
             }

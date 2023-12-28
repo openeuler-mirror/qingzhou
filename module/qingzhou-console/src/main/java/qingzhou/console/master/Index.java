@@ -6,8 +6,8 @@ import qingzhou.api.console.ModelAction;
 import qingzhou.api.console.ModelField;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.util.Constants;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.util.Map;
 
@@ -43,7 +43,7 @@ public class Index extends MasterModelBase {
     public void home(Request request, Response response) throws Exception {
         Index index = new Index();
         index.serverInfo = "QingZhou（轻舟）";
-        index.domainPath = ServerUtil.getDomain().getPath();
+        index.domainPath = ConsoleWarHelper.getDomain().getPath();
         index.javaHome = "";// TODO JDKUtil.getJavaHome();
         response.modelData().addDataObject(index, getConsoleContext());
     }

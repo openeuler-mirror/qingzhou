@@ -2,7 +2,6 @@ package qingzhou.console.impl;
 
 import qingzhou.api.AppContextHelper;
 import qingzhou.api.Constants;
-import qingzhou.api.QingZhouApp;
 import qingzhou.console.util.ClassLoaderUtil;
 import qingzhou.console.util.FileUtil;
 import qingzhou.framework.FrameworkContext;
@@ -17,7 +16,7 @@ import java.io.IOException;
 import java.net.URLClassLoader;
 
 public class InitMasterApp implements Process {
-    private FrameworkContext frameworkContext;
+    private final FrameworkContext frameworkContext;
     private static AppInfoImpl masterAppInfo;
 
     public InitMasterApp(FrameworkContext frameworkContext) {

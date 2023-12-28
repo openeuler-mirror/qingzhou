@@ -348,7 +348,7 @@ public class XmlUtil {
         if (properties != null) {
             properties.forEach((k, v) -> {
                 if (v != null) {
-                    newElement.setAttribute((String) k, (String) v);
+                    newElement.setAttribute(k, v);
                 }
             });
         }
