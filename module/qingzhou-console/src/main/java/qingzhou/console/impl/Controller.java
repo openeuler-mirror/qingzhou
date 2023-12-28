@@ -19,7 +19,7 @@ public class Controller implements BundleActivator {
         sequence = new ProcessSequence(
                 new GetFrameworkService(context),
                 new StartServlet(),
-                new InitMasterApp(frameworkContext),
+                new InitMasterApp(frameworkContext),// todo frameworkContext 应该没有初始化
                 new RunWar(this),
                 new RunRemote(this)
         );

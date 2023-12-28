@@ -1,27 +1,22 @@
 package qingzhou.console.auth;
 
+import qingzhou.api.console.Model;
+import qingzhou.api.console.ModelManager;
+import qingzhou.api.console.model.*;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.controller.RESTController;
 import qingzhou.console.controller.RestContext;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.view.ViewManager;
-import qingzhou.console.view.impl.JsonView;
-import qingzhou.api.console.Model;
-import qingzhou.api.console.ModelManager;
-import qingzhou.api.console.model.AddModel;
-import qingzhou.api.console.model.DownloadModel;
-import qingzhou.api.console.model.EditModel;
-import qingzhou.api.console.model.ListModel;
-import qingzhou.api.console.model.ShowModel;
-import qingzhou.framework.pattern.Filter;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.StringUtil;
+import qingzhou.console.view.ViewManager;
+import qingzhou.console.view.impl.JsonView;
+import qingzhou.framework.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * 检查是否有访问权限
@@ -51,7 +46,7 @@ public class AccessControl implements Filter<RestContext> {
         return false;
     }
 
-    public static boolean hasAppPermission(String loginUser, String appName) {
+    public static boolean hasAppPermission(String loginUser, String appName) {//todo
         /*Set<XPermission> userRolePermissions = RoleCache.getUserRolePermissions(loginUser);
         if (userRolePermissions == null) {
             return false;

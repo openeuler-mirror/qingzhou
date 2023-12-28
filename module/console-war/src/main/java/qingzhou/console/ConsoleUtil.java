@@ -287,7 +287,7 @@ public class ConsoleUtil {
 
     public static List<Map<String, String>> listModels(HttpServletRequest request, String targetType, String targetName, String modelName) {
         String appName = getAppName(targetType, targetName);
-       /* ModelManagerImpl modelManager = (ModelManagerImpl) getModelManager(appName);
+       /* ModelManagerImpl modelManager = (ModelManagerImpl) getModelManager(appName); todo
         if (modelManager == null) {
             return new ArrayList<>();
         }
