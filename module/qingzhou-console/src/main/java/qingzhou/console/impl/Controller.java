@@ -19,6 +19,7 @@ public class Controller implements BundleActivator {
         sequence = new ProcessSequence(
                 new GetFrameworkService(context),
                 new StartServlet(),
+                new InitMasterApp(frameworkContext),
                 new RunWar(this),
                 new RunRemote(this)
         );

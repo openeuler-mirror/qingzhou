@@ -1,10 +1,22 @@
 package qingzhou.console;
 
+import qingzhou.api.console.model.EditModel;
+import qingzhou.api.console.model.ListModel;
+import qingzhou.api.console.model.ShowModel;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.util.*;
+import qingzhou.console.util.Constants;
+import qingzhou.console.util.ExceptionUtil;
+import qingzhou.console.util.FileUtil;
+import qingzhou.console.util.StringUtil;
+import qingzhou.console.util.XmlUtil;
+import qingzhou.framework.impl.ServerUtil;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class ServerXml {
     private static File serverXmlFile;
@@ -181,6 +193,22 @@ public class ServerXml {
         }
     }
 
+    public static String getTenantUserNodeExpression(String tenant, String user) {
+        if (StringUtil.isBlank(user)) {
+            return "//root/console/auth/tenants/tenant[@" + ListModel.FIELD_NAME_ID + "='" + tenant + "']/users";
+        }
+
+        return "//root/console/auth/tenants/tenant[@" + ListModel.FIELD_NAME_ID + "='" + tenant + "']/users/user[@" + ListModel.FIELD_NAME_ID + "='" + user + "']";
+    }
+
+    public static String getTenantRoleNodeExpression(String tenant, String roleId) {
+        if (StringUtil.isBlank(roleId)) {
+            return "//root/console/auth/tenants/tenant[@" + ListModel.FIELD_NAME_ID + "='" + tenant + "']/roles";
+        }
+
+        return "//root/console/auth/tenants/tenant[@" + ListModel.FIELD_NAME_ID + "='" + tenant + "']/roles/role[@" + ListModel.FIELD_NAME_ID + "='" + roleId + "']";
+    }
+
     public static String getTenant(String loginUser) {
         if (StringUtil.isBlank(loginUser)) {
             return null;
@@ -248,5 +276,184 @@ public class ServerXml {
 
     public static boolean isMyFavorites(String loginUser, String instanceName, String model, String action) {
         return getMyFavorites(loginUser).contains(instanceName + "/" + model + "/" + action);
+    }
+
+    /********************** console ***********************/
+    public static class ConsoleRole {
+        // 开放的model，不需要检测权限
+        // NOTE: 为方便自动测试集使用，此处设置为 public
+        public static final String[] commonAppModels = {Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_index,
+                Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_password,
+                Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_favorites};
+        public static final String[] openedModelActions;
+
+        static {
+            List<String> temp = new ArrayList<>();
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_index + "/" + Constants.ACTION_NAME_INDEX + "/");
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_index + "/home/");
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_home + "/" + ShowModel.ACTION_NAME_SHOW + "/");
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_password + "/key/");
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_password + "/validate/");
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_password + "/" + EditModel.ACTION_NAME_EDIT + "/");
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_password + "/" + EditModel.ACTION_NAME_UPDATE + "/");
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_favorites + "/" + ListModel.ACTION_NAME_LIST + "/");
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_favorites + "/addfavorite/");
+            temp.add("/" + Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_favorites + "/cancelfavorites/");
+            openedModelActions = temp.toArray(new String[0]);
+        }
+
+        public static boolean isRootUser(String loginUser) {
+            String tenant = getTenant(loginUser);
+            String loginUserName = getLoginUserName(loginUser);
+            Map<String, String> user = new XmlUtil(ServerUtil.getServerXml()).getAttributes(getTenantUserNodeExpression(tenant, loginUserName));
+            if (user != null && !user.isEmpty()) {
+                String role = user.get("roles");
+                if (StringUtil.notBlank(role)) {
+                    String[] roles = role.split(Constants.DATA_SEPARATOR);
+                    for (String r : roles) {
+                        if (BuiltinRoleEnum.root.name().equals(r)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static boolean isAuditorModel(String model) {
+            for (String m : BuiltinRoleEnum.auditor.getModels()) {
+                if (m.equals(model)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static boolean checkLoginUserIsManagerRole(String loginUser, boolean containTenant) {
+            String tenant = getTenant(loginUser);
+            String loginUserName = getLoginUserName(loginUser);
+            Map<String, String> user = new XmlUtil(ServerUtil.getServerXml()).getAttributes(getTenantUserNodeExpression(tenant, loginUserName));
+            if (user != null && !user.isEmpty()) {
+                String role = user.get("roles");
+                if (StringUtil.notBlank(role)) {
+                    String[] roles = role.split(Constants.DATA_SEPARATOR);
+                    for (String r : roles) {
+                        if (BuiltinRoleEnum.root.name().equals(r)
+                                || BuiltinRoleEnum.system.name().equals(r)
+                                || (containTenant && BuiltinRoleEnum.tenant.name().equals(r))) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static List<String> systemXUsers() {
+            return new ArrayList<String>() {{
+                add("thanos");
+                add("security");
+                add("auditor");
+                add("monitor");
+            }};
+        }
+
+        public static List<String> systemXRoles() {
+            List<String> roles = new ArrayList<>();
+            for (BuiltinRoleEnum role : BuiltinRoleEnum.values()) {
+                roles.add(role.name());
+            }
+
+            return roles;
+        }
+
+        public enum BuiltinRoleEnum {
+            root("超级管理员", null, null, null, null),
+            system("系统管理员", null, null
+                    , null, new String[]{
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_instance,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_cluster,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_appversion,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_backup,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_user,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_role,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_userrole,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_auditlog,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_auditconfig
+            }),
+            tenant("租户管理员", new String[]{Constants.QINGZHOU_MASTER_APP_NAME}, new String[]{
+                    Constants.MODEL_NAME_instance,
+                    Constants.MODEL_NAME_cluster,
+                    Constants.MODEL_NAME_appversion,
+                    Constants.MODEL_NAME_backup,
+                    Constants.MODEL_NAME_user,
+                    Constants.MODEL_NAME_role,
+                    Constants.MODEL_NAME_userrole
+            }, new String[]{
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_node + Constants.GROUP_SEPARATOR + ListModel.ACTION_NAME_SHOW,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_node + Constants.GROUP_SEPARATOR + ListModel.ACTION_NAME_LIST,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_node + Constants.GROUP_SEPARATOR + EditModel.ACTION_NAME_EDIT
+            }, null),
+            auditor("安全审计员", new String[]{Constants.QINGZHOU_MASTER_APP_NAME},
+                    new String[]{
+                            Constants.MODEL_NAME_index,
+                            Constants.MODEL_NAME_password,
+                            Constants.MODEL_NAME_favorites,
+                            Constants.MODEL_NAME_auditlog,
+                            Constants.MODEL_NAME_auditconfig
+                    }
+                    , null, null);
+
+            private String info;
+            private String[] apps;
+            private String[] models;
+            private String[] extendedUris;
+            private String[] excludedUris;
+
+            BuiltinRoleEnum(String info, String[] apps, String[] models, String[] extendedUris, String[] excludedUris) {
+                this.info = info;
+                this.apps = apps;
+                this.models = models;
+                this.extendedUris = extendedUris;
+                this.excludedUris = excludedUris;
+            }
+
+            public String getInfo() {
+                return info;
+            }
+
+            public String[] getApps() {
+                return apps;
+            }
+
+            public String[] getModels() {
+                return models;
+            }
+
+            /**
+             * 扩展增加master应用的功能菜单权限
+             * 1. app/model         增加mapp/odel所有的action权限
+             * 2. app/model/action  增加app/model指定action的权限
+             *
+             * @return
+             */
+            public String[] getExtendedUris() {
+                return extendedUris;
+            }
+
+            /**
+             * 排除的master应用功能菜单权限
+             * 1. app/model         增加app的model所有的action权限
+             * 2. app/model/action  增加app的model指定action的权限
+             *
+             * @return
+             */
+            public String[] getExcludedUris() {
+                return excludedUris;
+            }
+        }
     }
 }

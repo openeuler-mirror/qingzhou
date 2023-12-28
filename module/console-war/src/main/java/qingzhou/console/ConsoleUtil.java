@@ -1,7 +1,11 @@
 package qingzhou.console;
 
 import qingzhou.api.AppContext;
-import qingzhou.api.console.*;
+import qingzhou.api.console.FieldType;
+import qingzhou.api.console.Model;
+import qingzhou.api.console.ModelAction;
+import qingzhou.api.console.ModelField;
+import qingzhou.api.console.ModelManager;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.group.GroupManager;
@@ -16,19 +20,25 @@ import qingzhou.console.controller.RequestBuilder;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.sec.Encryptor;
+import qingzhou.console.sec.SecureKey;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.ObjectUtil;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
-import qingzhou.framework.impl.app.ConsoleContextImpl;
 import qingzhou.framework.app.I18n;
-import qingzhou.framework.impl.app.model.ModelManagerImpl;
+import qingzhou.framework.impl.app.ConsoleContextImpl;
 import qingzhou.framework.pattern.Visitor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
 public class ConsoleUtil {
@@ -277,7 +287,7 @@ public class ConsoleUtil {
 
     public static List<Map<String, String>> listModels(HttpServletRequest request, String targetType, String targetName, String modelName) {
         String appName = getAppName(targetType, targetName);
-        ModelManagerImpl modelManager = (ModelManagerImpl) getModelManager(appName);
+       /* ModelManagerImpl modelManager = (ModelManagerImpl) getModelManager(appName);
         if (modelManager == null) {
             return new ArrayList<>();
         }
@@ -292,9 +302,9 @@ public class ConsoleUtil {
             modelManager.invokeAction(qzRequest, response);
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
 
-        return response.modelData().getDataList();
+        return new ArrayList<>();
     }
 
     private static Request buildRequest(HttpServletRequest request, String targetType, String targetName, String appName, String modelName, String actionName, String id) {
@@ -778,8 +788,10 @@ public class ConsoleUtil {
             return input;
         }
         try {
-            // return Encryptor.decryptWithPrivateKey(input);
-            throw new IllegalArgumentException("todo");
+            return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(
+                    SecureKey.getSecureKey(ConsoleWarHelper.getDomain(), SecureKey.publicKeyName),
+                    SecureKey.getSecureKey(ConsoleWarHelper.getDomain(), SecureKey.privateKeyName)
+            ).decryptWithPrivateKey(input);
         } catch (Exception e) {
             e.printStackTrace();
             return input;

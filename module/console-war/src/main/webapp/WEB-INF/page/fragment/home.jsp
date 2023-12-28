@@ -6,7 +6,7 @@
 <div class="panel" style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
     <div class="panel-heading"
          style="background-color: #FFFFFF; opacity:0.9;border-color:#EFEEEE; font-size:14px;height:50px;line-height:35px;font-weight:600;">
-        <%=I18n.getString(qzRequest, "field.group." + group)%>
+        <%=I18n.getString(qzRequest.getAppName(), "field.group." + group)%>
     </div>
     <div class="panel-body" style="word-break: break-all">
         <table class="table home-table" style="margin-bottom: 1px;">
@@ -15,8 +15,8 @@
             %>
             <tr>
                 <td class="home-field-info" field="<%=fieldName%>">
-                    <label for="<%=fieldName%>"><%=I18n.getString(qzRequest, "model.field." + qzRequest.getModelName() + "." + fieldName)%></label>
-                    <span class="tooltips" data-tip="<%=I18n.getString(qzRequest, "model.field.info." + qzRequest.getModelName() + "." + fieldName)%>" data-tip-arrow="right" style="line-height:25px;">
+                    <label for="<%=fieldName%>"><%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%></label>
+                    <span class="tooltips" data-tip="<%=I18n.getString(qzRequest.getAppName(), "model.field.info." + qzRequest.getModelName() + "." + fieldName)%>" data-tip-arrow="right" style="line-height:25px;">
                         <i class="icon icon-question-sign"></i>
                     </span>
                 </td>

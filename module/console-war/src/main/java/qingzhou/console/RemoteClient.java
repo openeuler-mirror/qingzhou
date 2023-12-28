@@ -53,7 +53,7 @@ public class RemoteClient {
                 throw new RuntimeException("remoteKey error");
             }
 
-            Serializer serializer = ConsoleWarHelper.getAppContext(null)// todo 换个方式？
+            Serializer serializer = ConsoleUtil.getAppContext(null)// todo 换个方式？
                     .getService(Serializer.class);
             byte[] serialize = serializer.serialize(object);
             byte[] encrypt = cipher.encrypt(serialize);

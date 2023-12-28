@@ -1,11 +1,12 @@
 package qingzhou.console.sec;
 
-import qingzhou.crypto.PasswordCipher;
-import qingzhou.framework.pattern.Callback;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.util.ExceptionUtil;
 import qingzhou.console.util.FileLockUtil;
 import qingzhou.console.util.FileUtil;
 import qingzhou.console.util.StringUtil;
+import qingzhou.crypto.PasswordCipher;
+import qingzhou.framework.pattern.Callback;
 
 import java.io.File;
 import java.io.IOException;
@@ -109,11 +110,9 @@ public class SecureKey {
         String secureKey = SecureKey.getSecureKey(baseDir, keyName, args -> {
             String seedKey = UUID.randomUUID().toString().replaceAll("-", "");
 
-            if (true) {
-                throw new IllegalArgumentException("todo");
-            }
-//            pubKey[0] = HexUtil.bytesToHex(publicKey.getEncoded());
-//            priKey[0] = HexUtil.bytesToHex(privateKey.getEncoded());
+            String[] keyPair = ConsoleWarHelper.getCryptoService().generateKeyPair(seedKey);
+            pubKey[0] = keyPair[0];
+            priKey[0] = keyPair[1];
 
             if (keyName.equals(publicKeyName)) {
                 return pubKey[0];

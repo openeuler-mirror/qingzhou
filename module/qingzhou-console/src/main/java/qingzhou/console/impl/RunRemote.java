@@ -1,27 +1,32 @@
 package qingzhou.console.impl;
 
 import qingzhou.api.console.ConsoleContext;
+import qingzhou.api.console.ModelManager;
 import qingzhou.api.console.data.Response;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.ServerXml;
 import qingzhou.console.Validator;
 import qingzhou.console.sec.SecureKey;
+import qingzhou.console.servlet.RequestContext;
+import qingzhou.console.servlet.ServletProcessor;
+import qingzhou.console.servlet.UploadFileContext;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.FileUtil;
 import qingzhou.console.util.StreamUtil;
 import qingzhou.crypto.PasswordCipher;
 import qingzhou.framework.AppInfo;
 import qingzhou.framework.AppInfoManager;
-import qingzhou.framework.impl.app.model.ModelManagerImpl;
 import qingzhou.framework.pattern.Process;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
-import qingzhou.console.servlet.RequestContext;
-import qingzhou.console.servlet.ServletProcessor;
-import qingzhou.console.servlet.UploadFileContext;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
@@ -72,9 +77,9 @@ public class RunRemote implements Process {
             AppInfo appInfo = appInfoManager.getAppInfo(appInfoManager.getApps().iterator().next()); // TODO ?
 
             ConsoleContext consoleContext = appInfo.getAppContext().getConsoleContext();
-            ModelManagerImpl modelManager = (ModelManagerImpl) consoleContext.getModelManager();
+            ModelManager modelManager = consoleContext.getModelManager();
             if (Validator.validate(request, response, modelManager)) {
-                modelManager.invokeAction(request, response);
+                appInfo.invokeAction(request, response);
             }
 
             byte[] responseData = serializer.serialize(response);

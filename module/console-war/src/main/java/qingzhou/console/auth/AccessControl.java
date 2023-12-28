@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 检查是否有访问权限
@@ -48,6 +49,22 @@ public class AccessControl implements Filter<RestContext> {
 //            }
 //        }
         return false;
+    }
+
+    public static boolean hasAppPermission(String loginUser, String appName) {
+        /*Set<XPermission> userRolePermissions = RoleCache.getUserRolePermissions(loginUser);
+        if (userRolePermissions == null) {
+            return false;
+        }
+        boolean hasPermission = false;
+        for (XPermission permission : userRolePermissions) {
+            hasPermission = permission.checkAppPermission(appName);
+            if (hasPermission) {
+                break;
+            }
+        }*/
+
+        return true;
     }
 
     private static final String[] basicActionNames = { // 有任何其它权限的，则 附带打开其读 权限
