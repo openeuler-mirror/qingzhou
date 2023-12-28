@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root>
+    <!--进程-->
+    <jvm workDir="${qingzhou.domain}">
+        <environments>
+            <env enabled="false" name="JAVA_HOME" value=""/>
+        </environments>
+        <args>
+            <arg name="-Xms64m" desc="初始分配的堆内存"/>
+            <arg name="-Xmx64m" desc="最大可分配的堆内存"/>
+            <arg name="-Dqingzhou.home=${qingzhou.home}" desc="安装目录"/>
+            <arg name="-Dqingzhou.domain=${qingzhou.domain}" desc="运行目录"/>
+            <arg name="-XX:+HeapDumpOnOutOfMemoryError" desc="开启堆转储"/>
+            <arg name="-server"/>
+            <arg name="-Djava.io.tmpdir=${qingzhou.domain}/temp"/>
+            <arg name="-Djava.security.egd=file:/dev/./urandom"
+                 enabled="true" onlyForLinux="true"/>
+            <arg name="-Djava.security.manager"
+                 enabled="false"/>
+            <arg name="-Djava.security.policy=${qingzhou.domain}/conf/server.policy"
+                 enabled="false" desc="设置安全管理器的策略文件"/>
+            <arg name="-Djava.rmi.server.hostname=127.0.0.1"/>
+            <arg name="-Djava.awt.headless=true"/>
+            <arg name="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:8888"
+                 enabled="false" desc="远程调试参数"/>
+        </args>
+    </jvm>
+
+    <!--服务器-->
+    <server>
+        <connector port="7900"/>
+    </server>
+
+    <!--控制台-->
+    <console contextRoot="/console" trustedIP="">
+        <auth verCodeEnabled="true">
+            <tenants>
+                <tenant id="default" info="默认租户">
+                    <users>
+                        <user active="true" bound2FA="false" changeInitPwd="${ReleaseModeEncrypted}" enable2FA="false"
+                              enablePasswordAge="true" info="超级管理员" keyFor2FA="" id="thanos"
+                              password="44D3$2$0B8AA118786066B2A9DF05A44B342AE2FC147F2164B5A9F232259E50DE5D9F1C$SHA-256"
+                              passwordMaxAge="90" passwordMinAge="0" roles="root"/>
+                        <user active="true" bound2FA="false" changeInitPwd="${ReleaseModeEncrypted}" enable2FA="false"
+                              enablePasswordAge="true" info="系统管理员" keyFor2FA="" id="security"
+                              password="81CF$2$7EB73603DA4BF9EF6CF59C766907573045427ACFBEA43524B94A2EB7543A7BDF$SHA-256"
+                              passwordMaxAge="90" passwordMinAge="0" roles="system"/>
+                        <user active="true" bound2FA="false" changeInitPwd="false" enable2FA="false"
+                              enablePasswordAge="true" info="安全审计员" keyFor2FA="" id="auditor"
+                              password="4797$2$25F343027E465AF76344CDC8CD6C47DD36A8A6DCD9A34DAAA8AA077F0DF27F73$SHA-256"
+                              passwordMaxAge="90" passwordMinAge="0" roles="auditor"/>
+                    </users>
+                    <roles/>
+                </tenant>
+            </tenants>
+        </auth>
+    </console>
+
+    <!--实例-->
+    <instances>
+        <instance app=""/>
+    </instances>
+</root>

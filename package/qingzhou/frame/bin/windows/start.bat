@@ -1,0 +1,1 @@
+call "%~dp0.\admin.bat" server start %*

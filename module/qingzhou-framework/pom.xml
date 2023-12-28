@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>qingzhou</groupId>
+        <artifactId>module</artifactId>
+        <version>1.0</version>
+    </parent>
+
+    <artifactId>qingzhou-framework</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-api</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-logger</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-serializer</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-crypto</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                            <Bundle-Activator>qingzhou.framework.impl.Controller</Bundle-Activator>
+
+                            <Import-Package>
+                                org.osgi.framework,qingzhou.api,qingzhou.api.console,qingzhou.api.console.data,qingzhou.api.console.group,qingzhou.api.console.model,qingzhou.api.console.option,qingzhou.logger,qingzhou.serializer,qingzhou.crypto
+                            </Import-Package>
+
+                            <Export-Package>qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.app,qingzhou.framework.impl.app</Export-Package>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
