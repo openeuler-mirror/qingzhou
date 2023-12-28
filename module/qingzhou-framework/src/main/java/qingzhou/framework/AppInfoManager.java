@@ -1,12 +1,16 @@
 package qingzhou.framework;
 
+import qingzhou.framework.impl.app.AppInfoImpl;
+
 import java.io.File;
 import java.util.Set;
 
 public interface AppInfoManager {
-    void addApp(File file);
+    void addMasterApp(AppInfoImpl appInfo);
 
-    void removeApp(String name);
+    boolean addApp(File file);
+
+    boolean removeApp(String name);
 
     Set<String> getApps();
 

@@ -83,7 +83,7 @@
                                     continue;
                                 }
 
-                                String msg = I18n.getString(qzRequest, "model.field.info." + qzRequest.getModelName() + "." + fieldName);
+                                String msg = I18n.getString(qzRequest.getAppName(), "model.field.info." + qzRequest.getModelName() + "." + fieldName);
                                 String info = "";
                                 if (msg != null && !msg.startsWith("model.field.")) {
                                     info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-question-sign' data-tip-arrow=\"right\"></i></span>";
@@ -96,7 +96,7 @@
                         <tr>
                             <td class="home-field-info" field="<%=fieldName%>">
                                 <label for="<%=fieldName%>"><%=info%>&nbsp;
-                                    <%=I18n.getString(qzRequest, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
+                                    <%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%>
                                 </label>
                             </td>
                             <td style="word-break: break-all">
@@ -133,10 +133,10 @@
                 keysBuilder.append("{");
                 for (Map.Entry<String, String> e : dataList.get(0).entrySet()) {
                     String key = e.getKey();
-                    String i18n = I18n.getString(qzRequest, "model.field." + qzRequest.getModelName() + "." + key);
+                    String i18n = I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + key);
                     int i = key.indexOf(MonitorModel.MONITOR_EXT_SEPARATOR);
                     if (i > 0) {
-                        i18n = I18n.getString(qzRequest, "model.field." + qzRequest.getModelName() + "." + key.substring(0, i));
+                        i18n = I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + key.substring(0, i));
                         i18n = i18n + ":" + key.substring(i + 1);
                     }
                     keysBuilder.append("\"").append(key).append("\":\"").append(i18n).append("\",");

@@ -1,7 +1,5 @@
 package qingzhou.framework.impl.app.model;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.AppContextHelper;
 import qingzhou.api.console.FieldType;
 import qingzhou.api.console.Model;
 import qingzhou.api.console.ModelAction;
@@ -12,8 +10,6 @@ import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.ListModel;
 import qingzhou.api.console.model.ModelBase;
-import qingzhou.framework.AppInfo;
-import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.pattern.Callback;
 import qingzhou.framework.pattern.Visitor;
 
@@ -46,52 +42,6 @@ public class ModelManagerImpl implements ModelManager {
 
     public ModelManagerImpl(URLClassLoader modelLoader) {
         this.modelLoader = modelLoader;
-    }
-
-    // 初始化完毕后，通过此方法进入业务逻辑
-    public void invokeAction(Request request, Response response) throws Exception {
-        ModelInfo modelInfo = modelInfoMap.get(request.getModelName());
-        if (modelInfo == null) return;
-
-        ActionInfo actionInfo = modelInfo.actionInfoMap.get(request.getActionName());
-        if (actionInfo == null) return;
-
-        Method javaMethod = actionInfo.javaMethod;
-
-        List<Object> args = new ArrayList<>();
-        for (Map.Entry<Integer, Class<?>> entry : actionInfo.parameterTypesIndex.entrySet()) {
-            Object value;
-            if (entry.getValue().isInstance(request)) {
-                value = request;
-            } else if (entry.getValue().isInstance(response)) {
-                value = response;
-            } else {
-                throw new IllegalStateException();
-            }
-
-            args.add(entry.getKey(), value);
-        }
-
-        AppInfo appInfo = FrameworkContextImpl.getInstance().getAppInfoManager().getAppInfo(request.getAppName());
-        AppContext appContext = appInfo.getAppContext();
-        AppContextHelper.setAppContext(appContext);// todo 后续删除
-
-        javaMethod.invoke(getModelInstance(request.getModelName()), args.toArray());
-        filterResponse(request, response);// todo 后续 剥离掉 LIstModel api 里面的逻辑后，这块就挪动到 listIntern 内部实现的尾部。
-    }
-
-    private void filterResponse(Request request, Response response) {
-        String[] showField = getShowField(request.getModelName(), request.getActionName());
-        if (showField != null) {
-            List<Map<String, String>> dataList = response.modelData().getDataList();
-            for (Map<String, String> map : dataList) {
-                for (String field : showField) {
-                    if (!map.containsKey(field)) {
-                        map.remove(field);
-                    }
-                }
-            }
-        }
     }
 
     public void close() throws Exception {
@@ -339,7 +289,7 @@ public class ModelManagerImpl implements ModelManager {
         return true;
     }
 
-    private ModelInfo getModelInfo(String modelName) {
+    public ModelInfo getModelInfo(String modelName) {
         ModelInfo modelInfo = modelInfoMap.get(modelName);
         if (modelInfo == null) {
             throw new IllegalArgumentException("Model not found: " + modelName);
@@ -531,9 +481,12 @@ public class ModelManagerImpl implements ModelManager {
                         }
                         int i = entryName.indexOf(endsWithFlag);
                         String className = entryName.substring(0, i).replace("/", ".");
-                        Class<?> clazz = classLoader.loadClass(className);
-                        if (!visitor.visit(clazz)) {
-                            return;
+                        try {
+                            Class<?> clazz = classLoader.loadClass(className);
+                            if (!visitor.visit(clazz)) {
+                                return;
+                            }
+                        } catch (NoClassDefFoundError|ClassNotFoundException ignored) {
                         }
                     }
                 }

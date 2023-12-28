@@ -29,7 +29,6 @@
 <%@ page import="qingzhou.console.view.impl.HtmlView" %>
 <%@ page import="qingzhou.console.util.Constants" %>
 <%@ page import="qingzhou.console.util.SafeCheckerUtil" %>
-<%@ page import="qingzhou.console.util.ServerUtil" %>
 <%@ page import="qingzhou.console.util.StringUtil" %>
 <%@ page import="java.io.IOException" %>
 <%@ page import="java.time.LocalDateTime" %>
@@ -119,7 +118,7 @@
 
 <%--公用“通知”消息提示--%>
 <%
-    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, Constants.MODEL_NAME_instance, Constants.QINGZHOU_DEFAULT_APP_NAME, Constants.MODEL_NAME_notice);
+    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, Constants.MODEL_NAME_instance, Constants.QINGZHOU_MASTER_APP_NAME, Constants.MODEL_NAME_notice);
     StringBuilder noticeBuilder = new StringBuilder();
     for (int jj = 0; jj < noticeModes.size(); jj++) {
         Map<String, String> mb = noticeModes.get(jj);
@@ -130,7 +129,7 @@
             noticeBuilder.append("<br>");
         }
     }
-    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():Constants.MODEL_NAME_instance, Constants.QINGZHOU_DEFAULT_APP_NAME +"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
+    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():Constants.MODEL_NAME_instance, Constants.QINGZHOU_MASTER_APP_NAME +"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
         int noticeSize = noticeModes.size();
 %>
 <script type="text/javascript">
@@ -169,7 +168,7 @@
 %>
 <script type="text/javascript">
     $(document).ready(function () {
-        var noticeIndex = showInfo("<%=(I18n.getString(initAppName, "model." + qzRequest.getModelName()) + ": " + msg)%> | <%=(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME,"page.go"))%> <%=(I18n.getString(Constants.QINGZHOU_DEFAULT_APP_NAME, "model." + Constants.MODEL_NAME_notice))%>");
+        var noticeIndex = showInfo("<%=(I18n.getString(initAppName, "model." + qzRequest.getModelName()) + ": " + msg)%> | <%=(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME,"page.go"))%> <%=(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model." + Constants.MODEL_NAME_notice))%>");
         // 记录最后一次通知弹窗
         try {
             $(getActiveTabContent()).attr("showInfoIndex", noticeIndex);

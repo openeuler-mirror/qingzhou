@@ -280,7 +280,7 @@
             </li>
 
             <%
-            if(AccessControl.hasAppPermission(currentUser,Constants.QINGZHOU_DEFAULT_APP_NAME)){
+            if(AccessControl.hasAppPermission(currentUser,Constants.QINGZHOU_MASTER_APP_NAME)){
                 %>
                 <li class="inactive" local="true">
                     <a href="javascript:void(0);">
@@ -290,8 +290,8 @@
                             <%-- 通知 --%>
                             <%
                                 int tabNoticeSize = 0;
-                                if (AccessControl.canAccess(qzRequest.getTargetType(), Constants.QINGZHOU_DEFAULT_APP_NAME+"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
-                                    tabNoticeSize = StringUtil.isBlank(currentUser) ? 0 : ConsoleUtil.listModels(request, Constants.MODEL_NAME_instance, Constants.QINGZHOU_DEFAULT_APP_NAME, Constants.MODEL_NAME_notice).size();
+                                if (AccessControl.canAccess(qzRequest.getTargetType(), Constants.QINGZHOU_MASTER_APP_NAME+"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
+                                    tabNoticeSize = StringUtil.isBlank(currentUser) ? 0 : ConsoleUtil.listModels(request, Constants.MODEL_NAME_instance, Constants.QINGZHOU_MASTER_APP_NAME, Constants.MODEL_NAME_notice).size();
                                 }
                             %>
                             <span class="noticeNumber label label-badge" style="display:<%=tabNoticeSize > 0 ? "inline-block" : "none" %>;"><%=tabNoticeSize%></span>
@@ -335,7 +335,7 @@
                 </section>
             </li>
             <%
-            if(AccessControl.hasAppPermission(currentUser,Constants.QINGZHOU_DEFAULT_APP_NAME)){
+            if(AccessControl.hasAppPermission(currentUser,Constants.QINGZHOU_MASTER_APP_NAME)){
                 %>
                 <li class="inactive" local="true">
                     <%-- 初始化的本地实例页面 --%>

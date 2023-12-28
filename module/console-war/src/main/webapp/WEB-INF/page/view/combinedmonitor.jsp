@@ -44,9 +44,9 @@
 
                     String i18n = "";
                     if (StringUtil.notBlank(fieldDataId)) {
-                        i18n = I18n.getString(qzRequest, "model." + theModelName) + "(" + fieldDataId + "):" + I18n.getString(qzRequest, "model.field." + theModelName + "." + fieldName);
+                        i18n = I18n.getString(qzRequest.getAppName(), "model." + theModelName) + "(" + fieldDataId + "):" + I18n.getString(qzRequest.getAppName(), "model.field." + theModelName + "." + fieldName);
                     } else {
-                        i18n = I18n.getString(qzRequest, "model." + theModelName) + ":" + I18n.getString(qzRequest, "model.field." + theModelName + "." + fieldName);
+                        i18n = I18n.getString(qzRequest.getAppName(), "model." + theModelName) + ":" + I18n.getString(qzRequest.getAppName(), "model.field." + theModelName + "." + fieldName);
                     }
                     keysBuilder.append("\"").append(key).append("\":\"").append(i18n).append("\",");
                 }

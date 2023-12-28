@@ -25,7 +25,7 @@ public interface EditModel extends ShowModel {
             icon = "save",
             nameI18n = {"更新", "en:Update"},
             infoI18n = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-    default void update(Request request) throws Exception {
+    default void update(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
         Map<String, String> properties = prepareParameters(request);
         dataStore.updateSpecifiedData(request.getModelName(), request.getId(), properties);

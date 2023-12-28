@@ -3,6 +3,7 @@ package qingzhou.console.login.vercode;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.RESTController;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LockOutRealm;
 import qingzhou.console.login.LoginManager;
 import qingzhou.api.console.ConsoleContext;
@@ -37,8 +38,10 @@ public class VerCode implements Filter<HttpServletContext> {
     };
 
     static {
-        ConsoleContext master = ConsoleUtil.getAppContext(null).getConsoleContext();// todo
-        master.addI18N(captchaError, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
+        ConsoleContext master = ConsoleWarHelper.getMasterAppConsoleContext();// todo
+        if (master != null) {
+            master.addI18N(captchaError, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
+        }
     }
 
     private final String verCodeFormat = "jpeg";
