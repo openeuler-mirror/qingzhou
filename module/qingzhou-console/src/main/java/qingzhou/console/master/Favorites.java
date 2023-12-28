@@ -18,7 +18,6 @@ import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.util.XmlUtil;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -168,7 +167,7 @@ public class Favorites extends MasterModelBase implements ListModel {
 
     private void writeUserFavorites(String loginUser, List<String> userFavorites) throws Exception {
         String favorites = StringUtil.join(userFavorites, ",");
-        XmlUtil consoleXml = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil consoleXml = new XmlUtil(ConsoleWarHelper.getServerXml());
         consoleXml.setAttribute(ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(loginUser), ServerXml.getLoginUserName(loginUser)), "favorites", favorites);
         consoleXml.write();
     }

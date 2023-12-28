@@ -18,7 +18,6 @@ import qingzhou.console.sec.Digest;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.util.XmlUtil;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -114,7 +113,7 @@ public class Tenant extends MasterModelBase implements AddModel {
     public void add(Request request, Response response) throws Exception {
         // 校验用户是否为超级管理员，系统管理员
         String loginUser = request.getLoginUser();
-        if(!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(loginUser, false)){
+        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(loginUser, false)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));
             return;
@@ -125,7 +124,7 @@ public class Tenant extends MasterModelBase implements AddModel {
         String loginName = properties.remove("loginName");
         String password = properties.remove(User.pwdKey);
         properties.remove(User.confirmPwdKey);
-        XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
         xmlUtils.addNew("//root/console/auth/tenants", "tenant", properties);
 
         Map<String, String> userMap = new HashMap<>();

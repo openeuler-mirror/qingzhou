@@ -6,9 +6,9 @@ import qingzhou.api.console.ModelField;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.ShowModel;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.master.MasterModelBase;
 import qingzhou.console.sec.SecureKey;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +31,7 @@ public class CentralizedConfig extends MasterModelBase {
             nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
     public void show(Request request, Response response) throws Exception {
-        String secureKeyAsKeyPair = SecureKey.getOrInitKeyPair(ServerUtil.getDomain(), SecureKey.publicKeyName, SecureKey.publicKeyName, SecureKey.privateKeyName);
+        String secureKeyAsKeyPair = SecureKey.getOrInitKeyPair(ConsoleWarHelper.getDomain(), SecureKey.publicKeyName, SecureKey.publicKeyName, SecureKey.privateKeyName);
         Map<String, String> map = new HashMap<>();
         map.put("publicKey", secureKeyAsKeyPair);
         response.modelData().addData(map);

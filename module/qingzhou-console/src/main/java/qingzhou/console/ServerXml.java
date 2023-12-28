@@ -9,7 +9,6 @@ import qingzhou.console.util.ExceptionUtil;
 import qingzhou.console.util.FileUtil;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.util.XmlUtil;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -305,7 +304,7 @@ public class ServerXml {
         public static boolean isRootUser(String loginUser) {
             String tenant = getTenant(loginUser);
             String loginUserName = getLoginUserName(loginUser);
-            Map<String, String> user = new XmlUtil(ServerUtil.getServerXml()).getAttributes(getTenantUserNodeExpression(tenant, loginUserName));
+            Map<String, String> user = new XmlUtil(ConsoleWarHelper.getServerXml()).getAttributes(getTenantUserNodeExpression(tenant, loginUserName));
             if (user != null && !user.isEmpty()) {
                 String role = user.get("roles");
                 if (StringUtil.notBlank(role)) {
@@ -334,7 +333,7 @@ public class ServerXml {
         public static boolean checkLoginUserIsManagerRole(String loginUser, boolean containTenant) {
             String tenant = getTenant(loginUser);
             String loginUserName = getLoginUserName(loginUser);
-            Map<String, String> user = new XmlUtil(ServerUtil.getServerXml()).getAttributes(getTenantUserNodeExpression(tenant, loginUserName));
+            Map<String, String> user = new XmlUtil(ConsoleWarHelper.getServerXml()).getAttributes(getTenantUserNodeExpression(tenant, loginUserName));
             if (user != null && !user.isEmpty()) {
                 String role = user.get("roles");
                 if (StringUtil.notBlank(role)) {
@@ -407,11 +406,11 @@ public class ServerXml {
                     }
                     , null, null);
 
-            private String info;
-            private String[] apps;
-            private String[] models;
-            private String[] extendedUris;
-            private String[] excludedUris;
+            private final String info;
+            private final String[] apps;
+            private final String[] models;
+            private final String[] extendedUris;
+            private final String[] excludedUris;
 
             BuiltinRoleEnum(String info, String[] apps, String[] models, String[] extendedUris, String[] excludedUris) {
                 this.info = info;

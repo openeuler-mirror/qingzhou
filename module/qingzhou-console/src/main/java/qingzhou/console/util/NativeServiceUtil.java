@@ -1,7 +1,5 @@
 package qingzhou.console.util;
 
-import qingzhou.framework.impl.ServerUtil;
-
 import java.io.File;
 
 public class NativeServiceUtil {
@@ -28,7 +26,7 @@ public class NativeServiceUtil {
             return;
         }
 
-        if (ServerUtil.isWindows() || !serviceFile.exists() || !serviceFile.isFile()) {
+        if (OSUtil.IS_WINDOWS || !serviceFile.exists() || !serviceFile.isFile()) {
             return;
         }
 
@@ -44,7 +42,7 @@ public class NativeServiceUtil {
      * 返回 null 表示安装成功，否则返回错误消息。
      **/
     public static String installAsService(String startCmdPath, String serviceName, String javaHome) throws Exception {
-        if (ServerUtil.isWindows()) {
+        if (OSUtil.IS_WINDOWS) {
             return "Failed to install server as a system self-starting service. Only Linux platform is supported.";
         }
         String s = System.lineSeparator();

@@ -24,7 +24,6 @@ import qingzhou.console.util.Constants;
 import qingzhou.console.util.ObjectUtil;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.util.XmlUtil;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -249,7 +248,7 @@ public class User extends MasterModelBase implements AddModel {
 
     @Override
     public List<Map<String, String>> listInternal(Request request, int start, int size) throws Exception {
-        XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
         List<String> tenantUserIds = xmlUtil.getAttributeList(getAllUserIdExpression(request.getLoginUser()));
         String tenant = ServerXml.getTenant(request.getLoginUser());
         List<Map<String, String>> results = new ArrayList<>();
@@ -273,7 +272,7 @@ public class User extends MasterModelBase implements AddModel {
 
     @Override
     public int getTotalSize(Request request) throws Exception {
-        XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
         List<String> tenantUserIds = xmlUtil.getAttributeList(getAllUserIdExpression(request.getLoginUser()));
         return tenantUserIds == null ? 0 : tenantUserIds.size();
     }
@@ -300,7 +299,7 @@ public class User extends MasterModelBase implements AddModel {
         }
         Map<String, String> properties = prepareParameters(request);
         rectifyParameters(properties, tenant);
-        XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
         xmlUtils.addNew(ServerXml.getTenantUserNodeExpression(tenant, null), "user", properties);
         xmlUtils.write();
     }
@@ -375,12 +374,12 @@ public class User extends MasterModelBase implements AddModel {
             response.setMsg(getConsoleContext().getI18N("tenant.not.exist", tenant));
             return;
         }
-        Map<String, String> oldPro = new XmlUtil(ServerUtil.getServerXml()).getAttributes(ServerXml.getTenantUserNodeExpression(tenant, request.getId()));
+        Map<String, String> oldPro = new XmlUtil(ConsoleWarHelper.getServerXml()).getAttributes(ServerXml.getTenantUserNodeExpression(tenant, request.getId()));
         DataStore dataStore = getDataStore();
         Map<String, String> properties = prepareParameters(request);
         dataStore.updateSpecifiedData(request.getModelName(), request.getId(), properties);
 
-        Map<String, String> newPro = new XmlUtil(ServerUtil.getServerXml()).getAttributes(ServerXml.getTenantUserNodeExpression(tenant, request.getId()));
+        Map<String, String> newPro = new XmlUtil(ConsoleWarHelper.getServerXml()).getAttributes(ServerXml.getTenantUserNodeExpression(tenant, request.getId()));
 
         // 检查是否要重新登录: 简单设计，只要更新即要求重新登录，这可用于强制踢人
         if (!ObjectUtil.isSameMap(oldPro, newPro)) {
@@ -405,7 +404,7 @@ public class User extends MasterModelBase implements AddModel {
             insertPasswordModifiedTime(params);
         }
 
-        Map<String, String> oldPro = new XmlUtil(ServerUtil.getServerXml()).getAttributes(ServerXml.getTenantUserNodeExpression(tenant, params.get("id")));
+        Map<String, String> oldPro = new XmlUtil(ConsoleWarHelper.getServerXml()).getAttributes(ServerXml.getTenantUserNodeExpression(tenant, params.get("id")));
         if (oldPro == null) {
             oldPro = new HashMap<>();
         }
@@ -509,7 +508,7 @@ public class User extends MasterModelBase implements AddModel {
     }
 
     static void updateXmlProperty(String userName, String key, String val) throws Exception {
-        XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
 
         Map<String, String> p = new HashMap<>();
         p.put(key, val);

@@ -10,10 +10,10 @@ import org.apache.tomcat.JarScanFilter;
 import org.apache.tomcat.JarScanType;
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.JarScannerCallback;
+
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 
 public class SingleServletContext extends StandardContext {
@@ -32,7 +32,7 @@ public class SingleServletContext extends StandardContext {
         });
     }
 
-    public SingleServletContext(String contextPath, String mapping, String docBase,HttpServlet servlet) {
+    public SingleServletContext(String contextPath, String mapping, String docBase, HttpServlet servlet) {
         this();
 
         this.contextPath = contextPath;

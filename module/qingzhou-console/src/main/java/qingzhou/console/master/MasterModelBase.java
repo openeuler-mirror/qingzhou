@@ -21,7 +21,7 @@ public class MasterModelBase extends ModelBase {
         return ConsoleWarHelper.getMasterAppConsoleContext();
     }
 
-    protected   <T> Map<String, String> mapper(T data) {
+    protected <T> Map<String, String> mapper(T data) {
         Class<?> dataClassType = data.getClass();
         String[] classFields = getConsoleContext().getModelManager().getAllFieldNames(dataClassType);
         Map<String, String> map = new HashMap<>();

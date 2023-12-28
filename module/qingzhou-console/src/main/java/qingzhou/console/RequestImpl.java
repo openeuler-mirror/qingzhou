@@ -9,7 +9,7 @@ import java.util.Map;
 public class RequestImpl implements Request, Serializable, Cloneable {
     private String targetType;
     private String targetName;
-    private String appName;
+    private final String appName;
     private String modelName;
     private String actionName;
     private final String viewName;
