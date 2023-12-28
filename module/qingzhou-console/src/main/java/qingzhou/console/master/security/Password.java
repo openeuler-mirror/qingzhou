@@ -101,7 +101,7 @@ public class Password extends MasterModelBase implements EditModel {
         Map<String, String> p = new HashMap<>();
         Map<String, String> paramMap = prepareParameters(request);
 
-        String loginUser = request.getLoginUser();
+        String loginUser = request.getUserName();
         if (Boolean.parseBoolean(p.getOrDefault("update2FA", "false"))) {
             // p.put("keyFor2FA", User.refresh2FA()); TODO
             p.put("bound2FA", "false");
@@ -165,7 +165,7 @@ public class Password extends MasterModelBase implements EditModel {
             return null;
         }
 
-        String loginUser = request.getLoginUser();
+        String loginUser = request.getUserName();
         String update2FA = request.getParameter("update2FA");
         String newValue;
         if (StringUtil.isBlank(update2FA) || !Boolean.parseBoolean(update2FA)) {
@@ -251,7 +251,7 @@ public class Password extends MasterModelBase implements EditModel {
     }
 
     private boolean forbidResetInitPwd(Request request) {
-        String loginUser = request.getLoginUser();
+        String loginUser = request.getUserName();
         if (!ServerXml.ConsoleRole.systemXUsers().contains(loginUser)) { // 非三员或特殊用户不必限制
             return false;
         }
@@ -313,7 +313,7 @@ public class Password extends MasterModelBase implements EditModel {
         boolean result = false;
         String reqCode = request.getParameter(Constants.LOGIN_2FA);
         if (StringUtil.notBlank(reqCode)) {
-            String loginUser = request.getLoginUser();
+            String loginUser = request.getUserName();
             Map<String, String> attributes = ServerXml.get().user(loginUser);
             String keyFor2FA = attributes.get("keyFor2FA");
             try {

@@ -44,7 +44,7 @@ public class Favorites extends MasterModelBase implements ListModel {
     @Override
     public void list(Request request, Response response) throws Exception {
         try {
-            String loginUser = request.getLoginUser();
+            String loginUser = request.getUserName();
             List<String> userFavorites = ServerXml.getMyFavorites(loginUser);
             for (String userFavorite : userFavorites) {
                 Favorites favorites = new Favorites();
@@ -63,7 +63,7 @@ public class Favorites extends MasterModelBase implements ListModel {
             infoI18n = {"将该功能入口添加至我的收藏。", "en:Add this feature entry to My Favorites."})
     public void addFavorite(Request request, Response response) {
         try {
-            String loginUser = request.getLoginUser();
+            String loginUser = request.getUserName();
             final String modelAndAction = checkModelAndAction(request, response);
             if (modelAndAction == null /*|| !AccessControl.canAccess(modelAndAction, loginUser, true)*/) {
                 response.setSuccess(false);
@@ -102,7 +102,7 @@ public class Favorites extends MasterModelBase implements ListModel {
                 return;
             }
 
-            String loginUser = request.getLoginUser();
+            String loginUser = request.getUserName();
             List<String> userFavorites = ServerXml.getMyFavorites(loginUser);
             userFavorites.remove(modelAndAction);
             writeUserFavorites(loginUser, userFavorites);

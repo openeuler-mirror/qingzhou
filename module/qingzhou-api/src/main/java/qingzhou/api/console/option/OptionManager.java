@@ -9,5 +9,4 @@ public interface OptionManager {
     static OptionManager of(Option... options) {
         return () -> Arrays.asList(options);
     }
-
 }

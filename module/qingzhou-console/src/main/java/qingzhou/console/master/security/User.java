@@ -234,7 +234,7 @@ public class User extends MasterModelBase implements AddModel {
     }
 
     public void list(Request request, Response response) throws Exception {
-        String loginUser = request.getLoginUser();
+        String loginUser = request.getUserName();
         if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(loginUser, true)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));
@@ -250,8 +250,8 @@ public class User extends MasterModelBase implements AddModel {
     @Override
     public List<Map<String, String>> listInternal(Request request, int start, int size) throws Exception {
         XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
-        List<String> tenantUserIds = xmlUtil.getAttributeList(getAllUserIdExpression(request.getLoginUser()));
-        String tenant = ServerXml.getTenant(request.getLoginUser());
+        List<String> tenantUserIds = xmlUtil.getAttributeList(getAllUserIdExpression(request.getUserName()));
+        String tenant = ServerXml.getTenant(request.getUserName());
         List<Map<String, String>> results = new ArrayList<>();
         for (int i = start; i < Integer.min(start + size, tenantUserIds.size()); i++) {
             Map<String, String> user = xmlUtil.getAttributes(ServerXml.getTenantUserNodeExpression(tenant, tenantUserIds.get(i)));
@@ -274,7 +274,7 @@ public class User extends MasterModelBase implements AddModel {
     @Override
     public int getTotalSize(Request request) throws Exception {
         XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
-        List<String> tenantUserIds = xmlUtil.getAttributeList(getAllUserIdExpression(request.getLoginUser()));
+        List<String> tenantUserIds = xmlUtil.getAttributeList(getAllUserIdExpression(request.getUserName()));
         return tenantUserIds == null ? 0 : tenantUserIds.size();
     }
 
@@ -292,7 +292,7 @@ public class User extends MasterModelBase implements AddModel {
         if (!response.isSuccess()) {
             return;
         }
-        String tenant = ServerXml.getTenant(request.getLoginUser());
+        String tenant = ServerXml.getTenant(request.getUserName());
         if (StringUtil.isBlank(tenant)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("tenant.not.exist", tenant));
@@ -369,7 +369,7 @@ public class User extends MasterModelBase implements AddModel {
         if (!response.isSuccess()) {
             return;
         }
-        String tenant = ServerXml.getTenant(request.getLoginUser());
+        String tenant = ServerXml.getTenant(request.getUserName());
         if (StringUtil.isBlank(tenant)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("tenant.not.exist", tenant));
@@ -453,7 +453,7 @@ public class User extends MasterModelBase implements AddModel {
     }
 
     private void writeForbid(Request request, Response response) {
-        String loginUser = request.getLoginUser();
+        String loginUser = request.getUserName();
         if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(loginUser, true)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));

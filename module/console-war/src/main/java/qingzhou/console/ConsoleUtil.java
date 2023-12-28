@@ -16,7 +16,6 @@ import qingzhou.api.console.option.Option;
 import qingzhou.api.console.option.OptionManager;
 import qingzhou.console.auth.AccessControl;
 import qingzhou.console.controller.RESTController;
-import qingzhou.console.controller.RequestBuilder;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.sec.Encryptor;
@@ -24,7 +23,6 @@ import qingzhou.console.sec.SecureKey;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.ObjectUtil;
 import qingzhou.console.util.StringUtil;
-import qingzhou.console.view.ViewManager;
 import qingzhou.framework.app.I18n;
 import qingzhou.framework.impl.app.ConsoleContextImpl;
 import qingzhou.framework.pattern.Visitor;
@@ -264,7 +262,7 @@ public class ConsoleUtil {
     }
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, RequestImpl request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getTargetType() + "/" + request.getTargetName() + "/" + request.getModelName() + "/" + actionName;
+        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
         return response.encodeURL(url);
     }
 
@@ -273,7 +271,7 @@ public class ConsoleUtil {
         List<ModelAction> modelActions = new ArrayList<>();
 
         if (actions != null) {
-            ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+            ModelManager modelManager = getModelManager(request.getAppName());
             for (String acName : actions) {
                 ModelAction action = modelManager.getModelAction(request.getModelName(), acName);
                 if (action != null) {
@@ -307,25 +305,8 @@ public class ConsoleUtil {
         return new ArrayList<>();
     }
 
-    private static Request buildRequest(HttpServletRequest request, String targetType, String targetName, String appName, String modelName, String actionName, String id) {
-        RequestBuilder builder = new RequestBuilder()
-                .request(request)
-                .viewName(ViewManager.jsonView)
-                .targetType(targetType)
-                .targetName(targetName)
-                .appName(appName)
-                .modelName(modelName)
-                .actionName(actionName);
-
-        if (StringUtil.notBlank(id)) {
-            builder.id(id);
-        }
-
-        return builder.build();
-    }
-
     public static GroupManager fieldGroups(RequestImpl request, String groupName) {
-        String appName = getAppName(request.getTargetType(), request.getTargetName());
+        String appName = request.getAppName();
         ModelManager modelManager = getModelManager(appName);
         if (modelManager == null) {
             return null;
@@ -335,7 +316,7 @@ public class ConsoleUtil {
     }
 
     public static OptionManager fieldOptions(RequestImpl request, String fieldName) {
-        String appName = getAppName(request.getTargetType(), request.getTargetName());
+        String appName = request.getAppName();
         ModelManager modelManager = getModelManager(appName);
         if (modelManager == null) {
             return null;
@@ -391,7 +372,7 @@ public class ConsoleUtil {
 
 
     public static boolean actionsWithAjax(RequestImpl request, String actionName) {
-        final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return false;
         }
@@ -405,7 +386,7 @@ public class ConsoleUtil {
     }
 
     public static List<String> actionsToList(RequestImpl request) {
-        final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
         }
@@ -419,7 +400,7 @@ public class ConsoleUtil {
     }
 
     public static boolean actionShowToListHead(RequestImpl request, String actionName) {
-        final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return false;
         }
@@ -451,7 +432,7 @@ public class ConsoleUtil {
      * list.jsp 在使用
      */
     public static boolean isFilterSelect(RequestImpl request, int i) {
-        final ModelManager modelManager = getModelManager(ConsoleUtil.getAppName(request.getTargetType(), request.getTargetName()));
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return false;
         }
@@ -463,7 +444,7 @@ public class ConsoleUtil {
     }
 
     public static boolean isFieldReadOnly(RequestImpl request, String fieldName) {
-        final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return false;
         }
@@ -481,7 +462,7 @@ public class ConsoleUtil {
 
     public static boolean hasIDField(RequestImpl request) {
         try {
-            final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+            final ModelManager modelManager = getModelManager(request.getAppName());
             if (modelManager == null) {
                 return false;
             }
@@ -495,7 +476,7 @@ public class ConsoleUtil {
     }
 
     public static String isActionEffective(RequestImpl request, Map<String, String> obj, ModelAction modelAction) {
-        final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
         }
@@ -535,7 +516,7 @@ public class ConsoleUtil {
     }
 
     public static Map<String, String> modelFieldEffectiveWhenMap(RequestImpl request) {
-        final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return new HashMap<>();
         }
@@ -569,7 +550,7 @@ public class ConsoleUtil {
     }
 
     public static LinkedHashMap<String, ModelField> getModelFieldMap(RequestImpl request) {
-        final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return new LinkedHashMap<>();
         }
@@ -584,7 +565,7 @@ public class ConsoleUtil {
 
     public static String getSubmitActionName(RequestImpl request) {
         boolean isEdit = Objects.equals("edit", request.getActionName());
-        final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
         }
@@ -607,7 +588,7 @@ public class ConsoleUtil {
         List<ModelBase> modelBases = new ArrayList<>();
         final List<Map<String, String>> models = response.modelData().getDataList();
         if (models != null) {
-            final ModelManager modelManager = getModelManager(getAppName(request.getTargetType(), request.getTargetName()));
+            final ModelManager modelManager = getModelManager(request.getAppName());
             if (modelManager == null) {
                 return null;
             }
@@ -641,9 +622,7 @@ public class ConsoleUtil {
     }
 
     private static void visitActions(RequestImpl request, Response response, HttpSession session, Visitor<ModelAction> visitor, List<Map<String, String>> datas, boolean checkEffective) throws Exception {
-        final String targetType = request.getTargetType();
-        final String targetName = request.getTargetName();
-        final String appName = getAppName(targetType, targetName);
+        final String appName = request.getAppName();
         final ModelManager modelManager = getModelManager(appName);
         if (modelManager == null) {
             return;
@@ -668,7 +647,7 @@ public class ConsoleUtil {
                         continue;
                     }
 
-                    if (!AccessControl.canAccess(targetType, targetName, modelName + "/" + actionName, LoginManager.getLoginUser(session))) {
+                    if (!AccessControl.canAccess(null, null, modelName + "/" + actionName, LoginManager.getLoginUser(session))) {
                         continue;
                     }
 

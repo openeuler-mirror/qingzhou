@@ -5,12 +5,13 @@ import qingzhou.api.console.ConsoleContext;
 import java.util.List;
 import java.util.Map;
 
-public interface Datas {
+public interface Datas {// todo 此对象里面的分页参数不应该暴漏给用户？
+
     void addData(Map<String, String> data);
 
     void addDataBatch(List<Map<String, String>> list);
 
-    void addDataObject(Object data, ConsoleContext context);// 对象会被序列化为Map在进入addData
+    void addDataObject(Object data, ConsoleContext context);// todo ConsoleContext 在这里是否合适？
 
     List<Map<String, String>> getDataList();
 
