@@ -26,7 +26,7 @@ public interface AddModel extends EditModel, DeleteModel {
             icon = "save",
             nameI18n = {"添加", "en:Add"},
             infoI18n = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    default void add(Request request) throws Exception {
+    default void add(Request request, Response response) throws Exception {
         Map<String, String> properties = prepareParameters(request);
         String id = properties.get(FIELD_NAME_ID);
         DataStore dataStore = getDataStore();

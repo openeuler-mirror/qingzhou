@@ -51,7 +51,7 @@
                                 org.osgi.framework,qingzhou.api,qingzhou.api.console,qingzhou.api.console.data,qingzhou.api.console.group,qingzhou.api.console.model,qingzhou.api.console.option,qingzhou.logger,qingzhou.serializer,qingzhou.crypto
                             </Import-Package>
 
-                            <Export-Package>qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.app</Export-Package>
+                            <Export-Package>qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.app,qingzhou.framework.impl.app</Export-Package>
                         </manifestEntries>
                     </archive>
                 </configuration>

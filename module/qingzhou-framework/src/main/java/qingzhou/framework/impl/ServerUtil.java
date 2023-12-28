@@ -1,13 +1,23 @@
 package qingzhou.framework.impl;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -151,6 +161,10 @@ public class ServerUtil {// todo：将无状态的工具方法，拆分到对应
             output.write(buffer, 0, n);
         }
         output.flush();
+    }
+
+    public static File getServerXml() {
+        return getServerXml(getDomain());
     }
 
     public static File getServerXml(File domain) {

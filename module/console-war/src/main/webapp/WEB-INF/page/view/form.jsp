@@ -122,9 +122,9 @@
                     <div class="form-group" id="form-item-<%=fieldName%>">
                         <label for="<%=fieldName%>" class="col-sm-4">
                             <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
-                            <%=I18n.getString(qzRequest, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
+                            <%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%>
                             <%
-                                String fieldInfo = I18n.getString(qzRequest, "model.field.info." + qzRequest.getModelName() + "." + fieldName);
+                                String fieldInfo = I18n.getString(qzRequest.getAppName(), "model.field.info." + qzRequest.getModelName() + "." + fieldName);
                                 if (fieldInfo != null) {
                                     // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
                                     fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
@@ -272,7 +272,7 @@
             if (submitPermission) {
                 %>
                 <input type="submit" class="btn"
-                       value='<%=I18n.getString(qzRequest, "model.action." + qzRequest.getModelName() + "." + submitActionName)%>'>
+                       value='<%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + submitActionName)%>'>
                 <%
             }
 
@@ -296,7 +296,7 @@
                         %>
                         <a href='<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, MonitorModel.ACTION_NAME_MONITOR)%>'
                            btn-type="<%=MonitorModel.ACTION_NAME_MONITOR%>" class="btn">
-                            <%=I18n.getString(qzRequest, "model.action." + qzRequest.getModelName() + "." + MonitorModel.ACTION_NAME_MONITOR)%>
+                            <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + MonitorModel.ACTION_NAME_MONITOR)%>
                         </a>
                         <%
                         break;
@@ -315,7 +315,7 @@
                                         out.print(ConsoleUtil.isDisableDownload() ? " disabled ":"" + " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE + "/" + encodedId) + "' ");
                                     %>
                                btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>" class="btn">
-                                <%=I18n.getString(qzRequest, "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
+                                <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
                             </a>
                             <%
                             break;
@@ -330,7 +330,7 @@
                     %>
                     <a href='<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ConsoleUtil.ACTION_NAME_key)%>'
                        btn-type="<%=ConsoleUtil.ACTION_NAME_key%>" class="btn">
-                        <%=I18n.getString(qzRequest, "model.action." + qzRequest.getModelName() + "." + ConsoleUtil.ACTION_NAME_key)%>
+                        <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + ConsoleUtil.ACTION_NAME_key)%>
                     </a>
                     <%
                 }

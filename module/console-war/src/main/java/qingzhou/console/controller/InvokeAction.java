@@ -1,5 +1,6 @@
 package qingzhou.console.controller;
 
+import qingzhou.api.console.ModelManager;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.DownloadModel;
 import qingzhou.api.console.model.ListModel;
@@ -16,7 +17,6 @@ import qingzhou.console.sec.SecureKey;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.StringUtil;
 import qingzhou.framework.app.I18n;
-import qingzhou.framework.impl.app.model.ModelManagerImpl;
 import qingzhou.framework.pattern.Filter;
 
 import javax.naming.NameNotFoundException;
@@ -136,7 +136,7 @@ public class InvokeAction implements Filter<RestContext> {
                 }
             } else {
                 String appName = ConsoleUtil.getAppName(request.getTargetType(), request.getTargetName());
-                ModelManagerImpl manager = (ModelManagerImpl) ConsoleUtil.getModelManager(appName);
+                ModelManager manager = ConsoleUtil.getModelManager(appName);
                 Class<?> modelClass = manager.getModelClass(modelName);
                 if (modelClass != null) {
                     if (ListModel.class.isAssignableFrom(modelClass)) {
@@ -155,7 +155,7 @@ public class InvokeAction implements Filter<RestContext> {
                     }
 
                     if (Validator.validate(request, response, manager)) {
-                        manager.invokeAction(request, response);
+                        ConsoleWarHelper.invokeAction(appName, request, response);
                     }
                 }
             }

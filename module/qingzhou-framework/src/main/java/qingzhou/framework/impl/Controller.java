@@ -118,7 +118,6 @@ public class Controller implements BundleActivator {
             @Override
             public void exec() throws Exception {
                 AppInfoManagerImpl appInfoManager = (AppInfoManagerImpl) frameworkContext.getAppInfoManager();
-                appInfoManager.initMaster(frameworkContext);
 
                 File[] apps = appsDir().listFiles();
                 if (apps == null) return;
