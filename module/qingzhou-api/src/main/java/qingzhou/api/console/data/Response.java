@@ -4,13 +4,13 @@ import java.io.File;
 import java.util.Map;
 
 public interface Response {
-    Datas modelData();
+    Datas modelData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
 
-    Datas monitorData();
+    Datas monitorData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
 
-    Datas errorData();
+    Datas errorData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
 
-    Datas attachmentData();
+    Datas attachmentData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
 
     void setSuccess(boolean success);
 
@@ -20,9 +20,7 @@ public interface Response {
 
     String getMsg();
 
-    String getContentType();
+    Map<String, Object> downloadData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
 
-    Map<String, Object> downloadData();
-
-    void readDownloadFile(String key, long offset, File[] downloadFiles) throws Exception;
+    void readDownloadFile(String key, long offset, File[] downloadFiles) throws Exception;// todo 这些或许不应该设计在api里面，因为用户可能不关心？
 }

@@ -1,9 +1,8 @@
 package qingzhou.console.search;
 
 import qingzhou.console.ConsoleUtil;
-import qingzhou.console.auth.AccessControl;
-import qingzhou.console.controller.RestContext;
 import qingzhou.console.RequestImpl;
+import qingzhou.console.controller.RestContext;
 import qingzhou.console.login.LoginManager;
 import qingzhou.framework.app.I18n;
 import qingzhou.framework.app.Lang;
@@ -113,7 +112,7 @@ public class SearchFilter implements Filter<RestContext> {
             try (PrintWriter writer = response.getWriter()) {
                 if (user != null && !"".equals(keyword)) {
                     RequestImpl qzRequest = (RequestImpl) context.request;
-                    writer.write(search(qzRequest.getTargetType(), qzRequest.getTargetName(), user, keyword.toLowerCase()).replaceAll("[\\n\\r]", ""));
+                    writer.write(search(keyword.toLowerCase()).replaceAll("[\\n\\r]", ""));
                 } else {
                     writer.write("{\"success\":\"true\",\"msg\":[]}");
                 }
@@ -125,7 +124,7 @@ public class SearchFilter implements Filter<RestContext> {
         return true;
     }
 
-    private String search(String targetType, String targetName, String user, String keyword) {
+    private String search(String keyword) {
         StringBuilder result = new StringBuilder();
         List<Map<String, String>> langList = new HashMap<>(INFOS_FOR_SEARCH).getOrDefault(I18n.getI18nLang(), new ArrayList<>());
         Map<String, List<Map<String, String>>> modelMap = langList.stream().collect(Collectors.groupingBy(map -> map.get("model")));
@@ -133,10 +132,7 @@ public class SearchFilter implements Filter<RestContext> {
         Map<String, Boolean> authMap = new HashMap<>();
         modelMap.forEach((k, v) -> {
             for (String action : v.get(0).get("modelActions").split(",")) {
-                if (AccessControl.canAccess(targetType, targetName, action, user)) {
-                    authMap.put(k, true);
-                    return;
-                }
+                authMap.put(k, true);
             }
             authMap.put(k, false);
         });
