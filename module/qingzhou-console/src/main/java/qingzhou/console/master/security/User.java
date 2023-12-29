@@ -273,7 +273,7 @@ public class User extends MasterModelBase implements AddModel {
     @Override
     public int getTotalSize(Request request) throws Exception {
         XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
-        List<String> tenantUserIds = xmlUtil.getAttributeList(getAllUserIdExpression(request.getLoginUser()));
+        List<String> tenantUserIds = xmlUtil.getAttributeList(getAllUserIdExpression(request.getUserName()));
         return tenantUserIds == null ? 0 : tenantUserIds.size();
     }
 

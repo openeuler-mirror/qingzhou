@@ -114,7 +114,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
 
     @Override
     public List<Map<String, String>> listInternal(Request request, int start, int size) throws Exception {
-        String expression = ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getLoginUser()), null);
+        String expression = ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getUserName()), null);
         XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
         List<Map<String, String>> result = new ArrayList<>();
         start += 1; // 索引从1开始

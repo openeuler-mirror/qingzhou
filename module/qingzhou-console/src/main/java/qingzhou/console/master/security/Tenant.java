@@ -112,7 +112,7 @@ public class Tenant extends MasterModelBase implements AddModel {
     @Override
     public void add(Request request, Response response) throws Exception {
         // 校验用户是否为超级管理员，系统管理员
-        String loginUser = request.getLoginUser();
+        String loginUser = request.getUserName();
         if(!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(loginUser, false)){
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));

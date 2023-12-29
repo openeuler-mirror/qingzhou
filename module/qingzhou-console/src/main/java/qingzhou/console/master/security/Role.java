@@ -179,7 +179,7 @@ public class Role extends MasterModelBase implements AddModel {
         }
 
         Map<String, String> properties = prepareParameters(request);
-        String expression = ServerXml.getTenantRoleNodeExpression(ServerXml.getTenant(request.getLoginUser()), null);
+        String expression = ServerXml.getTenantRoleNodeExpression(ServerXml.getTenant(request.getUserName()), null);
         XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
         xmlUtil.addNew(expression, Constants.MODEL_NAME_role, properties);
         xmlUtil.write();
@@ -220,7 +220,7 @@ public class Role extends MasterModelBase implements AddModel {
         }
 
         XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
-        xmlUtil.delete(ServerXml.getTenantRoleNodeExpression(ServerXml.getTenant(request.getLoginUser()), request.getId()));
+        xmlUtil.delete(ServerXml.getTenantRoleNodeExpression(ServerXml.getTenant(request.getUserName()), request.getId()));
         xmlUtil.write();
     }
 
@@ -251,7 +251,7 @@ public class Role extends MasterModelBase implements AddModel {
         }
         if (results.size() < size) {
             XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
-            List<String> tenantRoleIds = xmlUtil.getAttributeList(getAllRoleIdExpression(request.getLoginUser()));
+            List<String> tenantRoleIds = xmlUtil.getAttributeList(getAllRoleIdExpression(request.getUserName()));
             int tenantRoleSize = tenantRoleIds == null ? 0 : tenantRoleIds.size();
             String tenant = ServerXml.getTenant(request.getUserName());
             start = Math.max(start - systemRoles.length, 0);
@@ -268,7 +268,7 @@ public class Role extends MasterModelBase implements AddModel {
     @Override
     public int getTotalSize(Request request) throws Exception {
         XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
-        List<String> tenantRoleIds = xmlUtil.getAttributeList(getAllRoleIdExpression(request.getLoginUser()));
+        List<String> tenantRoleIds = xmlUtil.getAttributeList(getAllRoleIdExpression(request.getUserName()));
         int systemRoleSize = ServerXml.ConsoleRole.BuiltinRoleEnum.values().length;
         int tenantRoleSize = tenantRoleIds == null ? 0 : tenantRoleIds.size();
         return systemRoleSize + tenantRoleSize;
