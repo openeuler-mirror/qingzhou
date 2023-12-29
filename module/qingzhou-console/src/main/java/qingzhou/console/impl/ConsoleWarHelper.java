@@ -15,6 +15,7 @@ import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
 
 import java.io.File;
+import java.nio.file.Paths;
 
 public class ConsoleWarHelper {
     static FrameworkContext fc;
@@ -83,8 +84,16 @@ public class ConsoleWarHelper {
         return fc.getDomain();
     }
 
+    public static File getHome() {
+        return fc.getHome();
+    }
+
     public static File getLogs() {
         return new File(getDomain(), "logs");
+    }
+
+    public static File getServerXml() {
+        return Paths.get(getDomain().getAbsolutePath(), "conf", "qingzhou.xml").toFile();
     }
 
     public static Logger getLogger() {

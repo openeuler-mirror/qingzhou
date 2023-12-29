@@ -13,7 +13,6 @@ import qingzhou.console.master.MasterModelBase;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.util.XmlUtil;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.util.Map;
 import java.util.Objects;
@@ -55,7 +54,7 @@ public class ConsoleSecurity extends MasterModelBase implements EditModel {
 
     @Override
     public void update(Request request, Response response) throws Exception {
-        XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
         boolean written = false;
         String[] ss = {"disableUpload", "disableDownload"};
         for (String s : ss) {
@@ -97,7 +96,7 @@ public class ConsoleSecurity extends MasterModelBase implements EditModel {
         ConsoleSecurity consoleSecurity = new ConsoleSecurity();
         consoleSecurity.trustedIP = ServerXml.get().trustedIP();
         consoleSecurity.disableUpload = true;
-        XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
         Map<String, String> attributes = xmlUtil.getAttributes("//root/console");
         String disableUpload = attributes.getOrDefault("disableUpload", "true");
         consoleSecurity.disableUpload = Boolean.parseBoolean(disableUpload);

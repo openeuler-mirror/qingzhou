@@ -79,6 +79,7 @@ public class Validator {
             consoleContext.addI18N("validator.hasRefModel", new String[]{"%s 正在被其它模块使用，不支持对其进行该操作，使用模块：%s", "en:%s is being used by other modules, this operation cannot be performed on it, using module: %s"});
         }
     }
+
     public static boolean validate(Request request, Response response, ModelManager modelManager) throws Exception {
         if (!AddModel.ACTION_NAME_ADD.equals(request.getActionName()) && !AddModel.ACTION_NAME_UPDATE.equals(request.getActionName())) {
             return true;

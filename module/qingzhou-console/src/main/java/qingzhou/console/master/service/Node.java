@@ -22,7 +22,6 @@ import qingzhou.console.util.IPUtil;
 import qingzhou.console.util.SafeCheckerUtil;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.util.XmlUtil;
-import qingzhou.framework.impl.ServerUtil;
 import qingzhou.ssh.SSHService;
 import qingzhou.ssh.SshResult;
 
@@ -335,7 +334,7 @@ public class Node extends MasterModelBase implements AddModel {
             return;
         }
 
-        File destNodeTempDir = FileUtil.newFile(ServerUtil.getHome(), nodeZip);
+        File destNodeTempDir = FileUtil.newFile(ConsoleWarHelper.getHome(), nodeZip);
         SSHService sshClient = getSshClient(node);
         try {
             // 校验node是否重复
@@ -406,7 +405,7 @@ public class Node extends MasterModelBase implements AddModel {
         if (localIps != null && localIps.size() > 0) {
             if (localIps.contains(ip)) {
                 // 判断端口是否是master在用的端口
-                Set<String> ports = getUsedPorts(Paths.get(ServerUtil.getHome().getCanonicalPath(), "domains"));
+                Set<String> ports = getUsedPorts(Paths.get(ConsoleWarHelper.getHome().getCanonicalPath(), "domains"));
                 if (ports.size() > 0) {
                     if (ports.contains(port)) {
                         response.setSuccess(false);
@@ -473,7 +472,7 @@ public class Node extends MasterModelBase implements AddModel {
         boolean updateLocalKey;
         try {
             PasswordCipher cipher = new PasswordCipherImpl(Encryptor.decrypt(remoteKey));
-            String localKey = cipher.encrypt(Encryptor.getOrInitKey(ServerUtil.getDomain(), SecureKey.localKeyName));
+            String localKey = cipher.encrypt(Encryptor.getOrInitKey(ConsoleWarHelper.getDomain(), SecureKey.localKeyName));
             updateLocalKey = RemoteClient.sendReq(String.format("http://%s:%s%s%s", ip, port, Constants.remoteApp, Constants.remotePath), new Object[]{localKey}, "updateLocalKey");
         } catch (Exception e) {
             updateLocalKey = false;
@@ -550,7 +549,7 @@ public class Node extends MasterModelBase implements AddModel {
     }
 
     private void buildNodeZip(Response response, File destNodeTempDir, Map<String, String> node) throws Exception {
-        File qzHome = ServerUtil.getHome();
+        File qzHome = ConsoleWarHelper.getHome();
         if (!qzHome.exists()) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("node.qingzhouhome.notexist"));
@@ -561,7 +560,7 @@ public class Node extends MasterModelBase implements AddModel {
             FileUtil.forceDeleteQuietly(destNodeTempDir);
         }
 
-        File libDir = ServerUtil.getLib();
+        File libDir = ConsoleWarHelper.getLibDir();
         FileUtil.copyFileOrDirectory(libDir, FileUtil.newFile(destNodeTempDir, "framework", libDir.getName()));
         copyBin(FileUtil.newFile(qzHome, "bin"), FileUtil.newFile(destNodeTempDir, "bin"), true, false);
         FileUtil.copyFileOrDirectory(FileUtil.newFile(qzHome, "apps"), FileUtil.newFile(destNodeTempDir, "apps"));
@@ -575,10 +574,10 @@ public class Node extends MasterModelBase implements AddModel {
             FileUtil.mkdirs(destDomain1Dir);
         }
         String remoteKey = SecureKey.getSecureKey(destDomain1Dir, SecureKey.remoteKeyName, args -> Encryptor.getOrInitKey(destDomain1Dir, SecureKey.remoteKeyName));
-        SecureKey.writeSecureKey(destDomain1Dir, SecureKey.localKeyName, Encryptor.getOrInitKey(ServerUtil.getDomain(), SecureKey.localKeyName)); // for #NC-3321
+        SecureKey.writeSecureKey(destDomain1Dir, SecureKey.localKeyName, Encryptor.getOrInitKey(ConsoleWarHelper.getDomain(), SecureKey.localKeyName)); // for #NC-3321
 
         node.put(SecureKey.remoteKeyName, Encryptor.encrypt(remoteKey));
-        File domainTemplateDir = FileUtil.newFile(destNodeHome.getParent(), "framework", ServerUtil.getLib().getName(), "domain_template");
+        File domainTemplateDir = FileUtil.newFile(destNodeHome.getParent(), "framework", ConsoleWarHelper.getLibDir().getName(), "domain_template");
         FileUtil.copyFileOrDirectory(domainTemplateDir, destDomain1Dir);
         FileUtil.forceDeleteQuietly(FileUtil.newFile(destDomain1Dir, "conf", "console.xml"));
 
@@ -607,9 +606,9 @@ public class Node extends MasterModelBase implements AddModel {
     public static void copyLicFile(File destDir) {
         try {
             File licenseFile;
-            String licenseDir = new XmlUtil(ServerUtil.getServerXml()).getSpecifiedAttribute("/root/server", "licenseDir");
+            String licenseDir = new XmlUtil(ConsoleWarHelper.getServerXml()).getSpecifiedAttribute("/root/server", "licenseDir");
             if (StringUtil.isBlank(licenseDir)) {
-                licenseFile = FileUtil.newFile(ServerUtil.getHome(), "license.dat");
+                licenseFile = FileUtil.newFile(ConsoleWarHelper.getHome(), "license.dat");
             } else {
                 licenseFile = FileUtil.newFile(licenseDir, "license.dat");
             }
@@ -804,7 +803,7 @@ public class Node extends MasterModelBase implements AddModel {
     private File geTempFile(String name) {
         String fileName = "ssh_" + name;
         String basePath = "conf" + File.separator + fileName;
-        return FileUtil.newFile(ServerUtil.getDomain(), basePath);
+        return FileUtil.newFile(ConsoleWarHelper.getDomain(), basePath);
     }
 
     private String invertResult(String val) {
