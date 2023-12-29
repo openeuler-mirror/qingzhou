@@ -74,7 +74,7 @@ public class Controller implements BundleActivator {
                 appInfoManager.getApps().forEach(s -> {
                     AppInfoImpl appInfo = (AppInfoImpl) appInfoManager.getAppInfo(s);
                     try {
-                        appInfo.getQingZhouApp().start(appInfo.getAppContext());
+                        appInfo.getQingZhouApp().start();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -87,7 +87,7 @@ public class Controller implements BundleActivator {
                 appInfoManager.getApps().forEach(s -> {
                     AppInfoImpl appInfo = (AppInfoImpl) appInfoManager.getAppInfo(s);
                     try {
-                        appInfo.getQingZhouApp().stop(appInfo.getAppContext());
+                        appInfo.getQingZhouApp().stop();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

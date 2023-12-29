@@ -9,7 +9,7 @@
         <version>1.0</version>
     </parent>
 
-    <artifactId>ext</artifactId>
+    <artifactId>module-ext</artifactId>
     <packaging>pom</packaging>
 
     <modules>
