@@ -1,16 +1,17 @@
 package qingzhou.console.view.impl;
 
-import qingzhou.console.controller.InvokeAction;
-import qingzhou.console.controller.RestContext;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.DownloadModel;
 import qingzhou.console.RequestImpl;
+import qingzhou.console.controller.InvokeAction;
+import qingzhou.console.controller.RestContext;
 import qingzhou.console.util.DownLoadUtil;
 import qingzhou.console.util.TimeUtil;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
 import java.util.Map;
 
 public class FileView implements View {
@@ -43,8 +44,10 @@ public class FileView implements View {
             }
 
             RequestImpl req = ((RequestImpl) request).clone();
-            req.setParameterNames(new String[]{DownloadModel.DOWNLOAD_KEY, DownloadModel.DOWNLOAD_OFFSET});
-            req.setParameterValues(new String[]{key, String.valueOf(offset)});
+            Map<String, String> data = new HashMap<>();
+            data.put(DownloadModel.DOWNLOAD_KEY, key);
+            data.put(DownloadModel.DOWNLOAD_OFFSET, String.valueOf(offset));
+            req.setParameters(data);
             Response res = new InvokeAction().invoke(req);
             if (res.isSuccess()) {
                 result = res.downloadData();

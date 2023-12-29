@@ -46,7 +46,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
             nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
     public void show(Request request, Response response) throws Exception {
-        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(request.getLoginUser(), true)) {
+        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(request.getUserName(), true)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));
             return;
@@ -56,7 +56,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
         XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
         UserRole userRole = new UserRole();
         userRole.id = id;
-        userRole.roles = xmlUtils.getSpecifiedAttribute(ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getLoginUser()), id), "roles");
+        userRole.roles = xmlUtils.getSpecifiedAttribute(ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getUserName()), id), "roles");
         response.modelData().addDataObject(userRole, getConsoleContext());
     }
 
@@ -70,7 +70,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
             return;
         }
 
-        String tenant = ServerXml.getTenant(request.getLoginUser());
+        String tenant = ServerXml.getTenant(request.getUserName());
         String userId = request.getId();
         XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
         String path = ServerXml.getTenantUserNodeExpression(tenant, userId);
@@ -100,7 +100,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
 
     @Override
     public void list(Request request, Response response) throws Exception {
-        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(request.getLoginUser(), true)) {
+        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(request.getUserName(), true)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));
             return;
@@ -110,7 +110,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
 
     @Override
     public List<Map<String, String>> listInternal(Request request, int start, int size) throws Exception {
-        String expression = ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getLoginUser()), null);
+        String expression = ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getUserName()), null);
         XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
         List<Map<String, String>> result = new ArrayList<>();
         start += 1; // 索引从1开始
@@ -118,7 +118,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
         for (String userId : userList) {
             UserRole userRole = new UserRole();
             userRole.id = userId;
-            userRole.roles = xmlUtils.getSpecifiedAttribute(ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getLoginUser()), userId), "roles");
+            userRole.roles = xmlUtils.getSpecifiedAttribute(ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getUserName()), userId), "roles");
             result.add(mapper(userRole));
         }
 
@@ -128,7 +128,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
     @Override
     public int getTotalSize(Request request) throws Exception {
         XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
-        String expression = ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getLoginUser()), null);
+        String expression = ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getUserName()), null);
         return xmlUtils.getTotalSize(expression.substring(2) + "/user/@" + ListModel.FIELD_NAME_ID);
     }
 
@@ -138,7 +138,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
             List<Option> options = new ArrayList<>();
             try {
                 XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
-                List<String> roleIds = xmlUtil.getAttributeList(Role.getAllRoleIdExpression(request.getLoginUser()));
+                List<String> roleIds = xmlUtil.getAttributeList(Role.getAllRoleIdExpression(request.getUserName()));
                 for (String roleId : roleIds) {
                     options.add(Option.of(roleId));
                 }
@@ -179,7 +179,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
 
     private void writeForbid(Request request, Response response) {
         // 校验用户是否为超级管理员，系统管理员
-        String loginUser = request.getLoginUser();
+        String loginUser = request.getUserName();
         if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(loginUser, true)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));

@@ -13,9 +13,5 @@ public interface Request {
 
     String getParameter(String parameterName);
 
-    String getClientIp();
-
-    String getUri();
-
-    String getLoginUser();
+    String getUserName();
 }

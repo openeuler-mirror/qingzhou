@@ -5,9 +5,11 @@ import qingzhou.api.console.ModelAction;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.console.ConsoleUtil;
+import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.auth.AccessControl;
 import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.login.LoginManager;
 import qingzhou.console.search.SearchFilter;
 import qingzhou.console.security.AsymmetricFilter;
 import qingzhou.console.util.Constants;
@@ -29,11 +31,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
@@ -139,32 +137,30 @@ public class RESTController extends HttpServlet {
 
     private Request buildRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> fileAttachments) throws IOException {
         List<String> rest = retrieveRestPathInfo(req);
-        int restDepth = 5;
+        int restDepth = 4;
         if (rest.size() < restDepth) { // must have model & action
             String msg = "Parameters missing, make sure to use the correct REST interface: " + req.getRequestURI();
             resp.getWriter().print(JsonView.buildErrorResponse(msg));
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
             return null;
         }
-        String targetType = rest.get(1);
-        String targetName = rest.get(2);
-        RequestBuilder builder = new RequestBuilder()
-                .viewName(rest.get(0))
-                .targetType(targetType)
-                .targetName(targetName)
-                .modelName(rest.get(3))
-                .actionName(rest.get(4));
+
+        RequestImpl request = new RequestImpl();
+        request.setViewName(rest.get(0));
+        request.setAppName(rest.get(1));
+        request.setModelName(rest.get(2));
+        request.setActionName(rest.get(3));
+        request.setUserName(LoginManager.getLoginUser(req.getSession(false)));
 
         if (rest.size() > restDepth) {
             String id = rest.get(restDepth);
-            builder.id(id);
+            request.setId(id);
         }
-        String appName = ConsoleUtil.getAppName(targetType, targetName);
         boolean actionFound = false;
-        ModelAction[] actions = ConsoleUtil.getModelManager(appName).getModelActions(builder.modelName());
+        ModelAction[] actions = ConsoleUtil.getModelManager(request.getAppName()).getModelActions(request.getModelName());
         if (actions != null) {
             for (ModelAction ma : actions) {
-                if (ma.name().equals(builder.actionName())) {
+                if (ma.name().equals(request.getActionName())) {
                     actionFound = true;
                     break;
                 }
@@ -177,9 +173,33 @@ public class RESTController extends HttpServlet {
             return null;
         }
 
-        builder.request(req)
-                .fileAttachments(fileAttachments);
-        return builder.build();
+        Map<String, String> data = new HashMap<>();
+        Enumeration<String> parameterNames = req.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            String k = parameterNames.nextElement();
+            String[] v = req.getParameterValues(k);
+            if (v != null) {
+                data.put(k, String.join(Constants.DATA_SEPARATOR, v));
+            }
+        }
+        request.setParameters(data);
+        if (fileAttachments != null) {
+            // todo
+//                requestImpl.setFileAttachments(fileAttachments);
+//                for (Map.Entry<String, String> entry : fileAttachments.entrySet()) {
+//                    if (StringUtil.notBlank(entry.getValue())) {
+//                        int i = names.indexOf(entry.getKey());
+//                        if (i == -1) {
+//                            names.add(entry.getKey());
+//                            vals.add(entry.getValue());
+//                        } else {
+//                            names.set(i, entry.getValue());
+//                        }
+//                    }
+//                }
+        }
+
+        return request;
     }
 
     private Map<String, String> prepareUploadFiles(HttpServletRequest request) throws Exception {
