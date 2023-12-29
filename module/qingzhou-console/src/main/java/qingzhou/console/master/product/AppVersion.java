@@ -120,10 +120,10 @@ public class AppVersion extends MasterModelBase implements AddModel {
         if (app == null || app.isEmpty()) {
             return;
         }
-        List<Map<String, String>> instanceList = getDataStore().getDataByKey(Constants.MODEL_NAME_instance, "app", id);
+        List<Map<String, String>> instanceList = getDataStore().getDataByKey(Constants.MODEL_NAME_node, "app", id);
         if (instanceList != null && instanceList.size() > 0) {
             String thisModel = I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model." + request.getModelName()) + "(" + id + ")";
-            String detail = String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "validator.hasRefModel"), thisModel, I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model." + Constants.MODEL_NAME_instance));
+            String detail = String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "validator.hasRefModel"), thisModel, I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model." + Constants.MODEL_NAME_node));
             response.setSuccess(false);
             response.setMsg(detail);
             return;

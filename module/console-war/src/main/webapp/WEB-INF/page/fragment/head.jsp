@@ -47,9 +47,6 @@
 <%@ page import="qingzhou.console.RequestImpl" %>
 <%@ page import="qingzhou.api.console.data.Response" %>
 <%@ page import="qingzhou.console.ResponseImpl" %>
-<%@ page import="qingzhou.console.util.Constants" %>
-<%@ page import="qingzhou.console.util.SafeCheckerUtil" %>
-<%@ page import="qingzhou.console.util.StringUtil" %>
 <%@ page import="qingzhou.console.ServerXml" %>
 <%@ page import="qingzhou.framework.app.Lang" %>
 <%@ page import="qingzhou.framework.app.I18n" %>
@@ -118,7 +115,7 @@
 
 <%--公用“通知”消息提示--%>
 <%
-    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, Constants.MODEL_NAME_instance, Constants.QINGZHOU_MASTER_APP_NAME, Constants.MODEL_NAME_notice);
+    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, Constants.MODEL_NAME_node, Constants.QINGZHOU_MASTER_APP_NAME, Constants.MODEL_NAME_notice);
     StringBuilder noticeBuilder = new StringBuilder();
     for (int jj = 0; jj < noticeModes.size(); jj++) {
         Map<String, String> mb = noticeModes.get(jj);
@@ -129,7 +126,7 @@
             noticeBuilder.append("<br>");
         }
     }
-    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():Constants.MODEL_NAME_instance, Constants.QINGZHOU_MASTER_APP_NAME +"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
+    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():Constants.MODEL_NAME_node, Constants.QINGZHOU_MASTER_APP_NAME +"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
         int noticeSize = noticeModes.size();
 %>
 <script type="text/javascript">

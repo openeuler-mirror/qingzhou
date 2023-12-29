@@ -76,7 +76,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
             httpServletResponse.sendRedirect(ConsoleUtil.encodeRedirectURL(httpServletRequest, httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
-                    "/" + Constants.MODEL_NAME_instance +
+                    "/" + Constants.MODEL_NAME_node +
                     "/" + Constants.QINGZHOU_MASTER_APP_NAME +
                     "/" + Constants.MODEL_NAME_password +
                     "/edit" +

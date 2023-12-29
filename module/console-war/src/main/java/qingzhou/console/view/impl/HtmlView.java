@@ -36,7 +36,7 @@ public class HtmlView implements View {
 
 
         if (ConsoleUtil.ACTION_NAME_TARGET.equals(actionName)) {
-            if (Constants.MODEL_NAME_cluster.equals(modelName) || Constants.MODEL_NAME_instance.equals(modelName)) {
+            if (Constants.MODEL_NAME_cluster.equals(modelName) || Constants.MODEL_NAME_node.equals(modelName)) {
                 request.setModelName(Constants.MODEL_NAME_home);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
             }

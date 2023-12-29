@@ -79,7 +79,7 @@ public interface Constants { // TODO 需要清理失效的项目
     String MODEL_NAME_busythread = "busythread";
     String MODEL_NAME_encryptor = "encryptor";
     String MODEL_NAME_centralizedconfig = "centralizedconfig";
-    String MODEL_NAME_instance = "instance";
+    String MODEL_NAME_node = "node";
     String MODEL_NAME_cluster = "cluster";
     String MODEL_NAME_sessionserver = "sessionserver";
     String MODEL_NAME_loadbalanceserver = "loadbalanceserver";
@@ -112,7 +112,6 @@ public interface Constants { // TODO 需要清理失效的项目
     String MODEL_NAME_auditconfig = "auditconfig";
     String MODEL_NAME_accesslog = "accesslog";
     String MODEL_NAME_logpush = "logpush";
-    String MODEL_NAME_node = "node";
     String MODEL_NAME_appversion = "appversion";
     String MODEL_NAME_backup = "backup";
     String MODEL_NAME_tenant = "tenant";

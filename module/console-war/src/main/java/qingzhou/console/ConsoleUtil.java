@@ -6,7 +6,6 @@ import qingzhou.api.console.Model;
 import qingzhou.api.console.ModelAction;
 import qingzhou.api.console.ModelField;
 import qingzhou.api.console.ModelManager;
-import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.group.GroupManager;
 import qingzhou.api.console.model.EditModel;
@@ -100,12 +99,12 @@ public class ConsoleUtil {
         menuBuilder.append("</li>");
     }
 
-    static void printChildrenMenu(Properties menu, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String curModel, StringBuilder menuBuilder) {
+    static void printChildrenMenu(Properties menu, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName, String curModel, StringBuilder menuBuilder) {
         String model = menu.getProperty("name");
         String action = menu.getProperty("entryAction");
         menuBuilder.append("<li class=\"treeview " + (model.equals(curModel) ? " active" : "") + "\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + targetType + "/" + targetName + "/" + model + "/" + action;
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + targetType + "/" + targetName + "/" + appName + "/" + model + "/" + action;
         menuBuilder.append("<a href='" + ConsoleUtil.encodeURL(request, response, url) + "' modelName='" + model + "'>");
         menuBuilder.append("<i class='icon icon-" + menu.getProperty("icon") + "'></i>");
         menuBuilder.append("<span>" + I18n.getString(getAppName(targetType, targetName), "model." + model) + "</span>");
@@ -150,15 +149,15 @@ public class ConsoleUtil {
         return menuBuilder.toString();
     }
 
-    public static String buildMenuHtmlBuilder(List<Properties> models, String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String curModel) {
+    public static String buildMenuHtmlBuilder(List<Properties> models, String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName, String curModel) {
         StringBuilder builder = new StringBuilder();
-        buildMenuHtmlBuilder(models, request, response, viewName, targetType, targetName, curModel, builder, true);
+        buildMenuHtmlBuilder(models, request, response, viewName, targetType, targetName, appName, curModel, builder, true);
         String menus = builder.toString();
         String favoritesMenu = printFavoritesMenu(loginUser, request, response, viewName, targetType, targetName);
         return String.format(menus, StringUtil.isBlank(favoritesMenu) ? " " : favoritesMenu);
     }
 
-    private static void buildMenuHtmlBuilder(List<Properties> models, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String curModel, StringBuilder builder, boolean needFavoritesMenu) {
+    private static void buildMenuHtmlBuilder(List<Properties> models, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName, String curModel, StringBuilder builder, boolean needFavoritesMenu) {
         models.sort(java.util.Comparator.comparing(o -> String.valueOf(o.get("order"))));
 
         for (int i = 0; i < models.size(); i++) {
@@ -172,12 +171,12 @@ public class ConsoleUtil {
             StringBuilder childrenBuilder = new StringBuilder();
             Object c = menu.get("children");
             if (c == null) {
-                printChildrenMenu(menu, request, response, viewName, targetType, targetName, curModel, childrenBuilder);
+                printChildrenMenu(menu, request, response, viewName, targetType, targetName, appName, curModel, childrenBuilder);
                 builder.append(childrenBuilder);
             } else {
                 List<Properties> childrenMenus = (List<Properties>) c;
                 StringBuilder parentBuilder = new StringBuilder();
-                buildMenuHtmlBuilder(childrenMenus, request, response, viewName, targetType, targetName, curModel, childrenBuilder, false);
+                buildMenuHtmlBuilder(childrenMenus, request, response, viewName, targetType, targetName, appName, curModel, childrenBuilder, false);
                 printParentMenu(menu, targetType, targetName, curModel, parentBuilder, childrenBuilder);
                 builder.append(parentBuilder.toString());
             }

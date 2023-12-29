@@ -221,7 +221,7 @@ public class ServerXml { // todo 考虑由 admin service 来取代
     }
 
     public static String getAppName(String targetType, String targetName) {
-        if (Constants.MODEL_NAME_instance.equals(targetType)) {
+        if (Constants.MODEL_NAME_node.equals(targetType)) {
             if (Constants.QINGZHOU_MASTER_APP_NAME.equals(targetName)
                     || Constants.QINGZHOU_DEFAULT_APP_NAME.equals(targetName)
                     || "domain1".equals(targetName)) {
@@ -373,7 +373,7 @@ public class ServerXml { // todo 考虑由 admin service 来取代
             root("超级管理员", null, null, null, null),
             system("系统管理员", null, null
                     , null, new String[]{
-                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_instance,
+                    Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_node,
                     Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_cluster,
                     Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_appversion,
                     Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_backup,
@@ -384,7 +384,7 @@ public class ServerXml { // todo 考虑由 admin service 来取代
                     Constants.QINGZHOU_MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_auditconfig
             }),
             tenant("租户管理员", new String[]{Constants.QINGZHOU_MASTER_APP_NAME}, new String[]{
-                    Constants.MODEL_NAME_instance,
+                    Constants.MODEL_NAME_node,
                     Constants.MODEL_NAME_cluster,
                     Constants.MODEL_NAME_appversion,
                     Constants.MODEL_NAME_backup,
