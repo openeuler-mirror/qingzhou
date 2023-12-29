@@ -50,12 +50,13 @@
 <%@ page import="qingzhou.console.ServerXml" %>
 <%@ page import="qingzhou.framework.app.Lang" %>
 <%@ page import="qingzhou.framework.app.I18n" %>
+<%@ page import="qingzhou.console.TargetTypeEnum" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     Response qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
-    String initAppName = qzRequest == null ? Constants.QINGZHOU_MASTER_APP_NAME : ConsoleUtil.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName());
+    String initAppName = qzRequest == null ? Constants.QINGZHOU_MASTER_APP_NAME : qzRequest.getAppName();
     ModelManager modelManager = ConsoleUtil.getModelManager(initAppName);
 %>
 
@@ -115,7 +116,7 @@
 
 <%--公用“通知”消息提示--%>
 <%
-    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, Constants.MODEL_NAME_node, Constants.QINGZHOU_MASTER_APP_NAME, Constants.MODEL_NAME_notice);
+    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, TargetTypeEnum.node.name(), Constants.QINGZHOU_DEFAULT_NODE_NAME, Constants.QINGZHOU_MASTER_APP_NAME, Constants.MODEL_NAME_notice);
     StringBuilder noticeBuilder = new StringBuilder();
     for (int jj = 0; jj < noticeModes.size(); jj++) {
         Map<String, String> mb = noticeModes.get(jj);
@@ -126,7 +127,7 @@
             noticeBuilder.append("<br>");
         }
     }
-    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():Constants.MODEL_NAME_node, Constants.QINGZHOU_MASTER_APP_NAME +"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
+    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():TargetTypeEnum.node.name(), Constants.QINGZHOU_MASTER_APP_NAME +"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
         int noticeSize = noticeModes.size();
 %>
 <script type="text/javascript">

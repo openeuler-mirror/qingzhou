@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.console.TargetTypeEnum" %>
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
 <%
@@ -291,7 +292,7 @@
                             <%
                                 int tabNoticeSize = 0;
                                 if (AccessControl.canAccess(qzRequest.getTargetType(), Constants.QINGZHOU_MASTER_APP_NAME+"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
-                                    tabNoticeSize = StringUtil.isBlank(currentUser) ? 0 : ConsoleUtil.listModels(request, Constants.MODEL_NAME_node, Constants.QINGZHOU_MASTER_APP_NAME, Constants.MODEL_NAME_notice).size();
+                                    tabNoticeSize = StringUtil.isBlank(currentUser) ? 0 : ConsoleUtil.listModels(request, TargetTypeEnum.node.name(), Constants.QINGZHOU_DEFAULT_NODE_NAME, Constants.QINGZHOU_MASTER_APP_NAME, Constants.MODEL_NAME_notice).size();
                                 }
                             %>
                             <span class="noticeNumber label label-badge" style="display:<%=tabNoticeSize > 0 ? "inline-block" : "none" %>;"><%=tabNoticeSize%></span>

@@ -81,7 +81,7 @@
     </div>
 
     <%
-        if (ConsoleUtil.isListModel(ConsoleUtil.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), qzRequest.getModelName())) {
+        if (ConsoleUtil.isListModel(qzRequest.getAppName(), qzRequest.getModelName())) {
     %>
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
         <div class="form-btn">

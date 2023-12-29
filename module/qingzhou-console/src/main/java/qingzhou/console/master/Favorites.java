@@ -177,15 +177,16 @@ public class Favorites extends MasterModelBase implements ListModel {
         int i = favorite.indexOf("/");
         if (i > 0) {
             String[] favorites = favorite.split("/");
-            String targetType = favorites[0];
+            String targetType = favorites[0];//TODO
             String targetName = favorites[1];
-            ConsoleContext consoleContext = ConsoleWarHelper.getAppConsoleContext(ServerXml.getAppName(targetType, targetName));
+            String appName = favorites[2];
+            ConsoleContext consoleContext = ConsoleWarHelper.getAppConsoleContext(appName);
             if (consoleContext != null) {
-                String model = favorites[2];
-                String action = favorites[3];
+                String model = favorites[3];
+                String action = favorites[4];
                 final ModelAction modelAction = consoleContext.getModelManager().getModelAction(model, action);
                 if (modelAction != null) {
-                    return targetName + "/" + model + "/" + action;
+                    return appName + "/" + model + "/" + action;
                 }
             }
         }

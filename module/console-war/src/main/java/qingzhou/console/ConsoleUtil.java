@@ -63,10 +63,6 @@ public class ConsoleUtil {
         ConsoleWarHelper.getLogger().warn(msg);
     }
 
-    public static String getAppName(String targetType, String targetName) {
-        return ServerXml.getAppName(targetType, targetName);
-    }
-
     public static ModelManager getModelManager(String appName) {
         return getAppContext(appName).getConsoleContext().getModelManager();
     }
@@ -107,12 +103,12 @@ public class ConsoleUtil {
         String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + targetType + "/" + targetName + "/" + appName + "/" + model + "/" + action;
         menuBuilder.append("<a href='" + ConsoleUtil.encodeURL(request, response, url) + "' modelName='" + model + "'>");
         menuBuilder.append("<i class='icon icon-" + menu.getProperty("icon") + "'></i>");
-        menuBuilder.append("<span>" + I18n.getString(getAppName(targetType, targetName), "model." + model) + "</span>");
+        menuBuilder.append("<span>" + I18n.getString(appName, "model." + model) + "</span>");
         menuBuilder.append("</a>");
         menuBuilder.append("</li>");
     }
 
-    static String printFavoritesMenu(String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName) {
+    static String printFavoritesMenu(String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName) {
         StringBuilder menuBuilder = new StringBuilder();
         List<String> myFavorites = ServerXml.getInstanceFavorites(loginUser, targetName);
         if (myFavorites.size() > 0) {
@@ -137,7 +133,7 @@ public class ConsoleUtil {
                     menuBuilder.append("<li class=\"treeview\">");
                     menuBuilder.append("<a href='" + ConsoleUtil.encodeURL(request, response, viewName + "/" + targetType + "/" + instanceName + "/" + modelName + "/" + actionName) + "' modelName='" + modelName + "'>");
                     menuBuilder.append("<i class='icon icon-" + modelAction.icon() + "'></i>");
-                    menuBuilder.append("<span>" + I18n.getString(getAppName(targetType, targetName), "model." + modelName) + "</span>");
+                    menuBuilder.append("<span>" + I18n.getString(appName, "model." + modelName) + "</span>");
                     menuBuilder.append("</a>");
                     menuBuilder.append("</li>");
                 }
@@ -153,7 +149,7 @@ public class ConsoleUtil {
         StringBuilder builder = new StringBuilder();
         buildMenuHtmlBuilder(models, request, response, viewName, targetType, targetName, appName, curModel, builder, true);
         String menus = builder.toString();
-        String favoritesMenu = printFavoritesMenu(loginUser, request, response, viewName, targetType, targetName);
+        String favoritesMenu = printFavoritesMenu(loginUser, request, response, viewName, targetType, targetName, appName);
         return String.format(menus, StringUtil.isBlank(favoritesMenu) ? " " : favoritesMenu);
     }
 
@@ -282,8 +278,7 @@ public class ConsoleUtil {
         return modelActions.toArray(new ModelAction[0]);
     }
 
-    public static List<Map<String, String>> listModels(HttpServletRequest request, String targetType, String targetName, String modelName) {
-        String appName = getAppName(targetType, targetName);
+    public static List<Map<String, String>> listModels(HttpServletRequest request, String targetType, String targetName, String appName, String modelName) {
        /* ModelManagerImpl modelManager = (ModelManagerImpl) getModelManager(appName); todo
         if (modelManager == null) {
             return new ArrayList<>();

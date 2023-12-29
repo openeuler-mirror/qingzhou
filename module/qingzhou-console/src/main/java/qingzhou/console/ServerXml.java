@@ -220,29 +220,6 @@ public class ServerXml { // todo 考虑由 admin service 来取代
         }
     }
 
-    public static String getAppName(String targetType, String targetName) {
-        if (Constants.MODEL_NAME_node.equals(targetType)) {
-            if (Constants.QINGZHOU_MASTER_APP_NAME.equals(targetName)
-                    || Constants.QINGZHOU_DEFAULT_APP_NAME.equals(targetName)
-                    || "domain1".equals(targetName)) {
-                return targetName;
-            }
-            Map<String, String> instanceById = get().getInstanceById(targetName);
-            if (instanceById != null) {
-                return instanceById.get("app");
-            }
-        } else if (Constants.MODEL_NAME_cluster.equals(targetType)) {
-            List<String> instances = get().getAllInstanceIdByCluster(targetName);
-            if (instances != null) {
-                Map<String, String> instanceById = get().getInstanceById(instances.get(0));
-                if (instanceById != null) {
-                    return instanceById.get("app");
-                }
-            }
-        }
-        return null;
-    }
-
     public static List<String> getMyFavorites(String loginUser) {
         List<String> result = new ArrayList<>(); // 返回 List 而不是 Set 可控制收藏菜单的顺序
         if (StringUtil.isBlank(loginUser)) {
