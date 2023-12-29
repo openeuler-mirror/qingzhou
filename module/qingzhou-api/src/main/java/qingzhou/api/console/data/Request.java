@@ -1,6 +1,10 @@
 package qingzhou.api.console.data;
 
 public interface Request {
+    String getTargetType();
+
+    String getTargetName();
+
     String getAppName();
 
     String getModelName();
