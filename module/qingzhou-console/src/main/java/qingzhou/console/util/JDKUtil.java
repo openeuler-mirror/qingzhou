@@ -1,7 +1,5 @@
 package qingzhou.console.util;
 
-import qingzhou.framework.impl.ServerUtil;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,7 +67,7 @@ public class JDKUtil {
 
     public static String getJavaBinTool(String cmd, String javaHome) {
         //add for ITAIT-4712
-        if (ServerUtil.isWindows()) {
+        if (OSUtil.IS_WINDOWS) {
             cmd += ".exe";
         }
         Path cmdPath = Paths.get(javaHome, "bin", cmd);

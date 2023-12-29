@@ -1,7 +1,5 @@
 package qingzhou.console.util;
 
-import qingzhou.framework.impl.ServerUtil;
-
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -62,7 +60,7 @@ public class NativeCommandUtil {
         }
 
         String[] cmd;
-        if (ServerUtil.isWindows()) {
+        if (OSUtil.IS_WINDOWS) {
             cmd = new String[3];
             cmd[0] = "cmd.exe";
             cmd[1] = "/c";
@@ -108,7 +106,7 @@ public class NativeCommandUtil {
         if (StringUtil.isBlank(pid)) {
             return -1;
         }
-        if (ServerUtil.isWindows()) {
+        if (OSUtil.IS_WINDOWS) {
             return runNativeCommand(String.format("taskkill /f /pid %s", pid), null, output);
         } else {
             return runNativeCommand(String.format("kill -9 %s", pid), null, output);

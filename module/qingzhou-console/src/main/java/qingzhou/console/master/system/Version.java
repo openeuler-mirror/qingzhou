@@ -1,6 +1,8 @@
 package qingzhou.console.master.system;
 
-import qingzhou.api.console.*;
+import qingzhou.api.console.Model;
+import qingzhou.api.console.ModelAction;
+import qingzhou.api.console.ModelField;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.AddModel;

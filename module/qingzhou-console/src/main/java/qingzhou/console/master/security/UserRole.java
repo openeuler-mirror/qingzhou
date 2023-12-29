@@ -1,6 +1,9 @@
 package qingzhou.console.master.security;
 
-import qingzhou.api.console.*;
+import qingzhou.api.console.FieldType;
+import qingzhou.api.console.Model;
+import qingzhou.api.console.ModelAction;
+import qingzhou.api.console.ModelField;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.EditModel;
@@ -9,6 +12,7 @@ import qingzhou.api.console.model.ShowModel;
 import qingzhou.api.console.option.Option;
 import qingzhou.api.console.option.OptionManager;
 import qingzhou.console.ServerXml;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.master.MasterModelBase;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.StringUtil;
@@ -53,7 +57,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
         }
 
         String id = request.getId();
-        XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
         UserRole userRole = new UserRole();
         userRole.id = id;
         userRole.roles = xmlUtils.getSpecifiedAttribute(ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getUserName()), id), "roles");
@@ -72,7 +76,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
 
         String tenant = ServerXml.getTenant(request.getUserName());
         String userId = request.getId();
-        XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
         String path = ServerXml.getTenantUserNodeExpression(tenant, userId);
         String oldRoles = xmlUtils.getSpecifiedAttribute(path, "roles");
 
@@ -90,7 +94,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
         xmlUtils.setAttribute(path, "roles", StringUtil.join(roleList, Constants.DATA_SEPARATOR));
         xmlUtils.write();
 
-        String newRoles = new XmlUtil(ServerUtil.getServerXml()).getSpecifiedAttribute(path, "roles");
+        String newRoles = new XmlUtil(ConsoleWarHelper.getServerXml()).getSpecifiedAttribute(path, "roles");
         if (!isSameRoles(oldRoles, newRoles)) {
             for (String role : oldRoles.split(Constants.DATA_SEPARATOR)) {
                 // TODO RoleCache.clearRoleCache(tenant, role);
@@ -111,7 +115,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
     @Override
     public List<Map<String, String>> listInternal(Request request, int start, int size) throws Exception {
         String expression = ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getUserName()), null);
-        XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
         List<Map<String, String>> result = new ArrayList<>();
         start += 1; // 索引从1开始
         List<String> userList = xmlUtils.getAttributeList(expression + "/user[position() >= " + start + " and position() < " + (start + size) + "]/@" + ListModel.FIELD_NAME_ID);
@@ -127,7 +131,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
 
     @Override
     public int getTotalSize(Request request) throws Exception {
-        XmlUtil xmlUtils = new XmlUtil(ServerUtil.getServerXml());
+        XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
         String expression = ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getUserName()), null);
         return xmlUtils.getTotalSize(expression.substring(2) + "/user/@" + ListModel.FIELD_NAME_ID);
     }
@@ -137,7 +141,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
         if ("roles".equals(fieldName)) {
             List<Option> options = new ArrayList<>();
             try {
-                XmlUtil xmlUtil = new XmlUtil(ServerUtil.getServerXml());
+                XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
                 List<String> roleIds = xmlUtil.getAttributeList(Role.getAllRoleIdExpression(request.getUserName()));
                 for (String roleId : roleIds) {
                     options.add(Option.of(roleId));

@@ -59,20 +59,15 @@ public class SafeCheckerUtil {
 
         //onmouseover漏洞
         List<String> onXXEventPrefixList = new ArrayList<String>();
-        onXXEventPrefixList.addAll(Arrays.asList(new String[]{"%20", "&nbsp;", "\"", "'", "/", "\\+"}));
+        onXXEventPrefixList.addAll(Arrays.asList("%20", "&nbsp;", "\"", "'", "/", "\\+"));
         resultUrl = scriptPattern1.matcher(resultUrl).replaceAll("");
         if (!resultUrl.equals(check)) {
             return false;
         }
 
         // 拦截这种攻击方式：payload:'onmousemove         =confirm(1)//
-        if ((resultUrl.contains("'") || resultUrl.contains("\""))
-                && resultUrl.indexOf(")") > resultUrl.indexOf("(")) {
-            return false;
-        }
-
-
-        return true;
+        return (!resultUrl.contains("'") && !resultUrl.contains("\""))
+                || resultUrl.indexOf(")") <= resultUrl.indexOf("(");
     }
 
     public static boolean checkXssOk(String check) {
@@ -89,11 +84,7 @@ public class SafeCheckerUtil {
 
 
         resultUrl = resultUrl.replaceAll("\\[", "&#91").replaceAll("\\]", "&#93");
-        if (!resultUrl.equals(check)) {
-            return false;
-        }
-
-        return true;
+        return resultUrl.equals(check);
     }
 
     private SafeCheckerUtil() {
