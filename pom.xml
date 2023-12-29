@@ -12,8 +12,8 @@
     <modules>
         <module>module</module>
         <module>package</module>
-        <module>ext</module>
-        <module>example</module>
+        <module>module-ext</module>
+        <module>apps</module>
     </modules>
 
     <properties>

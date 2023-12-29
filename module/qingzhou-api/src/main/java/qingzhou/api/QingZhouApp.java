@@ -1,11 +1,20 @@
 package qingzhou.api;
 
-public interface QingZhouApp {
-    void install(AppContext context);
+public abstract class QingZhouApp {
+    protected final AppContext appContext;
 
-    void start(AppContext context) throws Exception;
+    protected QingZhouApp(AppContext appContext) {
+        this.appContext = appContext;
+    }
 
-    void stop(AppContext context);
+    public void init() throws Exception {
+    }
 
-    void uninstall(AppContext context);
+    public abstract void start() throws Exception;
+
+    public void stop() throws Exception {
+    }
+
+    public void destroy() throws Exception {
+    }
 }

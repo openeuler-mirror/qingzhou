@@ -4,16 +4,21 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>qingzhou-project</artifactId>
         <groupId>qingzhou</groupId>
+        <artifactId>qingzhou-project</artifactId>
         <version>1.0</version>
     </parent>
 
-    <artifactId>example</artifactId>
+    <artifactId>apps</artifactId>
     <packaging>pom</packaging>
 
     <modules>
         <module>tomcat</module>
+        <module>IzPack</module>
+        <module>RocketMQ</module>
+        <module>Redis</module>
+        <module>OpenSearch</module>
+        <module>Nacos</module>
     </modules>
 
     <dependencies>
@@ -21,11 +26,7 @@
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-api</artifactId>
             <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-logger</artifactId>
-            <version>1.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
