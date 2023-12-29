@@ -273,7 +273,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static String getMsg(String msg) {
-        String i18n = I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, msg);
+        String i18n = I18n.getString(Constants.MASTER_APP_NAME, msg);
         return StringUtil.notBlank(i18n) ? i18n : msg;
     }
 
@@ -329,7 +329,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
                     response.setContentType("application/json;charset=UTF-8");
                     try (PrintWriter writer = context.resp.getWriter()) {
-                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.login.need") + "\"}");
+                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getString(Constants.MASTER_APP_NAME, "page.login.need") + "\"}");
                         writer.flush();
                     }
                     return false;

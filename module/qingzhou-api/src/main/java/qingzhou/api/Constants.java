@@ -1,6 +1,8 @@
 package qingzhou.api;
 
+// 在请求、响应以及API中出现的常量，应定义在这里，框架内部的常量不要放这里
 public interface Constants {
-    String QINGZHOU_MASTER_APP_NAME = "master";// todo 放这里合适？
-    String CONSOLE_DOWNLOAD_NAME_SEPARATOR = "/";
+    String LOCAL_NODE_NAME = "local";
+    String MASTER_APP_NAME = "master";
+    String DOWNLOAD_NAME_SEPARATOR = "/";
 }

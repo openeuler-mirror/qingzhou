@@ -54,7 +54,7 @@ public class AppInfoManagerImpl implements AppInfoManager {
 
     @Override
     public AppInfo getAppInfo(String name) {
-        if (name == null || name.equals(Constants.QINGZHOU_MASTER_APP_NAME)) return masterAppInfo;
+        if (name == null || name.equals(Constants.MASTER_APP_NAME)) return masterAppInfo;
 
         return appInfoMap.get(name);
     }

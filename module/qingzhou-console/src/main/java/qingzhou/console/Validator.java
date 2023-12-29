@@ -100,7 +100,7 @@ public class Validator {
         }
 
         if (!errorData.isEmpty()) {
-            response.errorData().addData(errorData);
+            response.addData(errorData);
             response.setSuccess(false);
             return false;
         }

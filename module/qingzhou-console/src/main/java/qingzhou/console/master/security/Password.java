@@ -80,7 +80,7 @@ public class Password extends MasterModelBase implements EditModel {
 
     @Override
     public void edit(Request request, Response response) throws Exception {
-        response.modelData().addDataObject(new Password(), getConsoleContext());
+        response.addDataObject(new Password());
     }
 
     @Override

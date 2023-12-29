@@ -81,11 +81,11 @@ public class InvokeAction implements Filter<RestContext> {
         String model = I18n.getString(appName, "model." + request.getModelName());
         String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
         if (result.isEmpty()) {
-            String resultMsg = String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "batch.ops.success"), model, action, suc);
+            String resultMsg = String.format(I18n.getString(Constants.MASTER_APP_NAME, "batch.ops.success"), model, action, suc);
             response.setMsg(resultMsg);
         } else {
             response.setSuccess(suc > 0);
-            errbuilder.append(String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "batch.ops.fail"), model, action, suc, fail));
+            errbuilder.append(String.format(I18n.getString(Constants.MASTER_APP_NAME, "batch.ops.fail"), model, action, suc, fail));
             errbuilder.append("<br/>");
             for (Map.Entry<String, String> entry : result.entrySet()) {
                 String key = entry.getKey();
@@ -135,10 +135,10 @@ public class InvokeAction implements Filter<RestContext> {
                             Response responseTemp = new ResponseImpl();
                             ShowModel showModel = manager.getModelInstance(modelName);
                             showModel.show(request, responseTemp);
-                            if (responseTemp.modelData().getDataList().isEmpty()) {
+                            if (responseTemp.getDataList().isEmpty()) {
                                 response.setSuccess(false);
                                 String msg = String.format(
-                                        I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "validator.notexist"),
+                                        I18n.getString(Constants.MASTER_APP_NAME, "validator.notexist"),
                                         I18n.getString(appName, "model." + modelName));
                                 response.setMsg(msg);
                             }
@@ -203,7 +203,7 @@ public class InvokeAction implements Filter<RestContext> {
         return false;
 //        String targetName = request.getTargetName();
 //        return StringUtil.notBlank(targetName)
-//                && !Constants.QINGZHOU_MASTER_APP_NAME.equals(targetName)
+//                && !Constants.MASTER_APP_NAME.equals(targetName)
 //                && !Constants.QINGZHOU_DEFAULT_APP_NAME.equals(targetName);
     }
 
@@ -217,7 +217,7 @@ public class InvokeAction implements Filter<RestContext> {
 
         String ip;
         String port;
-//    todo    if (Constants.QINGZHOU_DEFAULT_NODE_NAME.equals(nodeName)) {
+//    todo    if (qingzhou.api.Constants.LOCAL_NODE_NAME.equals(nodeName)) {
 //            ip = ServerUtil.getGlobalIp(); // 需和默认节点ip保持一致
 //        } else {
 //            Map<String, String> nodeById = ServerXml.get().getNodeById(nodeName);

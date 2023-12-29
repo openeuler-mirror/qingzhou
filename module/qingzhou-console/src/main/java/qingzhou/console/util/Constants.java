@@ -60,9 +60,8 @@ public interface Constants { // TODO 需要清理失效的项目
     Map<String, String> loggerNameDirMap = new HashMap<>();
     String HEADER_NAME_CLI = "REQUEST-FROM-CLI";
     String SINGLE_FIELD_VALIDATE_PARAM = "SINGLE_FIELD_VALIDATE_PARAM";
-    String QINGZHOU_MASTER_APP_NAME = qingzhou.api.Constants.QINGZHOU_MASTER_APP_NAME;
+    String MASTER_APP_NAME = qingzhou.api.Constants.MASTER_APP_NAME;
     String QINGZHOU_DEFAULT_APP_NAME = "default";
-    String QINGZHOU_DEFAULT_NODE_NAME = "default";
     String LOGIN_2FA = "password2fa";
     String AutoRegisterK = "k";
     String AutoRegisterMsg = "msg";

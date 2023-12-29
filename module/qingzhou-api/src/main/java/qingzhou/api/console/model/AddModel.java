@@ -19,7 +19,7 @@ public interface AddModel extends EditModel, DeleteModel {
     default void create(Request request, Response response) throws Exception {
         ConsoleContext consoleContext = getConsoleContext();
         Map<String, String> properties = consoleContext.getModelManager().getModelDefaultProperties(request.getModelName());
-        response.modelData().addData(properties);
+        response.addData(properties);
     }
 
     @ModelAction(name = ACTION_NAME_ADD,

@@ -787,7 +787,7 @@ public class Node extends MasterModelBase implements AddModel {
                 }
             }
 
-            return ConsoleWarHelper.getAppContext(Constants.QINGZHOU_MASTER_APP_NAME).getService(SSHService.class).start(node);
+            return ConsoleWarHelper.getAppContext(Constants.MASTER_APP_NAME).getService(SSHService.class).start(node);
         } catch (Exception e) {
             String privateKeyLocation = node.get("privateKeyLocation");
             if (StringUtil.notBlank(privateKeyLocation)) {

@@ -549,10 +549,10 @@ public class SupportList extends MasterModelBase implements ListModel, EditModel
     }
 
     @Override
-    public void show(Request request, Response response) {
+    public void show(Request request, Response response) throws Exception {
         for (SupportList support : supportList()) {
             if (support.id.equals(request.getId())) {
-                response.modelData().addDataObject(support, getConsoleContext());
+                response.addDataObject(support);
                 break;
             }
         }

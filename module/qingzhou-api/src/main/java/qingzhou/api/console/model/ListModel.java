@@ -2,7 +2,6 @@ package qingzhou.api.console.model;
 
 import qingzhou.api.console.DataStore;
 import qingzhou.api.console.ModelAction;
-import qingzhou.api.console.data.Datas;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 
@@ -19,16 +18,17 @@ public interface ListModel extends ShowModel {
             nameI18n = {"列表", "en:List"},
             infoI18n = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     default void list(Request request, Response response) throws Exception {
-        Datas datas = response.modelData();
-        datas.setTotalSize(getTotalSize(request));
-        datas.setPageSize(pageSize());
-        datas.setPageNum(pageNum(request));
-        int start = (datas.getPageNum() - 1) * datas.getPageSize();
-        if (datas.getTotalSize() < start) {
+        response.setTotalSize(getTotalSize(request));
+        response.setPageSize(pageSize());
+        response.setPageNum(pageNum(request));
+        int start = (response.getPageNum() - 1) * response.getPageSize();
+        if (response.getTotalSize() < start) {
             return;
         }
-        List<Map<String, String>> results = listInternal(request, start, datas.getPageSize());
-        datas.addDataBatch(results);
+        List<Map<String, String>> results = listInternal(request, start, response.getPageSize());
+        for (Map<String, String> result : results) {
+            response.addData(result);
+        }
     }
 
 

@@ -34,7 +34,7 @@ public class CentralizedConfig extends MasterModelBase {
         String secureKeyAsKeyPair = SecureKey.getOrInitKeyPair(ConsoleWarHelper.getDomain(), SecureKey.publicKeyName, SecureKey.publicKeyName, SecureKey.privateKeyName);
         Map<String, String> map = new HashMap<>();
         map.put("publicKey", secureKeyAsKeyPair);
-        response.modelData().addData(map);
+        response.addData(map);
 
     }
 }

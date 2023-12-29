@@ -51,8 +51,8 @@ public class Role extends MasterModelBase implements AddModel {
         put(DownloadModel.ACTION_NAME_DOWNLOADFILE, new String[]{DownloadModel.ACTION_NAME_DOWNLOADLIST, EditModel.ACTION_NAME_EDIT, ListModel.ACTION_NAME_LIST});
     }});
     public static final String[] commonActions = {
-            Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_index + "/" + Constants.ACTION_NAME_INDEX,
-            Constants.QINGZHOU_MASTER_APP_NAME + "/" + Constants.MODEL_NAME_home + "/home"
+            Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_index + "/" + Constants.ACTION_NAME_INDEX,
+            Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_home + "/home"
     };
 
     static {
@@ -303,16 +303,16 @@ public class Role extends MasterModelBase implements AddModel {
                 }
             }
         } else {
-            response.modelData().addData(role);
+            response.addData(role);
         }
     }
 
-    private void addRole(Response response, ServerXml.ConsoleRole.BuiltinRoleEnum systemRole) {
+    private void addRole(Response response, ServerXml.ConsoleRole.BuiltinRoleEnum systemRole) throws Exception {
         Role role = new Role();
         role.id = systemRole.name();
         role.info = systemRole.getInfo();
         role.builtIn = true;
-        response.modelData().addDataObject(role, getConsoleContext());
+        response.addDataObject(role);
     }
 
     private void writeForbid(Request request, Response response) {
@@ -328,7 +328,7 @@ public class Role extends MasterModelBase implements AddModel {
             for (ServerXml.ConsoleRole.BuiltinRoleEnum value : ServerXml.ConsoleRole.BuiltinRoleEnum.values()) {
                 if (value.name().equals(id)) {
                     response.setSuccess(false);
-                    response.setMsg(getConsoleContext().getI18N(Constants.QINGZHOU_MASTER_APP_NAME, "operate.system.roles.not"));
+                    response.setMsg(getConsoleContext().getI18N(Constants.MASTER_APP_NAME, "operate.system.roles.not"));
                     return;
                 }
             }
@@ -389,8 +389,8 @@ public class Role extends MasterModelBase implements AddModel {
     public List<String> getAllUris() {
         List<String> allUris = new ArrayList<>();
         List<String> allAppNames = new ArrayList<>(ConsoleWarHelper.getAppInfoManager().getApps());
-        if (!allAppNames.contains(Constants.QINGZHOU_MASTER_APP_NAME)) {// 集中管理
-            allAppNames.add(Constants.QINGZHOU_MASTER_APP_NAME);
+        if (!allAppNames.contains(Constants.MASTER_APP_NAME)) {// 集中管理
+            allAppNames.add(Constants.MASTER_APP_NAME);
         }
         for (String appName : allAppNames) {
             ModelManager modelManager;
@@ -398,7 +398,7 @@ public class Role extends MasterModelBase implements AddModel {
                 modelManager = ConsoleWarHelper.getAppModelManager(appName);
                 OUT:
                 for (String model : modelManager.getAllModelNames()) {
-                    if (Constants.QINGZHOU_MASTER_APP_NAME.equals(appName)) {
+                    if (Constants.MASTER_APP_NAME.equals(appName)) {
                         for (String t : ServerXml.ConsoleRole.commonAppModels) {
                             if (t.equals(appName + Constants.GROUP_SEPARATOR + model)) {
                                 continue OUT;
@@ -408,7 +408,7 @@ public class Role extends MasterModelBase implements AddModel {
                     for (ModelAction action : modelManager.getModelActions(model)) {
                         String target = appName + "/" + model + "/" + action.name();
                         boolean isCommon = false;
-                        if (Constants.QINGZHOU_MASTER_APP_NAME.equals(appName)) {
+                        if (Constants.MASTER_APP_NAME.equals(appName)) {
                             for (String commonAction : commonActions) {
                                 if (target.equals(commonAction)) {
                                     isCommon = true;

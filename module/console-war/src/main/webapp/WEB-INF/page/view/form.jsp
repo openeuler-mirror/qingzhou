@@ -32,7 +32,7 @@
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
         Map<String, String> model;
-        List<Map<String, String>> models = qzResponse.modelData().getDataList();
+        List<Map<String, String>> models = qzResponse.getDataList();
         if (!models.isEmpty()) {
             model = models.get(0);
             Map<String, Map<String, ModelField>> fieldMapWithGroup = modelManager.getGroupedModelFieldMap(qzRequest.getModelName());
@@ -281,7 +281,7 @@
                 %>
                 <a href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>"
                    btn-type="goback" class="btn">
-                    <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.cancel")%>
+                    <%=I18n.getString(Constants.MASTER_APP_NAME, "page.cancel")%>
                 </a>
                 <%
             }

@@ -26,7 +26,7 @@ public class ConsoleWarHelper {
 
     public static ConsoleContext getMasterAppConsoleContext() {
         try {
-            return getAppContext(Constants.QINGZHOU_MASTER_APP_NAME).getConsoleContext();
+            return getAppContext(Constants.MASTER_APP_NAME).getConsoleContext();
         } catch (Exception e) {
             return null;
         }

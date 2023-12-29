@@ -30,7 +30,7 @@ public class InitMasterApp implements Process {//todo
         }
         masterAppInfo = new AppInfoImpl();
         ConsoleWarHelper.getAppInfoManager().addMasterApp(masterAppInfo);
-        masterAppInfo.setName(Constants.QINGZHOU_MASTER_APP_NAME);
+        masterAppInfo.setName(Constants.MASTER_APP_NAME);
         AppContextImpl appContext = new AppContextImpl((FrameworkContextImpl) frameworkContext);
         masterAppInfo.setAppContext(appContext);
         File[] modules = {FileUtil.newFile(ConsoleWarHelper.getLibDir(), "module", "qingzhou-console.jar")};

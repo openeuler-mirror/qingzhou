@@ -92,7 +92,7 @@ public class ConsoleSecurity extends MasterModelBase implements EditModel {
     }
 
     @Override
-    public void show(Request request, Response response) {
+    public void show(Request request, Response response) throws Exception {
         ConsoleSecurity consoleSecurity = new ConsoleSecurity();
         consoleSecurity.trustedIP = ServerXml.get().trustedIP();
         consoleSecurity.disableUpload = true;
@@ -102,7 +102,7 @@ public class ConsoleSecurity extends MasterModelBase implements EditModel {
         consoleSecurity.disableUpload = Boolean.parseBoolean(disableUpload);
         String disableDownload = attributes.getOrDefault("disableDownload", "true");
         consoleSecurity.disableDownload = Boolean.parseBoolean(disableDownload);
-        response.modelData().addDataObject(consoleSecurity, getConsoleContext());
+        response.addDataObject(consoleSecurity);
     }
 
 }

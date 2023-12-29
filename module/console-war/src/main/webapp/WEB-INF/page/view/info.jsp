@@ -3,7 +3,7 @@
 
 <%
     boolean hasId = ConsoleUtil.hasIDField(qzRequest);
-    boolean chartEnabled = !qzResponse.monitorData().getDataList().isEmpty();
+    boolean chartEnabled = !qzResponse.getDataList().isEmpty();
     boolean isMonitor = MonitorModel.ACTION_NAME_MONITOR.equals(qzRequest.getActionName());
 
     String encodedId = qzRequest.getId();
@@ -29,7 +29,7 @@
         <%}%>
 
         <%
-            List<Map<String, String>> models = qzResponse.modelData().getDataList();
+            List<Map<String, String>> models = qzResponse.getDataList();
             if (!models.isEmpty()) {
                 Map<String, String> modelData = models.get(0);
                 List<String> fieldMap = new ArrayList<>();
@@ -53,7 +53,7 @@
                     }
                 }
                 boolean hasItem = false;
-                final List<Map<String, String>> infoMonitorDataList = qzResponse.monitorData().getDataList();
+                final List<Map<String, String>> infoMonitorDataList = qzResponse.getDataList();
                 Map<String, String> infoMonitorData = infoMonitorDataList.isEmpty() ? null : infoMonitorDataList.get(0);
                 for (String fieldName : fieldMap) {
                     if (infoMonitorData != null && infoMonitorData.containsKey(fieldName)) {
@@ -73,7 +73,7 @@
                 <div class="panel-body" style="word-break: break-all;">
                     <table class="table home-table" style="margin-bottom: 1px;">
                         <%
-                            List<Map<String, String>> dataList = qzResponse.monitorData().getDataList();
+                            List<Map<String, String>> dataList = qzResponse.getDataList();
                             Map<String, String> attachments = new HashMap<>();
                             if (dataList != null && !dataList.isEmpty()) {
                                 attachments = dataList.get(0);
@@ -128,7 +128,7 @@
         <textarea name="infoKeys" rows="3" disabled="disabled" style="display:none;">
         <%
             StringBuilder keysBuilder = new StringBuilder();
-            List<Map<String, String>> dataList = qzResponse.monitorData().getDataList();
+            List<Map<String, String>> dataList = qzResponse.getDataList();
             if (dataList != null && !dataList.isEmpty()) {
                 keysBuilder.append("{");
                 for (Map.Entry<String, String> e : dataList.get(0).entrySet()) {
@@ -156,7 +156,7 @@
             <a href="javascript:void(0);" onclick="tw.goback(this);"
                btn-type="goback" class="btn">
                 <!--<i class="icon icon-undo"></i>-->
-                <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.cancel")%>
+                <%=I18n.getString(Constants.MASTER_APP_NAME, "page.cancel")%>
             </a>
         </div>
     </div>

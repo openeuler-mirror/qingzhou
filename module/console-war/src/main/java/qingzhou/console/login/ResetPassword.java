@@ -77,7 +77,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + Constants.MODEL_NAME_node +
-                    "/" + Constants.QINGZHOU_MASTER_APP_NAME +
+                    "/" + Constants.MASTER_APP_NAME +
                     "/" + Constants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +

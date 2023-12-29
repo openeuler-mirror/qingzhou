@@ -81,7 +81,7 @@ public class AppInfoImpl implements AppInfo {
     private void filterResponse(Request request, Response response, ModelManagerImpl modelManager) {
         String[] showField = modelManager.getShowField(request.getModelName(), request.getActionName());
         if (showField != null) {
-            List<Map<String, String>> dataList = response.modelData().getDataList();
+            List<Map<String, String>> dataList = response.getDataList();
             for (Map<String, String> map : dataList) {
                 for (String field : showField) {
                     if (!map.containsKey(field)) {

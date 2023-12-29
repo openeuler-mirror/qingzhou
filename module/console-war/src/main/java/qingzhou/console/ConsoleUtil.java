@@ -483,7 +483,7 @@ public class ConsoleUtil {
             }
             if (!effective) {
                 return String.format(
-                        I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "validator.ActionEffective.notsupported"),
+                        I18n.getString(Constants.MASTER_APP_NAME, "validator.ActionEffective.notsupported"),
                         I18n.getString(request.toString(), "model.action." + request.getModelName() + "." + request.getActionName()),// todo
                         effectiveWhen);
             }
@@ -580,7 +580,7 @@ public class ConsoleUtil {
 
     public static List<ModelBase> convertMapToModelBase(RequestImpl request, Response response) {
         List<ModelBase> modelBases = new ArrayList<>();
-        final List<Map<String, String>> models = response.modelData().getDataList();
+        final List<Map<String, String>> models = response.getDataList();
         if (models != null) {
             final ModelManager modelManager = getModelManager(request.getAppName());
             if (modelManager == null) {
@@ -612,7 +612,7 @@ public class ConsoleUtil {
     }
 
     private static void visitActions(RequestImpl request, Response response, HttpSession session, Visitor<ModelAction> visitor) throws Exception {
-        visitActions(request, response, session, visitor, response.modelData().getDataList(), true);
+        visitActions(request, response, session, visitor, response.getDataList(), true);
     }
 
     private static void visitActions(RequestImpl request, Response response, HttpSession session, Visitor<ModelAction> visitor, List<Map<String, String>> datas, boolean checkEffective) throws Exception {
@@ -623,7 +623,7 @@ public class ConsoleUtil {
         }
         final String modelName = request.getModelName();
         boolean hasId = hasIDField(request);
-        if (hasId && !response.modelData().getDataList().isEmpty()) {
+        if (hasId && !response.getDataList().isEmpty()) {
             ModelAction[] actions = modelManager.getModelActions(modelName);
             ModelBase modelBase = modelManager.getModelInstance(modelName);
             for (ModelAction action : actions) {
@@ -779,13 +779,13 @@ public class ConsoleUtil {
         int minLength = 10;
         int maxLength = 20;
         if (password.length() < minLength || password.length() > maxLength) {
-            return String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "validator.lengthBetween"), minLength, maxLength);
+            return String.format(I18n.getString(Constants.MASTER_APP_NAME, "validator.lengthBetween"), minLength, maxLength);
         }
 
         if (infos != null && infos.length > 0) {
             if (infos[0] != null) { // for #ITAIT-5014
                 if (password.contains(infos[0])) { // 包含身份信息
-                    return I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "password.passwordContainsUsername");
+                    return I18n.getString(Constants.MASTER_APP_NAME, "password.passwordContainsUsername");
                 }
             }
         }
@@ -793,11 +793,11 @@ public class ConsoleUtil {
         //特殊符号包含下划线
         String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";
         if (!Pattern.compile(PASSWORD_REGEX).matcher(password).matches()) {
-            return I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "password.format");
+            return I18n.getString(Constants.MASTER_APP_NAME, "password.format");
         }
 
         if (isContinuousChar(password)) { // 连续字符校验
-            return I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "password.continuousChars");
+            return I18n.getString(Constants.MASTER_APP_NAME, "password.continuousChars");
         }
 
         return null;

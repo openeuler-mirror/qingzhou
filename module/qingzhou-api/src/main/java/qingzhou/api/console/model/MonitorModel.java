@@ -58,8 +58,7 @@ public interface MonitorModel {
             }
         }
 
-        response.monitorData().addData(monitorData);
-        response.modelData().addData(p);
+        response.addData(monitorData);
     }
 
     ConsoleContext getConsoleContext();

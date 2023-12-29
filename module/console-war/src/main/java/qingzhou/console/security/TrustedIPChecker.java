@@ -25,7 +25,7 @@ public class TrustedIPChecker implements Filter<HttpServletContext> {
             return true;
         }
         String msgKey = "client.trusted.not";
-        String toJson = JsonView.buildErrorResponse(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, msgKey));
+        String toJson = JsonView.buildErrorResponse(I18n.getString(Constants.MASTER_APP_NAME, msgKey));
         if (I18n.getI18nLang() == Lang.en) { // header里只能英文
             response.setHeader(Constants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
         } else {

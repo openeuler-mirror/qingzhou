@@ -1,9 +1,9 @@
 package qingzhou.console.view.impl;
 
 import qingzhou.api.console.data.Request;
-import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.DownloadModel;
 import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.InvokeAction;
 import qingzhou.console.controller.RestContext;
 import qingzhou.console.util.DownLoadUtil;
@@ -18,7 +18,7 @@ public class FileView implements View {
     @Override
     public void render(RestContext restContext) throws Exception {
         Request request = restContext.request;
-        Response response = restContext.response;
+        ResponseImpl response = (ResponseImpl) restContext.response;
         String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModelName() + "-" + TimeUtil.getCurrentTime()) : request.getId();
         HttpServletResponse servletResponse = restContext.servletResponse;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
@@ -48,7 +48,7 @@ public class FileView implements View {
             data.put(DownloadModel.DOWNLOAD_KEY, key);
             data.put(DownloadModel.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);
-            Response res = new InvokeAction().invoke(req);
+            ResponseImpl res = (ResponseImpl) new InvokeAction().invoke(req);
             if (res.isSuccess()) {
                 result = res.downloadData();
                 offset = (long) result.get(DownloadModel.DOWNLOAD_OFFSET);  // 续传

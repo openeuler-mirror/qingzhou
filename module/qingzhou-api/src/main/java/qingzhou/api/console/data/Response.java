@@ -1,17 +1,9 @@
 package qingzhou.api.console.data;
 
-import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 public interface Response {
-    Datas modelData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
-
-    Datas monitorData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
-
-    Datas errorData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
-
-    Datas attachmentData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
-
     void setSuccess(boolean success);
 
     boolean isSuccess();
@@ -20,7 +12,25 @@ public interface Response {
 
     String getMsg();
 
-    Map<String, Object> downloadData();// todo 这些或许不应该设计在api里面，因为用户可能不关心？
+    void setContentType(String contentType);
 
-    void readDownloadFile(String key, long offset, File[] downloadFiles) throws Exception;// todo 这些或许不应该设计在api里面，因为用户可能不关心？
+    String getContentType();
+
+    void addData(Map<String, String> data);
+
+    void addDataObject(Object data) throws Exception;
+
+    List<Map<String, String>> getDataList();
+
+    void setTotalSize(int totalSize);
+
+    int getTotalSize();
+
+    void setPageSize(int pageSize);
+
+    int getPageSize();
+
+    void setPageNum(int pageNum);
+
+    int getPageNum();
 }

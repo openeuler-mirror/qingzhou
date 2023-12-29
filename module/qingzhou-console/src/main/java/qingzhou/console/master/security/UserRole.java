@@ -17,7 +17,6 @@ import qingzhou.console.master.MasterModelBase;
 import qingzhou.console.util.Constants;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.util.XmlUtil;
-import qingzhou.framework.impl.ServerUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +60,7 @@ public class UserRole extends MasterModelBase implements ListModel, EditModel {
         UserRole userRole = new UserRole();
         userRole.id = id;
         userRole.roles = xmlUtils.getSpecifiedAttribute(ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(request.getUserName()), id), "roles");
-        response.modelData().addDataObject(userRole, getConsoleContext());
+        response.addDataObject(userRole);
     }
 
     @ModelAction(name = EditModel.ACTION_NAME_UPDATE,

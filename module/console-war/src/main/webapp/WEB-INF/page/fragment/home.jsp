@@ -22,7 +22,7 @@
                 </td>
                 <td style="word-break: break-all">
                     <%
-                        List<Map<String, String>> dataList = qzResponse.modelData().getDataList();
+                        List<Map<String, String>> dataList = qzResponse.getDataList();
                         if (!dataList.isEmpty()) {
                             out.print(dataList.get(0).get(fieldName));
                         }

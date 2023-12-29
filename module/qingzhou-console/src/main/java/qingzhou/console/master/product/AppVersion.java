@@ -3,7 +3,6 @@ package qingzhou.console.master.product;
 import qingzhou.api.console.FieldType;
 import qingzhou.api.console.Model;
 import qingzhou.api.console.ModelField;
-import qingzhou.api.console.data.Datas;
 import qingzhou.api.console.data.Request;
 import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.AddModel;
@@ -122,8 +121,8 @@ public class AppVersion extends MasterModelBase implements AddModel {
         }
         List<Map<String, String>> instanceList = getDataStore().getDataByKey(Constants.MODEL_NAME_node, "app", id);
         if (instanceList != null && instanceList.size() > 0) {
-            String thisModel = I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model." + request.getModelName()) + "(" + id + ")";
-            String detail = String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "validator.hasRefModel"), thisModel, I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model." + Constants.MODEL_NAME_node));
+            String thisModel = I18n.getString(Constants.MASTER_APP_NAME, "model." + request.getModelName()) + "(" + id + ")";
+            String detail = String.format(I18n.getString(Constants.MASTER_APP_NAME, "validator.hasRefModel"), thisModel, I18n.getString(Constants.MASTER_APP_NAME, "model." + Constants.MODEL_NAME_node));
             response.setSuccess(false);
             response.setMsg(detail);
             return;
@@ -167,16 +166,15 @@ public class AppVersion extends MasterModelBase implements AddModel {
                 }
             }
         }
-        Datas dataInfo = response.modelData();
-        dataInfo.setTotalSize(appNames.size());
-        dataInfo.setPageSize(pageSize());
-        dataInfo.setPageNum(pageNum);
+        response.setTotalSize(appNames.size());
+        response.setPageSize(pageSize());
+        response.setPageNum(pageNum);
 
         int start = (pageNum - 1) * pageSize();
         int end = appNames.size() < pageSize() ? appNames.size() : (start + pageSize());
         for (int i = start; i < end; i++) {
             String appName = appNames.get(i);
-            response.modelData().addDataObject(buildApp(appName), getConsoleContext());
+            response.addDataObject(buildApp(appName));
         }
     }
 

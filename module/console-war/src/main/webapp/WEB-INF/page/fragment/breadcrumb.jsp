@@ -51,16 +51,16 @@
             if (ServerXml.isMyFavorites(currentUser, qzRequest.getTargetName(), qzRequest.getModelName(), qzRequest.getActionName())) {
                 %>
                 <a class="cancelfavorites" href="javascript:void(0);" style="margin-left: 10px;"
-                   title='<%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model.action." + Constants.MODEL_NAME_favorites + "." + ConsoleUtil.ACTION_NAME_cancelfavorites)%>'
-                   onclick='favoirtes("<%=ConsoleUtil.encodeURL(request,response,ViewManager.jsonView+"/" + TargetTypeEnum.node.name()+"/"+ Constants.QINGZHOU_DEFAULT_NODE_NAME +"/"+ Constants.QINGZHOU_MASTER_APP_NAME +"/"+Constants.MODEL_NAME_favorites+"/"+ConsoleUtil.ACTION_NAME_cancelfavorites+"?favorite="+qzRequest.getTargetType()+"/"+qzRequest.getTargetName()+"/"+qzRequest.getModelName()+"/"+qzRequest.getActionName())%>")'>
+                   title='<%=I18n.getString(Constants.MASTER_APP_NAME, "model.action." + Constants.MODEL_NAME_favorites + "." + ConsoleUtil.ACTION_NAME_cancelfavorites)%>'
+                   onclick='favoirtes("<%=ConsoleUtil.encodeURL(request,response,ViewManager.jsonView+"/" + TargetTypeEnum.node.name()+"/"+ qingzhou.api.Constants.LOCAL_NODE_NAME +"/"+ Constants.MASTER_APP_NAME +"/"+Constants.MODEL_NAME_favorites+"/"+ConsoleUtil.ACTION_NAME_cancelfavorites+"?favorite="+qzRequest.getTargetType()+"/"+qzRequest.getTargetName()+"/"+qzRequest.getModelName()+"/"+qzRequest.getActionName())%>")'>
                     <i class="icon icon-star"></i>
                 </a>
                 <%
             } else {
                 %>
                 <a class="addfavotites" href="javascript:void(0);" style="margin-left: 10px;"
-                   title='<%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model.action." + Constants.MODEL_NAME_favorites + "." + ConsoleUtil.ACTION_NAME_addfavorite)%>'
-                   onclick='favoirtes("<%=ConsoleUtil.encodeURL(request,response,ViewManager.jsonView+"/" + TargetTypeEnum.node.name()+"/"+Constants.QINGZHOU_DEFAULT_NODE_NAME+"/"+ Constants.QINGZHOU_MASTER_APP_NAME +"/"+Constants.MODEL_NAME_favorites+"/"+ConsoleUtil.ACTION_NAME_addfavorite+"?favorite="+qzRequest.getTargetType()+"/"+qzRequest.getTargetName()+"/"+qzRequest.getModelName()+"/"+qzRequest.getActionName())%>")'>
+                   title='<%=I18n.getString(Constants.MASTER_APP_NAME, "model.action." + Constants.MODEL_NAME_favorites + "." + ConsoleUtil.ACTION_NAME_addfavorite)%>'
+                   onclick='favoirtes("<%=ConsoleUtil.encodeURL(request,response,ViewManager.jsonView+"/" + TargetTypeEnum.node.name()+"/"+ qingzhou.api.Constants.LOCAL_NODE_NAME +"/"+ Constants.MASTER_APP_NAME +"/"+Constants.MODEL_NAME_favorites+"/"+ConsoleUtil.ACTION_NAME_addfavorite+"?favorite="+qzRequest.getTargetType()+"/"+qzRequest.getTargetName()+"/"+qzRequest.getModelName()+"/"+qzRequest.getActionName())%>")'>
                     <i class="icon icon-star-empty"></i>
                 </a>
                 <%

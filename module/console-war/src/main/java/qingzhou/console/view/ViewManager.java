@@ -34,7 +34,7 @@ public class ViewManager {
         if (StringUtil.isBlank(response.getMsg())) {
             String appName = request.getAppName();
             String SP = I18n.getI18nLang().isZH() ? "" : " ";
-            String msg = response.isSuccess() ? I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "msg.success") : I18n.getString(appName, "msg.fail");
+            String msg = response.isSuccess() ? I18n.getString(Constants.MASTER_APP_NAME, "msg.success") : I18n.getString(appName, "msg.fail");
             String model = I18n.getString(appName, "model." + request.getModelName());
             String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
             String operation = Objects.equals(model, action) ? model : model + SP + action;

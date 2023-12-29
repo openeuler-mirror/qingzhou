@@ -49,7 +49,7 @@ public class Favorites extends MasterModelBase implements ListModel {
                 Favorites favorites = new Favorites();
                 favorites.id = userFavorite;
                 favorites.favorite = userFavorite;
-                response.modelData().addDataObject(favorites, getConsoleContext());
+                response.addDataObject(favorites);
             }
         } catch (Exception e) {
             response.setSuccess(false);

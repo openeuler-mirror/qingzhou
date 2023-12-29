@@ -34,11 +34,11 @@ public interface DownloadModel {
                 for (Map.Entry<String, List<String[]>> entry : result.entrySet()) {
                     String group = entry.getKey();
                     for (String[] file : entry.getValue()) {
-                        map.put(group + Constants.CONSOLE_DOWNLOAD_NAME_SEPARATOR + file[0], file[0] + " (" + file[1] + ")");
+                        map.put(group + Constants.DOWNLOAD_NAME_SEPARATOR + file[0], file[0] + " (" + file[1] + ")");
                     }
                 }
             }
-            response.attachmentData().addData(map);
+            response.addData(map);
         }
     }
 
@@ -60,10 +60,10 @@ public interface DownloadModel {
                 return;
             }
             List<File> downloadFiles = downloadfile0(request, downloadFileNames);
-            response.readDownloadFile(null, 0, downloadFiles.toArray(new File[0]));
+//            response.readDownloadFile(null, 0, downloadFiles.toArray(new File[0])); todo
         } else {
             long offset = Long.parseLong(request.getParameter(DOWNLOAD_OFFSET));
-            response.readDownloadFile(key, offset, null);
+//            response.readDownloadFile(key, offset, null); todo
         }
     }
 

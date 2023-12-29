@@ -45,7 +45,7 @@ public class Index extends MasterModelBase {
         index.serverInfo = "QingZhou（轻舟）";
         index.domainPath = ConsoleWarHelper.getDomain().getPath();
         index.javaHome = "";// TODO JDKUtil.getJavaHome();
-        response.modelData().addDataObject(index, getConsoleContext());
+        response.addDataObject(index);
     }
 
     // 这个方法用作是 Login 成功后 跳过的
