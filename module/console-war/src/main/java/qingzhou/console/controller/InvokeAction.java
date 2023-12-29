@@ -5,12 +5,7 @@ import qingzhou.api.console.data.Response;
 import qingzhou.api.console.model.DownloadModel;
 import qingzhou.api.console.model.ListModel;
 import qingzhou.api.console.model.ShowModel;
-import qingzhou.console.ConsoleUtil;
-import qingzhou.console.RemoteClient;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
-import qingzhou.console.ServerXml;
-import qingzhou.console.Validator;
+import qingzhou.console.*;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.sec.SecureKey;
@@ -23,12 +18,7 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class InvokeAction implements Filter<RestContext> {
     private static final Set<String> noCheckActions = new HashSet<String>() {{
@@ -87,7 +77,7 @@ public class InvokeAction implements Filter<RestContext> {
             }
         }
         request.setId(oid);
-        String appName = ServerXml.getAppName(request.getTargetType(), request.getTargetName());
+        String appName = request.getAppName();
         String model = I18n.getString(appName, "model." + request.getModelName());
         String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
         if (result.isEmpty()) {
@@ -116,15 +106,16 @@ public class InvokeAction implements Filter<RestContext> {
             if (isRemoteCall(request)) {
                 List<String> uploadFiles = new ArrayList<>();
                 try {
-                    Map<String, String> fileAttachments = request.getFileAttachments();
-                    if (fileAttachments != null) {
-                        String uploadUrl = buildRemoteRequestUrl(request, Constants.uploadPath);
-                        for (Map.Entry<String, String> entry : fileAttachments.entrySet()) {
-                            String uploadFile = RemoteClient.uploadFile(uploadUrl, entry.getValue());
-                            uploadFiles.add(uploadFile);
-                            request.updateParameter(entry.getKey(), uploadFile);
-                        }
-                    }
+                    // todo
+//                    Map<String, String> fileAttachments = request.getFileAttachments();
+//                    if (fileAttachments != null) {
+//                        String uploadUrl = buildRemoteRequestUrl(request, Constants.uploadPath);
+//                        for (Map.Entry<String, String> entry : fileAttachments.entrySet()) {
+//                            String uploadFile = RemoteClient.uploadFile(uploadUrl, entry.getValue());
+//                            uploadFiles.add(uploadFile);
+//                            request.updateParameter(entry.getKey(), uploadFile);
+//                        }
+//                    }
                     String url = buildRemoteRequestUrl(request, Constants.remotePath);
                     String remoteKey = SecureKey.getSecureKey(ConsoleWarHelper.getDomain(), SecureKey.remoteKeyName);// todo 这里应该用远端的 key ？
                     response = RemoteClient.sendReq(url, request, remoteKey);
@@ -135,7 +126,7 @@ public class InvokeAction implements Filter<RestContext> {
                     }
                 }
             } else {
-                String appName = ConsoleUtil.getAppName(request.getTargetType(), request.getTargetName());
+                String appName = request.getAppName();
                 ModelManager manager = ConsoleUtil.getModelManager(appName);
                 Class<?> modelClass = manager.getModelClass(modelName);
                 if (modelClass != null) {
@@ -209,14 +200,15 @@ public class InvokeAction implements Filter<RestContext> {
     }
 
     private boolean isRemoteCall(RequestImpl request) {
-        String targetName = request.getTargetName();
-        return StringUtil.notBlank(targetName)
-                && !Constants.QINGZHOU_MASTER_APP_NAME.equals(targetName)
-                && !Constants.QINGZHOU_DEFAULT_APP_NAME.equals(targetName);
+        return false;
+//        String targetName = request.getTargetName();
+//        return StringUtil.notBlank(targetName)
+//                && !Constants.QINGZHOU_MASTER_APP_NAME.equals(targetName)
+//                && !Constants.QINGZHOU_DEFAULT_APP_NAME.equals(targetName);
     }
 
     private String buildRemoteRequestUrl(RequestImpl request, String path) {
-        Map<String, String> instanceById = ServerXml.get().getInstanceById(request.getTargetName());// todo：是没有没有兼顾 “集群”的“管理”
+        Map<String, String> instanceById = ServerXml.get().getInstanceById(request.getAppName());// todo：是没有没有兼顾 “集群”的“管理”
         if (instanceById == null) {
             return null;
         }

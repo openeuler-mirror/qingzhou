@@ -191,7 +191,7 @@ public class Role extends MasterModelBase implements AddModel {
         if (!response.isSuccess()) {
             return;
         }
-        String tenant = ServerXml.getTenant(request.getLoginUser());
+        String tenant = ServerXml.getTenant(request.getUserName());
         String role = request.getId();
         String expression = ServerXml.getTenantRoleNodeExpression(tenant, role);
         XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
@@ -227,7 +227,7 @@ public class Role extends MasterModelBase implements AddModel {
     @Override
     public void list(Request request, Response response) throws Exception {
         // 校验权限，登录用户是否为管理员。
-        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(request.getLoginUser(), true)) {
+        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(request.getUserName(), true)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));
             return;
@@ -253,7 +253,7 @@ public class Role extends MasterModelBase implements AddModel {
             XmlUtil xmlUtil = new XmlUtil(ConsoleWarHelper.getServerXml());
             List<String> tenantRoleIds = xmlUtil.getAttributeList(getAllRoleIdExpression(request.getLoginUser()));
             int tenantRoleSize = tenantRoleIds == null ? 0 : tenantRoleIds.size();
-            String tenant = ServerXml.getTenant(request.getLoginUser());
+            String tenant = ServerXml.getTenant(request.getUserName());
             start = Math.max(start - systemRoles.length, 0);
             int end = Math.min(tenantRoleSize, start + size - results.size());
             for (int i = start; i < end; i++) {
@@ -285,7 +285,7 @@ public class Role extends MasterModelBase implements AddModel {
     @Override
     public void show(Request request, Response response) throws Exception {
         // 校验权限，登录用户是否为管理员。
-        String loginUser = request.getLoginUser();
+        String loginUser = request.getUserName();
         if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(loginUser, true)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));
@@ -317,7 +317,7 @@ public class Role extends MasterModelBase implements AddModel {
 
     private void writeForbid(Request request, Response response) {
         // 校验权限，登录用户是否为管理员。
-        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(request.getLoginUser(), true)) {
+        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(request.getUserName(), true)) {
             response.setSuccess(false);
             response.setMsg(getConsoleContext().getI18N("user.not.permission"));
             return;

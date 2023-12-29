@@ -1,16 +1,15 @@
 package qingzhou.console.view;
 
-import qingzhou.console.ConsoleUtil;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.RestContext;
+import qingzhou.console.util.Constants;
+import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.impl.FileView;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.console.view.impl.View;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
 import qingzhou.framework.app.I18n;
-import qingzhou.console.util.Constants;
-import qingzhou.console.util.StringUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class ViewManager {
         ResponseImpl response = (ResponseImpl) restContext.response;
         // 完善响应的 msg
         if (StringUtil.isBlank(response.getMsg())) {
-            String appName = ConsoleUtil.getAppName(request.getTargetType(), request.getTargetName());
+            String appName = request.getAppName();
             String SP = I18n.getI18nLang().isZH() ? "" : " ";
             String msg = response.isSuccess() ? I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "msg.success") : I18n.getString(appName, "msg.fail");
             String model = I18n.getString(appName, "model." + request.getModelName());

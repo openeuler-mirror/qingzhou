@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class ServerXml {
+public class ServerXml { // todo 考虑由 admin service 来取代
     private static File serverXmlFile;
 
     public static ServerXml get() {

@@ -63,7 +63,6 @@ public class ResponseImpl implements Response, Serializable {
         this.contentType = contentType;
     }
 
-    @Override
     public String getContentType() {
         return contentType;
     }

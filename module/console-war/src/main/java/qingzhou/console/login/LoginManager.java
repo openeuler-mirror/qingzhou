@@ -2,7 +2,6 @@ package qingzhou.console.login;
 
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
-import qingzhou.console.audit.AuditFilter;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.RESTController;
 import qingzhou.console.i18n.I18nFilter;
@@ -10,15 +9,15 @@ import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.totp.Totp;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.sdk.ConsoleSDK;
+import qingzhou.console.util.Constants;
+import qingzhou.console.util.IPUtil;
+import qingzhou.console.util.StringUtil;
+import qingzhou.console.util.TimeUtil;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.app.I18n;
 import qingzhou.framework.app.Lang;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.console.util.Constants;
-import qingzhou.console.util.IPUtil;
-import qingzhou.console.util.StringUtil;
-import qingzhou.console.util.TimeUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -87,9 +86,6 @@ public class LoginManager implements Filter<HttpServletContext> {
 
                 // 进入主页
                 response.sendRedirect(ConsoleUtil.encodeRedirectURL(request, response, request.getContextPath() + RESTController.INDEX_PATH)); // to welcome page
-
-                // 只记录登录成功的，否则恶意的任意用户尝试，导致审计日志爆掉
-                auditLogin(request);
             } finally {
                 I18n.resetI18nLang();
             }
@@ -110,16 +106,6 @@ public class LoginManager implements Filter<HttpServletContext> {
                 }
                 response.sendRedirect(request.getContextPath() + redirectUri);
             }
-        }
-    }
-
-    private static void auditLogin(HttpServletRequest request) {
-        String user = request.getParameter(LOGIN_USER);
-        if (StringUtil.notBlank(user)) {
-            AuditFilter.LogLine logLine = new AuditFilter.LogLine();
-            logLine.set(AuditFilter.LogField.user, user).set(AuditFilter.LogField.model, "console")// todo： console 写死了，应该是 可配置的？
-                    .set(AuditFilter.LogField.action, "login").set(AuditFilter.LogField.result, "true").set(AuditFilter.LogField.clientIp, request.getRemoteAddr()).set(AuditFilter.LogField.uri, "login");
-            AuditFilter.auditLog(logLine);
         }
     }
 
@@ -268,11 +254,6 @@ public class LoginManager implements Filter<HttpServletContext> {
             String user = getLoginUser(session);
             if (StringUtil.notBlank(user)) {
                 session.invalidate();
-
-                AuditFilter.LogLine logLine = new AuditFilter.LogLine();
-                logLine.set(AuditFilter.LogField.user, user).set(AuditFilter.LogField.model, "console")// todo: console 写死了，应该是配置的?
-                        .set(AuditFilter.LogField.action, "logout").set(AuditFilter.LogField.result, "true").set(AuditFilter.LogField.clientIp, request.getRemoteAddr()).set(AuditFilter.LogField.uri, "logout");
-                AuditFilter.auditLog(logLine);
             }
         }
     }
