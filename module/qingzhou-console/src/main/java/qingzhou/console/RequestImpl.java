@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 public class RequestImpl implements Request, Serializable, Cloneable {
+    private String testName;
     private String appName;
     private String modelName;
     private String actionName;
