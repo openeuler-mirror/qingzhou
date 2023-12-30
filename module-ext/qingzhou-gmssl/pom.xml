@@ -21,7 +21,7 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.gmssl.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework</Import-Package>
+                            <Import-Package>org.osgi.framework,qingzhou.framework</Import-Package>
                             <Export-Package>qingzhou.gmssl</Export-Package>
                         </manifestEntries>
                     </archive>

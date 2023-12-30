@@ -45,14 +45,14 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-api</include>
                 <include>${project.groupId}:qingzhou-framework</include>
                 <include>${project.groupId}:qingzhou-logger</include>
                 <include>${project.groupId}:qingzhou-console</include>
                 <include>${project.groupId}:qingzhou-serializer</include>
                 <include>${project.groupId}:qingzhou-ssh</include>
                 <include>${project.groupId}:qingzhou-crypto</include>
-                <include>${project.groupId}:qingzhou-commons</include>
+                <include>${project.groupId}:qingzhou-jnet</include>
+                <include>${project.groupId}:qingzhou-app</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

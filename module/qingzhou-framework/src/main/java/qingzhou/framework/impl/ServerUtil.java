@@ -1,23 +1,13 @@
 package qingzhou.framework.impl;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -29,6 +19,14 @@ public class ServerUtil {// todo：将无状态的工具方法，拆分到对应
     private static File dataXmlFile;
     private static File libDir;
     private static File home;
+
+    public static boolean isBlank(String value) {
+        return value == null || "".equals(value.trim());
+    }
+
+    public static boolean notBlank(String value) {
+        return !isBlank(value);
+    }
 
     /**
      * 字符串是否包含中文
@@ -62,45 +60,6 @@ public class ServerUtil {// todo：将无状态的工具方法，拆分到对应
             }
         }
         return properties;
-    }
-
-    public static <S> List<S> loadServices(String serviceType, ClassLoader classLoader) {
-        List<S> services = new ArrayList<>();
-
-        try {
-            ClassLoader loader = null;
-            if (classLoader != null) {
-                loader = classLoader;
-            }
-            if (loader == null) {
-                loader = Thread.currentThread().getContextClassLoader();
-            }
-            if (loader == null) {
-                loader = ClassLoader.getSystemClassLoader();
-            }
-            Objects.requireNonNull(loader);
-
-            Enumeration<URL> resources = loader.getResources("META-INF/services/" + serviceType);
-            while (resources.hasMoreElements()) {
-                final URL url = resources.nextElement();
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()), 256)) {
-                    ClassLoader finalLoader = loader;
-                    br.lines().filter(s -> s.charAt(0) != '#').map(String::trim).forEach(line -> {
-                        try {
-                            services.add((S) finalLoader.loadClass(line).newInstance());
-                        } catch (Exception e) {
-                            e.printStackTrace();// 不需要抛异常，加了条目没有类打个日志即可
-                        }
-                    });
-                } catch (Throwable e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return services;
     }
 
     public static URLClassLoader newURLClassLoader(File[] files, ClassLoader parentLoader) {
@@ -168,7 +127,7 @@ public class ServerUtil {// todo：将无状态的工具方法，拆分到对应
     }
 
     public static File getServerXml(File domain) {
-        return Paths.get(domain.getAbsolutePath(), "conf", "qingzhou.xml").toFile();
+        return Paths.get(domain.getAbsolutePath(), "conf", "server.xml").toFile();
     }
 
     public static File getDomain(String domainName) {

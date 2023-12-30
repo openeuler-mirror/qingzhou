@@ -186,7 +186,7 @@ public class Utils {
     }
 
     public static File getServerXml(File domain) {
-        return Utils.newFile(domain, "conf", "qingzhou.xml");
+        return Utils.newFile(domain, "conf", "server.xml");
     }
 
     public static boolean isWindows() {

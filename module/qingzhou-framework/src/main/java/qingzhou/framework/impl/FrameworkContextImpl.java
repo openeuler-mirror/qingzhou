@@ -1,8 +1,7 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.AppInfoManager;
+import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.impl.app.AppInfoManagerImpl;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -12,17 +11,17 @@ import java.util.Map;
 import java.util.Set;
 
 public class FrameworkContextImpl implements FrameworkContext {
-    static FrameworkContextImpl instance;
+    static FrameworkContextImpl frameworkContext;
 
-    public static FrameworkContext getInstance() {
-        return instance;
+    public static FrameworkContext getFrameworkContext() {
+        return frameworkContext;
     }
 
-    private final AppInfoManagerImpl appInfoManager = new AppInfoManagerImpl();
+    private final AppManagerImpl appInfoManager = new AppManagerImpl();
     private final Map<Class<?>, Object> services = new HashMap<>();
 
     @Override
-    public AppInfoManager getAppInfoManager() {
+    public AppManager getAppInfoManager() {
         return appInfoManager;
     }
 

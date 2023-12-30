@@ -101,7 +101,7 @@ for (Lang lang : Lang.values()) {
                         </div>
                     </div>
                     <textarea id="pubkey" rows="3" style="display:none;">
-                        <%=ConsoleUtil.getConsolePublicKey()%>
+                        <%=SecureKey.getPublicKeyString()%>
                     </textarea>
                 </form>
             </section>

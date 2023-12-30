@@ -17,8 +17,8 @@
 package org.apache.catalina.webresources;
 
 import org.apache.catalina.webresources.war.Handler;
-import qingzhou.commons.org.apache.commons.jnet.Installer;
-import qingzhou.commons.org.apache.commons.jnet.URLStreamHandlerFactoryWrapper;
+import qingzhou.jnet.Installer;
+import qingzhou.jnet.URLStreamHandlerFactoryWrapper;
 
 import java.net.URL;
 import java.net.URLStreamHandler;

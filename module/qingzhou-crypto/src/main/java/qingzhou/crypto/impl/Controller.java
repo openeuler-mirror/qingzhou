@@ -1,20 +1,16 @@
 package qingzhou.crypto.impl;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 import qingzhou.crypto.CryptoService;
+import qingzhou.framework.ServiceRegister;
 
-public class Controller implements BundleActivator {
-    private ServiceRegistration<CryptoService> registration;
-
+public class Controller extends ServiceRegister<CryptoService> {
     @Override
-    public void start(BundleContext bundleContext) {
-        registration = bundleContext.registerService(CryptoService.class, new CryptoServiceImpl(), null);
+    protected Class<CryptoService> serviceType() {
+        return CryptoService.class;
     }
 
     @Override
-    public void stop(BundleContext bundleContext) {
-        registration.unregister();
+    protected CryptoService serviceObject() {
+        return new CryptoServiceImpl();
     }
 }

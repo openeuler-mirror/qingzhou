@@ -1,20 +1,20 @@
 package qingzhou.console.login;
 
+import qingzhou.framework.api.ConsoleContext;
 import qingzhou.console.ConsoleUtil;
-import qingzhou.console.auth.AccessControl;
-import qingzhou.console.controller.HttpServletContext;
-import qingzhou.console.controller.RESTController;
+import qingzhou.console.controller.rest.AccessControl;
+import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.console.view.impl.JsonView;
-import qingzhou.api.console.ConsoleContext;
 import qingzhou.console.ServerXml;
-import qingzhou.framework.app.I18n;
-import qingzhou.framework.app.Lang;
+import qingzhou.console.sdk.ConsoleSDK;
+import qingzhou.framework.util.Constants;
+import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.util.TimeUtil;
+import qingzhou.console.view.impl.JsonView;
+import qingzhou.framework.console.I18n;
+import qingzhou.framework.console.Lang;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.console.util.Constants;
-import qingzhou.console.util.ExceptionUtil;
-import qingzhou.console.util.TimeUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -68,16 +68,16 @@ public class ResetPassword implements Filter<HttpServletContext> {
             String toJson = JsonView.buildErrorResponse(LoginManager.retrieveI18nMsg(msgI18nKey));
             httpServletResponse.getWriter().print(toJson);// 重定向，会丢失body里的消息
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                httpServletResponse.setHeader(Constants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
+                httpServletResponse.setHeader(qingzhou.framework.api.Constants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
             } else {
-                httpServletResponse.setHeader(Constants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
+                httpServletResponse.setHeader(qingzhou.framework.api.Constants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
             }
 
             httpServletResponse.sendRedirect(ConsoleUtil.encodeRedirectURL(httpServletRequest, httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + Constants.MODEL_NAME_node +
-                    "/" + Constants.MASTER_APP_NAME +
+                    "/" + qingzhou.framework.api.Constants.MASTER_APP_NAME +
                     "/" + Constants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +

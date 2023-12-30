@@ -101,7 +101,6 @@
                 <groupId>org.osgi</groupId>
                 <artifactId>osgi.core</artifactId>
                 <version>6.0.0</version>
-                <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

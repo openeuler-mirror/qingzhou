@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.HashMap" %>
-<%@ page import="qingzhou.console.util.Constants" %>
+<%@ page import="qingzhou.api.Constants" %>
 <%
     String statusCode = String.valueOf(response.getStatus());
     String errorMsg = response.getHeader(Constants.RESPONSE_HEADER_MSG_KEY);

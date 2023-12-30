@@ -1,41 +1,21 @@
 package qingzhou.console;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.console.FieldType;
-import qingzhou.api.console.Model;
-import qingzhou.api.console.ModelAction;
-import qingzhou.api.console.ModelField;
-import qingzhou.api.console.ModelManager;
-import qingzhou.api.console.data.Response;
-import qingzhou.api.console.group.GroupManager;
-import qingzhou.api.console.model.EditModel;
-import qingzhou.api.console.model.ListModel;
-import qingzhou.api.console.model.ModelBase;
-import qingzhou.api.console.option.Option;
-import qingzhou.api.console.option.OptionManager;
-import qingzhou.console.auth.AccessControl;
-import qingzhou.console.controller.RESTController;
+import qingzhou.console.controller.rest.AccessControl;
+import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.impl.RequestImpl;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.sec.Encryptor;
-import qingzhou.console.sec.SecureKey;
-import qingzhou.console.util.Constants;
-import qingzhou.console.util.ObjectUtil;
-import qingzhou.console.util.StringUtil;
-import qingzhou.framework.app.I18n;
-import qingzhou.framework.impl.app.ConsoleContextImpl;
+import qingzhou.framework.api.*;
+import qingzhou.framework.console.I18n;
 import qingzhou.framework.pattern.Visitor;
+import qingzhou.framework.util.ModelUtil;
+import qingzhou.framework.util.ObjectUtil;
+import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class ConsoleUtil {
@@ -64,7 +44,7 @@ public class ConsoleUtil {
     }
 
     public static ModelManager getModelManager(String appName) {
-        return getAppContext(appName).getConsoleContext().getModelManager();
+        return getAppContext(appName).getModelManager();
     }
 
     static void printParentMenu(Properties menu, String targetType, String targetName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -72,10 +52,10 @@ public class ConsoleUtil {
         menuBuilder.append("<li class=\"treeview" + (model.equals(curModel) ? " active" : "") + "\">");
         menuBuilder.append("<a href=\"javascript:void(0);\">");
         menuBuilder.append(" <i class=\"icon icon-" + menu.getProperty("icon") + "\"></i>");
-        ConsoleContextImpl consoleContext = (ConsoleContextImpl) getAppContext(null).getConsoleContext();
+        ConsoleContext consoleContext = getAppContext(null).getConsoleContext();
         String menuText = "未分类";
         if (StringUtil.notBlank(model)) {
-            ConsoleContextImpl.MenuInfo menuInfo = consoleContext.getMenuInfo(model);
+            MenuInfo menuInfo = consoleContext.getMenuInfo(model);
             if (menuInfo == null) {
                 // todo
 //                menuInfo = ((ConsoleContextImpl) Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME)).getMenuInfo(model);
@@ -115,8 +95,9 @@ public class ConsoleUtil {
             menuBuilder.append("<li class=\"treeview\">");
             menuBuilder.append("<a href=\"javascript:void(0);\">");
             menuBuilder.append(" <i class=\"icon icon-star\"></i>");
-            ConsoleContextImpl consoleContext = (ConsoleContextImpl) ConsoleUtil.getAppContext(null).getConsoleContext();
-            ConsoleContextImpl.MenuInfo menuInfo = consoleContext.getMenuInfo("Favorites");
+            AppContext appContext = ConsoleUtil.getAppContext(null);
+            ConsoleContext consoleContext = appContext.getConsoleContext();
+            MenuInfo menuInfo = consoleContext.getMenuInfo("Favorites");
             String menuText = I18n.getString(menuInfo.getMenuI18n());
             menuBuilder.append("<span>" + menuText + "</span>");
             menuBuilder.append("<span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");
@@ -126,7 +107,7 @@ public class ConsoleUtil {
                 String[] favorites = myFavorite.split("/");
                 if (favorites.length == 3) {
                     String instanceName = favorites[0];
-                    ModelManager modelManager = consoleContext.getModelManager();
+                    ModelManager modelManager = appContext.getModelManager();
                     String modelName = favorites[1];
                     String actionName = favorites[2];
                     ModelAction modelAction = modelManager.getModelAction(modelName, actionName);
@@ -161,9 +142,6 @@ public class ConsoleUtil {
                 builder.append("%s");
             }
             Properties menu = models.get(i);
-            if (Constants.MODEL_NAME_favorites.equals(menu.getProperty("name"))) {
-                continue;
-            }
             StringBuilder childrenBuilder = new StringBuilder();
             Object c = menu.get("children");
             if (c == null) {
@@ -199,7 +177,7 @@ public class ConsoleUtil {
          *  order -> int
          *  children -> Properties
          */
-        ConsoleContextImpl consoleContext = (ConsoleContextImpl) getAppContext(null).getConsoleContext();
+        ConsoleContext consoleContext = getAppContext(null).getConsoleContext();
         Map<String, Properties> modelMap = new HashMap<>();
         for (Model model : allModels) {
             String modelName = model.name();
@@ -210,7 +188,7 @@ public class ConsoleUtil {
             menu.put("entryAction", model.entryAction());
             String menuName = model.menuName();
             if (StringUtil.notBlank(menuName)) {
-                ConsoleContextImpl.MenuInfo menuInfo = consoleContext.getMenuInfo(menuName);
+                MenuInfo menuInfo = consoleContext.getMenuInfo(menuName);
                 if (menuInfo == null) {
                     menuInfo = consoleContext.getMenuInfo(menuName);
                     if (menuInfo == null) {
@@ -334,7 +312,7 @@ public class ConsoleUtil {
         LinkedHashMap<String, String> twoGroup = new LinkedHashMap<>();
         for (Option option : optionsManager.options()) {
             String value = option.value();
-            String[] groupData = value.split(Constants.GROUP_SEPARATOR);
+            String[] groupData = value.split(Constants.OPTION_GROUP_SEPARATOR);
             String desc = I18n.getString(option.i18n());
             if (groupData.length == 1) {
                 groupDes.putIfAbsent(value, desc);
@@ -343,7 +321,7 @@ public class ConsoleUtil {
                 items.putIfAbsent(groupData[0], desc);
                 twoGroup.putIfAbsent(value, desc);
             } else if (groupData.length == 3) {
-                LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + Constants.GROUP_SEPARATOR + groupData[1], k -> new LinkedHashMap<>());
+                LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + Constants.OPTION_GROUP_SEPARATOR + groupData[1], k -> new LinkedHashMap<>());
                 items.put(value, desc);
             }
         }
@@ -353,17 +331,6 @@ public class ConsoleUtil {
             groupedMap.putAll(tempGroup);
         }
     }
-
-    /**
-     * 属性是否符合有效性规则
-     */
-    public static boolean isEffective(Validator.FieldValueRetriever retriever, String effectiveWhen) throws Exception {
-        if (StringUtil.isBlank(effectiveWhen)) {
-            return true;
-        }
-        return Validator.isEffective(retriever, effectiveWhen);
-    }
-
 
     public static boolean actionsWithAjax(RequestImpl request, String actionName) {
         final ModelManager modelManager = getModelManager(request.getAppName());
@@ -478,7 +445,7 @@ public class ConsoleUtil {
             String effectiveWhen = modelAction.effectiveWhen().trim();
             boolean effective = false;
             try {
-                effective = isEffective(fieldName -> obj.get(fieldName), effectiveWhen);
+                effective = ModelUtil.isEffective(fieldName -> obj.get(fieldName), effectiveWhen);
             } catch (Exception ignored) {
             }
             if (!effective) {
@@ -752,18 +719,14 @@ public class ConsoleUtil {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
     }
 
-    public static String getConsolePublicKey() {
-        return Encryptor.getPublicKeyString();
-    }
-
     public static String decryptWithConsolePrivateKey(String input) {
         if (StringUtil.isBlank(input)) {
             return input;
         }
         try {
             return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(
-                    SecureKey.getSecureKey(ConsoleWarHelper.getDomain(), SecureKey.publicKeyName),
-                    SecureKey.getSecureKey(ConsoleWarHelper.getDomain(), SecureKey.privateKeyName)
+                    SecureKey.getPublicKeyString(),
+                    SecureKey.getPrivateKeyString()
             ).decryptWithPrivateKey(input);
         } catch (Exception e) {
             e.printStackTrace();
@@ -779,13 +742,13 @@ public class ConsoleUtil {
         int minLength = 10;
         int maxLength = 20;
         if (password.length() < minLength || password.length() > maxLength) {
-            return String.format(I18n.getString(Constants.MASTER_APP_NAME, "validator.lengthBetween"), minLength, maxLength);
+            return String.format(I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "validator.lengthBetween"), minLength, maxLength);
         }
 
         if (infos != null && infos.length > 0) {
             if (infos[0] != null) { // for #ITAIT-5014
                 if (password.contains(infos[0])) { // 包含身份信息
-                    return I18n.getString(Constants.MASTER_APP_NAME, "password.passwordContainsUsername");
+                    return I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "password.passwordContainsUsername");
                 }
             }
         }
@@ -793,11 +756,11 @@ public class ConsoleUtil {
         //特殊符号包含下划线
         String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";
         if (!Pattern.compile(PASSWORD_REGEX).matcher(password).matches()) {
-            return I18n.getString(Constants.MASTER_APP_NAME, "password.format");
+            return I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "password.format");
         }
 
         if (isContinuousChar(password)) { // 连续字符校验
-            return I18n.getString(Constants.MASTER_APP_NAME, "password.continuousChars");
+            return I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "password.continuousChars");
         }
 
         return null;

@@ -1,6 +1,6 @@
 package qingzhou.console.sdk;
 
-import qingzhou.console.util.Base32Util;
+import qingzhou.framework.util.Base32Util;
 
 import java.nio.charset.StandardCharsets;
 

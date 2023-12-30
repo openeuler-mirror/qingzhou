@@ -24,7 +24,7 @@
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-api</artifactId>
+            <artifactId>qingzhou-framework</artifactId>
             <version>1.0</version>
             <scope>provided</scope>
         </dependency>

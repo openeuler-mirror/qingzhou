@@ -1,7 +1,7 @@
 package qingzhou.console.impl;
 
-import qingzhou.console.util.FileUtil;
 import qingzhou.framework.pattern.Process;
+import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
@@ -15,17 +15,17 @@ public class RunWar implements Process {
 
     @Override
     public void exec() throws Exception {
+        if (!controller.isMaster) return;
+
+        contextPath = "/console"; // TODO 需要可配置
         File console = FileUtil.newFile(ConsoleWarHelper.getLibDir(), "sysapp", "console");
-        if (console.isDirectory()) {
-            String docBase = console.getAbsolutePath();
-            contextPath = "/console"; // TODO 需要可配置
-            controller.servletService.addWebapp(contextPath, docBase);
-        }
+        String docBase = console.getAbsolutePath();
+        controller.servletService.addWebapp(contextPath, docBase);
     }
 
     @Override
     public void undo() {
-        if (contextPath == null) return;
+        if (!controller.isMaster) return;
 
         controller.servletService.removeApp(contextPath);
     }

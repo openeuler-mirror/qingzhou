@@ -1,7 +1,7 @@
 package qingzhou.console.view.impl;
 
-import qingzhou.api.console.data.Response;
-import qingzhou.console.controller.RestContext;
+import qingzhou.framework.api.Response;
+import qingzhou.console.controller.rest.RestContext;
 
 import java.io.PrintWriter;
 import java.util.List;

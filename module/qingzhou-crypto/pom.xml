@@ -9,6 +9,14 @@
 
     <artifactId>qingzhou-crypto</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-framework</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -19,7 +27,9 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.crypto.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework,javax.crypto,javax.crypto.spec</Import-Package>
+                            <Import-Package>
+                                org.osgi.framework,qingzhou.framework,javax.crypto,javax.crypto.spec
+                            </Import-Package>
                             <Export-Package>qingzhou.crypto</Export-Package>
                         </manifestEntries>
                     </archive>

@@ -1,14 +1,13 @@
 package qingzhou.app;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.QingZhouApp;
+import qingzhou.framework.api.AppContext;
+import qingzhou.framework.api.QingZhouApp;
 
-public class Main extends QingZhouApp {
-    protected Main(AppContext appContext) {
-        super(appContext);
-    }
+import java.io.File;
 
+public class Main implements QingZhouApp {
     @Override
-    public void start() throws Exception {
+    public void start(AppContext appContext) {
+        System.out.println("Load app: " + new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getFile()).getName());
     }
 }

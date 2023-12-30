@@ -1,13 +1,13 @@
 package qingzhou.console.view.impl;
 
-import qingzhou.api.console.data.Request;
-import qingzhou.api.console.model.DownloadModel;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
-import qingzhou.console.controller.InvokeAction;
-import qingzhou.console.controller.RestContext;
-import qingzhou.console.util.DownLoadUtil;
-import qingzhou.console.util.TimeUtil;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.DownloadModel;
+import qingzhou.console.impl.RequestImpl;
+import qingzhou.console.impl.ResponseImpl;
+import qingzhou.console.controller.rest.InvokeAction;
+import qingzhou.console.controller.rest.RestContext;
+import qingzhou.framework.util.DownLoadUtil;
+import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -44,7 +44,7 @@ public class FileView implements View {
             }
 
             RequestImpl req = ((RequestImpl) request).clone();
-            Map<String, String> data = new HashMap<>();
+            HashMap<String, String> data = new HashMap<>();
             data.put(DownloadModel.DOWNLOAD_KEY, key);
             data.put(DownloadModel.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);

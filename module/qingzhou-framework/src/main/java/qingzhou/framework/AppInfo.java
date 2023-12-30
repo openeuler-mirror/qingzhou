@@ -1,8 +1,8 @@
 package qingzhou.framework;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.console.data.Request;
-import qingzhou.api.console.data.Response;
+import qingzhou.framework.api.AppContext;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 
 public interface AppInfo {
     AppContext getAppContext();

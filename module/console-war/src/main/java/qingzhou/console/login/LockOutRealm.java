@@ -2,8 +2,8 @@ package qingzhou.console.login;
 
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
-import qingzhou.console.util.StringUtil;
-import qingzhou.console.util.TimeUtil;
+import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.util.TimeUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
