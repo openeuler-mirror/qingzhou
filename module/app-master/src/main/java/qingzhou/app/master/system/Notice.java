@@ -1,7 +1,7 @@
-package qingzhou.master.system;
+package qingzhou.app.master.system;
 
 import qingzhou.framework.api.*;
-import qingzhou.framework.util.ModelUtil;
+import qingzhou.framework.util.ServerUtil;
 
 @Model(name = "notice", icon = "bell-alt",
         menuName = "Basic", menuOrder = 4,
@@ -10,7 +10,7 @@ import qingzhou.framework.util.ModelUtil;
                 "en:Notifications are used to provide administrators with information about QingZhou restarts, licence expiry, etc. When a system configuration attribute is changed and the server needs to be restarted for the change to take effect, a notification is given with the \"details\" generally indicating the specific attribute name that was sent for the change and its value before and after the change. If more than one property has changed, they will be separated by a semicolon. In addition, the restart of QingZhou notification will be cancelled if the property is edited again after it has changed to return it to the value it had at the start."})
 public class Notice extends ModelBase implements ListModel {
     static {
-        ConsoleContext master = ModelUtil.getMasterConsoleContext();
+        ConsoleContext master = ServerUtil.getMasterConsoleContext();
         if (master != null) {
             master.addI18N("NOTICE_TYPE_RESTART", new String[]{"有配置项发生变更，需重启 QingZhou 以使其生效",
                     "en:If a configuration item is changed, QingZhou needs to be restarted for it to take effect"});

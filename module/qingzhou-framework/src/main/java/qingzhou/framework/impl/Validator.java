@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class Validator {
     static {
-        ConsoleContext consoleContext = ModelUtil.getMasterConsoleContext();
+        ConsoleContext consoleContext = ServerUtil.getMasterConsoleContext();
         if (consoleContext != null) {
             consoleContext.addI18N("validator.arg.memory.invalid", new String[]{"参数不合法，此参数应以数字加单位(m/M、g/G)构成", "en:The parameter is not legal, this parameter should be composed of numbers plus units (m/M, g/G)."});
             consoleContext.addI18N("validator.arg.memory.union.invalid", new String[]{"联合校验参数【%s】不合法，该参数应以数字加单位(m/M、g/G)构成", "en:The joint verification parameter [%s] is illegal, and the parameter should be composed of numbers plus units (m/m, g/g)."});
@@ -97,7 +97,7 @@ public class Validator {
         try {
             Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
             ObjectUtil.setObjectValues(tempModel, dataMap);
-            if (!ModelUtil.isEffective(fieldName0 -> String.valueOf(tempModel.getClass().getField(fieldName)
+            if (!ServerUtil.isEffective(fieldName0 -> String.valueOf(tempModel.getClass().getField(fieldName)
                     .get(tempModel)), modelField.effectiveWhen().trim())) {// TODO: 不显示的属性不需要校验
                 return null;
             }
@@ -117,7 +117,7 @@ public class Validator {
                     // 例如 Connector：证书路径虽然给了默认值，但如果用户清空输入框再提交就会报错，未拦截说必填项（根因在于 空串和null的判别），所以此处需要再次核验
                     String defaultValue = "";//getModelManager().getFieldValue(tempModel, fieldName); todo 获取默认值
                     if (ServerUtil.isBlank(defaultValue)) {
-                        return ModelUtil.getMasterConsoleContext().getI18N("validator.require");
+                        return ServerUtil.getMasterConsoleContext().getI18N("validator.require");
                     }
                 }
             }
@@ -201,7 +201,7 @@ public class Validator {
     }
 
     public static String dataInvalidMsg(String s) {
-        return String.format(ModelUtil.getMasterConsoleContext().getI18N("validator.dataInvalid"), "\"" + s + "\"");
+        return String.format(ServerUtil.getMasterConsoleContext().getI18N("validator.dataInvalid"), "\"" + s + "\"");
     }
 
     static class ValidatorContext {
@@ -222,7 +222,7 @@ public class Validator {
             this.request = request;
             this.modelManager = modelManager;
             this.tempModel = tempModel;
-            this.context = FrameworkContextImpl.getFrameworkContext().getAppInfoManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
+            this.context = ServerUtil.getFrameworkContext().getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
         }
 
         boolean isAdd() {

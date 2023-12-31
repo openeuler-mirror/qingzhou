@@ -34,7 +34,7 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.framework.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework,qingzhou.logger</Import-Package>
+                            <Import-Package>org.osgi.framework,qingzhou.logger,javax.xml.xpath,org.w3c.dom,javax.xml.transform,javax.xml.parsers</Import-Package>
 
                             <Export-Package>
                                 qingzhou.framework,qingzhou.framework.api,qingzhou.framework.pattern,qingzhou.framework.util,qingzhou.framework.console

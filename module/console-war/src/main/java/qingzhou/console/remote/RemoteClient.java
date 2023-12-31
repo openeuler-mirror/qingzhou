@@ -1,16 +1,13 @@
 package qingzhou.console.remote;
 
-import qingzhou.console.ConsoleUtil;
+import qingzhou.console.SecureKey;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.impl.ResponseImpl;
-import qingzhou.console.SecureKey;
 import qingzhou.console.servlet.UploadFileContext;
-import qingzhou.framework.util.ExceptionUtil;
-import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.ObjectUtil;
-import qingzhou.framework.util.StringUtil;
 import qingzhou.crypto.PasswordCipher;
+import qingzhou.framework.util.*;
 import qingzhou.serializer.Serializer;
+import qingzhou.serializer.SerializerService;
 
 import javax.net.ssl.*;
 import java.io.*;
@@ -39,14 +36,13 @@ public class RemoteClient {
 
             PasswordCipher cipher;
             try {
-                String localKey = SecureKey.getOrInitKey(ConsoleWarHelper.getDomain(), SecureKey.localKeyName);
+                String localKey = SecureKey.getOrInitKey(ServerUtil.getDomain(), SecureKey.localKeyName);
                 cipher = ConsoleWarHelper.getPasswordCipher(ConsoleWarHelper.getPasswordCipher(localKey).decrypt(remoteKey));
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }
 
-            Serializer serializer = ConsoleUtil.getAppContext(null)// todo 换个方式？
-                    .getService(Serializer.class);
+            Serializer serializer = ServerUtil.getFrameworkContext().getService(SerializerService.class).getSerializer();
             byte[] serialize = serializer.serialize(object);
             byte[] encrypt = cipher.encrypt(serialize);
             OutputStream outStream = connection.getOutputStream();

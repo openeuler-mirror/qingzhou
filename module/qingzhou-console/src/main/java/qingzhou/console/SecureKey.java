@@ -2,7 +2,7 @@ package qingzhou.console;
 
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.crypto.PasswordCipher;
-import qingzhou.framework.impl.ServerUtil;
+import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.pattern.Callback;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;

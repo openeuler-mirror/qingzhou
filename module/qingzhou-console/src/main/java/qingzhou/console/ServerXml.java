@@ -3,7 +3,7 @@ package qingzhou.console;
 import qingzhou.framework.api.EditModel;
 import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.ShowModel;
-import qingzhou.framework.impl.ServerUtil;
+import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.*;
 
 import java.io.File;

@@ -32,7 +32,7 @@ public interface Constants { // TODO 需要清理失效的项目
     Map<String, String> loggerNameDirMap = new HashMap<>();
     String HEADER_NAME_CLI = "REQUEST-FROM-CLI";
     String QINGZHOU_DEFAULT_APP_NAME = "default";
-    String LOGIN_2FA = "password2fa";
+
     String AutoRegisterK = "k";
     String AutoRegisterMsg = "msg";
     String AutoRegisterSuccess = "success";

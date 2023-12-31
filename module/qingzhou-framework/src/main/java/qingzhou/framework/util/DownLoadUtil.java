@@ -1,7 +1,5 @@
 package qingzhou.framework.util;
 
-import qingzhou.framework.impl.ServerUtil;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;

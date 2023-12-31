@@ -2,6 +2,7 @@ package qingzhou.framework.impl;
 
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.util.ServerUtil;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -21,7 +22,7 @@ public class FrameworkContextImpl implements FrameworkContext {
     private final Map<Class<?>, Object> services = new HashMap<>();
 
     @Override
-    public AppManager getAppInfoManager() {
+    public AppManager getAppManager() {
         return appInfoManager;
     }
 

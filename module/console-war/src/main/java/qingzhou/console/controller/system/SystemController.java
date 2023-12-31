@@ -1,22 +1,17 @@
 package qingzhou.console.controller.system;
 
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
+import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.pattern.FilterPattern;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
+import qingzhou.framework.util.ServerUtil;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -88,15 +83,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         @Override
         public void exec() {
 //      todo      ConsoleContext master = Main.getInternalService(ConsoleContextFinder.class).find(qingzhou.framework.api.Constants.MASTER_APP_NAME);
-            ConsoleContext master = ConsoleWarHelper.getMasterAppConsoleContext();
-            if (master != null) {
-                master.setMenuInfo("Favorites", new String[]{"我的收藏", "en:Favorites"}, "star", 0);
-                master.setMenuInfo("Service", new String[]{"服务管理", "en:Service"}, "server", 1);
-                master.setMenuInfo("Product", new String[]{"产品管理", "en:Product"}, "book", 2);
-                master.setMenuInfo("Security", new String[]{"安全管理", "en:Security"}, "shield", 3);
-                master.setMenuInfo("System", new String[]{"系统管理", "en:System"}, "cog", 4);
-                master.setMenuInfo("Support", new String[]{"扩展支持", "en:Support"}, "rocket", 5);
-            }
+            // master 位置：qingzhou.app.master.Main
 
 //      todo      ConsoleContext defaultApp = Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME);
             /*ConsoleContext defaultApp = ConsoleUtil.getAppContext(null).getConsoleContext();

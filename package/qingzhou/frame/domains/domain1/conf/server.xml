@@ -22,7 +22,7 @@
             <arg name="-Djava.rmi.server.hostname=127.0.0.1"/>
             <arg name="-Djava.awt.headless=true"/>
             <arg name="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:8888"
-                 enabled="false" desc="远程调试参数"/>
+                 enabled="true" desc="远程调试参数"/>
         </args>
     </jvm>
 

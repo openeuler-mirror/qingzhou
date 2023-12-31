@@ -49,13 +49,13 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
                 <div class="logo"><%=I18n.getString(Constants.MASTER_APP_NAME, "page.userlogin")%></div>
                 <form id="loginForm" method="post" action="<%=ConsoleUtil.encodeURL(request, response, contextPath+LoginManager.LOGIN_URI)%>" class="form-group" autocomplete="off">
                     <div class="input-control has-icon-left">
-                        <input value="thanos" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" class="form-control" placeholder="name<%=I18n.getString(Constants.MASTER_APP_NAME, "model.field."+Constants.MODEL_NAME_user+".name")%>" autofocus required>
-                        <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel(Constants.MODEL_NAME_user).icon()%> "></i></label>
+                        <input value="thanos" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" class="form-control" placeholder="name<%=I18n.getString(Constants.MASTER_APP_NAME, "model.field.user.name")%>" autofocus required>
+                        <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel("user").icon()%> "></i></label>
                     </div>
                     <div class="input-control has-icon-left">
-                        <input value="thanos123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control" placeholder="password<%=I18n.getString(Constants.MASTER_APP_NAME, "model.field."+Constants.MODEL_NAME_user+".password")%>" dotted onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;">
+                        <input value="thanos123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control" placeholder="password<%=I18n.getString(Constants.MASTER_APP_NAME, "model.field.user.password")%>" dotted onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;">
                         <input value="thanos123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>" name="<%=LoginManager.LOGIN_PASSWORD%>">
-                        <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel(Constants.MODEL_NAME_password).icon()%>"></i></label>
+                        <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel("password").icon()%>"></i></label>
                         <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;"><i class="icon icon-eye-close"></i></label>
                     </div>
                     <div class="input-control has-icon-left">

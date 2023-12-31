@@ -1,61 +1,30 @@
 <%@ page pageEncoding="UTF-8" %>
 
-<%@ page import="qingzhou.api.console.FieldType" %>
-
-<%@ page import="qingzhou.api.console.Model" %>
-<%@ page import="qingzhou.api.console.ModelAction" %>
-<%@ page import="qingzhou.api.console.ModelField" %>
-<%@ page import="qingzhou.api.console.ModelManager" %>
-<%@ page import="qingzhou.api.console.group.GroupManager" %>
-
-<%@ page import="qingzhou.api.console.MonitoringField" %>
-<%@ page import="qingzhou.api.console.model.AddModel" %>
-<%@ page import="qingzhou.api.console.model.DownloadModel" %>
-<%@ page import="qingzhou.api.console.model.EditModel" %>
-<%@ page import="qingzhou.api.console.model.ListModel" %>
-<%@ page import="qingzhou.api.console.model.ModelBase" %>
-<%@ page import="qingzhou.api.console.model.MonitorModel" %>
-<%@ page import="qingzhou.api.console.model.ShowModel" %>
-<%@ page import="qingzhou.api.console.option.Option" %>
-<%@ page import="qingzhou.api.console.option.OptionManager" %>
+<%@ page import="qingzhou.framework.api.*" %>
 <%@ page import="qingzhou.console.ConsoleUtil" %>
-<%@ page import="qingzhou.console.auth.AccessControl" %>
-<%@ page import="qingzhou.console.controller.RESTController" %>
-<%@ page import="qingzhou.console.i18n.I18nFilter" %>
+<%@ page import="qingzhou.console.controller.rest.*" %>
+<%@ page import="qingzhou.console.controller.system.*" %>
 <%@ page import="qingzhou.console.login.LoginManager" %>
-<%@ page import="qingzhou.console.login.vercode.VerCode" %>
-<%@ page import="qingzhou.console.sdk.ConsoleSDK" %>
+<%@ page import="qingzhou.console.login.vercode.*" %>
+<%@ page import="qingzhou.console.login.*" %>
 <%@ page import="qingzhou.console.view.ViewManager" %>
-<%@ page import="qingzhou.console.view.impl.HtmlView" %>
-<%@ page import="qingzhou.console.util.Constants" %>
-<%@ page import="qingzhou.console.util.SafeCheckerUtil" %>
-<%@ page import="qingzhou.console.util.StringUtil" %>
+<%@ page import="qingzhou.console.view.impl.*" %>
+<%@ page import="qingzhou.framework.api.Constants" %>
 <%@ page import="java.io.IOException" %>
 <%@ page import="java.time.LocalDateTime" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="java.util.Arrays" %>
-<%@ page import="java.util.HashMap" %>
-<%@ page import="java.util.LinkedHashMap" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="java.util.Objects" %>
-<%@ page import="java.util.Properties" %>
-<%@ page import="java.util.Set" %>
-<%@ page import="java.util.Collections" %>
-<%@ page import="java.util.Comparator" %>
-<%@ page import="qingzhou.console.RequestImpl" %>
-<%@ page import="qingzhou.api.console.data.Response" %>
-<%@ page import="qingzhou.console.ResponseImpl" %>
+<%@ page import="java.util.*" %>
 <%@ page import="qingzhou.console.ServerXml" %>
-<%@ page import="qingzhou.framework.Lang" %>
-<%@ page import="qingzhou.framework.I18n" %>
-<%@ page import="qingzhou.console.controller.rest.TargetType" %>
+<%@ page import="qingzhou.framework.console.Lang" %>
+<%@ page import="qingzhou.framework.console.I18n" %>
+<%@ page import="qingzhou.console.controller.rest.*" %>
+<%@ page import="qingzhou.console.SecureKey" %>
+<%@ page import="qingzhou.framework.util.*" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
-    RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
-    Response qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
+    Request qzRequest = (Request) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
+    Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
     String initAppName = qzRequest == null ? Constants.MASTER_APP_NAME : qzRequest.getAppName();
     ModelManager modelManager = ConsoleUtil.getModelManager(initAppName);
 %>
@@ -116,7 +85,7 @@
 
 <%--公用“通知”消息提示--%>
 <%
-    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, TargetType.node.name(), Constants.LOCAL_NODE_NAME, Constants.MASTER_APP_NAME, Constants.MODEL_NAME_notice);
+    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, TargetType.node.name(), Constants.LOCAL_NODE_NAME, Constants.MASTER_APP_NAME, "notice");
     StringBuilder noticeBuilder = new StringBuilder();
     for (int jj = 0; jj < noticeModes.size(); jj++) {
         Map<String, String> mb = noticeModes.get(jj);
@@ -127,7 +96,7 @@
             noticeBuilder.append("<br>");
         }
     }
-    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():TargetType.node.name(), Constants.MASTER_APP_NAME +"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
+    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():TargetType.node.name(), Constants.MASTER_APP_NAME +"/notice/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
         int noticeSize = noticeModes.size();
 %>
 <script type="text/javascript">
@@ -166,7 +135,7 @@
 %>
 <script type="text/javascript">
     $(document).ready(function () {
-        var noticeIndex = showInfo("<%=(I18n.getString(initAppName, "model." + qzRequest.getModelName()) + ": " + msg)%> | <%=(I18n.getString(Constants.MASTER_APP_NAME,"page.go"))%> <%=(I18n.getString(Constants.MASTER_APP_NAME, "model." + Constants.MODEL_NAME_notice))%>");
+        var noticeIndex = showInfo("<%=(I18n.getString(initAppName, "model." + qzRequest.getModelName()) + ": " + msg)%> | <%=(I18n.getString(Constants.MASTER_APP_NAME,"page.go"))%> <%=(I18n.getString(Constants.MASTER_APP_NAME, "model.notice"))%>");
         // 记录最后一次通知弹窗
         try {
             $(getActiveTabContent()).attr("showInfoIndex", noticeIndex);

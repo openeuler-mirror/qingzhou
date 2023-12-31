@@ -19,20 +19,12 @@ public class ConsoleWarHelper {
         return new File(fc.getDomain(), "apps");
     }
 
-    public static ConsoleContext getMasterAppConsoleContext() {
-        try {
-            return getAppContext(qingzhou.framework.api.Constants.MASTER_APP_NAME).getConsoleContext();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public static AppContext getAppContext(String appName) {
         return getAppInfoManager().getAppInfo(appName).getAppContext();
     }
 
     public static AppManager getAppInfoManager() {
-        return fc.getAppInfoManager();
+        return fc.getAppManager();
     }
 
     public static MessageDigest getMessageDigest() {
@@ -57,10 +49,6 @@ public class ConsoleWarHelper {
 
     public static File getLibDir() {
         return fc.getLib();
-    }
-
-    public static File getDomain() {
-        return fc.getDomain();
     }
 
     public static File getHome() {

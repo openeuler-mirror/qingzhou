@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Set;
 
 public interface FrameworkContext {
-    AppManager getAppInfoManager();
+    AppManager getAppManager();
 
     Set<Class<?>> getServiceTypes();
 

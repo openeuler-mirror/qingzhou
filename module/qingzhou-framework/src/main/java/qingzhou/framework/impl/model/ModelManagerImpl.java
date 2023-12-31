@@ -38,16 +38,10 @@ public class ModelManagerImpl implements ModelManager {
             if (ModelBase.class.isAssignableFrom(clazz)) {
                 Model model = clazz.getAnnotation(Model.class);
                 if (model != null) {
-                    try {
-                        clazz.getConstructor().newInstance();
-                    } catch (Exception e) {
-                        throw new IllegalArgumentException("The class annotated by the Model needs to have a public parameter-free constructor.", e);
-                    }
-
                     ModelInfo modelInfo;
                     try {
                         modelInfo = new ModelInfo(model, initModelFieldInfo(clazz), initModelMonitorFieldInfo(clazz), initModelActionInfo(clazz), clazz);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         throw new IllegalArgumentException(e);
                     }
 

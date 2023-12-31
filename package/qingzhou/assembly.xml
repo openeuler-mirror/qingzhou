@@ -77,5 +77,27 @@
             </unpackOptions>
         </dependencySet>
 
+        <dependencySet>
+            <includes>
+                <include>${project.groupId}:app-master</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version/sysapp/master</outputDirectory>
+        </dependencySet>
+
+        <dependencySet>
+            <includes>
+                <include>${project.groupId}:app-common</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version/sysapp/common</outputDirectory>
+        </dependencySet>
+
     </dependencySets>
 </assembly>

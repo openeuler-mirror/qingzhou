@@ -7,6 +7,7 @@ import qingzhou.framework.impl.model.ModelInfo;
 import qingzhou.framework.impl.model.ModelManagerImpl;
 
 import java.lang.reflect.Method;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import java.util.Map;
 public class AppInfoImpl implements AppInfo {
     private QingZhouApp qingZhouApp;
     private AppContext appContext;
+    private URLClassLoader loader;
 
     @Override
     public AppContext getAppContext() {
@@ -63,5 +65,13 @@ public class AppInfoImpl implements AppInfo {
 
     public void setQingZhouApp(QingZhouApp qingZhouApp) {
         this.qingZhouApp = qingZhouApp;
+    }
+
+    public URLClassLoader getLoader() {
+        return loader;
+    }
+
+    public void setLoader(URLClassLoader loader) {
+        this.loader = loader;
     }
 }

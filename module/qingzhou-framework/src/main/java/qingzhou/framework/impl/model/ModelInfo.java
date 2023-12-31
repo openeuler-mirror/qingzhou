@@ -1,6 +1,7 @@
 package qingzhou.framework.impl.model;
 
 import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelBase;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -13,6 +14,7 @@ public class ModelInfo {
     public final Map<String, MonitoringFieldInfo> monitoringFieldInfoMap;
     public final Map<String, ActionInfo> actionInfoMap;
     public final Class<?> clazz;
+    public final ModelBase instance;
 
     public ModelInfo(Model model, List<FieldInfo> fieldInfoMap, List<MonitoringFieldInfo> monitoringFieldInfoMap, List<ActionInfo> actionInfoMap, Class<?> clazz) {
         this.model = model;
@@ -37,5 +39,10 @@ public class ModelInfo {
         this.monitoringFieldInfoMap = Collections.unmodifiableMap(monitoringFieldInfoTemp);
         this.actionInfoMap = Collections.unmodifiableMap(actionInfoTemp);
         this.clazz = clazz;
+        try {
+            this.instance = (ModelBase) clazz.newInstance();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("The class annotated by the Model needs to have a public parameter-free constructor.", e);
+        }
     }
 }

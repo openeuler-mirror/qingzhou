@@ -13,4 +13,5 @@ public interface Constants {
     String PASSWORD_FLAG = "***************";
     String SINGLE_FIELD_VALIDATE_PARAM = "SINGLE_FIELD_VALIDATE_PARAM";
     String OPTION_GROUP_SEPARATOR = "/";
+    String LOGIN_2FA = "password2fa";
 }

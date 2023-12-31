@@ -29,7 +29,8 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.app.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework,qingzhou.framework</Import-Package>                        </manifestEntries>
+                            <Import-Package>org.osgi.framework,qingzhou.framework,qingzhou.framework.util,qingzhou.logger</Import-Package>
+                        </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>

@@ -12,6 +12,7 @@ import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.framework.util.Constants;
 import qingzhou.console.SecureKey;
+import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.pattern.Filter;
@@ -119,7 +120,7 @@ public class InvokeAction implements Filter<RestContext> {
 //                        }
 //                    }
                     String url = buildRemoteRequestUrl(request, Constants.remotePath);
-                    String remoteKey = SecureKey.getOrInitKey(ConsoleWarHelper.getDomain(), SecureKey.remoteKeyName);// todo 这里应该用远端的 key ？
+                    String remoteKey = SecureKey.getOrInitKey(ServerUtil.getDomain(), SecureKey.remoteKeyName);// todo 这里应该用远端的 key ？
                     response = RemoteClient.sendReq(url, request, remoteKey);
                 } finally {
                     if (!uploadFiles.isEmpty()) {

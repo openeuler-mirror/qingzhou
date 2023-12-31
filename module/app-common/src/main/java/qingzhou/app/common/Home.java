@@ -1,4 +1,4 @@
-package qingzhou.master;
+package qingzhou.app.common;
 
 import qingzhou.framework.api.*;
 
@@ -6,9 +6,9 @@ import java.util.Map;
 
 @Model(name = "index", icon = "home", entryAction = "home",
         nameI18n = {"主页", "en:Main"},
-        infoI18n = {"查看当前轻舟实例的产品、授权等信息。",
-                "en:View the product, license, and other information of the current QingZhou instance."})
-public class Index extends MasterModelBase {
+        infoI18n = {"展示当前应用的说明信息。",
+                "en:Displays the description of the current app."})
+public class Home extends ModelBase implements ShowModel {
     @ModelField(
             group = "product",
             nameI18n = {"产品信息", "en:Server Info"},
@@ -34,7 +34,7 @@ public class Index extends MasterModelBase {
             infoI18n = {"查看 QingZhou 应用服务器的产品和授权信息。",
                     "en:View product and licensing information for QingZhou Application Server."})
     public void home(Request request, Response response) throws Exception {
-        Index index = new Index();
+        Home index = new Home();
         index.serverInfo = "QingZhou（轻舟）";
         index.domainPath = getAppContext().getDomain().getPath();
         index.javaHome = "";// TODO JDKUtil.getJavaHome();

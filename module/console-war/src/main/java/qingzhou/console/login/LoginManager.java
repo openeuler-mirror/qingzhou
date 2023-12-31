@@ -1,22 +1,22 @@
 package qingzhou.console.login;
 
 import qingzhou.console.ConsoleUtil;
+import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.controller.system.I18nFilter;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.ServerXml;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.framework.util.Constants;
-import qingzhou.framework.util.IPUtil;
-import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.TimeUtil;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.Constants;
+import qingzhou.framework.util.IPUtil;
+import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -199,7 +199,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static boolean check2FA(HttpServletRequest request) throws Exception {
-        return check2FA(request.getParameter(LOGIN_USER), ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(Constants.LOGIN_2FA)));
+        return check2FA(request.getParameter(LOGIN_USER), ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(qingzhou.framework.api.Constants.LOGIN_2FA)));
     }
 
     public static boolean check2FA(String user, String login2FA) throws Exception {

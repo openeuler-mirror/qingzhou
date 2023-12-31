@@ -20,9 +20,6 @@ public class Controller implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
-        File console = FileUtil.newFile(ConsoleWarHelper.getLibDir(), "sysapp", "console");
-        isMaster = console.isDirectory();
-
         sequence = new ProcessSequence(
                 new GetFrameworkService(context),
                 new StartServlet(),
@@ -67,7 +64,11 @@ public class Controller implements BundleActivator {
         public void exec() {
             reference = context.getServiceReference(FrameworkContext.class);
             frameworkContext = context.getService(this.reference);
+
             ConsoleWarHelper.fc = frameworkContext;
+
+            File console = FileUtil.newFile(ConsoleWarHelper.getLibDir(), "sysapp", "console");
+            isMaster = console.isDirectory();
         }
 
         @Override

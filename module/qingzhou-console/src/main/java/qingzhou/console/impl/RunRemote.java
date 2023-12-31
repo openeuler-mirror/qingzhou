@@ -1,5 +1,6 @@
 package qingzhou.console.impl;
 
+import qingzhou.console.SecureKey;
 import qingzhou.console.servlet.RequestContext;
 import qingzhou.console.servlet.ServletProcessor;
 import qingzhou.console.servlet.UploadFileContext;
@@ -11,7 +12,7 @@ import qingzhou.framework.api.Response;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.util.Constants;
 import qingzhou.framework.util.FileUtil;
-import qingzhou.console.SecureKey;
+import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StreamUtil;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
@@ -52,7 +53,7 @@ public class RunRemote implements Process {
             StreamUtil.copyStream(in, bos);
             byte[] requestData = bos.toByteArray();
 
-            String remoteKey = SecureKey.getOrInitKey(ConsoleWarHelper.getDomain(), SecureKey.remoteKeyName);
+            String remoteKey = SecureKey.getOrInitKey(ServerUtil.getDomain(), SecureKey.remoteKeyName);
             PasswordCipher passwordCipher = ConsoleWarHelper.getPasswordCipher(remoteKey);
             byte[] decryptedData = passwordCipher.decrypt(requestData);
 
@@ -61,7 +62,7 @@ public class RunRemote implements Process {
 
             Response response = new ResponseImpl();
 
-            AppManager appManager = controller.frameworkContext.getAppInfoManager();
+            AppManager appManager = controller.frameworkContext.getAppManager();
             AppInfo appInfo = appManager.getAppInfo(request.getAppName());
             appInfo.invokeAction(request, response);
 

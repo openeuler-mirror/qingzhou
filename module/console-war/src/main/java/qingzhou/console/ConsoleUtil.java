@@ -8,8 +8,8 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.framework.api.*;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.pattern.Visitor;
-import qingzhou.framework.util.ModelUtil;
 import qingzhou.framework.util.ObjectUtil;
+import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,11 +36,11 @@ public class ConsoleUtil {
     }
 
     public static void error(String msg, Throwable t) {
-        ConsoleWarHelper.getLogger().error(msg, t);
+        ServerUtil.getLogger().error(msg, t);
     }
 
     public static void warn(String msg) {
-        ConsoleWarHelper.getLogger().warn(msg);
+        ServerUtil.getLogger().warn(msg);
     }
 
     public static ModelManager getModelManager(String appName) {
@@ -160,7 +160,7 @@ public class ConsoleUtil {
 
     // todo 临时，仅支持单应用
     public static AppContext getAppContext(String appName) {
-        return ConsoleWarHelper.getAppContext(appName);
+        return ServerUtil.getFrameworkContext().getAppManager().getAppInfo(appName).getAppContext();
     }
 
     public static List<Properties> getAppMenuList(String loginUser, String appName) {
@@ -445,7 +445,7 @@ public class ConsoleUtil {
             String effectiveWhen = modelAction.effectiveWhen().trim();
             boolean effective = false;
             try {
-                effective = ModelUtil.isEffective(fieldName -> obj.get(fieldName), effectiveWhen);
+                effective = ServerUtil.isEffective(fieldName -> obj.get(fieldName), effectiveWhen);
             } catch (Exception ignored) {
             }
             if (!effective) {

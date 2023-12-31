@@ -21,7 +21,8 @@
         <module>qingzhou-jnet</module>
         <module>qingzhou-console</module>
         <module>console-war</module>
-<!--        <module>qingzhou-master</module>-->
         <module>qingzhou-app</module>
+        <module>app-master</module>
+        <module>app-common</module>
     </modules>
 </project>

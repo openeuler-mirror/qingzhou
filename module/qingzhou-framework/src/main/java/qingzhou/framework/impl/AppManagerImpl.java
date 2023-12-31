@@ -6,21 +6,19 @@ import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.QingZhouApp;
 import qingzhou.framework.impl.model.ModelManagerImpl;
 import qingzhou.framework.util.ClassLoaderUtil;
+import qingzhou.framework.util.FileUtil;
+import qingzhou.framework.util.ServerUtil;
 
 import java.io.File;
 import java.net.URLClassLoader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class AppManagerImpl implements AppManager {
     private final Map<String, AppInfo> appInfoMap = new HashMap<>();
-    private final Map<String, URLClassLoader> loaderMap = new HashMap<>();
 
     private AppInfoImpl buildAppInfo(URLClassLoader loader) {
         AppInfoImpl appInfo = new AppInfoImpl();
-        AppContextImpl appContext = new AppContextImpl((FrameworkContextImpl) FrameworkContextImpl.getFrameworkContext());
+        AppContextImpl appContext = new AppContextImpl((FrameworkContextImpl) ServerUtil.getFrameworkContext());
         ModelManager modelManager = new ModelManagerImpl(loader);
         appContext.setModelManager(modelManager);
         appContext.setConsoleContext(new ConsoleContextImpl(modelManager));
@@ -33,22 +31,23 @@ public class AppManagerImpl implements AppManager {
     }
 
     @Override
-    public void installApp(String appName, File appFile) throws Exception {
-        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appFile, QingZhouApp.class.getClassLoader());
-        installApp(appName, loader);
-
-        loaderMap.put(appName, loader);
-    }
-
-    @Override
-    public void installApp(String appName, URLClassLoader loader) throws Exception {
+    public void installApp(String appName, boolean includeCommon, File... file) throws Exception {
         if (appInfoMap.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
 
+        List<File> appLib = new ArrayList<>(Arrays.asList(file));
+        if (includeCommon) {
+            File[] files = FileUtil.newFile(ServerUtil.getFrameworkContext().getLib(), "sysapp", "common").listFiles();
+            if (files != null) {
+                appLib.addAll(Arrays.asList(files));
+            }
+        }
+        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLib, QingZhouApp.class.getClassLoader());
         AppInfoImpl appInfo = buildAppInfo(loader);
-        appInfo.getQingZhouApp().start(appInfo.getAppContext());
         appInfoMap.put(appName, appInfo);
+
+        appInfo.getQingZhouApp().start(appInfo.getAppContext());
     }
 
     @Override
@@ -61,10 +60,7 @@ public class AppManagerImpl implements AppManager {
             qingZhouApp.stop();
         }
 
-        URLClassLoader loader = loaderMap.remove(name);
-        if (loader != null) {
-            loader.close();
-        }
+        appInfo.getLoader().close();
     }
 
     @Override

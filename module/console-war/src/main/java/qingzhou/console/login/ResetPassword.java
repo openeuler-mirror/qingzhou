@@ -1,20 +1,20 @@
 package qingzhou.console.login;
 
-import qingzhou.framework.api.ConsoleContext;
 import qingzhou.console.ConsoleUtil;
+import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
-import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.ServerXml;
 import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.framework.util.Constants;
-import qingzhou.framework.util.ExceptionUtil;
-import qingzhou.framework.util.TimeUtil;
 import qingzhou.console.view.impl.JsonView;
+import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.Constants;
+import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,7 +28,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
     private static final String set2FAMsg = "page.warn.set2fa";
 
     static {
-        ConsoleContext master = ConsoleWarHelper.getMasterAppConsoleContext();// todo
+        ConsoleContext master = ServerUtil.getMasterConsoleContext();
         if (master != null) {
             master.addI18N(setPasswordMsg, new String[]{"请先重置默认密码", "en:Please reset your default password first"});
             master.addI18N(set2FAMsg, new String[]{"请先扫描二维码绑定双因子认证密钥", "en:Please scan the QR code to bind the two-factor authentication key"});

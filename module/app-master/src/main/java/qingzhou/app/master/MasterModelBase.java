@@ -1,29 +1,22 @@
-package qingzhou.master;
+package qingzhou.app.master;
 
-import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.util.ModelUtil;
 import qingzhou.framework.util.ObjectUtil;
+import qingzhou.framework.util.ServerUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class MasterModelBase extends ModelBase {
-    static {
-        ConsoleContext consoleContext = ModelUtil.getMasterConsoleContext();
-        if (consoleContext != null) {
-            consoleContext.addI18N("user.not.permission", new String[]{"当前登录用户没有执行此操作的权限。", "en:The currently login user does not have permission to do this"});
-        }
-    }
-
     @Override
-    public ConsoleContext getConsoleContext() {
-        return ModelUtil.getMasterConsoleContext();
+    public AppContext getAppContext() {
+        return ServerUtil.getMasterAppContext();
     }
 
     protected <T> Map<String, String> mapper(T data) {
         Class<?> dataClassType = data.getClass();
-        String[] classFields = ModelUtil.getMasterAppContext().getModelManager().getAllFieldNames(dataClassType);
+        String[] classFields = ServerUtil.getMasterAppContext().getModelManager().getAllFieldNames(dataClassType);
         Map<String, String> map = new HashMap<>();
         for (String field : classFields) {
             try {

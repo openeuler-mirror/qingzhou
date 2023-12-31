@@ -72,7 +72,11 @@ public class Main {
         for (Map.Entry<Integer, Set<String>> entry : moduleLevel.entrySet()) {
             entry.getValue().forEach(moduleName -> {
                 File moduleJar = new File(moduleBase, moduleName + ".jar");
-                installBundleFile(framework, moduleJar);
+                if (moduleJar.exists()) {
+                    installBundleFile(framework, moduleJar);
+                } else {
+                    System.err.println("module not found: " + moduleJar.getName());
+                }
             });
         }
 

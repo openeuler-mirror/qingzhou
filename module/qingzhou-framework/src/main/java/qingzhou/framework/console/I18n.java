@@ -2,7 +2,7 @@ package qingzhou.framework.console;
 
 import qingzhou.framework.AppInfo;
 import qingzhou.framework.impl.ConsoleContextImpl;
-import qingzhou.framework.impl.FrameworkContextImpl;
+import qingzhou.framework.util.ServerUtil;
 
 import java.util.Map;
 
@@ -34,13 +34,13 @@ public class I18n {
     }
 
     public static String getString(String appName, String i18nKey, Lang lang) {
-        AppInfo appInfo = FrameworkContextImpl.getFrameworkContext().getAppInfoManager().getAppInfo(appName);
+        AppInfo appInfo = ServerUtil.getFrameworkContext().getAppManager().getAppInfo(appName);
         ConsoleContextImpl consoleContext = (ConsoleContextImpl) appInfo.getAppContext().getConsoleContext();
         return consoleContext.getI18N(lang, i18nKey);
     }
 
     public static String getString(String appName, String i18nKey) {
-        AppInfo appInfo = FrameworkContextImpl.getFrameworkContext().getAppInfoManager().getAppInfo(appName);
+        AppInfo appInfo = ServerUtil.getFrameworkContext().getAppManager().getAppInfo(appName);
         return appInfo.getAppContext().getConsoleContext().getI18N(i18nKey);
     }
 
