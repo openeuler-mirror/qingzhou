@@ -421,12 +421,7 @@ public class ModelManagerImpl implements ModelManager {
 
     @Override
     public ModelBase getModelInstance(String modelName) {
-        ModelInfo modelInfo = getModelInfo(modelName);
-        try {
-            return (ModelBase) modelInfo.clazz.newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return getModelInfo(modelName).instance;
     }
 
     @Override

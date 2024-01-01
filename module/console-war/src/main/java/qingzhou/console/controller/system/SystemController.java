@@ -82,9 +82,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
         @Override
         public void exec() {
-//      todo      ConsoleContext master = Main.getInternalService(ConsoleContextFinder.class).find(qingzhou.framework.api.Constants.MASTER_APP_NAME);
-            // master 位置：qingzhou.app.master.Main
-
 //      todo      ConsoleContext defaultApp = Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME);
             /*ConsoleContext defaultApp = ConsoleUtil.getAppContext(null).getConsoleContext();
             master.setMenuInfo("Favorites", new String[]{"我的收藏", "en:Favorites"}, "star", 0);

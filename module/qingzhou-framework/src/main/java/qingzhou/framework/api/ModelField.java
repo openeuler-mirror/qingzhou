@@ -8,26 +8,23 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ModelField {
+    String group() default "";
+
     String[] nameI18n();
 
     String[] infoI18n();
 
-    /**
-     * 标注需要在页面上按顺序显示，自然顺序排序
-     */
-    int order() default -1;
+    boolean required() default false;
 
     FieldType type() default FieldType.text;
+
+    boolean unique() default false;
 
     Class<?> refModel() default Object.class;
 
     boolean allowRefModelEdit() default true;
 
     boolean allowRefModelDelete() default false;
-
-    boolean required() default false;
-
-    boolean unique() default false;
 
     long min() default -1;
 
@@ -83,8 +80,6 @@ public @interface ModelField {
 
     boolean clientEncrypt() default false;
 
-    String group() default "";
-
     String effectiveWhen() default "";
 
     boolean effectiveOnCreate() default true;
@@ -101,4 +96,9 @@ public @interface ModelField {
      * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.action.fieldname"，根据modelname和action跳转，fieldname为链接携带的参数key
      */
     String linkModel() default "";
+
+    /**
+     * 标注需要在页面上按顺序显示，自然顺序排序
+     */
+    int order() default -1;
 }

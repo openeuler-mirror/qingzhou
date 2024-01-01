@@ -1,6 +1,5 @@
 package qingzhou.app.master;
 
-import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.ServerUtil;
@@ -9,11 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MasterModelBase extends ModelBase {
-    @Override
-    public AppContext getAppContext() {
-        return ServerUtil.getMasterAppContext();
-    }
-
+    // todo
     protected <T> Map<String, String> mapper(T data) {
         Class<?> dataClassType = data.getClass();
         String[] classFields = ServerUtil.getMasterAppContext().getModelManager().getAllFieldNames(dataClassType);

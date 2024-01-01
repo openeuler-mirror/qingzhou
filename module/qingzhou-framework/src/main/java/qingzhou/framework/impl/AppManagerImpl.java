@@ -2,6 +2,7 @@ package qingzhou.framework.impl;
 
 import qingzhou.framework.AppInfo;
 import qingzhou.framework.AppManager;
+import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.QingZhouApp;
 import qingzhou.framework.impl.model.ModelManagerImpl;
@@ -16,12 +17,18 @@ import java.util.*;
 public class AppManagerImpl implements AppManager {
     private final Map<String, AppInfo> appInfoMap = new HashMap<>();
 
-    private AppInfoImpl buildAppInfo(URLClassLoader loader) {
+    private AppInfoImpl buildAppInfo(String appName, URLClassLoader loader) {
         AppInfoImpl appInfo = new AppInfoImpl();
         AppContextImpl appContext = new AppContextImpl((FrameworkContextImpl) ServerUtil.getFrameworkContext());
+        appContext.setAppName(appName);
         ModelManager modelManager = new ModelManagerImpl(loader);
         appContext.setModelManager(modelManager);
         appContext.setConsoleContext(new ConsoleContextImpl(modelManager));
+        for (String modelName : modelManager.getAllModelNames()) {
+            ModelBase modelInstance = modelManager.getModelInstance(modelName);
+            modelInstance.setAppContext(appContext);
+            modelInstance.init();
+        }
         appInfo.setAppContext(appContext);
         List<QingZhouApp> apps = ClassLoaderUtil.loadServices(QingZhouApp.class.getName(), loader);
         if (!apps.isEmpty()) {
@@ -44,7 +51,7 @@ public class AppManagerImpl implements AppManager {
             }
         }
         URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLib, QingZhouApp.class.getClassLoader());
-        AppInfoImpl appInfo = buildAppInfo(loader);
+        AppInfoImpl appInfo = buildAppInfo(appName, loader);
         appInfoMap.put(appName, appInfo);
 
         appInfo.getQingZhouApp().start(appInfo.getAppContext());

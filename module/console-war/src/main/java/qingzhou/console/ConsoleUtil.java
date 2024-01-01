@@ -277,24 +277,11 @@ public class ConsoleUtil {
         return new ArrayList<>();
     }
 
-    public static GroupManager fieldGroups(RequestImpl request, String groupName) {
+    public static Options fieldOptions(RequestImpl request, String fieldName) {
         String appName = request.getAppName();
         ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return null;
-        }
-        ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
-        return modelInstance.fieldGroups(groupName);
-    }
-
-    public static OptionManager fieldOptions(RequestImpl request, String fieldName) {
-        String appName = request.getAppName();
-        ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return null;
-        }
         ModelBase modelBase = modelManager.getModelInstance(request.getModelName());
-        return modelBase.fieldOptions(request, fieldName);
+        return modelBase.options(fieldName);
     }
 
     public static boolean isListModel(String appName, String modelName) {
@@ -307,7 +294,7 @@ public class ConsoleUtil {
 
     public static void multiSelectGroup(LinkedHashMap<String, String> groupDes,
                                         LinkedHashMap<String, LinkedHashMap<String, String>> groupedMap,
-                                        OptionManager optionsManager) {
+                                        Options optionsManager) {
         LinkedHashMap<String, LinkedHashMap<String, String>> tempGroup = new LinkedHashMap<>();
         LinkedHashMap<String, String> twoGroup = new LinkedHashMap<>();
         for (Option option : optionsManager.options()) {

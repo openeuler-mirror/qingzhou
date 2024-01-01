@@ -5,25 +5,25 @@ import java.util.Map;
 public interface ModelManager {
     String[] getAllModelNames();
 
+    String getModelName(Class<?> modelClass);
+
+    ModelBase getModelInstance(String modelName);
+
+    Map<String, String> getModelDefaultProperties(String modelName);
+
     Model[] getAllModels();
 
     Model getModel(String modelName);
 
     Class<?> getModelClass(String modelName);
 
-    ModelBase getModelInstance(String modelName);
-
     ModelAction[] getModelActions(String modelName);
 
     ModelAction getModelAction(String modelName, String actionName);
 
-    Map<String, String> getModelDefaultProperties(String modelName);
-
     String[] getAllFieldNames(String modelName);
 
     String[] getAllFieldNames(Class<?> modelClass);
-
-    String getModelName(Class<?> modelClass);
 
     String[] getShowField(String modelName, String actionName);
 

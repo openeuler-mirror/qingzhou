@@ -1,8 +1,6 @@
 package qingzhou.framework.api;
 
 public interface Group {
-    String GROUP_NAME_BASIC = "basic";
-
     String name();
 
     String[] i18n();

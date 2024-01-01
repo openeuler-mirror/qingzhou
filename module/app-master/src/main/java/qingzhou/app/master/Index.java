@@ -60,9 +60,4 @@ public class Index extends MasterModelBase {
     public Map<String, String> showInternal(Request request) throws Exception {
         return null;
     }
-
-    @Override
-    public DataStore getDataStore() {
-        return null;
-    }
 }

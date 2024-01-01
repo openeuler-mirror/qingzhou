@@ -1,8 +1,7 @@
 package qingzhou.app.master.user;
 
 import qingzhou.app.master.MasterModelBase;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.Model;
+import qingzhou.framework.api.*;
 
 @Model(name = "user", icon = "user",
         menuName = "Security", menuOrder = 1,
@@ -14,33 +13,26 @@ public class User extends MasterModelBase implements AddModel {
     public static final int defSaltLength = 4;
     public static final int defIterations = 5;
     public static final int defLimitRepeats = 5;
-//
-//    static {
-//        ConsoleContext master = ServerUtil.getMasterConsoleContext();
-//        master.addI18N("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
-//        master.addI18N("permissions.cannot.users", new String[]{"出于安全考虑，系统内置用户的权限不能更改", "en:For security reasons, permissions cannot be changed for built-in users of the system"});
-//        master.addI18N("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
-//        master.addI18N("operate.system.users.not", new String[]{"为安全起见，请勿操作系统内置用户", "en:For security reasons, do not operate the system built-in users"});
-//        master.addI18N("tenant.not.exist", new String[]{"租户[%s]不存在", "en:Tenant [%s] does not exist"});
-//
-//    }
-//
+
+    @ModelField(
+            required = true, unique = true, showToList = true,
+            nameI18n = {"名称", "en:Name"},
+            infoI18n = {"唯一标识。", "en:Unique identifier."})
+    public String id;
+
+    @Override
+    public void init() {
+        super.init();
+        ConsoleContext consoleContext = getAppContext().getConsoleContext();
+        consoleContext.addI18N("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
+        consoleContext.addI18N("permissions.cannot.users", new String[]{"出于安全考虑，系统内置用户的权限不能更改", "en:For security reasons, permissions cannot be changed for built-in users of the system"});
+        consoleContext.addI18N("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
+        consoleContext.addI18N("operate.system.users.not", new String[]{"为安全起见，请勿操作系统内置用户", "en:For security reasons, do not operate the system built-in users"});
+        consoleContext.addI18N("tenant.not.exist", new String[]{"租户[%s]不存在", "en:Tenant [%s] does not exist"});
+    }
+
+    //
 //    @ModelField(
-//            group = Group.GROUP_NAME_BASIC,
-//            required = true, unique = true, showToList = true,
-//            nameI18n = {"名称", "en:Name"},
-//            infoI18n = {"唯一标识。", "en:Unique identifier."})
-//    public String id;
-//
-//    @ModelField(
-//            group = Group.GROUP_NAME_BASIC,
-//            showToList = true,
-//            nameI18n = {"描述", "en:Description"},
-//            infoI18n = {"描述信息。", "en:Description information."})
-//    public String info = "";
-//
-//    @ModelField(
-//            group = Group.GROUP_NAME_BASIC,
 //            showToList = true,
 //            effectiveOnEdit = false,
 //            effectiveOnCreate = false,
@@ -49,7 +41,6 @@ public class User extends MasterModelBase implements AddModel {
 //    public String tenant = "";
 //
 //    @ModelField(
-//            group = Group.GROUP_NAME_BASIC,
 //            required = true,
 //            type = FieldType.password,
 //            nameI18n = {"密码", "en:Password"},
@@ -57,7 +48,6 @@ public class User extends MasterModelBase implements AddModel {
 //    public String password;
 //
 //    @ModelField(
-//            group = Group.GROUP_NAME_BASIC,
 //            required = true,
 //            type = FieldType.password,
 //            nameI18n = {"确认密码", "en:Confirm Password"},
@@ -65,7 +55,6 @@ public class User extends MasterModelBase implements AddModel {
 //    public String confirmPassword;
 //
 //    @ModelField(
-//            group = Group.GROUP_NAME_BASIC,
 //            required = true,
 //            type = FieldType.select,
 //            nameI18n = {"摘要算法", "en:Digest Algorithm"},
@@ -74,7 +63,6 @@ public class User extends MasterModelBase implements AddModel {
 //    public String digestAlg = "SHA-256";
 //
 //    @ModelField(
-//            group = Group.GROUP_NAME_BASIC,
 //            type = FieldType.number,
 //            min = 1,
 //            max = 128,
@@ -84,8 +72,6 @@ public class User extends MasterModelBase implements AddModel {
 //    public Integer saltLength = defSaltLength;
 //
 //    @ModelField(
-//            group = Group.GROUP_NAME_BASIC,
-//            type = FieldType.number,
 //            min = 1,
 //            max = 128,
 //            nameI18n = {"迭代次数", "en:Iterations"},
@@ -175,30 +161,26 @@ public class User extends MasterModelBase implements AddModel {
 //            infoI18n = {"记录最近几次使用过的密码。", "en:Keep a record of the last few passwords you have used."})
 //    public String oldPasswords;
 //
-//    @Override
-//    public GroupManager fieldGroups(String groupName) {
-//        if (groupName.equals("security")) {
-//            return () -> Collections.singletonList(Group.of("security", new String[]{"安全", "en:Security"}));
-//        }
-//
-//        return super.fieldGroups(groupName);
-//    }
-//
-//    @Override
-//    public OptionManager fieldOptions(Request request, String fieldName) {
-//        if ("digestAlg".equals(fieldName)) {
-//            return () -> digestAlgFieldOptions();
-//        }
-//
-//        return super.fieldOptions(request, fieldName);
-//    }
-//
-//    public List<Option> digestAlgFieldOptions() {
-//        return new ArrayList<>(Arrays.asList(Option.of("SHA-256", new String[]{"SHA-256", "en:SHA-256"}),
-//                Option.of("SHA-384", new String[]{"SHA-384", "en:SHA-384"}),
-//                Option.of("SHA-512", new String[]{"SHA-512", "en:SHA-512"})));
-//    }
-//
+    @Override
+    public Groups group() {
+        Groups group = super.group();
+        return Groups.merge(group, Group.of("security", new String[]{"安全", "en:Security"}));
+    }
+
+    @Override
+    public Options options(String fieldName) {
+        Options options = super.options(fieldName);
+
+        if ("digestAlg".equals(fieldName)) {
+            return Options.merge(options,
+                    Option.of("SHA-256"),
+                    Option.of("SHA-384"),
+                    Option.of("SHA-512"));
+        }
+
+        return options;
+    }
+
 //    public void list(Request request, Response response) throws Exception {
 //        String loginUser = request.getUserName();
 //        if (!ServerXml.ConsoleRole.checkLoginUserIsManagerRole(loginUser, true)) {

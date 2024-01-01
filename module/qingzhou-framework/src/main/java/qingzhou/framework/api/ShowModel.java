@@ -18,13 +18,9 @@ public interface ShowModel {
         return dataStore.getDataById(request.getModelName(), request.getId());
     }
 
-    AppContext getAppContext();
-
-    default ConsoleContext getConsoleContext() {
-        return getAppContext().getConsoleContext();
-    }
-
     default DataStore getDataStore() {
-        return getConsoleContext().getDataStore();
+        return getAppContext().getDataStore();
     }
+
+    AppContext getAppContext();
 }

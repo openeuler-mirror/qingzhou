@@ -14,7 +14,13 @@ public interface AppContext {
 
     <T> T getService(Class<T> serviceType);
 
+    String getAppName();
+
     ModelManager getModelManager();
+
+    void setDataStore(DataStore dataStore);
+
+    DataStore getDataStore();
 
     ConsoleContext getConsoleContext();
 }

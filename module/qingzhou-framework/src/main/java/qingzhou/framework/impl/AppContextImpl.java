@@ -3,6 +3,7 @@ package qingzhou.framework.impl;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.DataStore;
 import qingzhou.framework.api.ModelManager;
 
 import java.io.File;
@@ -10,8 +11,10 @@ import java.util.Set;
 
 public class AppContextImpl implements AppContext {
     private final FrameworkContext frameworkContext;
+    private String appName;
     private ConsoleContext consoleContext;
     private ModelManager modelManager;
+    private DataStore dataStore;
 
     public AppContextImpl(FrameworkContextImpl frameworkContext) {
         this.frameworkContext = frameworkContext;
@@ -43,6 +46,15 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
+    public String getAppName() {
+        return appName;
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
+    }
+
+    @Override
     public ModelManager getModelManager() {
         return modelManager;
     }
@@ -58,5 +70,15 @@ public class AppContextImpl implements AppContext {
 
     public void setConsoleContext(ConsoleContext consoleContext) {
         this.consoleContext = consoleContext;
+    }
+
+    @Override
+    public void setDataStore(DataStore dataStore) {
+        this.dataStore = dataStore;
+    }
+
+    @Override
+    public DataStore getDataStore() {
+        return dataStore;
     }
 }

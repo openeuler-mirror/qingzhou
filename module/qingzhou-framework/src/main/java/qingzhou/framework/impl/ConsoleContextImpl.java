@@ -11,7 +11,6 @@ import java.util.Map;
 public class ConsoleContextImpl implements ConsoleContext {
     private final Map<Lang, Map<String, String>> langMap = new HashMap<>();
     private final Map<String, MenuInfoImpl> menuInfoMap = new HashMap<>();
-    private DataStore dataStore;
 
     public ConsoleContextImpl(ModelManager modelManager) {
         initI18N(modelManager);
@@ -75,15 +74,6 @@ public class ConsoleContextImpl implements ConsoleContext {
     @Override
     public String getI18N(String key, Object... args) {
         return getI18N(I18n.getI18nLang(), key, args);
-    }
-
-    @Override
-    public void setDataStore(DataStore dataStore) {
-        this.dataStore = dataStore;
-    }
-
-    public DataStore getDataStore() {
-        return dataStore;
     }
 
     public String getI18N(Lang lang, String key, Object... args) {

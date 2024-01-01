@@ -42,21 +42,20 @@
                 %>
                 <ul class="nav nav-tabs">
                     <%
-                    boolean isFirst = true;
-                    for (String group : groups) {
-                        GroupManager groupManager = ConsoleUtil.fieldGroups(qzRequest, group);
-                        if(groupManager==null){
-                            continue;
+                    GroupManager groupManager = ConsoleUtil.group(qzRequest);
+                    if(groupManager!=null){
+                        boolean isFirst = true;
+                        for (Group group : groupManager.groups()) {
+                            %>
+                            <li <%=isFirst ? "class='active'" : ""%>>
+                                <a data-tab href="#group-<%=("".equals(group.name()) ? "OTHERS":group.name())%>-<%=suffixId%>"
+                                   tabGroup="<%=("".equals(group.name()) ? "OTHERS":group.name())%>">
+                                    <%=I18n.getString(group.i18n())%>
+                                </a>
+                            </li>
+                            <%
+                            isFirst = false;
                         }
-                        %>
-                        <li <%=isFirst ? "class='active'" : ""%>>
-                            <a data-tab href="#group-<%=("".equals(group) ? "OTHERS":group)%>-<%=suffixId%>"
-                               tabGroup="<%=("".equals(group) ? "OTHERS":group)%>">
-                                <%=I18n.getString(groupManager.groups().get(0).i18n())%>
-                            </a>
-                        </li>
-                        <%
-                        isFirst = false;
                     }
                     %>
                 </ul>

@@ -311,7 +311,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             // 如果是范围限定的，首先验证是否在指定的范围内，一定要放在 空串 检测之前，否则 Boolean 传递 空串会被跳过验证
-            OptionManager optionManager = vc.tempModel.fieldOptions(vc.request, vc.fieldName);
+            Options optionManager = vc.tempModel.options(vc.fieldName);
             if (optionManager != null) {
                 List<Option> options = optionManager.options();
                 List<String> keyList = new ArrayList<>();// set 没有顺序，会影响自动测试集合
