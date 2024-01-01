@@ -7,7 +7,6 @@ import qingzhou.console.impl.ResponseImpl;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.pattern.Filter;
@@ -34,15 +33,6 @@ public class RESTController extends HttpServlet {
     public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + Constants.MODEL_NAME_node + "/" + qingzhou.framework.api.Constants.LOCAL_NODE_NAME + "/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_index + "/" + Constants.ACTION_NAME_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache();
-
-    static {
-        ConsoleContext master = ConsoleUtil.getAppContext(null).getConsoleContext();
-        // 一些 filter 需要 i18n，如 LoginFreeFilter 调用了Helper.convertCommonMsg(msg)，此时 RestController 等类可能都还没有初始化（例如 Rest 直连登录），会导致 i18n 信息丢失，因此放到这里
-        master.addI18N("validator.notexist", new String[]{"%s不存在", "en:%s does not exist"});// The product uses untrusted data to generated HTML pages. 客户端传来的参数不能回显到页面上，以阻止可能的xss攻击
-        master.addI18N("validator.ActionEffective.notsupported", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});// The product uses untrusted data to generated HTML pages. 客户端传来的参数不能回显到页面上，以阻止可能的xss攻击
-        master.addI18N("batch.ops.success", new String[]{"%s%s成功%s个", "en:%s %s Success %s"});
-        master.addI18N("batch.ops.fail", new String[]{"%s%s成功%s个，失败%s个，失败详情：", "en:%s%s success %s, failure %s, failure details:"});
-    }
 
     public static List<String> retrieveRestPathInfo(HttpServletRequest req) {
         List<String> result = new ArrayList<>();
