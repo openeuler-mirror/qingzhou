@@ -62,7 +62,7 @@ public class Validator {
         }
 
         Map<String, String> errorData = new HashMap<>();
-        String[] allFieldNames = modelManager.getAllFieldNames(request.getModelName());
+        String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
         boolean singleFieldValidation = isSingleFieldValidation(request);
         String singleField = request.getParameter(Constants.SINGLE_FIELD_VALIDATE_PARAM);
         for (String fieldName : allFieldNames) {
@@ -92,7 +92,7 @@ public class Validator {
             return null;
         }
 
-        ModelBase tempModel = modelManager.getModelInstance(modelName);
+        ModelBase tempModel = (ModelBase) modelManager.getModelClass(modelName).newInstance();
 
         try {
             Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
@@ -109,10 +109,10 @@ public class Validator {
         boolean isUpdate = EditModel.ACTION_NAME_UPDATE.equals(request.getActionName());
         if (newValue == null) { // NOTE：不能使用 StringUtil.isBlank 来判断，空串 "" 表示有值，且与 null（无值） 是不同含义
             if (modelField.required()) {
-                if (isUpdate && !modelField.effectiveOnEdit()) { // for #NC-1624|创建时必填，编辑时允许为空。
+                if (isUpdate && modelField.disableOnEdit()) { // for #NC-1624|创建时必填，编辑时允许为空。
                     return null;
                 }
-                if (modelField.effectiveOnCreate()) {
+                if (modelField.disableOnCreate()) {
                     // 解决 Connector 同时有 compressibleMimeType的默认值和 required 标注，依然在此处被拦截问题
                     // 例如 Connector：证书路径虽然给了默认值，但如果用户清空输入框再提交就会报错，未拦截说必填项（根因在于 空串和null的判别），所以此处需要再次核验
                     String defaultValue = "";//getModelManager().getFieldValue(tempModel, fieldName); todo 获取默认值
@@ -126,7 +126,7 @@ public class Validator {
 
             Class<?>[] preValidatorClass = { // 有顺序要求
                     readOnly.class,
-                    effectiveOnCreate.class,
+                    disableOnCreate.class,
                     options.class
             };
             String msg = validate(preValidatorClass, vc);
@@ -265,7 +265,7 @@ public class Validator {
 
             // id 字段，额外增加校验
             // 放在 useCustomizedValidator 之后，可 允许自定义id的校验
-            if (vc.fieldName.equals(ListModel.FIELD_NAME_ID) && !vc.modelField.skipIdFormat()) {
+            if (vc.fieldName.equals(ListModel.FIELD_NAME_ID)) {
                 // 只能输入英文数字下划线和横线的正则表达式
                 boolean matches = Pattern.compile("^[a-zA-Z0-9#_/.:-]+$").matcher(vc.newValue).find();
                 if (!matches) {
@@ -292,12 +292,12 @@ public class Validator {
         }
     }
 
-    static class effectiveOnCreate implements InternalValidator {
+    static class disableOnCreate implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             // 字段不可创建
-            if (!vc.modelField.effectiveOnCreate() && vc.isAdd()) {
+            if (vc.modelField.disableOnCreate() && vc.isAdd()) {
                 if (ServerUtil.notBlank(vc.newValue)) {
                     return vc.context.getI18N("validator.cannotCreate");
                 }
@@ -311,7 +311,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             // 如果是范围限定的，首先验证是否在指定的范围内，一定要放在 空串 检测之前，否则 Boolean 传递 空串会被跳过验证
-            Options optionManager = vc.tempModel.options(vc.fieldName);
+            Options optionManager = vc.modelManager.getOptions(vc.modelName, vc.fieldName);
             if (optionManager != null) {
                 List<Option> options = optionManager.options();
                 List<String> keyList = new ArrayList<>();// set 没有顺序，会影响自动测试集合

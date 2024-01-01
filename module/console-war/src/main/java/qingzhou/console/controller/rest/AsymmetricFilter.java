@@ -14,7 +14,7 @@ public class AsymmetricFilter implements Filter<RestContext> {
         RequestImpl request = (RequestImpl) context.request;
         String appName = request.getAppName();
         ModelManager modelManager = ConsoleUtil.getModelManager(appName);
-        for (String fieldName : modelManager.getAllFieldNames(request.getModelName())) {
+        for (String fieldName : modelManager.getFieldNames(request.getModelName())) {
             ModelField modelField = modelManager.getModelField(request.getModelName(), fieldName);
             if (modelField.type() == FieldType.password
                     || modelField.clientEncrypt()

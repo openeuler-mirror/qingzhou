@@ -4,12 +4,9 @@ import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
-import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.pattern.FilterPattern;
 import qingzhou.framework.pattern.Process;
-import qingzhou.framework.pattern.ProcessSequence;
-import qingzhou.framework.util.ServerUtil;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -19,15 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
-    // 可添加自定义监听器，监听 console 的启动和停止事件
-    public static final ProcessSequence COMPONENT_SEQUENCE = new ProcessSequence(
-            new InitConsoleMenu()
-    );
     private static final List<Runnable> shutdownHooks = new ArrayList<>();
-
-    public static void addShutdownHook(Runnable task) {
-        shutdownHooks.add(task);
-    }
 
     private static final Filter<HttpServletContext>[] processors = new Filter[]{
             new TrustedIPChecker(),
@@ -48,21 +37,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             context.chain.doFilter(context.req, context.resp); // 这样可以进入 servlet 资源
             return false;
         }
-    }
-
-    @Override
-    public void contextInitialized(ServletContextEvent servletContextEvent) {
-        try {
-            COMPONENT_SEQUENCE.exec();
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    @Override
-    public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        COMPONENT_SEQUENCE.undo();
-        shutdownHooks.forEach(Runnable::run);
     }
 
     @Override

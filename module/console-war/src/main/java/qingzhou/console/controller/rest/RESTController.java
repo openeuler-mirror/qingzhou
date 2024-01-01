@@ -155,7 +155,7 @@ public class RESTController extends HttpServlet {
             request.setId(id);
         }
         boolean actionFound = false;
-        ModelAction[] actions = ConsoleUtil.getModelManager(request.getAppName()).getModelActions(request.getModelName());
+        ModelAction[] actions = ConsoleUtil.getModelManager(request.getAppName()).getActionNames(request.getModelName());
         if (actions != null) {
             for (ModelAction ma : actions) {
                 if (ma.name().equals(request.getActionName())) {

@@ -1,21 +1,19 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ServerXml;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.api.DownloadModel;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.ShowModel;
 import qingzhou.console.ConsoleUtil;
-import qingzhou.console.impl.*;
+import qingzhou.console.SecureKey;
+import qingzhou.console.ServerXml;
+import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.impl.RequestImpl;
+import qingzhou.console.impl.ResponseImpl;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.framework.util.Constants;
-import qingzhou.console.SecureKey;
-import qingzhou.framework.util.ServerUtil;
-import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.api.*;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.Constants;
+import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.StringUtil;
 
 import javax.naming.NameNotFoundException;
 import java.net.SocketException;
@@ -133,7 +131,7 @@ public class InvokeAction implements Filter<RestContext> {
                 ModelManager manager = ConsoleUtil.getModelManager(appName);
                 Class<?> modelClass = manager.getModelClass(modelName);
                 if (modelClass != null) {
-                    if (ListModel.class.isAssignableFrom(modelClass)) {
+                    if (manager.isModelType(modelName, ListModel.class)) {
                         if (!noCheckActions.contains(actionName)) {
                             Response responseTemp = new ResponseImpl();
                             ShowModel showModel = manager.getModelInstance(modelName);

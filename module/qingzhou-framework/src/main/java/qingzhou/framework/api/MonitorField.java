@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface MonitoringField {
+public @interface MonitorField {
     /**
      * 名称 国际化(注：国际化语言不指定视为中文)：示例：{"zh:确定", "en:yes"}
      */

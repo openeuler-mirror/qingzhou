@@ -129,10 +129,10 @@ public class AccessControl implements Filter<RestContext> {
 //        }
 
         ModelManager modelManager = ConsoleUtil.getModelManager(appName);
-//        if (modelManager == null) {
-//            return new Model[0];
-//        }
-//
+        if (modelManager == null) {
+            return new Model[0];
+        }
+
 //        Set<Model> menuModels = new HashSet<>();
 //        for (XPermission xPermission : userRolePermissions) {
 //            if (xPermission == null) {
@@ -146,10 +146,13 @@ public class AccessControl implements Filter<RestContext> {
 //                }
 //            }
 //        }
-
 //        return menuModels.toArray(new Model[0]);
 
-        return modelManager.getAllModels();
+        List<Model> models = new ArrayList<>();
+        for (String modelName : modelManager.getModelNames()) {
+            models.add(modelManager.getModel(modelName));
+        }
+        return models.toArray(new Model[0]);
     }
 
     public static boolean canAccess(String targetType, String targetName, String modelAction, String user) {

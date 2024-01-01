@@ -26,17 +26,17 @@ public interface MonitorModel extends ShowModel {
         }
         List<String> graphicalDynamicFields = new ArrayList<>();
         Map<String, String> monitorData = new HashMap<>();
-        for (Map.Entry<String, MonitoringField> entry : getAppContext().getModelManager().getModelMonitoringFieldMap(request.getModelName()).entrySet()) {
+        for (Map.Entry<String, MonitorField> entry : getAppContext().getModelManager().getModelMonitoringFieldMap(request.getModelName()).entrySet()) {
             String fieldName = entry.getKey();
-            MonitoringField monitoringField = entry.getValue();
-            if (monitoringField.supportGraphicalDynamic()) {
+            MonitorField monitorField = entry.getValue();
+            if (monitorField.supportGraphicalDynamic()) {
                 graphicalDynamicFields.add(fieldName);
             } else {
                 String value = p.get(fieldName);
                 if (value != null) {
-                    if (monitoringField.supportGraphicalDynamic()) {
+                    if (monitorField.supportGraphicalDynamic()) {
                         graphicalDynamicFields.add(fieldName);
-                    } else if (monitoringField.supportGraphical()) {
+                    } else if (monitorField.supportGraphical()) {
                         monitorData.put(fieldName, value);
                     }
                 }

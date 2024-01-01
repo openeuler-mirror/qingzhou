@@ -10,7 +10,6 @@
     final boolean hasId = ConsoleUtil.hasIDField(qzRequest);
 
     LinkedHashMap<String, ModelField> fieldInfos = ConsoleUtil.getModelFieldMap(qzRequest);
-    List<Integer> indexToShow = new ArrayList<>();
     int num = -1;
     for (Map.Entry<String, ModelField> e : fieldInfos.entrySet()) {
         num++;
@@ -18,7 +17,6 @@
         if (!modelField.showToList()) {
             continue;
         }
-        indexToShow.add(num);
     }
 
     int totalSize = qzResponse.getTotalSize();
@@ -40,7 +38,7 @@
                     List<Option> modelOptionsEntry = null;
                     if (ConsoleUtil.isFilterSelect(qzRequest, i)) {
                         try {
-                            OptionManager modelOptions = ConsoleUtil.fieldOptions(qzRequest, fieldName);
+                            Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
                             if (modelOptions != null) {
                                 modelOptionsEntry = modelOptions.options();
                             }
@@ -111,7 +109,7 @@
                     boolean downloadPermission = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADFILE, LoginManager.getLoginUser(session))
                             && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADLIST, LoginManager.getLoginUser(session)));
                     final ModelAction downloadListModelAction = modelManager.getModelAction(qzRequest.getModelName(), DownloadModel.ACTION_NAME_DOWNLOADLIST);
-                    if (downloadListModelAction != null && downloadPermission && ConsoleUtil.actionShowToListHead(qzRequest, downloadListModelAction.name())) {
+                    if (downloadListModelAction != null && downloadPermission && Arrays.asList(modelManager.getActionNamesToListHead(modelName)).contains(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
                         %>
                         <a style="margin-left:6px" class="btn" btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
                            action-name="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"

@@ -24,7 +24,7 @@ public class AppManagerImpl implements AppManager {
         ModelManager modelManager = new ModelManagerImpl(loader);
         appContext.setModelManager(modelManager);
         appContext.setConsoleContext(new ConsoleContextImpl(modelManager));
-        for (String modelName : modelManager.getAllModelNames()) {
+        for (String modelName : modelManager.getModelNames()) {
             ModelBase modelInstance = modelManager.getModelInstance(modelName);
             modelInstance.setAppContext(appContext);
             modelInstance.init();

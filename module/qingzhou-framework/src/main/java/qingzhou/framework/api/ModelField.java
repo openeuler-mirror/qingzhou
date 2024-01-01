@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ModelField {
+public @interface ModelField { // todo 内容太多，可以按照 Validation、Monitor 分为不同的注解？
     String group() default "";
 
     String[] nameI18n();
@@ -18,13 +18,7 @@ public @interface ModelField {
 
     FieldType type() default FieldType.text;
 
-    boolean unique() default false;
-
     Class<?> refModel() default Object.class;
-
-    boolean allowRefModelEdit() default true;
-
-    boolean allowRefModelDelete() default false;
 
     long min() default -1;
 
@@ -37,8 +31,6 @@ public @interface ModelField {
     boolean isIpOrHostname() default false;
 
     boolean isWildcardIp() default false;
-
-    boolean isFileName() default false;
 
     boolean isPort() default false;
 
@@ -66,29 +58,21 @@ public @interface ModelField {
 
     String cannotBeTheSameAs() default "";
 
-    String[] mustStartsWith() default {};
-
-    boolean skipIdFormat() default false;
-
     boolean skipSafeCheck() default false;
 
     String skipCharacterCheck() default "";
 
     boolean checkXssLevel1() default false;
 
-    String valueFrom() default "";
-
     boolean clientEncrypt() default false;
 
     String effectiveWhen() default "";
 
-    boolean effectiveOnCreate() default true;
+    boolean disableOnCreate() default false;
 
-    boolean effectiveOnEdit() default true;
+    boolean disableOnEdit() default false; // 可见，不可编辑
 
-    boolean showToEdit() default true;
-
-    boolean showToShow() default true;
+    boolean showToEdit() default true; // 不可见
 
     boolean showToList() default false;
 
@@ -96,6 +80,8 @@ public @interface ModelField {
      * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.action.fieldname"，根据modelname和action跳转，fieldname为链接携带的参数key
      */
     String linkModel() default "";
+
+    String valueFrom() default "";
 
     /**
      * 标注需要在页面上按顺序显示，自然顺序排序

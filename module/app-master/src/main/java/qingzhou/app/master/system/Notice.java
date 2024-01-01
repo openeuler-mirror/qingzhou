@@ -9,7 +9,7 @@ import qingzhou.framework.api.*;
                 "en:Notifications are used to provide administrators with information about QingZhou restarts, licence expiry, etc. When a system configuration attribute is changed and the server needs to be restarted for the change to take effect, a notification is given with the \"details\" generally indicating the specific attribute name that was sent for the change and its value before and after the change. If more than one property has changed, they will be separated by a semicolon. In addition, the restart of QingZhou notification will be cancelled if the property is edited again after it has changed to return it to the value it had at the start."})
 public class Notice extends ModelBase implements ListModel {
     @ModelField(
-            required = true, unique = true, showToList = true,
+            required = true, showToList = true,
             nameI18n = {"ID", "en:ID"},
             infoI18n = {"ID。", "en:ID."})
     public String id;

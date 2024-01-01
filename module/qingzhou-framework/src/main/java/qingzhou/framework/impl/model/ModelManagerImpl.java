@@ -56,7 +56,7 @@ public class ModelManagerImpl implements ModelManager {
         modelInfoMap = Collections.unmodifiableMap(tempMap);
 
         // 初始化不可变的对象
-        for (String modelName : getAllModelNames()) {
+        for (String modelName : getModelNames()) {
             ModelBase modelInstance = getModelInstance(modelName);
             for (Map.Entry<String, FieldInfo> entry : modelInfoMap.get(modelName).fieldInfoMap.entrySet()) {
                 Field field = entry.getValue().field;
@@ -141,11 +141,11 @@ public class ModelManagerImpl implements ModelManager {
         return result;
     }
 
-    private List<MonitoringFieldInfo> initModelMonitorFieldInfo(Class<?> modelClass) throws Exception {
+    private List<MonitorFieldInfo> initModelMonitorFieldInfo(Class<?> modelClass) throws Exception {
         return initFieldInfo(modelClass, field -> {
-            MonitoringField fieldMeta = field.getAnnotation(MonitoringField.class);
+            MonitorField fieldMeta = field.getAnnotation(MonitorField.class);
             if (fieldMeta != null) {
-                return new MonitoringFieldInfo(fieldMeta, field);
+                return new MonitorFieldInfo(fieldMeta, field);
             }
             return null;
         });
@@ -274,19 +274,8 @@ public class ModelManagerImpl implements ModelManager {
     // 以下的是公开的方法
 
     @Override
-    public String[] getAllModelNames() {
+    public String[] getModelNames() {
         return modelInfoMap.keySet().toArray(new String[0]);
-    }
-
-    @Override
-    public Model[] getAllModels() {
-        Collection<ModelInfo> modelInfos = modelInfoMap.values();
-        List<Model> models = new ArrayList<>(modelInfos.size());
-        for (ModelInfo mi : modelInfos) {
-            models.add(mi.model);
-        }
-
-        return models.toArray(new Model[0]);
     }
 
     @Override
@@ -300,14 +289,35 @@ public class ModelManagerImpl implements ModelManager {
     }
 
     @Override
-    public ModelAction[] getModelActions(String modelName) {
+    public boolean isModelType(String modelName, Class<?> modelType) {
+        Class<?> modelClass = getModelClass(modelName);
+        return modelType.isAssignableFrom(modelClass);
+    }
+
+    @Override
+    public String[] getActionNames(String modelName) {
         ModelInfo modelInfo = getModelInfo(modelName);
-        Collection<ActionInfo> actionInfos = modelInfo.actionInfoMap.values();
-        List<ModelAction> modelActions = new ArrayList<>(actionInfos.size());
-        for (ActionInfo ai : actionInfos) {
-            modelActions.add(ai.modelAction);
-        }
-        return modelActions.toArray(new ModelAction[0]);
+        return modelInfo.actionInfoMap.keySet().toArray(new String[0]);
+    }
+
+    @Override
+    public String[] getActionNamesToFormBottom(String modelName) {
+        return getModelInstance(modelName).actionsToFormBottom().toArray(new String[0]);
+    }
+
+    @Override
+    public String[] getActionNamesSupportBatch(String modelName) {
+        return getModelInstance(modelName).actionsSupportBatch().toArray(new String[0]);
+    }
+
+    @Override
+    public String[] getActionNamesToList(String modelName) {
+        return getModelInstance(modelName).actionsToList().toArray(new String[0]);
+    }
+
+    @Override
+    public String[] getActionNamesToListHead(String modelName) {
+        return getModelInstance(modelName).actionsToListHead().toArray(new String[0]);
     }
 
     @Override
@@ -328,13 +338,8 @@ public class ModelManagerImpl implements ModelManager {
     }
 
     @Override
-    public String[] getAllFieldNames(String modelName) {
+    public String[] getFieldNames(String modelName) {
         return getModelInfo(modelName).fieldInfoMap.keySet().toArray(new String[0]);
-    }
-
-    @Override
-    public String[] getAllFieldNames(Class<?> modelClass) {
-        return getAllFieldNames(getModelName(modelClass));
     }
 
     @Override
@@ -345,22 +350,6 @@ public class ModelManagerImpl implements ModelManager {
             }
         }
 
-        return null;
-    }
-
-    @Override
-    public String[] getShowField(String modelName, String actionName) {
-        ModelInfo modelInfo = getModelInfo(modelName);
-        if (ListModel.ACTION_NAME_LIST.equals(actionName)) {
-            List<String> result = new ArrayList<>();
-            for (Map.Entry<String, FieldInfo> entry : modelInfo.fieldInfoMap.entrySet()) {
-                if (entry.getValue().modelField.showToList()) {
-                    result.add(entry.getKey());
-                }
-            }
-            return result.toArray(new String[0]);
-        }
-        // todo 可能有显示到其它action的字段，如 showToShow showToXX，等分离 api 以后，统一写到内部逻辑模板里面
         return null;
     }
 
@@ -376,47 +365,39 @@ public class ModelManagerImpl implements ModelManager {
     }
 
     @Override
-    public Map<String, ModelField> getModelFieldMap(String modelName) {
-        ModelInfo modelInfo = getModelInfo(modelName);
-        Map<String, ModelField> map = new LinkedHashMap<>();
-        for (Map.Entry<String, FieldInfo> entry : modelInfo.fieldInfoMap.entrySet()) {
-            map.put(entry.getKey(), entry.getValue().modelField);
-        }
-        return map;
+    public Options getOptions(String modelName, String fieldName) {
+        return getModelInstance(modelName).options(fieldName);
     }
 
     @Override
-    public Map<String, MonitoringField> getModelMonitoringFieldMap(String modelName) {
+    public Map<String, MonitorField> getModelMonitoringFieldMap(String modelName) {
         ModelInfo modelInfo = getModelInfo(modelName);
-        Map<String, MonitoringField> map = new LinkedHashMap<>();
-        for (Map.Entry<String, MonitoringFieldInfo> entry : modelInfo.monitoringFieldInfoMap.entrySet()) {
-            map.put(entry.getKey(), entry.getValue().monitoringField);
+        Map<String, MonitorField> map = new LinkedHashMap<>();
+        for (Map.Entry<String, MonitorFieldInfo> entry : modelInfo.monitorFieldInfoMap.entrySet()) {
+            map.put(entry.getKey(), entry.getValue().monitorField);
         }
         return map;
-    }
-
-    @Override
-    public Map<String, Map<String, ModelField>> getGroupedModelFieldMap(String modelName) {
-        ModelInfo modelInfo = getModelInfo(modelName);
-        Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
-        for (Map.Entry<String, FieldInfo> entry : modelInfo.fieldInfoMap.entrySet()) {
-            String fieldName = entry.getKey();
-            ModelField modelField = entry.getValue().modelField;
-            String group = modelField.group();
-            Map<String, ModelField> map = result.computeIfAbsent(group, s -> new LinkedHashMap<>());
-            map.put(fieldName, modelField);
-        }
-        return result;
     }
 
     @Override
     public String getFieldName(String modelName, int fieldIndex) {
-        return getAllFieldNames(modelName)[fieldIndex];
+        return getFieldNames(modelName)[fieldIndex];
     }
 
     @Override
-    public String[] getAllGroupNames(String modelName) {
-        return getGroupedModelFieldMap(modelName).keySet().toArray(new String[0]);
+    public String[] getGroupNames(String modelName) {
+        List<String> groupNames = new ArrayList<>();
+        ModelInfo modelInfo = getModelInfo(modelName);
+        modelInfo.fieldInfoMap.values().forEach(fieldInfo -> groupNames.add(fieldInfo.modelField.group()));
+        return groupNames.toArray(new String[0]);
+    }
+
+    @Override
+    public Group getGroup(String modelName, String groupName) {
+        ModelBase modelInstance = getModelInstance(modelName);
+        final Group[] found = new Group[1];
+        modelInstance.group().groups().stream().filter(group -> group.name().equals(groupName)).findAny().ifPresent(group -> found[0] = group);
+        return found[0];
     }
 
     @Override
@@ -426,12 +407,16 @@ public class ModelManagerImpl implements ModelManager {
 
     @Override
     public String[] getFieldNamesByGroup(String modelName, String groupName) {
-        Map<String, ModelField> groupFields = getGroupedModelFieldMap(modelName).get(groupName);
-        if (groupFields == null) {
-            throw new IllegalArgumentException("GroupName not found: " + groupName);
-        }
+        List<String> fieldNames = new ArrayList<>();
 
-        return groupFields.keySet().toArray(new String[0]);
+        ModelInfo modelInfo = getModelInfo(modelName);
+        modelInfo.fieldInfoMap.forEach((field, fieldInfo) -> {
+            if (fieldInfo.modelField.group().equals(groupName)) {
+                fieldNames.add(field);
+            }
+        });
+
+        return fieldNames.toArray(new String[0]);
     }
 
     private static void visitClasses(URLClassLoader classLoader, Visitor<Class<?>> visitor) throws Exception {

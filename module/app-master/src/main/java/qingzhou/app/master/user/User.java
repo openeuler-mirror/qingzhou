@@ -15,7 +15,7 @@ public class User extends MasterModelBase implements AddModel {
     public static final int defLimitRepeats = 5;
 
     @ModelField(
-            required = true, unique = true, showToList = true,
+            required = true, showToList = true,
             nameI18n = {"名称", "en:Name"},
             infoI18n = {"唯一标识。", "en:Unique identifier."})
     public String id;
@@ -34,8 +34,8 @@ public class User extends MasterModelBase implements AddModel {
     //
 //    @ModelField(
 //            showToList = true,
-//            effectiveOnEdit = false,
-//            effectiveOnCreate = false,
+//            disableOnEdit = true,
+//            disableOnCreate = true,
 //            nameI18n = {"所属租户", "en:Tenant"},
 //            infoI18n = {"所属租户。", "en:Tenant to which it belongs."})
 //    public String tenant = "";
@@ -138,7 +138,7 @@ public class User extends MasterModelBase implements AddModel {
 //    @ModelField(
 //            group = "security",
 //            showToList = true,
-//            effectiveOnCreate = false, effectiveOnEdit = false,
+//            disableOnCreate = true, disableOnEdit = true,
 //            nameI18n = {"密码最后修改时间", "en:Password Last Modified"},
 //            infoI18n = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}
 //    )
@@ -156,7 +156,7 @@ public class User extends MasterModelBase implements AddModel {
 //            group = "security",
 //            showToEdit = false,
 //            showToShow = false,
-//            effectiveOnCreate = false,
+//            disableOnCreate = true,
 //            nameI18n = {"历史密码", "en:Historical Passwords"},
 //            infoI18n = {"记录最近几次使用过的密码。", "en:Keep a record of the last few passwords you have used."})
 //    public String oldPasswords;

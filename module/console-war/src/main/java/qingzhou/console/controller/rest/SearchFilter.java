@@ -25,7 +25,7 @@ public class SearchFilter implements Filter<RestContext> {
 //        ModelManager modelManager = ConsoleUtil.getModelManager();
 //        for (String modelName : modelManager.getAllModelNames()) {
 //            Model model = modelManager.getModel(modelName);
-//            Map<String, Map<String, ModelField>> fieldMapWithGroup = modelManager.getGroupedModelFieldMap(modelName);
+//            Map<String, Map<String, ModelField>> fieldMapWithGroup = todo;
 //            if (!modelManager.getModelFieldMap(modelName).isEmpty()) {
 //                fieldMapWithGroup.put("", modelManager.getModelFieldMap(modelName));
 //            }
@@ -64,9 +64,9 @@ public class SearchFilter implements Filter<RestContext> {
 //                }
 //
 //                if (fieldMapWithGroup.isEmpty()) {// todo 缺少实现
-////                    if (MonitorModel.class.isAssignableFrom(modelClass)) {
-////                        for (MonitoringFieldInfo monitoringFieldInfo : modelManager.getMonitoringFieldInfos(modelName).values()) {
-////                            if (!monitoringFieldInfo.monitoringField.supportGraphicalDynamic()) {
+////                    if (modelManager.isModelType(MonitorModel.class, modelName)) {
+////                        for (MonitorFieldInfo monitoringFieldInfo : modelManager.getMonitoringFieldInfos(modelName).values()) {
+////                            if (!MonitorFieldFieldInfo.monitoringField.supportGraphicalDynamic()) {
 ////                                Map<String, String> fieldMap = new HashMap<>(baseLangMap);
 ////                                fieldMap.put("modelField", monitoringFieldInfo.name);
 ////                                fieldMap.put("modelFieldName", I18n.getString("model.field." + modelName + "." + monitoringFieldInfo.name, lang));

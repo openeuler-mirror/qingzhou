@@ -5,6 +5,7 @@ import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.util.ServerUtil;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,14 +18,15 @@ public class ConsoleContextImpl implements ConsoleContext {
     }
 
     private void initI18N(ModelManager modelManager) {
-        for (String modelName : modelManager.getAllModelNames()) {
+        for (String modelName : modelManager.getModelNames()) {
             final Model model = modelManager.getModel(modelName);
 
             // for i18n
             addI18N("model." + modelName, model.nameI18n());
             addI18N("model.info." + modelName, model.infoI18n());
 
-            modelManager.getModelFieldMap(modelName).forEach((k, v) -> {
+            Arrays.stream(modelManager.getFieldNames(modelName)).forEach(k -> {
+                ModelField v = modelManager.getModelField(modelName, k);
                 addI18N("model.field." + modelName + "." + k, v.nameI18n());
                 String[] info = v.infoI18n();
                 if (info.length > 0) {
@@ -40,7 +42,7 @@ public class ConsoleContextImpl implements ConsoleContext {
                 }
             });
 
-            for (ModelAction modelAction : modelManager.getModelActions(modelName)) {
+            for (ModelAction modelAction : modelManager.getActionNames(modelName)) {
                 addI18N("model.action." + modelName + "." + modelAction.name(), modelAction.nameI18n());
                 addI18N("model.action.info." + modelName + "." + modelAction.name(), modelAction.infoI18n());
             }

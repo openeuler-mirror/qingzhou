@@ -21,14 +21,11 @@ import java.util.regex.Pattern;
 public class ConsoleUtil {
     public static String ACTION_NAME_SERVER = "server";
     public static String ACTION_NAME_TARGET = "target";
-    public static String ACTION_NAME_key = "key";
     public static String ACTION_NAME_validate = "validate";
     public static String ACTION_NAME_addfavorite = "addfavorite";
     public static String ACTION_NAME_cancelfavorites = "cancelfavorites";
     public static String TARGET_TYPE_SET_FLAG = "targetType";
     public static String TARGET_NAME_SET_FLAG = "targetName";
-    public static String GROUP_NAME_PRODUCT = "product";
-    public static String GROUP_NAME_LICENSE = "license";
     private static Boolean disableUpload;
     private static Boolean disableDownload;
 
@@ -277,21 +274,6 @@ public class ConsoleUtil {
         return new ArrayList<>();
     }
 
-    public static Options fieldOptions(RequestImpl request, String fieldName) {
-        String appName = request.getAppName();
-        ModelManager modelManager = getModelManager(appName);
-        ModelBase modelBase = modelManager.getModelInstance(request.getModelName());
-        return modelBase.options(fieldName);
-    }
-
-    public static boolean isListModel(String appName, String modelName) {
-        ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return false;
-        }
-        return ListModel.class.isAssignableFrom(modelManager.getModelInstance(modelName).getClass());
-    }
-
     public static void multiSelectGroup(LinkedHashMap<String, String> groupDes,
                                         LinkedHashMap<String, LinkedHashMap<String, String>> groupedMap,
                                         Options optionsManager) {
@@ -320,60 +302,17 @@ public class ConsoleUtil {
     }
 
     public static boolean actionsWithAjax(RequestImpl request, String actionName) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
-        if (modelManager == null) {
-            return false;
-        }
-        ModelBase model = modelManager.getModelInstance(request.getModelName());
-        for (String ajaxAction : model.actionsWithAjax()) {
-            if (ajaxAction.equals(actionName)) {
-                return true;
-            }
-        }
-        return false;
+        return AddModel.ACTION_NAME_ADD.equals(actionName)
+                || EditModel.ACTION_NAME_UPDATE.equals(actionName)
+                || DeleteModel.ACTION_NAME_DELETE.equals(actionName);
     }
 
     public static List<String> actionsToList(RequestImpl request) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
-        if (modelManager == null) {
-            return null;
-        }
-        ModelBase model = modelManager.getModelInstance(request.getModelName());
-        return model.actionsToList();
     }
 
     public static boolean actionShowToList(RequestImpl request, String actionName) {
         List<String> strings = actionsToList(request);
         return strings != null && strings.contains(actionName);
-    }
-
-    public static boolean actionShowToListHead(RequestImpl request, String actionName) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
-        if (modelManager == null) {
-            return false;
-        }
-        ModelBase model = modelManager.getModelInstance(request.getModelName());
-        for (String a : model.actionsToListHead()) {
-            if (a.equals(actionName)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static boolean isBatchAction(String appName, String modelName, String actionName) {
-        final ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return false;
-        }
-        ModelBase model = modelManager.getModelInstance(modelName);
-        for (String a : model.actionsSupportBatch()) {
-            if (a.equals(actionName)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -385,7 +324,7 @@ public class ConsoleUtil {
             return false;
         }
         String modelName = request.getModelName();
-        String[] allFieldNames = modelManager.getAllFieldNames(modelName);
+        String[] allFieldNames = modelManager.getFieldNames(modelName);
         ModelField modelField = modelManager.getModelField(modelName, allFieldNames[i]);
         FieldType fieldType = modelField.type();
         return fieldType == FieldType.radio || fieldType == FieldType.bool || fieldType == FieldType.select || fieldType == FieldType.groupedMultiselect || fieldType == FieldType.checkbox || fieldType == FieldType.sortableCheckbox;
@@ -400,12 +339,11 @@ public class ConsoleUtil {
         if (modelField.maxLength() < 1) {
             return true;
         }
-        if (!modelField.effectiveOnCreate() && !modelField.effectiveOnEdit()) {
+        if (modelField.disableOnCreate() && modelField.disableOnEdit()) {
             return true;
         }
 
-        ModelBase modelBase = modelManager.getModelInstance(request.getModelName());
-        return modelBase.isReadOnly(request, fieldName);
+        return false;
     }
 
     public static boolean hasIDField(RequestImpl request) {
@@ -444,7 +382,7 @@ public class ConsoleUtil {
         }
         ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
 
-        return modelInstance.actionNotEffective(request);
+        return null;
     }
 
     public static boolean isDisableUpload() {
@@ -470,7 +408,7 @@ public class ConsoleUtil {
         }
         Map<String, String> result = new HashMap<>();
         String modelName = request.getModelName();
-        for (String fieldName : modelManager.getAllFieldNames(modelName)) {
+        for (String fieldName : modelManager.getFieldNames(modelName)) {
             ModelField modelField = modelManager.getModelField(modelName, fieldName);
             String condition = modelField.effectiveWhen();
             if (StringUtil.notBlank(condition)) {
@@ -497,27 +435,13 @@ public class ConsoleUtil {
         return inRefModelField;
     }
 
-    public static LinkedHashMap<String, ModelField> getModelFieldMap(RequestImpl request) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
-        if (modelManager == null) {
-            return new LinkedHashMap<>();
-        }
-        LinkedHashMap<String, ModelField> map = new LinkedHashMap<>();
-        Map<String, ModelField> modelFields = modelManager.getModelFieldMap(request.getModelName());
-        for (Map.Entry<String, ModelField> e : modelFields.entrySet()) {
-            map.put(e.getKey(), e.getValue());
-        }
-
-        return map;
-    }
-
     public static String getSubmitActionName(RequestImpl request) {
         boolean isEdit = Objects.equals("edit", request.getActionName());
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
         }
-        for (ModelAction modelAction : modelManager.getModelActions(request.getModelName())) {
+        for (ModelAction modelAction : modelManager.getActionNames(request.getModelName())) {
             String actionName = modelAction.name();
             if (actionName.equals("update")) {
                 if (isEdit) {
@@ -578,7 +502,7 @@ public class ConsoleUtil {
         final String modelName = request.getModelName();
         boolean hasId = hasIDField(request);
         if (hasId && !response.getDataList().isEmpty()) {
-            ModelAction[] actions = modelManager.getModelActions(modelName);
+            ModelAction[] actions = modelManager.getActionNames(modelName);
             ModelBase modelBase = modelManager.getModelInstance(modelName);
             for (ModelAction action : actions) {
                 for (Map<String, String> data : datas) {
@@ -591,7 +515,7 @@ public class ConsoleUtil {
                         continue;
                     }
 
-                    if (!actionShowToList(request, actionName) || actionShowToListHead(request, actionName)) {
+                    if (!actionShowToList(request, actionName) || Arrays.asList(modelManager.getActionNamesToListHead(modelName)).contains(actionName)) {
                         continue;
                     }
 
@@ -599,11 +523,7 @@ public class ConsoleUtil {
                         continue;
                     }
 
-                    if (modelBase.actionNotEffective(request) != null) {
-                        continue;
-                    }
-
-                    if (!isBatchAction(appName, modelName, action.name())) {
+                    if (!Arrays.asList(modelManager.getActionNamesSupportBatch(modelName)).contains(action.name())) {
                         continue;
                     }
 
@@ -772,5 +692,22 @@ public class ConsoleUtil {
             }
         }
         return false;
+    }
+
+    public static Map<String, Map<String, ModelField>> getGroupedModelFieldMap(Request request) {
+        Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
+        ModelManager manager = getModelManager(request.getAppName());
+        String modelName = request.getModelName();
+        for (String groupName : manager.getGroupNames(modelName)) {
+            Map<String, ModelField> map = new LinkedHashMap<>();
+            String[] fieldNamesByGroup = manager.getFieldNamesByGroup(modelName, groupName);
+            for (String f : fieldNamesByGroup) {
+                ModelField modelField = manager.getModelField(modelName, f);
+                map.put(f, modelField);
+            }
+            result.put(groupName, map);
+        }
+
+        return result;
     }
 }

@@ -3,41 +3,45 @@ package qingzhou.framework.api;
 import java.util.Map;
 
 public interface ModelManager {
-    String[] getAllModelNames();
+    String[] getModelNames();
 
     String getModelName(Class<?> modelClass);
+
+    Class<?> getModelClass(String modelName);
+
+    boolean isModelType(String modelName, Class<?> modelType);
 
     ModelBase getModelInstance(String modelName);
 
     Map<String, String> getModelDefaultProperties(String modelName);
 
-    Model[] getAllModels();
-
     Model getModel(String modelName);
 
-    Class<?> getModelClass(String modelName);
+    String[] getActionNames(String modelName);
 
-    ModelAction[] getModelActions(String modelName);
+    String[] getActionNamesToFormBottom(String modelName);
+
+    String[] getActionNamesSupportBatch(String modelName);
+
+    String[] getActionNamesToList(String modelName);
+
+    String[] getActionNamesToListHead(String modelName);
 
     ModelAction getModelAction(String modelName, String actionName);
 
-    String[] getAllFieldNames(String modelName);
+    String[] getFieldNames(String modelName);
 
-    String[] getAllFieldNames(Class<?> modelClass);
+    String[] getGroupNames(String modelName);
 
-    String[] getShowField(String modelName, String actionName);
+    String[] getFieldNamesByGroup(String modelName, String groupName);
 
-    ModelField getModelField(String modelName, String fieldName);
-
-    Map<String, ModelField> getModelFieldMap(String modelName);
-
-    Map<String, MonitoringField> getModelMonitoringFieldMap(String modelName);
-
-    Map<String, Map<String, ModelField>> getGroupedModelFieldMap(String modelName);
+    Group getGroup(String modelName, String groupName);
 
     String getFieldName(String modelName, int fieldIndex);
 
-    String[] getAllGroupNames(String modelName);
+    ModelField getModelField(String modelName, String fieldName);
 
-    String[] getFieldNamesByGroup(String modelName, String fieldGroup);
+    Options getOptions(String modelName, String fieldName);
+
+    Map<String, MonitorField> getModelMonitoringFieldMap(String modelName);// todo: MonitorField 合并如 ModelField？
 }

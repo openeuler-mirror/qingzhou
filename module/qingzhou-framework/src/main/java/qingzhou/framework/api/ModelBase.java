@@ -17,7 +17,13 @@ public abstract class ModelBase implements ShowModel {
         return appContext;
     }
 
+    // 添加 i18n 等定制初始化
     public void init() {
+    }
+
+    // 定制校验逻辑，返回 i18n，方式：I18NRegistry.getI18N(key, args)
+    public String validate(Request request, String fieldName) {
+        return null;
     }
 
     public Groups group() {
@@ -64,11 +70,29 @@ public abstract class ModelBase implements ShowModel {
         return null;// 应该再子类中实现
     }
 
-    public List<String> actionsWithAjax() { // todo：考虑删除？如果用户定义了新的ajax action，也没模板也暂无对应的交互方式？
+    private Options refModel(Class<?> modelClass) {
+        try {
+            ModelManager modelManager = getAppContext().getModelManager();
+            String modelName = modelManager.getModelName(modelClass);
+            ModelBase modelInstance = modelManager.getModelInstance(modelName);
+            List<String> dataIdList = ((ListModel) modelInstance).getAllDataId(modelName);
+            if (dataIdList == null) {
+                return null;
+            }
+            List<Option> options = new ArrayList<>();
+            for (String dataId : dataIdList) {
+                options.add(Option.of(dataId, new String[]{dataId, "en:" + dataId}));
+            }
+            return () -> options;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public List<String> actionsToFormBottom() {
         return new ArrayList<String>() {{
-            add(AddModel.ACTION_NAME_ADD);
-            add(AddModel.ACTION_NAME_UPDATE);
-            add(AddModel.ACTION_NAME_DELETE);
+            add(MonitorModel.ACTION_NAME_MONITOR);
+            add(DownloadModel.ACTION_NAME_DOWNLOADLIST);
         }};
     }
 
@@ -90,47 +114,5 @@ public abstract class ModelBase implements ShowModel {
         return new ArrayList<String>() {{
             add(DeleteModel.ACTION_NAME_DELETE);
         }};
-    }
-
-    // 返回 i18n，方式：I18NRegistry.getI18N(key, args)
-    public String actionNotEffective(Request request) {
-        return null;
-    }
-
-    protected Options refModel(Class<?> modelClass) {
-        try {
-            ModelManager modelManager = getAppContext().getModelManager();
-            String modelName = modelManager.getModelName(modelClass);
-            ModelBase modelInstance = modelManager.getModelInstance(modelName);
-            List<String> dataIdList = ((ListModel) modelInstance).getAllDataId(modelName);
-            if (dataIdList == null) {
-                return null;
-            }
-            List<Option> options = new ArrayList<>();
-            for (String dataId : dataIdList) {
-                options.add(Option.of(dataId, new String[]{dataId, "en:" + dataId}));
-            }
-            return () -> options;
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    public boolean isReadOnly(Request request, String fieldName) {
-        return false;
-    }
-
-    // 返回 i18n，方式：I18NRegistry.getI18N(key, args)
-    public String validate(Request request, String fieldName) {
-        return null;
-    }
-
-    @Override
-    public ModelBase clone() {
-        try {
-            return (ModelBase) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
-        }
     }
 }

@@ -22,12 +22,12 @@ public interface EditModel extends ShowModel {
     default void update(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
         Map<String, String> properties = prepareParameters(request);
-        dataStore.updateSpecifiedData(request.getModelName(), request.getId(), properties);
+        dataStore.updateDataById(request.getModelName(), request.getId(), properties);
     }
 
     default Map<String, String> prepareParameters(Request request) {
         Map<String, String> properties = new HashMap<>();
-        String[] fieldNames = getAppContext().getModelManager().getAllFieldNames(request.getModelName());
+        String[] fieldNames = getAppContext().getModelManager().getFieldNames(request.getModelName());
         for (String fieldName : fieldNames) {
             String value = request.getParameter(fieldName);
             if (value != null) {
