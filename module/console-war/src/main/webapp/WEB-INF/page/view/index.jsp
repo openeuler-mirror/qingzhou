@@ -289,10 +289,10 @@
                             <%=I18n.getString(Constants.MASTER_APP_NAME, "page.localInstance")%>
                             <%-- 通知 --%>
                             <%
-                                int tabNoticeSize = 0;
-                                if (AccessControl.canAccess(qzRequest.getTargetType(), Constants.MASTER_APP_NAME+"/"+ Constants.MODEL_NAME_notice + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
-                                    tabNoticeSize = StringUtil.isBlank(currentUser) ? 0 : ConsoleUtil.listModels(request, TargetType.node.name(), Constants.LOCAL_NODE_NAME, Constants.MASTER_APP_NAME, Constants.MODEL_NAME_notice).size();
-                                }
+                            int tabNoticeSize = 0;
+                            if (AccessControl.canAccess(qzRequest.getTargetType(), Constants.MASTER_APP_NAME+"/notice/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
+                                tabNoticeSize = StringUtil.isBlank(currentUser) ? 0 : ConsoleUtil.listModels(request, TargetType.node.name(), Constants.LOCAL_NODE_NAME, Constants.MASTER_APP_NAME, "notice").size();
+                            }
                             %>
                             <span class="noticeNumber label label-badge" style="display:<%=tabNoticeSize > 0 ? "inline-block" : "none" %>;"><%=tabNoticeSize%></span>
                         </label>
@@ -314,7 +314,7 @@
                             <%
                             // 菜单
                             List<Properties> menuList = ConsoleUtil.getAppMenuList(currentUser, Constants.MASTER_APP_NAME);
-                            out.print(ConsoleUtil.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, Constants.MODEL_NAME_node, Constants.MASTER_APP_NAME, Constants.MASTER_APP_NAME, qzRequest.getModelName()));
+                            out.print(ConsoleUtil.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, "node", Constants.MASTER_APP_NAME, Constants.MASTER_APP_NAME, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>
@@ -395,7 +395,7 @@
         bindSuccess2FA: '<%=I18n.getString(Constants.MASTER_APP_NAME,"page.bindsuccess.2fa")%>',
         bindFail2FA: '<%=I18n.getString(Constants.MASTER_APP_NAME,"page.bindfail.2fa")%>',
         passwordChangedMsg: '<%=I18n.getString(Constants.MASTER_APP_NAME,"page.password.changed")%>',
-        resetPasswordUrl: '<%="/" + Constants.MODEL_NAME_password + "/update"%>',
+        resetPasswordUrl: '<%="/password/update"%>',
         searchHiddenTip: '<%=I18n.getString(Constants.MASTER_APP_NAME,"page.search.hidden")%>',
         passwordConfirmFailed: '<%=I18n.getString(Constants.MASTER_APP_NAME,"password.confirm.notequal")%>',
         SINGLE_FIELD_VALIDATE_PARAM: '<%=Constants.SINGLE_FIELD_VALIDATE_PARAM%>'

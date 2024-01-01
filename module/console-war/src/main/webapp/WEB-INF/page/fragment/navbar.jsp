@@ -68,10 +68,10 @@
                     </li>
                     <%-- 用户/修改密码 --%>
                     <li>
-                        <a id="reset-password-btn" href="<%=ConsoleUtil.encodeURL(request, response, ViewManager.htmlView+"/"+ Constants.MASTER_APP_NAME +"/"+Constants.MODEL_NAME_password+"/"+ "edit")%>"
+                        <a id="reset-password-btn" href="<%=ConsoleUtil.encodeURL(request, response, ViewManager.htmlView+"/"+ Constants.MASTER_APP_NAME +"/password/"+ "edit")%>"
                         class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=ConsoleUtil.getModelManager(Constants.MASTER_APP_NAME).getModel(Constants.MODEL_NAME_user).icon()%>"></i>
+                                <i class="icon icon-<%=ConsoleUtil.getModelManager(Constants.MASTER_APP_NAME).getModel("user").icon()%>"></i>
                             </span>
                         </a>
                     </li>

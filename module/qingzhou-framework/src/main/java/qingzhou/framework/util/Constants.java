@@ -27,7 +27,7 @@ public interface Constants { // TODO 需要清理失效的项目
     String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String MONITOR_MODEL_SEPARATOR = "-";
     String MONITOR_EXT_SEPARATOR = ":";
-    String GROUP_SEPARATOR = "/";
+
     String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
     Map<String, String> loggerNameDirMap = new HashMap<>();
     String HEADER_NAME_CLI = "REQUEST-FROM-CLI";

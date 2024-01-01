@@ -176,7 +176,7 @@ public class ServerXml { // todo 考虑由 admin service 来取代
         if (StringUtil.isBlank(loginUser)) {
             return null;
         }
-        int index = loginUser.indexOf(Constants.GROUP_SEPARATOR);
+        int index = loginUser.indexOf("/");
         if (index == -1) {
             return loginUser;
         } else {
@@ -204,7 +204,7 @@ public class ServerXml { // todo 考虑由 admin service 来取代
         if (StringUtil.isBlank(loginUser)) {
             return null;
         }
-        int index = loginUser.indexOf(Constants.GROUP_SEPARATOR);
+        int index = loginUser.indexOf("/");
         if (index == -1) {
             return "default";
         } else {
@@ -216,8 +216,8 @@ public class ServerXml { // todo 考虑由 admin service 来取代
     public static class ConsoleRole {
         // 开放的model，不需要检测权限
         // NOTE: 为方便自动测试集使用，此处设置为 public
-        public static final String[] commonAppModels = {qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_index,
-                qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_password};
+        public static final String[] commonAppModels = {qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_index,
+                qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_password};
         public static final String[] openedModelActions;
 
         static {
@@ -304,15 +304,15 @@ public class ServerXml { // todo 考虑由 admin service 来取代
             root("超级管理员", null, null, null, null),
             system("系统管理员", null, null
                     , null, new String[]{
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_node,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_cluster,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_appversion,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_backup,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_user,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_role,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_userrole,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_auditlog,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_auditconfig
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_node,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_cluster,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_appversion,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_backup,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_user,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_role,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_userrole,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_auditlog,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_auditconfig
             }),
             tenant("租户管理员", new String[]{qingzhou.framework.api.Constants.MASTER_APP_NAME}, new String[]{
                     Constants.MODEL_NAME_node,
@@ -323,9 +323,9 @@ public class ServerXml { // todo 考虑由 admin service 来取代
                     Constants.MODEL_NAME_role,
                     Constants.MODEL_NAME_userrole
             }, new String[]{
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_node + Constants.GROUP_SEPARATOR + ListModel.ACTION_NAME_SHOW,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_node + Constants.GROUP_SEPARATOR + ListModel.ACTION_NAME_LIST,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_node + Constants.GROUP_SEPARATOR + EditModel.ACTION_NAME_EDIT
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_node + "/" + ListModel.ACTION_NAME_SHOW,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_node + "/" + ListModel.ACTION_NAME_LIST,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_node + "/" + EditModel.ACTION_NAME_EDIT
             }, null),
             auditor("安全审计员", new String[]{qingzhou.framework.api.Constants.MASTER_APP_NAME},
                     new String[]{
