@@ -22,8 +22,6 @@ public class ConsoleUtil {
     public static String ACTION_NAME_SERVER = "server";
     public static String ACTION_NAME_TARGET = "target";
     public static String ACTION_NAME_validate = "validate";
-    public static String ACTION_NAME_addfavorite = "addfavorite";
-    public static String ACTION_NAME_cancelfavorites = "cancelfavorites";
     public static String TARGET_TYPE_SET_FLAG = "targetType";
     public static String TARGET_NAME_SET_FLAG = "targetName";
     private static Boolean disableUpload;
@@ -85,50 +83,11 @@ public class ConsoleUtil {
         menuBuilder.append("</li>");
     }
 
-    static String printFavoritesMenu(String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName) {
-        StringBuilder menuBuilder = new StringBuilder();
-        List<String> myFavorites = ServerXml.getInstanceFavorites(loginUser, targetName);
-        if (myFavorites.size() > 0) {
-            menuBuilder.append("<li class=\"treeview\">");
-            menuBuilder.append("<a href=\"javascript:void(0);\">");
-            menuBuilder.append(" <i class=\"icon icon-star\"></i>");
-            AppContext appContext = ConsoleUtil.getAppContext(null);
-            ConsoleContext consoleContext = appContext.getConsoleContext();
-            MenuInfo menuInfo = consoleContext.getMenuInfo("Favorites");
-            String menuText = I18n.getString(menuInfo.getMenuI18n());
-            menuBuilder.append("<span>" + menuText + "</span>");
-            menuBuilder.append("<span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");
-            menuBuilder.append("</a>");
-            menuBuilder.append("<ul class=\"treeview-menu\">");
-            for (String myFavorite : myFavorites) {
-                String[] favorites = myFavorite.split("/");
-                if (favorites.length == 3) {
-                    String instanceName = favorites[0];
-                    ModelManager modelManager = appContext.getModelManager();
-                    String modelName = favorites[1];
-                    String actionName = favorites[2];
-                    ModelAction modelAction = modelManager.getModelAction(modelName, actionName);
-                    menuBuilder.append("<li class=\"treeview\">");
-                    menuBuilder.append("<a href='" + ConsoleUtil.encodeURL(request, response, viewName + "/" + targetType + "/" + instanceName + "/" + modelName + "/" + actionName) + "' modelName='" + modelName + "'>");
-                    menuBuilder.append("<i class='icon icon-" + modelAction.icon() + "'></i>");
-                    menuBuilder.append("<span>" + I18n.getString(appName, "model." + modelName) + "</span>");
-                    menuBuilder.append("</a>");
-                    menuBuilder.append("</li>");
-                }
-            }
-            menuBuilder.append("</ul>");
-            menuBuilder.append("</li>");
-        }
-
-        return menuBuilder.toString();
-    }
-
     public static String buildMenuHtmlBuilder(List<Properties> models, String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName, String curModel) {
         StringBuilder builder = new StringBuilder();
         buildMenuHtmlBuilder(models, request, response, viewName, targetType, targetName, appName, curModel, builder, true);
         String menus = builder.toString();
-        String favoritesMenu = printFavoritesMenu(loginUser, request, response, viewName, targetType, targetName, appName);
-        return String.format(menus, StringUtil.isBlank(favoritesMenu) ? " " : favoritesMenu);
+        return String.format(menus, " ");
     }
 
     private static void buildMenuHtmlBuilder(List<Properties> models, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName, String curModel, StringBuilder builder, boolean needFavoritesMenu) {

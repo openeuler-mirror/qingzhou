@@ -58,7 +58,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         public void exec() {
 //      todo      ConsoleContext defaultApp = Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME);
             /*ConsoleContext defaultApp = ConsoleUtil.getAppContext(null).getConsoleContext();
-            master.setMenuInfo("Favorites", new String[]{"我的收藏", "en:Favorites"}, "star", 0);
             defaultApp.setMenuInfo("Monitor", new String[]{"监视管理", "en:Monitor"}, "line-chart", 1);
             defaultApp.setMenuInfo("Security", new String[]{"安全配置", "en:Security"}, "shield", 2);
             defaultApp.setMenuInfo("Basic", new String[]{"基础配置", "en:Basic"}, "stack", 3);*/

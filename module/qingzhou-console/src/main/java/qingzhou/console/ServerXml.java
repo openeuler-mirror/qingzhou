@@ -212,47 +212,12 @@ public class ServerXml { // todo 考虑由 admin service 来取代
         }
     }
 
-    public static List<String> getMyFavorites(String loginUser) {
-        List<String> result = new ArrayList<>(); // 返回 List 而不是 Set 可控制收藏菜单的顺序
-        if (StringUtil.isBlank(loginUser)) {
-            return Collections.emptyList();
-        }
-        try {
-            Map<String, String> user = get().user(loginUser);
-            String favorites = user.get("favorites");
-            if (!StringUtil.isBlank(favorites)) {
-                String[] userFavorites = favorites.split(",");
-                result.addAll(new ArrayList<>(Arrays.asList(userFavorites)));
-            }
-        } catch (Exception ignored) {
-        }
-
-        return result;
-    }
-
-    public static List<String> getInstanceFavorites(String loginUser, String instanceName) {
-        List<String> myFavorites = getMyFavorites(loginUser);
-        List<String> favorites = new ArrayList<>();
-        for (String myFavorite : myFavorites) {
-            if (myFavorite.startsWith(instanceName)) {
-                favorites.add(myFavorite);
-            }
-        }
-
-        return favorites;
-    }
-
-    public static boolean isMyFavorites(String loginUser, String instanceName, String model, String action) {
-        return getMyFavorites(loginUser).contains(instanceName + "/" + model + "/" + action);
-    }
-
     /********************** console ***********************/
     public static class ConsoleRole {
         // 开放的model，不需要检测权限
         // NOTE: 为方便自动测试集使用，此处设置为 public
         public static final String[] commonAppModels = {qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_index,
-                qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_password,
-                qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_favorites};
+                qingzhou.framework.api.Constants.MASTER_APP_NAME + Constants.GROUP_SEPARATOR + Constants.MODEL_NAME_password};
         public static final String[] openedModelActions;
 
         static {
@@ -264,9 +229,6 @@ public class ServerXml { // todo 考虑由 admin service 来取代
             temp.add("/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_password + "/validate/");
             temp.add("/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_password + "/" + EditModel.ACTION_NAME_EDIT + "/");
             temp.add("/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_password + "/" + EditModel.ACTION_NAME_UPDATE + "/");
-            temp.add("/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_favorites + "/" + ListModel.ACTION_NAME_LIST + "/");
-            temp.add("/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_favorites + "/addfavorite/");
-            temp.add("/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_favorites + "/cancelfavorites/");
             openedModelActions = temp.toArray(new String[0]);
         }
 
@@ -369,7 +331,6 @@ public class ServerXml { // todo 考虑由 admin service 来取代
                     new String[]{
                             Constants.MODEL_NAME_index,
                             Constants.MODEL_NAME_password,
-                            Constants.MODEL_NAME_favorites,
                             Constants.MODEL_NAME_auditlog,
                             Constants.MODEL_NAME_auditconfig
                     }

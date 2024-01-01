@@ -67,7 +67,6 @@ public interface Constants { // TODO 需要清理失效的项目
     String MODEL_NAME_operatingsystem = "operatingsystem";
     String MODEL_NAME_index = "index";
     String MODEL_NAME_home = "home";
-    String MODEL_NAME_favorites = "favorites";
     String MODEL_NAME_jcaconnectionpool = "jcaconnectionpool";
     String MODEL_NAME_jcaadminobject = "jcaadminobject";
     String MODEL_NAME_javamail = "javamail";

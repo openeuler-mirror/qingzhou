@@ -108,7 +108,6 @@ public class I18nFilter implements Filter<HttpServletContext> {
         master.addI18N("jmx.authentication.invalid", new String[]{"JMX 认证无效，需使用用户登录认证", "en:JMX authentication is invalid, use user login authentication"});
 
         master.addI18N("page.index", new String[]{"管理控制台", "en:Console"});
-        master.addI18N("page.index.Favorites", new String[]{"我的收藏", "en:My Favorites"});
         master.addI18N("page.index.service", new String[]{"基础配置", "en:Basic Config"});
         master.addI18N("page.index.system", new String[]{"系统管理", "en:System Management"});
         master.addI18N("page.index.health", new String[]{"监视管理", "en:Monitor Management"});

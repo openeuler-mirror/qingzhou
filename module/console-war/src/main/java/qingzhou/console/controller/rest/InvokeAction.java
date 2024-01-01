@@ -26,8 +26,6 @@ public class InvokeAction implements Filter<RestContext> {
         add("create");
         add("add");
         add("list");
-        add("addfavorite");
-        add("cancelfavorites");
         add(DownloadModel.ACTION_NAME_DOWNLOADLIST);
         add(DownloadModel.ACTION_NAME_DOWNLOADFILE);
     }};
