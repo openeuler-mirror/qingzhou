@@ -301,23 +301,27 @@ public class ModelManagerImpl implements ModelManager {
     }
 
     @Override
-    public String[] getActionNamesToFormBottom(String modelName) {
-        return getModelInstance(modelName).actionsToFormBottom().toArray(new String[0]);
+    public String[] getActionNamesShowToFormBottom(String modelName) {
+        Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
+        return actionInfoMap.values().stream().filter(actionInfo -> actionInfo.modelAction.showToFormBottom()).toArray(String[]::new);
     }
 
     @Override
     public String[] getActionNamesSupportBatch(String modelName) {
-        return getModelInstance(modelName).actionsSupportBatch().toArray(new String[0]);
+        Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
+        return actionInfoMap.values().stream().filter(actionInfo -> actionInfo.modelAction.supportBatch()).toArray(String[]::new);
     }
 
     @Override
-    public String[] getActionNamesToList(String modelName) {
-        return getModelInstance(modelName).actionsToList().toArray(new String[0]);
+    public String[] getActionNamesShowToList(String modelName) {
+        Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
+        return actionInfoMap.values().stream().filter(actionInfo -> actionInfo.modelAction.showToList()).toArray(String[]::new);
     }
 
     @Override
-    public String[] getActionNamesToListHead(String modelName) {
-        return getModelInstance(modelName).actionsToListHead().toArray(new String[0]);
+    public String[] getActionNamesShowToListHead(String modelName) {
+        Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
+        return actionInfoMap.values().stream().filter(actionInfo -> actionInfo.modelAction.showToListHead()).toArray(String[]::new);
     }
 
     @Override

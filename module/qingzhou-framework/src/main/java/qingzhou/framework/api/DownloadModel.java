@@ -13,6 +13,7 @@ public interface DownloadModel {
     String DOWNLOAD_OFFSET = "DOWNLOAD_OFFSET";
 
     @ModelAction(name = ACTION_NAME_DOWNLOADLIST,
+            showToFormBottom = true, showToList = true,
             icon = "download-alt",
             nameI18n = {"下载", "en:Download"},
             infoI18n = {"获取该组件可下载文件的列表。",

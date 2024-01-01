@@ -236,23 +236,6 @@ public class ConsoleUtil {
         return response.encodeURL(url);
     }
 
-    public static ModelAction[] getShowToListActions(RequestImpl request) {
-        List<String> actions = actionsToList(request);
-        List<ModelAction> modelActions = new ArrayList<>();
-
-        if (actions != null) {
-            ModelManager modelManager = getModelManager(request.getAppName());
-            for (String acName : actions) {
-                ModelAction action = modelManager.getModelAction(request.getModelName(), acName);
-                if (action != null) {
-                    modelActions.add(action);
-                }
-            }
-        }
-
-        return modelActions.toArray(new ModelAction[0]);
-    }
-
     public static List<Map<String, String>> listModels(HttpServletRequest request, String targetType, String targetName, String appName, String modelName) {
        /* ModelManagerImpl modelManager = (ModelManagerImpl) getModelManager(appName); todo
         if (modelManager == null) {
@@ -305,14 +288,6 @@ public class ConsoleUtil {
         return AddModel.ACTION_NAME_ADD.equals(actionName)
                 || EditModel.ACTION_NAME_UPDATE.equals(actionName)
                 || DeleteModel.ACTION_NAME_DELETE.equals(actionName);
-    }
-
-    public static List<String> actionsToList(RequestImpl request) {
-    }
-
-    public static boolean actionShowToList(RequestImpl request, String actionName) {
-        List<String> strings = actionsToList(request);
-        return strings != null && strings.contains(actionName);
     }
 
     /**
@@ -441,8 +416,7 @@ public class ConsoleUtil {
         if (modelManager == null) {
             return null;
         }
-        for (ModelAction modelAction : modelManager.getActionNames(request.getModelName())) {
-            String actionName = modelAction.name();
+        for (String actionName : modelManager.getActionNames(request.getModelName())) {
             if (actionName.equals("update")) {
                 if (isEdit) {
                     return "update";
@@ -502,9 +476,9 @@ public class ConsoleUtil {
         final String modelName = request.getModelName();
         boolean hasId = hasIDField(request);
         if (hasId && !response.getDataList().isEmpty()) {
-            ModelAction[] actions = modelManager.getActionNames(modelName);
             ModelBase modelBase = modelManager.getModelInstance(modelName);
-            for (ModelAction action : actions) {
+            for (String ac : modelManager.getActionNames(modelName)) {
+                ModelAction action = modelManager.getModelAction(modelName, ac);
                 for (Map<String, String> data : datas) {
                     if (checkEffective && isActionEffective(request, data, action) != null) {
                         continue;
@@ -515,7 +489,7 @@ public class ConsoleUtil {
                         continue;
                     }
 
-                    if (!actionShowToList(request, actionName) || Arrays.asList(modelManager.getActionNamesToListHead(modelName)).contains(actionName)) {
+                    if (!action.showToList() || Arrays.asList(modelManager.getActionNamesShowToListHead(modelName)).contains(actionName)) {
                         continue;
                     }
 
@@ -523,7 +497,7 @@ public class ConsoleUtil {
                         continue;
                     }
 
-                    if (!Arrays.asList(modelManager.getActionNamesSupportBatch(modelName)).contains(action.name())) {
+                    if (!Arrays.asList(modelManager.getActionNamesSupportBatch(modelName)).contains(actionName)) {
                         continue;
                     }
 

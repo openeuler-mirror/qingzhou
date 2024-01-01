@@ -88,31 +88,4 @@ public abstract class ModelBase implements ShowModel {
             throw new IllegalStateException(e);
         }
     }
-
-    public List<String> actionsToFormBottom() {
-        return new ArrayList<String>() {{
-            add(MonitorModel.ACTION_NAME_MONITOR);
-            add(DownloadModel.ACTION_NAME_DOWNLOADLIST);
-        }};
-    }
-
-    public List<String> actionsToList() {
-        return new ArrayList<String>() {{
-            add(DeleteModel.ACTION_NAME_DELETE);
-            add(MonitorModel.ACTION_NAME_MONITOR);
-            add(DownloadModel.ACTION_NAME_DOWNLOADLIST);
-        }};
-    }
-
-    public List<String> actionsToListHead() {
-        return new ArrayList<String>() {{
-            add(AddModel.ACTION_NAME_CREATE);
-        }};
-    }
-
-    public List<String> actionsSupportBatch() {
-        return new ArrayList<String>() {{
-            add(DeleteModel.ACTION_NAME_DELETE);
-        }};
-    }
 }

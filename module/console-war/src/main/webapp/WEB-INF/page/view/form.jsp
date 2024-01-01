@@ -280,7 +280,7 @@
             %>
 
             <%
-            for (String actionName: modelManager.getActionNamesToFormBottom(qzRequest.getModelName())) {
+            for (String actionName: modelManager.getActionNamesShowToFormBottom(qzRequest.getModelName())) {
                 boolean hasPermission = AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + actionName, LoginManager.getLoginUser(session));
                 if (!hasPermission) continue;
 

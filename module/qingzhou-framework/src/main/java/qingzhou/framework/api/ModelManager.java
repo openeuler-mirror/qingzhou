@@ -19,13 +19,13 @@ public interface ModelManager {
 
     String[] getActionNames(String modelName);
 
-    String[] getActionNamesToFormBottom(String modelName);
+    String[] getActionNamesShowToFormBottom(String modelName);
 
     String[] getActionNamesSupportBatch(String modelName);
 
-    String[] getActionNamesToList(String modelName);
+    String[] getActionNamesShowToList(String modelName);
 
-    String[] getActionNamesToListHead(String modelName);
+    String[] getActionNamesShowToListHead(String modelName);
 
     ModelAction getModelAction(String modelName, String actionName);
 

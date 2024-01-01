@@ -7,6 +7,7 @@ public interface AddModel extends EditModel, DeleteModel {
     String ACTION_NAME_ADD = "add";
 
     @ModelAction(name = ACTION_NAME_CREATE,
+            showToListHead = true,
             icon = "plus-sign", forwardToPage = "form",
             nameI18n = {"创建", "en:Create"},
             infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})

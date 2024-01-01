@@ -1,21 +1,20 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.impl.RequestImpl;
 import qingzhou.console.impl.ResponseImpl;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.view.ViewManager;
+import qingzhou.console.view.impl.JsonView;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
+import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.pattern.FilterPattern;
 import qingzhou.framework.util.Constants;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.console.view.ViewManager;
-import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.pattern.FilterPattern;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -155,15 +154,14 @@ public class RESTController extends HttpServlet {
             request.setId(id);
         }
         boolean actionFound = false;
-        ModelAction[] actions = ConsoleUtil.getModelManager(request.getAppName()).getActionNames(request.getModelName());
-        if (actions != null) {
-            for (ModelAction ma : actions) {
-                if (ma.name().equals(request.getActionName())) {
-                    actionFound = true;
-                    break;
-                }
+        String[] actions = ConsoleUtil.getModelManager(request.getAppName()).getActionNames(request.getModelName());
+        for (String name : actions) {
+            if (name.equals(request.getActionName())) {
+                actionFound = true;
+                break;
             }
         }
+
         if (!actionFound) {
             String msg = "Not Found: " + req.getRequestURI();
             resp.getWriter().print(JsonView.buildErrorResponse(msg));

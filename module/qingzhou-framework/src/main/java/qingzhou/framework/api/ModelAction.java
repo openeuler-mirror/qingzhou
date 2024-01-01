@@ -19,4 +19,12 @@ public @interface ModelAction {
     String effectiveWhen() default "";
 
     String forwardToPage() default "";
+
+    boolean showToListHead() default false;
+
+    boolean showToList() default false;
+
+    boolean showToFormBottom() default false;
+
+    boolean supportBatch() default false;
 }
