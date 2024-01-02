@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    for (String group : new String[]{ConsoleUtil.GROUP_NAME_PRODUCT}) {
+    for (String group : new String[]{"product"}) {
 %>
 <div class="panel" style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
     <div class="panel-heading"

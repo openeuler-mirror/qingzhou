@@ -42,12 +42,12 @@ public class ConsoleUtil {
         return getAppContext(appName).getModelManager();
     }
 
-    static void printParentMenu(Properties menu, String targetType, String targetName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
+    static void printParentMenu(Properties menu, String targetType, String targetName, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
         String model = menu.getProperty("name");
         menuBuilder.append("<li class=\"treeview" + (model.equals(curModel) ? " active" : "") + "\">");
         menuBuilder.append("<a href=\"javascript:void(0);\">");
         menuBuilder.append(" <i class=\"icon icon-" + menu.getProperty("icon") + "\"></i>");
-        ConsoleContext consoleContext = getAppContext(null).getConsoleContext();
+        ConsoleContext consoleContext = getAppContext(appName).getConsoleContext();
         String menuText = "未分类";
         if (StringUtil.notBlank(model)) {
             MenuInfo menuInfo = consoleContext.getMenuInfo(model);
@@ -107,7 +107,7 @@ public class ConsoleUtil {
                 List<Properties> childrenMenus = (List<Properties>) c;
                 StringBuilder parentBuilder = new StringBuilder();
                 buildMenuHtmlBuilder(childrenMenus, request, response, viewName, targetType, targetName, appName, curModel, childrenBuilder, false);
-                printParentMenu(menu, targetType, targetName, curModel, parentBuilder, childrenBuilder);
+                printParentMenu(menu, targetType, targetName, appName, curModel, parentBuilder, childrenBuilder);
                 builder.append(parentBuilder.toString());
             }
 
@@ -133,7 +133,7 @@ public class ConsoleUtil {
          *  order -> int
          *  children -> Properties
          */
-        ConsoleContext consoleContext = getAppContext(null).getConsoleContext();
+        ConsoleContext consoleContext = getAppContext(appName).getConsoleContext();
         Map<String, Properties> modelMap = new HashMap<>();
         for (Model model : allModels) {
             String modelName = model.name();
