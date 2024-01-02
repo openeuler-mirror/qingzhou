@@ -32,10 +32,10 @@
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
         Map<String, String> model;
-        List<Map<String, String>> models = qzResponse.modelData().getDataList();
+        List<Map<String, String>> models = qzResponse.getDataList();
         if (!models.isEmpty()) {
             model = models.get(0);
-            Map<String, Map<String, ModelField>> fieldMapWithGroup = modelManager.getGroupedModelFieldMap(qzRequest.getModelName());
+            Map<String, Map<String, ModelField>> fieldMapWithGroup = ConsoleUtil.getGroupedModelFieldMap(qzRequest);
             Set<String> groups = fieldMapWithGroup.keySet();
             long suffixId = System.currentTimeMillis();
             if (groups.size() > 1) {
@@ -44,15 +44,12 @@
                     <%
                     boolean isFirst = true;
                     for (String group : groups) {
-                        GroupManager groupManager = ConsoleUtil.fieldGroups(qzRequest, group);
-                        if(groupManager==null){
-                            continue;
-                        }
+                        group = "".equals(group) ? "OTHERS":group;
                         %>
                         <li <%=isFirst ? "class='active'" : ""%>>
-                            <a data-tab href="#group-<%=("".equals(group) ? "OTHERS":group)%>-<%=suffixId%>"
-                               tabGroup="<%=("".equals(group) ? "OTHERS":group)%>">
-                                <%=I18n.getString(groupManager.groups().get(0).i18n())%>
+                            <a data-tab href="#group-<%=group%>-<%=suffixId%>"
+                               tabGroup="<%=group%>">
+                                <%=I18n.getString(modelManager.getGroup(qzRequest.getModelName(),group).i18n())%>
                             </a>
                         </li>
                         <%
@@ -65,16 +62,16 @@
             }
             boolean isFirstGroup = true;
             for (String group : groups) {
-                if (groups.size() > 1) {
-                    %>
-                    <div class="tab-pane <%=isFirstGroup?"active":""%>"
-                         id="group-<%=("".equals(group) ? "OTHERS":group)%>-<%=suffixId%>"
-                         tabGroup="<%=("".equals(group) ? "OTHERS":group)%>"><%
-                }
+                group = "".equals(group) ? "OTHERS":group;
+                %>
+                <div class="tab-pane <%=isFirstGroup?"active":""%>"
+                     id="group-<%=("".equals(group) ? "OTHERS":group)%>-<%=suffixId%>"
+                     tabGroup="<%=("".equals(group) ? "OTHERS":group)%>">
+                <%
                 isFirstGroup = false;
                 for (Map.Entry<String, ModelField> e : fieldMapWithGroup.get(group).entrySet()) {
                     ModelField modelField = e.getValue();
-                    if (!modelField.effectiveOnCreate() && !isEdit) {
+                    if (modelField.disableOnCreate() && !isEdit) {
                         continue;
                     }
                     if (!modelField.showToEdit() && isEdit) {
@@ -89,7 +86,7 @@
 
                     String readonly = "";
                     boolean required;
-                    if (!modelField.effectiveOnEdit() && isEdit) {
+                    if (modelField.disableOnEdit() && isEdit) {
                         readonly = "readonly";
                     }
                     if (idFieldName.equals(fieldName)) {
@@ -124,13 +121,13 @@
                             <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
                             <%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%>
                             <%
-                                String fieldInfo = I18n.getString(qzRequest.getAppName(), "model.field.info." + qzRequest.getModelName() + "." + fieldName);
-                                if (fieldInfo != null) {
-                                    // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
-                                    fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
-                                } else {
-                                    fieldInfo = "";
-                                }
+                            String fieldInfo = I18n.getString(qzRequest.getAppName(), "model.field.info." + qzRequest.getModelName() + "." + fieldName);
+                            if (fieldInfo != null) {
+                                // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
+                                fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
+                            } else {
+                                fieldInfo = "";
+                            }
                             %>
                             <%=fieldInfo%>
                         </label>
@@ -245,15 +242,10 @@
                                 }
                             }
                             %>
-                                <label class="tw-error-info"></label>
-                            </div>
+                            <label class="tw-error-info"></label>
                         </div>
-                        <%
-                        }
-                        if (groups.size() > 1) {
-                        %>
                     </div>
-                <%
+                    <%
                 }
             }
             if (groups.size() > 1) {
@@ -281,56 +273,32 @@
                 %>
                 <a href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>"
                    btn-type="goback" class="btn">
-                    <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.cancel")%>
+                    <%=I18n.getString(Constants.MASTER_APP_NAME, "page.cancel")%>
                 </a>
                 <%
             }
             %>
 
             <%
-            Class<?> mClass = modelManager.getModelClass(qzRequest.getModelName());
-            if ((EditModel.class.isAssignableFrom(mClass)) && (MonitorModel.class.isAssignableFrom(mClass))) {
-                for (ModelAction action : modelManager.getModelActions(qzRequest.getModelName())) {
-                    boolean monitorPermission = AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + MonitorModel.ACTION_NAME_MONITOR, LoginManager.getLoginUser(session));
-                    if (action.name().equals(MonitorModel.ACTION_NAME_MONITOR) && monitorPermission) {
-                        %>
-                        <a href='<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, MonitorModel.ACTION_NAME_MONITOR)%>'
-                           btn-type="<%=MonitorModel.ACTION_NAME_MONITOR%>" class="btn">
-                            <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + MonitorModel.ACTION_NAME_MONITOR)%>
-                        </a>
-                        <%
-                        break;
-                    }
-                }
-            }
+            for (String actionName: modelManager.getActionNamesShowToFormBottom(qzRequest.getModelName())) {
+                boolean hasPermission = AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + actionName, LoginManager.getLoginUser(session));
+                if (!hasPermission) continue;
 
-            if ((EditModel.class.isAssignableFrom(mClass)) && (DownloadModel.class.isAssignableFrom(mClass))) {
-                for (ModelAction action : modelManager.getModelActions(qzRequest.getModelName())) {
-                    boolean downloadPermission = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADFILE, LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADLIST, currentUser));
-                    if (action.name().equals(DownloadModel.ACTION_NAME_DOWNLOADLIST) && downloadPermission && !ConsoleUtil.actionShowToListHead(qzRequest, action.name())) {
-                            %>
-                            <a href='<%=ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DownloadModel.ACTION_NAME_DOWNLOADLIST)%>'
-                                    <%
-                                        out.print(ConsoleUtil.isDisableDownload() ? " disabled ":"" + " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE + "/" + encodedId) + "' ");
-                                    %>
-                               btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>" class="btn">
-                                <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
-                            </a>
-                            <%
-                            break;
-                        }
-                    }
-            }
-
-            ModelAction keyModelAction = modelManager.getModelAction(qzRequest.getModelName(), ConsoleUtil.ACTION_NAME_key);
-            if (keyModelAction != null) {
-                boolean keyModelActionPermission = AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + ConsoleUtil.ACTION_NAME_key, LoginManager.getLoginUser(session));
-                if (keyModelActionPermission) {
+                if (actionName.equals(MonitorModel.ACTION_NAME_MONITOR)) {
                     %>
-                    <a href='<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ConsoleUtil.ACTION_NAME_key)%>'
-                       btn-type="<%=ConsoleUtil.ACTION_NAME_key%>" class="btn">
-                        <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + ConsoleUtil.ACTION_NAME_key)%>
+                    <a href='<%=ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DownloadModel.ACTION_NAME_DOWNLOADLIST)%>'
+                        <%
+                        out.print(ConsoleUtil.isDisableDownload() ? " disabled ":"" + " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE + "/" + encodedId) + "' ");
+                        %>
+                        btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>" class="btn">
+                        <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
+                    </a>
+                    <%
+                } else {
+                    %>
+                    <a href='<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, actionName)%>'
+                        btn-type="<%=actionName%>" class="btn">
+                        <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionName)%>
                     </a>
                     <%
                 }
@@ -341,7 +309,7 @@
 
     <div id="tempZone" style="display:none;"></div>
     <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-            <%=ConsoleUtil.getConsolePublicKey()%>
+            <%=SecureKey.getPublicKeyString()%>
     </textarea>
 
     <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">

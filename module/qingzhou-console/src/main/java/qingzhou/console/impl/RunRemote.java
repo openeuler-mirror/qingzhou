@@ -1,32 +1,23 @@
 package qingzhou.console.impl;
 
-import qingzhou.api.console.ConsoleContext;
-import qingzhou.api.console.ModelManager;
-import qingzhou.api.console.data.Response;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
-import qingzhou.console.ServerXml;
-import qingzhou.console.Validator;
-import qingzhou.console.sec.SecureKey;
+import qingzhou.console.SecureKey;
 import qingzhou.console.servlet.RequestContext;
 import qingzhou.console.servlet.ServletProcessor;
 import qingzhou.console.servlet.UploadFileContext;
-import qingzhou.console.util.Constants;
-import qingzhou.console.util.FileUtil;
-import qingzhou.console.util.StreamUtil;
 import qingzhou.crypto.PasswordCipher;
 import qingzhou.framework.AppInfo;
-import qingzhou.framework.AppInfoManager;
+import qingzhou.framework.AppManager;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.pattern.Process;
+import qingzhou.framework.util.Constants;
+import qingzhou.framework.util.FileUtil;
+import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.StreamUtil;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
@@ -35,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 
 public class RunRemote implements Process {
-    private boolean remoteSupported = false;
     private final Controller controller;
 
     public RunRemote(Controller controller) {
@@ -44,8 +34,7 @@ public class RunRemote implements Process {
 
     @Override
     public void exec() {
-        remoteSupported = Boolean.parseBoolean(ServerXml.get().server().get("remoteSupported"));
-        if (!remoteSupported) return;
+        if (controller.isMaster) return;
 
         ServletProcessor processor = new ServletProcessorImpl();
         controller.servletService.addSingleServletWebapp(Constants.remoteApp, "/*", controller.frameworkContext.getCache().getAbsolutePath(), processor);
@@ -53,7 +42,7 @@ public class RunRemote implements Process {
 
     @Override
     public void undo() {
-        if (!remoteSupported) return;
+        if (controller.isMaster) return;
 
         controller.servletService.removeApp(Constants.remoteApp);
     }
@@ -64,23 +53,18 @@ public class RunRemote implements Process {
             StreamUtil.copyStream(in, bos);
             byte[] requestData = bos.toByteArray();
 
-            String remoteKey = SecureKey.getSecureKey(ConsoleWarHelper.getDomain(), SecureKey.remoteKeyName);
+            String remoteKey = SecureKey.getOrInitKey(ServerUtil.getDomain(), SecureKey.remoteKeyName);
             PasswordCipher passwordCipher = ConsoleWarHelper.getPasswordCipher(remoteKey);
             byte[] decryptedData = passwordCipher.decrypt(requestData);
 
             Serializer serializer = controller.frameworkContext.getService(SerializerService.class).getSerializer();
-            RequestImpl request = serializer.deserialize(decryptedData, RequestImpl.class);
+            Request request = serializer.deserialize(decryptedData, RequestImpl.class);
 
             Response response = new ResponseImpl();
 
-            AppInfoManager appInfoManager = controller.frameworkContext.getAppInfoManager();
-            AppInfo appInfo = appInfoManager.getAppInfo(appInfoManager.getApps().iterator().next()); // TODO ?
-
-            ConsoleContext consoleContext = appInfo.getAppContext().getConsoleContext();
-            ModelManager modelManager = consoleContext.getModelManager();
-            if (Validator.validate(request, response, modelManager)) {
-                appInfo.invokeAction(request, response);
-            }
+            AppManager appManager = controller.frameworkContext.getAppManager();
+            AppInfo appInfo = appManager.getAppInfo(request.getAppName());
+            appInfo.invokeAction(request, response);
 
             byte[] responseData = serializer.serialize(response);
             byte[] encryptData = passwordCipher.encrypt(responseData);

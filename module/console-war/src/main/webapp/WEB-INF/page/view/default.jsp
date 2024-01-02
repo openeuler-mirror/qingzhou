@@ -6,7 +6,7 @@
         return; // for 静态源码漏洞扫描
     }
     final boolean hasId = ConsoleUtil.hasIDField(qzRequest);
-    if (!qzResponse.attachmentData().getDataList().isEmpty()) {
+    if (!qzResponse.getDataList().isEmpty()) {
 %>
 
 <div class="bodyDiv">
@@ -17,7 +17,7 @@
         <table class="table table-hover">
             <tr>
                 <td>
-                    <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.status")%>:
+                    <%=I18n.getString(Constants.MASTER_APP_NAME, "page.status")%>:
                 </td>
                 <td>
                     <%=qzResponse.isSuccess()%>
@@ -25,7 +25,7 @@
             </tr>
             <tr>
                 <td>
-                    <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.msg")%>:
+                    <%=I18n.getString(Constants.MASTER_APP_NAME, "page.msg")%>:
                 </td>
                 <td>
                     <%=qzResponse.getMsg()%>
@@ -36,7 +36,7 @@
                 </td>
                 <td>
                     <%
-                        for (Map<String, String> data : qzResponse.attachmentData().getDataList()) {
+                        for (Map<String, String> data : qzResponse.getDataList()) {
                             for (Map.Entry<String, String> e : data.entrySet()) {
                                 String key = e.getKey();
                                 String value = e.getValue();
@@ -81,19 +81,19 @@
     </div>
 
     <%
-        if (ConsoleUtil.isListModel(ConsoleUtil.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), qzRequest.getModelName())) {
-    %>
-    <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
-        <div class="form-btn">
-            <a href="javascript:void(0);" btn-type="goback"
-               onclick="tw.goback(this);" class="btn">
-                <!--<i class="icon icon-undo"></i>-->
-                <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.cancel")%>
-            </a>
+    if (modelManager.isModelType(qzRequest.getModelName(), ListModel.class)) {
+        %>
+        <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
+            <div class="form-btn">
+                <a href="javascript:void(0);" btn-type="goback"
+                   onclick="tw.goback(this);" class="btn">
+                    <!--<i class="icon icon-undo"></i>-->
+                    <%=I18n.getString(Constants.MASTER_APP_NAME, "page.cancel")%>
+                </a>
+            </div>
         </div>
-    </div>
-    <%
-        }
+        <%
+    }
     %>
 </div>
 <%}%>

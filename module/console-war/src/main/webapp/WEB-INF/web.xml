@@ -8,12 +8,12 @@
          metadata-complete="true">
 
     <listener>
-        <listener-class>qingzhou.console.controller.SystemController</listener-class>
+        <listener-class>qingzhou.console.controller.system.SystemController</listener-class>
     </listener>
 
     <filter>
         <filter-name>SystemController</filter-name>
-        <filter-class>qingzhou.console.controller.SystemController</filter-class>
+        <filter-class>qingzhou.console.controller.system.SystemController</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>SystemController</filter-name>
@@ -22,7 +22,7 @@
 
     <servlet>
         <servlet-name>RESTController</servlet-name>
-        <servlet-class>qingzhou.console.controller.RESTController</servlet-class>
+        <servlet-class>qingzhou.console.controller.rest.RESTController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>RESTController</servlet-name>

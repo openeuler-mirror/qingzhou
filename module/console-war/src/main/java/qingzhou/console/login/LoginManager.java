@@ -2,22 +2,21 @@ package qingzhou.console.login;
 
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
-import qingzhou.console.controller.HttpServletContext;
-import qingzhou.console.controller.RESTController;
-import qingzhou.console.i18n.I18nFilter;
+import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.controller.system.HttpServletContext;
+import qingzhou.console.controller.system.I18nFilter;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.login.totp.Totp;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.console.util.Constants;
-import qingzhou.console.util.IPUtil;
-import qingzhou.console.util.StringUtil;
-import qingzhou.console.util.TimeUtil;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.app.I18n;
-import qingzhou.framework.app.Lang;
+import qingzhou.framework.console.I18n;
+import qingzhou.framework.console.Lang;
 import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.Constants;
+import qingzhou.framework.util.IPUtil;
+import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -200,7 +199,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static boolean check2FA(HttpServletRequest request) throws Exception {
-        return check2FA(request.getParameter(LOGIN_USER), ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(Constants.LOGIN_2FA)));
+        return check2FA(request.getParameter(LOGIN_USER), ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(qingzhou.framework.api.Constants.LOGIN_2FA)));
     }
 
     public static boolean check2FA(String user, String login2FA) throws Exception {
@@ -273,7 +272,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static String getMsg(String msg) {
-        String i18n = I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, msg);
+        String i18n = I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, msg);
         return StringUtil.notBlank(i18n) ? i18n : msg;
     }
 
@@ -329,7 +328,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
                     response.setContentType("application/json;charset=UTF-8");
                     try (PrintWriter writer = context.resp.getWriter()) {
-                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.login.need") + "\"}");
+                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "page.login.need") + "\"}");
                         writer.flush();
                     }
                     return false;
@@ -339,9 +338,9 @@ public class LoginManager implements Filter<HttpServletContext> {
                 String toJson = JsonView.buildErrorResponse("Please enter username and password to log in to the system");
                 response.getWriter().print(toJson);
                 if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                    response.setHeader(Constants.RESPONSE_HEADER_MSG_KEY, toJson);
+                    response.setHeader(qingzhou.framework.api.Constants.RESPONSE_HEADER_MSG_KEY, toJson);
                 } else {
-                    response.setHeader(Constants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
+                    response.setHeader(qingzhou.framework.api.Constants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
                 }
                 response.sendRedirect(request.getContextPath() + LOGIN_PATH);
             }

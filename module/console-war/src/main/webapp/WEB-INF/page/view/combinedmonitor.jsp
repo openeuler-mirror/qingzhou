@@ -26,7 +26,7 @@
             StringBuilder keysBuilder = new StringBuilder();
             keysBuilder.append("{");
 
-            for (Map<String, String> data : qzResponse.monitorData().getDataList()) {
+            for (Map<String, String> data : qzResponse.getDataList()) {
                 for (Map.Entry<String, String> e : data.entrySet()) {
                     String key = e.getKey();
                     int m = key.indexOf(Constants.MONITOR_MODEL_SEPARATOR);
@@ -64,7 +64,7 @@
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
         <div class="form-btn">
             <a href="javascript:void(0);" onclick="tw.goback(this);" btn-type="goback" class="btn">
-                <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.cancel")%>
+                <%=I18n.getString(Constants.MASTER_APP_NAME, "page.cancel")%>
             </a>
         </div>
     </div>

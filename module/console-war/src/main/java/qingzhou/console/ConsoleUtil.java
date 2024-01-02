@@ -1,55 +1,29 @@
 package qingzhou.console;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.console.FieldType;
-import qingzhou.api.console.Model;
-import qingzhou.api.console.ModelAction;
-import qingzhou.api.console.ModelField;
-import qingzhou.api.console.ModelManager;
-import qingzhou.api.console.data.Request;
-import qingzhou.api.console.data.Response;
-import qingzhou.api.console.group.GroupManager;
-import qingzhou.api.console.model.EditModel;
-import qingzhou.api.console.model.ListModel;
-import qingzhou.api.console.model.ModelBase;
-import qingzhou.api.console.option.Option;
-import qingzhou.api.console.option.OptionManager;
-import qingzhou.console.auth.AccessControl;
-import qingzhou.console.controller.RESTController;
+import qingzhou.console.controller.rest.AccessControl;
+import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.impl.RequestImpl;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.sec.Encryptor;
-import qingzhou.console.sec.SecureKey;
-import qingzhou.console.util.Constants;
-import qingzhou.console.util.ObjectUtil;
-import qingzhou.console.util.StringUtil;
-import qingzhou.framework.app.I18n;
-import qingzhou.framework.impl.app.ConsoleContextImpl;
+import qingzhou.framework.api.*;
+import qingzhou.framework.console.I18n;
 import qingzhou.framework.pattern.Visitor;
+import qingzhou.framework.util.ObjectUtil;
+import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class ConsoleUtil {
     public static String ACTION_NAME_SERVER = "server";
     public static String ACTION_NAME_TARGET = "target";
-    public static String ACTION_NAME_key = "key";
     public static String ACTION_NAME_validate = "validate";
-    public static String ACTION_NAME_addfavorite = "addfavorite";
-    public static String ACTION_NAME_cancelfavorites = "cancelfavorites";
     public static String TARGET_TYPE_SET_FLAG = "targetType";
     public static String TARGET_NAME_SET_FLAG = "targetName";
-    public static String GROUP_NAME_PRODUCT = "product";
-    public static String GROUP_NAME_LICENSE = "license";
     private static Boolean disableUpload;
     private static Boolean disableDownload;
 
@@ -57,19 +31,15 @@ public class ConsoleUtil {
     }
 
     public static void error(String msg, Throwable t) {
-        ConsoleWarHelper.getLogger().error(msg, t);
+        ServerUtil.getLogger().error(msg, t);
     }
 
     public static void warn(String msg) {
-        ConsoleWarHelper.getLogger().warn(msg);
-    }
-
-    public static String getAppName(String targetType, String targetName) {
-        return ServerXml.getAppName(targetType, targetName);
+        ServerUtil.getLogger().warn(msg);
     }
 
     public static ModelManager getModelManager(String appName) {
-        return getAppContext(appName).getConsoleContext().getModelManager();
+        return getAppContext(appName).getModelManager();
     }
 
     static void printParentMenu(Properties menu, String targetType, String targetName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -77,10 +47,10 @@ public class ConsoleUtil {
         menuBuilder.append("<li class=\"treeview" + (model.equals(curModel) ? " active" : "") + "\">");
         menuBuilder.append("<a href=\"javascript:void(0);\">");
         menuBuilder.append(" <i class=\"icon icon-" + menu.getProperty("icon") + "\"></i>");
-        ConsoleContextImpl consoleContext = (ConsoleContextImpl) getAppContext(null).getConsoleContext();
+        ConsoleContext consoleContext = getAppContext(null).getConsoleContext();
         String menuText = "未分类";
         if (StringUtil.notBlank(model)) {
-            ConsoleContextImpl.MenuInfo menuInfo = consoleContext.getMenuInfo(model);
+            MenuInfo menuInfo = consoleContext.getMenuInfo(model);
             if (menuInfo == null) {
                 // todo
 //                menuInfo = ((ConsoleContextImpl) Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME)).getMenuInfo(model);
@@ -100,65 +70,27 @@ public class ConsoleUtil {
         menuBuilder.append("</li>");
     }
 
-    static void printChildrenMenu(Properties menu, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String curModel, StringBuilder menuBuilder) {
+    static void printChildrenMenu(Properties menu, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName, String curModel, StringBuilder menuBuilder) {
         String model = menu.getProperty("name");
         String action = menu.getProperty("entryAction");
         menuBuilder.append("<li class=\"treeview " + (model.equals(curModel) ? " active" : "") + "\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + targetType + "/" + targetName + "/" + model + "/" + action;
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + targetType + "/" + targetName + "/" + appName + "/" + model + "/" + action;
         menuBuilder.append("<a href='" + ConsoleUtil.encodeURL(request, response, url) + "' modelName='" + model + "'>");
         menuBuilder.append("<i class='icon icon-" + menu.getProperty("icon") + "'></i>");
-        menuBuilder.append("<span>" + I18n.getString(getAppName(targetType, targetName), "model." + model) + "</span>");
+        menuBuilder.append("<span>" + I18n.getString(appName, "model." + model) + "</span>");
         menuBuilder.append("</a>");
         menuBuilder.append("</li>");
     }
 
-    static String printFavoritesMenu(String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName) {
-        StringBuilder menuBuilder = new StringBuilder();
-        List<String> myFavorites = ServerXml.getInstanceFavorites(loginUser, targetName);
-        if (myFavorites.size() > 0) {
-            menuBuilder.append("<li class=\"treeview\">");
-            menuBuilder.append("<a href=\"javascript:void(0);\">");
-            menuBuilder.append(" <i class=\"icon icon-star\"></i>");
-            ConsoleContextImpl consoleContext = (ConsoleContextImpl) ConsoleUtil.getAppContext(null).getConsoleContext();
-            ConsoleContextImpl.MenuInfo menuInfo = consoleContext.getMenuInfo("Favorites");
-            String menuText = I18n.getString(menuInfo.getMenuI18n());
-            menuBuilder.append("<span>" + menuText + "</span>");
-            menuBuilder.append("<span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");
-            menuBuilder.append("</a>");
-            menuBuilder.append("<ul class=\"treeview-menu\">");
-            for (String myFavorite : myFavorites) {
-                String[] favorites = myFavorite.split("/");
-                if (favorites.length == 3) {
-                    String instanceName = favorites[0];
-                    ModelManager modelManager = consoleContext.getModelManager();
-                    String modelName = favorites[1];
-                    String actionName = favorites[2];
-                    ModelAction modelAction = modelManager.getModelAction(modelName, actionName);
-                    menuBuilder.append("<li class=\"treeview\">");
-                    menuBuilder.append("<a href='" + ConsoleUtil.encodeURL(request, response, viewName + "/" + targetType + "/" + instanceName + "/" + modelName + "/" + actionName) + "' modelName='" + modelName + "'>");
-                    menuBuilder.append("<i class='icon icon-" + modelAction.icon() + "'></i>");
-                    menuBuilder.append("<span>" + I18n.getString(getAppName(targetType, targetName), "model." + modelName) + "</span>");
-                    menuBuilder.append("</a>");
-                    menuBuilder.append("</li>");
-                }
-            }
-            menuBuilder.append("</ul>");
-            menuBuilder.append("</li>");
-        }
-
-        return menuBuilder.toString();
-    }
-
-    public static String buildMenuHtmlBuilder(List<Properties> models, String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String curModel) {
+    public static String buildMenuHtmlBuilder(List<Properties> models, String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName, String curModel) {
         StringBuilder builder = new StringBuilder();
-        buildMenuHtmlBuilder(models, request, response, viewName, targetType, targetName, curModel, builder, true);
+        buildMenuHtmlBuilder(models, request, response, viewName, targetType, targetName, appName, curModel, builder, true);
         String menus = builder.toString();
-        String favoritesMenu = printFavoritesMenu(loginUser, request, response, viewName, targetType, targetName);
-        return String.format(menus, StringUtil.isBlank(favoritesMenu) ? " " : favoritesMenu);
+        return String.format(menus, " ");
     }
 
-    private static void buildMenuHtmlBuilder(List<Properties> models, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String curModel, StringBuilder builder, boolean needFavoritesMenu) {
+    private static void buildMenuHtmlBuilder(List<Properties> models, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName, String curModel, StringBuilder builder, boolean needFavoritesMenu) {
         models.sort(java.util.Comparator.comparing(o -> String.valueOf(o.get("order"))));
 
         for (int i = 0; i < models.size(); i++) {
@@ -166,18 +98,15 @@ public class ConsoleUtil {
                 builder.append("%s");
             }
             Properties menu = models.get(i);
-            if (Constants.MODEL_NAME_favorites.equals(menu.getProperty("name"))) {
-                continue;
-            }
             StringBuilder childrenBuilder = new StringBuilder();
             Object c = menu.get("children");
             if (c == null) {
-                printChildrenMenu(menu, request, response, viewName, targetType, targetName, curModel, childrenBuilder);
+                printChildrenMenu(menu, request, response, viewName, targetType, targetName, appName, curModel, childrenBuilder);
                 builder.append(childrenBuilder);
             } else {
                 List<Properties> childrenMenus = (List<Properties>) c;
                 StringBuilder parentBuilder = new StringBuilder();
-                buildMenuHtmlBuilder(childrenMenus, request, response, viewName, targetType, targetName, curModel, childrenBuilder, false);
+                buildMenuHtmlBuilder(childrenMenus, request, response, viewName, targetType, targetName, appName, curModel, childrenBuilder, false);
                 printParentMenu(menu, targetType, targetName, curModel, parentBuilder, childrenBuilder);
                 builder.append(parentBuilder.toString());
             }
@@ -187,7 +116,7 @@ public class ConsoleUtil {
 
     // todo 临时，仅支持单应用
     public static AppContext getAppContext(String appName) {
-        return ConsoleWarHelper.getAppContext(appName);
+        return ServerUtil.getFrameworkContext().getAppManager().getAppInfo(appName).getAppContext();
     }
 
     public static List<Properties> getAppMenuList(String loginUser, String appName) {
@@ -204,7 +133,7 @@ public class ConsoleUtil {
          *  order -> int
          *  children -> Properties
          */
-        ConsoleContextImpl consoleContext = (ConsoleContextImpl) getAppContext(null).getConsoleContext();
+        ConsoleContext consoleContext = getAppContext(null).getConsoleContext();
         Map<String, Properties> modelMap = new HashMap<>();
         for (Model model : allModels) {
             String modelName = model.name();
@@ -215,7 +144,7 @@ public class ConsoleUtil {
             menu.put("entryAction", model.entryAction());
             String menuName = model.menuName();
             if (StringUtil.notBlank(menuName)) {
-                ConsoleContextImpl.MenuInfo menuInfo = consoleContext.getMenuInfo(menuName);
+                MenuInfo menuInfo = consoleContext.getMenuInfo(menuName);
                 if (menuInfo == null) {
                     menuInfo = consoleContext.getMenuInfo(menuName);
                     if (menuInfo == null) {
@@ -266,25 +195,7 @@ public class ConsoleUtil {
         return response.encodeURL(url);
     }
 
-    public static ModelAction[] getShowToListActions(RequestImpl request) {
-        List<String> actions = actionsToList(request);
-        List<ModelAction> modelActions = new ArrayList<>();
-
-        if (actions != null) {
-            ModelManager modelManager = getModelManager(request.getAppName());
-            for (String acName : actions) {
-                ModelAction action = modelManager.getModelAction(request.getModelName(), acName);
-                if (action != null) {
-                    modelActions.add(action);
-                }
-            }
-        }
-
-        return modelActions.toArray(new ModelAction[0]);
-    }
-
-    public static List<Map<String, String>> listModels(HttpServletRequest request, String targetType, String targetName, String modelName) {
-        String appName = getAppName(targetType, targetName);
+    public static List<Map<String, String>> listModels(HttpServletRequest request, String targetType, String targetName, String appName, String modelName) {
        /* ModelManagerImpl modelManager = (ModelManagerImpl) getModelManager(appName); todo
         if (modelManager == null) {
             return new ArrayList<>();
@@ -305,42 +216,14 @@ public class ConsoleUtil {
         return new ArrayList<>();
     }
 
-    public static GroupManager fieldGroups(RequestImpl request, String groupName) {
-        String appName = request.getAppName();
-        ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return null;
-        }
-        ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
-        return modelInstance.fieldGroups(groupName);
-    }
-
-    public static OptionManager fieldOptions(RequestImpl request, String fieldName) {
-        String appName = request.getAppName();
-        ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return null;
-        }
-        ModelBase modelBase = modelManager.getModelInstance(request.getModelName());
-        return modelBase.fieldOptions(request, fieldName);
-    }
-
-    public static boolean isListModel(String appName, String modelName) {
-        ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return false;
-        }
-        return ListModel.class.isAssignableFrom(modelManager.getModelInstance(modelName).getClass());
-    }
-
     public static void multiSelectGroup(LinkedHashMap<String, String> groupDes,
                                         LinkedHashMap<String, LinkedHashMap<String, String>> groupedMap,
-                                        OptionManager optionsManager) {
+                                        Options optionsManager) {
         LinkedHashMap<String, LinkedHashMap<String, String>> tempGroup = new LinkedHashMap<>();
         LinkedHashMap<String, String> twoGroup = new LinkedHashMap<>();
         for (Option option : optionsManager.options()) {
             String value = option.value();
-            String[] groupData = value.split(Constants.GROUP_SEPARATOR);
+            String[] groupData = value.split(Constants.OPTION_GROUP_SEPARATOR);
             String desc = I18n.getString(option.i18n());
             if (groupData.length == 1) {
                 groupDes.putIfAbsent(value, desc);
@@ -349,7 +232,7 @@ public class ConsoleUtil {
                 items.putIfAbsent(groupData[0], desc);
                 twoGroup.putIfAbsent(value, desc);
             } else if (groupData.length == 3) {
-                LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + Constants.GROUP_SEPARATOR + groupData[1], k -> new LinkedHashMap<>());
+                LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + Constants.OPTION_GROUP_SEPARATOR + groupData[1], k -> new LinkedHashMap<>());
                 items.put(value, desc);
             }
         }
@@ -360,72 +243,10 @@ public class ConsoleUtil {
         }
     }
 
-    /**
-     * 属性是否符合有效性规则
-     */
-    public static boolean isEffective(Validator.FieldValueRetriever retriever, String effectiveWhen) throws Exception {
-        if (StringUtil.isBlank(effectiveWhen)) {
-            return true;
-        }
-        return Validator.isEffective(retriever, effectiveWhen);
-    }
-
-
     public static boolean actionsWithAjax(RequestImpl request, String actionName) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
-        if (modelManager == null) {
-            return false;
-        }
-        ModelBase model = modelManager.getModelInstance(request.getModelName());
-        for (String ajaxAction : model.actionsWithAjax()) {
-            if (ajaxAction.equals(actionName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static List<String> actionsToList(RequestImpl request) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
-        if (modelManager == null) {
-            return null;
-        }
-        ModelBase model = modelManager.getModelInstance(request.getModelName());
-        return model.actionsToList();
-    }
-
-    public static boolean actionShowToList(RequestImpl request, String actionName) {
-        List<String> strings = actionsToList(request);
-        return strings != null && strings.contains(actionName);
-    }
-
-    public static boolean actionShowToListHead(RequestImpl request, String actionName) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
-        if (modelManager == null) {
-            return false;
-        }
-        ModelBase model = modelManager.getModelInstance(request.getModelName());
-        for (String a : model.actionsToListHead()) {
-            if (a.equals(actionName)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static boolean isBatchAction(String appName, String modelName, String actionName) {
-        final ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return false;
-        }
-        ModelBase model = modelManager.getModelInstance(modelName);
-        for (String a : model.actionsSupportBatch()) {
-            if (a.equals(actionName)) {
-                return true;
-            }
-        }
-        return false;
+        return AddModel.ACTION_NAME_ADD.equals(actionName)
+                || EditModel.ACTION_NAME_UPDATE.equals(actionName)
+                || DeleteModel.ACTION_NAME_DELETE.equals(actionName);
     }
 
     /**
@@ -437,7 +258,7 @@ public class ConsoleUtil {
             return false;
         }
         String modelName = request.getModelName();
-        String[] allFieldNames = modelManager.getAllFieldNames(modelName);
+        String[] allFieldNames = modelManager.getFieldNames(modelName);
         ModelField modelField = modelManager.getModelField(modelName, allFieldNames[i]);
         FieldType fieldType = modelField.type();
         return fieldType == FieldType.radio || fieldType == FieldType.bool || fieldType == FieldType.select || fieldType == FieldType.groupedMultiselect || fieldType == FieldType.checkbox || fieldType == FieldType.sortableCheckbox;
@@ -452,12 +273,11 @@ public class ConsoleUtil {
         if (modelField.maxLength() < 1) {
             return true;
         }
-        if (!modelField.effectiveOnCreate() && !modelField.effectiveOnEdit()) {
+        if (modelField.disableOnCreate() && modelField.disableOnEdit()) {
             return true;
         }
 
-        ModelBase modelBase = modelManager.getModelInstance(request.getModelName());
-        return modelBase.isReadOnly(request, fieldName);
+        return false;
     }
 
     public static boolean hasIDField(RequestImpl request) {
@@ -484,19 +304,19 @@ public class ConsoleUtil {
             String effectiveWhen = modelAction.effectiveWhen().trim();
             boolean effective = false;
             try {
-                effective = isEffective(fieldName -> obj.get(fieldName), effectiveWhen);
+                effective = ServerUtil.isEffective(fieldName -> obj.get(fieldName), effectiveWhen);
             } catch (Exception ignored) {
             }
             if (!effective) {
                 return String.format(
-                        I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "validator.ActionEffective.notsupported"),
+                        I18n.getString(Constants.MASTER_APP_NAME, "validator.ActionEffective.notsupported"),
                         I18n.getString(request.toString(), "model.action." + request.getModelName() + "." + request.getActionName()),// todo
                         effectiveWhen);
             }
         }
         ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
 
-        return modelInstance.actionNotEffective(request);
+        return null;
     }
 
     public static boolean isDisableUpload() {
@@ -522,7 +342,7 @@ public class ConsoleUtil {
         }
         Map<String, String> result = new HashMap<>();
         String modelName = request.getModelName();
-        for (String fieldName : modelManager.getAllFieldNames(modelName)) {
+        for (String fieldName : modelManager.getFieldNames(modelName)) {
             ModelField modelField = modelManager.getModelField(modelName, fieldName);
             String condition = modelField.effectiveWhen();
             if (StringUtil.notBlank(condition)) {
@@ -549,28 +369,13 @@ public class ConsoleUtil {
         return inRefModelField;
     }
 
-    public static LinkedHashMap<String, ModelField> getModelFieldMap(RequestImpl request) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
-        if (modelManager == null) {
-            return new LinkedHashMap<>();
-        }
-        LinkedHashMap<String, ModelField> map = new LinkedHashMap<>();
-        Map<String, ModelField> modelFields = modelManager.getModelFieldMap(request.getModelName());
-        for (Map.Entry<String, ModelField> e : modelFields.entrySet()) {
-            map.put(e.getKey(), e.getValue());
-        }
-
-        return map;
-    }
-
     public static String getSubmitActionName(RequestImpl request) {
         boolean isEdit = Objects.equals("edit", request.getActionName());
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
         }
-        for (ModelAction modelAction : modelManager.getModelActions(request.getModelName())) {
-            String actionName = modelAction.name();
+        for (String actionName : modelManager.getActionNames(request.getModelName())) {
             if (actionName.equals("update")) {
                 if (isEdit) {
                     return "update";
@@ -586,7 +391,7 @@ public class ConsoleUtil {
 
     public static List<ModelBase> convertMapToModelBase(RequestImpl request, Response response) {
         List<ModelBase> modelBases = new ArrayList<>();
-        final List<Map<String, String>> models = response.modelData().getDataList();
+        final List<Map<String, String>> models = response.getDataList();
         if (models != null) {
             final ModelManager modelManager = getModelManager(request.getAppName());
             if (modelManager == null) {
@@ -618,7 +423,7 @@ public class ConsoleUtil {
     }
 
     private static void visitActions(RequestImpl request, Response response, HttpSession session, Visitor<ModelAction> visitor) throws Exception {
-        visitActions(request, response, session, visitor, response.modelData().getDataList(), true);
+        visitActions(request, response, session, visitor, response.getDataList(), true);
     }
 
     private static void visitActions(RequestImpl request, Response response, HttpSession session, Visitor<ModelAction> visitor, List<Map<String, String>> datas, boolean checkEffective) throws Exception {
@@ -629,10 +434,10 @@ public class ConsoleUtil {
         }
         final String modelName = request.getModelName();
         boolean hasId = hasIDField(request);
-        if (hasId && !response.modelData().getDataList().isEmpty()) {
-            ModelAction[] actions = modelManager.getModelActions(modelName);
+        if (hasId && !response.getDataList().isEmpty()) {
             ModelBase modelBase = modelManager.getModelInstance(modelName);
-            for (ModelAction action : actions) {
+            for (String ac : modelManager.getActionNames(modelName)) {
+                ModelAction action = modelManager.getModelAction(modelName, ac);
                 for (Map<String, String> data : datas) {
                     if (checkEffective && isActionEffective(request, data, action) != null) {
                         continue;
@@ -643,7 +448,7 @@ public class ConsoleUtil {
                         continue;
                     }
 
-                    if (!actionShowToList(request, actionName) || actionShowToListHead(request, actionName)) {
+                    if (!action.showToList() || Arrays.asList(modelManager.getActionNamesShowToListHead(modelName)).contains(actionName)) {
                         continue;
                     }
 
@@ -651,11 +456,7 @@ public class ConsoleUtil {
                         continue;
                     }
 
-                    if (modelBase.actionNotEffective(request) != null) {
-                        continue;
-                    }
-
-                    if (!isBatchAction(appName, modelName, action.name())) {
+                    if (!Arrays.asList(modelManager.getActionNamesSupportBatch(modelName)).contains(actionName)) {
                         continue;
                     }
 
@@ -758,18 +559,14 @@ public class ConsoleUtil {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
     }
 
-    public static String getConsolePublicKey() {
-        return Encryptor.getPublicKeyString();
-    }
-
     public static String decryptWithConsolePrivateKey(String input) {
         if (StringUtil.isBlank(input)) {
             return input;
         }
         try {
             return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(
-                    SecureKey.getSecureKey(ConsoleWarHelper.getDomain(), SecureKey.publicKeyName),
-                    SecureKey.getSecureKey(ConsoleWarHelper.getDomain(), SecureKey.privateKeyName)
+                    SecureKey.getPublicKeyString(),
+                    SecureKey.getPrivateKeyString()
             ).decryptWithPrivateKey(input);
         } catch (Exception e) {
             e.printStackTrace();
@@ -785,13 +582,13 @@ public class ConsoleUtil {
         int minLength = 10;
         int maxLength = 20;
         if (password.length() < minLength || password.length() > maxLength) {
-            return String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "validator.lengthBetween"), minLength, maxLength);
+            return String.format(I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "validator.lengthBetween"), minLength, maxLength);
         }
 
         if (infos != null && infos.length > 0) {
             if (infos[0] != null) { // for #ITAIT-5014
                 if (password.contains(infos[0])) { // 包含身份信息
-                    return I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "password.passwordContainsUsername");
+                    return I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "password.passwordContainsUsername");
                 }
             }
         }
@@ -799,11 +596,11 @@ public class ConsoleUtil {
         //特殊符号包含下划线
         String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";
         if (!Pattern.compile(PASSWORD_REGEX).matcher(password).matches()) {
-            return I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "password.format");
+            return I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "password.format");
         }
 
         if (isContinuousChar(password)) { // 连续字符校验
-            return I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "password.continuousChars");
+            return I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "password.continuousChars");
         }
 
         return null;
@@ -828,5 +625,22 @@ public class ConsoleUtil {
             }
         }
         return false;
+    }
+
+    public static Map<String, Map<String, ModelField>> getGroupedModelFieldMap(Request request) {
+        Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
+        ModelManager manager = getModelManager(request.getAppName());
+        String modelName = request.getModelName();
+        for (String groupName : manager.getGroupNames(modelName)) {
+            Map<String, ModelField> map = new LinkedHashMap<>();
+            String[] fieldNamesByGroup = manager.getFieldNamesByGroup(modelName, groupName);
+            for (String f : fieldNamesByGroup) {
+                ModelField modelField = manager.getModelField(modelName, f);
+                map.put(f, modelField);
+            }
+            result.put(groupName, map);
+        }
+
+        return result;
     }
 }

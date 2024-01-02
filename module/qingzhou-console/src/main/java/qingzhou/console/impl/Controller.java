@@ -8,20 +8,23 @@ import qingzhou.console.servlet.impl.ServletImpl;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
+import qingzhou.framework.util.FileUtil;
+
+import java.io.File;
 
 public class Controller implements BundleActivator {
     private ProcessSequence sequence;
     FrameworkContext frameworkContext;
     ServletService servletService;
+    boolean isMaster;
 
     @Override
     public void start(BundleContext context) throws Exception {
         sequence = new ProcessSequence(
                 new GetFrameworkService(context),
                 new StartServlet(),
-                new InitMasterApp(frameworkContext),// todo frameworkContext 应该没有初始化
-                new RunWar(this),
-                new RunRemote(this)
+                new RunRemote(this),
+                new RunWar(this)
         );
         sequence.exec();
     }
@@ -61,7 +64,11 @@ public class Controller implements BundleActivator {
         public void exec() {
             reference = context.getServiceReference(FrameworkContext.class);
             frameworkContext = context.getService(this.reference);
+
             ConsoleWarHelper.fc = frameworkContext;
+
+            File console = FileUtil.newFile(ConsoleWarHelper.getLibDir(), "sysapp", "console");
+            isMaster = console.isDirectory();
         }
 
         @Override

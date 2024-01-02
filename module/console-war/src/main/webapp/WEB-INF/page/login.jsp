@@ -46,20 +46,20 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
                 <div class="body_img"></div>
             </section>
             <section class="panel-body">
-                <div class="logo"><%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.userlogin")%></div>
+                <div class="logo"><%=I18n.getString(Constants.MASTER_APP_NAME, "page.userlogin")%></div>
                 <form id="loginForm" method="post" action="<%=ConsoleUtil.encodeURL(request, response, contextPath+LoginManager.LOGIN_URI)%>" class="form-group" autocomplete="off">
                     <div class="input-control has-icon-left">
-                        <input value="thanos" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" class="form-control" placeholder="name<%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model.field."+Constants.MODEL_NAME_user+".name")%>" autofocus required>
-                        <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel(Constants.MODEL_NAME_user).icon()%> "></i></label>
+                        <input value="thanos" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" class="form-control" placeholder="name<%=I18n.getString(Constants.MASTER_APP_NAME, "model.field.user.name")%>" autofocus required>
+                        <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel("user").icon()%> "></i></label>
                     </div>
                     <div class="input-control has-icon-left">
-                        <input value="thanos123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control" placeholder="password<%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "model.field."+Constants.MODEL_NAME_user+".password")%>" dotted onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;">
+                        <input value="thanos123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control" placeholder="password<%=I18n.getString(Constants.MASTER_APP_NAME, "model.field.user.password")%>" dotted onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;">
                         <input value="thanos123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>" name="<%=LoginManager.LOGIN_PASSWORD%>">
-                        <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel(Constants.MODEL_NAME_password).icon()%>"></i></label>
+                        <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel("password").icon()%>"></i></label>
                         <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;"><i class="icon icon-eye-close"></i></label>
                     </div>
                     <div class="input-control has-icon-left">
-                        <input type="text" id="<%=Constants.LOGIN_2FA%>_txt" class="form-control" placeholder="<%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.info.2fa")%>" onchange="document.getElementById('<%=Constants.LOGIN_2FA%>').value = this.value;">
+                        <input type="text" id="<%=Constants.LOGIN_2FA%>_txt" class="form-control" placeholder="<%=I18n.getString(Constants.MASTER_APP_NAME, "page.info.2fa")%>" onchange="document.getElementById('<%=Constants.LOGIN_2FA%>').value = this.value;">
                         <input type="hidden" id="<%=Constants.LOGIN_2FA%>" name="<%=Constants.LOGIN_2FA%>">
                         <label for="<%=Constants.LOGIN_2FA%>_txt" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
                     </div>
@@ -68,7 +68,7 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
                     if (request.getParameter(VerCode.SHOW_CAPTCHA_FLAG) != null) {
                     %>
                     <div class="input-control has-icon-left">
-                        <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control" required style="width:250px;display:inline-block;float:left;" placeholder="<%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.vercode")%>">
+                        <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control" required style="width:250px;display:inline-block;float:left;" placeholder="<%=I18n.getString(Constants.MASTER_APP_NAME, "page.vercode")%>">
                         <label for="randomcode" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
                         <img src="<%=ConsoleUtil.encodeURL(request, response, contextPath + VerCode.CAPTCHA_URI)%>" class="captcha" onclick="this.src = '<%=ConsoleUtil.encodeURL(request, response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
                     </div>
@@ -76,7 +76,7 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
                     }
                     %>
 
-                    <input type="submit" value='<%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.login")%>' class="login_btn">
+                    <input type="submit" value='<%=I18n.getString(Constants.MASTER_APP_NAME, "page.login")%>' class="login_btn">
                     <div style="display:block;">
                         <div style="text-align:right; padding-right:30px; padding-top:12px;">
                             <input checked type="checkbox" id="<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>" name="<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>" value="false" style="cursor:pointer;vertical-align:middle;">
@@ -89,8 +89,8 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
 <%
 for (Lang lang : Lang.values()) {
     %>
-    <h3 align="center"><%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "AGREEMENT_HEADER", lang)%></h3>
-    <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "AGREEMENT_BODY", lang)%>
+    <h3 align="center"><%=I18n.getString(Constants.MASTER_APP_NAME, "AGREEMENT_HEADER", lang)%></h3>
+    <%=I18n.getString(Constants.MASTER_APP_NAME, "AGREEMENT_BODY", lang)%>
     <br><br>
     <p align="center">----------------------------------------------------------------------------</p>
     <%
@@ -101,14 +101,14 @@ for (Lang lang : Lang.values()) {
                         </div>
                     </div>
                     <textarea id="pubkey" rows="3" style="display:none;">
-                        <%=ConsoleUtil.getConsolePublicKey()%>
+                        <%=SecureKey.getPublicKeyString()%>
                     </textarea>
                 </form>
             </section>
         </main>
         
         <footer class="page-copyright">
-            <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.copyright")%>&nbsp;<a href="https://www.openeuler.org/" target="_blank">www.openeuler.org</a>
+            <%=I18n.getString(Constants.MASTER_APP_NAME, "page.copyright")%>&nbsp;<a href="https://www.openeuler.org/" target="_blank">www.openeuler.org</a>
         </footer>
         
         <script type="text/javascript">
@@ -143,7 +143,7 @@ for (Lang lang : Lang.values()) {
                     return true;
                 } else {
                     $("#<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>").val("false");
-                    layer.msg("<%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, LoginManager.ACCEPT_AGREEMENT_MSG_KEY)%>", function () {});
+                    layer.msg("<%=I18n.getString(Constants.MASTER_APP_NAME, LoginManager.ACCEPT_AGREEMENT_MSG_KEY)%>", function () {});
                     return false;
                 }
             });

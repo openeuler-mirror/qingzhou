@@ -10,14 +10,7 @@ import qingzhou.bootstrap.Utils;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -75,19 +68,34 @@ public class Main {
     }
 
     private static void installBundle(Framework framework, TreeMap<Integer, Set<String>> moduleLevel) {
-        BundleContext bundleContext = framework.getBundleContext();
         File moduleBase = new File(Utils.getLibDir(), "module");
         for (Map.Entry<Integer, Set<String>> entry : moduleLevel.entrySet()) {
             entry.getValue().forEach(moduleName -> {
-                try {
-                    File moduleJar = new File(moduleBase, moduleName + ".jar");
-                    Bundle bundle = bundleContext.installBundle(moduleJar.toURI().toString());
-                    bundle.start();
-                } catch (BundleException e) {
-                    System.err.println("Failed to load module " + moduleName + ": " + e.getMessage());
-                    e.printStackTrace();
+                File moduleJar = new File(moduleBase, moduleName + ".jar");
+                if (moduleJar.exists()) {
+                    installBundleFile(framework, moduleJar);
+                } else {
+                    System.err.println("module not found: " + moduleJar.getName());
                 }
             });
+        }
+
+        File[] apps = new File(Utils.getDomain(), "apps").listFiles();
+        if (apps != null) {
+            for (File app : apps) {
+                installBundleFile(framework, app);
+            }
+        }
+    }
+
+    private static void installBundleFile(Framework framework, File moduleJar) {
+        BundleContext bundleContext = framework.getBundleContext();
+        try {
+            Bundle bundle = bundleContext.installBundle(moduleJar.toURI().toString());
+            bundle.start();
+        } catch (BundleException e) {
+            System.err.println("Failed to load module " + moduleJar.getName() + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

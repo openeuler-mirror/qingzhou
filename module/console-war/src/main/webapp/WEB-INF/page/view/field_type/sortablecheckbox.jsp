@@ -17,7 +17,7 @@
 %>
 <div class="checkbox-group sortable">
     <%
-    OptionManager manager = ConsoleUtil.fieldOptions(qzRequest, fieldName);
+    Options manager = modelManager.getOptions(qzRequest.getModelName(), fieldName);
     List<Option> list = manager.options();
     Collections.sort(list, Comparator.comparingInt(o -> fieldValues.indexOf(o.value())));
     for (Option option : list) {

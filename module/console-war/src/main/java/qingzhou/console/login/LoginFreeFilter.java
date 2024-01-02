@@ -1,11 +1,11 @@
 package qingzhou.console.login;
 
 import qingzhou.console.ConsoleUtil;
-import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.console.util.Constants;
-import qingzhou.console.util.StringUtil;
+import qingzhou.framework.util.Constants;
+import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

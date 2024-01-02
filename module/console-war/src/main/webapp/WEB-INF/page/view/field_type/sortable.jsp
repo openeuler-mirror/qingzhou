@@ -46,7 +46,7 @@ if(fieldValue == null) {
 		<li>
 			<a href="javascript:void(0);" class="<%=!"".equals(readonly) ? "read-only" : ""%>" onclick="addRow(this, <%=!"".equals(readonly)%>);">
 				<i class="icon icon-plus" style="font-size:10px;"></i>
-				<%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.info.add")%>
+				<%=I18n.getString(Constants.MASTER_APP_NAME, "page.info.add")%>
 			</a>
 		</li>
 	</ul>

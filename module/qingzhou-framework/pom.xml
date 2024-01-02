@@ -13,26 +13,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-api</artifactId>
-            <version>1.0</version>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
 
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-logger</artifactId>
-            <version>1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-serializer</artifactId>
-            <version>1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-crypto</artifactId>
             <version>1.0</version>
         </dependency>
     </dependencies>
@@ -47,11 +34,11 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.framework.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>
-                                org.osgi.framework,qingzhou.api,qingzhou.api.console,qingzhou.api.console.data,qingzhou.api.console.group,qingzhou.api.console.model,qingzhou.api.console.option,qingzhou.logger,qingzhou.serializer,qingzhou.crypto
-                            </Import-Package>
+                            <Import-Package>org.osgi.framework,qingzhou.logger,javax.xml.xpath,org.w3c.dom,javax.xml.transform,javax.xml.parsers</Import-Package>
 
-                            <Export-Package>qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.app,qingzhou.framework.impl.app</Export-Package>
+                            <Export-Package>
+                                qingzhou.framework,qingzhou.framework.api,qingzhou.framework.pattern,qingzhou.framework.util,qingzhou.framework.console
+                            </Export-Package>
                         </manifestEntries>
                     </archive>
                 </configuration>

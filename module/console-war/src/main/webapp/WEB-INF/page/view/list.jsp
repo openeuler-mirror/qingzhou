@@ -10,7 +10,6 @@
     final boolean hasId = ConsoleUtil.hasIDField(qzRequest);
 
     LinkedHashMap<String, ModelField> fieldInfos = ConsoleUtil.getModelFieldMap(qzRequest);
-    List<Integer> indexToShow = new ArrayList<>();
     int num = -1;
     for (Map.Entry<String, ModelField> e : fieldInfos.entrySet()) {
         num++;
@@ -18,12 +17,11 @@
         if (!modelField.showToList()) {
             continue;
         }
-        indexToShow.add(num);
     }
 
-    int totalSize = qzResponse.modelData().getTotalSize();
-    int pageNum = qzResponse.modelData().getPageNum();
-    int pageSize = qzResponse.modelData().getPageSize();
+    int totalSize = qzResponse.getTotalSize();
+    int pageNum = qzResponse.getPageNum();
+    int pageSize = qzResponse.getPageSize();
 %>
 
 <div class="bodyDiv">
@@ -40,7 +38,7 @@
                     List<Option> modelOptionsEntry = null;
                     if (ConsoleUtil.isFilterSelect(qzRequest, i)) {
                         try {
-                            OptionManager modelOptions = ConsoleUtil.fieldOptions(qzRequest, fieldName);
+                            Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
                             if (modelOptions != null) {
                                 modelOptionsEntry = modelOptions.options();
                             }
@@ -70,7 +68,7 @@
                                 }
                             %>
                             <label for="<%=fieldName%>"
-                                   class="input-control-label-left"><%=I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.field." + qzRequest.getModelName() + "." + fieldName)%>
+                                   class="input-control-label-left"><%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%>
                             </label>
                         </div>
                     </div>
@@ -82,7 +80,7 @@
                         <a class="btn"
                            href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
                            form="filterForm">
-                            <i class="icon icon-search"></i> <%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.filter")%>
+                            <i class="icon icon-search"></i> <%=I18n.getString(Constants.MASTER_APP_NAME, "page.filter")%>
                         </a>
                     </span>
                 </div>
@@ -103,7 +101,7 @@
                         <a class="btn"
                            href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, AddModel.ACTION_NAME_CREATE)%>">
                             <i class="icon icon-<%=listCreateAction.icon()%>"></i>
-                            <%=I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action." + qzRequest.getModelName() + "." + AddModel.ACTION_NAME_CREATE)%>
+                            <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + AddModel.ACTION_NAME_CREATE)%>
                         </a>
                         <%
                     }
@@ -111,7 +109,7 @@
                     boolean downloadPermission = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADFILE, LoginManager.getLoginUser(session))
                             && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADLIST, LoginManager.getLoginUser(session)));
                     final ModelAction downloadListModelAction = modelManager.getModelAction(qzRequest.getModelName(), DownloadModel.ACTION_NAME_DOWNLOADLIST);
-                    if (downloadListModelAction != null && downloadPermission && ConsoleUtil.actionShowToListHead(qzRequest, downloadListModelAction.name())) {
+                    if (downloadListModelAction != null && downloadPermission && Arrays.asList(modelManager.getActionNamesShowToListHead(modelName)).contains(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
                         %>
                         <a style="margin-left:6px" class="btn" btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
                            action-name="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
@@ -119,14 +117,14 @@
                                 <%
                                 out.print(ConsoleUtil.isDisableDownload() ? " disabled ":"" + " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE) + "' ");%>
                                 out.print("act-ajax='true' act-confirm='" +
-                                        String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.operationConfirm"),
-                                                I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST),
-                                                I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model." + qzRequest.getModelName()))
+                                        String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
+                                                I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST),
+                                                I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName()))
                                         + " ?' ");
                                 %>
 
                             <i class="icon icon-<%=downloadListModelAction.icon()%>"></i>
-                            <%=I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
+                            <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
                         </a>
                         <%
                     }
@@ -138,11 +136,11 @@
                         String modelIcon = modelManager.getModel(qzRequest.getModelName()).icon();
                         for (ModelAction action : opsActions) {
                             String actionKey = action.name();
-                            String titleStr = I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action.info." + qzRequest.getModelName() + "." + actionKey);
+                            String titleStr = I18n.getString(qzRequest.getAppName(), "model.action.info." + qzRequest.getModelName() + "." + actionKey);
                             if (StringUtil.notBlank(titleStr)) {
                                 titleStr = "data-tip='" + titleStr + "'";
                             } else {
-                                titleStr = "data-tip='" + I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
+                                titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
                             }
                             boolean isAjaxAction = ConsoleUtil.actionsWithAjax(qzRequest, actionKey);
                             String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
@@ -158,14 +156,14 @@
                                     <%
                                         if (isAjaxAction) {
                                             out.print("act-ajax='true' act-confirm='" +
-                                                    String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.operationConfirm"),
-                                                    I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action." + qzRequest.getModelName() + "." + actionKey),
-                                                    I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model." + qzRequest.getModelName())) + " ?' ");
+                                                    String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
+                                                    I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey),
+                                                    I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName())) + " ?' ");
                                         }
                                     %>
                             >
                                 <i class="icon icon-<%=action.icon()%>"></i>
-                                <%=I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action." + qzRequest.getModelName() + "." + actionKey)%>
+                                <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey)%>
                             </a>
                             <%
                         }
@@ -186,28 +184,28 @@
                     <%
                 }
                 %>
-                <th><%=I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.list.order")%>
+                <th><%=I18n.getString(Constants.MASTER_APP_NAME, "page.list.order")%>
                 </th>
                 <%
                 for (Integer i : indexToShow) {
                     String name = modelManager.getFieldName(qzRequest.getModelName(), i);
                     %>
-                        <th><%=I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.field." + qzRequest.getModelName() + "." + name)%></th>
+                        <th><%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + name)%></th>
                         <%
                 }
                 if (needOperationColumn) {
-                    out.print("<th>" + I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.action") + "</th>");
+                    out.print("<th>" + I18n.getString(Constants.MASTER_APP_NAME, "page.action") + "</th>");
                 }
                 %>
             </tr>
             </thead>
             <tbody>
             <%
-                List<Map<String, String>> modelDataList = qzResponse.modelData().getDataList();
+                List<Map<String, String>> modelDataList = qzResponse.getDataList();
                 if (modelDataList.isEmpty()) {
                     String dataEmpty = "<tr><td colspan='" + (indexToShow.size() + (needOperationColumn ? 2 : 1)) + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
-                            + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.none") + "</span></td>";
+                            + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getString(Constants.MASTER_APP_NAME, "page.none") + "</span></td>";
                     out.print(dataEmpty);
                 } else {
                     int listOrder = (pageNum - 1) * pageSize;
@@ -267,7 +265,7 @@
                                         <a href='<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.name() + "/" + encodedId)%>'
                                            class="dataid tooltips"
                                            record-action-id="<%=targetAction.name()%>"
-                                           data-tip='<%=I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action.info." + qzRequest.getModelName() + "." + targetAction.name())%>'
+                                           data-tip='<%=I18n.getString(qzRequest.getAppName(), "model.action.info." + qzRequest.getModelName() + "." + targetAction.name())%>'
                                            data-tip-arrow="top"
                                            style="color:#4C638F;">
                                             <%=value%>
@@ -285,7 +283,7 @@
                                             <a href='<%=ConsoleUtil.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getTargetType() + "/" + qzRequest.getTargetName() + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
                                                onclick='difModelActive("<%=qzRequest.getModelName()%>","<%=split[0]%>")'
                                                class="dataid tooltips" record-action-id="<%=split[1]%>"
-                                               data-tip='<%=I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model." + split[0])%>'
+                                               data-tip='<%=I18n.getString(qzRequest.getAppName(), "model." + split[0])%>'
                                                data-tip-arrow="top"
                                                style="color:#4C638F;">
                                                 <%=value%>
@@ -322,11 +320,11 @@
                                     continue;
                                 }
 
-                                String titleStr = I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action.info." + qzRequest.getModelName() + "." + actionKey);
+                                String titleStr = I18n.getString(qzRequest.getAppName(), "model.action.info." + qzRequest.getModelName() + "." + actionKey);
                                 if (StringUtil.notBlank(titleStr)) {
                                     titleStr = "data-tip='" + titleStr + "'";
                                 } else {
-                                    titleStr = "data-tip='" + I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
+                                    titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
                                 }
 
                                 boolean isAjaxAction = ConsoleUtil.actionsWithAjax(qzRequest, actionKey);
@@ -342,15 +340,15 @@
                                     }
                                     if (isAjaxAction) {
                                         out.print("act-ajax='true' act-confirm='" +
-                                                String.format(I18n.getString(Constants.QINGZHOU_MASTER_APP_NAME, "page.operationConfirm"),
-                                                        I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action." + qzRequest.getModelName() + "." + actionKey),
-                                                        I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model." + qzRequest.getModelName())) + " " + originUnEncodedId
+                                                String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
+                                                        I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey),
+                                                        I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName())) + " " + originUnEncodedId
                                                 + " ?' ");
                                     }
                                     %>
                                 >
                                 <i class="icon icon-<%=action.icon()%>"></i>
-                                <%=I18n.getString(ServerXml.getAppName(qzRequest.getTargetType(), qzRequest.getTargetName()), "model.action." + qzRequest.getModelName() + "." + actionKey)%>
+                                <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey)%>
                                 </a>
                                 <%
                             }

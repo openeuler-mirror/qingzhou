@@ -63,7 +63,7 @@ public class Server extends CommandLineProcessor {
             qzDomain = Utils.getDomain(qzDomain).getCanonicalPath();
         }
 
-        File serverXml = Utils.newFile(qzDomain, "conf", "qingzhou.xml");
+        File serverXml = Utils.newFile(qzDomain, "conf", "server.xml");
         if (!serverXml.isFile()) {
             log("Domain does not exist: " + base.getName());
             return;

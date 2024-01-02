@@ -19,7 +19,7 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.serializer.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework</Import-Package>
+                            <Import-Package>org.osgi.framework,qingzhou.framework</Import-Package>
                             <Export-Package>qingzhou.serializer</Export-Package>
                         </manifestEntries>
                     </archive>
@@ -27,5 +27,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-framework</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
 
 </project>

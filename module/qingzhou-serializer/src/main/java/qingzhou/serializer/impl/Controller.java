@@ -1,21 +1,17 @@
 package qingzhou.serializer.impl;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import qingzhou.framework.ServiceRegister;
 import qingzhou.serializer.SerializerService;
 import qingzhou.serializer.impl.java.JavaSerializer;
 
-public class Controller implements BundleActivator {
-    private ServiceRegistration<SerializerService> registerService;
-
+public class Controller extends ServiceRegister<SerializerService> {
     @Override
-    public void start(BundleContext context) {
-        registerService = context.registerService(SerializerService.class, JavaSerializer::new, null);
+    protected Class<SerializerService> serviceType() {
+        return SerializerService.class;
     }
 
     @Override
-    public void stop(BundleContext context) {
-        registerService.unregister();
+    protected SerializerService serviceObject() {
+        return JavaSerializer::new;
     }
 }

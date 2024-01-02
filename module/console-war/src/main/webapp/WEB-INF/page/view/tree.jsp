@@ -19,7 +19,7 @@
                 style="border: 0px; overflow-x:hidden; overflow-y:auto; min-height: 450px; padding-top:4px;padding-bottom:16px;">
                 <%
                     int tabIndex = 0;
-                    for (Map<String, String> treeName : qzResponse.attachmentData().getDataList()) {
+                    for (Map<String, String> treeName : qzResponse.getDataList()) {
                         tabIndex++;
                 %>
                 <li<%=(tabIndex == 1 ? " class=\"active\"" : "")%>>

@@ -16,7 +16,7 @@
     }
     LinkedHashMap<String, String> groupMultiDes = new LinkedHashMap<>();
     LinkedHashMap<String, LinkedHashMap<String, String>> groupedMultiMap = new LinkedHashMap<>();
-    OptionManager multiselectOptionManager = ConsoleUtil.fieldOptions(qzRequest, fieldName);
+    Options multiselectOptionManager = modelManager.getOptions(qzRequest.getModelName(), fieldName);
     ConsoleUtil.multiSelectGroup(groupMultiDes, groupedMultiMap, multiselectOptionManager);
 %>
 <select name="<%=fieldName%>" multiple="multiple" <%=readonly%> style="width:100%;">

@@ -1,9 +1,7 @@
 package qingzhou.console.view.impl;
 
-import qingzhou.console.controller.RestContext;
-import qingzhou.api.console.data.Datas;
-import qingzhou.api.console.data.Response;
-import qingzhou.console.DatasImpl;
+import qingzhou.framework.api.Response;
+import qingzhou.console.controller.rest.RestContext;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -26,40 +24,33 @@ public class JsonView implements View {
 
     public static String buildErrorResponse(String errorMsg) {
         StringBuilder json = new StringBuilder("{");
-        addBasic(json, false, errorMsg);
+        addStatus(json, false, errorMsg);
         return json.toString();
     }
 
     private static String convertToJson(Response response) {
         StringBuilder json = new StringBuilder("{");
 
-        addBasic(json, response.isSuccess(), response.getMsg());
+        addStatus(json, response.isSuccess(), response.getMsg());
         json.append(",");
-        addModelData(json, "model", response.modelData());
-        json.append(",");
-        addModelData(json, "monitor", response.monitorData());
-        json.append(",");
-        addModelData(json, "error", response.errorData());
-        json.append(",");
-        addModelData(json, "attachment", response.attachmentData());
+        addData(json, response);
 
         json.append("}");
         return json.toString();
     }
 
-    private static void addBasic(StringBuilder json, boolean success, String message) {
+    private static void addStatus(StringBuilder json, boolean success, String message) {
         addKV(json, "success", String.valueOf(success));
         json.append(",");
         addKV(json, "message", message);
     }
 
-    private static void addModelData(StringBuilder json, String k, Datas di) {
-        DatasImpl dataInfo = (DatasImpl) di;
-        json.append("\"").append(k).append("\"");
+    private static void addData(StringBuilder json, Response response) {
+        json.append("\"").append("data").append("\"");
         json.append(":");
         json.append("[");
 
-        List<Map<String, String>> dataList = dataInfo.getDataList();
+        List<Map<String, String>> dataList = response.getDataList();
         for (int i = 0; i < dataList.size(); i++) {
             if (i > 0) {
                 json.append(",");
@@ -81,18 +72,12 @@ public class JsonView implements View {
 
         json.append("]");
 
-        if (hasPageInfo(dataInfo)) {
-            json.append(",");
-            json.append("\"").append(k).append(".page").append("\"");
-            json.append(":{\"totalSize\":\"").append(dataInfo.getTotalSize())
-                    .append("\",\"pageSize\":\"").append(dataInfo.getPageSize())
-                    .append("\",\"pageNum\":\"").append(dataInfo.getPageNum())
-                    .append("\"}");
-        }
-    }
-
-    private static boolean hasPageInfo(Datas datas) {
-        return datas.getTotalSize() >= 0 && datas.getPageSize() >= 0 && datas.getPageNum() >= 0;
+        json.append(",");
+        json.append("\"").append(".page-info").append("\"");
+        json.append(":{\"totalSize\":\"").append(response.getTotalSize())
+                .append("\",\"pageSize\":\"").append(response.getPageSize())
+                .append("\",\"pageNum\":\"").append(response.getPageNum())
+                .append("\"}");
     }
 
     private static void addKV(StringBuilder json, String k, String v) {
