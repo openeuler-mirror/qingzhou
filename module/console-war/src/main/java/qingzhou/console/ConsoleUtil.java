@@ -3,9 +3,25 @@ package qingzhou.console;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.impl.RequestImpl;
 import qingzhou.console.login.LoginManager;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.AppContext;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.Constants;
+import qingzhou.framework.api.DeleteModel;
+import qingzhou.framework.api.EditModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.MenuInfo;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Option;
+import qingzhou.framework.api.Options;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ObjectUtil;
@@ -15,7 +31,14 @@ import qingzhou.framework.util.StringUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
 public class ConsoleUtil {
@@ -190,8 +213,8 @@ public class ConsoleUtil {
         return tree;
     }
 
-    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, RequestImpl request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
+    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
+        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getTargetType() + "/" + request.getTargetName() + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
         return response.encodeURL(url);
     }
 
@@ -243,7 +266,7 @@ public class ConsoleUtil {
         }
     }
 
-    public static boolean actionsWithAjax(RequestImpl request, String actionName) {
+    public static boolean actionsWithAjax(Request request, String actionName) {
         return AddModel.ACTION_NAME_ADD.equals(actionName)
                 || EditModel.ACTION_NAME_UPDATE.equals(actionName)
                 || DeleteModel.ACTION_NAME_DELETE.equals(actionName);
@@ -252,7 +275,7 @@ public class ConsoleUtil {
     /**
      * list.jsp 在使用
      */
-    public static boolean isFilterSelect(RequestImpl request, int i) {
+    public static boolean isFilterSelect(Request request, int i) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return false;
@@ -264,7 +287,7 @@ public class ConsoleUtil {
         return fieldType == FieldType.radio || fieldType == FieldType.bool || fieldType == FieldType.select || fieldType == FieldType.groupedMultiselect || fieldType == FieldType.checkbox || fieldType == FieldType.sortableCheckbox;
     }
 
-    public static boolean isFieldReadOnly(RequestImpl request, String fieldName) {
+    public static boolean isFieldReadOnly(Request request, String fieldName) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return false;
@@ -280,7 +303,7 @@ public class ConsoleUtil {
         return false;
     }
 
-    public static boolean hasIDField(RequestImpl request) {
+    public static boolean hasIDField(Request request) {
         try {
             final ModelManager modelManager = getModelManager(request.getAppName());
             if (modelManager == null) {
@@ -295,7 +318,7 @@ public class ConsoleUtil {
         return false;
     }
 
-    public static String isActionEffective(RequestImpl request, Map<String, String> obj, ModelAction modelAction) {
+    public static String isActionEffective(Request request, Map<String, String> obj, ModelAction modelAction) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
@@ -335,7 +358,7 @@ public class ConsoleUtil {
         return disableDownload;
     }
 
-    public static Map<String, String> modelFieldEffectiveWhenMap(RequestImpl request) {
+    public static Map<String, String> modelFieldEffectiveWhenMap(Request request) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return new HashMap<>();
@@ -369,7 +392,7 @@ public class ConsoleUtil {
         return inRefModelField;
     }
 
-    public static String getSubmitActionName(RequestImpl request) {
+    public static String getSubmitActionName(Request request) {
         boolean isEdit = Objects.equals("edit", request.getActionName());
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
@@ -389,7 +412,7 @@ public class ConsoleUtil {
         return isEdit ? "update" : "add";// 兜底
     }
 
-    public static List<ModelBase> convertMapToModelBase(RequestImpl request, Response response) {
+    public static List<ModelBase> convertMapToModelBase(Request request, Response response) {
         List<ModelBase> modelBases = new ArrayList<>();
         final List<Map<String, String>> models = response.getDataList();
         if (models != null) {
@@ -412,7 +435,7 @@ public class ConsoleUtil {
 
     /********************* 批量操作 start ************************/
     //公共操作列表
-    public static boolean needOperationColumn(RequestImpl request, Response response, HttpSession session) throws Exception {
+    public static boolean needOperationColumn(Request request, Response response, HttpSession session) throws Exception {
         final boolean[] needOperationColumn = {false};
         visitActions(request, response, session,
                 obj -> {
@@ -422,11 +445,11 @@ public class ConsoleUtil {
         return needOperationColumn[0];
     }
 
-    private static void visitActions(RequestImpl request, Response response, HttpSession session, Visitor<ModelAction> visitor) throws Exception {
+    private static void visitActions(Request request, Response response, HttpSession session, Visitor<ModelAction> visitor) throws Exception {
         visitActions(request, response, session, visitor, response.getDataList(), true);
     }
 
-    private static void visitActions(RequestImpl request, Response response, HttpSession session, Visitor<ModelAction> visitor, List<Map<String, String>> datas, boolean checkEffective) throws Exception {
+    private static void visitActions(Request request, Response response, HttpSession session, Visitor<ModelAction> visitor, List<Map<String, String>> datas, boolean checkEffective) throws Exception {
         final String appName = request.getAppName();
         final ModelManager modelManager = getModelManager(appName);
         if (modelManager == null) {
@@ -468,13 +491,13 @@ public class ConsoleUtil {
         }
     }
 
-    public static ModelAction[] listCommonOps(RequestImpl request, Response response, HttpSession session) throws Exception {
+    public static ModelAction[] listCommonOps(Request request, Response response, HttpSession session) throws Exception {
         BatchVisitor batchVisitor = new BatchVisitor();
         visitActions(request, response, session, batchVisitor);
         return batchVisitor.modelActions.toArray(new ModelAction[0]);
     }
 
-    public static ModelAction[] listModelBaseOps(RequestImpl request, Response response, HttpSession session, Map<String, String> obj) throws Exception {
+    public static ModelAction[] listModelBaseOps(Request request, Response response, HttpSession session, Map<String, String> obj) throws Exception {
         BatchVisitor batchVisitor = new BatchVisitor();
         visitActions(request, response, session, batchVisitor, new ArrayList<Map<String, String>>() {{
             add(obj);

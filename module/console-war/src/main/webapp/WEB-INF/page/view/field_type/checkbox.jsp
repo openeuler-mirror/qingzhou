@@ -17,7 +17,7 @@
 %>
 <%
     {
-        OptionManager checkboxOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
+        Options checkboxOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
         if(checkboxOptions != null){
             for (Option option : checkboxOptions.options()) {
                 String val = option.value();
