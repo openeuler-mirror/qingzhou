@@ -312,7 +312,7 @@
 
     <div id="tempZone" style="display:none;"></div>
     <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-            <%=SecureKey.getPublicKeyString()%>
+            <%=ConsoleUtil.getPublicKeyString()%>
     </textarea>
 
     <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">

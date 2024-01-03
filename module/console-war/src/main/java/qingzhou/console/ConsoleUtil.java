@@ -4,6 +4,7 @@ import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
+import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.api.*;
 import qingzhou.framework.console.I18n;
@@ -565,6 +566,13 @@ public class ConsoleUtil {
 
     public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
+    }
+
+    public static String getPublicKeyString() throws Exception {
+        CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
+        KeyManager keyManager = cryptoService.getKeyManager();
+        File secureFile = ServerUtil.getSecureFile(ServerUtil.getDomain());
+        return keyManager.getKeyPairOrElseInit(secureFile, ServerUtil.publicKeyName, ServerUtil.publicKeyName, ServerUtil.privateKeyName, null);
     }
 
     public static String decryptWithConsolePrivateKey(String input) {

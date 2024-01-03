@@ -28,7 +28,7 @@
                             <Bundle-Activator>qingzhou.crypto.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,qingzhou.framework,javax.crypto,javax.crypto.spec
+                                org.osgi.framework,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,javax.crypto,javax.crypto.spec
                             </Import-Package>
                             <Export-Package>qingzhou.crypto</Export-Package>
                         </manifestEntries>
