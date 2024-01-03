@@ -21,7 +21,7 @@ public class Controller implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         sequence = new ProcessSequence(
-                new GetFrameworkService(context),
+                new InitConsoleEnv(context),
                 new StartServlet(),
                 new RunRemote(this),
                 new RunWar(this)
@@ -52,11 +52,11 @@ public class Controller implements BundleActivator {
         }
     }
 
-    private class GetFrameworkService implements Process {
+    private class InitConsoleEnv implements Process {
         private final BundleContext context;
         private ServiceReference<FrameworkContext> reference;
 
-        private GetFrameworkService(BundleContext context) {
+        private InitConsoleEnv(BundleContext context) {
             this.context = context;
         }
 

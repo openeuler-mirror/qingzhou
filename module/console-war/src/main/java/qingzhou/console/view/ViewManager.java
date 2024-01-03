@@ -1,7 +1,7 @@
 package qingzhou.console.view;
 
-import qingzhou.console.impl.RequestImpl;
-import qingzhou.console.impl.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.console.view.impl.FileView;

@@ -57,15 +57,4 @@ public interface MonitorModel extends ShowModel {
     }
 
     Map<String, String> monitorData();
-
-    /**
-     * Map<String, Object> key:
-     * qingzhou.api.console.model.MonitorModel#OVERVIEW_DATA_KEY_NAME
-     * qingzhou.api.console.model.MonitorModel#OVERVIEW_DATA_KEY_MAX
-     * qingzhou.api.console.model.MonitorModel#OVERVIEW_DATA_KEY_VALUE
-     * qingzhou.api.console.model.MonitorModel#OVERVIEW_DATA_KEY_UNIT
-     */
-    default List<Map<String, Object>> showToOverViewData() {
-        return null;
-    }
 }

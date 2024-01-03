@@ -9,20 +9,37 @@ import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ServerUtil { // todo：将无状态的工具方法，拆分到对应的 util/*Utils类里面
+    public static final String remoteKeyName = "remoteKey";
+    public static final String localKeyName = "localKey";
+    public static final String publicKeyName = "publicKey";
+    public static final String privateKeyName = "privateKey";
+    public static final String remotePublicKeyName = "remotePublicKey";
+
     private static Boolean isWindows;
     private static File domain;
     private static File dataXmlFile;
@@ -44,6 +61,12 @@ public class ServerUtil { // todo：将无状态的工具方法，拆分到对�
 
     public static ConsoleContext getMasterConsoleContext() {
         return ServerUtil.getMasterAppContext().getConsoleContext();
+    }
+
+    public static String maskMBytes(long val) {
+        double v = ((double) val) / 1024 / 1024;
+        DecimalFormat df = new DecimalFormat("##0.0");//这样为保持1位
+        return df.format(v);
     }
 
     public static boolean isBlank(String value) {
@@ -187,6 +210,19 @@ public class ServerUtil { // todo：将无状态的工具方法，拆分到对�
             ServerUtil.domain = new File(domain).getAbsoluteFile();
         }
         return domain;
+    }
+
+    public static synchronized File getSecureFile(File domain) throws IOException {
+        File secureDir = FileUtil.newFile(domain, "data", "secure");
+        FileUtil.mkdirs(secureDir);
+        File secureFile = FileUtil.newFile(secureDir, "secure");
+        if (!secureFile.exists()) {
+            if (!secureFile.createNewFile()) {
+                throw ExceptionUtil.unexpectedException(secureFile.getPath());
+            }
+        }
+
+        return secureFile;
     }
 
     public static File getTempDir() {

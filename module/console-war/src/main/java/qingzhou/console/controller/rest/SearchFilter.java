@@ -1,7 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.console.ConsoleUtil;
-import qingzhou.console.impl.RequestImpl;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.console.login.LoginManager;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;

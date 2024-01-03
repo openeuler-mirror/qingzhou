@@ -2,8 +2,8 @@ package qingzhou.console.view.impl;
 
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.DownloadModel;
-import qingzhou.console.impl.RequestImpl;
-import qingzhou.console.impl.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.console.controller.rest.InvokeAction;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.framework.util.DownLoadUtil;

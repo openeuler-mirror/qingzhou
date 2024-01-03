@@ -4,7 +4,7 @@ import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.console.ConsoleUtil;
-import qingzhou.console.impl.RequestImpl;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.pattern.Filter;
 

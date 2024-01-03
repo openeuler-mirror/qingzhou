@@ -4,24 +4,8 @@ import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.AppContext;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.Constants;
-import qingzhou.framework.api.DeleteModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.MenuInfo;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.crypto.KeyManager;
+import qingzhou.framework.api.*;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ObjectUtil;
@@ -31,6 +15,7 @@ import qingzhou.framework.util.StringUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -587,10 +572,12 @@ public class ConsoleUtil {
             return input;
         }
         try {
-            return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(
-                    SecureKey.getPublicKeyString(),
-                    SecureKey.getPrivateKeyString()
-            ).decryptWithPrivateKey(input);
+            File secureFile = ServerUtil.getSecureFile(ServerUtil.getDomain());
+            KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
+            String pubKey = keyManager.getKeyPairOrElseInit(secureFile, ServerUtil.publicKeyName, ServerUtil.publicKeyName, ServerUtil.privateKeyName, null);
+            String priKey = keyManager.getKeyPairOrElseInit(secureFile, ServerUtil.privateKeyName, ServerUtil.publicKeyName, ServerUtil.privateKeyName, null);
+
+            return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(pubKey, priKey).decryptWithPrivateKey(input);
         } catch (Exception e) {
             e.printStackTrace();
             return input;

@@ -1,13 +1,20 @@
 package qingzhou.app.master.user;
 
-import qingzhou.app.master.MasterModelBase;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.Group;
+import qingzhou.framework.api.Groups;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Option;
+import qingzhou.framework.api.Options;
 
 @Model(name = "user", icon = "user",
         menuName = "Security", menuOrder = 1,
         nameI18n = {"管理员", "en:User"},
         infoI18n = {"管理登录和操作服务器的管理员，管理员可登录控制台、REST接口等。", "en:Manages the administrator who logs in and operates the server. The administrator can log in to the console, REST interface, etc."})
-public class User extends MasterModelBase implements AddModel {
+public class User extends ModelBase implements AddModel {
     public static final String pwdKey = "password";
     public static final String confirmPwdKey = "confirmPassword";
     public static final int defSaltLength = 4;

@@ -1,12 +1,17 @@
 package qingzhou.crypto.impl;
 
 import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.KeyManager;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.crypto.PasswordCipher;
 import qingzhou.crypto.PublicKeyCipher;
 
 import java.nio.charset.StandardCharsets;
-import java.security.*;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
 
 public class CryptoServiceImpl implements CryptoService {
     private final MessageDigest messageDigest = new MessageDigestImpl();
@@ -46,6 +51,11 @@ public class CryptoServiceImpl implements CryptoService {
     @Override
     public MessageDigest getMessageDigest() {
         return messageDigest;
+    }
+
+    @Override
+    public KeyManager getKeyManager() {
+        return new KeyManagerImpl();
     }
 
     private KeyPair genKeyPair(String seedKey) throws Exception {

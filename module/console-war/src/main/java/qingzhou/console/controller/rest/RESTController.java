@@ -2,8 +2,8 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.impl.RequestImpl;
-import qingzhou.console.impl.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
