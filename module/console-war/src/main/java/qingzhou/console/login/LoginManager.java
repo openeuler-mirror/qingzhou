@@ -231,7 +231,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
         try {
             String userPwd = getUserPassword(user);
-            if (ConsoleWarHelper.getMessageDigest().matches(password, userPwd)) {
+            if (ConsoleWarHelper.getCryptoService().getMessageDigest().matches(password, userPwd)) {
                 return null;
             } else {
                 return LOGIN_ERROR_MSG_KEY;
