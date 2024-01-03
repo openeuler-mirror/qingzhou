@@ -21,6 +21,8 @@ public class RunWar implements Process {
         File console = FileUtil.newFile(ConsoleWarHelper.getLibDir(), "sysapp", "console");
         String docBase = console.getAbsolutePath();
         controller.servletService.addWebapp(contextPath, docBase);
+
+        ConsoleWarHelper.getLogger().info("Open a browser to access the QingZhou console: http://localhost:9060" + contextPath);// todo 9060 应该动态获取到
     }
 
     @Override

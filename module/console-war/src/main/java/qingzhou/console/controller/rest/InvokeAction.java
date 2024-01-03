@@ -129,7 +129,7 @@ public class InvokeAction implements Filter<RestContext> {
                 ModelManager manager = ConsoleUtil.getModelManager(appName);
                 Class<?> modelClass = manager.getModelClass(modelName);
                 if (modelClass != null) {
-                    if (manager.isModelType(modelName, ListModel.class)) {
+                    if (manager.getModelAction(modelName, ListModel.ACTION_NAME_LIST) != null) {
                         if (!noCheckActions.contains(actionName)) {
                             Response responseTemp = new ResponseImpl();
                             ShowModel showModel = manager.getModelInstance(modelName);

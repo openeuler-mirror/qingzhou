@@ -81,7 +81,7 @@
     </div>
 
     <%
-    if (modelManager.isModelType(qzRequest.getModelName(), ListModel.class)) {
+    if (modelManager.getModelAction(qzRequest.getModelName(), ListModel.ACTION_NAME_LIST) != null) {
         %>
         <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
             <div class="form-btn">

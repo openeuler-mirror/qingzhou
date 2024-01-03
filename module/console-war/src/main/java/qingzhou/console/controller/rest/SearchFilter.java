@@ -64,7 +64,7 @@ public class SearchFilter implements Filter<RestContext> {
 //                }
 //
 //                if (fieldMapWithGroup.isEmpty()) {// todo 缺少实现
-////                    if (modelManager.isModelType(MonitorModel.class, modelName)) {
+////                    if (manager.getModelAction(modelName, MonitorModel.ACTION_NAME_MONITOR) != null)) {
 ////                        for (MonitorFieldInfo monitoringFieldInfo : modelManager.getMonitoringFieldInfos(modelName).values()) {
 ////                            if (!MonitorFieldFieldInfo.monitoringField.supportGraphicalDynamic()) {
 ////                                Map<String, String> fieldMap = new HashMap<>(baseLangMap);

@@ -34,8 +34,8 @@
                 Map<String, String> modelData = models.get(0);
                 List<String> fieldMap = new ArrayList<>();
                 if (isMonitor) {
-                    for (Map.Entry<String, MonitorField> entry : modelManager.getModelMonitoringFieldMap(qzRequest.getModelName()).entrySet()) {
-                        MonitorField monitoringField = entry.getValue();
+                    for (Map.Entry<String, MonitorField> entry : modelManager.getMonitorFieldMap(qzRequest.getModelName()).entrySet()) {
+                        ModelField monitoringField = entry.getValue();
                         if (!monitoringField.supportGraphicalDynamic() && !monitoringField.supportGraphical()) {
                             fieldMap.add(entry.getKey());
                         }

@@ -9,8 +9,6 @@ public interface ModelManager {
 
     Class<?> getModelClass(String modelName);
 
-    boolean isModelType(String modelName, Class<?> modelType);
-
     ModelBase getModelInstance(String modelName);
 
     Map<String, String> getModelDefaultProperties(String modelName);
@@ -41,7 +39,7 @@ public interface ModelManager {
 
     ModelField getModelField(String modelName, String fieldName);
 
-    Options getOptions(String modelName, String fieldName);
+    Map<String, ModelField> getMonitorFieldMap(String modelName);
 
-    Map<String, MonitorField> getModelMonitoringFieldMap(String modelName);// todo: MonitorField 合并如 ModelField？
+    Options getOptions(String modelName, String fieldName);
 }

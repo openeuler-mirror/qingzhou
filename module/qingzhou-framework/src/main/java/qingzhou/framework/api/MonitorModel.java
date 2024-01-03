@@ -27,9 +27,9 @@ public interface MonitorModel extends ShowModel {
         }
         List<String> graphicalDynamicFields = new ArrayList<>();
         Map<String, String> monitorData = new HashMap<>();
-        for (Map.Entry<String, MonitorField> entry : getAppContext().getModelManager().getModelMonitoringFieldMap(request.getModelName()).entrySet()) {
+        for (Map.Entry<String, ModelField> entry : getAppContext().getModelManager().getMonitorFieldMap(request.getModelName()).entrySet()) {
             String fieldName = entry.getKey();
-            MonitorField monitorField = entry.getValue();
+            ModelField monitorField = entry.getValue();
             if (monitorField.supportGraphicalDynamic()) {
                 graphicalDynamicFields.add(fieldName);
             } else {

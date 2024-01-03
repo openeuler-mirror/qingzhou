@@ -87,4 +87,18 @@ public @interface ModelField { // todo 内容太多，可以按照 Validation、
      * 标注需要在页面上按顺序显示，自然顺序排序
      */
     int order() default -1;
+
+    boolean isMonitorField() default false;
+
+    /**
+     * 是否是持续变化的整数，用于标记是否要在画图板上绘图显示。
+     */
+    boolean supportGraphical() default false;
+
+    /**
+     * 表示动态多值的监视量，如 一个应用里 多个ejb实例的监视
+     * 只支持：持续变化的整数，用于标记是否要在画图板上绘图显示。
+     * 和 supportGraphical 二选一
+     */
+    boolean supportGraphicalDynamic() default false;
 }
