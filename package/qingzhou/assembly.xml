@@ -51,6 +51,7 @@
                 <include>${project.groupId}:qingzhou-serializer</include>
                 <include>${project.groupId}:qingzhou-ssh</include>
                 <include>${project.groupId}:qingzhou-crypto</include>
+                <include>${project.groupId}:qingzhou-remote</include>
                 <include>${project.groupId}:qingzhou-jnet</include>
                 <include>${project.groupId}:qingzhou-app</include>
             </includes>

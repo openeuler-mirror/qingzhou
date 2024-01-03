@@ -36,9 +36,10 @@
                     <archive>
                         <manifestEntries>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-Activator>qingzhou.app.impl.Controller</Bundle-Activator>
+                            <Bundle-Activator>qingzhou.remote.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework,qingzhou.framework,qingzhou.crypto,qingzhou.serializer
+                            <Import-Package>
+                                org.osgi.framework,qingzhou.framework,qingzhou.crypto,qingzhou.serializer
                             </Import-Package>
                         </manifestEntries>
                     </archive>
