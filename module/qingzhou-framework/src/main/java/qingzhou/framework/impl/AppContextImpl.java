@@ -1,12 +1,15 @@
 package qingzhou.framework.impl;
 
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.DataStore;
 import qingzhou.framework.api.ModelManager;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class AppContextImpl implements AppContext {
@@ -15,6 +18,7 @@ public class AppContextImpl implements AppContext {
     private ConsoleContext consoleContext;
     private ModelManager modelManager;
     private DataStore dataStore;
+    private List<ActionFilter> actionFilters;
 
     public AppContextImpl(FrameworkContextImpl frameworkContext) {
         this.frameworkContext = frameworkContext;
@@ -80,5 +84,17 @@ public class AppContextImpl implements AppContext {
     @Override
     public DataStore getDataStore() {
         return dataStore;
+    }
+
+    @Override
+    public void addActionFilter(ActionFilter actionFilter) {
+        if (actionFilters == null) {
+            actionFilters = new ArrayList<>();
+        }
+        actionFilters.add(actionFilter);
+    }
+
+    public List<ActionFilter> getActionFilters() {
+        return actionFilters;
     }
 }
