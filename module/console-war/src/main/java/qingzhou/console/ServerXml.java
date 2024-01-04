@@ -311,7 +311,7 @@ public class ServerXml { // todo 考虑由 admin service 来取代
                     , null, new String[]{
                     qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_node,
                     qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_cluster,
-                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_appversion,
+                    qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_app,
                     qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_backup,
                     qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_user,
                     qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_role,
@@ -322,7 +322,7 @@ public class ServerXml { // todo 考虑由 admin service 来取代
             tenant("租户管理员", new String[]{qingzhou.framework.api.Constants.MASTER_APP_NAME}, new String[]{
                     ConsoleConstants.MODEL_NAME_node,
                     ConsoleConstants.MODEL_NAME_cluster,
-                    ConsoleConstants.MODEL_NAME_appversion,
+                    ConsoleConstants.MODEL_NAME_app,
                     ConsoleConstants.MODEL_NAME_backup,
                     ConsoleConstants.MODEL_NAME_user,
                     ConsoleConstants.MODEL_NAME_role,

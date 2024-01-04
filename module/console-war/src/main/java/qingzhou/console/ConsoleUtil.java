@@ -443,7 +443,6 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         final String modelName = request.getModelName();
         boolean hasId = hasIDField(request);
         if (hasId && !response.getDataList().isEmpty()) {
-            ModelBase modelBase = modelManager.getModelInstance(modelName);
             for (String ac : modelManager.getActionNames(modelName)) {
                 ModelAction action = modelManager.getModelAction(modelName, ac);
                 for (Map<String, String> data : datas) {

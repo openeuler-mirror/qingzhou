@@ -212,6 +212,11 @@ public class ServerUtil { // todo：将无状态的工具方法，拆分到对�
         return domain;
     }
 
+
+    public static File getApps() {
+        return FileUtil.newFile(getDomain(), "apps");
+    }
+
     public static synchronized File getSecureFile(File domain) throws IOException {
         File secureDir = FileUtil.newFile(domain, "data", "secure");
         FileUtil.mkdirs(secureDir);
