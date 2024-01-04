@@ -9,7 +9,12 @@
 
     final boolean hasId = ConsoleUtil.hasIDField(qzRequest);
 
-    LinkedHashMap<String, ModelField> fieldInfos = ConsoleUtil.getModelFieldMap(qzRequest);
+    LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
+    String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
+    for (String fieldName : fieldNames) {
+        fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModelName(), fieldName));
+    }
+    List<Integer> indexToShow = new ArrayList<>();
     int num = -1;
     for (Map.Entry<String, ModelField> e : fieldInfos.entrySet()) {
         num++;
@@ -17,6 +22,7 @@
         if (!modelField.showToList()) {
             continue;
         }
+        indexToShow.add(num);
     }
 
     int totalSize = qzResponse.getTotalSize();
@@ -33,47 +39,47 @@
               action="<%=ConsoleUtil.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getTargetType() + "/" + qzRequest.getTargetName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
             <div class="row filterForm" style="margin-top: 10px;">
                 <%
-                for (Integer i : indexToShow) {
-                    String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
-                    List<Option> modelOptionsEntry = null;
-                    if (ConsoleUtil.isFilterSelect(qzRequest, i)) {
-                        try {
-                            Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
-                            if (modelOptions != null) {
-                                modelOptionsEntry = modelOptions.options();
+                    for (Integer i : indexToShow) {
+                        String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
+                        List<Option> modelOptionsEntry = null;
+                        if (ConsoleUtil.isFilterSelect(qzRequest, i)) {
+                            try {
+                                Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
+                                if (modelOptions != null) {
+                                    modelOptionsEntry = modelOptions.options();
+                                }
+                            } catch (Exception ignored) {
                             }
-                        } catch (Exception ignored) {
                         }
-                    }
-                    %>
-                    <div class='col-md-3 list-page-padding-bottom <%=modelOptionsEntry != null ? "listPageFilterSelect" : "" %>'>
-                        <div class="input-control has-label-left ">
-                            <%
-                                if (modelOptionsEntry != null) {
-                            %>
-                            <%@ include file="../fragment/filter_select.jsp" %>
-                            <%
-                            } else {
-                                String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
-                                if (StringUtil.notBlank(showHtml)) {
-                                    if (SafeCheckerUtil.checkIsXSS(showHtml)) {
-                                        showHtml = "";
-                                    }
+                %>
+                <div class='col-md-3 list-page-padding-bottom <%=modelOptionsEntry != null ? "listPageFilterSelect" : "" %>'>
+                    <div class="input-control has-label-left ">
+                        <%
+                            if (modelOptionsEntry != null) {
+                        %>
+                        <%@ include file="../fragment/filter_select.jsp" %>
+                        <%
+                        } else {
+                            String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
+                            if (StringUtil.notBlank(showHtml)) {
+                                if (SafeCheckerUtil.checkIsXSS(showHtml)) {
+                                    showHtml = "";
                                 }
-                            %>
-                            <input id="<%=fieldName%>" type="text" name="<%=fieldName%>"
-                                   value='<%=showHtml%>'
-                                   class="form-control" placeholder="">
-                            <%
-                                }
-                            %>
-                            <label for="<%=fieldName%>"
-                                   class="input-control-label-left"><%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%>
-                            </label>
-                        </div>
+                            }
+                        %>
+                        <input id="<%=fieldName%>" type="text" name="<%=fieldName%>"
+                               value='<%=showHtml%>'
+                               class="form-control" placeholder="">
+                        <%
+                            }
+                        %>
+                        <label for="<%=fieldName%>"
+                               class="input-control-label-left"><%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%>
+                        </label>
                     </div>
-                    <%
-                }
+                </div>
+                <%
+                    }
                 %>
                 <div class="col-md-3 search-btn" style="margin-bottom: 16px;">
                     <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
@@ -92,41 +98,41 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    String errorOfActionEffective = modelManager.getModelInstance(qzRequest.getModelName()).actionNotEffective(qzRequest);
-                    boolean canAccess = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
+                    boolean canAccess = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
                     ModelAction listCreateAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_CREATE);
                     ModelAction listAddAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_ADD);
-                    if (canAccess && listCreateAction != null && listAddAction != null && errorOfActionEffective == null) {
-                        %>
-                        <a class="btn"
-                           href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, AddModel.ACTION_NAME_CREATE)%>">
-                            <i class="icon icon-<%=listCreateAction.icon()%>"></i>
-                            <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + AddModel.ACTION_NAME_CREATE)%>
-                        </a>
-                        <%
+                    if (canAccess && listCreateAction != null && listAddAction != null) {
+                %>
+                <a class="btn"
+                   href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, AddModel.ACTION_NAME_CREATE)%>">
+                    <i class="icon icon-<%=listCreateAction.icon()%>"></i>
+                    <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + AddModel.ACTION_NAME_CREATE)%>
+                </a>
+                <%
                     }
 
-                    boolean downloadPermission = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADFILE, LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADLIST, LoginManager.getLoginUser(session)));
+                    boolean downloadPermission = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADFILE, LoginManager.getLoginUser(session))
+                            && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADLIST, LoginManager.getLoginUser(session)));
                     final ModelAction downloadListModelAction = modelManager.getModelAction(qzRequest.getModelName(), DownloadModel.ACTION_NAME_DOWNLOADLIST);
-                    if (downloadListModelAction != null && downloadPermission && Arrays.asList(modelManager.getActionNamesShowToListHead(modelName)).contains(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
-                        %>
-                        <a style="margin-left:6px" class="btn" btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
-                           action-name="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
-                           href="<%= ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DownloadModel.ACTION_NAME_DOWNLOADLIST)%>"
-                                <%
-                                out.print(ConsoleUtil.isDisableDownload() ? " disabled ":"" + " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE) + "' ");%>
-                                out.print("act-ajax='true' act-confirm='" +
-                                        String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
-                                                I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST),
-                                                I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName()))
-                                        + " ?' ");
-                                %>
-
-                            <i class="icon icon-<%=downloadListModelAction.icon()%>"></i>
-                            <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
-                        </a>
+                    if (downloadListModelAction != null && downloadPermission && Arrays.asList(modelManager.getActionNamesShowToListHead(qzRequest.getModelName())).contains(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
+                %>
+                <a style="margin-left:6px" class="btn" btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
+                   action-name="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
+                   href="<%= ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DownloadModel.ACTION_NAME_DOWNLOADLIST)%>"
                         <%
+                            out.print(ConsoleUtil.isDisableDownload() ? " disabled " : "" + " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE) + "' ");%>
+                   out.print("act-ajax='true' act-confirm='" +
+                String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
+                I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." +
+                DownloadModel.ACTION_NAME_DOWNLOADLIST),
+                I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName()))
+                + " ?' ");
+                %>
+
+                <i class="icon icon-<%=downloadListModelAction.icon()%>"></i>
+                <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
+                </a>
+                <%
                     }
 
                     // 用于判断是否需要操作列
@@ -144,28 +150,28 @@
                             }
                             boolean isAjaxAction = ConsoleUtil.actionsWithAjax(qzRequest, actionKey);
                             String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
-                            %>
-                            <a id="<%=actionKey%>"
-                               href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, actionKey)%>"
-                               onclick='batchOps("<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, actionKey)%>","<%=actionKey%>")'
-                                    <%=titleStr%>
-                               class="btn batch-ops"
-                               disabled="disabled"
-                               model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
-                               data-name="" data-id=""
-                                    <%
-                                        if (isAjaxAction) {
-                                            out.print("act-ajax='true' act-confirm='" +
-                                                    String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
-                                                    I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey),
-                                                    I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName())) + " ?' ");
-                                        }
-                                    %>
-                            >
-                                <i class="icon icon-<%=action.icon()%>"></i>
-                                <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey)%>
-                            </a>
-                            <%
+                %>
+                <a id="<%=actionKey%>"
+                   href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, actionKey)%>"
+                   onclick='batchOps("<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, actionKey)%>","<%=actionKey%>")'
+                        <%=titleStr%>
+                   class="btn batch-ops"
+                   disabled="disabled"
+                   model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
+                   data-name="" data-id=""
+                        <%
+                            if (isAjaxAction) {
+                                out.print("act-ajax='true' act-confirm='" +
+                                        String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
+                                                I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey),
+                                                I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName())) + " ?' ");
+                            }
+                        %>
+                >
+                    <i class="icon icon-<%=action.icon()%>"></i>
+                    <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey)%>
+                </a>
+                <%
                         }
                     }
                 %>
@@ -176,26 +182,27 @@
             <thead>
             <tr style="height:20px;">
                 <%
-                if (opsActions.length > 0) {
-                    %>
-                    <th>
-                        <input type="checkbox" class="allcheck"/>
-                    </th>
-                    <%
-                }
+                    if (opsActions.length > 0) {
+                %>
+                <th>
+                    <input type="checkbox" class="allcheck"/>
+                </th>
+                <%
+                    }
                 %>
                 <th><%=I18n.getString(Constants.MASTER_APP_NAME, "page.list.order")%>
                 </th>
                 <%
-                for (Integer i : indexToShow) {
-                    String name = modelManager.getFieldName(qzRequest.getModelName(), i);
-                    %>
-                        <th><%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + name)%></th>
-                        <%
-                }
-                if (needOperationColumn) {
-                    out.print("<th>" + I18n.getString(Constants.MASTER_APP_NAME, "page.action") + "</th>");
-                }
+                    for (Integer i : indexToShow) {
+                        String name = modelManager.getFieldName(qzRequest.getModelName(), i);
+                %>
+                <th><%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + name)%>
+                </th>
+                <%
+                    }
+                    if (needOperationColumn) {
+                        out.print("<th>" + I18n.getString(Constants.MASTER_APP_NAME, "page.action") + "</th>");
+                    }
                 %>
             </tr>
             </thead>
@@ -221,143 +228,142 @@
                                 encodedId = ConsoleSDK.encodeId(originUnEncodedId);
                             }
                         }
-                        %>
-                        <tr>
-                            <%
-                            if (hasId) {
-                                String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
-                                if (opsActions.length > 0) {
-                                    boolean hasCheckAction = ConsoleUtil.listModelBaseOps(qzRequest, qzResponse, session, modelBase).length > 0;
-                                    %>
-                                    <td>
-                                        <input type="checkbox"
-                                               value="<%= ConsoleSDK.needEncode(idValue) ?  ConsoleSDK.encodeId(idValue) : idValue%>"
-                                               name="<%=ListModel.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
-                                    </td>
-                                    <%
-                                }
-                            }
-                            %>
-                            <td><%=++listOrder%>
-                            </td>
-                            <%
-                            ModelAction targetAction = null;
-                            if (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
-                                    && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
-                                targetAction = modelManager.getModelAction(qzRequest.getModelName(), EditModel.ACTION_NAME_EDIT);
-                            }
-                            if (targetAction == null) {
-                                if (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(),qzRequest.getModelName() + "/" + ShowModel.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
-                                    targetAction = modelManager.getModelAction(qzRequest.getModelName(), ShowModel.ACTION_NAME_SHOW);
-                                }
-                            }
-                            boolean isFirst = true;
-                            for (Integer i : indexToShow) {
-                                String value = modelBase.get(modelManager.getFieldName(qzRequest.getModelName(), i));
-                                if (value == null) {
-                                    value = "";
-                                }
-                                ModelAction actionEdit = modelManager.getModelAction(qzRequest.getModelName(), EditModel.ACTION_NAME_EDIT);
-                                if (isFirst && hasId && targetAction != null && actionEdit != null && actionEdit.effectiveWhen() != "") {
-                                    isFirst = false;
-                                    %>
-                                    <td>
-                                        <a href='<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.name() + "/" + encodedId)%>'
-                                           class="dataid tooltips"
-                                           record-action-id="<%=targetAction.name()%>"
-                                           data-tip='<%=I18n.getString(qzRequest.getAppName(), "model.action.info." + qzRequest.getModelName() + "." + targetAction.name())%>'
-                                           data-tip-arrow="top"
-                                           style="color:#4C638F;">
-                                            <%=value%>
-                                        </a>
-                                    </td>
-                                    <%
-                                } else {
-                                    String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
-                                    String linkField = modelManager.getModelField(qzRequest.getModelName(), fieldName).linkModel();
-                                    if (StringUtil.notBlank(linkField)) {
-                                        String[] split = linkField.split("\\.");
-                                        String idFieldValue = modelBase.get(ListModel.FIELD_NAME_ID);
-                                        %>
-                                        <td>
-                                            <a href='<%=ConsoleUtil.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getTargetType() + "/" + qzRequest.getTargetName() + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
-                                               onclick='difModelActive("<%=qzRequest.getModelName()%>","<%=split[0]%>")'
-                                               class="dataid tooltips" record-action-id="<%=split[1]%>"
-                                               data-tip='<%=I18n.getString(qzRequest.getAppName(), "model." + split[0])%>'
-                                               data-tip-arrow="top"
-                                               style="color:#4C638F;">
-                                                <%=value%>
-                                            </a>
-                                        </td>
-                                        <%
-                                    } else {
-                                        %>
-                                        <td><%=value%></td>
-                                        <%
-                                    }
-                                }
-                            }
-                            %>
-
-                            <%
-                            ModelAction[] actions = ConsoleUtil.getShowToListActions(qzRequest);
-                            %>
-                            <td>
-                            <%
-                            for (ModelAction action : actions) {
-                                if(action == null){
-                                    continue;
-                                }
-                                if (ConsoleUtil.isActionEffective(qzRequest, modelBase, action) != null) {
-                                    continue;
-                                }
-                                String actionKey = action.name();
-                                if (actionKey.equals(EditModel.ACTION_NAME_EDIT)) {
-                                    continue;
-                                }
-
-                                if (!AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + actionKey, LoginManager.getLoginUser(session))) {
-                                    continue;
-                                }
-
-                                String titleStr = I18n.getString(qzRequest.getAppName(), "model.action.info." + qzRequest.getModelName() + "." + actionKey);
-                                if (StringUtil.notBlank(titleStr)) {
-                                    titleStr = "data-tip='" + titleStr + "'";
-                                } else {
-                                    titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
-                                }
-
-                                boolean isAjaxAction = ConsoleUtil.actionsWithAjax(qzRequest, actionKey);
-                                String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
-                                %>
-                                <a href="<%=actionKey.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST) && ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>
-                                   class="tw-action-link tooltips" data-tip-arrow="top"
-                                   model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
-                                   data-name="<%=originUnEncodedId%>" data-id="<%=(qzRequest.getModelName() + "|" + encodedId)%>"
-                                    <%
-                                    if (actionKey.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
-                                        out.print(ConsoleUtil.isDisableDownload() ? " disabled ":"" + "downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE + "/" + encodedId) + "' ");
-                                    }
-                                    if (isAjaxAction) {
-                                        out.print("act-ajax='true' act-confirm='" +
-                                                String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
-                                                        I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey),
-                                                        I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName())) + " " + originUnEncodedId
-                                                + " ?' ");
-                                    }
-                                    %>
-                                >
-                                <i class="icon icon-<%=action.icon()%>"></i>
-                                <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey)%>
-                                </a>
-                                <%
-                            }
-                            %>
-                        </td>
-                    </tr>
+            %>
+            <tr>
                 <%
+                    if (hasId) {
+                        String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
+                        if (opsActions.length > 0) {
+                            boolean hasCheckAction = ConsoleUtil.listModelBaseOps(qzRequest, qzResponse, session, modelBase).length > 0;
+                %>
+                <td>
+                    <input type="checkbox"
+                           value="<%= ConsoleSDK.needEncode(idValue) ?  ConsoleSDK.encodeId(idValue) : idValue%>"
+                           name="<%=ListModel.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
+                </td>
+                <%
+                        }
+                    }
+                %>
+                <td><%=++listOrder%>
+                </td>
+                <%
+                    ModelAction targetAction = null;
+                    if (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
+                            && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
+                        targetAction = modelManager.getModelAction(qzRequest.getModelName(), EditModel.ACTION_NAME_EDIT);
+                    }
+                    if (targetAction == null) {
+                        if (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + ShowModel.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
+                            targetAction = modelManager.getModelAction(qzRequest.getModelName(), ShowModel.ACTION_NAME_SHOW);
+                        }
+                    }
+                    boolean isFirst = true;
+                    for (Integer i : indexToShow) {
+                        String value = modelBase.get(modelManager.getFieldName(qzRequest.getModelName(), i));
+                        if (value == null) {
+                            value = "";
+                        }
+                        ModelAction actionEdit = modelManager.getModelAction(qzRequest.getModelName(), EditModel.ACTION_NAME_EDIT);
+                        if (isFirst && hasId && targetAction != null && actionEdit != null && actionEdit.effectiveWhen() != "") {
+                            isFirst = false;
+                %>
+                <td>
+                    <a href='<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.name() + "/" + encodedId)%>'
+                       class="dataid tooltips"
+                       record-action-id="<%=targetAction.name()%>"
+                       data-tip='<%=I18n.getString(qzRequest.getAppName(), "model.action.info." + qzRequest.getModelName() + "." + targetAction.name())%>'
+                       data-tip-arrow="top"
+                       style="color:#4C638F;">
+                        <%=value%>
+                    </a>
+                </td>
+                <%
+                } else {
+                    String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
+                    String linkField = modelManager.getModelField(qzRequest.getModelName(), fieldName).linkModel();
+                    if (StringUtil.notBlank(linkField)) {
+                        String[] split = linkField.split("\\.");
+                        String idFieldValue = modelBase.get(ListModel.FIELD_NAME_ID);
+                %>
+                <td>
+                    <a href='<%=ConsoleUtil.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getTargetType() + "/" + qzRequest.getTargetName() + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
+                       onclick='difModelActive("<%=qzRequest.getModelName()%>","<%=split[0]%>")'
+                       class="dataid tooltips" record-action-id="<%=split[1]%>"
+                       data-tip='<%=I18n.getString(qzRequest.getAppName(), "model." + split[0])%>'
+                       data-tip-arrow="top"
+                       style="color:#4C638F;">
+                        <%=value%>
+                    </a>
+                </td>
+                <%
+                } else {
+                %>
+                <td><%=value%>
+                </td>
+                <%
+                            }
+                        }
+                    }
+                %>
+                <td>
+                    <%
+                        String[] actions = modelManager.getActionNames(qzRequest.getModelName());
+                        for (String actionName : actions) {
+                            ModelAction action = modelManager.getModelAction(qzRequest.getModelName(), actionName);
+                            if (action == null) {
+                                continue;
+                            }
+                            if (ConsoleUtil.isActionEffective(qzRequest, modelBase, action) != null) {
+                                continue;
+                            }
+                            String actionKey = action.name();
+                            if (actionKey.equals(EditModel.ACTION_NAME_EDIT)) {
+                                continue;
+                            }
+
+                            if (!AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + actionKey, LoginManager.getLoginUser(session))) {
+                                continue;
+                            }
+
+                            String titleStr = I18n.getString(qzRequest.getAppName(), "model.action.info." + qzRequest.getModelName() + "." + actionKey);
+                            if (StringUtil.notBlank(titleStr)) {
+                                titleStr = "data-tip='" + titleStr + "'";
+                            } else {
+                                titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
+                            }
+
+                            boolean isAjaxAction = ConsoleUtil.actionsWithAjax(qzRequest, actionKey);
+                            String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
+                    %>
+                    <a href="<%=actionKey.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST) && ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>
+                       class="tw-action-link tooltips" data-tip-arrow="top"
+                       model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
+                       data-name="<%=originUnEncodedId%>" data-id="<%=(qzRequest.getModelName() + "|" + encodedId)%>"
+                            <%
+                                if (actionKey.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
+                                    out.print(ConsoleUtil.isDisableDownload() ? " disabled " : "" + "downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE + "/" + encodedId) + "' ");
+                                }
+                                if (isAjaxAction) {
+                                    out.print("act-ajax='true' act-confirm='" +
+                                            String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
+                                                    I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey),
+                                                    I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName())) + " " + originUnEncodedId
+                                            + " ?' ");
+                                }
+                            %>
+                    >
+                        <i class="icon icon-<%=action.icon()%>"></i>
+                        <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey)%>
+                    </a>
+                    <%
+                        }
+                    %>
+                </td>
+            </tr>
+            <%
+                    }
                 }
-            }
             %>
             </tbody>
         </table>
@@ -410,7 +416,7 @@
             $(".batch-ops", getRestrictedArea()).removeAttr("disabled");
         }
     });
-    $(".morecheck", getRestrictedArea()).click(function(){
+    $(".morecheck", getRestrictedArea()).click(function () {
         if (!$(this).prop("checked")) {
             $(this).removeAttr("checked", false);
             $(".allcheck", getRestrictedArea()).prop("checked", false);
@@ -418,7 +424,7 @@
             $(this).prop("checked", "checked");
             var isAll = true;
             var morechecks = $(".morecheck", getRestrictedArea());
-            for (var i = 0; i < morechecks.length; i++){
+            for (var i = 0; i < morechecks.length; i++) {
                 if (!morechecks[i].checked) {
                     isAll = false;
                     break;

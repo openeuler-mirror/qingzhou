@@ -24,5 +24,6 @@
         <module>qingzhou-app</module>
         <module>app-master</module>
         <module>app-common</module>
+        <module>qingzhou-remote</module>
     </modules>
 </project>

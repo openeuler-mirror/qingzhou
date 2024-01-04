@@ -1,21 +1,22 @@
 package qingzhou.app.master.user;
 
-import qingzhou.app.master.MasterModelBase;
-import qingzhou.framework.api.*;
-import qingzhou.framework.util.StringUtil;
-
-import java.security.MessageDigest;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Map;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.EditModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
+import qingzhou.framework.api.ShowModel;
 
 @Model(name = "password", icon = "key",
         menuName = "Security", menuOrder = 5,
         entryAction = EditModel.ACTION_NAME_EDIT,
         nameI18n = {"修改密码", "en:Change Password"},
         infoI18n = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
-public class Password extends MasterModelBase implements EditModel {
+public class Password extends ModelBase implements EditModel {
     @ModelField(
             effectiveWhen = "update2FA=false",
             required = true, type = FieldType.password,

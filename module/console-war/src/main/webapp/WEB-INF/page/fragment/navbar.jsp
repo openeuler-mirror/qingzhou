@@ -40,7 +40,7 @@
 
                     <%-- 手册 --%>
                     <li>
-                        <a id="help-btn" href='<%=ConsoleUtil.encodeURL(request, response, contextPath + "/" + Constants.MANUAL_PDF)%>' target="_blank"
+                        <a id="help-btn" href='<%=ConsoleUtil.encodeURL(request, response, contextPath + "/manual")%>' target="_blank"
                         class="tooltips" data-tip='<%=I18n.getString(Constants.MASTER_APP_NAME, "page.document")%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
                                 <i class="icon icon-file-pdf"></i>

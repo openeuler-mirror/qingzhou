@@ -1,15 +1,19 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.console.ConsoleUtil;
-import qingzhou.console.SecureKey;
 import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.impl.RequestImpl;
-import qingzhou.console.impl.ResponseImpl;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.framework.api.*;
+import qingzhou.crypto.KeyManager;
+import qingzhou.framework.api.DownloadModel;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Response;
+import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.console.I18n;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.Constants;
 import qingzhou.framework.util.ServerUtil;
@@ -19,7 +23,12 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class InvokeAction implements Filter<RestContext> {
     private static final Set<String> noCheckActions = new HashSet<String>() {{
@@ -116,7 +125,8 @@ public class InvokeAction implements Filter<RestContext> {
 //                        }
 //                    }
                     String url = buildRemoteRequestUrl(request, Constants.remotePath);
-                    String remoteKey = SecureKey.getOrInitKey(ServerUtil.getDomain(), SecureKey.remoteKeyName);// todo 这里应该用远端的 key ？
+                    KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
+                    String remoteKey = keyManager.getKeyOrElseInit(ServerUtil.getSecureFile(ServerUtil.getDomain()), ServerUtil.remoteKeyName, null);
                     response = RemoteClient.sendReq(url, request, remoteKey);
                 } finally {
                     if (!uploadFiles.isEmpty()) {
@@ -129,7 +139,7 @@ public class InvokeAction implements Filter<RestContext> {
                 ModelManager manager = ConsoleUtil.getModelManager(appName);
                 Class<?> modelClass = manager.getModelClass(modelName);
                 if (modelClass != null) {
-                    if (manager.isModelType(modelName, ListModel.class)) {
+                    if (manager.getModelAction(modelName, ListModel.ACTION_NAME_LIST) != null) {
                         if (!noCheckActions.contains(actionName)) {
                             Response responseTemp = new ResponseImpl();
                             ShowModel showModel = manager.getModelInstance(modelName);

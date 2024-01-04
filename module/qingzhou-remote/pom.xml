@@ -6,13 +6,24 @@
         <artifactId>module</artifactId>
         <version>1.0</version>
     </parent>
-
-    <artifactId>qingzhou-crypto</artifactId>
+    <artifactId>qingzhou-remote</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-framework</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-crypto</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-serializer</artifactId>
             <version>1.0</version>
         </dependency>
     </dependencies>
@@ -25,12 +36,11 @@
                     <archive>
                         <manifestEntries>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-Activator>qingzhou.crypto.impl.Controller</Bundle-Activator>
+                            <Bundle-Activator>qingzhou.remote.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,javax.crypto,javax.crypto.spec
+                                org.osgi.framework,qingzhou.framework,qingzhou.framework.api,qingzhou.crypto,qingzhou.serializer
                             </Import-Package>
-                            <Export-Package>qingzhou.crypto</Export-Package>
                         </manifestEntries>
                     </archive>
                 </configuration>

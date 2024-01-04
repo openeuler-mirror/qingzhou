@@ -10,4 +10,6 @@ public interface CryptoService {
     PublicKeyCipher getPublicKeyCipher(String publicKey, String privateKey) throws Exception;
 
     MessageDigest getMessageDigest();
+
+    KeyManager getKeyManager();
 }

@@ -3,8 +3,9 @@ package qingzhou.console;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.impl.RequestImpl;
 import qingzhou.console.login.LoginManager;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.KeyManager;
 import qingzhou.framework.api.*;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.pattern.Visitor;
@@ -15,7 +16,15 @@ import qingzhou.framework.util.StringUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
 public class ConsoleUtil {
@@ -42,12 +51,12 @@ public class ConsoleUtil {
         return getAppContext(appName).getModelManager();
     }
 
-    static void printParentMenu(Properties menu, String targetType, String targetName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
+    static void printParentMenu(Properties menu, String targetType, String targetName, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
         String model = menu.getProperty("name");
         menuBuilder.append("<li class=\"treeview" + (model.equals(curModel) ? " active" : "") + "\">");
         menuBuilder.append("<a href=\"javascript:void(0);\">");
         menuBuilder.append(" <i class=\"icon icon-" + menu.getProperty("icon") + "\"></i>");
-        ConsoleContext consoleContext = getAppContext(null).getConsoleContext();
+        ConsoleContext consoleContext = getAppContext(appName).getConsoleContext();
         String menuText = "未分类";
         if (StringUtil.notBlank(model)) {
             MenuInfo menuInfo = consoleContext.getMenuInfo(model);
@@ -107,7 +116,7 @@ public class ConsoleUtil {
                 List<Properties> childrenMenus = (List<Properties>) c;
                 StringBuilder parentBuilder = new StringBuilder();
                 buildMenuHtmlBuilder(childrenMenus, request, response, viewName, targetType, targetName, appName, curModel, childrenBuilder, false);
-                printParentMenu(menu, targetType, targetName, curModel, parentBuilder, childrenBuilder);
+                printParentMenu(menu, targetType, targetName, appName, curModel, parentBuilder, childrenBuilder);
                 builder.append(parentBuilder.toString());
             }
 
@@ -133,7 +142,7 @@ public class ConsoleUtil {
          *  order -> int
          *  children -> Properties
          */
-        ConsoleContext consoleContext = getAppContext(null).getConsoleContext();
+        ConsoleContext consoleContext = getAppContext(appName).getConsoleContext();
         Map<String, Properties> modelMap = new HashMap<>();
         for (Model model : allModels) {
             String modelName = model.name();
@@ -190,8 +199,8 @@ public class ConsoleUtil {
         return tree;
     }
 
-    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, RequestImpl request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
+    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
+        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getTargetType() + "/" + request.getTargetName() + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
         return response.encodeURL(url);
     }
 
@@ -243,7 +252,7 @@ public class ConsoleUtil {
         }
     }
 
-    public static boolean actionsWithAjax(RequestImpl request, String actionName) {
+    public static boolean actionsWithAjax(Request request, String actionName) {
         return AddModel.ACTION_NAME_ADD.equals(actionName)
                 || EditModel.ACTION_NAME_UPDATE.equals(actionName)
                 || DeleteModel.ACTION_NAME_DELETE.equals(actionName);
@@ -252,7 +261,7 @@ public class ConsoleUtil {
     /**
      * list.jsp 在使用
      */
-    public static boolean isFilterSelect(RequestImpl request, int i) {
+    public static boolean isFilterSelect(Request request, int i) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return false;
@@ -264,7 +273,7 @@ public class ConsoleUtil {
         return fieldType == FieldType.radio || fieldType == FieldType.bool || fieldType == FieldType.select || fieldType == FieldType.groupedMultiselect || fieldType == FieldType.checkbox || fieldType == FieldType.sortableCheckbox;
     }
 
-    public static boolean isFieldReadOnly(RequestImpl request, String fieldName) {
+    public static boolean isFieldReadOnly(Request request, String fieldName) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return false;
@@ -280,7 +289,7 @@ public class ConsoleUtil {
         return false;
     }
 
-    public static boolean hasIDField(RequestImpl request) {
+    public static boolean hasIDField(Request request) {
         try {
             final ModelManager modelManager = getModelManager(request.getAppName());
             if (modelManager == null) {
@@ -295,7 +304,7 @@ public class ConsoleUtil {
         return false;
     }
 
-    public static String isActionEffective(RequestImpl request, Map<String, String> obj, ModelAction modelAction) {
+    public static String isActionEffective(Request request, Map<String, String> obj, ModelAction modelAction) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
@@ -335,7 +344,7 @@ public class ConsoleUtil {
         return disableDownload;
     }
 
-    public static Map<String, String> modelFieldEffectiveWhenMap(RequestImpl request) {
+    public static Map<String, String> modelFieldEffectiveWhenMap(Request request) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return new HashMap<>();
@@ -369,7 +378,7 @@ public class ConsoleUtil {
         return inRefModelField;
     }
 
-    public static String getSubmitActionName(RequestImpl request) {
+    public static String getSubmitActionName(Request request) {
         boolean isEdit = Objects.equals("edit", request.getActionName());
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
@@ -389,7 +398,7 @@ public class ConsoleUtil {
         return isEdit ? "update" : "add";// 兜底
     }
 
-    public static List<ModelBase> convertMapToModelBase(RequestImpl request, Response response) {
+    public static List<ModelBase> convertMapToModelBase(Request request, Response response) {
         List<ModelBase> modelBases = new ArrayList<>();
         final List<Map<String, String>> models = response.getDataList();
         if (models != null) {
@@ -412,7 +421,7 @@ public class ConsoleUtil {
 
     /********************* 批量操作 start ************************/
     //公共操作列表
-    public static boolean needOperationColumn(RequestImpl request, Response response, HttpSession session) throws Exception {
+    public static boolean needOperationColumn(Request request, Response response, HttpSession session) throws Exception {
         final boolean[] needOperationColumn = {false};
         visitActions(request, response, session,
                 obj -> {
@@ -422,11 +431,11 @@ public class ConsoleUtil {
         return needOperationColumn[0];
     }
 
-    private static void visitActions(RequestImpl request, Response response, HttpSession session, Visitor<ModelAction> visitor) throws Exception {
+    private static void visitActions(Request request, Response response, HttpSession session, Visitor<ModelAction> visitor) throws Exception {
         visitActions(request, response, session, visitor, response.getDataList(), true);
     }
 
-    private static void visitActions(RequestImpl request, Response response, HttpSession session, Visitor<ModelAction> visitor, List<Map<String, String>> datas, boolean checkEffective) throws Exception {
+    private static void visitActions(Request request, Response response, HttpSession session, Visitor<ModelAction> visitor, List<Map<String, String>> datas, boolean checkEffective) throws Exception {
         final String appName = request.getAppName();
         final ModelManager modelManager = getModelManager(appName);
         if (modelManager == null) {
@@ -468,13 +477,13 @@ public class ConsoleUtil {
         }
     }
 
-    public static ModelAction[] listCommonOps(RequestImpl request, Response response, HttpSession session) throws Exception {
+    public static ModelAction[] listCommonOps(Request request, Response response, HttpSession session) throws Exception {
         BatchVisitor batchVisitor = new BatchVisitor();
         visitActions(request, response, session, batchVisitor);
         return batchVisitor.modelActions.toArray(new ModelAction[0]);
     }
 
-    public static ModelAction[] listModelBaseOps(RequestImpl request, Response response, HttpSession session, Map<String, String> obj) throws Exception {
+    public static ModelAction[] listModelBaseOps(Request request, Response response, HttpSession session, Map<String, String> obj) throws Exception {
         BatchVisitor batchVisitor = new BatchVisitor();
         visitActions(request, response, session, batchVisitor, new ArrayList<Map<String, String>>() {{
             add(obj);
@@ -559,15 +568,24 @@ public class ConsoleUtil {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
     }
 
+    public static String getPublicKeyString() throws Exception {
+        CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
+        KeyManager keyManager = cryptoService.getKeyManager();
+        File secureFile = ServerUtil.getSecureFile(ServerUtil.getDomain());
+        return keyManager.getKeyPairOrElseInit(secureFile, ServerUtil.publicKeyName, ServerUtil.publicKeyName, ServerUtil.privateKeyName, null);
+    }
+
     public static String decryptWithConsolePrivateKey(String input) {
         if (StringUtil.isBlank(input)) {
             return input;
         }
         try {
-            return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(
-                    SecureKey.getPublicKeyString(),
-                    SecureKey.getPrivateKeyString()
-            ).decryptWithPrivateKey(input);
+            File secureFile = ServerUtil.getSecureFile(ServerUtil.getDomain());
+            KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
+            String pubKey = keyManager.getKeyPairOrElseInit(secureFile, ServerUtil.publicKeyName, ServerUtil.publicKeyName, ServerUtil.privateKeyName, null);
+            String priKey = keyManager.getKeyPairOrElseInit(secureFile, ServerUtil.privateKeyName, ServerUtil.publicKeyName, ServerUtil.privateKeyName, null);
+
+            return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(pubKey, priKey).decryptWithPrivateKey(input);
         } catch (Exception e) {
             e.printStackTrace();
             return input;

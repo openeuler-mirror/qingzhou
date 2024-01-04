@@ -6,7 +6,7 @@ import qingzhou.framework.api.QingZhouApp;
 
 public class Main implements QingZhouApp {
     @Override
-    public void start(AppContext appContext) throws Exception {
+    public void start(AppContext appContext) {
         ConsoleContext consoleContext = appContext.getConsoleContext();
         consoleContext.setMenuInfo("Service", new String[]{"服务管理", "en:Service"}, "server", 1);
         consoleContext.setMenuInfo("Product", new String[]{"产品管理", "en:Product"}, "book", 2);

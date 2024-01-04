@@ -1,14 +1,17 @@
 package qingzhou.app.master;
 
-import qingzhou.framework.api.*;
-
-import java.util.Map;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 
 @Model(name = "index", icon = "home", entryAction = "home",
         nameI18n = {"主页", "en:Main"},
         infoI18n = {"查看当前轻舟实例的产品、授权等信息。",
                 "en:View the product, license, and other information of the current QingZhou instance."})
-public class Index extends MasterModelBase {
+public class Index extends ModelBase {
     @ModelField(
             group = "product",
             nameI18n = {"产品信息", "en:Server Info"},
@@ -54,10 +57,5 @@ public class Index extends MasterModelBase {
     @Override
     public void show(Request request, Response response) throws Exception {
         home(request, response);
-    }
-
-    @Override
-    public Map<String, String> showInternal(Request request) throws Exception {
-        return null;
     }
 }

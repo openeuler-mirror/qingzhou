@@ -34,7 +34,7 @@ public class ConsoleContextImpl implements ConsoleContext {
                 }
             });
 
-            modelManager.getModelMonitoringFieldMap(modelName).forEach((k, v) -> {
+            modelManager.getMonitorFieldMap(modelName).forEach((k, v) -> {
                 addI18N("model.field." + modelName + "." + k, v.nameI18n());
                 String[] info = v.infoI18n();
                 if (info.length > 0) {

@@ -1,6 +1,14 @@
 package qingzhou.framework.impl.model;
 
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.Group;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Options;
 import qingzhou.framework.pattern.Callback;
 import qingzhou.framework.pattern.Visitor;
 
@@ -9,7 +17,17 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -40,7 +58,7 @@ public class ModelManagerImpl implements ModelManager {
                 if (model != null) {
                     ModelInfo modelInfo;
                     try {
-                        modelInfo = new ModelInfo(model, initModelFieldInfo(clazz), initModelMonitorFieldInfo(clazz), initModelActionInfo(clazz), clazz);
+                        modelInfo = new ModelInfo(model, initModelFieldInfo(clazz), initModelActionInfo(clazz), clazz);
                     } catch (Throwable e) {
                         throw new IllegalArgumentException(e);
                     }
@@ -139,16 +157,6 @@ public class ModelManagerImpl implements ModelManager {
         }
 
         return result;
-    }
-
-    private List<MonitorFieldInfo> initModelMonitorFieldInfo(Class<?> modelClass) throws Exception {
-        return initFieldInfo(modelClass, field -> {
-            MonitorField fieldMeta = field.getAnnotation(MonitorField.class);
-            if (fieldMeta != null) {
-                return new MonitorFieldInfo(fieldMeta, field);
-            }
-            return null;
-        });
     }
 
     private <T> List<T> initFieldInfo(Class<?> modelClass, Callback<Field, T> callback) throws Exception {
@@ -289,12 +297,6 @@ public class ModelManagerImpl implements ModelManager {
     }
 
     @Override
-    public boolean isModelType(String modelName, Class<?> modelType) {
-        Class<?> modelClass = getModelClass(modelName);
-        return modelType.isAssignableFrom(modelClass);
-    }
-
-    @Override
     public String[] getActionNames(String modelName) {
         ModelInfo modelInfo = getModelInfo(modelName);
         return modelInfo.actionInfoMap.keySet().toArray(new String[0]);
@@ -374,11 +376,14 @@ public class ModelManagerImpl implements ModelManager {
     }
 
     @Override
-    public Map<String, MonitorField> getModelMonitoringFieldMap(String modelName) {
+    public Map<String, ModelField> getMonitorFieldMap(String modelName) {
         ModelInfo modelInfo = getModelInfo(modelName);
-        Map<String, MonitorField> map = new LinkedHashMap<>();
-        for (Map.Entry<String, MonitorFieldInfo> entry : modelInfo.monitorFieldInfoMap.entrySet()) {
-            map.put(entry.getKey(), entry.getValue().monitorField);
+        Map<String, ModelField> map = new LinkedHashMap<>();
+        for (Map.Entry<String, FieldInfo> entry : modelInfo.fieldInfoMap.entrySet()) {
+            ModelField modelField = entry.getValue().modelField;
+            if (modelField.isMonitorField()) {
+                map.put(entry.getKey(), modelField);
+            }
         }
         return map;
     }

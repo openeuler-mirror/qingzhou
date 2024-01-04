@@ -62,14 +62,17 @@
             }
             boolean isFirstGroup = true;
             for (String group : groups) {
-                group = "".equals(group) ? "OTHERS":group;
                 %>
                 <div class="tab-pane <%=isFirstGroup?"active":""%>"
                      id="group-<%=("".equals(group) ? "OTHERS":group)%>-<%=suffixId%>"
                      tabGroup="<%=("".equals(group) ? "OTHERS":group)%>">
                 <%
                 isFirstGroup = false;
-                for (Map.Entry<String, ModelField> e : fieldMapWithGroup.get(group).entrySet()) {
+                Map<String, ModelField> groupFieldMap = fieldMapWithGroup.get(group);
+                if(groupFieldMap == null){
+                    continue;
+                }
+                for (Map.Entry<String, ModelField> e : groupFieldMap.entrySet()) {
                     ModelField modelField = e.getValue();
                     if (modelField.disableOnCreate() && !isEdit) {
                         continue;
@@ -309,7 +312,7 @@
 
     <div id="tempZone" style="display:none;"></div>
     <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-            <%=SecureKey.getPublicKeyString()%>
+            <%=ConsoleUtil.getPublicKeyString()%>
     </textarea>
 
     <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">

@@ -18,8 +18,8 @@
 <%@ page import="qingzhou.framework.console.Lang" %>
 <%@ page import="qingzhou.framework.console.I18n" %>
 <%@ page import="qingzhou.console.controller.rest.*" %>
-<%@ page import="qingzhou.console.SecureKey" %>
 <%@ page import="qingzhou.framework.util.*" %>
+<%@ page import="qingzhou.console.sdk.ConsoleSDK" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);

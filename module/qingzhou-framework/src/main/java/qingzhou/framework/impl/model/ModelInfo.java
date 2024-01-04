@@ -11,20 +11,15 @@ import java.util.Map;
 public class ModelInfo {
     public final Model model;
     public final Map<String, FieldInfo> fieldInfoMap;
-    public final Map<String, MonitorFieldInfo> monitorFieldInfoMap;
     public final Map<String, ActionInfo> actionInfoMap;
     public final Class<?> clazz;
     public final ModelBase instance;
 
-    public ModelInfo(Model model, List<FieldInfo> fieldInfoMap, List<MonitorFieldInfo> monitorFieldInfoMap, List<ActionInfo> actionInfoMap, Class<?> clazz) {
+    public ModelInfo(Model model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, Class<?> clazz) {
         this.model = model;
         Map<String, FieldInfo> fieldInfoTemp = new LinkedHashMap<>();
         for (FieldInfo fieldInfo : fieldInfoMap) {
             fieldInfoTemp.put(fieldInfo.field.getName(), fieldInfo);
-        }
-        Map<String, MonitorFieldInfo> monitoringFieldInfoTemp = new LinkedHashMap<>();
-        for (MonitorFieldInfo monitorFieldInfo : monitorFieldInfoMap) {
-            monitoringFieldInfoTemp.put(monitorFieldInfo.field.getName(), monitorFieldInfo);
         }
         Map<String, ActionInfo> actionInfoTemp = new LinkedHashMap<>();
         for (ActionInfo actionInfo : actionInfoMap) {
@@ -36,7 +31,6 @@ public class ModelInfo {
         }
 
         this.fieldInfoMap = Collections.unmodifiableMap(fieldInfoTemp);
-        this.monitorFieldInfoMap = Collections.unmodifiableMap(monitoringFieldInfoTemp);
         this.actionInfoMap = Collections.unmodifiableMap(actionInfoTemp);
         this.clazz = clazz;
         try {

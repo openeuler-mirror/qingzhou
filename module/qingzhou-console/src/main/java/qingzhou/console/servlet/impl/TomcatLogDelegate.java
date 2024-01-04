@@ -3,11 +3,11 @@ package qingzhou.console.servlet.impl;
 import org.apache.juli.logging.Log;
 import qingzhou.console.impl.ConsoleWarHelper;
 
-public class LogDelegate implements Log {
-    public LogDelegate() {
+public class TomcatLogDelegate implements Log {
+    public TomcatLogDelegate() {
     }
 
-    public LogDelegate(String loggerName) {
+    public TomcatLogDelegate(String loggerName) {
     }
 
     @Override

@@ -1,16 +1,31 @@
 package qingzhou.console.remote;
 
-import qingzhou.console.SecureKey;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.impl.ResponseImpl;
 import qingzhou.console.servlet.UploadFileContext;
+import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PasswordCipher;
-import qingzhou.framework.util.*;
+import qingzhou.framework.console.ResponseImpl;
+import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.util.FileUtil;
+import qingzhou.framework.util.ObjectUtil;
+import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.StringUtil;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
-import javax.net.ssl.*;
-import java.io.*;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -36,8 +51,10 @@ public class RemoteClient {
 
             PasswordCipher cipher;
             try {
-                String localKey = SecureKey.getOrInitKey(ServerUtil.getDomain(), SecureKey.localKeyName);
-                cipher = ConsoleWarHelper.getPasswordCipher(ConsoleWarHelper.getPasswordCipher(localKey).decrypt(remoteKey));
+                CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
+                qingzhou.crypto.KeyManager keyManager = cryptoService.getKeyManager();
+                String localKey = keyManager.getKeyOrElseInit(ServerUtil.getSecureFile(ServerUtil.getDomain()), ServerUtil.localKeyName, null);
+                cipher = cryptoService.getPasswordCipher(cryptoService.getPasswordCipher(localKey).decrypt(remoteKey));
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }

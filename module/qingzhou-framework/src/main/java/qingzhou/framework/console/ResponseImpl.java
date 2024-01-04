@@ -1,4 +1,4 @@
-package qingzhou.console.impl;
+package qingzhou.framework.console;
 
 import qingzhou.framework.api.Response;
 import qingzhou.framework.util.DownLoadUtil;
