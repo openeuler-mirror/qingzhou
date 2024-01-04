@@ -29,6 +29,10 @@ public class CharMap {
         }
     }
 
+    public static void setZhTrMap(char zh, char tr) {
+        zh_tr_Map.put(zh, tr);
+    }
+
     public static String zh2tr(String msg) {
         if (msg == null) return null;
         msg = msg.trim();

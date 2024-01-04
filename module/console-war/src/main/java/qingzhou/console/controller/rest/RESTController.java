@@ -76,11 +76,13 @@ public class RESTController extends HttpServlet {
         return result;
     }
 
+    public static InvokeAction invokeAction = new InvokeAction();
+
     private final Filter<RestContext>[] filters = new Filter[]{
             new AccessControl(),
             new SearchFilter(),
             new AsymmetricFilter(),// 解密前端的 password 类型的表单域
-            new InvokeAction() // 执行具体的业务逻辑
+            invokeAction // 执行具体的业务逻辑
     };
     private final ViewManager viewManager = new ViewManager();
 

@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
@@ -15,7 +16,6 @@ import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -38,6 +38,9 @@ public class InvokeAction implements Filter<RestContext> {
         add(DownloadModel.ACTION_NAME_DOWNLOADLIST);
         add(DownloadModel.ACTION_NAME_DOWNLOADFILE);
     }};
+
+    InvokeAction() {
+    }
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {

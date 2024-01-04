@@ -1,6 +1,11 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.MenuInfo;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.util.ServerUtil;
@@ -48,6 +53,11 @@ public class ConsoleContextImpl implements ConsoleContext {
                 addI18N("model.action.info." + modelName + "." + modelAction.name(), modelAction.infoI18n());
             }
         }
+    }
+
+    @Override
+    public void setZhTrMap(char zh, char tr) {
+        I18n.setZhTrMap(zh, tr);
     }
 
     @Override

@@ -4,11 +4,15 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import qingzhou.bytecode.BytecodeService;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class Controller implements BundleActivator {
     private ProcessSequence processSequence;
@@ -18,7 +22,7 @@ public class Controller implements BundleActivator {
     public void start(BundleContext context) throws Exception {
         processSequence = new ProcessSequence(
                 new InitFramework(context),
-                new InitLogger(context),
+                new InitBasicServices(context),
                 new ShowInfo()
         );
         processSequence.exec();
@@ -55,24 +59,28 @@ public class Controller implements BundleActivator {
         }
     }
 
-    private class InitLogger implements Process {
+    private class InitBasicServices implements Process {
         private final BundleContext context;
-        private ServiceReference<LoggerService> reference;
+        private final Set<ServiceReference<?>> serviceReferences = new HashSet<>();
 
-        private InitLogger(BundleContext context) {
+        private InitBasicServices(BundleContext context) {
             this.context = context;
         }
 
         @Override
         public void exec() {
-            reference = context.getServiceReference(LoggerService.class);
-            LoggerService loggerService = context.getService(reference);
-            frameworkContext.registerService(LoggerService.class, loggerService);
+            Class<?>[] serviceTypes = {LoggerService.class, BytecodeService.class};
+            for (Class serviceType : serviceTypes) {
+                ServiceReference<?> reference = context.getServiceReference(serviceType);
+                Object serviceObj = context.getService(reference);
+                frameworkContext.registerService(serviceType, serviceObj);
+                serviceReferences.add(reference);
+            }
         }
 
         @Override
         public void undo() {
-            context.ungetService(reference);
+            serviceReferences.forEach(context::ungetService);
         }
     }
 
