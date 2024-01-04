@@ -12,6 +12,7 @@ import qingzhou.framework.api.Options;
 import qingzhou.framework.pattern.Callback;
 import qingzhou.framework.pattern.Visitor;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -37,9 +38,10 @@ public class ModelManagerImpl implements ModelManager {
     // 以下属性是为性能缓存
     private final Map<String, Map<String, String>> modelDefaultProperties = new HashMap<>();
 
-    public ModelManagerImpl(URLClassLoader modelLoader) {
+    public ModelManagerImpl(List<File> appLib) {
         try {
-            init(modelLoader);
+            init(appLib);
+            initDefaultProperties();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -50,29 +52,7 @@ public class ModelManagerImpl implements ModelManager {
         modelInfoMap.clear();
     }
 
-    public void init(URLClassLoader modelLoader) throws Exception {
-        Map<String, ModelInfo> tempMap = new HashMap<>();
-        visitClasses(modelLoader, clazz -> {
-            if (ModelBase.class.isAssignableFrom(clazz)) {
-                Model model = clazz.getAnnotation(Model.class);
-                if (model != null) {
-                    ModelInfo modelInfo;
-                    try {
-                        modelInfo = new ModelInfo(model, initModelFieldInfo(clazz), initModelActionInfo(clazz), clazz);
-                    } catch (Throwable e) {
-                        throw new IllegalArgumentException(e);
-                    }
-
-                    ModelInfo already = tempMap.put(model.name(), modelInfo);
-                    if (already != null) {
-                        throw new IllegalArgumentException("Duplicate model name: " + model.name());
-                    }
-                }
-            }
-            return true;
-        });
-        modelInfoMap = Collections.unmodifiableMap(tempMap);
-
+    private void initDefaultProperties() throws Exception {
         // 初始化不可变的对象
         for (String modelName : getModelNames()) {
             ModelBase modelInstance = getModelInstance(modelName);
@@ -98,7 +78,30 @@ public class ModelManagerImpl implements ModelManager {
                 }
             }
         }
+    }
 
+    private void init(List<File> appLib) throws Exception {
+        Map<String, ModelInfo> tempMap = new HashMap<>();
+        visitClasses(modelLoader, clazz -> {
+            if (ModelBase.class.isAssignableFrom(clazz)) {
+                Model model = clazz.getAnnotation(Model.class);
+                if (model != null) {
+                    ModelInfo modelInfo;
+                    try {
+                        modelInfo = new ModelInfo(model, initModelFieldInfo(clazz), initModelActionInfo(clazz), clazz);
+                    } catch (Throwable e) {
+                        throw new IllegalArgumentException(e);
+                    }
+
+                    ModelInfo already = tempMap.put(model.name(), modelInfo);
+                    if (already != null) {
+                        throw new IllegalArgumentException("Duplicate model name: " + model.name());
+                    }
+                }
+            }
+            return true;
+        });
+        modelInfoMap = Collections.unmodifiableMap(tempMap);
     }
 
     private void checkModelField(ModelField fieldMeta, Class<?> modelClass) {

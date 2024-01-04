@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
@@ -15,7 +16,6 @@ import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.Constants;
 import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -38,6 +38,9 @@ public class InvokeAction implements Filter<RestContext> {
         add(DownloadModel.ACTION_NAME_DOWNLOADLIST);
         add(DownloadModel.ACTION_NAME_DOWNLOADFILE);
     }};
+
+    InvokeAction() {
+    }
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {
@@ -124,13 +127,13 @@ public class InvokeAction implements Filter<RestContext> {
 //                            request.updateParameter(entry.getKey(), uploadFile);
 //                        }
 //                    }
-                    String url = buildRemoteRequestUrl(request, Constants.remotePath);
+                    String url = buildRemoteRequestUrl(request, ConsoleConstants.remotePath);
                     KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
                     String remoteKey = keyManager.getKeyOrElseInit(ServerUtil.getSecureFile(ServerUtil.getDomain()), ServerUtil.remoteKeyName, null);
                     response = RemoteClient.sendReq(url, request, remoteKey);
                 } finally {
                     if (!uploadFiles.isEmpty()) {
-                        String delFileUrl = buildRemoteRequestUrl(request, Constants.deleteFilePath);
+                        String delFileUrl = buildRemoteRequestUrl(request, ConsoleConstants.deleteFilePath);
                         RemoteClient.deleteFiles(delFileUrl, uploadFiles);
                     }
                 }
@@ -238,6 +241,6 @@ public class InvokeAction implements Filter<RestContext> {
             return null;
         }
 
-        return String.format("http://%s:%s%s%s", ip, port, Constants.remoteApp, path);
+        return String.format("http://%s:%s%s%s", ip, port, ConsoleConstants.remoteApp, path);
     }
 }

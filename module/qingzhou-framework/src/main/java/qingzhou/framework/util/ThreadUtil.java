@@ -191,7 +191,7 @@ public class ThreadUtil {
 
         @Override
         public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, Constants.QZ_ + threadFlag + "-" + threadNumber.getAndIncrement());
+            Thread t = new Thread(r, threadFlag + "-" + threadNumber.getAndIncrement());
             t.setDaemon(true);
             return t;
         }

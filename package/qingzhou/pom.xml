@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>package</artifactId>
-        <version>1.0</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>qingzhou</artifactId>
@@ -46,75 +46,80 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-launcher</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-bootstrap</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-framework</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-logger</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
             <classifier>jar-with-dependencies</classifier>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-ssh</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
             <classifier>jar-with-dependencies</classifier>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>console-war</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
             <type>war</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-console</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-serializer</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-crypto</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-remote</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-jnet</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-app</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>app-master</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>app-common</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-bytecode</artifactId>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 </project>

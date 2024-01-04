@@ -13,7 +13,6 @@ import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.Constants;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.TimeUtil;
@@ -43,6 +42,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static final String ACCEPT_AGREEMENT_MSG_KEY_MISSING = "page.login.agreement.missing";
     public static final String ACCEPT_AGREEMENT_MSG_KEY = "page.login.agreement";
+    public static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
     private static final Map<String, LockOutRealm> userLockOutRealms = new LinkedHashMap<String, LockOutRealm>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, LockOutRealm> eldest) {
@@ -283,7 +283,7 @@ public class LoginManager implements Filter<HttpServletContext> {
         String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
 
         if (checkPath.startsWith("/static/")) {
-            for (String suffix : Constants.STATIC_RES_SUFFIX) {
+            for (String suffix : STATIC_RES_SUFFIX) {
                 if (checkPath.endsWith(suffix)) {
                     return true;
                 }

@@ -1,6 +1,6 @@
 package qingzhou.console.view.impl;
 
-import qingzhou.console.controller.rest.InvokeAction;
+import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.framework.api.DownloadModel;
 import qingzhou.framework.api.Request;
@@ -48,7 +48,7 @@ public class FileView implements View {
             data.put(DownloadModel.DOWNLOAD_KEY, key);
             data.put(DownloadModel.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);
-            ResponseImpl res = (ResponseImpl) new InvokeAction().invoke(req);
+            ResponseImpl res = (ResponseImpl) RESTController.invokeAction.invoke(req);
             if (res.isSuccess()) {
                 result = res.downloadData();
                 offset = (long) result.get(DownloadModel.DOWNLOAD_OFFSET);  // 续传

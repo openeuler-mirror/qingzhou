@@ -7,8 +7,9 @@
 :ziti: images/sim_images
 
 == 介绍
+轻舟，提供了一套开发Web管理软件的基础平台，基于声明式API、充血模型等思想，开发者只需编写后端业务模型代码，即可自动获得前端页面，并自动化实现参数校验、REST接口、远程管理、角色权限、页面国际化、云上对接等能力。
 
-配置和观测你的业务系统
+Business value: Quickly and centrally develop, configure, and observe your business systems
 
 == 软件架构
 

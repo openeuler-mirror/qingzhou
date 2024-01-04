@@ -8,7 +8,7 @@ import java.io.OutputStream;
 
 public class StreamUtil {
     public static void readInputStreamWithThread(InputStream inputStream, StringCollector output, String name) {
-        Thread thread = new Thread(new StreamConsumer(inputStream, name, output), Constants.QZ_ + "readInputStreamWithThread");
+        Thread thread = new Thread(new StreamConsumer(inputStream, name, output), "read-input-stream-with-thread");
         thread.setDaemon(true);
         thread.start();
     }

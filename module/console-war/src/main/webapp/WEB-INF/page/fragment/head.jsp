@@ -1,25 +1,20 @@
 <%@ page pageEncoding="UTF-8" %>
 
+<%@ page import="java.util.*" %>
+<%@ page import="java.io.*" %>
+<%@ page import="java.time.*" %>
+<%@ page import="java.time.format.*" %>
 <%@ page import="qingzhou.framework.api.*" %>
-<%@ page import="qingzhou.console.ConsoleUtil" %>
+<%@ page import="qingzhou.framework.console.*" %>
+<%@ page import="qingzhou.framework.util.*" %>
+<%@ page import="qingzhou.console.*" %>
 <%@ page import="qingzhou.console.controller.rest.*" %>
 <%@ page import="qingzhou.console.controller.system.*" %>
-<%@ page import="qingzhou.console.login.LoginManager" %>
-<%@ page import="qingzhou.console.login.vercode.*" %>
 <%@ page import="qingzhou.console.login.*" %>
-<%@ page import="qingzhou.console.view.ViewManager" %>
+<%@ page import="qingzhou.console.login.vercode.*" %>
+<%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.impl.*" %>
-<%@ page import="qingzhou.framework.api.Constants" %>
-<%@ page import="java.io.IOException" %>
-<%@ page import="java.time.LocalDateTime" %>
-<%@ page import="java.time.format.DateTimeFormatter" %>
-<%@ page import="java.util.*" %>
-<%@ page import="qingzhou.console.ServerXml" %>
-<%@ page import="qingzhou.framework.console.Lang" %>
-<%@ page import="qingzhou.framework.console.I18n" %>
-<%@ page import="qingzhou.console.controller.rest.*" %>
-<%@ page import="qingzhou.framework.util.*" %>
-<%@ page import="qingzhou.console.sdk.ConsoleSDK" %>
+<%@ page import="qingzhou.console.sdk.*" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);

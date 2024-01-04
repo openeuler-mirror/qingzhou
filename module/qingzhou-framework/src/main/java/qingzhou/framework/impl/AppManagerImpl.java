@@ -12,16 +12,22 @@ import qingzhou.framework.util.ServerUtil;
 
 import java.io.File;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class AppManagerImpl implements AppManager {
     private final Map<String, AppInfo> appInfoMap = new HashMap<>();
 
-    private AppInfoImpl buildAppInfo(String appName, URLClassLoader loader) {
+    private AppInfoImpl buildAppInfo(String appName, List<File> appLib) {
         AppInfoImpl appInfo = new AppInfoImpl();
+
         AppContextImpl appContext = new AppContextImpl((FrameworkContextImpl) ServerUtil.getFrameworkContext());
         appContext.setAppName(appName);
-        ModelManager modelManager = new ModelManagerImpl(loader);
+        ModelManager modelManager = new ModelManagerImpl(appLib);
         appContext.setModelManager(modelManager);
         appContext.setConsoleContext(new ConsoleContextImpl(modelManager));
         for (String modelName : modelManager.getModelNames()) {
@@ -30,6 +36,10 @@ public class AppManagerImpl implements AppManager {
             modelInstance.init();
         }
         appInfo.setAppContext(appContext);
+
+        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLib, QingZhouApp.class.getClassLoader());
+        appInfo.setLoader(loader);
+
         List<QingZhouApp> apps = ClassLoaderUtil.loadServices(QingZhouApp.class.getName(), loader);
         if (!apps.isEmpty()) {
             appInfo.setQingZhouApp(apps.get(0));
@@ -50,8 +60,7 @@ public class AppManagerImpl implements AppManager {
                 appLib.addAll(Arrays.asList(files));
             }
         }
-        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLib, QingZhouApp.class.getClassLoader());
-        AppInfoImpl appInfo = buildAppInfo(appName, loader);
+        AppInfoImpl appInfo = buildAppInfo(appName, appLib);
         appInfoMap.put(appName, appInfo);
 
         appInfo.getQingZhouApp().start(appInfo.getAppContext());

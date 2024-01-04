@@ -1,6 +1,7 @@
 package qingzhou.framework.console;
 
 import qingzhou.framework.AppInfo;
+import qingzhou.framework.impl.CharMap;
 import qingzhou.framework.impl.ConsoleContextImpl;
 import qingzhou.framework.util.ServerUtil;
 
@@ -48,5 +49,9 @@ public class I18n {
         Map<Lang, String> i18nMap = Lang.parseI18n(i18n);
 
         return i18nMap.get(getI18nLang());
+    }
+
+    public static void setZhTrMap(char zh, char tr) {
+        CharMap.setZhTrMap(zh, tr);
     }
 }

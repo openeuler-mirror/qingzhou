@@ -3,7 +3,7 @@ package qingzhou.console.controller.system;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.Constants;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StreamUtil;
 
@@ -20,7 +20,7 @@ public class Manual implements Filter<HttpServletContext> {
     @Override
     public boolean doFilter(HttpServletContext context) throws Exception {
         String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(context.req);
-        if (!checkPath.equals("/" + Constants.MANUAL_PDF)) {
+        if (!checkPath.equals("/" + ConsoleConstants.MANUAL_PDF)) {
             return true;
         }
 
