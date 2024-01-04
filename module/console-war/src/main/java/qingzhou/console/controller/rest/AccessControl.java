@@ -12,7 +12,7 @@ import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.Constants;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,8 +28,8 @@ public class AccessControl implements Filter<RestContext> {
     // 开放的model，不需要检测权限
     // NOTE: 为方便自动测试集使用，此处设置为 public
     public static final String[] commonActions = {
-            qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_index + "/index",
-            qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_index + "/home"};
+            qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/index",
+            qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/home"};
 
     private static final List<String> generalUris = new ArrayList<String>() {{
         for (String commonAction : commonActions) {

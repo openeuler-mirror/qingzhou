@@ -11,7 +11,7 @@ import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.Constants;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.TimeUtil;
@@ -57,7 +57,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
 
         String msgI18nKey = user == null ? null : needReset(user);
         if (user != null && msgI18nKey != null) { // 例如加密工具不需要登录时候 user == null
-            if (Constants.MODEL_NAME_password.equals(model)) {
+            if (ConsoleConstants.MODEL_NAME_password.equals(model)) {
                 if ("edit".equals(action)
                         || "update".equals(action)) { // 允许访问重置密码的 uri
                     return true;
@@ -76,9 +76,9 @@ public class ResetPassword implements Filter<HttpServletContext> {
             httpServletResponse.sendRedirect(ConsoleUtil.encodeRedirectURL(httpServletRequest, httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
-                    "/" + Constants.MODEL_NAME_node +
+                    "/" + ConsoleConstants.MODEL_NAME_node +
                     "/" + qingzhou.framework.api.Constants.MASTER_APP_NAME +
-                    "/" + Constants.MODEL_NAME_password +
+                    "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +
                     "?" + RESTController.MSG_FLAG + "=" + msgI18nKey));
@@ -109,13 +109,13 @@ public class ResetPassword implements Filter<HttpServletContext> {
             if (passwordLastModifiedTime != null) {
                 long time;
                 try {
-                    time = new SimpleDateFormat(Constants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
+                    time = new SimpleDateFormat(ConsoleConstants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
                 } catch (ParseException e) {
                     throw ExceptionUtil.unexpectedException(e);
                 }
                 String maxAge = userP.get("passwordMaxAge");
                 if (maxAge != null && !maxAge.equals("0")) {
-                    long max = time + Integer.parseInt(maxAge) * Constants.DAY_MILLIS_VALUE;
+                    long max = time + Integer.parseInt(maxAge) * ConsoleConstants.DAY_MILLIS_VALUE;
                     if (TimeUtil.getCurrentTime() > max) {
                         return "password.max," + maxAge + "," + passwordLastModifiedTime;
                     }

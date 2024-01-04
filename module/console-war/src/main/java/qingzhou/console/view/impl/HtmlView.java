@@ -6,7 +6,7 @@ import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.util.Constants;
+import qingzhou.console.ConsoleConstants;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -36,8 +36,8 @@ public class HtmlView implements View {
 
 
         if (ConsoleUtil.ACTION_NAME_TARGET.equals(actionName)) {
-            if (Constants.MODEL_NAME_cluster.equals(modelName) || Constants.MODEL_NAME_node.equals(modelName)) {
-                request.setModelName(Constants.MODEL_NAME_home);
+            if (ConsoleConstants.MODEL_NAME_cluster.equals(modelName) || ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
+                request.setModelName(ConsoleConstants.MODEL_NAME_home);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
             }
         }

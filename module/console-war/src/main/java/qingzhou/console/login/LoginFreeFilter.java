@@ -4,7 +4,6 @@ import qingzhou.console.ConsoleUtil;
 import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.Constants;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +27,7 @@ public class LoginFreeFilter implements Filter<HttpServletContext> {
         }
         String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
         if (checkPath.startsWith("/static/")) {
-            for (String suffix : Constants.STATIC_RES_SUFFIX) {
+            for (String suffix : LoginManager.STATIC_RES_SUFFIX) {
                 if (checkPath.endsWith(suffix)) {
                     return true;
                 }

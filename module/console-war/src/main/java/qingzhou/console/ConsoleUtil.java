@@ -25,9 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
-public class ConsoleUtil {
+public class ConsoleUtil {// todo 临时工具类，后续考虑移除
     public static String ACTION_NAME_SERVER = "server";
     public static String ACTION_NAME_TARGET = "target";
     public static String ACTION_NAME_validate = "validate";
@@ -590,38 +589,6 @@ public class ConsoleUtil {
             e.printStackTrace();
             return input;
         }
-    }
-
-    public static String checkPwd(String password, String... infos) {
-        if (Constants.PASSWORD_FLAG.equals(password)) {
-            return null;
-        }
-
-        int minLength = 10;
-        int maxLength = 20;
-        if (password.length() < minLength || password.length() > maxLength) {
-            return String.format(I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "validator.lengthBetween"), minLength, maxLength);
-        }
-
-        if (infos != null && infos.length > 0) {
-            if (infos[0] != null) { // for #ITAIT-5014
-                if (password.contains(infos[0])) { // 包含身份信息
-                    return I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "password.passwordContainsUsername");
-                }
-            }
-        }
-
-        //特殊符号包含下划线
-        String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";
-        if (!Pattern.compile(PASSWORD_REGEX).matcher(password).matches()) {
-            return I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "password.format");
-        }
-
-        if (isContinuousChar(password)) { // 连续字符校验
-            return I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "password.continuousChars");
-        }
-
-        return null;
     }
 
     /**

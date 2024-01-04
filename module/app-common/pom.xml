@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>module</artifactId>
-        <version>1.0</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>app-common</artifactId>
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-framework</artifactId>
-            <version>1.0</version>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 

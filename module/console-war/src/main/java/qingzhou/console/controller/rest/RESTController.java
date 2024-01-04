@@ -11,7 +11,7 @@ import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.pattern.FilterPattern;
-import qingzhou.framework.util.Constants;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -35,7 +35,7 @@ import java.util.Map;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + Constants.MODEL_NAME_node + "/" + qingzhou.framework.api.Constants.LOCAL_NODE_NAME + "/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + Constants.MODEL_NAME_index + "/" + Constants.ACTION_NAME_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MODEL_NAME_node + "/" + qingzhou.framework.api.Constants.LOCAL_NODE_NAME + "/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/" + ConsoleConstants.ACTION_NAME_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache();
 
