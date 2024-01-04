@@ -11,6 +11,7 @@ import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Options;
 import qingzhou.framework.pattern.Callback;
 import qingzhou.framework.pattern.Visitor;
+import qingzhou.framework.util.ClassLoaderUtil;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -81,6 +82,7 @@ public class ModelManagerImpl implements ModelManager {
     }
 
     private void init(List<File> appLib) throws Exception {
+        URLClassLoader modelLoader = ClassLoaderUtil.newURLClassLoader(appLib, Thread.currentThread().getContextClassLoader());
         Map<String, ModelInfo> tempMap = new HashMap<>();
         visitClasses(modelLoader, clazz -> {
             if (ModelBase.class.isAssignableFrom(clazz)) {
