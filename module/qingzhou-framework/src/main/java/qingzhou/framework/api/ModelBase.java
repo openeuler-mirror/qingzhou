@@ -1,5 +1,7 @@
 package qingzhou.framework.api;
 
+import qingzhou.framework.util.StringUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,8 +48,8 @@ public abstract class ModelBase implements ShowModel {
             );
         }
 
-        Class<?> refModel = modelField.refModel();
-        if (refModel != Object.class) {
+        String refModel = modelField.refModel();
+        if (StringUtil.notBlank(refModel)) {
             if (modelField.required()) {
                 return refModel(refModel);
             } else {
@@ -70,16 +72,12 @@ public abstract class ModelBase implements ShowModel {
         return null;// 应该再子类中实现
     }
 
-    private Options refModel(Class<?> modelClass) {
+    private Options refModel(String modelName) {
         try {
             ModelManager modelManager = getAppContext().getModelManager();
-            String modelName = modelManager.getModelName(modelClass);
             ModelBase modelInstance = modelManager.getModelInstance(modelName);
-            List<String> dataIdList = ((ListModel) modelInstance).getAllDataId(modelName);
-            if (dataIdList == null) {
-                return null;
-            }
             List<Option> options = new ArrayList<>();
+            List<String> dataIdList = ((ListModel) modelInstance).getAllDataId(modelName);
             for (String dataId : dataIdList) {
                 options.add(Option.of(dataId, new String[]{dataId, "en:" + dataId}));
             }

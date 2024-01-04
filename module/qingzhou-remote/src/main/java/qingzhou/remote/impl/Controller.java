@@ -1,6 +1,5 @@
 package qingzhou.remote.impl;
 
-import com.sun.net.httpserver.HttpServer;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -16,6 +15,8 @@ import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StreamUtil;
+import qingzhou.httpserver.HttpServer;
+import qingzhou.httpserver.HttpServerService;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
 import qingzhou.serializer.Serializer;
@@ -24,7 +25,6 @@ import qingzhou.serializer.SerializerService;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
 public class Controller implements BundleActivator {
@@ -35,14 +35,19 @@ public class Controller implements BundleActivator {
     private String path;
 
     @Override
-    public void start(BundleContext bundleContext) throws Exception {
+    public void start(BundleContext bundleContext) {
         serviceReference = bundleContext.getServiceReference(FrameworkContext.class);
         frameworkContext = bundleContext.getService(serviceReference);
+        Logger logger = frameworkContext.getService(LoggerService.class).getLogger();
 
         int port = 7000;// todo 可配置
         path = "/";
-        server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.createContext(path, httpExchange -> {
+        server = frameworkContext.getService(HttpServerService.class).createHttpServer(port);
+        if (server == null) {
+            logger.error("TODO: HttpServerService 尚未实现，可以引用一个流行的开源组件来做一下");
+            return;// todo
+        }
+        server.addContext(path, httpExchange -> {
             byte[] result;
             int responseCode;
             try {
@@ -52,21 +57,20 @@ public class Controller implements BundleActivator {
                 result = ExceptionUtil.stackTrace(e).getBytes(StandardCharsets.UTF_8);
                 responseCode = 500;
             }
-            httpExchange.sendResponseHeaders(responseCode, result.length);
+            httpExchange.setStatus(responseCode);
             OutputStream os = httpExchange.getResponseBody();
             os.write(result);
             os.close();
         });
         server.start();
 
-        Logger logger = frameworkContext.getService(LoggerService.class).getLogger();
         logger.info("The remote service is started on the port: " + port);
     }
 
     @Override
     public void stop(BundleContext bundleContext) {
         server.removeContext(path);
-        server.stop(1);
+        server.stop();
 
         bundleContext.ungetService(serviceReference);
     }

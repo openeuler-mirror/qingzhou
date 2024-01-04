@@ -18,7 +18,7 @@ public @interface ModelField { // todo 内容太多，可以按照 Validation、
 
     FieldType type() default FieldType.text;
 
-    Class<?> refModel() default Object.class;
+    String refModel() default "";
 
     long min() default -1;
 
@@ -82,11 +82,6 @@ public @interface ModelField { // todo 内容太多，可以按照 Validation、
     String linkModel() default "";
 
     String valueFrom() default "";
-
-    /**
-     * 标注需要在页面上按顺序显示，自然顺序排序
-     */
-    int order() default -1;
 
     boolean isMonitorField() default false;
 

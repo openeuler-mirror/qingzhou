@@ -12,9 +12,7 @@ import qingzhou.framework.impl.model.ModelInfo;
 import qingzhou.framework.impl.model.ModelManagerImpl;
 
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class AppInfoImpl implements AppInfo {
     private QingZhouApp qingZhouApp;
@@ -38,20 +36,6 @@ public class AppInfoImpl implements AppInfo {
         ActionInfo actionInfo = modelInfo.actionInfoMap.get(request.getActionName());
         if (actionInfo == null) return;
 
-        List<Object> args = new ArrayList<>();
-        for (Map.Entry<Integer, Class<?>> entry : actionInfo.parameterTypesIndex.entrySet()) {
-            Object value;
-            if (entry.getValue().isInstance(request)) {
-                value = request;
-            } else if (entry.getValue().isInstance(response)) {
-                value = response;
-            } else {
-                throw new IllegalStateException();
-            }
-
-            args.add(entry.getKey(), value);
-        }
-
         ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
         modelInstance.setAppContext(appContext);
         List<ActionFilter> actionFilters = appContext.getActionFilters();
@@ -61,7 +45,7 @@ public class AppInfoImpl implements AppInfo {
             }
         }
 
-        actionInfo.javaMethod.invoke(modelInstance, args.toArray());
+        actionInfo.getJavaMethod().invoke(modelInstance, request, response);
     }
 
     public void setAppContext(AppContextImpl appContext) {

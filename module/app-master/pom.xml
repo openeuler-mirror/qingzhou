@@ -15,7 +15,6 @@
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-framework</artifactId>
-            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>

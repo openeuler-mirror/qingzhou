@@ -26,5 +26,6 @@
         <module>app-common</module>
         <module>qingzhou-remote</module>
         <module>qingzhou-bytecode</module>
+        <module>qingzhou-httpserver</module>
     </modules>
 </project>

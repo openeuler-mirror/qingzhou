@@ -6,8 +6,7 @@
         <artifactId>module</artifactId>
         <version>0.1.0</version>
     </parent>
-
-    <artifactId>qingzhou-ssh</artifactId>
+    <artifactId>qingzhou-httpserver</artifactId>
 
     <build>
         <plugins>
@@ -27,10 +26,10 @@
                             <archive>
                                 <manifestEntries>
                                     <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                                    <Bundle-Activator>qingzhou.ssh.impl.Controller</Bundle-Activator>
+                                    <Bundle-Activator>qingzhou.httpserver.impl.Controller</Bundle-Activator>
 
                                     <Import-Package>org.osgi.framework,qingzhou.framework</Import-Package>
-                                    <Export-Package>qingzhou.ssh</Export-Package>
+                                    <Export-Package>qingzhou.httpserver</Export-Package>
                                 </manifestEntries>
                             </archive>
                         </configuration>
@@ -45,11 +44,9 @@
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
         </dependency>
-
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-framework</artifactId>
         </dependency>
     </dependencies>
-
 </project>

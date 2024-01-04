@@ -9,14 +9,6 @@
 
     <artifactId>qingzhou-crypto</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-    </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -38,4 +30,15 @@
         </plugins>
     </build>
 
+
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-framework</artifactId>
+        </dependency>
+    </dependencies>
 </project>

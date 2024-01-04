@@ -467,7 +467,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
                         continue;
                     }
 
-                    if (!visitor.visit(action)) {
+                    if (visitor.visitAndEnd(action)) {
                         break;
                     }
                 }
@@ -493,12 +493,12 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         List<ModelAction> modelActions = new ArrayList<>();
 
         @Override
-        public boolean visit(ModelAction action) {
+        public boolean visitAndEnd(ModelAction action) {
             if (!modelActions.contains(action)) {
                 modelActions.add(action);
             }
 
-            return true;
+            return false;
         }
     }
 
