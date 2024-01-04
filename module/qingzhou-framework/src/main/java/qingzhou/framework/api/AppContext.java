@@ -22,5 +22,7 @@ public interface AppContext {
 
     DataStore getDataStore();
 
+    void addActionFilter(ActionFilter actionFilter);
+
     ConsoleContext getConsoleContext();
 }
