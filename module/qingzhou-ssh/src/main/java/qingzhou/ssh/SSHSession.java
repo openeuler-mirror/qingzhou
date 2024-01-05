@@ -1,12 +1,13 @@
 package qingzhou.ssh;
 
-public interface SSHSession extends AutoCloseable {
-    void execCmd(String cmd) throws Exception;
+public interface SSHSession extends AutoCloseable{
 
-    SSHResult execShell(String cmd) throws Exception;
+    SSHResult execCmd(String cmd) throws Exception;
 
     String uploadFile(String src, String dist) throws Exception;
 
+    String downLoadFile(String src, String dist) throws Exception;
+
     @Override
-    void close() throws Exception;
+    void close();
 }

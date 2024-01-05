@@ -3,5 +3,5 @@ package qingzhou.ssh;
 import java.util.Map;
 
 public interface SSHService {
-    SSHSession buildSession(Map<String, String> config);
+    SSHClient buildClient(Map<String, String> config) throws Exception;
 }
