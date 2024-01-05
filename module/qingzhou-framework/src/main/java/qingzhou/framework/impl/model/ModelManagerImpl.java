@@ -2,25 +2,13 @@ package qingzhou.framework.impl.model;
 
 import qingzhou.bytecode.AnnotationReader;
 import qingzhou.bytecode.BytecodeService;
-import qingzhou.framework.api.Group;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Options;
+import qingzhou.framework.api.*;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ServerUtil;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -160,25 +148,37 @@ public class ModelManagerImpl implements ModelManager {
     @Override
     public String[] getActionNamesShowToFormBottom(String modelName) {
         Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
-        return actionInfoMap.values().stream().filter(actionInfo -> actionInfo.modelAction.showToFormBottom()).toArray(String[]::new);
+        return actionInfoMap.values().stream()
+                .filter(actionInfo -> actionInfo.modelAction.showToFormBottom())
+                .map(actionInfo -> actionInfo.modelAction.name())
+                .toArray(String[]::new);
     }
 
     @Override
     public String[] getActionNamesSupportBatch(String modelName) {
         Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
-        return actionInfoMap.values().stream().filter(actionInfo -> actionInfo.modelAction.supportBatch()).toArray(String[]::new);
+        return actionInfoMap.values().stream()
+                .filter(actionInfo -> actionInfo.modelAction.supportBatch())
+                .map(actionInfo -> actionInfo.modelAction.name())
+                .toArray(String[]::new);
     }
 
     @Override
     public String[] getActionNamesShowToList(String modelName) {
         Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
-        return actionInfoMap.values().stream().filter(actionInfo -> actionInfo.modelAction.showToList()).toArray(String[]::new);
+        return actionInfoMap.values().stream()
+                .filter(actionInfo -> actionInfo.modelAction.showToList())
+                .map(actionInfo -> actionInfo.modelAction.name())
+                .toArray(String[]::new);
     }
 
     @Override
     public String[] getActionNamesShowToListHead(String modelName) {
         Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
-        return actionInfoMap.values().stream().filter(actionInfo -> actionInfo.modelAction.showToListHead()).toArray(String[]::new);
+        return actionInfoMap.values().stream()
+                .filter(actionInfo -> actionInfo.modelAction.showToListHead())
+                .map(actionInfo -> actionInfo.modelAction.name())
+                .toArray(String[]::new);
     }
 
     @Override
