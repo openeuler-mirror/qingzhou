@@ -20,7 +20,7 @@ public class ModelInfo {
         this.model = model;
         Map<String, FieldInfo> fieldInfoTemp = new LinkedHashMap<>();
         for (FieldInfo fieldInfo : fieldInfoMap) {
-            fieldInfoTemp.put(fieldInfo.getField().getName(), fieldInfo);
+            fieldInfoTemp.put(fieldInfo.fieldName, fieldInfo);
         }
         Map<String, ActionInfo> actionInfoTemp = new LinkedHashMap<>();
         for (ActionInfo actionInfo : actionInfoMap) {

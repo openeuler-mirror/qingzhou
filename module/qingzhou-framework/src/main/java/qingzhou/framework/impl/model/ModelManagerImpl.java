@@ -301,7 +301,7 @@ public class ModelManagerImpl implements ModelManager {
                 String className = entryName.substring(0, i).replace("/", ".");
                 try {
                     if (visitor.visitAndEnd(className)) {
-                        return;
+                        // return;
                     }
                 } catch (NoClassDefFoundError e) {
                     e.printStackTrace();
