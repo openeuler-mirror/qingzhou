@@ -21,6 +21,7 @@
             <groupId>qingzhou</groupId>
             <artifactId>console-war</artifactId>
             <version>0.1.0</version>
+            <classifier>classes</classifier>
         </dependency>
         <dependency><!-- TODO: 考虑重构一下这个依赖 -->
             <groupId>qingzhou</groupId>

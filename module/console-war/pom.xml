@@ -12,6 +12,15 @@
 
     <build>
         <finalName>console</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <!-- 把class打包jar作为附件 -->
+                    <attachClasses>true</attachClasses>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencies>
