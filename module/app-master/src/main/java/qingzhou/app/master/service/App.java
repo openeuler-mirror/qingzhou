@@ -41,7 +41,7 @@ public class App extends ModelBase implements AddModel {
             maxLength = 255,// for #NC-1418 及其它文件目录操作的，文件长度不能大于 255
             nameI18n = {"应用位置", "en:Application File"},
             infoI18n = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar 类型的文件。",
-                    "en:The location of the application on the server, usually the app's package, Note: Must be a *.jar file."})
+                    "en:The location of the application on the server, usually the app package, Note: Must be a *.jar file."})
     public String filename;
 
     @ModelField(

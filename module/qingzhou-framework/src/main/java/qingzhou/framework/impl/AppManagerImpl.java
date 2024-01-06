@@ -50,7 +50,7 @@ public class AppManagerImpl implements AppManager {
             for (String modelName : modelManager.getModelNames()) {
                 ModelInfo modelInfo = modelManager.getModelInfo(modelName);
                 Class<?> modelClass = loader.loadClass(modelInfo.className);
-                if (ModelBase.class.isAssignableFrom(modelClass)) {
+                if (!ModelBase.class.isAssignableFrom(modelClass)) {
                     throw new IllegalArgumentException("The class annotated by the @Model ( " + modelClass.getName() + " ) needs to 'extends ModelBase'.");
                 }
                 modelInfo.setModelClass(modelClass);
