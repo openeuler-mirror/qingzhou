@@ -13,18 +13,17 @@ import qingzhou.framework.api.Response;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.ExceptionUtil;
-import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StreamUtil;
 import qingzhou.httpserver.HttpServer;
 import qingzhou.httpserver.HttpServerService;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
+import qingzhou.remote.RemoteConstants;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class Controller implements BundleActivator {
@@ -83,7 +82,7 @@ public class Controller implements BundleActivator {
 
         // 数据解密，附带认证能力
         CryptoService cryptoService = frameworkContext.getService(CryptoService.class);
-        String remoteKey = cryptoService.getKeyManager().getKeyOrElseInit(ServerUtil.getSecureFile(ServerUtil.getDomain()), ServerUtil.remoteKeyName, null);
+        String remoteKey = cryptoService.getKeyManager().getKeyOrElseInit(getSecureFile(frameworkContext.getDomain()), RemoteConstants.REMOTE_KEY_NAME, null);
         PasswordCipher passwordCipher = cryptoService.getPasswordCipher(remoteKey);
         byte[] decryptedData = passwordCipher.decrypt(requestData);
 
@@ -102,5 +101,18 @@ public class Controller implements BundleActivator {
         // 返回数据加密
 
         return passwordCipher.encrypt(responseData);
+    }
+
+    private File getSecureFile(File domain) throws IOException {
+        File secureDir = FileUtil.newFile(domain, "data", "secure");
+        FileUtil.mkdirs(secureDir);
+        File secureFile = FileUtil.newFile(secureDir, "secure");
+        if (!secureFile.exists()) {
+            if (!secureFile.createNewFile()) {
+                throw ExceptionUtil.unexpectedException(secureFile.getPath());
+            }
+        }
+
+        return secureFile;
     }
 }

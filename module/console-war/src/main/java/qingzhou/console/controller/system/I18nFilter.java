@@ -2,12 +2,12 @@ package qingzhou.console.controller.system;
 
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.view.ViewManager;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -94,7 +94,7 @@ public class I18nFilter implements Filter<HttpServletContext> {
     }
 
     static {
-        ConsoleContext master = ServerUtil.getMasterConsoleContext();
+        ConsoleContext master = ConsoleWarHelper.getMasterConsoleContext();
 
         master.addI18N(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
         master.addI18N(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});

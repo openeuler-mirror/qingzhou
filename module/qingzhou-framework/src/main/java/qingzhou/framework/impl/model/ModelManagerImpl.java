@@ -3,8 +3,8 @@ package qingzhou.framework.impl.model;
 import qingzhou.bytecode.AnnotationReader;
 import qingzhou.bytecode.BytecodeService;
 import qingzhou.framework.api.*;
+import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.pattern.Visitor;
-import qingzhou.framework.util.ServerUtil;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -53,7 +53,7 @@ public class ModelManagerImpl implements ModelManager {
 
     public void init(File[] appLib) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
-        AnnotationReader annotation = ServerUtil.getFrameworkContext()
+        AnnotationReader annotation = FrameworkContextImpl.getFrameworkContext()
                 .getService(BytecodeService.class).createAnnotationReader(appLib, Model.class.getClassLoader());
         for (File file : appLib) {
             visitClassName(file, className -> {

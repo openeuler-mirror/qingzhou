@@ -1,8 +1,12 @@
-package qingzhou.framework.impl;
+package qingzhou.framework.console;
 
-import qingzhou.framework.api.Constants;
+import qingzhou.framework.AppInfo;
 import qingzhou.framework.api.*;
-import qingzhou.framework.util.*;
+import qingzhou.framework.impl.FrameworkContextImpl;
+import qingzhou.framework.util.IPUtil;
+import qingzhou.framework.util.ObjectUtil;
+import qingzhou.framework.util.SafeCheckerUtil;
+import qingzhou.framework.util.StringUtil;
 
 import java.math.BigDecimal;
 import java.net.URL;
@@ -14,7 +18,7 @@ import java.util.regex.Pattern;
 
 public class Validator {
     static {
-        ConsoleContext consoleContext = ServerUtil.getMasterConsoleContext();
+        ConsoleContext consoleContext = getMasterConsoleContext();
         if (consoleContext != null) {
             consoleContext.addI18N("validator.arg.memory.invalid", new String[]{"参数不合法，此参数应以数字加单位(m/M、g/G)构成", "en:The parameter is not legal, this parameter should be composed of numbers plus units (m/M, g/G)."});
             consoleContext.addI18N("validator.arg.memory.union.invalid", new String[]{"联合校验参数【%s】不合法，该参数应以数字加单位(m/M、g/G)构成", "en:The joint verification parameter [%s] is illegal, and the parameter should be composed of numbers plus units (m/m, g/g)."});
@@ -70,7 +74,7 @@ public class Validator {
                 continue;
             }
             String validate = validate(request, modelManager, fieldName, request.getParameter(fieldName));
-            if (ServerUtil.notBlank(validate)) {
+            if (StringUtil.notBlank(validate)) {
                 errorData.put(fieldName, validate);
             }
         }
@@ -97,7 +101,7 @@ public class Validator {
         try {
             Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
             ObjectUtil.setObjectValues(tempModel, dataMap);
-            if (!ServerUtil.isEffective(fieldName0 -> String.valueOf(tempModel.getClass().getField(fieldName)
+            if (!isEffective(fieldName0 -> String.valueOf(tempModel.getClass().getField(fieldName)
                     .get(tempModel)), modelField.effectiveWhen().trim())) {// TODO: 不显示的属性不需要校验
                 return null;
             }
@@ -116,8 +120,8 @@ public class Validator {
                     // 解决 Connector 同时有 compressibleMimeType的默认值和 required 标注，依然在此处被拦截问题
                     // 例如 Connector：证书路径虽然给了默认值，但如果用户清空输入框再提交就会报错，未拦截说必填项（根因在于 空串和null的判别），所以此处需要再次核验
                     String defaultValue = "";//getModelManager().getFieldValue(tempModel, fieldName); todo 获取默认值
-                    if (ServerUtil.isBlank(defaultValue)) {
-                        return ServerUtil.getMasterConsoleContext().getI18N("validator.require");
+                    if (StringUtil.isBlank(defaultValue)) {
+                        return getMasterConsoleContext().getI18N("validator.require");
                     }
                 }
             }
@@ -125,7 +129,6 @@ public class Validator {
             ValidatorContext vc = new ValidatorContext(newValue, modelField, fieldName, request, modelManager, tempModel);
 
             Class<?>[] preValidatorClass = { // 有顺序要求
-                    readOnly.class,
                     disableOnCreate.class,
                     options.class
             };
@@ -201,7 +204,7 @@ public class Validator {
     }
 
     public static String dataInvalidMsg(String s) {
-        return String.format(ServerUtil.getMasterConsoleContext().getI18N("validator.dataInvalid"), "\"" + s + "\"");
+        return String.format(getMasterConsoleContext().getI18N("validator.dataInvalid"), "\"" + s + "\"");
     }
 
     static class ValidatorContext {
@@ -222,7 +225,7 @@ public class Validator {
             this.request = request;
             this.modelManager = modelManager;
             this.tempModel = tempModel;
-            this.context = ServerUtil.getFrameworkContext().getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
+            this.context = FrameworkContextImpl.getFrameworkContext().getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
         }
 
         boolean isAdd() {
@@ -277,28 +280,13 @@ public class Validator {
         }
     }
 
-
-    static class readOnly implements InternalValidator {
-
-        @Override
-        public String validate(ValidatorContext vc) throws Exception {
-            // 字段不可写（创建和编辑）
-            /*if (vc.modelManager.isFieldReadOnly(vc.actionContext, vc.tempModel, vc.fieldName)) {
-                if (!vc.newValue.equals(vc.oldValue)) {
-                    return vc.context.getI18N( "validator.cannotWrite");
-                }
-            }*/ // TODO
-            return null;
-        }
-    }
-
     static class disableOnCreate implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             // 字段不可创建
             if (vc.modelField.disableOnCreate() && vc.isAdd()) {
-                if (ServerUtil.notBlank(vc.newValue)) {
+                if (StringUtil.notBlank(vc.newValue)) {
                     return vc.context.getI18N("validator.cannotCreate");
                 }
             }
@@ -324,9 +312,9 @@ public class Validator {
                     checkValue = checkValue.toLowerCase(); // 支持大小的boolean值的后续校验
                 }
                 if (!isMultiVal(vc.modelField.type())) {
-                    if (ServerUtil.notBlank(checkValue) && !keyList.contains(checkValue)) {
+                    if (StringUtil.notBlank(checkValue) && !keyList.contains(checkValue)) {
                         if (keyList.isEmpty()) {
-                            if (ServerUtil.isBlank(checkValue)) {
+                            if (StringUtil.isBlank(checkValue)) {
                                 return vc.context.getI18N("validator.require");
                             } else {
                                 return vc.context.getI18N("validator.notfound");
@@ -467,7 +455,7 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             // 校验key-value键值对的一般格式
             if (vc.modelField.type() == FieldType.kv) {
-                if (ServerUtil.notBlank(vc.newValue)) {
+                if (StringUtil.notBlank(vc.newValue)) {
                     String[] arr = vc.newValue.split(Constants.DATA_SEPARATOR);
                     Set<String> keys = new HashSet<>();
                     for (String s : arr) {
@@ -476,7 +464,7 @@ public class Validator {
                             keys.add(s);
                         } else {
                             String k = s.substring(0, i);
-                            if (ServerUtil.isBlank(k)) {
+                            if (StringUtil.isBlank(k)) {
                                 return vc.context.getI18N("validator.kv.require");
                             }
                             keys.add(k);
@@ -499,7 +487,7 @@ public class Validator {
             if (vc.modelField.type() == FieldType.datetime) {
                 String modelName = vc.modelName;
 
-                if (ServerUtil.notBlank(vc.newValue)) {
+                if (StringUtil.notBlank(vc.newValue)) {
                     DateFormat dateFormat;
                     Date thisDateTime;
                     try {
@@ -526,7 +514,7 @@ public class Validator {
                     if (!noLessThan.isEmpty()) {
                         try {
                             String thanObj = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, noGreaterThan));
-                            if (ServerUtil.notBlank(thanObj)) {
+                            if (StringUtil.notBlank(thanObj)) {
                                 Date otherDateTime = dateFormat.parse(thanObj);
                                 if (!thisDateTime.after(otherDateTime)) {
                                     String msg = vc.context.getI18N("validator.date.less.cannot");
@@ -560,7 +548,7 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             // 字符串长度校验 1
             if (vc.modelField.maxLength() < 1) {
-                if (ServerUtil.notBlank(vc.newValue)) {
+                if (StringUtil.notBlank(vc.newValue)) {
                     return vc.context.getI18N("validator.cannotWrite");
                 }
             }
@@ -586,7 +574,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             if (vc.modelField.isPattern()) {
-                if (ServerUtil.notBlank(vc.newValue)) {
+                if (StringUtil.notBlank(vc.newValue)) {
                     try {
                         Pattern.compile(vc.newValue);// for #ITAIT-4107，不能按 Constans.Data_Separator 拆分
                     } catch (Exception ex) {
@@ -653,7 +641,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             if (vc.modelField.type() == FieldType.selectCharset) {
-                if (ServerUtil.notBlank(vc.newValue)) {
+                if (StringUtil.notBlank(vc.newValue)) {
                     try {
                         Charset.forName(vc.newValue);
                     } catch (Exception ignored) {
@@ -728,7 +716,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String cannotBeTheSameAs = vc.modelField.cannotBeTheSameAs();
-            if (ServerUtil.notBlank(cannotBeTheSameAs) && ServerUtil.notBlank(vc.newValue) && vc.request.getParameter(Constants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
+            if (StringUtil.notBlank(cannotBeTheSameAs) && StringUtil.notBlank(vc.newValue) && vc.request.getParameter(Constants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
                 for (String field : cannotBeTheSameAs.split(Constants.DATA_SEPARATOR)) {
                     String fieldValue = vc.request.getParameter(field);
                     if (fieldValue == null && vc.isUpdate()) {
@@ -751,7 +739,7 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             if (!vc.modelField.isURL()) return null;
 
-            if (ServerUtil.isBlank(vc.newValue)) return null;
+            if (StringUtil.isBlank(vc.newValue)) return null;
 
             String useDefaultProtocol = "http://";
             if (vc.newValue.contains("://")) {
@@ -762,7 +750,7 @@ public class Validator {
             }
 
             try {
-                String protocol = ServerUtil.notBlank(useDefaultProtocol) ? useDefaultProtocol : "";
+                String protocol = StringUtil.notBlank(useDefaultProtocol) ? useDefaultProtocol : "";
                 String url = protocol + vc.newValue;
                 new URL(url);
                 return null;
@@ -783,7 +771,7 @@ public class Validator {
             if (vc.modelField.type() == FieldType.password) {
                 return null;
             }
-            if (ServerUtil.notBlank(vc.newValue)) {
+            if (StringUtil.notBlank(vc.newValue)) {
                 boolean ok = true;
                 for (int i = 0; i < vc.newValue.length(); i++) {
                     if (!vc.modelField.skipCharacterCheck().contains(vc.newValue.substring(i, i + 1))) {
@@ -804,7 +792,7 @@ public class Validator {
                     || vc.modelField.isPattern();
             if (!skipInjectionRiskCheck) {
                 String risk;
-                if (ServerUtil.notBlank(risk = SafeCheckerUtil.hasCommandInjectionRiskWithSkip(vc.newValue, vc.modelField.skipCharacterCheck()))) {
+                if (StringUtil.notBlank(risk = SafeCheckerUtil.hasCommandInjectionRiskWithSkip(vc.newValue, vc.modelField.skipCharacterCheck()))) {
                     return dataInvalidMsg(risk);
                 }
             }
@@ -845,4 +833,109 @@ public class Validator {
         }
     }
 
+    public static ConsoleContext getMasterConsoleContext() {
+        AppInfo appInfo = FrameworkContextImpl.getFrameworkContext().getAppManager().getAppInfo(Constants.MASTER_APP_NAME);
+        return appInfo.getAppContext().getConsoleContext();
+    }
+
+    public static boolean isEffective(FieldValueRetriever retriever, String effectiveWhen) throws Exception {
+        if (StringUtil.isBlank(effectiveWhen)) {
+            return true;
+        }
+
+        AndOrQueue queue = null;
+        String[] split;
+        if ((split = effectiveWhen.split("&")).length > 1) {
+            queue = new AndOrQueue(true);
+        } else if ((split = effectiveWhen.split("\\|")).length > 1) {
+            queue = new AndOrQueue(false);
+        }
+        if (queue == null) {
+            if (split.length > 0) {
+                queue = new AndOrQueue(true);
+            }
+        }
+        if (queue == null) {
+            return true;
+        }
+
+        String notEqStr = "!=";
+        String eqStr = "=";
+        for (String s : split) {
+            int notEq = s.indexOf(notEqStr);
+            if (notEq > 1) {
+                String f = s.substring(0, notEq);
+                String v = s.substring(notEq + notEqStr.length());
+                queue.addComparator(new Comparator(false, retriever.getFieldValue(f), v));
+                continue;
+            }
+            int eq = s.indexOf(eqStr);
+            if (eq > 1) {
+                String f = s.substring(0, eq);
+                String v = s.substring(eq + eqStr.length());
+                queue.addComparator(new Comparator(true, retriever.getFieldValue(f), v));
+            }
+        }
+
+        return queue.compare();
+    }
+
+    private static final class AndOrQueue {
+        final boolean andOr;
+        final List<Comparator> comparators = new ArrayList<>();
+
+        AndOrQueue(boolean andOr) {
+            this.andOr = andOr;
+        }
+
+        void addComparator(Comparator comparator) {
+            comparators.add(comparator);
+        }
+
+        boolean compare() {
+            if (andOr) {
+                for (Comparator c : comparators) {
+                    if (!c.compare()) {
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                for (Comparator c : comparators) {
+                    if (c.compare()) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
+    private static final class Comparator {
+        final boolean eqOrNot;
+        final String v1;
+        final String v2;
+
+        Comparator(boolean eqOrNot, String v1, String v2) {
+            this.eqOrNot = eqOrNot;
+            this.v1 = v1;
+            this.v2 = v2;
+        }
+
+        boolean compare() {
+            String vv1 = v1;
+            String vv2 = v2;
+            if (vv1 != null) {
+                vv1 = vv1.toLowerCase();
+            }
+            if (vv2 != null) {
+                vv2 = vv2.toLowerCase();
+            }
+            return eqOrNot == Objects.equals(vv1, vv2);
+        }
+    }
+
+    public interface FieldValueRetriever {
+        String getFieldValue(String fieldName) throws Exception;
+    }
 }

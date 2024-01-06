@@ -5,14 +5,10 @@ import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.MonitorModel;
-import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.MathUtil;
 
 import java.io.File;
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.RuntimeMXBean;
-import java.lang.management.ThreadMXBean;
+import java.lang.management.*;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -105,10 +101,10 @@ public class Jvm extends ModelBase implements MonitorModel {
         properties.put("deadlockedThreadCount", String.valueOf(deadlockedThreadCount));
 
         MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-        properties.put("heapUsed", ServerUtil.maskMBytes(memoryMXBean.getHeapMemoryUsage().getUsed()));
-        properties.put("heapCommitted", ServerUtil.maskMBytes(memoryMXBean.getHeapMemoryUsage().getCommitted()));
+        properties.put("heapUsed", MathUtil.maskMBytes(memoryMXBean.getHeapMemoryUsage().getUsed()));
+        properties.put("heapCommitted", MathUtil.maskMBytes(memoryMXBean.getHeapMemoryUsage().getCommitted()));
 
-        properties.put("nonHeapUsed", ServerUtil.maskMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
+        properties.put("nonHeapUsed", MathUtil.maskMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
 
         for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
             String name = Arrays.toString(gcBean.getMemoryPoolNames());
@@ -176,8 +172,8 @@ public class Jvm extends ModelBase implements MonitorModel {
         }
         String result = path.toString();
         try {
-            result = result.replace(ServerUtil.getDomain().getCanonicalPath(), "${tongweb.base}");
-            result = result.replace(ServerUtil.getHome().getCanonicalPath(), "${tongweb.home}");
+            result = result.replace(getAppContext().getDomain().getCanonicalPath(), "${tongweb.base}");
+            result = result.replace(getAppContext().getHome().getCanonicalPath(), "${tongweb.home}");
         } catch (Exception ignored) {
         }
         return result;

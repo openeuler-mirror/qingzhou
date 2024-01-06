@@ -1,6 +1,11 @@
 package qingzhou.console;
 
 public interface ConsoleConstants { // TODO 需要清理失效的项目
+    String localKeyName = "localKey";
+    String publicKeyName = "publicKey";
+    String privateKeyName = "privateKey";
+    String remotePublicKeyName = "remotePublicKey";
+
     String QZ_ = "QZ-";
     String remoteApp = "/remote";
     String remotePath = "/callRemote";

@@ -1,17 +1,9 @@
 package qingzhou.app.master.service;
 
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.Constants;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.app.master.Main;
+import qingzhou.framework.AppManager;
+import qingzhou.framework.api.*;
 import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
@@ -20,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Model(name = ConsoleConstants.MODEL_NAME_app, icon = "rss",
+@Model(name = "app", icon = "rss",
         menuName = "Service", menuOrder = 1,
         nameI18n = {"应用管理", "en:App Management"},
         infoI18n = {"应用管理。",
@@ -94,17 +86,17 @@ public class App extends ModelBase implements AddModel {
             srcFileName = srcFileName.substring(0, index);
         }
         try {
-            FileUtil.copyFileOrDirectory(srcFile, ServerUtil.getApps());
+            FileUtil.copyFileOrDirectory(srcFile, getApps());
         } catch (IOException e) {
             e.printStackTrace();
             response.setSuccess(false);
             return;
         }
-        File app = FileUtil.newFile(ServerUtil.getApps(), srcFileName);
+        File app = FileUtil.newFile(getApps(), srcFileName);
         p.put("filename", srcFileName);
 
         try {
-            ConsoleWarHelper.getAppInfoManager().installApp(srcFileName, false, app);
+            getAppManager().installApp(srcFileName, false, app);
             getDataStore().addData(request.getModelName(), p.get("id"), p);
         } catch (Exception e) {
             e.printStackTrace();
@@ -117,13 +109,13 @@ public class App extends ModelBase implements AddModel {
     @Override
     public void delete(Request request, Response response) throws Exception {
         String id = request.getId();
-        Map<String, String> appInfo = getDataStore().getDataById(ConsoleConstants.MODEL_NAME_app, id);
+        Map<String, String> appInfo = getDataStore().getDataById("app", id);
         if (appInfo == null || appInfo.isEmpty()) {
             return;
         }
 
         String filename = appInfo.get("filename");
-        File app = FileUtil.newFile(ServerUtil.getApps(), filename);
+        File app = FileUtil.newFile(getApps(), filename);
         if (app.exists()) {
             try {
                 FileUtil.forceDelete(app);
@@ -135,12 +127,11 @@ public class App extends ModelBase implements AddModel {
         }
 
         try {
-            ConsoleWarHelper.getAppInfoManager().uninstallApp(filename);
+            getAppManager().uninstallApp(filename);
             getDataStore().deleteDataById(request.getModelName(), id);
         } catch (Exception e) {
             e.printStackTrace();
             response.setSuccess(false);
-            return;
         }
     }
 
@@ -155,8 +146,8 @@ public class App extends ModelBase implements AddModel {
             }
         }
 
-        List<String> appNames = new ArrayList<>(ConsoleWarHelper.getAppInfoManager().getApps());
-        List<Map<String, String>> apps = getDataStore().getAllData(ConsoleConstants.MODEL_NAME_app);
+        List<String> appNames = new ArrayList<>(getAppManager().getApps());
+        List<Map<String, String>> apps = getDataStore().getAllData("app");
         if (apps != null && apps.size() > 0) {
             for (Map<String, String> app : apps) {
                 String filename = app.getOrDefault("filename", "");
@@ -177,7 +168,7 @@ public class App extends ModelBase implements AddModel {
         int end = appNames.size() < pageSize() ? appNames.size() : (start + pageSize());
         for (int i = start; i < end; i++) {
             String appName = appNames.get(i);
-            dataInfo.add(getDataStore().getDataById(ConsoleConstants.MODEL_NAME_app, appName));
+            dataInfo.add(getDataStore().getDataById("app", appName));
         }
     }
 
@@ -202,5 +193,13 @@ public class App extends ModelBase implements AddModel {
         }
 
         return super.validate(request, fieldName);
+    }
+
+    private AppManager getAppManager() {
+        return Main.getFC().getAppManager();
+    }
+
+    public File getApps() {
+        return FileUtil.newFile(getAppContext().getDomain(), "apps");
     }
 }

@@ -7,6 +7,7 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.QingZhouApp;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.console.Validator;
 import qingzhou.framework.impl.model.ActionInfo;
 import qingzhou.framework.impl.model.ModelInfo;
 import qingzhou.framework.impl.model.ModelManagerImpl;

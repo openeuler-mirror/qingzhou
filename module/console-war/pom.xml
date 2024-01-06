@@ -12,15 +12,6 @@
 
     <build>
         <finalName>console</finalName>
-        <plugins>
-            <plugin>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>
-                    <!-- 把class打包jar作为附件 -->
-                    <attachClasses>true</attachClasses>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 
     <dependencies>
@@ -32,6 +23,12 @@
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-console</artifactId>
+            <version>0.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-remote</artifactId>
             <version>0.1.0</version>
             <scope>provided</scope>
         </dependency>

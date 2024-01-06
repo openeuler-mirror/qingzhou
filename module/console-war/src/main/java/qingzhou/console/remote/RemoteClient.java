@@ -1,5 +1,7 @@
 package qingzhou.console.remote;
 
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.ConsoleUtil;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.servlet.UploadFileContext;
 import qingzhou.crypto.CryptoService;
@@ -8,24 +10,11 @@ import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.ObjectUtil;
-import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.serializer.Serializer;
-import qingzhou.serializer.SerializerService;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.OutputStream;
+import javax.net.ssl.*;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -53,13 +42,13 @@ public class RemoteClient {
             try {
                 CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
                 qingzhou.crypto.KeyManager keyManager = cryptoService.getKeyManager();
-                String localKey = keyManager.getKeyOrElseInit(ServerUtil.getSecureFile(ServerUtil.getDomain()), ServerUtil.localKeyName, null);
+                String localKey = keyManager.getKeyOrElseInit(ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()), ConsoleConstants.localKeyName, null);
                 cipher = cryptoService.getPasswordCipher(cryptoService.getPasswordCipher(localKey).decrypt(remoteKey));
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }
 
-            Serializer serializer = ServerUtil.getFrameworkContext().getService(SerializerService.class).getSerializer();
+            Serializer serializer = ConsoleWarHelper.getSerializer();
             byte[] serialize = serializer.serialize(object);
             byte[] encrypt = cipher.encrypt(serialize);
             OutputStream outStream = connection.getOutputStream();

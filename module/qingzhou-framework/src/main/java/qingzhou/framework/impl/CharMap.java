@@ -1,7 +1,8 @@
 package qingzhou.framework.impl;
 
 import qingzhou.framework.console.Lang;
-import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.ObjectUtil;
+import qingzhou.framework.util.StringUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +16,7 @@ public class CharMap {
 
     static {
         try {
-            Properties props = ServerUtil.streamToProperties(CharMap.class.getResourceAsStream("/charmap.txt"));
+            Properties props = ObjectUtil.streamToProperties(CharMap.class.getResourceAsStream("/charmap.txt"));
             String zh = props.getProperty("zh");
             String tr = props.getProperty("tr");
             for (int i = 0; i < zh.length(); i++) {
@@ -46,7 +47,7 @@ public class CharMap {
                 twChar = c;
 
                 // 记录，以更新繁体字的字典
-                if (ServerUtil.containsZHChar(String.valueOf(c))) {
+                if (StringUtil.containsZHChar(String.valueOf(c))) {
                     detected.add(c);
                     StringBuilder needAdd = new StringBuilder();
                     for (Character character : detected) {

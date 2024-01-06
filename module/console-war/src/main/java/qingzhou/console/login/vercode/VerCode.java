@@ -4,12 +4,12 @@ import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LockOutRealm;
 import qingzhou.console.login.LoginManager;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
-import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,7 +38,7 @@ public class VerCode implements Filter<HttpServletContext> {
     };
 
     static {
-        ConsoleContext master = ServerUtil.getMasterConsoleContext();
+        ConsoleContext master = ConsoleWarHelper.getMasterConsoleContext();
         if (master != null) {
             master.addI18N(captchaError, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
         }

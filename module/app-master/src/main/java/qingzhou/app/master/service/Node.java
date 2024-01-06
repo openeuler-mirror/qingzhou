@@ -1,18 +1,11 @@
 package qingzhou.app.master.service;
 
-import qingzhou.console.ConsoleConstants;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.framework.api.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Model(name = ConsoleConstants.MODEL_NAME_node, icon = "node",
+@Model(name = "node", icon = "node",
         menuName = "Service",
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",

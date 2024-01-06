@@ -7,28 +7,19 @@ import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.crypto.KeyManager;
-import qingzhou.framework.api.DownloadModel;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.api.ShowModel;
+import qingzhou.framework.api.*;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.remote.RemoteConstants;
 
 import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class InvokeAction implements Filter<RestContext> {
     private static final Set<String> noCheckActions = new HashSet<String>() {{
@@ -116,8 +107,7 @@ public class InvokeAction implements Filter<RestContext> {
             String modelName = request.getModelName();// 事先提取出来，否则后续可能被修改，再拿可能会变
             if (isRemoteCall(request)) {
                 List<String> uploadFiles = new ArrayList<>();
-                try {
-                    // todo
+                // todo
 //                    Map<String, String> fileAttachments = request.getFileAttachments();
 //                    if (fileAttachments != null) {
 //                        String uploadUrl = buildRemoteRequestUrl(request, Constants.uploadPath);
@@ -127,16 +117,10 @@ public class InvokeAction implements Filter<RestContext> {
 //                            request.updateParameter(entry.getKey(), uploadFile);
 //                        }
 //                    }
-                    String url = buildRemoteRequestUrl(request, ConsoleConstants.remotePath);
-                    KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
-                    String remoteKey = keyManager.getKeyOrElseInit(ServerUtil.getSecureFile(ServerUtil.getDomain()), ServerUtil.remoteKeyName, null);
-                    response = RemoteClient.sendReq(url, request, remoteKey);
-                } finally {
-                    if (!uploadFiles.isEmpty()) {
-                        String delFileUrl = buildRemoteRequestUrl(request, ConsoleConstants.deleteFilePath);
-                        RemoteClient.deleteFiles(delFileUrl, uploadFiles);
-                    }
-                }
+                String url = buildRemoteRequestUrl(request, ConsoleConstants.remotePath);
+                KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
+                String remoteKey = keyManager.getKeyOrElseInit(ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()), RemoteConstants.REMOTE_KEY_NAME, null);
+                response = RemoteClient.sendReq(url, request, remoteKey);
             } else {
                 String appName = request.getAppName();
                 ModelManager manager = ConsoleUtil.getModelManager(appName);
@@ -225,18 +209,9 @@ public class InvokeAction implements Filter<RestContext> {
 
         String nodeName = instanceById.get("node");
 
-        String ip;
-        String port;
-//    todo    if (qingzhou.api.Constants.LOCAL_NODE_NAME.equals(nodeName)) {
-//            ip = ServerUtil.getGlobalIp(); // 需和默认节点ip保持一致
-//        } else {
-//            Map<String, String> nodeById = ServerXml.get().getNodeById(nodeName);
-//            ip = nodeById.get("ip"); // 需和远程节点ip保持一致
-//        }
         Map<String, String> nodeById = ServerXml.get().getNodeById(nodeName);
-        ip = nodeById.get("ip"); // 需和远程节点ip保持一致
-
-        port = instanceById.get("port");
+        String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
+        String port = instanceById.get("port");
         if (StringUtil.isBlank(ip) || StringUtil.isBlank(port)) {
             return null;
         }

@@ -2,7 +2,7 @@ package qingzhou.framework.impl;
 
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -12,9 +12,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class FrameworkContextImpl implements FrameworkContext {
+    private static File libDir;
+    private static File home;
+    private static File domain;
+
     static FrameworkContextImpl frameworkContext;
 
-    public static FrameworkContext getFrameworkContext() {
+    public static FrameworkContextImpl getFrameworkContext() {
         return frameworkContext;
     }
 
@@ -41,24 +45,58 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public File getHome() {
-        return ServerUtil.getHome();
+        if (home == null) {
+            home = new File(System.getProperty("qingzhou.home"));
+        }
+        return home;
     }
 
     @Override
     public File getDomain() {
-        return ServerUtil.getDomain();
+        if (FrameworkContextImpl.domain == null) {
+            String domain = System.getProperty("qingzhou.domain");
+            if (domain == null || domain.trim().isEmpty()) {
+                throw new NullPointerException("qingzhou.domain");
+            }
+            FrameworkContextImpl.domain = new File(domain).getAbsoluteFile();
+        }
+        return FrameworkContextImpl.domain;
     }
 
     @Override
     public File getCache() {
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
         String timeFlag = df.format(new Date());
-        return ServerUtil.getCache(timeFlag);
+        return getCache(getDomain(), timeFlag);
+    }
+
+    private static File getCache(File domain, String sub) {
+        File cacheDir = new File(getTempDir(domain), "cache");
+        FileUtil.mkdirs(cacheDir);
+        return sub == null ? cacheDir : new File(cacheDir, sub);
+    }
+
+    private static File getTempDir(File domain) {
+        File tmpdir;
+        if (domain != null) {
+            tmpdir = new File(domain, "temp");
+        } else {
+            tmpdir = new File(System.getProperty("java.io.tmpdir"));
+        }
+        FileUtil.mkdirs(tmpdir);
+        return tmpdir;
     }
 
     @Override
     public File getLib() {
-        return ServerUtil.getLib();
+        if (libDir == null) {
+            String jarPath = FrameworkContextImpl.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            String flag = "/version";
+            int i = jarPath.lastIndexOf(flag);
+            int j = jarPath.indexOf("/", i + flag.length());
+            libDir = new File(new File(getHome(), "lib"), jarPath.substring(i + 1, j));
+        }
+        return libDir;
     }
 
     @Override

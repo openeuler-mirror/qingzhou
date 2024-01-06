@@ -289,7 +289,7 @@ public class User extends ModelBase implements AddModel {
 //        if (Constants.PASSWORD_FLAG.equals(password)) {
 //            return null;
 //        }
-//        ConsoleContext consoleContext = ServerUtil.getMasterConsoleContext();
+//        ConsoleContext consoleContext = getMasterConsoleContext();
 //        int minLength = 10;
 //        int maxLength = 20;
 //        if (password.length() < minLength || password.length() > maxLength) {

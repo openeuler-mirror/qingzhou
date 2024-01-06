@@ -170,9 +170,10 @@ public class StringUtil {
      * 字符串是否包含中文
      */
     public static boolean containsZHChar(String str) {
-        if (isBlank(str)) {
-            return false;
-        }
+        if (str == null) return false;
+        str = str.trim();
+        if (str.isEmpty()) return false;
+
         Pattern p = Pattern.compile("[\u4E00-\u9FA5\\！\\，\\。\\（\\）\\《\\》\\“\\”\\？\\：\\；\\【\\】]");
         Matcher m = p.matcher(str);
         return m.find();
