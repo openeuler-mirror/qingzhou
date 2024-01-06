@@ -11,6 +11,6 @@ public class Controller extends ServiceRegister<SSHService> {
 
     @Override
     protected SSHService serviceObject() {
-        return new SSHImpl();
+        return new SSHServiceImpl();
     }
 }

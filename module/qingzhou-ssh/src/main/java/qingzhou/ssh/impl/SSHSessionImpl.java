@@ -1,118 +1,39 @@
 package qingzhou.ssh.impl;
 
-import org.apache.sshd.client.ClientBuilder;
-import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.channel.ClientChannelEvent;
-import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.client.session.ClientSession;
-import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
-import org.apache.sshd.core.CoreModuleProperties;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.apache.sshd.sftp.client.fs.SftpFileSystem;
-import org.apache.sshd.sftp.client.fs.SftpPath;
-import qingzhou.ssh.SSHClientConfig;
 import qingzhou.ssh.SSHResult;
 import qingzhou.ssh.SSHSession;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.GeneralSecurityException;
-import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SSHSessionImpl implements SSHSession {
-    private SshClient sshClient;
-    private SSHClientConfig config;
-    private ClientSession session;
+    private final ClientSession clientSession;
 
-    /**
-     * session open超时时间
-     */
-    public final Long connectTimeout = 10000L;
-
-    /**
-     * 认证超时时间
-     */
-    public final Long authTimeout = 10000L;
-
-    /**
-     * 命令执行超时时间
-     */
-    private final Long executeTimeout = 600000L;
-
-    public SSHSessionImpl(SSHClientConfig config) throws IOException {
-        this.sshClient = ClientBuilder.builder().build();
-        CoreModuleProperties.IDLE_TIMEOUT.set(sshClient, Duration.ZERO);
-        sshClient.start();
-
-        this.config = config;
-
-        this.session = createSession();
+    public SSHSessionImpl(ClientSession clientSession) {
+        this.clientSession = clientSession;
     }
 
     @Override
     public SSHResult execCmd(String cmd) throws Exception {
-        return execCmd0(getSession(), cmd);
-    }
-
-    @Override
-    public String uploadFile(String src, String dist) throws IOException {
-        return fileProcess(getSession(), src, dist, "upload");
-    }
-
-    @Override
-    public String downLoadFile(String src, String dist) throws IOException {
-        return fileProcess(getSession(), dist, src, "download");
-    }
-
-    public ClientSession getSession() throws IOException {
-        if (session == null || session.isClosed()) {
-            session = createSession();
-        }
-
-        return session;
-    }
-
-    public ClientSession createSession() throws IOException {
-        ConnectFuture future = sshClient.connect(config.getUsername(), config.getHostname(), config.getPort()).verify(connectTimeout);
-        if (!future.isConnected()) {
-            throw new RuntimeException("Session connect failed after " + connectTimeout + " mill seconds.");
-        }
-        ClientSession session = future.getSession();
-        if (config.getPrivateKeyLocation() != null) {
-            // 基于秘钥登陆
-            try {
-                session.addPublicKeyIdentity(new FileKeyPairProvider(Paths.get(config.getPrivateKeyLocation()))
-                        .loadKey(session, config.getKeyPairType()));
-            } catch (GeneralSecurityException e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-        } else if (config.getPassword() != null) {
-            session.addPasswordIdentity(config.getPassword());
-        }
-
-        if (!session.auth().verify(authTimeout).isSuccess()) {
-            session.close();
-            throw new RuntimeException("Ansible control machine authentication failed after " + authTimeout + " mill seconds.");
-        }
-
-        return session;
-    }
-
-    protected SSHResult execCmd0(ClientSession session, String cmd) throws Exception {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream(); ByteArrayOutputStream error = new ByteArrayOutputStream(); ChannelExec channel = session.createExecChannel(cmd)) {
+        try (ChannelExec channel = clientSession.createExecChannel(cmd);
+             ByteArrayOutputStream out = new ByteArrayOutputStream();
+             ByteArrayOutputStream error = new ByteArrayOutputStream()) {
             channel.setupSensibleDefaultPty();
-            channel.setErr(error);
             channel.setOut(out);
-            channel.open().verify(authTimeout);
-            channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), executeTimeout);
+            channel.setErr(error);
+            channel.open().verify(10000L);
+            channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), 600000L);
             int exit = channel.getExitStatus();
             String msg;
             if (exit == 0) {
@@ -128,106 +49,100 @@ public class SSHSessionImpl implements SSHSession {
                         exit = 0;
                     }
                 } else {
-                    System.err.println(String.format("Failed to execute command: %s, exit status: %d, details: %s", cmd, exit, msg));
+                    System.err.printf("Failed to execute command: %s, exit status: %d, details: %s%n", cmd, exit, msg);
                 }
             }
+
             SSHResultImp sshResult = new SSHResultImp();
             sshResult.setCode(exit);
             sshResult.setMessage(msg);
-
             return sshResult;
         }
     }
 
-    protected String fileProcess(ClientSession session, String localFile, String remoteFile, String type) {
-        try (SftpFileSystem fs = SftpClientFactory.instance().createSftpFileSystem(session)) {
-            Path remote = fs.getDefaultDir().resolve(remoteFile);
-            Path local = Paths.get(localFile);
-            if ("upload".equals(type)) {
-                createDirectories(remote);
-                upload(local, remote, fs);
-            } else if ("download".equals(type)) {
-                createDirectories(local);
-                download(remote, local, fs);
-            }
-            return "ok";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+    @Override
+    public SSHResult execCmdAsLogin(String cmd) throws Exception {
+        return execCmd("source /etc/profile; source ~/.bash_profile; " + cmd);
     }
 
-    private void upload(Path source, Path target, SftpFileSystem fs) throws IOException {
-        if (Files.isDirectory(source)) {
-            try (Stream<Path> stream = Files.list(source)) {
-                List<Path> paths = stream.collect(Collectors.toList());
-                boolean exists = Files.exists(target);
-                if (!exists) {
-                    Files.createDirectory(target);
-                }
-                for (Path path : paths) {
-                    SftpPath remotePath = fs.getDefaultDir().resolve(target.resolve(path.getFileName().toString()));
-                    if (Files.isDirectory(path)) {
-                        upload(path, remotePath, fs);
-                    } else {
-                        Files.copy(path, remotePath);
+    @Override
+    // src: 本地路径；dist: 远端路径
+    public void uploadFile(String src, String dist) throws Exception {
+        try (SftpFileSystem fs = SftpClientFactory.instance().createSftpFileSystem(clientSession)) {
+            Path local = Paths.get(src);
+            Path remote = fs.getDefaultDir().resolve(dist);
+            transferFile(local, remote, new PathSupplying() {
+                @Override
+                public List<Path> listSrc(Path path) throws Exception {
+                    try (Stream<Path> list = Files.list(path)) {
+                        return list.collect(Collectors.toList());
                     }
                 }
-            }
-        } else {
-            copyFile(source, target, fs);
+
+                @Override
+                public Path resolveDist(Path dist) {
+                    return fs.getDefaultDir().resolve(dist);
+                }
+            });
         }
     }
 
-    private void download(Path source, Path target, SftpFileSystem fs) throws IOException {
-        if (Files.isDirectory(source)) {
-            try (Stream<Path> stream = Files.list(fs.getDefaultDir().resolve(source))) {
-                List<Path> paths = stream.collect(Collectors.toList());
-                boolean exists = Files.exists(target);
-                if (!exists) {
-                    Files.createDirectory(target);
-                }
-                for (Path path : paths) {
-                    Path targetFile = Paths.get(target.toFile().getAbsolutePath(), path.getFileName().toString());
-                    if (Files.isDirectory(path)) {
-                        download(path, targetFile, fs);
-                    } else {
-                        Files.copy(path, targetFile);
+    @Override
+    // src: 远端路径；dist: 本地路径
+    public void downloadFile(String src, String dist) throws Exception {
+        try (SftpFileSystem fs = SftpClientFactory.instance().createSftpFileSystem(clientSession)) {
+            Path remote = fs.getDefaultDir().resolve(src);
+            Path local = Paths.get(dist);
+            transferFile(remote, local, new PathSupplying() {
+                @Override
+                public List<Path> listSrc(Path path) throws Exception {
+                    try (Stream<Path> list = Files.list(fs.getDefaultDir().resolve(path))) {
+                        return list.collect(Collectors.toList());
                     }
                 }
-            }
-        } else {
-            copyFile(source, target, fs);
+
+                @Override
+                public Path resolveDist(Path dist) {
+                    return dist;
+                }
+            });
         }
     }
 
-    private void createDirectories(Path path) throws IOException {
-        boolean exists = Files.exists(path);
-        if (!exists) {
-            if (Files.isDirectory(path)) {
-                Files.createDirectories(path);
+    private void transferFile(Path srcPath, Path distPath, PathSupplying pathSupplying) throws Exception {
+        if (!Files.exists(distPath)) {
+            if (Files.isDirectory(distPath)) {
+                Files.createDirectories(distPath);
             } else {
-                Path parent = path.getParent();
+                Path parent = distPath.getParent();
                 if (!Files.exists(parent)) {
                     Files.createDirectories(parent);
                 }
             }
         }
+
+        if (Files.isDirectory(srcPath)) {
+            for (Path src : pathSupplying.listSrc(srcPath)) {
+                Path dist = pathSupplying.resolveDist(distPath.resolve(src.getFileName().toString()));
+                transferFile(src, dist, pathSupplying);
+            }
+
+        } else {
+            Files.deleteIfExists(distPath);
+            Files.copy(srcPath, distPath);
+        }
     }
 
-    private void copyFile(Path source, Path target, SftpFileSystem fs) throws IOException {
-        if (Files.isDirectory(target)) {
-            target = fs.getDefaultDir().resolve(target.resolve(source.getFileName().toString()));
-        }
-        Files.deleteIfExists(target);
-        Files.copy(source, target);
+    private interface PathSupplying {
+        List<Path> listSrc(Path src) throws Exception;
+
+        Path resolveDist(Path dist);
     }
 
     @Override
-    public void close() {
-        if (sshClient != null) {
-            sshClient.stop();
-            sshClient = null;
+    public void close() throws Exception {
+        if (clientSession != null) {
+            clientSession.close();
         }
     }
 }

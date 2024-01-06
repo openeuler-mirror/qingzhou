@@ -1,22 +1,18 @@
 package qingzhou.ssh;
 
-public class SSHClientConfig {
+public class SSHConfig {
     private String hostname;
     private int port = 22;
     private String username;
     private String password;
     private String privateKeyLocation;
-    private String keyPairType = SSHClient.SSH_RSA;
-    
-
-    public SSHClientConfig() {
-    }
+    private String keyPairType = "ssh-rsa";
 
     public String getHostname() {
         return hostname;
     }
 
-    public SSHClientConfig setHostname(String hostname) {
+    public SSHConfig setHostname(String hostname) {
         this.hostname = hostname;
         return this;
     }
@@ -25,7 +21,7 @@ public class SSHClientConfig {
         return port;
     }
 
-    public SSHClientConfig setPort(int port) {
+    public SSHConfig setPort(int port) {
         this.port = port;
         return this;
     }
@@ -34,7 +30,7 @@ public class SSHClientConfig {
         return username;
     }
 
-    public SSHClientConfig setUsername(String username) {
+    public SSHConfig setUsername(String username) {
         this.username = username;
         return this;
     }
@@ -43,7 +39,7 @@ public class SSHClientConfig {
         return password;
     }
 
-    public SSHClientConfig setPassword(String password) {
+    public SSHConfig setPassword(String password) {
         this.password = password;
         return this;
     }
@@ -52,7 +48,7 @@ public class SSHClientConfig {
         return privateKeyLocation;
     }
 
-    public SSHClientConfig setPrivateKeyLocation(String privateKeyLocation) {
+    public SSHConfig setPrivateKeyLocation(String privateKeyLocation) {
         this.privateKeyLocation = privateKeyLocation;
         return this;
     }
@@ -61,10 +57,8 @@ public class SSHClientConfig {
         return keyPairType;
     }
 
-    public SSHClientConfig setKeyPairType(String keyPairType) {
-        if (keyPairType != null) {
-            this.keyPairType = keyPairType.trim();
-        }
+    public SSHConfig setKeyPairType(String keyPairType) {
+        this.keyPairType = keyPairType;
         return this;
     }
 }
