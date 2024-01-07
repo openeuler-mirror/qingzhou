@@ -12,14 +12,15 @@ public class ModelInfo {
     public final Model model;
     public final Map<String, FieldInfo> fieldInfoMap;
     public final Map<String, ActionInfo> actionInfoMap;
-    public final Class<?> clazz;
-    public final ModelBase instance;
+    public final String className;
+    private Class<?> clazz;
+    private ModelBase instance;
 
-    public ModelInfo(Model model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, Class<?> clazz) {
+    public ModelInfo(Model model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, String className) {
         this.model = model;
         Map<String, FieldInfo> fieldInfoTemp = new LinkedHashMap<>();
         for (FieldInfo fieldInfo : fieldInfoMap) {
-            fieldInfoTemp.put(fieldInfo.field.getName(), fieldInfo);
+            fieldInfoTemp.put(fieldInfo.fieldName, fieldInfo);
         }
         Map<String, ActionInfo> actionInfoTemp = new LinkedHashMap<>();
         for (ActionInfo actionInfo : actionInfoMap) {
@@ -32,11 +33,24 @@ public class ModelInfo {
 
         this.fieldInfoMap = Collections.unmodifiableMap(fieldInfoTemp);
         this.actionInfoMap = Collections.unmodifiableMap(actionInfoTemp);
+        this.className = className;
+    }
+
+    public void setModelClass(Class<?> clazz) {
+        if (this.clazz != null) throw new IllegalStateException();
         this.clazz = clazz;
-        try {
-            this.instance = (ModelBase) clazz.newInstance();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("The class annotated by the Model needs to have a public parameter-free constructor.", e);
-        }
+    }
+
+    public void setModelInstance(ModelBase instance) {
+        if (this.instance != null) throw new IllegalStateException();
+        this.instance = instance;
+    }
+
+    public Class<?> getClazz() {
+        return clazz;
+    }
+
+    public ModelBase getInstance() {
+        return instance;
     }
 }

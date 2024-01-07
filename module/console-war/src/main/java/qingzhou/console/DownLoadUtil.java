@@ -1,4 +1,8 @@
-package qingzhou.framework.util;
+package qingzhou.console;
+
+import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.framework.util.FileUtil;
+import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -112,7 +116,7 @@ public class DownLoadUtil {
 
     private static synchronized File getDownloadCache() {
         if (downloadCacheDir == null) {
-            downloadCacheDir = ServerUtil.getCache("download");
+            downloadCacheDir = ConsoleWarHelper.getCache();
         }
         FileUtil.mkdirs(downloadCacheDir);
 

@@ -12,7 +12,7 @@ import qingzhou.framework.api.Options;
 
 @Model(name = "user", icon = "user",
         menuName = "Security", menuOrder = 1,
-        nameI18n = {"管理员", "en:User"},
+        nameI18n = {"用户管理", "en:User"},
         infoI18n = {"管理登录和操作服务器的管理员，管理员可登录控制台、REST接口等。", "en:Manages the administrator who logs in and operates the server. The administrator can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements AddModel {
     public static final String pwdKey = "password";
@@ -289,7 +289,7 @@ public class User extends ModelBase implements AddModel {
 //        if (Constants.PASSWORD_FLAG.equals(password)) {
 //            return null;
 //        }
-//        ConsoleContext consoleContext = ServerUtil.getMasterConsoleContext();
+//        ConsoleContext consoleContext = getMasterConsoleContext();
 //        int minLength = 10;
 //        int maxLength = 20;
 //        if (password.length() < minLength || password.length() > maxLength) {

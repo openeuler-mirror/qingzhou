@@ -11,24 +11,6 @@
 
     <artifactId>qingzhou-framework</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-logger</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-bytecode</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-    </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -53,4 +35,21 @@
         </plugins>
     </build>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-logger</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-bytecode</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+    </dependencies>
 </project>

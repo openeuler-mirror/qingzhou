@@ -1,14 +1,9 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.MenuInfo;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.*;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
-import qingzhou.framework.util.ServerUtil;
+import qingzhou.framework.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -78,7 +73,7 @@ public class ConsoleContextImpl implements ConsoleContext {
         // 防止将英文写成中文的情况发生
         if (checkContainChinese) {
             String val = langMap.get(Lang.en).get(key);
-            if (ServerUtil.containsZHChar(val)) {
+            if (StringUtil.containsZHChar(val)) {
                 new IllegalArgumentException("Please do not use Chinese in English: " + key).printStackTrace();
             }
         }

@@ -8,23 +8,19 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.api.*;
 import qingzhou.framework.console.I18n;
+import qingzhou.framework.console.Validator;
 import qingzhou.framework.pattern.Visitor;
+import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.ObjectUtil;
-import qingzhou.framework.util.ServerUtil;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.io.IOException;
+import java.util.*;
 
 public class ConsoleUtil {// todo 临时工具类，后续考虑移除
     public static String ACTION_NAME_SERVER = "server";
@@ -39,11 +35,11 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
     }
 
     public static void error(String msg, Throwable t) {
-        ServerUtil.getLogger().error(msg, t);
+        ConsoleWarHelper.getLogger().error(msg, t);
     }
 
     public static void warn(String msg) {
-        ServerUtil.getLogger().warn(msg);
+        ConsoleWarHelper.getLogger().warn(msg);
     }
 
     public static ModelManager getModelManager(String appName) {
@@ -124,7 +120,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
 
     // todo 临时，仅支持单应用
     public static AppContext getAppContext(String appName) {
-        return ServerUtil.getFrameworkContext().getAppManager().getAppInfo(appName).getAppContext();
+        return ConsoleWarHelper.getAppInfoManager().getAppInfo(appName).getAppContext();
     }
 
     public static List<Properties> getAppMenuList(String loginUser, String appName) {
@@ -312,7 +308,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
             String effectiveWhen = modelAction.effectiveWhen().trim();
             boolean effective = false;
             try {
-                effective = ServerUtil.isEffective(fieldName -> obj.get(fieldName), effectiveWhen);
+                effective = Validator.isEffective(fieldName -> obj.get(fieldName), effectiveWhen);
             } catch (Exception ignored) {
             }
             if (!effective) {
@@ -443,7 +439,6 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         final String modelName = request.getModelName();
         boolean hasId = hasIDField(request);
         if (hasId && !response.getDataList().isEmpty()) {
-            ModelBase modelBase = modelManager.getModelInstance(modelName);
             for (String ac : modelManager.getActionNames(modelName)) {
                 ModelAction action = modelManager.getModelAction(modelName, ac);
                 for (Map<String, String> data : datas) {
@@ -468,7 +463,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
                         continue;
                     }
 
-                    if (!visitor.visit(action)) {
+                    if (visitor.visitAndEnd(action)) {
                         break;
                     }
                 }
@@ -494,12 +489,12 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         List<ModelAction> modelActions = new ArrayList<>();
 
         @Override
-        public boolean visit(ModelAction action) {
+        public boolean visitAndEnd(ModelAction action) {
             if (!modelActions.contains(action)) {
                 modelActions.add(action);
             }
 
-            return true;
+            return false;
         }
     }
 
@@ -567,11 +562,24 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
     }
 
+    public static synchronized File getSecureFile(File domain) throws IOException {
+        File secureDir = FileUtil.newFile(domain, "data", "secure");
+        FileUtil.mkdirs(secureDir);
+        File secureFile = FileUtil.newFile(secureDir, "secure");
+        if (!secureFile.exists()) {
+            if (!secureFile.createNewFile()) {
+                throw ExceptionUtil.unexpectedException(secureFile.getPath());
+            }
+        }
+
+        return secureFile;
+    }
+
     public static String getPublicKeyString() throws Exception {
         CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
         KeyManager keyManager = cryptoService.getKeyManager();
-        File secureFile = ServerUtil.getSecureFile(ServerUtil.getDomain());
-        return keyManager.getKeyPairOrElseInit(secureFile, ServerUtil.publicKeyName, ServerUtil.publicKeyName, ServerUtil.privateKeyName, null);
+        File secureFile = ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain());
+        return keyManager.getKeyPairOrElseInit(secureFile, ConsoleConstants.publicKeyName, ConsoleConstants.publicKeyName, ConsoleConstants.privateKeyName, null);
     }
 
     public static String decryptWithConsolePrivateKey(String input) {
@@ -579,10 +587,10 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
             return input;
         }
         try {
-            File secureFile = ServerUtil.getSecureFile(ServerUtil.getDomain());
+            File secureFile = ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain());
             KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
-            String pubKey = keyManager.getKeyPairOrElseInit(secureFile, ServerUtil.publicKeyName, ServerUtil.publicKeyName, ServerUtil.privateKeyName, null);
-            String priKey = keyManager.getKeyPairOrElseInit(secureFile, ServerUtil.privateKeyName, ServerUtil.publicKeyName, ServerUtil.privateKeyName, null);
+            String pubKey = keyManager.getKeyPairOrElseInit(secureFile, ConsoleConstants.publicKeyName, ConsoleConstants.publicKeyName, ConsoleConstants.privateKeyName, null);
+            String priKey = keyManager.getKeyPairOrElseInit(secureFile, ConsoleConstants.privateKeyName, ConsoleConstants.publicKeyName, ConsoleConstants.privateKeyName, null);
 
             return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(pubKey, priKey).decryptWithPrivateKey(input);
         } catch (Exception e) {

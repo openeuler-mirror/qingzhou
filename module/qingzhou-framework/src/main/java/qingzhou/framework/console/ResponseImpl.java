@@ -1,12 +1,10 @@
 package qingzhou.framework.console;
 
 import qingzhou.framework.api.Response;
-import qingzhou.framework.util.DownLoadUtil;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -106,19 +104,5 @@ public class ResponseImpl implements Response, Serializable {
         }
 
         dataList.add(map);
-    }
-
-    public Map<String, Object> downloadData() {
-        return null;// todo
-    }
-
-    public void readDownloadFile(String key, long offset, File[] downloadFiles) throws Exception {
-        if (key == null) {
-            if (downloadFiles == null || downloadFiles.length == 0) {
-                return;
-            }
-            key = DownLoadUtil.buildDownloadKey(downloadFiles);
-        }
-        // downloadData = DownLoadUtil.downloadFile(key, offset); todo
     }
 }

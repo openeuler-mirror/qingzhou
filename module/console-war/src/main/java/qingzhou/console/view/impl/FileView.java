@@ -6,7 +6,7 @@ import qingzhou.framework.api.DownloadModel;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
-import qingzhou.framework.util.DownLoadUtil;
+import qingzhou.console.DownLoadUtil;
 import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.ServletOutputStream;
@@ -23,7 +23,7 @@ public class FileView implements View {
         HttpServletResponse servletResponse = restContext.servletResponse;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
 
-        Map<String, Object> result = response.downloadData();
+        Map<String, Object> result = null;// todo: response.downloadData()
         if (result.isEmpty()) {
             return;
         }
@@ -50,7 +50,7 @@ public class FileView implements View {
             req.setParameters(data);
             ResponseImpl res = (ResponseImpl) RESTController.invokeAction.invoke(req);
             if (res.isSuccess()) {
-                result = res.downloadData();
+                result = null; // todo: res.downloadData();
                 offset = (long) result.get(DownloadModel.DOWNLOAD_OFFSET);  // 续传
                 key = (String) result.get(DownloadModel.DOWNLOAD_KEY);      // 性能优化
             } else {

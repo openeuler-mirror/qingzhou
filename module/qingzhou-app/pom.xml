@@ -11,14 +11,6 @@
 
     <artifactId>qingzhou-app</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-    </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -29,11 +21,24 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.app.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework,qingzhou.framework,qingzhou.framework.util,qingzhou.logger</Import-Package>
+                            <Import-Package>
+                                org.osgi.framework,qingzhou.framework,qingzhou.framework.util,qingzhou.logger
+                            </Import-Package>
                         </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-framework</artifactId>
+        </dependency>
+    </dependencies>
 </project>

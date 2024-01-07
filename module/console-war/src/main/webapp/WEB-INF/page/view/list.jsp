@@ -101,7 +101,7 @@
                     boolean canAccess = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
                     ModelAction listCreateAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_CREATE);
                     ModelAction listAddAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_ADD);
-                    if (canAccess && listCreateAction != null && listAddAction != null) {
+                    if (canAccess && listCreateAction != null && listAddAction != null && Arrays.asList(modelManager.getActionNamesShowToListHead(qzRequest.getModelName())).contains(AddModel.ACTION_NAME_CREATE)) {
                 %>
                 <a class="btn"
                    href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, AddModel.ACTION_NAME_CREATE)%>">
