@@ -8,6 +8,7 @@ import qingzhou.framework.pattern.Visitor;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.net.URLClassLoader;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -51,10 +52,10 @@ public class ModelManagerImpl implements ModelManager {
         }
     }
 
-    public void init(File[] appLib) throws Exception {
+    public void init(File[] appLib, URLClassLoader loader) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
         AnnotationReader annotation = FrameworkContextImpl.getFrameworkContext()
-                .getService(BytecodeService.class).createAnnotationReader(appLib, Model.class.getClassLoader());
+                .getService(BytecodeService.class).createAnnotationReader(appLib, loader);
         for (File file : appLib) {
             visitClassName(file, className -> {
                 Object[] classAnnotations = annotation.getClassAnnotations(className);

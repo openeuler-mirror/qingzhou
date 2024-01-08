@@ -45,7 +45,7 @@ public class AppManagerImpl implements AppManager {
     private ModelManagerImpl buildModelManager(File[] appLib, URLClassLoader loader) {
         ModelManagerImpl modelManager = new ModelManagerImpl();
         try {
-            modelManager.init(appLib);
+            modelManager.init(appLib, loader);
 
             for (String modelName : modelManager.getModelNames()) {
                 ModelInfo modelInfo = modelManager.getModelInfo(modelName);

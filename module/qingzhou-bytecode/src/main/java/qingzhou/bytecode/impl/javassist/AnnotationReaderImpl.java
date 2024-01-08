@@ -1,4 +1,4 @@
-package qingzhou.bytecode.impl;
+package qingzhou.bytecode.impl.javassist;
 
 import javassist.ClassPool;
 import javassist.CtField;

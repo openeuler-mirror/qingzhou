@@ -26,7 +26,7 @@ public class App extends ModelBase implements AddModel {
 
     @ModelField(
             required = true,
-            disableOnEdit = false,
+            disableOnEdit = true,
             type = FieldType.upload,
             nameI18n = {"应用来源", "en:Application Source"},
             infoI18n = {"部署的应用可以从客户端上传，也可以从服务器端指定的位置读取。注：出于安全考虑，QingZhou 出厂设置禁用了文件上传功能，您可在“控制台安全”模块了解详情和进行相关的配置操作。",
@@ -47,7 +47,7 @@ public class App extends ModelBase implements AddModel {
     @ModelField(
             type = FieldType.file,
             effectiveWhen = "appFrom=" + Constants.FILE_FROM_UPLOAD,
-            disableOnEdit = false,
+            disableOnEdit = true,
             showToEdit = false,
             notSupportedCharacters = "#",
             required = true,

@@ -1,4 +1,4 @@
-package qingzhou.bytecode.impl;
+package qingzhou.bytecode.impl.javassist;
 
 import qingzhou.bytecode.AnnotationReader;
 import qingzhou.bytecode.BytecodeService;
