@@ -573,3 +573,17 @@ a.cancelfavorites:active{text-decoration: none;color: black;}
 .search-item:hover {border-radius: 5px; background: #e0f0ff;}
 .search-item .highlight {color: #ff8105;}
 .search-list .active {border-radius: 5px; background: #e0f0ff;}
+
+/*应用网格布局样式*/
+.appCard{width:400px;height:186px;background-color:#fafafa; border-radius: 5px;}
+.appCard .left{width:120px;height:100%;float:left;}
+.appCard .right{width:250px;height:100%;float:right;padding-left:5px;padding-right:10px;}
+.appCard .left .appLogo {margin-top: 39%;width:120px;}
+.appCard .left .appLogo img{display:block; margin:10px 20%; border:1px solid #E3E3E3; padding:2px;}
+.appCard .left .appVersion{display:block; font-size:12px; color:#666; white-space: nowrap;}
+
+.appCard .right .appName {margin-top: 8px; font-size:18px;}
+.appCard .right .appInfo {margin-top: 10px; font-size: 13px;}
+.appCard .right .installUpgrade a {margin-left: 0px; float:left;}
+.appCard .right a{font-size:13px;color:blue;float:right;margin:8px 0 0px 6px;}
+.appCard .right a:hover{color:#06F;text-decoration: none;}
