@@ -28,7 +28,7 @@
                                     <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                                     <Bundle-Activator>qingzhou.httpserver.impl.Controller</Bundle-Activator>
 
-                                    <Import-Package>org.osgi.framework,qingzhou.framework</Import-Package>
+                                    <Import-Package>org.osgi.framework,qingzhou.framework,com.sun.net.httpserver</Import-Package>
                                     <Export-Package>qingzhou.httpserver</Export-Package>
                                 </manifestEntries>
                             </archive>
