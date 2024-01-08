@@ -98,41 +98,55 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    boolean canAccess = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
-                    ModelAction listCreateAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_CREATE);
-                    ModelAction listAddAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_ADD);
-                    if (canAccess && listCreateAction != null && listAddAction != null && Arrays.asList(modelManager.getActionNamesShowToListHead(qzRequest.getModelName())).contains(AddModel.ACTION_NAME_CREATE)) {
-                %>
-                <a class="btn"
-                   href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, AddModel.ACTION_NAME_CREATE)%>">
-                    <i class="icon icon-<%=listCreateAction.icon()%>"></i>
-                    <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + AddModel.ACTION_NAME_CREATE)%>
-                </a>
-                <%
-                    }
+                    for (String action : modelManager.getActionNamesShowToListHead(qzRequest.getModelName())) {
+                        // boolean canAccess = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
+                        ModelAction modelAction = modelManager.getModelAction(qzRequest.getModelName(), action);
+                        // ModelAction listAddAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_ADD);
+                        if (modelAction != null) {
+                            String viewName = modelAction.useAjax() ? ViewManager.jsonView : ViewManager.htmlView;
 
-                    boolean downloadPermission = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADFILE, LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADLIST, LoginManager.getLoginUser(session)));
-                    final ModelAction downloadListModelAction = modelManager.getModelAction(qzRequest.getModelName(), DownloadModel.ACTION_NAME_DOWNLOADLIST);
-                    if (downloadListModelAction != null && downloadPermission && Arrays.asList(modelManager.getActionNamesShowToListHead(qzRequest.getModelName())).contains(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
                 %>
-                <a style="margin-left:6px" class="btn" btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
-                   action-name="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
-                   href="<%= ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DownloadModel.ACTION_NAME_DOWNLOADLIST)%>"
+                <a class="btn" btn-type="<%=action%>" action-name="<%=action%>"
+                   href="<%= ConsoleUtil.isDisable(action) ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, action)%>"
                         <%
-                            out.print(ConsoleUtil.isDisableDownload() ? " disabled " : "" + " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE) + "' ");%>
-                   out.print("act-ajax='true' act-confirm='" +
-                String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
-                I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." +
-                DownloadModel.ACTION_NAME_DOWNLOADLIST),
-                I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName()))
-                + " ?' ");
-                %>
-
-                <i class="icon icon-<%=downloadListModelAction.icon()%>"></i>
-                <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
+                            if (action.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
+                                out.print(ConsoleUtil.isDisable(action) ? " disabled " : " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE) + "' ");
+                            }
+                        %>
+                >
+                    <i class="icon icon-<%=modelAction.icon()%>"></i>
+                    <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + action)%>
                 </a>
+                <%--  <%
+                      boolean canAccess = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
+                      ModelAction listCreateAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_CREATE);
+                      ModelAction listAddAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_ADD);
+                      if (canAccess && listCreateAction != null && listAddAction != null && Arrays.asList(modelManager.getActionNamesShowToListHead(qzRequest.getModelName())).contains(AddModel.ACTION_NAME_CREATE)) {
+                  %>
+                  <a class="btn"
+                     href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, AddModel.ACTION_NAME_CREATE)%>">
+                      <i class="icon icon-<%=listCreateAction.icon()%>"></i>
+                      <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + AddModel.ACTION_NAME_CREATE)%>
+                  </a>
+                  <%
+                      }
+
+                      boolean downloadPermission = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADFILE, LoginManager.getLoginUser(session))
+                              && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADLIST, LoginManager.getLoginUser(session)));
+                      final ModelAction downloadListModelAction = modelManager.getModelAction(qzRequest.getModelName(), DownloadModel.ACTION_NAME_DOWNLOADLIST);
+                      if (downloadListModelAction != null && downloadPermission && Arrays.asList(modelManager.getActionNamesShowToListHead(qzRequest.getModelName())).contains(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
+                  %>
+                  <a style="margin-left:6px" class="btn" btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
+                     action-name="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>"
+                     href="<%= ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DownloadModel.ACTION_NAME_DOWNLOADLIST)%>">
+                      <%
+                          out.print(ConsoleUtil.isDisableDownload() ? " disabled " : " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE) + "' ");%>
+
+                      <i class="icon icon-<%=downloadListModelAction.icon()%>"></i>
+                      <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
+                  </a>--%>
                 <%
+                        }
                     }
 
                     // 用于判断是否需要操作列

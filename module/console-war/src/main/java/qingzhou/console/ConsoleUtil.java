@@ -339,6 +339,14 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         return disableDownload;
     }
 
+    public static boolean isDisable(String action) {
+        if (DownloadModel.ACTION_NAME_DOWNLOADLIST.equals(action)) {
+            return isDisableDownload();
+        } else {
+            return false;
+        }
+    }
+
     public static Map<String, String> modelFieldEffectiveWhenMap(Request request) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
