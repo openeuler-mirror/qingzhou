@@ -15,7 +15,11 @@ public interface ListModel extends ShowModel {
             infoI18n = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     default void list(Request request, Response response) throws Exception {
         String modelName = request.getModelName();
-        int totalSize = getDataStore().getTotalSize(modelName);
+        DataStore dataStore = getDataStore();
+        if (dataStore == null) {
+            return;
+        }
+        int totalSize = dataStore.getTotalSize(modelName);
         response.setTotalSize(totalSize);
 
         int pageSize = pageSize();
@@ -28,10 +32,10 @@ public interface ListModel extends ShowModel {
         }
         response.setPageNum(pageNum);
 
-        String[] dataIdInPage = getDataStore().getDataIdInPage(modelName, pageSize, pageNum).toArray(new String[0]);
+        String[] dataIdInPage = dataStore.getDataIdInPage(modelName, pageSize, pageNum).toArray(new String[0]);
         ModelManager manager = getAppContext().getModelManager();
         String[] fieldNamesToList = Arrays.stream(manager.getFieldNames(modelName)).filter(s -> manager.getModelField(modelName, s).showToList()).toArray(String[]::new);
-        List<Map<String, String>> result = getDataStore().getDataFieldByIds(modelName, dataIdInPage, fieldNamesToList);
+        List<Map<String, String>> result = dataStore.getDataFieldByIds(modelName, dataIdInPage, fieldNamesToList);
         for (Map<String, String> data : result) {
             response.addData(data);
         }

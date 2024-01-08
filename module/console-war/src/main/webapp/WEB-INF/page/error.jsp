@@ -1,6 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ page import="java.util.*" %>
-<%@ page import="qingzhou.api.*" %>
+<%@ page import="qingzhou.framework.api.Constants" %>
 <%
     String statusCode = String.valueOf(response.getStatus());
     String errorMsg = response.getHeader(Constants.RESPONSE_HEADER_MSG_KEY);
