@@ -2,7 +2,15 @@ package qingzhou.app.master.service;
 
 import qingzhou.app.master.Main;
 import qingzhou.framework.AppManager;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.Constants;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -68,6 +76,10 @@ public class App extends ModelBase implements AddModel {
             infoI18n = {"此应用的类型。", "en:The type of this app."})
     public String type;
 
+    @ModelAction(name = ACTION_NAME_ADD,
+            icon = "save",
+            nameI18n = {"添加", "en:Add"},
+            infoI18n = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     @Override
     public void add(Request request, Response response) throws Exception {
         Map<String, String> p = prepareParameters(request);
@@ -106,6 +118,13 @@ public class App extends ModelBase implements AddModel {
         }
     }
 
+    @ModelAction(
+            name = ACTION_NAME_DELETE,
+            showToList = true, supportBatch = true,
+            icon = "trash",
+            nameI18n = {"删除", "en:Delete"},
+            infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
+                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     @Override
     public void delete(Request request, Response response) throws Exception {
         String id = request.getId();
@@ -135,6 +154,10 @@ public class App extends ModelBase implements AddModel {
         }
     }
 
+    @ModelAction(name = ACTION_NAME_LIST,
+            icon = "list", forwardToPage = "list",
+            nameI18n = {"列表", "en:List"},
+            infoI18n = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     @Override
     public void list(Request request, Response response) throws Exception {
         int pageNum = 1;
@@ -147,13 +170,15 @@ public class App extends ModelBase implements AddModel {
         }
 
         List<String> appNames = new ArrayList<>(getAppManager().getApps());
-        List<Map<String, String>> apps = getDataStore().getAllData("app");
-        if (apps != null && apps.size() > 0) {
-            for (Map<String, String> app : apps) {
-                String filename = app.getOrDefault("filename", "");
-                if (appNames.contains(filename)) {
-                    appNames.add(app.get("id"));
-                    appNames.remove(filename);
+        if (getDataStore() != null) {
+            List<Map<String, String>> apps = getDataStore().getAllData("app");
+            if (apps != null && apps.size() > 0) {
+                for (Map<String, String> app : apps) {
+                    String filename = app.getOrDefault("filename", "");
+                    if (appNames.contains(filename)) {
+                        appNames.add(app.get("id"));
+                        appNames.remove(filename);
+                    }
                 }
             }
         }
@@ -168,7 +193,9 @@ public class App extends ModelBase implements AddModel {
         int end = appNames.size() < pageSize() ? appNames.size() : (start + pageSize());
         for (int i = start; i < end; i++) {
             String appName = appNames.get(i);
-            dataInfo.add(getDataStore().getDataById("app", appName));
+            if (getDataStore() != null) {
+                dataInfo.add(getDataStore().getDataById("app", appName));
+            }
         }
     }
 

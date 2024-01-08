@@ -1,6 +1,13 @@
 package qingzhou.app.master.service;
 
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +43,10 @@ public class Node extends ModelBase implements AddModel {
             nameI18n = {"运行中", "en:Running"}, infoI18n = {"了解该组件的运行状态。", "en:Know the operational status of the component."})
     public boolean running;
 
+    @ModelAction(name = ACTION_NAME_LIST,
+            icon = "list", forwardToPage = "list",
+            nameI18n = {"列表", "en:List"},
+            infoI18n = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     @Override
     public void list(Request request, Response response) throws Exception {
         Map<String, String> node = new HashMap<>();

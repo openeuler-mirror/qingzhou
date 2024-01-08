@@ -314,7 +314,7 @@
                             <%
                             // 菜单
                             List<Properties> menuList = ConsoleUtil.getAppMenuList(currentUser, Constants.MASTER_APP_NAME);
-                            out.print(ConsoleUtil.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, "node", Constants.MASTER_APP_NAME, Constants.MASTER_APP_NAME, qzRequest.getModelName()));
+                            out.print(ConsoleUtil.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, "node", Constants.LOCAL_NODE_NAME, Constants.MASTER_APP_NAME, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>
