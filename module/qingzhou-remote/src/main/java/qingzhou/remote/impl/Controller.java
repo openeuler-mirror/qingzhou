@@ -68,8 +68,10 @@ public class Controller implements BundleActivator {
 
     @Override
     public void stop(BundleContext bundleContext) {
-        server.removeContext(path);
-        server.stop();
+        if(server != null) {
+            server.removeContext(path);
+            server.stop();
+        }
 
         bundleContext.ungetService(serviceReference);
     }
