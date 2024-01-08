@@ -25,7 +25,7 @@ image::doc/img/architecture.png[Architecture,700,500]
 
 . 确保已具备 java 环境。
 . 进入安装目录，在 bin 目录下根据操作系统平台执行对应的 start 脚本即完成启动。
-. 可选，免脚本启动方式：`java -jar ~/qingzhou/bin/qingzhou-launcher.jar server start`
+. 可选，免脚本启动方式：`java -jar ~/qingzhou/bin/qingzhou-launcher.jar server start`。
 
 == 参与贡献
 
