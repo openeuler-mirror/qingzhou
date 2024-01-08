@@ -1,6 +1,6 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleConstants;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
@@ -46,7 +46,7 @@ public class InvokeAction implements Filter<RestContext> {
 
     private boolean isBatchAction(RequestImpl request) {
         String ids = request.getParameter(ListModel.FIELD_NAME_ID);
-        return StringUtil.notBlank(ids) && ids.contains(qingzhou.framework.api.Constants.DATA_SEPARATOR);
+        return StringUtil.notBlank(ids) && ids.contains(ConsoleConstants.DATA_SEPARATOR);
     }
 
     private Response invokeBatch(RequestImpl request) {
@@ -56,7 +56,7 @@ public class InvokeAction implements Filter<RestContext> {
         StringBuilder errbuilder = new StringBuilder();
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
         String oid = request.getParameter(ListModel.FIELD_NAME_ID);
-        for (String id : oid.split(qingzhou.framework.api.Constants.DATA_SEPARATOR)) {
+        for (String id : oid.split(ConsoleConstants.DATA_SEPARATOR)) {
             if (StringUtil.notBlank(id)) {
                 id = ConsoleSDK.decodeId(id);
                 request.setId(id);
@@ -67,7 +67,7 @@ public class InvokeAction implements Filter<RestContext> {
                     String actionContextMsg = response.getMsg();
                     if (result.containsKey(actionContextMsg)) {
                         errbuilder.append(result.get(actionContextMsg));
-                        errbuilder.append(qingzhou.framework.api.Constants.DATA_SEPARATOR);
+                        errbuilder.append(ConsoleConstants.DATA_SEPARATOR);
                         errbuilder.append(id);
                         result.put(actionContextMsg, errbuilder.toString());
                         errbuilder.setLength(0);
@@ -83,11 +83,11 @@ public class InvokeAction implements Filter<RestContext> {
         String model = I18n.getString(appName, "model." + request.getModelName());
         String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
         if (result.isEmpty()) {
-            String resultMsg = String.format(I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "batch.ops.success"), model, action, suc);
+            String resultMsg = String.format(I18n.getString(ConsoleConstants.MASTER_APP_NAME, "batch.ops.success"), model, action, suc);
             response.setMsg(resultMsg);
         } else {
             response.setSuccess(suc > 0);
-            errbuilder.append(String.format(I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "batch.ops.fail"), model, action, suc, fail));
+            errbuilder.append(String.format(I18n.getString(ConsoleConstants.MASTER_APP_NAME, "batch.ops.fail"), model, action, suc, fail));
             errbuilder.append("<br/>");
             for (Map.Entry<String, String> entry : result.entrySet()) {
                 String key = entry.getKey();
@@ -134,7 +134,7 @@ public class InvokeAction implements Filter<RestContext> {
                             if (responseTemp.getDataList().isEmpty()) {
                                 response.setSuccess(false);
                                 String msg = String.format(
-                                        I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "validator.notexist"),
+                                        I18n.getString(ConsoleConstants.MASTER_APP_NAME, "validator.notexist"),
                                         I18n.getString(appName, "model." + modelName));
                                 response.setMsg(msg);
                             }

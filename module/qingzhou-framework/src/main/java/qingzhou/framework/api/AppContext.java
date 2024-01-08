@@ -16,8 +16,6 @@ public interface AppContext {
 
     String getAppName();
 
-    ModelManager getModelManager();
-
     void setDataStore(DataStore dataStore);
 
     DataStore getDataStore();
@@ -25,4 +23,6 @@ public interface AppContext {
     void addActionFilter(ActionFilter actionFilter);
 
     ConsoleContext getConsoleContext();
+
+    ModelManager getModelManager();
 }

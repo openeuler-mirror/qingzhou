@@ -5,7 +5,7 @@ import qingzhou.bytecode.BytecodeService;
 
 import java.io.File;
 
-public class JavaServiceImpl implements BytecodeService {
+public class JavaImpl implements BytecodeService {
 
     @Override
     public AnnotationReader createAnnotationReader(File[] classPath, ClassLoader parent) {

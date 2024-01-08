@@ -1,7 +1,18 @@
 package qingzhou.framework.console;
 
 import qingzhou.framework.AppInfo;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.EditModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Option;
+import qingzhou.framework.api.Options;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.ObjectUtil;
@@ -15,7 +26,15 @@ import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class Validator {
@@ -53,7 +72,7 @@ public class Validator {
             consoleContext.addI18N("validator.notfound", new String[]{"不存在", "en:Not found"});
             consoleContext.addI18N("validator.kv.require", new String[]{"变量名不支持为空", "en:Variable names cannot be empty"});
             consoleContext.addI18N("validator.kv.name.duplicate", new String[]{"变量名不能重复", "en:Variable names cannot be duplicated"});
-            consoleContext.addI18N("validator.date-time.format", new String[]{"须使用 " + Constants.DATE_FORMAT + " 的时间格式", "en:Must use the time format " + Constants.DATE_FORMAT});
+            consoleContext.addI18N("validator.date-time.format", new String[]{"须使用 " + ConsoleConstants.DATE_FORMAT + " 的时间格式", "en:Must use the time format " + ConsoleConstants.DATE_FORMAT});
             consoleContext.addI18N("validator.xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
             consoleContext.addI18N("validation.error.cron", new String[]{"内容格式有误，不是一个合法的 Cron 表达式",
                     "en:The content is malformed and is not a valid cron expression"});
@@ -70,7 +89,7 @@ public class Validator {
         Map<String, String> errorData = new HashMap<>();
         String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
         boolean singleFieldValidation = isSingleFieldValidation(request);
-        String singleField = request.getParameter(Constants.SINGLE_FIELD_VALIDATE_PARAM);
+        String singleField = request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM);
         for (String fieldName : allFieldNames) {
             if (singleFieldValidation && !fieldName.equals(singleField)) {
                 continue;
@@ -194,7 +213,7 @@ public class Validator {
     }
 
     private static boolean isSingleFieldValidation(Request request) {
-        return request.getParameter(Constants.SINGLE_FIELD_VALIDATE_PARAM) != null;
+        return request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) != null;
     }
 
     public static boolean isMultiVal(FieldType fieldType) {
@@ -326,7 +345,7 @@ public class Validator {
                         }
                     }
                 } else {
-                    for (String data : checkValue.split(Constants.DATA_SEPARATOR)) { //  例如：角色的权限，经过 ActionContext的getRequestParameter转换后包含逗号
+                    for (String data : checkValue.split(ConsoleConstants.DATA_SEPARATOR)) { //  例如：角色的权限，经过 ActionContext的getRequestParameter转换后包含逗号
                         boolean multiselect = vc.modelField.type() == FieldType.groupedMultiselect;
                         boolean containsSP = data.contains("/") && !data.startsWith("/") && !data.endsWith("/");
                         boolean isMultiselect = (multiselect && !containsSP);
@@ -379,7 +398,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             if (vc.modelField.notSupportedStrings().length > 0) {
-                String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(Constants.DATA_SEPARATOR) : new String[]{vc.newValue};
+                String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(ConsoleConstants.DATA_SEPARATOR) : new String[]{vc.newValue};
                 for (String e : vc.modelField.notSupportedStrings()) {
                     for (String valueStr : valueStrs) {
                         if (valueStr.toLowerCase().contains(e.toLowerCase())) {
@@ -398,7 +417,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             if (vc.modelField.notSupportedCharacters().length() > 0) { // 不能用 isBlank，因为可能只是配置了一个 空白 符
-                String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(Constants.DATA_SEPARATOR) : new String[]{vc.newValue};
+                String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(ConsoleConstants.DATA_SEPARATOR) : new String[]{vc.newValue};
                 for (char e : vc.modelField.notSupportedCharacters().toCharArray()) {
                     for (String valueStr : valueStrs) {
                         if (valueStr.indexOf(e) > -1) {
@@ -458,7 +477,7 @@ public class Validator {
             // 校验key-value键值对的一般格式
             if (vc.modelField.type() == FieldType.kv) {
                 if (StringUtil.notBlank(vc.newValue)) {
-                    String[] arr = vc.newValue.split(Constants.DATA_SEPARATOR);
+                    String[] arr = vc.newValue.split(ConsoleConstants.DATA_SEPARATOR);
                     Set<String> keys = new HashSet<>();
                     for (String s : arr) {
                         int i = s.indexOf("=");
@@ -493,7 +512,7 @@ public class Validator {
                     DateFormat dateFormat;
                     Date thisDateTime;
                     try {
-                        dateFormat = new SimpleDateFormat(Constants.DATE_FORMAT);
+                        dateFormat = new SimpleDateFormat(ConsoleConstants.DATE_FORMAT);
                         thisDateTime = dateFormat.parse(vc.newValue);
                     } catch (ParseException e) {
                         return vc.context.getI18N("validator.date-time.format");
@@ -556,7 +575,7 @@ public class Validator {
             }
 
             // 字符串长度校验 2
-            String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(Constants.DATA_SEPARATOR) : new String[]{vc.newValue};
+            String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(ConsoleConstants.DATA_SEPARATOR) : new String[]{vc.newValue};
             for (String v : valueStrs) {
                 if (v.length() < vc.modelField.minLength() || v.length() > vc.modelField.maxLength()) {
                     if (vc.modelField.minLength() == vc.modelField.maxLength()) {
@@ -660,7 +679,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String noGreaterThan = vc.modelField.noGreaterThan().trim();
-            if (!noGreaterThan.isEmpty() && vc.request.getParameter(Constants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
+            if (!noGreaterThan.isEmpty() && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
                 String value = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, noGreaterThan));
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
@@ -679,7 +698,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String noGreaterThanMinusOne = vc.modelField.noGreaterThanMinusOne().trim();
-            if (!noGreaterThanMinusOne.isEmpty() && vc.request.getParameter(Constants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
+            if (!noGreaterThanMinusOne.isEmpty() && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
                 String value = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, noGreaterThanMinusOne));
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
@@ -698,7 +717,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String noLessThan = vc.modelField.noLessThan().trim();
-            if (!noLessThan.isEmpty() && vc.request.getParameter(Constants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
+            if (!noLessThan.isEmpty() && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
                 String value = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, noLessThan));
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) { // 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
@@ -718,8 +737,8 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String cannotBeTheSameAs = vc.modelField.cannotBeTheSameAs();
-            if (StringUtil.notBlank(cannotBeTheSameAs) && StringUtil.notBlank(vc.newValue) && vc.request.getParameter(Constants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
-                for (String field : cannotBeTheSameAs.split(Constants.DATA_SEPARATOR)) {
+            if (StringUtil.notBlank(cannotBeTheSameAs) && StringUtil.notBlank(vc.newValue) && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
+                for (String field : cannotBeTheSameAs.split(ConsoleConstants.DATA_SEPARATOR)) {
                     String fieldValue = vc.request.getParameter(field);
                     if (fieldValue == null && vc.isUpdate()) {
                         fieldValue = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, field));
@@ -836,7 +855,7 @@ public class Validator {
     }
 
     public static ConsoleContext getMasterConsoleContext() {
-        AppInfo appInfo = FrameworkContextImpl.getFrameworkContext().getAppManager().getAppInfo(Constants.MASTER_APP_NAME);
+        AppInfo appInfo = FrameworkContextImpl.getFrameworkContext().getAppManager().getAppInfo(ConsoleConstants.MASTER_APP_NAME);
         return appInfo.getAppContext().getConsoleContext();
     }
 

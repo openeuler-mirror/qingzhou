@@ -3,16 +3,14 @@ package qingzhou.app.master.service;
 import qingzhou.app.master.Main;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.Constants;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,15 +33,15 @@ public class App extends ModelBase implements AddModel {
     @ModelField(
             required = true,
             disableOnEdit = true,
-            type = FieldType.upload,
-            nameI18n = {"应用来源", "en:Application Source"},
+            type = FieldType.bool,
+            nameI18n = {"使用上传", "en:Enable Upload"},
             infoI18n = {"部署的应用可以从客户端上传，也可以从服务器端指定的位置读取。注：出于安全考虑，QingZhou 出厂设置禁用了文件上传功能，您可在“控制台安全”模块了解详情和进行相关的配置操作。",
                     "en:The deployed app can be uploaded from the client or read from a location specified on the server side. Note: For security reasons, QingZhou factory settings disable file upload, you can learn more and perform related configuration operations in the \"Console Security\" module."})
-    public String appFrom = Constants.FILE_FROM_SERVER;
+    public boolean appFrom = false;
 
     @ModelField(
             showToList = true,
-            effectiveWhen = "appFrom=" + Constants.FILE_FROM_SERVER,
+            effectiveWhen = "appFrom=false",
             required = true,
             notSupportedCharacters = "#",
             maxLength = 255,// for #NC-1418 及其它文件目录操作的，文件长度不能大于 255
@@ -54,7 +52,7 @@ public class App extends ModelBase implements AddModel {
 
     @ModelField(
             type = FieldType.file,
-            effectiveWhen = "appFrom=" + Constants.FILE_FROM_UPLOAD,
+            effectiveWhen = "appFrom=true",
             disableOnEdit = true,
             showToEdit = false,
             notSupportedCharacters = "#",
@@ -62,7 +60,7 @@ public class App extends ModelBase implements AddModel {
             nameI18n = {"上传应用", "en:Upload Application"},
             infoI18n = {"上传一个应用文件到服务器，文件须是 *.war *.ear 等 Java EE 标准类型的文件，否则可能会导致部署失败。",
                     "en:Upload an application file to the server, the file must be a Java EE standard type file such as *.war *.ear, otherwise, the deployment may fail."})
-    public String fromUpload;// 必需一致于: com.tongweb.server.util.Constants.FILE_FROM_UPLOAD
+    public String fromUpload;
 
     @ModelField(
             showToList = true,
@@ -84,8 +82,8 @@ public class App extends ModelBase implements AddModel {
     public void add(Request request, Response response) throws Exception {
         Map<String, String> p = prepareParameters(request);
         File srcFile;
-        if (Constants.FILE_FROM_UPLOAD.equals(p.get("appFrom"))) {
-            srcFile = FileUtil.newFile(p.remove(Constants.FILE_FROM_UPLOAD));
+        if (Boolean.parseBoolean(p.get("appFrom"))) {
+            srcFile = FileUtil.newFile(p.remove("fromUpload"));
         } else {
             srcFile = new File(p.get("filename"));
         }
@@ -182,7 +180,7 @@ public class App extends ModelBase implements AddModel {
                 }
             }
         }
-        appNames.remove(Constants.MASTER_APP_NAME);// master系统应用不显示
+        appNames.remove(ConsoleConstants.MASTER_APP_NAME);// master系统应用不显示
 
         List<Map<String, String>> dataInfo = response.getDataList();
         response.setTotalSize(appNames.size());
@@ -197,29 +195,6 @@ public class App extends ModelBase implements AddModel {
                 dataInfo.add(getDataStore().getDataById("app", appName));
             }
         }
-    }
-
-    @Override
-    public String validate(Request request, String fieldName) {
-        String appFrom = request.getParameter("appFrom");
-
-        if ("filename".equals(fieldName)) {
-            if (StringUtil.isBlank(fieldName)) {
-                if (Constants.FILE_FROM_SERVER.equals(appFrom)) {
-                    return null;
-                }
-            }
-        }
-
-        if ("fromUpload".equals(fieldName)) {
-            if (StringUtil.isBlank(fieldName)) {
-                if (Constants.FILE_FROM_UPLOAD.equals(appFrom)) {
-                    return null;
-                }
-            }
-        }
-
-        return super.validate(request, fieldName);
     }
 
     private AppManager getAppManager() {

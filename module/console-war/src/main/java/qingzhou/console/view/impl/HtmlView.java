@@ -6,7 +6,7 @@ import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.console.RequestImpl;
-import qingzhou.console.ConsoleConstants;
+import qingzhou.framework.console.ConsoleConstants;
 
 import javax.servlet.http.HttpServletRequest;
 

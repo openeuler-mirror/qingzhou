@@ -1,6 +1,5 @@
 package qingzhou.framework.util;
 
-import qingzhou.framework.api.Constants;
 import qingzhou.framework.pattern.Callback;
 
 import java.net.InetAddress;
@@ -88,7 +87,7 @@ public class StringUtil {
             sb.append(entry.getKey())
                     .append("=")
                     .append(entry.getValue())
-                    .append(Constants.DATA_SEPARATOR);
+                    .append(",");
         }
         return sb.substring(0, sb.length() - 1);
     }
@@ -102,7 +101,7 @@ public class StringUtil {
         if (StringUtil.isBlank(str)) {
             return map;
         }
-        String[] envArr = str.split(Constants.DATA_SEPARATOR);
+        String[] envArr = str.split(",");
         for (String env : envArr) {
             int i = env.indexOf("=");
             if (i < 0) {

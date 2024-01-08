@@ -367,9 +367,9 @@
 
 <script type="text/javascript">
     var global_setting = {
-        check2FA: '<%=Constants.LOGIN_2FA%>',
+        check2FA: '<%=ConsoleConstants.LOGIN_2FA%>',
         separa: '<%=Constants.DATA_SEPARATOR%>',
-        downdloadGroupSepara: '<%=Constants.GROUP_SEPARATOR%>',
+        downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
         locale: '<%=(I18n.getI18nLang().isZH() ? "zh-CN":"en-US")%>',
         pageLang: '<%=(I18n.getI18nLang().isZH() ? "zh_cn":"en")%>',
         pageErrorMsg: '<%=I18n.getString(Constants.MASTER_APP_NAME,"page.error")%>',
@@ -398,7 +398,7 @@
         resetPasswordUrl: '<%="/password/update"%>',
         searchHiddenTip: '<%=I18n.getString(Constants.MASTER_APP_NAME,"page.search.hidden")%>',
         passwordConfirmFailed: '<%=I18n.getString(Constants.MASTER_APP_NAME,"password.confirm.notequal")%>',
-        SINGLE_FIELD_VALIDATE_PARAM: '<%=Constants.SINGLE_FIELD_VALIDATE_PARAM%>'
+        SINGLE_FIELD_VALIDATE_PARAM: '<%=ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM%>'
     };
     var searchUrl = '<%=ConsoleUtil.encodeURL(request, response, contextPath + "/search")%>';
 </script>

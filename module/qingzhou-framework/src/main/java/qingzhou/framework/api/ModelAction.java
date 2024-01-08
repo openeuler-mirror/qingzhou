@@ -27,6 +27,4 @@ public @interface ModelAction {
     boolean showToFormBottom() default false;
 
     boolean supportBatch() default false;
-
-    boolean useAjax() default false;
 }

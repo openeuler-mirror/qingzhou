@@ -1,4 +1,4 @@
-package qingzhou.console;
+package qingzhou.framework.console;
 
 public interface ConsoleConstants { // TODO 需要清理失效的项目
     String localKeyName = "localKey";
@@ -12,6 +12,12 @@ public interface ConsoleConstants { // TODO 需要清理失效的项目
     String uploadPath = "/uploadFile";
     String deleteFilePath = "/deleteFile";
     String ACTION_NAME_INDEX = "index";
+
+    String GROUP_SEPARATOR = "/";
+    String LOGIN_2FA = "password2fa";
+    String OPTION_GROUP_SEPARATOR = "/";
+    String SINGLE_FIELD_VALIDATE_PARAM = "SINGLE_FIELD_VALIDATE_PARAM";
+    String DOWNLOAD_NAME_SEPARATOR = "/";
 
     String MANUAL_PDF = "manual";
     long DAY_MILLIS_VALUE = 24 * 60 * 60 * 1000; // 一天的毫秒值
@@ -28,4 +34,8 @@ public interface ConsoleConstants { // TODO 需要清理失效的项目
     String MODEL_NAME_app = "app";
     String MODEL_NAME_backup = "backup";
     String MODEL_NAME_password = "password";
+    String DATA_SEPARATOR = ",";
+    String LOCAL_NODE_NAME = "local";
+    String MASTER_APP_NAME = "master";
+    String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
 }

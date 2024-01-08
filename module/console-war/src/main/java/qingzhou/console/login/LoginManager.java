@@ -1,5 +1,6 @@
 package qingzhou.console.login;
 
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
@@ -199,7 +200,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static boolean check2FA(HttpServletRequest request) throws Exception {
-        return check2FA(request.getParameter(LOGIN_USER), ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(qingzhou.framework.api.Constants.LOGIN_2FA)));
+        return check2FA(request.getParameter(LOGIN_USER), ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
     }
 
     public static boolean check2FA(String user, String login2FA) throws Exception {
@@ -272,7 +273,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static String getMsg(String msg) {
-        String i18n = I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, msg);
+        String i18n = I18n.getString(ConsoleConstants.MASTER_APP_NAME, msg);
         return StringUtil.notBlank(i18n) ? i18n : msg;
     }
 
@@ -328,7 +329,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
                     response.setContentType("application/json;charset=UTF-8");
                     try (PrintWriter writer = context.resp.getWriter()) {
-                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "page.login.need") + "\"}");
+                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.login.need") + "\"}");
                         writer.flush();
                     }
                     return false;
@@ -338,9 +339,9 @@ public class LoginManager implements Filter<HttpServletContext> {
                 String toJson = JsonView.buildErrorResponse("Please enter username and password to log in to the system");
                 response.getWriter().print(toJson);
                 if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                    response.setHeader(qingzhou.framework.api.Constants.RESPONSE_HEADER_MSG_KEY, toJson);
+                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);
                 } else {
-                    response.setHeader(qingzhou.framework.api.Constants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
+                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
                 }
                 response.sendRedirect(request.getContextPath() + LOGIN_PATH);
             }

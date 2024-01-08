@@ -7,6 +7,7 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.api.*;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Validator;
 import qingzhou.framework.pattern.Visitor;
@@ -227,7 +228,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         LinkedHashMap<String, String> twoGroup = new LinkedHashMap<>();
         for (Option option : optionsManager.options()) {
             String value = option.value();
-            String[] groupData = value.split(Constants.OPTION_GROUP_SEPARATOR);
+            String[] groupData = value.split(ConsoleConstants.OPTION_GROUP_SEPARATOR);
             String desc = I18n.getString(option.i18n());
             if (groupData.length == 1) {
                 groupDes.putIfAbsent(value, desc);
@@ -236,7 +237,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
                 items.putIfAbsent(groupData[0], desc);
                 twoGroup.putIfAbsent(value, desc);
             } else if (groupData.length == 3) {
-                LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + Constants.OPTION_GROUP_SEPARATOR + groupData[1], k -> new LinkedHashMap<>());
+                LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + ConsoleConstants.OPTION_GROUP_SEPARATOR + groupData[1], k -> new LinkedHashMap<>());
                 items.put(value, desc);
             }
         }
@@ -313,7 +314,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
             }
             if (!effective) {
                 return String.format(
-                        I18n.getString(Constants.MASTER_APP_NAME, "validator.ActionEffective.notsupported"),
+                        I18n.getString(ConsoleConstants.MASTER_APP_NAME, "validator.ActionEffective.notsupported"),
                         I18n.getString(request.toString(), "model.action." + request.getModelName() + "." + request.getActionName()),// todo
                         effectiveWhen);
             }

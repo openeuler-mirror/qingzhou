@@ -184,11 +184,6 @@
                                         <%@ include file="field_type/radio.jsp" %>
                                         <%
                                         break;
-                                    case upload:
-                                        %>
-                                        <%@ include file="field_type/upload.jsp" %>
-                                        <%
-                                        break;
                                     case bool:
                                         %>
                                         <%@ include file="field_type/bool.jsp" %>

@@ -5,7 +5,7 @@ import qingzhou.framework.AppInfo;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.Constants;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
 import qingzhou.serializer.Serializer;
@@ -49,7 +49,7 @@ public class ConsoleWarHelper {
     }
 
     public static ConsoleContext getMasterConsoleContext() {
-        AppInfo appInfo = fc.getAppManager().getAppInfo(Constants.MASTER_APP_NAME);
+        AppInfo appInfo = fc.getAppManager().getAppInfo(ConsoleConstants.MASTER_APP_NAME);
         return appInfo.getAppContext().getConsoleContext();
     }
 

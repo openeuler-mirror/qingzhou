@@ -59,9 +59,9 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
                         <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;"><i class="icon icon-eye-close"></i></label>
                     </div>
                     <div class="input-control has-icon-left">
-                        <input type="text" id="<%=Constants.LOGIN_2FA%>_txt" class="form-control" placeholder="<%=I18n.getString(Constants.MASTER_APP_NAME, "page.info.2fa")%>" onchange="document.getElementById('<%=Constants.LOGIN_2FA%>').value = this.value;">
-                        <input type="hidden" id="<%=Constants.LOGIN_2FA%>" name="<%=Constants.LOGIN_2FA%>">
-                        <label for="<%=Constants.LOGIN_2FA%>_txt" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
+                        <input type="text" id="<%=ConsoleConstants.LOGIN_2FA%>_txt" class="form-control" placeholder="<%=I18n.getString(Constants.MASTER_APP_NAME, "page.info.2fa")%>" onchange="document.getElementById('<%=Constants.LOGIN_2FA%>').value = this.value;">
+                        <input type="hidden" id="<%=ConsoleConstants.LOGIN_2FA%>" name="<%=Constants.LOGIN_2FA%>">
+                        <label for="<%=ConsoleConstants.LOGIN_2FA%>_txt" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
                     </div>
                     
                     <%
@@ -136,7 +136,7 @@ for (Lang lang : Lang.values()) {
                     for (var i = 0; i < inputs.length; i++) {
                         var input = inputs[i];
                         $(input).change();
-                        if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=Constants.LOGIN_2FA%>") {
+                        if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=ConsoleConstants.LOGIN_2FA%>") {
                             $(input).val(encrypt.encryptLong2($(input).val()));
                         }
                     }

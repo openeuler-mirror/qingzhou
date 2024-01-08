@@ -1,6 +1,6 @@
 package qingzhou.console.login;
 
-import qingzhou.console.ConsoleConstants;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.AccessControl;
@@ -68,16 +68,16 @@ public class ResetPassword implements Filter<HttpServletContext> {
             String toJson = JsonView.buildErrorResponse(LoginManager.retrieveI18nMsg(msgI18nKey));
             httpServletResponse.getWriter().print(toJson);// 重定向，会丢失body里的消息
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                httpServletResponse.setHeader(qingzhou.framework.api.Constants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
+                httpServletResponse.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
             } else {
-                httpServletResponse.setHeader(qingzhou.framework.api.Constants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
+                httpServletResponse.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
             }
 
             httpServletResponse.sendRedirect(ConsoleUtil.encodeRedirectURL(httpServletRequest, httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + ConsoleConstants.MODEL_NAME_node +
-                    "/" + qingzhou.framework.api.Constants.MASTER_APP_NAME +
+                    "/" + ConsoleConstants.MASTER_APP_NAME +
                     "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +

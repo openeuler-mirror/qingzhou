@@ -286,7 +286,7 @@ public class User extends ModelBase implements AddModel {
 //    }
 //
 //    public static String checkPwd(String password, String... infos) {
-//        if (Constants.PASSWORD_FLAG.equals(password)) {
+//        if (ConsoleConstants.PASSWORD_FLAG.equals(password)) {
 //            return null;
 //        }
 //        ConsoleContext consoleContext = getMasterConsoleContext();
@@ -383,25 +383,25 @@ public class User extends ModelBase implements AddModel {
 //            oldPasswords = "";
 //        }
 //        if (StringUtil.notBlank(newPwd)) {
-//            oldPasswords += (oldPasswords.isEmpty() ? "" : Constants.DATA_SEPARATOR) + newPwd;
+//            oldPasswords += (oldPasswords.isEmpty() ? "" : ConsoleConstants.DATA_SEPARATOR) + newPwd;
 //        }
 //
 //        if (StringUtil.isBlank(repeats)) {
 //            repeats = String.valueOf(User.defLimitRepeats);
 //        }
 //        int currentLength;
-//        if (!oldPasswords.contains(Constants.DATA_SEPARATOR)) {
+//        if (!oldPasswords.contains(ConsoleConstants.DATA_SEPARATOR)) {
 //            currentLength = 1;
 //        } else {
-//            currentLength = oldPasswords.split(Constants.DATA_SEPARATOR).length;
+//            currentLength = oldPasswords.split(ConsoleConstants.DATA_SEPARATOR).length;
 //        }
 //        int limitRepeats = Integer.parseInt(repeats);
 //        int cutCount = currentLength - limitRepeats;
 //        if (cutCount > 0) {
 //            for (int i = 0; i < cutCount; i++) {
-//                int found = oldPasswords.indexOf(Constants.DATA_SEPARATOR);
+//                int found = oldPasswords.indexOf(ConsoleConstants.DATA_SEPARATOR);
 //                if (found != -1) {
-//                    oldPasswords = oldPasswords.substring(found + Constants.DATA_SEPARATOR.length());
+//                    oldPasswords = oldPasswords.substring(found + ConsoleConstants.DATA_SEPARATOR.length());
 //                }
 //            }
 //        }
@@ -461,7 +461,7 @@ public class User extends ModelBase implements AddModel {
 //
 //
 //    private boolean passwordChanged(String password) {
-//        return password != null && !Constants.PASSWORD_FLAG.equals(password);
+//        return password != null && !ConsoleConstants.PASSWORD_FLAG.equals(password);
 //    }
 //
 //    static void updateXmlProperty(String userName, String key, String val) throws Exception {
