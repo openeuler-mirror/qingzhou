@@ -37,7 +37,7 @@ public class JDKUtil {
         try {
             String ver = getJavaVersionString(javaCmd);
             return parseJavaVersion(ver);
-        } catch (Exception e) {
+        } catch (IOException e) {
             return 8;
         }
     }
@@ -52,7 +52,7 @@ public class JDKUtil {
                 ver = ver.substring(0, firstVer);
             }
             return Integer.parseInt(ver);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return 8;
         }
     }
@@ -130,7 +130,7 @@ public class JDKUtil {
         } finally {
             try {
                 start.waitFor();
-            } catch (Exception ignored) {
+            } catch (InterruptedException ignored) {
             }
             try {
                 start.destroyForcibly();

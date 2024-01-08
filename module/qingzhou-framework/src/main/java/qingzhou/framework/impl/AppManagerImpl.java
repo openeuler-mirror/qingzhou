@@ -64,7 +64,7 @@ public class AppManagerImpl implements AppManager {
                     try {
                         Field field = modelClass.getField(fieldInfo.fieldName);
                         fieldInfo.setField(field);
-                    } catch (Exception e) {
+                    } catch (NoSuchFieldException | SecurityException e) {
                         e.printStackTrace();
                     }
                 });
@@ -73,7 +73,7 @@ public class AppManagerImpl implements AppManager {
                     try {
                         Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
                         actionInfo.setJavaMethod(method);
-                    } catch (Exception e) {
+                    } catch (NoSuchMethodException | SecurityException e) {
                         e.printStackTrace();
                     }
                 });
@@ -103,10 +103,12 @@ public class AppManagerImpl implements AppManager {
         appInfoMap.put(appName, appInfo);
 
         QingZhouApp qingZhouApp = appInfo.getQingZhouApp();
-        if (qingZhouApp instanceof FrameworkContextAware) {
-            ((FrameworkContextAware) qingZhouApp).setFrameworkContext(FrameworkContextImpl.getFrameworkContext());
+        if (qingZhouApp != null) {
+            if (qingZhouApp instanceof FrameworkContextAware) {
+                ((FrameworkContextAware) qingZhouApp).setFrameworkContext(FrameworkContextImpl.getFrameworkContext());
+            }
+            qingZhouApp.start(appInfo.getAppContext());
         }
-        qingZhouApp.start(appInfo.getAppContext());
     }
 
     @Override

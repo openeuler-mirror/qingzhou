@@ -140,16 +140,16 @@ public class ObjectUtil {
             return 0; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
         }
         if (type.equals(int.class) || type.equals(Integer.class)) {
-            return Integer.parseInt(value);
+            return Integer.valueOf(value);
         }
         if (type.equals(long.class) || type.equals(Long.class)) {
-            return Long.parseLong(value);
+            return Long.valueOf(value);
         }
         if (type.equals(float.class) || type.equals(Float.class)) {
-            return Float.parseFloat(value);
+            return Float.valueOf(value);
         }
         if (type.equals(double.class) || type.equals(Double.class)) {
-            return Double.parseDouble(value);
+            return Double.valueOf(value);
         }
 
         throw new IllegalArgumentException();
@@ -161,7 +161,7 @@ public class ObjectUtil {
         }
 
         if (type.equals(boolean.class) || type.equals(Boolean.class)) {
-            return Boolean.parseBoolean(value);
+            return Boolean.valueOf(value);
         }
 
         if (type == InetAddress.class) {

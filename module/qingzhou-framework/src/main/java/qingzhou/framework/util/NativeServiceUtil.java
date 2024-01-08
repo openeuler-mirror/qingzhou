@@ -13,7 +13,7 @@ public class NativeServiceUtil {
 
             File startFilePath = FileUtil.newFile(home, "bin", "startd.sh");
             return installAsService(startFilePath.getCanonicalPath(), domain, javaHome);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throw new Exception("Failed to set auto-start server: " + domain, t);
         }
     }

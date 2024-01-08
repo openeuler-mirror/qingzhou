@@ -1,19 +1,15 @@
 package qingzhou.framework.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.regex.Pattern;
 
 public class SafeCheckerUtil {
     private static final String[] CommandInjectionRisk = new String[]{"`", "$", ";", "&", "|", "{", "}", "(", ")", "[", "]", "../", "..\\", "*", "%", "~", "^", "!"};// windows 路径会存在空格
 
     public static String hasCommandInjectionRiskWithSkip(String arg, String skips) {
-        OUT:
         for (String f : CommandInjectionRisk) { // 命令行执行注入漏洞
             if (skips != null) {
                 if (skips.contains(f)) {
-                    continue OUT;
+                    continue;
                 }
             }
             if (arg.contains(f)) {
@@ -34,7 +30,7 @@ public class SafeCheckerUtil {
         return false;
     }
 
-    private static final Pattern scriptPattern1 = Pattern.compile("vbscript:", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SCRIPT_PATTERN = Pattern.compile("vbscript:", Pattern.CASE_INSENSITIVE);
 
     public static boolean checkIsXSS(String check) {
         return !checkXssOk(check);
@@ -58,9 +54,9 @@ public class SafeCheckerUtil {
         }
 
         //onmouseover漏洞
-        List<String> onXXEventPrefixList = new ArrayList<String>();
-        onXXEventPrefixList.addAll(Arrays.asList("%20", "&nbsp;", "\"", "'", "/", "\\+"));
-        resultUrl = scriptPattern1.matcher(resultUrl).replaceAll("");
+        //List<String> onXXEventPrefixList = new ArrayList<String>();
+        //onXXEventPrefixList.addAll(Arrays.asList("%20", "&nbsp;", "\"", "'", "/", "\\+"));
+        resultUrl = SCRIPT_PATTERN.matcher(resultUrl).replaceAll("");
         if (!resultUrl.equals(check)) {
             return false;
         }

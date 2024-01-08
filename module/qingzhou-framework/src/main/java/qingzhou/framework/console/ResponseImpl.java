@@ -51,6 +51,7 @@ public class ResponseImpl implements Response, Serializable {
         return contentType;
     }
 
+    @Override
     public int getTotalSize() {
         return totalSize;
     }
@@ -70,6 +71,7 @@ public class ResponseImpl implements Response, Serializable {
         this.pageSize = pageSize;
     }
 
+    @Override
     public int getPageNum() {
         return pageNum;
     }

@@ -17,9 +17,14 @@ import javax.xml.xpath.XPathFactory;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.*;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import org.xml.sax.SAXException;
 
 public class XmlUtil {
     private static final XPath xpath;
@@ -56,7 +61,7 @@ public class XmlUtil {
                     this.doc = db.parse(inputStream);
                 }
             }
-        } catch (Exception e) {
+        } catch (IOException | ParserConfigurationException | SAXException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -69,7 +74,7 @@ public class XmlUtil {
         XmlUtil xmlUtil = new XmlUtil(file);
         Map<String, String> attributes = xmlUtil.getAttributes(nodeExpression);
         Properties properties = ObjectUtil.map2Properties(attributes);
-        return properties.size() == 0 ? null : properties;
+        return properties.isEmpty() ? null : properties;
     }
 
     public boolean containsNode(String nodeName, String attrName, String attrValue) {
@@ -378,7 +383,7 @@ public class XmlUtil {
                 // 最后修改主文件
                 FileUtil.writeFile(file, content); // 真实文件写入明文
             }
-        } catch (Throwable t) {
+        } catch (IOException | IllegalArgumentException | TransformerException | TransformerFactoryConfigurationError t) {
             throw new IllegalStateException(t);
         }
     }

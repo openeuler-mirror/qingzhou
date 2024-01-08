@@ -99,11 +99,8 @@ public class FileUtil {
 
     public static void writeFile(File file, String context) throws IOException {
         mkdirs(file.getParentFile());
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8));
+        try (FileOutputStream fos = new FileOutputStream(file); BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8))) {
             bw.write(context, 0, context.length());
-            bw.flush();
-            bw.close();
         }
     }
 

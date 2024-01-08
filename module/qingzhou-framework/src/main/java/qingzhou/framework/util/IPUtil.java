@@ -73,7 +73,7 @@ public class IPUtil {
 
                 }
             }
-        } catch (Exception e) {
+        } catch (UnknownHostException e) {
             e.printStackTrace();
             return false;
         }
@@ -275,7 +275,7 @@ public class IPUtil {
                         continue;// for #ITAIT-3712
                     }
 
-                    if (!inetAddr.isLoopbackAddress()) {
+                    if (inetAddr != null && !inetAddr.isLoopbackAddress()) {
                         if (inetAddr.isSiteLocalAddress()) {
                             if (iName.startsWith("eth") || iName.startsWith("en") // ITAIT-3024
                             ) {
@@ -307,7 +307,7 @@ public class IPUtil {
                     first.add(jdkSuppliedAddress.getHostAddress());
                 }
             }
-        } catch (Exception e) {
+        } catch (SocketException | UnknownHostException e) {
             System.out.println("Failed to getLocalInetAddress: " + e.getMessage());
         }
 

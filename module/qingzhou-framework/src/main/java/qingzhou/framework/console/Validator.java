@@ -9,9 +9,11 @@ import qingzhou.framework.util.SafeCheckerUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -420,7 +422,7 @@ public class Validator {
                     if (guessNumber < vc.modelField.min() || guessNumber > vc.modelField.max()) {
                         return String.format(vc.context.getI18N("validator.valueBetween"), vc.modelField.min(), vc.modelField.max());
                     }
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     return vc.context.getI18N("validator.number");
                 }
             }
@@ -493,7 +495,7 @@ public class Validator {
                     try {
                         dateFormat = new SimpleDateFormat(Constants.DATE_FORMAT);
                         thisDateTime = dateFormat.parse(vc.newValue);
-                    } catch (Exception e) {
+                    } catch (ParseException e) {
                         return vc.context.getI18N("validator.date-time.format");
                     }
 
@@ -598,7 +600,7 @@ public class Validator {
                     if (guessNumber < min || guessNumber > max) {
                         return String.format(vc.context.getI18N("validator.valueBetween"), min, max);
                     }
-                } catch (Exception e) {
+                } catch (NumberFormatException e) {
                     return vc.context.getI18N("validator.number");
                 }
             }
@@ -754,7 +756,7 @@ public class Validator {
                 String url = protocol + vc.newValue;
                 new URL(url);
                 return null;
-            } catch (Exception e) {
+            } catch (MalformedURLException e) {
                 return vc.context.getI18N("validation.error.centralizedConsoleUrl");
             }
 

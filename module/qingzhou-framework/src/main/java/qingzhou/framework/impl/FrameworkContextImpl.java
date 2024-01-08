@@ -54,11 +54,11 @@ public class FrameworkContextImpl implements FrameworkContext {
     @Override
     public File getDomain() {
         if (FrameworkContextImpl.domain == null) {
-            String domain = System.getProperty("qingzhou.domain");
-            if (domain == null || domain.trim().isEmpty()) {
+            String domainName = System.getProperty("qingzhou.domain");
+            if (domainName == null || domainName.trim().isEmpty()) {
                 throw new NullPointerException("qingzhou.domain");
             }
-            FrameworkContextImpl.domain = new File(domain).getAbsoluteFile();
+            FrameworkContextImpl.domain = new File(domainName).getAbsoluteFile();
         }
         return FrameworkContextImpl.domain;
     }

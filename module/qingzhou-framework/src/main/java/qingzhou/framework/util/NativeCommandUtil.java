@@ -15,11 +15,11 @@ public class NativeCommandUtil {
     public static String getPid() {
         if (NativeCommandUtil.pid == null) {
             RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
-            String pid = bean.getName();
-            if (pid.contains("@")) {
-                pid = pid.substring(0, pid.indexOf('@'));
+            String pidStr = bean.getName();
+            if (pidStr.contains("@")) {
+                pidStr = pidStr.substring(0, pidStr.indexOf('@'));
 
-                NativeCommandUtil.pid = pid;
+                NativeCommandUtil.pid = pidStr;
             }
         }
 
