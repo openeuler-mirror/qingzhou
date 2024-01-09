@@ -3,7 +3,11 @@ package qingzhou.framework.impl;
 import qingzhou.framework.AppInfo;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContextAware;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.QingZhouApp;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.impl.model.ModelInfo;
 import qingzhou.framework.impl.model.ModelManagerImpl;
 import qingzhou.framework.util.ClassLoaderUtil;
@@ -13,7 +17,12 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class AppManagerImpl implements AppManager {
     private final Map<String, AppInfo> appInfoMap = new HashMap<>();
@@ -26,7 +35,6 @@ public class AppManagerImpl implements AppManager {
         URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLib, QingZhouApp.class.getClassLoader());
         appInfo.setLoader(loader);
         ModelManager modelManager = buildModelManager(appLib, loader);
-        appContext.setModelManager(modelManager);
         appContext.setConsoleContext(new ConsoleContextImpl(modelManager));
         for (String modelName : modelManager.getModelNames()) {
             ModelBase modelInstance = modelManager.getModelInstance(modelName);

@@ -23,6 +23,4 @@ public interface AppContext {
     void addActionFilter(ActionFilter actionFilter);
 
     ConsoleContext getConsoleContext();
-
-    ModelManager getModelManager();
 }

@@ -12,7 +12,7 @@ public interface AddModel extends EditModel, DeleteModel {
             nameI18n = {"创建", "en:Create"},
             infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     default void create(Request request, Response response) throws Exception {
-        Map<String, String> properties = getAppContext().getModelManager().getModelDefaultProperties(request.getModelName());
+        Map<String, String> properties = getAppContext().getConsoleContext().getModelManager().getModelDefaultProperties(request.getModelName());
         response.addData(properties);
     }
 

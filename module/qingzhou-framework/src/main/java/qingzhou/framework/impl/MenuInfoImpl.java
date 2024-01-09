@@ -2,9 +2,10 @@ package qingzhou.framework.impl;
 
 import qingzhou.framework.api.MenuInfo;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class MenuInfoImpl implements MenuInfo {
+public class MenuInfoImpl implements MenuInfo, Serializable {
     private final String menuName;
     private String[] menuI18n;
     private String menuIcon;

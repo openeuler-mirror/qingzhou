@@ -21,7 +21,14 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 
 public class ConsoleUtil {// todo 临时工具类，后续考虑移除
     public static String ACTION_NAME_SERVER = "server";
@@ -44,7 +51,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
     }
 
     public static ModelManager getModelManager(String appName) {
-        return getAppContext(appName).getModelManager();
+        return getAppContext(appName).getConsoleContext().getModelManager();
     }
 
     static void printParentMenu(Properties menu, String targetType, String targetName, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -319,8 +326,6 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
                         effectiveWhen);
             }
         }
-        ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
-
         return null;
     }
 

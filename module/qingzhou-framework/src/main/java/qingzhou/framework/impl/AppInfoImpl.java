@@ -27,7 +27,7 @@ public class AppInfoImpl implements AppInfo {
 
     @Override
     public void invokeAction(Request request, Response response) throws Exception {
-        ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getModelManager();
+        ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getConsoleContext().getModelManager();
         boolean ok = Validator.validate(request, response, modelManager);
         if (!ok) return;
 

@@ -27,7 +27,7 @@ public interface EditModel extends ShowModel {
 
     default Map<String, String> prepareParameters(Request request) {
         Map<String, String> properties = new HashMap<>();
-        String[] fieldNames = getAppContext().getModelManager().getFieldNames(request.getModelName());
+        String[] fieldNames = getAppContext().getConsoleContext().getModelManager().getFieldNames(request.getModelName());
         for (String fieldName : fieldNames) {
             String value = request.getParameter(fieldName);
             if (value != null) {

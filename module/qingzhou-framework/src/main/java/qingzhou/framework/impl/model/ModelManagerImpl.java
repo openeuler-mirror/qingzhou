@@ -2,27 +2,35 @@ package qingzhou.framework.impl.model;
 
 import qingzhou.bytecode.AnnotationReader;
 import qingzhou.bytecode.BytecodeService;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.Group;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Options;
 import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.pattern.Visitor;
 
 import java.io.File;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class ModelManagerImpl implements ModelManager {
+public class ModelManagerImpl implements ModelManager, Serializable {
     private Map<String, ModelInfo> modelInfoMap;
 
     // 以下属性是为性能缓存
     private final Map<String, Map<String, String>> modelDefaultProperties = new HashMap<>();
-
-    public void close() throws Exception {
-        modelDefaultProperties.clear();
-        modelInfoMap.clear();
-    }
 
     public void initDefaultProperties() throws Exception {
         // 初始化不可变的对象

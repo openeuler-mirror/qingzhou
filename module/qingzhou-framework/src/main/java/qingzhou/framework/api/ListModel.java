@@ -33,7 +33,7 @@ public interface ListModel extends ShowModel {
         response.setPageNum(pageNum);
 
         String[] dataIdInPage = dataStore.getDataIdInPage(modelName, pageSize, pageNum).toArray(new String[0]);
-        ModelManager manager = getAppContext().getModelManager();
+        ModelManager manager = getAppContext().getConsoleContext().getModelManager();
         String[] fieldNamesToList = Arrays.stream(manager.getFieldNames(modelName)).filter(s -> manager.getModelField(modelName, s).showToList()).toArray(String[]::new);
         List<Map<String, String>> result = dataStore.getDataFieldByIds(modelName, dataIdInPage, fieldNamesToList);
         for (Map<String, String> data : result) {
