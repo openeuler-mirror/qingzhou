@@ -17,7 +17,7 @@
         <table class="table table-hover">
             <tr>
                 <td>
-                    <%=I18n.getString(Constants.MASTER_APP_NAME, "page.status")%>:
+                    <%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.status")%>:
                 </td>
                 <td>
                     <%=qzResponse.isSuccess()%>
@@ -25,7 +25,7 @@
             </tr>
             <tr>
                 <td>
-                    <%=I18n.getString(Constants.MASTER_APP_NAME, "page.msg")%>:
+                    <%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.msg")%>:
                 </td>
                 <td>
                     <%=qzResponse.getMsg()%>
@@ -88,7 +88,7 @@
                 <a href="javascript:void(0);" btn-type="goback"
                    onclick="tw.goback(this);" class="btn">
                     <!--<i class="icon icon-undo"></i>-->
-                    <%=I18n.getString(Constants.MASTER_APP_NAME, "page.cancel")%>
+                    <%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.cancel")%>
                 </a>
             </div>
         </div>

@@ -13,7 +13,7 @@ if(fieldValue == null) {
 	<input type="hidden" name="<%=fieldName%>" value='<%=fieldValue%>'>
 	<ul class="sortable">
 		<%
-		String[] vals = (fieldValue == null ? "" : fieldValue).split(Constants.DATA_SEPARATOR);
+		String[] vals = (fieldValue == null ? "" : fieldValue).split(ConsoleConstants.DATA_SEPARATOR);
 		for (int ii = 0; ii < vals.length; ii++) {
 			%>
 			<li class="droptarget" draggable="true">
@@ -46,7 +46,7 @@ if(fieldValue == null) {
 		<li>
 			<a href="javascript:void(0);" class="<%=!"".equals(readonly) ? "read-only" : ""%>" onclick="addRow(this, <%=!"".equals(readonly)%>);">
 				<i class="icon icon-plus" style="font-size:10px;"></i>
-				<%=I18n.getString(Constants.MASTER_APP_NAME, "page.info.add")%>
+				<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.info.add")%>
 			</a>
 		</li>
 	</ul>

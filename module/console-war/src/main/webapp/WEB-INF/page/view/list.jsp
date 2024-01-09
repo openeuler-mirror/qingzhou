@@ -86,7 +86,7 @@
                         <a class="btn"
                            href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
                            form="filterForm">
-                            <i class="icon icon-search"></i> <%=I18n.getString(Constants.MASTER_APP_NAME, "page.filter")%>
+                            <i class="icon icon-search"></i> <%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.filter")%>
                         </a>
                     </span>
                 </div>
@@ -146,7 +146,7 @@
                                 <%
                                 if (isAjaxAction) {
                                     out.print("act-ajax='true' act-confirm='" +
-                                            String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
+                                            String.format(I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.operationConfirm"),
                                                     I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey),
                                                     I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName())) + " ?' ");
                                 }
@@ -174,7 +174,7 @@
                     <%
                 }
                 %>
-                <th><%=I18n.getString(Constants.MASTER_APP_NAME, "page.list.order")%></th>
+                <th><%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.list.order")%></th>
                 <%
                 for (Integer i : indexToShow) {
                     String name = modelManager.getFieldName(qzRequest.getModelName(), i);
@@ -184,7 +184,7 @@
                     <%
                 }
                 if (needOperationColumn) {
-                    out.print("<th>" + I18n.getString(Constants.MASTER_APP_NAME, "page.action") + "</th>");
+                    out.print("<th>" + I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.action") + "</th>");
                 }
                 %>
             </tr>
@@ -195,7 +195,7 @@
                 if (modelDataList.isEmpty()) {
                     String dataEmpty = "<tr><td colspan='" + (indexToShow.size() + (needOperationColumn ? 2 : 1)) + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
-                            + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getString(Constants.MASTER_APP_NAME, "page.none") + "</span></td>";
+                            + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.none") + "</span></td>";
                     out.print(dataEmpty);
                 } else {
                     int listOrder = (pageNum - 1) * pageSize;
@@ -327,7 +327,7 @@
                                             }
                                             if (isAjaxAction) {
                                                 out.print("act-ajax='true' act-confirm='" +
-                                                        String.format(I18n.getString(Constants.MASTER_APP_NAME, "page.operationConfirm"),
+                                                        String.format(I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.operationConfirm"),
                                                                 I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey),
                                                                 I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName())) + " " + originUnEncodedId
                                                         + " ?' ");
