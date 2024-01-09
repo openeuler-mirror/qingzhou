@@ -3,12 +3,13 @@ package qingzhou.framework.impl.model;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelBase;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ModelInfo {
+public class ModelInfo implements Serializable {
     public final Model model;
     public final Map<String, FieldInfo> fieldInfoMap;
     public final Map<String, ActionInfo> actionInfoMap;

@@ -1,4 +1,4 @@
-package qingzhou.framework.bytecode;
+package qingzhou.framework.impl.bytecode;
 
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;

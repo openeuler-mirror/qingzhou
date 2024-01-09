@@ -1,9 +1,9 @@
-package qingzhou.framework.bytecode.impl;
+package qingzhou.framework.impl.bytecode.impl;
 
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelField;
-import qingzhou.framework.bytecode.AnnotationReader;
+import qingzhou.framework.impl.bytecode.AnnotationReader;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -78,6 +78,8 @@ public class AnnotationReaderImpl implements AnnotationReader {
                 if (action != null) {
                     return action;
                 }
+
+                break;
             }
         }
 

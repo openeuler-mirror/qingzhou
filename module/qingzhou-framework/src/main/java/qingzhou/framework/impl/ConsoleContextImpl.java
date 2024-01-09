@@ -10,17 +10,21 @@ import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.util.StringUtil;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ConsoleContextImpl implements ConsoleContext {
+public class ConsoleContextImpl implements ConsoleContext, Serializable {
     private final Map<String, String[]> langMap = new HashMap<>();
     private final Map<String, MenuInfoImpl> menuInfoMap = new HashMap<>();
-    private final ModelManager modelManager;
+    private ModelManager modelManager;
 
-    public ConsoleContextImpl(ModelManager modelManager) {
+    public void setModelManager(ModelManager modelManager) {
         this.modelManager = modelManager;
+    }
+
+    public void init() {
         initI18N();
     }
 

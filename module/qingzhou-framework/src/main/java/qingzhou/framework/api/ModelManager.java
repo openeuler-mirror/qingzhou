@@ -7,8 +7,6 @@ public interface ModelManager {
 
     String getModelName(Class<?> modelClass);
 
-    Class<?> getModelClass(String modelName);
-
     ModelBase getModelInstance(String modelName);
 
     Map<String, String> getModelDefaultProperties(String modelName);

@@ -35,7 +35,9 @@ public class AppManagerImpl implements AppManager {
         URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLib, QingZhouApp.class.getClassLoader());
         appInfo.setLoader(loader);
         ModelManager modelManager = buildModelManager(appLib, loader);
-        appContext.setConsoleContext(new ConsoleContextImpl(modelManager));
+        ConsoleContextImpl consoleContext = new ConsoleContextImpl();
+        consoleContext.setModelManager(modelManager);
+        appContext.setConsoleContext(consoleContext);
         for (String modelName : modelManager.getModelNames()) {
             ModelBase modelInstance = modelManager.getModelInstance(modelName);
             modelInstance.setAppContext(appContext);

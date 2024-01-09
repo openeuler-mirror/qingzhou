@@ -212,10 +212,6 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         if (modelManager == null) {
             return new ArrayList<>();
         }
-        Class<?> modelClass = modelManager.getModelClass(modelName);
-        if (modelClass == null) {
-            return new ArrayList<>();
-        }
 
         Request qzRequest = buildRequest(request, targetType, targetName, appName, modelName, "list", null);
         ResponseImpl response = new ResponseImpl();

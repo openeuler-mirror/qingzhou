@@ -117,7 +117,7 @@ public class Validator {
             return null;
         }
 
-        ModelBase tempModel = (ModelBase) modelManager.getModelClass(modelName).newInstance();
+        ModelBase tempModel = modelManager.getModelInstance(modelName);
 
         try {
             Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);

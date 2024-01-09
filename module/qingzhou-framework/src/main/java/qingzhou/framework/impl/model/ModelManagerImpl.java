@@ -7,8 +7,8 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Options;
-import qingzhou.framework.bytecode.AnnotationReader;
-import qingzhou.framework.bytecode.impl.BytecodeImpl;
+import qingzhou.framework.impl.bytecode.AnnotationReader;
+import qingzhou.framework.impl.bytecode.impl.BytecodeImpl;
 import qingzhou.framework.pattern.Visitor;
 
 import java.io.File;
@@ -99,11 +99,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     private List<FieldInfo> initModelFieldInfo(String className, AnnotationReader annotation) throws Exception {
         List<FieldInfo> fieldInfoList = new ArrayList<>();
-        annotation.getFieldAnnotations(className).forEach((s, field) -> {
-
-            fieldInfoList.add(new FieldInfo(field, s));
-
-        });
+        annotation.getFieldAnnotations(className).forEach((s, field) -> fieldInfoList.add(new FieldInfo(field, s)));
         return fieldInfoList;
     }
 
@@ -125,11 +121,6 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     @Override
     public Model getModel(String modelName) {
         return getModelInfo(modelName).model;
-    }
-
-    @Override
-    public Class<?> getModelClass(String modelName) {
-        return getModelInfo(modelName).getClazz();
     }
 
     @Override
