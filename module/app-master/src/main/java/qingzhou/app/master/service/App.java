@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import qingzhou.framework.api.ModelAction;
 
 @Model(name = "app", icon = "rss",
         menuName = "Service", menuOrder = 1,
