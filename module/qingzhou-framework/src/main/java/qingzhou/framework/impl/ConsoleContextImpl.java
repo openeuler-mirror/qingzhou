@@ -100,12 +100,16 @@ public class ConsoleContextImpl implements ConsoleContext {
     }
 
     public String getI18N(Lang lang, String key, Object... args) {
-        String s = langMap.get(key)[lang.ordinal()];
-        if (s != null && args != null && args.length > 0) {
-            return String.format(s, args);
+        String[] values = langMap.get(key);
+        if (values != null) {
+            String s = values[lang.ordinal()];
+            if (s != null && args != null && args.length > 0) {
+                return String.format(s, args);
+            }
+            return s;
         }
+        return null;
 
-        return s;
     }
 
     @Override
