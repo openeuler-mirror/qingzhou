@@ -54,7 +54,6 @@
                 <include>${project.groupId}:qingzhou-remote</include>
                 <include>${project.groupId}:qingzhou-jnet</include>
                 <include>${project.groupId}:qingzhou-app</include>
-                <include>${project.groupId}:qingzhou-bytecode</include>
                 <include>${project.groupId}:qingzhou-httpserver</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>

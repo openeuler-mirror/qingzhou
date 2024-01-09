@@ -1,4 +1,4 @@
-package qingzhou.bytecode;
+package qingzhou.framework.bytecode;
 
 import java.io.File;
 

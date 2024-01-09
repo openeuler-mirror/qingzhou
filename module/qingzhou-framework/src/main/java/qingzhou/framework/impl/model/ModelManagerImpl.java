@@ -1,7 +1,5 @@
 package qingzhou.framework.impl.model;
 
-import qingzhou.bytecode.AnnotationReader;
-import qingzhou.bytecode.BytecodeService;
 import qingzhou.framework.api.Group;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
@@ -9,7 +7,8 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Options;
-import qingzhou.framework.impl.FrameworkContextImpl;
+import qingzhou.framework.bytecode.AnnotationReader;
+import qingzhou.framework.bytecode.impl.BytecodeImpl;
 import qingzhou.framework.pattern.Visitor;
 
 import java.io.File;
@@ -62,33 +61,28 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     public void init(File[] appLib, URLClassLoader loader) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
-        AnnotationReader annotation = FrameworkContextImpl.getFrameworkContext()
-                .getService(BytecodeService.class).createAnnotationReader(appLib, loader);
+        AnnotationReader annotation = new BytecodeImpl().createAnnotationReader(appLib, loader);
         for (File file : appLib) {
             visitClassName(file, className -> {
-                Object[] classAnnotations = annotation.getClassAnnotations(className);
-                for (Object classAnnotation : classAnnotations) {
-                    if (classAnnotation instanceof Model) {
-                        Model model = (Model) classAnnotation;
-
-                        ModelInfo modelInfo;
-                        try {
-                            modelInfo = new ModelInfo(model,
-                                    initModelFieldInfo(className, annotation),
-                                    initModelActionInfo(className, annotation),
-                                    className);
-                        } catch (Throwable e) {
-                            e.printStackTrace();
-                            continue;
-                        }
-
-                        ModelInfo already = tempMap.put(model.name(), modelInfo);
-                        if (already != null) {
-                            new IllegalArgumentException("Duplicate model name: " + model.name()).printStackTrace();
-                        }
-
-                        break;
-                    }
+                Model model = annotation.getClassAnnotations(className);
+                if (model == null) {
+                    return false;
+                }
+                ModelInfo modelInfo = null;
+                try {
+                    modelInfo = new ModelInfo(model,
+                            initModelFieldInfo(className, annotation),
+                            initModelActionInfo(className, annotation),
+                            className);
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+                if (modelInfo == null) {
+                    return false;
+                }
+                ModelInfo already = tempMap.put(model.name(), modelInfo);
+                if (already != null) {
+                    new IllegalArgumentException("Duplicate model name: " + model.name()).printStackTrace();
                 }
 
                 return false;
@@ -99,26 +93,16 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     private List<ActionInfo> initModelActionInfo(String className, AnnotationReader annotation) throws Exception {
         List<ActionInfo> actionInfoList = new ArrayList<>();
-        annotation.getMethodAnnotations(className).forEach((s, objects) -> {
-            for (Object object : objects) {
-                if (object instanceof ModelAction) {
-                    actionInfoList.add(new ActionInfo((ModelAction) object, s));
-                    break;
-                }
-            }
-        });
+        annotation.getMethodAnnotations(className).forEach((s, action) -> actionInfoList.add(new ActionInfo(action, s)));
         return actionInfoList;
     }
 
     private List<FieldInfo> initModelFieldInfo(String className, AnnotationReader annotation) throws Exception {
         List<FieldInfo> fieldInfoList = new ArrayList<>();
-        annotation.getFieldAnnotations(className).forEach((s, objects) -> {
-            for (Object object : objects) {
-                if (object instanceof ModelField) {
-                    fieldInfoList.add(new FieldInfo((ModelField) object, s));
-                    break;
-                }
-            }
+        annotation.getFieldAnnotations(className).forEach((s, field) -> {
+
+            fieldInfoList.add(new FieldInfo(field, s));
+
         });
         return fieldInfoList;
     }

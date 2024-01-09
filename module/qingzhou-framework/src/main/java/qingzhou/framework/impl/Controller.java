@@ -4,7 +4,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import qingzhou.bytecode.BytecodeService;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
@@ -69,7 +68,7 @@ public class Controller implements BundleActivator {
 
         @Override
         public void exec() {
-            Class<?>[] serviceTypes = {LoggerService.class, BytecodeService.class};
+            Class<?>[] serviceTypes = {LoggerService.class};
             for (Class serviceType : serviceTypes) {
                 ServiceReference<?> reference = context.getServiceReference(serviceType);
                 Object serviceObj = context.getService(reference);
