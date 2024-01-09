@@ -7,8 +7,6 @@ public interface ConsoleConstants { // TODO 需要清理失效的项目
     String remotePublicKeyName = "remotePublicKey";
 
     String QZ_ = "QZ-";
-    String remoteApp = "/remote";
-    String remotePath = "/callRemote";
     String uploadPath = "/uploadFile";
     String deleteFilePath = "/deleteFile";
     String ACTION_NAME_INDEX = "index";

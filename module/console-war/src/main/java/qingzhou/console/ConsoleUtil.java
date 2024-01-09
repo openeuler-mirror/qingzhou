@@ -407,27 +407,6 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         return isEdit ? "update" : "add";// 兜底
     }
 
-    public static List<ModelBase> convertMapToModelBase(Request request, Response response) {
-        List<ModelBase> modelBases = new ArrayList<>();
-        final List<Map<String, String>> models = response.getDataList();
-        if (models != null) {
-            final ModelManager modelManager = getModelManager(request.getAppName());
-            if (modelManager == null) {
-                return null;
-            }
-            for (Map<String, String> model : models) {
-                ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
-                try {
-                    ObjectUtil.setObjectValues(modelInstance, model);
-                    modelBases.add(modelInstance);
-                } catch (Exception ignored) {
-                }
-            }
-        }
-
-        return modelBases;
-    }
-
     /********************* 批量操作 start ************************/
     //公共操作列表
     public static boolean needOperationColumn(Request request, Response response, HttpSession session) throws Exception {
