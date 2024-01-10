@@ -54,8 +54,8 @@ public class ServerXml { // todo 考虑由 admin service 来取代
         return new XmlUtil(this.xmlFile).getAttributesByKey("/root/console/nodes/node", "id", id);
     }
 
-    public Map<String, String> getInstanceById(String id) {
-        return new XmlUtil(this.xmlFile).getAttributesByKey("/root/console/instances/instance", "id", id);
+    public Map<String, String> getClusterById(String id) {
+        return new XmlUtil(this.xmlFile).getAttributesByKey("/root/console/clusters/cluster", "id", id);
     }
 
     public boolean isDisableUpload() {

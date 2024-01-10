@@ -267,14 +267,6 @@ $(document).ready(function () {
     setOrReset();
     // NC-1616 菜单展示优化
     var menuLevel1 = $("ul.sidebar-menu>li", $(".content-box>ul>li[local='true']"));
-    if (menuLevel1.length === 1) {
-        if ($($("a", menuLevel1)[0]).attr("href").indexOf("rest/html/<%=Constants.MODEL_NAME_home%>/<%=ActionName.home.name()%>")) {
-            $(".tab-box>ul>li[central='true']").removeClass("inactive").addClass("active");
-            $(".content-box>ul>li[central='true']").removeClass("inactive").addClass("active");
-            $(".tab-box>ul>li[local='true']").removeClass("active").addClass("inactive");
-            $(".content-box>ul>li[local='true']").removeClass("active").addClass("inactive");
-        }
-    }
     $(".sidebar-menu>li").hover(function () {
         if ($(document.body).hasClass("sidebar-collapse")) {
             $(".main-sidebar .sidebar").removeClass("sidebar-scroll");

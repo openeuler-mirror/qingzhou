@@ -1,23 +1,35 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.MenuInfo;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.util.StringUtil;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ConsoleContextImpl implements ConsoleContext {
-    private final Map<Lang, Map<String, String>> langMap = new HashMap<>();
+public class ConsoleContextImpl implements ConsoleContext, Serializable {
+    private final Map<String, String[]> langMap = new HashMap<>();
     private final Map<String, MenuInfoImpl> menuInfoMap = new HashMap<>();
+    private ModelManager modelManager;
 
-    public ConsoleContextImpl(ModelManager modelManager) {
-        initI18N(modelManager);
+    public void setModelManager(ModelManager modelManager) {
+        this.modelManager = modelManager;
+        init();
     }
 
-    private void initI18N(ModelManager modelManager) {
+    public void init() {
+        initI18N();
+    }
+
+    private void initI18N() {
         for (String modelName : modelManager.getModelNames()) {
             final Model model = modelManager.getModel(modelName);
 
@@ -51,6 +63,11 @@ public class ConsoleContextImpl implements ConsoleContext {
     }
 
     @Override
+    public ModelManager getModelManager() {
+        return modelManager;
+    }
+
+    @Override
     public void setZhTrMap(char zh, char tr) {
         I18n.setZhTrMap(zh, tr);
     }
@@ -64,15 +81,18 @@ public class ConsoleContextImpl implements ConsoleContext {
         Map<Lang, String> i18nMap = Lang.parseI18n(i18n);
         for (Lang lang : i18nMap.keySet()) {
             String val = i18nMap.get(lang);
-            String old = langMap.computeIfAbsent(lang, lang1 -> new HashMap<>()).put(key, val);
-            if (old != null) { // 提醒更正会被覆盖的key
+            String[] indexedData = langMap.computeIfAbsent(key, s -> new String[Lang.values().length]);
+            String old = indexedData[lang.ordinal()];
+            if (old == null) {
+                indexedData[lang.ordinal()] = val;
+            } else { // 提醒更正会被覆盖的key
                 new IllegalArgumentException("Duplicate i18n key: " + key + ", old: " + old + ", new: " + val).printStackTrace();
             }
         }
 
         // 防止将英文写成中文的情况发生
         if (checkContainChinese) {
-            String val = langMap.get(Lang.en).get(key);
+            String val = langMap.get(key)[Lang.en.ordinal()];
             if (StringUtil.containsZHChar(val)) {
                 new IllegalArgumentException("Please do not use Chinese in English: " + key).printStackTrace();
             }
@@ -85,12 +105,16 @@ public class ConsoleContextImpl implements ConsoleContext {
     }
 
     public String getI18N(Lang lang, String key, Object... args) {
-        String s = langMap.get(lang).get(key);
-        if (s != null && args != null && args.length > 0) {
-            return String.format(s, args);
+        String[] values = langMap.get(key);
+        if (values != null) {
+            String s = values[lang.ordinal()];
+            if (s != null && args != null && args.length > 0) {
+                return String.format(s, args);
+            }
+            return s;
         }
+        return null;
 
-        return s;
     }
 
     @Override

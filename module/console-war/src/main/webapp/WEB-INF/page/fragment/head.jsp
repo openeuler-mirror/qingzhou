@@ -15,13 +15,14 @@
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.impl.*" %>
 <%@ page import="qingzhou.console.sdk.*" %>
+<%@ page import="qingzhou.console.page.PageBackendService" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
     Request qzRequest = (Request) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
-    String initAppName = qzRequest == null ? Constants.MASTER_APP_NAME : qzRequest.getAppName();
-    ModelManager modelManager = ConsoleUtil.getModelManager(initAppName);
+    String initAppName = qzRequest == null ? ConsoleConstants.MASTER_APP_NAME : qzRequest.getAppName();
+    ModelManager modelManager = PageBackendService.getModelManager(initAppName);
 %>
 
 <script type="text/javascript">
@@ -80,7 +81,7 @@
 
 <%--公用“通知”消息提示--%>
 <%
-    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, TargetType.node.name(), Constants.LOCAL_NODE_NAME, Constants.MASTER_APP_NAME, "notice");
+    List<Map<String, String>> noticeModes = StringUtil.isBlank(currentUser) ? new ArrayList<>() : ConsoleUtil.listModels(request, TargetType.node.name(), ConsoleConstants.LOCAL_NODE_NAME, ConsoleConstants.MASTER_APP_NAME, "notice");
     StringBuilder noticeBuilder = new StringBuilder();
     for (int jj = 0; jj < noticeModes.size(); jj++) {
         Map<String, String> mb = noticeModes.get(jj);
@@ -91,7 +92,7 @@
             noticeBuilder.append("<br>");
         }
     }
-    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():TargetType.node.name(), Constants.MASTER_APP_NAME +"/notice/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
+    if (AccessControl.canAccess(qzRequest!=null?qzRequest.getTargetType():TargetType.node.name(), ConsoleConstants.MASTER_APP_NAME +"/notice/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
         int noticeSize = noticeModes.size();
 %>
 <script type="text/javascript">
@@ -130,7 +131,7 @@
 %>
 <script type="text/javascript">
     $(document).ready(function () {
-        var noticeIndex = showInfo("<%=(I18n.getString(initAppName, "model." + qzRequest.getModelName()) + ": " + msg)%> | <%=(I18n.getString(Constants.MASTER_APP_NAME,"page.go"))%> <%=(I18n.getString(Constants.MASTER_APP_NAME, "model.notice"))%>");
+        var noticeIndex = showInfo("<%=(I18n.getString(initAppName, "model." + qzRequest.getModelName()) + ": " + msg)%> | <%=(PageBackendService.getMasterAppI18NString("page.go"))%> <%=(PageBackendService.getMasterAppI18NString( "model.notice"))%>");
         // 记录最后一次通知弹窗
         try {
             $(getActiveTabContent()).attr("showInfoIndex", noticeIndex);

@@ -1,27 +1,35 @@
 package qingzhou.framework.impl.model;
 
-import qingzhou.bytecode.AnnotationReader;
-import qingzhou.bytecode.BytecodeService;
-import qingzhou.framework.api.*;
-import qingzhou.framework.impl.FrameworkContextImpl;
+import qingzhou.framework.api.Group;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Options;
+import qingzhou.framework.impl.bytecode.AnnotationReader;
+import qingzhou.framework.impl.bytecode.impl.BytecodeImpl;
 import qingzhou.framework.pattern.Visitor;
 
 import java.io.File;
+import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class ModelManagerImpl implements ModelManager {
+public class ModelManagerImpl implements ModelManager, Serializable {
     private Map<String, ModelInfo> modelInfoMap;
 
     // 以下属性是为性能缓存
     private final Map<String, Map<String, String>> modelDefaultProperties = new HashMap<>();
-
-    public void close() throws Exception {
-        modelDefaultProperties.clear();
-        modelInfoMap.clear();
-    }
 
     public void initDefaultProperties() throws Exception {
         // 初始化不可变的对象
@@ -51,35 +59,30 @@ public class ModelManagerImpl implements ModelManager {
         }
     }
 
-    public void init(File[] appLib) throws Exception {
+    public void init(File[] appLib, URLClassLoader loader) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
-        AnnotationReader annotation = FrameworkContextImpl.getFrameworkContext()
-                .getService(BytecodeService.class).createAnnotationReader(appLib, Model.class.getClassLoader());
+        AnnotationReader annotation = new BytecodeImpl().createAnnotationReader(appLib, loader);
         for (File file : appLib) {
             visitClassName(file, className -> {
-                Object[] classAnnotations = annotation.getClassAnnotations(className);
-                for (Object classAnnotation : classAnnotations) {
-                    if (classAnnotation instanceof Model) {
-                        Model model = (Model) classAnnotation;
-
-                        ModelInfo modelInfo;
-                        try {
-                            modelInfo = new ModelInfo(model,
-                                    initModelFieldInfo(className, annotation),
-                                    initModelActionInfo(className, annotation),
-                                    className);
-                        } catch (Throwable e) {
-                            e.printStackTrace();
-                            continue;
-                        }
-
-                        ModelInfo already = tempMap.put(model.name(), modelInfo);
-                        if (already != null) {
-                            new IllegalArgumentException("Duplicate model name: " + model.name()).printStackTrace();
-                        }
-
-                        break;
-                    }
+                Model model = annotation.getClassAnnotations(className);
+                if (model == null) {
+                    return false;
+                }
+                ModelInfo modelInfo = null;
+                try {
+                    modelInfo = new ModelInfo(model,
+                            initModelFieldInfo(className, annotation),
+                            initModelActionInfo(className, annotation),
+                            className);
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+                if (modelInfo == null) {
+                    return false;
+                }
+                ModelInfo already = tempMap.put(model.name(), modelInfo);
+                if (already != null) {
+                    new IllegalArgumentException("Duplicate model name: " + model.name()).printStackTrace();
                 }
 
                 return false;
@@ -90,27 +93,13 @@ public class ModelManagerImpl implements ModelManager {
 
     private List<ActionInfo> initModelActionInfo(String className, AnnotationReader annotation) throws Exception {
         List<ActionInfo> actionInfoList = new ArrayList<>();
-        annotation.getMethodAnnotations(className).forEach((s, objects) -> {
-            for (Object object : objects) {
-                if (object instanceof ModelAction) {
-                    actionInfoList.add(new ActionInfo((ModelAction) object, s));
-                    break;
-                }
-            }
-        });
+        annotation.getMethodAnnotations(className).forEach((s, action) -> actionInfoList.add(new ActionInfo(action, s)));
         return actionInfoList;
     }
 
     private List<FieldInfo> initModelFieldInfo(String className, AnnotationReader annotation) throws Exception {
         List<FieldInfo> fieldInfoList = new ArrayList<>();
-        annotation.getFieldAnnotations(className).forEach((s, objects) -> {
-            for (Object object : objects) {
-                if (object instanceof ModelField) {
-                    fieldInfoList.add(new FieldInfo((ModelField) object, s));
-                    break;
-                }
-            }
-        });
+        annotation.getFieldAnnotations(className).forEach((s, field) -> fieldInfoList.add(new FieldInfo(field, s)));
         return fieldInfoList;
     }
 
@@ -132,11 +121,6 @@ public class ModelManagerImpl implements ModelManager {
     @Override
     public Model getModel(String modelName) {
         return getModelInfo(modelName).model;
-    }
-
-    @Override
-    public Class<?> getModelClass(String modelName) {
-        return getModelInfo(modelName).getClazz();
     }
 
     @Override

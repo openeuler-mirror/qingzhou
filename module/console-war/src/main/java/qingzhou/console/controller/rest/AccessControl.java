@@ -2,6 +2,7 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.api.AddModel;
@@ -12,7 +13,7 @@ import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.console.ConsoleConstants;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,8 +29,8 @@ public class AccessControl implements Filter<RestContext> {
     // 开放的model，不需要检测权限
     // NOTE: 为方便自动测试集使用，此处设置为 public
     public static final String[] commonActions = {
-            qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/index",
-            qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/home"};
+            ConsoleConstants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/index",
+            ConsoleConstants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/home"};
 
     private static final List<String> generalUris = new ArrayList<String>() {{
         for (String commonAction : commonActions) {
@@ -134,7 +135,7 @@ public class AccessControl implements Filter<RestContext> {
 //            return new Model[0];
 //        }
 
-        ModelManager modelManager = ConsoleUtil.getModelManager(appName);
+        ModelManager modelManager = PageBackendService.getModelManager(appName);
         if (modelManager == null) {
             return new Model[0];
         }

@@ -110,7 +110,7 @@ public class ThreadUtil {
                                 list.add(map);
                             }
                         }
-                        Comparator<Map<String, String>> comparing = Comparator.comparing(p -> Double.parseDouble(p.get("cpuLoad")));
+                        Comparator<Map<String, String>> comparing = Comparator.comparing(p -> Double.valueOf(p.get("cpuLoad")));
                         list.sort(comparing.reversed());
                         return list;
                     }

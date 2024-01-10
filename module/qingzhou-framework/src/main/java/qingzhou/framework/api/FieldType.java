@@ -17,7 +17,6 @@ public enum FieldType {
     checkbox,           // 复选框
     sortableCheckbox,   // 可排序复选框
     file,               // 单文件上传
-    upload,             // 选择是否上传文件
     selectCharset,      // 选择支持的字符集中的一个
     kv,                 // key-value 输入框
     datetime,           // 日期选择

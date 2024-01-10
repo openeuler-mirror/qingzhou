@@ -2,9 +2,10 @@ package qingzhou.framework.impl;
 
 import qingzhou.framework.api.MenuInfo;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class MenuInfoImpl implements MenuInfo {
+public class MenuInfoImpl implements MenuInfo, Serializable {
     private final String menuName;
     private String[] menuI18n;
     private String menuIcon;
@@ -14,10 +15,12 @@ public class MenuInfoImpl implements MenuInfo {
         this.menuName = menuName;
     }
 
+    @Override
     public String getMenuName() {
         return menuName;
     }
 
+    @Override
     public String[] getMenuI18n() {
         return menuI18n;
     }
@@ -26,6 +29,7 @@ public class MenuInfoImpl implements MenuInfo {
         this.menuI18n = menuI18n;
     }
 
+    @Override
     public String getMenuIcon() {
         return menuIcon;
     }
@@ -34,6 +38,7 @@ public class MenuInfoImpl implements MenuInfo {
         this.menuIcon = menuIcon;
     }
 
+    @Override
     public int getMenuOrder() {
         return menuOrder;
     }

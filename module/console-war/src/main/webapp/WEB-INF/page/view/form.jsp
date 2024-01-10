@@ -113,7 +113,7 @@
                     }
 
                     String fieldValue = model.get(fieldName);// 需要在 isFieldReadOnly 之后，原因是 license 限制的 5 个并发会在其中被修改，总之最后读取值是最新的最准确的
-                    List<String> fieldValues = fieldValue == null ? new ArrayList<>() : Arrays.asList(fieldValue.split(Constants.DATA_SEPARATOR));
+                    List<String> fieldValues = fieldValue == null ? new ArrayList<>() : Arrays.asList(fieldValue.split(ConsoleConstants.DATA_SEPARATOR));
                     if (fieldValue == null) {
                         fieldValue = "";
                     }
@@ -182,11 +182,6 @@
                                         break;
                                     case radio:%>
                                         <%@ include file="field_type/radio.jsp" %>
-                                        <%
-                                        break;
-                                    case upload:
-                                        %>
-                                        <%@ include file="field_type/upload.jsp" %>
                                         <%
                                         break;
                                     case bool:
@@ -276,7 +271,7 @@
                 %>
                 <a href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>"
                    btn-type="goback" class="btn">
-                    <%=I18n.getString(Constants.MASTER_APP_NAME, "page.cancel")%>
+                    <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
                 </a>
                 <%
             }

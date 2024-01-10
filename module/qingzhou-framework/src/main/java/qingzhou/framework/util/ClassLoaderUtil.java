@@ -48,7 +48,7 @@ public class ClassLoaderUtil {
                     br.lines().filter(s -> s.charAt(0) != '#').map(String::trim).forEach(line -> {
                         try {
                             services.add((S) finalLoader.loadClass(line).newInstance());
-                        } catch (Exception e) {
+                        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                             e.printStackTrace();// 不需要抛异常，加了条目没有类打个日志即可
                         }
                     });
@@ -89,7 +89,7 @@ public class ClassLoaderUtil {
         Class<?> objClass = null;
         try {
             objClass = Thread.currentThread().getContextClassLoader().loadClass(className);
-        } catch (Exception e) {
+        } catch (ClassNotFoundException e) {
             try {
                 ClassLoader loader = secondLoader.run(null);
                 objClass = loader.loadClass(className);

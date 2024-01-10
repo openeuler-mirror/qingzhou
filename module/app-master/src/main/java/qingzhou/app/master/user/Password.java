@@ -191,11 +191,11 @@ public class Password extends ModelBase implements EditModel {
 //                    String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
 //                    if (StringUtil.notBlank(passwordLastModifiedTime)) {
 //                        try {
-//                            long time = new SimpleDateFormat(Constants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
+//                            long time = new SimpleDateFormat(ConsoleConstants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
 //                            if (Boolean.parseBoolean(userP.get("enablePasswordAge"))) {
 //                                String minAge = userP.get("passwordMinAge");
 //                                if (minAge != null && !minAge.equals("0")) {
-//                                    long min = time + Integer.parseInt(minAge) * Constants.DAY_MILLIS_VALUE;
+//                                    long min = time + Integer.parseInt(minAge) * ConsoleConstants.DAY_MILLIS_VALUE;
 //                                    if (TimeUtil.getCurrentTime() < min) {
 //                                        return String.format(getConsoleContext().getI18N("password.min"), minAge, passwordLastModifiedTime);
 //                                    }
@@ -210,7 +210,7 @@ public class Password extends ModelBase implements EditModel {
 //                if (loginUserPro != null) {
 //                    String oldPasswords = loginUserPro.get("oldPasswords");
 //                    if (StringUtil.notBlank(oldPasswords)) {
-//                        for (String oldPass : oldPasswords.split(Constants.DATA_SEPARATOR)) {
+//                        for (String oldPass : oldPasswords.split(ConsoleConstants.DATA_SEPARATOR)) {
 //                            if (!oldPass.isEmpty() && digest.matches(newValue, oldPass)) {
 //                                String limitRepeats = loginUserPro.get("limitRepeats");
 //                                if (StringUtil.isBlank(limitRepeats)) {
@@ -298,7 +298,7 @@ public class Password extends ModelBase implements EditModel {
 //            infoI18n = {"验证双因子密码是否正确。", "en:Verify that the two-factor password is correct."})
 //    public void validate(Request request, Response response) throws Exception {
 //        boolean result = false;
-//        String reqCode = request.getParameter(Constants.LOGIN_2FA);
+//        String reqCode = request.getParameter(ConsoleConstants.LOGIN_2FA);
 //        if (StringUtil.notBlank(reqCode)) {
 //            String loginUser = request.getUserName();
 //            Map<String, String> attributes = ServerXml.get().user(loginUser);

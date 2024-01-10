@@ -19,6 +19,7 @@
         <module>Redis</module>
         <module>OpenSearch</module>
         <module>Nacos</module>
+        <module>SpringBootAdmin</module>
     </modules>
 
     <dependencies>

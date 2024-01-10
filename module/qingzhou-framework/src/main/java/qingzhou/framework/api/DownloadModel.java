@@ -1,5 +1,7 @@
 package qingzhou.framework.api;
 
+import qingzhou.framework.console.ConsoleConstants;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +15,7 @@ public interface DownloadModel {
     String DOWNLOAD_OFFSET = "DOWNLOAD_OFFSET";
 
     @ModelAction(name = ACTION_NAME_DOWNLOADLIST,
-            showToFormBottom = true, showToList = true,
+            showToFormBottom = true, showToList = true, showToListHead = true,
             icon = "download-alt",
             nameI18n = {"下载", "en:Download"},
             infoI18n = {"获取该组件可下载文件的列表。",
@@ -30,7 +32,7 @@ public interface DownloadModel {
                 for (Map.Entry<String, List<String[]>> entry : result.entrySet()) {
                     String group = entry.getKey();
                     for (String[] file : entry.getValue()) {
-                        map.put(group + Constants.DOWNLOAD_NAME_SEPARATOR + file[0], file[0] + " (" + file[1] + ")");
+                        map.put(group + ConsoleConstants.DOWNLOAD_NAME_SEPARATOR + file[0], file[0] + " (" + file[1] + ")");
                     }
                 }
             }

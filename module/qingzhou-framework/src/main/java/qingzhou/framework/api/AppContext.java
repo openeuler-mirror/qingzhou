@@ -16,8 +16,6 @@ public interface AppContext {
 
     String getAppName();
 
-    ModelManager getModelManager();
-
     void setDataStore(DataStore dataStore);
 
     DataStore getDataStore();

@@ -1,8 +1,8 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.api.Request;
@@ -11,7 +11,7 @@ import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.pattern.FilterPattern;
-import qingzhou.console.ConsoleConstants;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -35,7 +35,7 @@ import java.util.Map;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MODEL_NAME_node + "/" + qingzhou.framework.api.Constants.LOCAL_NODE_NAME + "/" + qingzhou.framework.api.Constants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/" + ConsoleConstants.ACTION_NAME_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MODEL_NAME_node + "/" + ConsoleConstants.LOCAL_NODE_NAME + "/" + ConsoleConstants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/" + ConsoleConstants.ACTION_NAME_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache();
 
@@ -151,7 +151,7 @@ public class RESTController extends HttpServlet {
             request.setId(id);
         }
         boolean actionFound = false;
-        String[] actions = ConsoleUtil.getModelManager(request.getAppName()).getActionNames(request.getModelName());
+        String[] actions = PageBackendService.getModelManager(request.getAppName()).getActionNames(request.getModelName());
         for (String name : actions) {
             if (name.equals(request.getActionName())) {
                 actionFound = true;
@@ -172,7 +172,7 @@ public class RESTController extends HttpServlet {
             String k = parameterNames.nextElement();
             String[] v = req.getParameterValues(k);
             if (v != null) {
-                data.put(k, String.join(qingzhou.framework.api.Constants.DATA_SEPARATOR, v));
+                data.put(k, String.join(ConsoleConstants.DATA_SEPARATOR, v));
             }
         }
         request.setParameters(data);

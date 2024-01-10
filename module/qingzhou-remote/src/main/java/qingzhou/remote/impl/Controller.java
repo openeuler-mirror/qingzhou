@@ -23,7 +23,11 @@ import qingzhou.remote.RemoteConstants;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class Controller implements BundleActivator {
@@ -34,32 +38,32 @@ public class Controller implements BundleActivator {
     private String path;
 
     @Override
-    public void start(BundleContext bundleContext) {
+    public void start(BundleContext bundleContext) throws Exception {
         serviceReference = bundleContext.getServiceReference(FrameworkContext.class);
         frameworkContext = bundleContext.getService(serviceReference);
         Logger logger = frameworkContext.getService(LoggerService.class).getLogger();
 
         int port = 7000;// todo 可配置
         path = "/";
-        server = frameworkContext.getService(HttpServerService.class).createHttpServer(port);
-        if (server == null) {
-            logger.error("TODO: HttpServerService 尚未实现，可以引用一个流行的开源组件来做一下");
-            return;// todo
-        }
+        server = frameworkContext.getService(HttpServerService.class).createHttpServer(port, 200);
         server.addContext(path, httpExchange -> {
             byte[] result;
-            int responseCode;
             try {
                 result = process(httpExchange.getRequestBody());
-                responseCode = 200;
             } catch (Exception e) {
                 result = ExceptionUtil.stackTrace(e).getBytes(StandardCharsets.UTF_8);
-                responseCode = 500;
             }
-            httpExchange.setStatus(responseCode);
             OutputStream os = httpExchange.getResponseBody();
-            os.write(result);
-            os.close();
+            try {
+                os.write(result);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                os.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
         server.start();
 
@@ -68,8 +72,10 @@ public class Controller implements BundleActivator {
 
     @Override
     public void stop(BundleContext bundleContext) {
-        server.removeContext(path);
-        server.stop();
+        if (server != null) {
+            server.removeContext(path);
+            server.stop(5000);
+        }
 
         bundleContext.ungetService(serviceReference);
     }

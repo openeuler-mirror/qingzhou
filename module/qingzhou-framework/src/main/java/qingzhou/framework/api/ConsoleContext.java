@@ -1,6 +1,8 @@
 package qingzhou.framework.api;
 
 public interface ConsoleContext {
+    ModelManager getModelManager();
+
     void setZhTrMap(char zh, char tr);
 
     void addI18N(String key, String[] i18n);

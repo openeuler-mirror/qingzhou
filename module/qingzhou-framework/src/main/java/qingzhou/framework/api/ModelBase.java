@@ -33,7 +33,7 @@ public abstract class ModelBase implements ShowModel {
     }
 
     public Options options(String fieldName) {
-        ModelManager manager = getAppContext().getModelManager();
+        ModelManager manager = getAppContext().getConsoleContext().getModelManager();
         String modelName = manager.getModelName(this.getClass());
         ModelField modelField = manager.getModelField(modelName, fieldName);
 
@@ -74,7 +74,7 @@ public abstract class ModelBase implements ShowModel {
 
     private Options refModel(String modelName) {
         try {
-            ModelManager modelManager = getAppContext().getModelManager();
+            ModelManager modelManager = getAppContext().getConsoleContext().getModelManager();
             ModelBase modelInstance = modelManager.getModelInstance(modelName);
             List<Option> options = new ArrayList<>();
             List<String> dataIdList = ((ListModel) modelInstance).getAllDataId(modelName);

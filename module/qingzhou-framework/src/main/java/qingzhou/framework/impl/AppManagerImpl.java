@@ -3,7 +3,11 @@ package qingzhou.framework.impl;
 import qingzhou.framework.AppInfo;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContextAware;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.QingZhouApp;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.impl.model.ModelInfo;
 import qingzhou.framework.impl.model.ModelManagerImpl;
 import qingzhou.framework.util.ClassLoaderUtil;
@@ -13,7 +17,12 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class AppManagerImpl implements AppManager {
     private final Map<String, AppInfo> appInfoMap = new HashMap<>();
@@ -26,8 +35,9 @@ public class AppManagerImpl implements AppManager {
         URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLib, QingZhouApp.class.getClassLoader());
         appInfo.setLoader(loader);
         ModelManager modelManager = buildModelManager(appLib, loader);
-        appContext.setModelManager(modelManager);
-        appContext.setConsoleContext(new ConsoleContextImpl(modelManager));
+        ConsoleContextImpl consoleContext = new ConsoleContextImpl();
+        consoleContext.setModelManager(modelManager);
+        appContext.setConsoleContext(consoleContext);
         for (String modelName : modelManager.getModelNames()) {
             ModelBase modelInstance = modelManager.getModelInstance(modelName);
             modelInstance.setAppContext(appContext);
@@ -45,7 +55,7 @@ public class AppManagerImpl implements AppManager {
     private ModelManagerImpl buildModelManager(File[] appLib, URLClassLoader loader) {
         ModelManagerImpl modelManager = new ModelManagerImpl();
         try {
-            modelManager.init(appLib);
+            modelManager.init(appLib, loader);
 
             for (String modelName : modelManager.getModelNames()) {
                 ModelInfo modelInfo = modelManager.getModelInfo(modelName);
@@ -64,7 +74,7 @@ public class AppManagerImpl implements AppManager {
                     try {
                         Field field = modelClass.getField(fieldInfo.fieldName);
                         fieldInfo.setField(field);
-                    } catch (Exception e) {
+                    } catch (NoSuchFieldException | SecurityException e) {
                         e.printStackTrace();
                     }
                 });
@@ -73,7 +83,7 @@ public class AppManagerImpl implements AppManager {
                     try {
                         Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
                         actionInfo.setJavaMethod(method);
-                    } catch (Exception e) {
+                    } catch (NoSuchMethodException | SecurityException e) {
                         e.printStackTrace();
                     }
                 });
@@ -103,10 +113,12 @@ public class AppManagerImpl implements AppManager {
         appInfoMap.put(appName, appInfo);
 
         QingZhouApp qingZhouApp = appInfo.getQingZhouApp();
-        if (qingZhouApp instanceof FrameworkContextAware) {
-            ((FrameworkContextAware) qingZhouApp).setFrameworkContext(FrameworkContextImpl.getFrameworkContext());
+        if (qingZhouApp != null) {
+            if (qingZhouApp instanceof FrameworkContextAware) {
+                ((FrameworkContextAware) qingZhouApp).setFrameworkContext(FrameworkContextImpl.getFrameworkContext());
+            }
+            qingZhouApp.start(appInfo.getAppContext());
         }
-        qingZhouApp.start(appInfo.getAppContext());
     }
 
     @Override

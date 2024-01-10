@@ -6,7 +6,7 @@
     if (ConsoleSDK.needEncode(encodedId)) {
         encodedId = ConsoleSDK.encodeId(encodedId);
     }
-    String url = ConsoleUtil.encodeURL(request, response, ViewManager.jsonView + "/" + qzRequest.getTargetType() + "/"+ qzRequest.getTargetName() +"/" + qzRequest.getModelName() + "/" + MonitorModel.ACTION_NAME_MONITOR + "/" + encodedId);
+    String url = PageBackendService.encodeURL(request, response, ViewManager.jsonView + "/" + qzRequest.getTargetType() + "/"+ qzRequest.getTargetName() +"/" + qzRequest.getModelName() + "/" + MonitorModel.ACTION_NAME_MONITOR + "/" + encodedId);
 %>
 
 <div class="bodyDiv">
@@ -29,12 +29,12 @@
             for (Map<String, String> data : qzResponse.getDataList()) {
                 for (Map.Entry<String, String> e : data.entrySet()) {
                     String key = e.getKey();
-                    int m = key.indexOf(Constants.MONITOR_MODEL_SEPARATOR);
+                    int m = key.indexOf(ConsoleConstants.MONITOR_MODEL_SEPARATOR);
 
                     String fieldAndId = key.substring(m + 1);
                     String fieldName = fieldAndId;
                     String fieldDataId = "";
-                    int f = fieldAndId.indexOf(Constants.MONITOR_EXT_SEPARATOR);
+                    int f = fieldAndId.indexOf(ConsoleConstants.MONITOR_EXT_SEPARATOR);
                     if (f > 0) {
                         fieldName = fieldAndId.substring(0, f);
                         fieldDataId = fieldAndId.substring(f + 1);
@@ -64,7 +64,7 @@
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
         <div class="form-btn">
             <a href="javascript:void(0);" onclick="tw.goback(this);" btn-type="goback" class="btn">
-                <%=I18n.getString(Constants.MASTER_APP_NAME, "page.cancel")%>
+                <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
             </a>
         </div>
     </div>

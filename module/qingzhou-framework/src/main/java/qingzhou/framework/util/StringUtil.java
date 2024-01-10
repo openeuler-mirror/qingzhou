@@ -1,6 +1,5 @@
 package qingzhou.framework.util;
 
-import qingzhou.framework.api.Constants;
 import qingzhou.framework.pattern.Callback;
 
 import java.net.InetAddress;
@@ -26,7 +25,7 @@ public class StringUtil {
             return value;
         }
         if (type.equals(boolean.class) || type.equals(Boolean.class)) {
-            return Boolean.parseBoolean(value);
+            return Boolean.valueOf(value);
         }
 
         if (type == InetAddress.class) {
@@ -40,25 +39,25 @@ public class StringUtil {
             if (StringUtil.isBlank(value)) {
                 return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
             }
-            return Integer.parseInt(value);
+            return Integer.valueOf(value);
         }
         if (type.equals(long.class) || type.equals(Long.class)) {
             if (StringUtil.isBlank(value)) {
                 return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
             }
-            return Long.parseLong(value);
+            return Long.valueOf(value);
         }
         if (type.equals(float.class) || type.equals(Float.class)) {
             if (StringUtil.isBlank(value)) {
                 return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
             }
-            return Float.parseFloat(value);
+            return Float.valueOf(value);
         }
         if (type.equals(double.class) || type.equals(Double.class)) {
             if (StringUtil.isBlank(value)) {
                 return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
             }
-            return Double.parseDouble(value);
+            return Double.valueOf(value);
         }
 
         // 其它类型是不支持的
@@ -88,7 +87,7 @@ public class StringUtil {
             sb.append(entry.getKey())
                     .append("=")
                     .append(entry.getValue())
-                    .append(Constants.DATA_SEPARATOR);
+                    .append(",");
         }
         return sb.substring(0, sb.length() - 1);
     }
@@ -102,7 +101,7 @@ public class StringUtil {
         if (StringUtil.isBlank(str)) {
             return map;
         }
-        String[] envArr = str.split(Constants.DATA_SEPARATOR);
+        String[] envArr = str.split(",");
         for (String env : envArr) {
             int i = env.indexOf("=");
             if (i < 0) {

@@ -5,7 +5,6 @@ import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.ModelManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ public class AppContextImpl implements AppContext {
     private final FrameworkContext frameworkContext;
     private String appName;
     private ConsoleContext consoleContext;
-    private ModelManager modelManager;
     private DataStore dataStore;
     private List<ActionFilter> actionFilters;
 
@@ -56,15 +54,6 @@ public class AppContextImpl implements AppContext {
 
     public void setAppName(String appName) {
         this.appName = appName;
-    }
-
-    @Override
-    public ModelManager getModelManager() {
-        return modelManager;
-    }
-
-    public void setModelManager(ModelManager modelManager) {
-        this.modelManager = modelManager;
     }
 
     @Override

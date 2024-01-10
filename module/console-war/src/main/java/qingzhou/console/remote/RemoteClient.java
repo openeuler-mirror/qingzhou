@@ -1,6 +1,6 @@
 package qingzhou.console.remote;
 
-import qingzhou.console.ConsoleConstants;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.servlet.UploadFileContext;

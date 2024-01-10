@@ -34,22 +34,19 @@
                 Map<String, String> modelData = models.get(0);
                 List<String> fieldMap = new ArrayList<>();
                 if (isMonitor) {
-                    for (Map.Entry<String, MonitorField> entry : modelManager.getMonitorFieldMap(qzRequest.getModelName()).entrySet()) {
+                    for (Map.Entry<String, ModelField> entry : modelManager.getMonitorFieldMap(qzRequest.getModelName()).entrySet()) {
                         ModelField monitoringField = entry.getValue();
                         if (!monitoringField.supportGraphicalDynamic() && !monitoringField.supportGraphical()) {
                             fieldMap.add(entry.getKey());
                         }
                     }
                 } else {
-                    for (String field : modelManager.getAllFieldNames(qzRequest.getModelName())) {
+                    for (String field : modelManager.getFieldNames(qzRequest.getModelName())) {
                         ModelField modelField = modelManager.getModelField(qzRequest.getModelName(), field);
-                        if (!modelField.showToShow()) {
-                            continue;
-                        }
 
-                        if (ConsoleUtil.isEffective(fieldName -> modelData.get(field), modelField.effectiveWhen())) {
+                        //if (ConsoleUtil.isEffective(fieldName -> modelData.get(field), modelField.effectiveWhen())) {
                             fieldMap.add(field);
-                        }
+                        //} TODO
                     }
                 }
                 boolean hasItem = false;
@@ -156,7 +153,7 @@
             <a href="javascript:void(0);" onclick="tw.goback(this);"
                btn-type="goback" class="btn">
                 <!--<i class="icon icon-undo"></i>-->
-                <%=I18n.getString(Constants.MASTER_APP_NAME, "page.cancel")%>
+                <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
             </a>
         </div>
     </div>
