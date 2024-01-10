@@ -1,6 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.console.ConsoleUtil;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.ModelManager;
@@ -13,7 +14,7 @@ public class AsymmetricFilter implements Filter<RestContext> {
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = (RequestImpl) context.request;
         String appName = request.getAppName();
-        ModelManager modelManager = ConsoleUtil.getModelManager(appName);
+        ModelManager modelManager = PageBackendService.getModelManager(appName);
         for (String fieldName : modelManager.getFieldNames(request.getModelName())) {
             ModelField modelField = modelManager.getModelField(request.getModelName(), fieldName);
             if (modelField.type() == FieldType.password

@@ -153,7 +153,7 @@
             <a href="javascript:void(0);" onclick="tw.goback(this);"
                btn-type="goback" class="btn">
                 <!--<i class="icon icon-undo"></i>-->
-                <%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.cancel")%>
+                <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
             </a>
         </div>
     </div>

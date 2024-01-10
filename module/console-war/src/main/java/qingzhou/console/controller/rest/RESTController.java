@@ -1,8 +1,8 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.api.Request;
@@ -151,7 +151,7 @@ public class RESTController extends HttpServlet {
             request.setId(id);
         }
         boolean actionFound = false;
-        String[] actions = ConsoleUtil.getModelManager(request.getAppName()).getActionNames(request.getModelName());
+        String[] actions = PageBackendService.getModelManager(request.getAppName()).getActionNames(request.getModelName());
         for (String name : actions) {
             if (name.equals(request.getActionName())) {
                 actionFound = true;

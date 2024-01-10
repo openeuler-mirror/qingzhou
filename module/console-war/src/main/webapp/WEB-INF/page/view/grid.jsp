@@ -36,7 +36,7 @@
 
     <div class="block-bg">
         <form name="filterForm" id="filterForm" method="POST"
-              action="<%=ConsoleUtil.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getTargetType() + "/" + qzRequest.getTargetName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
+              action="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getTargetType() + "/" + qzRequest.getTargetName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
             <div class="row filterForm" style="margin-top: 10px;">
                 <%
                     for (Integer i : indexToShow) {
@@ -86,7 +86,7 @@
                         <a class="btn"
                            href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
                            form="filterForm">
-                            <i class="icon icon-search"></i> <%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.filter")%>
+                            <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18NString( "page.filter")%>
                         </a>
                     </span>
                 </div>
@@ -122,7 +122,7 @@
                         <%
                             out.print(ConsoleUtil.isDisableDownload() ? " disabled " : "" + " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE) + "' ");%>
                    out.print("act-ajax='true' act-confirm='" +
-                String.format(I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.operationConfirm"),
+                String.format(PageBackendService.getMasterAppI18NString( "page.operationConfirm"),
                 I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." +
                 DownloadModel.ACTION_NAME_DOWNLOADLIST),
                 I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName()))
@@ -162,7 +162,7 @@
                         <%
                             if (isAjaxAction) {
                                 out.print("act-ajax='true' act-confirm='" +
-                                        String.format(I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.operationConfirm"),
+                                        String.format(PageBackendService.getMasterAppI18NString( "page.operationConfirm"),
                                                 I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey),
                                                 I18n.getString(qzRequest.getAppName(), "model." + qzRequest.getModelName())) + " ?' ");
                             }

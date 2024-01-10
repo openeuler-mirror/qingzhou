@@ -2,6 +2,7 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.api.AddModel;
@@ -134,7 +135,7 @@ public class AccessControl implements Filter<RestContext> {
 //            return new Model[0];
 //        }
 
-        ModelManager modelManager = ConsoleUtil.getModelManager(appName);
+        ModelManager modelManager = PageBackendService.getModelManager(appName);
         if (modelManager == null) {
             return new Model[0];
         }

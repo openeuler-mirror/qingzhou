@@ -264,7 +264,7 @@
 <%@ include file="../fragment/head.jsp" %>
 <body style="overflow:hidden;">
     <!--[if lt IE 8]>
-    <div class="alert alert-danger"><%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.browser.outdated")%></div>
+    <div class="alert alert-danger"><%=PageBackendService.getMasterAppI18NString( "page.browser.outdated")%></div>
     <![endif]-->
 
 <%@ include file="../fragment/navbar.jsp" %>
@@ -275,7 +275,7 @@
             <li class="active" central="true">
                 <a href="javascript:void(0);">
                     <i class="icon icon-resize"></i>
-                    <label><%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.index.centralized")%></label>
+                    <label><%=PageBackendService.getMasterAppI18NString( "page.index.centralized")%></label>
                 </a>
             </li>
 
@@ -286,7 +286,7 @@
                     <a href="javascript:void(0);">
                         <i class="icon icon-cube"></i>
                         <label>
-                            <%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.localInstance")%>
+                            <%=PageBackendService.getMasterAppI18NString( "page.localInstance")%>
                             <%-- 通知 --%>
                             <%
                             int tabNoticeSize = 0;
@@ -313,8 +313,8 @@
                         <ul class="sidebar-menu" data-widget="tree">
                             <%
                             // 菜单
-                            List<Properties> menuList = ConsoleUtil.getAppMenuList(currentUser, ConsoleConstants.MASTER_APP_NAME);
-                            out.print(ConsoleUtil.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, "node", ConsoleConstants.LOCAL_NODE_NAME, ConsoleConstants.MASTER_APP_NAME, qzRequest.getModelName()));
+                            List<Properties> menuList = PageBackendService.getAppMenuList(currentUser, ConsoleConstants.MASTER_APP_NAME);
+                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, "node", ConsoleConstants.LOCAL_NODE_NAME, ConsoleConstants.MASTER_APP_NAME, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>
@@ -372,35 +372,35 @@
         downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
         locale: '<%=(I18n.getI18nLang().isZH() ? "zh-CN":"en-US")%>',
         pageLang: '<%=(I18n.getI18nLang().isZH() ? "zh_cn":"en")%>',
-        pageErrorMsg: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.error")%>',
-        pageConfirmTitle: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.confirm.title")%>',
-        confirmBtnText: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.confirm")%>',
-        cancelBtnText: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.cancel")%>',
-        notLogin: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.login.need")%>',
+        pageErrorMsg: '<%=PageBackendService.getMasterAppI18NString("page.error")%>',
+        pageConfirmTitle: '<%=PageBackendService.getMasterAppI18NString("page.confirm.title")%>',
+        confirmBtnText: '<%=PageBackendService.getMasterAppI18NString("page.confirm")%>',
+        cancelBtnText: '<%=PageBackendService.getMasterAppI18NString("page.cancel")%>',
+        notLogin: '<%=PageBackendService.getMasterAppI18NString("page.login.need")%>',
         encrypt_key_size: '<%=ConsoleUtil.getKeySize()%>',
-        reloginBtnText: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.relogin")%>',
-        iknowBtnText: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.gotit")%>',
-        switchLang: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.lang.switch.confirm")%>',
-        logout: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.logout.confirm")%>',
+        reloginBtnText: '<%=PageBackendService.getMasterAppI18NString("page.relogin")%>',
+        iknowBtnText: '<%=PageBackendService.getMasterAppI18NString("page.gotit")%>',
+        switchLang: '<%=PageBackendService.getMasterAppI18NString("page.lang.switch.confirm")%>',
+        logout: '<%=PageBackendService.getMasterAppI18NString("page.logout.confirm")%>',
         downloadlistName: '<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>',
-        downloadTip: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.download.log.tip")%>',
+        downloadTip: '<%=PageBackendService.getMasterAppI18NString("page.download.log.tip")%>',
         actionName_target: '<%=ConsoleUtil.ACTION_NAME_TARGET%>',
         downloadFileNames: '<%=DownloadModel.PARAMETER_DOWNLOAD_FILE_NAMES%>',
         showAction: '<%=ShowModel.ACTION_NAME_SHOW%>',
-        downloadCheckAll: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.download.checkall")%>',
-        downloadTaskTip: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.download.tasktip")%>',
-        layerTitle2FA: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.layertitle.2fa")%>',
-        networkError: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.error.network")%>',
-        placeholder2FA: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.placeholder.2fa")%>',
-        bindSuccess2FA: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.bindsuccess.2fa")%>',
-        bindFail2FA: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.bindfail.2fa")%>',
-        passwordChangedMsg: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.password.changed")%>',
+        downloadCheckAll: '<%=PageBackendService.getMasterAppI18NString("page.download.checkall")%>',
+        downloadTaskTip: '<%=PageBackendService.getMasterAppI18NString("page.download.tasktip")%>',
+        layerTitle2FA: '<%=PageBackendService.getMasterAppI18NString("page.layertitle.2fa")%>',
+        networkError: '<%=PageBackendService.getMasterAppI18NString("page.error.network")%>',
+        placeholder2FA: '<%=PageBackendService.getMasterAppI18NString("page.placeholder.2fa")%>',
+        bindSuccess2FA: '<%=PageBackendService.getMasterAppI18NString("page.bindsuccess.2fa")%>',
+        bindFail2FA: '<%=PageBackendService.getMasterAppI18NString("page.bindfail.2fa")%>',
+        passwordChangedMsg: '<%=PageBackendService.getMasterAppI18NString("page.password.changed")%>',
         resetPasswordUrl: '<%="/password/update"%>',
-        searchHiddenTip: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.search.hidden")%>',
-        passwordConfirmFailed: '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"password.confirm.notequal")%>',
+        searchHiddenTip: '<%=PageBackendService.getMasterAppI18NString("page.search.hidden")%>',
+        passwordConfirmFailed: '<%=PageBackendService.getMasterAppI18NString("password.confirm.notequal")%>',
         SINGLE_FIELD_VALIDATE_PARAM: '<%=ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM%>'
     };
-    var searchUrl = '<%=ConsoleUtil.encodeURL(request, response, contextPath + "/search")%>';
+    var searchUrl = '<%=PageBackendService.encodeURL(request, response, contextPath + "/search")%>';
 </script>
 <script type="text/javascript" src="<%=contextPath%>/static/js/main.js"></script>
 <script type="text/javascript" src="<%=contextPath%>/static/js/index.js"></script>
@@ -413,17 +413,17 @@
         $(document.body).children("header,main").hide();
         $("#guide").show();
         var guideOptions = {
-            "prevLabel": "&larr; <%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.guide.previous")%>",
-            "nextLabel": "<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.guide.next")%> &rarr;",
-            "skipLabel": "<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.guide.skip")%>",
-            "doneLabel": "<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.guide.finish")%>",
+            "prevLabel": "&larr; <%=PageBackendService.getMasterAppI18NString("page.guide.previous")%>",
+            "nextLabel": "<%=PageBackendService.getMasterAppI18NString("page.guide.next")%> &rarr;",
+            "skipLabel": "<%=PageBackendService.getMasterAppI18NString("page.guide.skip")%>",
+            "doneLabel": "<%=PageBackendService.getMasterAppI18NString("page.guide.finish")%>",
             "exitOnOverlayClick": false, "overlayOpacity": 0.5, "showStepNumbers": false
         };
         guideOptions["steps"] = [
-            {"element": "#JiyYEh", "intro": '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.guide.pwd")%>', "image": "index.png", "position": "left", "rl": 92.98618490967057, "rt": 0.21253985122210414, "rw": 3.9319872476089266, "rh": 3.4006376195536663},
-            {"element": "#NcDLKd", "intro": '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.guide.help")%>', "image": "index.png", "position": "bottom", "rl": 84.9096705632306, "rt": 0.26567481402763016, "rw": 4.0913921360255046, "rh": 3.1880977683315623},
-            {"element": "#SRvTcb", "intro": '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.guide.home")%>', "image": "index.png", "position": "right", "rl": -0.3188097768331562, "rt": 7.1200850159404885, "rw": 15.834218916046758, "rh": 3.5600425079702442},
-            {"element": "#tPFOOB", "intro": '<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.guide.res")%>', "image": "create-ds.png", "position": "top", "rl": -0.21253985122210414, "rt": 23.645058448459086, "rw": 15.037194473963869, "rh": 3.1349628055260363}
+            {"element": "#JiyYEh", "intro": '<%=PageBackendService.getMasterAppI18NString( "page.guide.pwd")%>', "image": "index.png", "position": "left", "rl": 92.98618490967057, "rt": 0.21253985122210414, "rw": 3.9319872476089266, "rh": 3.4006376195536663},
+            {"element": "#NcDLKd", "intro": '<%=PageBackendService.getMasterAppI18NString( "page.guide.help")%>', "image": "index.png", "position": "bottom", "rl": 84.9096705632306, "rt": 0.26567481402763016, "rw": 4.0913921360255046, "rh": 3.1880977683315623},
+            {"element": "#SRvTcb", "intro": '<%=PageBackendService.getMasterAppI18NString( "page.guide.home")%>', "image": "index.png", "position": "right", "rl": -0.3188097768331562, "rt": 7.1200850159404885, "rw": 15.834218916046758, "rh": 3.5600425079702442},
+            {"element": "#tPFOOB", "intro": '<%=PageBackendService.getMasterAppI18NString( "page.guide.res")%>', "image": "create-ds.png", "position": "top", "rl": -0.21253985122210414, "rt": 23.645058448459086, "rw": 15.037194473963869, "rh": 3.1349628055260363}
         ];
         if (!guideInited) {
             guideInited = true;

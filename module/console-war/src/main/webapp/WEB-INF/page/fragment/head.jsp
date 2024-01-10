@@ -15,13 +15,14 @@
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.impl.*" %>
 <%@ page import="qingzhou.console.sdk.*" %>
+<%@ page import="qingzhou.console.page.PageBackendService" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
     Request qzRequest = (Request) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
     String initAppName = qzRequest == null ? ConsoleConstants.MASTER_APP_NAME : qzRequest.getAppName();
-    ModelManager modelManager = ConsoleUtil.getModelManager(initAppName);
+    ModelManager modelManager = PageBackendService.getModelManager(initAppName);
 %>
 
 <script type="text/javascript">
@@ -130,7 +131,7 @@
 %>
 <script type="text/javascript">
     $(document).ready(function () {
-        var noticeIndex = showInfo("<%=(I18n.getString(initAppName, "model." + qzRequest.getModelName()) + ": " + msg)%> | <%=(I18n.getString(ConsoleConstants.MASTER_APP_NAME,"page.go"))%> <%=(I18n.getString(ConsoleConstants.MASTER_APP_NAME, "model.notice"))%>");
+        var noticeIndex = showInfo("<%=(I18n.getString(initAppName, "model." + qzRequest.getModelName()) + ": " + msg)%> | <%=(PageBackendService.getMasterAppI18NString("page.go"))%> <%=(PageBackendService.getMasterAppI18NString( "model.notice"))%>");
         // 记录最后一次通知弹窗
         try {
             $(getActiveTabContent()).attr("showInfoIndex", noticeIndex);

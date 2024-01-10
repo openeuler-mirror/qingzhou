@@ -46,7 +46,7 @@ if(fieldValue == null) {
 		<li>
 			<a href="javascript:void(0);" class="<%=!"".equals(readonly) ? "read-only" : ""%>" onclick="addRow(this, <%=!"".equals(readonly)%>);">
 				<i class="icon icon-plus" style="font-size:10px;"></i>
-				<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.info.add")%>
+				<%=PageBackendService.getMasterAppI18NString( "page.info.add")%>
 			</a>
 		</li>
 	</ul>

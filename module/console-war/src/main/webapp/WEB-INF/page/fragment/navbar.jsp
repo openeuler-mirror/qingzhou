@@ -16,14 +16,14 @@
         <div class="collapse navbar-collapse">
             <div >
                 <ul class="nav navbar-nav">
-                    <li><span class="console-name"><%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.index")%></span></li>
+                    <li><span class="console-name"><%=PageBackendService.getMasterAppI18NString( "page.index")%></span></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                    <%-- 快捷搜索 --%>
                     <li>
                        <div class="searchBar">
                             <div class="sample">
-                                 <input type="text" id="searchText" name="search" placeholder="<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.filter")%>">
+                                 <input type="text" id="searchText" name="search" placeholder="<%=PageBackendService.getMasterAppI18NString( "page.filter")%>">
                                  <a href="javascript:void(0);" class="btn btn-search"><i class="icon icon-search"></i></a>
                                  <div id="searchResult" class="search-list"></div>
                             </div>
@@ -31,7 +31,7 @@
                    </li>
                     <%-- 新手引导 --%>
                     <li>
-                        <a id="guide-btn" href="javascript:void(0);" class="tooltips" data-tip='<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.guide")%>' data-tip-arrow="bottom">
+                        <a id="guide-btn" href="javascript:void(0);" class="tooltips" data-tip='<%=PageBackendService.getMasterAppI18NString( "page.guide")%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
                                 <i class="icon icon-lightbulb"></i>
                             </span>
@@ -40,8 +40,8 @@
 
                     <%-- 手册 --%>
                     <li>
-                        <a id="help-btn" href='<%=ConsoleUtil.encodeURL(request, response, contextPath + "/manual")%>' target="_blank"
-                        class="tooltips" data-tip='<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.document")%>' data-tip-arrow="bottom">
+                        <a id="help-btn" href='<%=PageBackendService.encodeURL(request, response, contextPath + "/manual")%>' target="_blank"
+                           class="tooltips" data-tip='<%=PageBackendService.getMasterAppI18NString( "page.document")%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
                                 <i class="icon icon-file-pdf"></i>
                             </span>
@@ -51,7 +51,7 @@
                     <%-- 切换语言 --%>
                     <li id="switch-lang" class="dropdown">
                         <a href="javascript:void(0);" data-toggle="dropdown"
-                           class="tooltips" data-tip='<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.lang.switch")%>' data-tip-arrow="bottom">
+                           class="tooltips" data-tip='<%=PageBackendService.getMasterAppI18NString( "page.lang.switch")%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
                                 <i class="icon icon-language"></i>
                             </span>
@@ -60,7 +60,7 @@
                             <%
                                 for(Lang lang : Lang.values()) {
                                     out.print("<li>");
-                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", ConsoleUtil.encodeURL(request, response, contextPath + I18nFilter.LANG_SWITCH_URI + "/" + lang), lang.getFullName()));
+                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", PageBackendService.encodeURL(request, response, contextPath + I18nFilter.LANG_SWITCH_URI + "/" + lang), lang.getFullName()));
                                     out.print("</li>");
                                 }
                             %>
@@ -68,17 +68,17 @@
                     </li>
                     <%-- 用户/修改密码 --%>
                     <li>
-                        <a id="reset-password-btn" href="<%=ConsoleUtil.encodeURL(request, response, ViewManager.htmlView+"/"+ ConsoleConstants.MASTER_APP_NAME +"/password/"+ "edit")%>"
+                        <a id="reset-password-btn" href="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView+"/"+ ConsoleConstants.MASTER_APP_NAME +"/password/"+ "edit")%>"
                         class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=ConsoleUtil.getModelManager(ConsoleConstants.MASTER_APP_NAME).getModel("user").icon()%>"></i>
+                                <i class="icon icon-<%=PageBackendService.getModelManager(ConsoleConstants.MASTER_APP_NAME).getModel("user").icon()%>"></i>
                             </span>
                         </a>
                     </li>
                     <%-- 注销 --%>
                     <li>
-                        <a id="logout-btn" href="<%=ConsoleUtil.encodeURL(request, response, contextPath + LoginManager.LOGIN_PATH + "?" + LoginManager.LOGOUT_FLAG)%>"
-                        class="tooltips" data-tip='<%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.invalidate")%>' data-tip-arrow="bottom">
+                        <a id="logout-btn" href="<%=PageBackendService.encodeURL(request, response, contextPath + LoginManager.LOGIN_PATH + "?" + LoginManager.LOGOUT_FLAG)%>"
+                        class="tooltips" data-tip='<%=PageBackendService.getMasterAppI18NString( "page.invalidate")%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
                                 <i class="icon icon-signout"></i>
                             </span>

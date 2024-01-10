@@ -271,7 +271,7 @@
                 %>
                 <a href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>"
                    btn-type="goback" class="btn">
-                    <%=I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.cancel")%>
+                    <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
                 </a>
                 <%
             }

@@ -2,6 +2,7 @@ package qingzhou.console.view.impl;
 
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.controller.rest.RestContext;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
@@ -26,7 +27,7 @@ public class HtmlView implements View {
 
         String modelName = request.getModelName();
         String actionName = request.getActionName();
-        ModelAction modelAction = ConsoleUtil.getModelManager(request.getAppName()).getModelAction(modelName, actionName);
+        ModelAction modelAction = PageBackendService.getModelManager(request.getAppName()).getModelAction(modelName, actionName);
         String pageForward;
         if (modelAction != null) {
             pageForward = modelAction.forwardToPage();
