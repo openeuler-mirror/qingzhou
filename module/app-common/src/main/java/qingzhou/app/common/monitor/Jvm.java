@@ -172,8 +172,8 @@ public class Jvm extends ModelBase implements MonitorModel {
         }
         String result = path.toString();
         try {
-            result = result.replace(getAppContext().getDomain().getCanonicalPath(), "${tongweb.base}");
-            result = result.replace(getAppContext().getHome().getCanonicalPath(), "${tongweb.home}");
+            result = result.replace(getAppContext().getDomain().getCanonicalPath(), "${qingzhou.domain}");
+            result = result.replace(getAppContext().getHome().getCanonicalPath(), "${qingzhou.home}");
         } catch (Exception ignored) {
         }
         return result;
