@@ -22,6 +22,7 @@ public class ConsoleContextImpl implements ConsoleContext, Serializable {
 
     public void setModelManager(ModelManager modelManager) {
         this.modelManager = modelManager;
+        init();
     }
 
     public void init() {
