@@ -25,7 +25,7 @@ public class Node extends ModelBase implements AddModel {
     public String id;
 
     @ModelField(required = true, showToList = true,
-            isIpOrHostname = true, disableOnEdit = false,
+            isIpOrHostname = true, disableOnEdit = true,
             nameI18n = {"IP", "en:IP"},
             infoI18n = {"连接节点的 IP 地址。", "en:The IP address of the connected node."})
     public String ip;
@@ -37,7 +37,7 @@ public class Node extends ModelBase implements AddModel {
             infoI18n = {"节点的管理端口。", "en:The management port of the node."})
     public int port = 9060;
 
-    @ModelField(showToList = true, disableOnCreate = false, disableOnEdit = false,
+    @ModelField(showToList = true, disableOnCreate = true, disableOnEdit = true,
             type = FieldType.bool,
             nameI18n = {"运行中", "en:Running"}, infoI18n = {"了解该组件的运行状态。", "en:Know the operational status of the component."})
     public boolean running;
@@ -46,7 +46,7 @@ public class Node extends ModelBase implements AddModel {
     public void list(Request request, Response response) throws Exception {
         Map<String, String> node = new HashMap<>();
         node.put("id", "default");
-        node.put("ip", "127.0.0.1");
+        node.put("ip", "0.0.0.0");
         node.put("port", "9060");
         node.put("running", "true");
         response.addData(node);

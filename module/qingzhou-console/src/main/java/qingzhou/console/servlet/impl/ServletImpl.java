@@ -3,6 +3,7 @@ package qingzhou.console.servlet.impl;
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
+import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import qingzhou.console.servlet.ServletProcessor;
 import qingzhou.console.servlet.ServletService;
@@ -38,6 +39,10 @@ public class ServletImpl implements ServletService {
     @Override
     public void addWebapp(String contextPath, String docBase) {
         Context context = tomcat.addWebapp(contextPath, docBase);// 指定部署应用的信息
+        // 添加Multipart配置
+        if(context instanceof StandardContext){
+            context.setAllowCasualMultipartParsing(true);
+        }
         context.setRequestCharacterEncoding(StandardCharsets.UTF_8.name());
     }
 

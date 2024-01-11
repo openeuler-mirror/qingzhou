@@ -132,7 +132,7 @@
                         } else {
                             titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
                         }
-                        boolean isAjaxAction = ConsoleUtil.actionsWithAjax(qzRequest, actionKey);
+                        boolean isAjaxAction = action.showToFormBottom();
                         String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                         %>
                         <a id="<%=actionKey%>"
@@ -303,6 +303,10 @@
                                         continue;
                                     }
 
+                                    if (!action.showToList()  || action.showToListHead()) {
+                                        continue;
+                                    }
+
                                     if (!AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + actionKey, LoginManager.getLoginUser(session))) {
                                         continue;
                                     }
@@ -314,7 +318,7 @@
                                         titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
                                     }
 
-                                    boolean isAjaxAction = ConsoleUtil.actionsWithAjax(qzRequest, actionKey);
+                                    boolean isAjaxAction = action.showToFormBottom();
                                     String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                                     %>
                                     <a href="<%=actionKey.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST) && ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>

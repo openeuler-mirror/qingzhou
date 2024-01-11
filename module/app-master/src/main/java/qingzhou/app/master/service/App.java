@@ -5,6 +5,7 @@ import qingzhou.framework.AppManager;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
@@ -91,14 +92,14 @@ public class App extends ModelBase implements AddModel {
         if (index > -1) {
             srcFileName = srcFileName.substring(0, index);
         }
+        File app = FileUtil.newFile(getApps(), srcFile.getName());
         try {
-            FileUtil.copyFileOrDirectory(srcFile, getApps());
+            FileUtil.copyFileOrDirectory(srcFile, app);
         } catch (IOException e) {
             e.printStackTrace();
             response.setSuccess(false);
             return;
         }
-        File app = FileUtil.newFile(getApps(), srcFileName);
         p.put("filename", srcFileName);
 
         try {
@@ -182,11 +183,44 @@ public class App extends ModelBase implements AddModel {
         }
     }
 
+    @ModelAction(name = "start",
+            effectiveWhen = "running=false",
+            icon = "play",
+            nameI18n = {"启动", "en:Start"},
+            infoI18n = {"启动操作可能因为超时而提示失败，可在一段时间后刷新状态以确认是否启动成功。", "en:The startup operation may fail due to timeout. You can refresh the status after a period of time to confirm whether the startup is successful."})
+    public void start(Request request, Response response) throws Exception {
+
+    }
+
+    @ModelAction(name = "stop",
+            effectiveWhen = "running=true",
+            icon = "stop",
+            nameI18n = {"停止", "en:Stop"},
+            infoI18n = {"停止这个应用，停止后该应用不再对外提供服务，继续访问该应用将得到404响应码。注：该操作仅对Web类型的应用有效。",
+                    "en:Stop the application. After stopping, the application will no longer provide services to the outside world. If you continue to access the application, you will get a 404 response code. Note: This operation is only valid for web-type applications."})
+    public void stop(Request request, Response response) throws Exception {
+
+    }
+
+    @ModelAction(name = "target",
+            icon = "location-arrow", forwardToPage = "target",
+            nameI18n = {"管理", "en:Manage"},
+            effectiveWhen = "running=true",
+            infoI18n = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
+    public void switchTarget(Request request, Response response) throws Exception {
+
+    }
+
     private AppManager getAppManager() {
         return Main.getFC().getAppManager();
     }
 
     public File getApps() {
-        return FileUtil.newFile(Main.getFC().getDomain(), "apps");
+        File apps = FileUtil.newFile(Main.getFC().getDomain(), "apps");
+        if (!apps.exists()) {
+            FileUtil.mkdirs(apps);
+        }
+
+        return apps;
     }
 }

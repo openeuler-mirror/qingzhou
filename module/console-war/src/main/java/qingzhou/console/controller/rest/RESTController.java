@@ -7,11 +7,11 @@ import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.pattern.FilterPattern;
-import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -175,22 +175,12 @@ public class RESTController extends HttpServlet {
                 data.put(k, String.join(ConsoleConstants.DATA_SEPARATOR, v));
             }
         }
-        request.setParameters(data);
+
         if (fileAttachments != null) {
-            // todo
-//                requestImpl.setFileAttachments(fileAttachments);
-//                for (Map.Entry<String, String> entry : fileAttachments.entrySet()) {
-//                    if (StringUtil.notBlank(entry.getValue())) {
-//                        int i = names.indexOf(entry.getKey());
-//                        if (i == -1) {
-//                            names.add(entry.getKey());
-//                            vals.add(entry.getValue());
-//                        } else {
-//                            names.set(i, entry.getValue());
-//                        }
-//                    }
-//                }
+            data.putAll(fileAttachments);
         }
+
+        request.setParameters(data);
 
         return request;
     }

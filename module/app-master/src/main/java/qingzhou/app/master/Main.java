@@ -5,6 +5,9 @@ import qingzhou.framework.FrameworkContextAware;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.QingZhouApp;
+import qingzhou.framework.util.FileUtil;
+
+import java.io.File;
 
 public class Main implements QingZhouApp, FrameworkContextAware {
     public static FrameworkContext FC;
@@ -21,6 +24,8 @@ public class Main implements QingZhouApp, FrameworkContextAware {
         consoleContext.addI18N("validator.ActionEffective.notsupported", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});// The product uses untrusted data to generated HTML pages. 客户端传来的参数不能回显到页面上，以阻止可能的xss攻击
         consoleContext.addI18N("batch.ops.success", new String[]{"%s%s成功%s个", "en:%s %s Success %s"});
         consoleContext.addI18N("batch.ops.fail", new String[]{"%s%s成功%s个，失败%s个，失败详情：", "en:%s%s success %s, failure %s, failure details:"});
+        File serverXml = FileUtil.newFile(appContext.getDomain(), "conf", "server.xml");
+        appContext.setDataStore(new DataStoreImpl(serverXml));
     }
 
     @Override
