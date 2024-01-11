@@ -65,19 +65,22 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public File getCache() {
+        File temp = new File(getTempDir(), "cache");
+        return getCache(temp);
+    }
+
+    @Override
+    public File getCache(File parent) {
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
         String timeFlag = df.format(new Date());
-        return getCache(getDomain(), timeFlag);
+        File result = new File(parent, timeFlag);
+        FileUtil.mkdirs(result);
+        return result;
     }
 
-    private static File getCache(File domain, String sub) {
-        File cacheDir = new File(getTempDir(domain), "cache");
-        FileUtil.mkdirs(cacheDir);
-        return sub == null ? cacheDir : new File(cacheDir, sub);
-    }
-
-    private static File getTempDir(File domain) {
+    private File getTempDir() {
         File tmpdir;
+        File domain = getDomain();
         if (domain != null) {
             tmpdir = new File(domain, "temp");
         } else {

@@ -8,7 +8,11 @@ import qingzhou.framework.api.MonitorModel;
 import qingzhou.framework.util.MathUtil;
 
 import java.io.File;
-import java.lang.management.*;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -172,7 +176,6 @@ public class Jvm extends ModelBase implements MonitorModel {
         }
         String result = path.toString();
         try {
-            result = result.replace(getAppContext().getDomain().getCanonicalPath(), "${qingzhou.domain}");
             result = result.replace(getAppContext().getHome().getCanonicalPath(), "${qingzhou.home}");
         } catch (Exception ignored) {
         }

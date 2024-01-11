@@ -187,6 +187,6 @@ public class App extends ModelBase implements AddModel {
     }
 
     public File getApps() {
-        return FileUtil.newFile(getAppContext().getDomain(), "apps");
+        return FileUtil.newFile(Main.getFC().getDomain(), "apps");
     }
 }

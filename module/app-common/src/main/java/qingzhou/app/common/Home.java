@@ -36,7 +36,7 @@ public class Home extends ModelBase implements ShowModel {
     public void home(Request request, Response response) throws Exception {
         Home index = new Home();
         index.serverInfo = "QingZhou（轻舟）";
-        index.domainPath = getAppContext().getDomain().getPath();
+        index.domainPath = getAppContext().getAppDomain().getPath();
         index.javaHome = "";// TODO JDKUtil.getJavaHome();
         response.addDataObject(index);
     }
