@@ -101,22 +101,11 @@ public class I18nFilter implements Filter<HttpServletContext> {
         master.addI18N(TWO_FA_MSG_KEY, new String[]{"双因子认证认证失败：动态密码错误", "en:Two-factor authentication authentication failed: dynamic password error"});
         master.addI18N(ACCEPT_AGREEMENT_MSG_KEY_MISSING, new String[]{"请输入同意本产品《许可协议》的参数：" + LOGIN_ACCEPT_AGREEMENT + "=true", "en:Please enter the parameters of agreeing to the License Agreement of this product:" + LOGIN_ACCEPT_AGREEMENT + "=true"});
         master.addI18N(ACCEPT_AGREEMENT_MSG_KEY, new String[]{"请确保您已阅读并同意本产品的《许可协议》", "en:Please ensure that you have read and agree to the <License Agreement> for this product"});
-        master.addI18N("jmx.credentials.miss", new String[]{"请输入身份认证信息", "en:Please enter authentication information"});
-        master.addI18N("jmx.credentials.type.error", new String[]{"认证信息应为字符串数组类型，检测到不合法数据：%s", "en:Authentication information should be of type string array, invalid data detected: %s"});
-        master.addI18N("jmx.credentials.element.error", new String[]{"认证信息不完整，即字符串数组个数不足够", "en:The authentication information is incomplete, that is, the number of string arrays is insufficient"});
         master.addI18N("jmx.credentials.element.isNull", new String[]{"用户名或密码不能为空", "en:The user name or password cannot be empty"});
-        master.addI18N("jmx.authentication.invalid", new String[]{"JMX 认证无效，需使用用户登录认证", "en:JMX authentication is invalid, use user login authentication"});
 
         master.addI18N("page.index", new String[]{"管理控制台", "en:Console"});
-        master.addI18N("page.index.service", new String[]{"基础配置", "en:Basic Config"});
-        master.addI18N("page.index.system", new String[]{"系统管理", "en:System Management"});
-        master.addI18N("page.index.health", new String[]{"监视管理", "en:Monitor Management"});
-        master.addI18N("page.index.diagnostic", new String[]{"诊断管理", "en:Healthy Management"});
-        master.addI18N("page.index.support", new String[]{"扩展服务", "en:Extended Service"});
         master.addI18N("page.index.centralized", new String[]{"集中管理", "en:Centralized Management"});
-        master.addI18N("page.index.log", new String[]{"日志管理", "en:Log Management"});
         master.addI18N("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
-        master.addI18N("page.index.console", new String[]{"安全配置", "en:Security Config"});
         master.addI18N("page.action", new String[]{"操作", "en:Action"});
         master.addI18N("page.filter", new String[]{"搜索", "en:Search"});
         master.addI18N("page.status", new String[]{"状态", "en:Status"});
@@ -126,16 +115,11 @@ public class I18nFilter implements Filter<HttpServletContext> {
         master.addI18N("page.cancel", new String[]{"返回", "en:Cancel"});
         master.addI18N("page.confirm.title", new String[]{"请确认", "en:Please confirm"});
         master.addI18N("page.operationConfirm", new String[]{"是否%s该%s", "en:Whether to %s this %s"});
-        master.addI18N("page.action.confirm", new String[]{"是否%s", "en:Whether to %s"});
         master.addI18N("page.document", new String[]{"手册", "en:Manual"});
         master.addI18N("page.invalidate", new String[]{"注销", "en:Logout"});
         master.addI18N("page.error", new String[]{"请求服务器出现错误，请查看服务器日志以了解详情", "en:There was an error requesting the server, please check the server log for details"});
         master.addI18N("msg.success", new String[]{"成功", "en:Success"});
         master.addI18N("msg.fail", new String[]{"失败", "en:Failed"});
-        master.addI18N("fileFrom.upload", new String[]{"上传文件", "en:Upload File"});
-        master.addI18N("fileFrom.server", new String[]{"服务器文件", "en:Server File"});
-        master.addI18N("reportmode.pull", new String[]{"拉取", "en:pull"});
-        master.addI18N("reportmode.push", new String[]{"推送", "en:push"});
         master.addI18N("page.selectfile", new String[]{"选择文件", "en:Select file"});
         master.addI18N("page.list.order", new String[]{"序号", "en:No."});
         master.addI18N("page.copyright", new String[]{"版权所有 © 2023 openEuler 保留一切权利", "en:Copyright © 2023 openEuler. All rights reserved."});
@@ -176,15 +160,6 @@ public class I18nFilter implements Filter<HttpServletContext> {
         master.addI18N("page.guide.help", new String[]{"查看用户手册，帮助您详细了解如何使用产品", "en:View the user manual to help you learn more about how to use products"});
         master.addI18N("page.guide.home", new String[]{"点击“首页”，可查看产品的名称、版本号、命名空间、运行模式及授权等信息", "en:Click \"Home\" to view the name, version number, namespace, operating mode and authorization of the product"});
         master.addI18N("page.guide.res", new String[]{"展开“资源管理”，可创建应用所需要使用的数据库、会话服务器、应用类库等资源", "en:Expand Resource Management to create resources such as databases, session servers, and application class libraries that your application needs to use"});
-        master.addI18N("page.guide.app", new String[]{"展开“应用管理”，可部署、管理应用，并对应用进行升级、备份、回收、迁移等", "en:Expand Application Management to deploy, manage, upgrade, backup, recycle, and migrate applications"});
-        master.addI18N("page.guide.monitor", new String[]{"展开“监视管理”，可了解系统的整体健康状况，观测系统的性能瓶颈", "en:Expand Monitoring Management to understand the overall health of the system and observe the performance bottlenecks of the system"});
-        master.addI18N("page.guide.diagnosis", new String[]{"展开“诊断管理”，可监控系统指标，在达到设置阈值后进行预警。生成快照、发送告警通知等", "en:Expand Diagnostic Management to monitor system metrics and provide alerts when set thresholds are reached. Generate snapshots, send alarm notifications, and more"});
-        master.addI18N("page.guide.log", new String[]{"展开“日志管理”，可对服务器日志、访问日志、审计日志进行配置管理", "en:Expand Log Management to configure and manage server logs, access logs, and audit logs"});
-        master.addI18N("page.guide.cluster", new String[]{"点击“集中管理”，可添加添加远程节点，通过负载均衡器、会话服务器、消息服务器等构建集群，以满足企业多种高并发的业务场景", "en:Click \"Centralized Management\" to add remote nodes and build clusters through load balancers, session servers, and message servers to meet multiple high-concurrency business scenarios of enterprises"});
-        master.addI18N("page.guide.node", new String[]{"点击“集中管理”, 然后点击菜单创建节点", "en:Click \"Centralized Management\", and then click the menu Create Node"});
-
-        master.addI18N("field.group.product", new String[]{"产品信息", "en:Product Info"});
-        master.addI18N("field.group.license", new String[]{"授权信息", "en:License Info"});
 
         // todo
         master.addI18N("AGREEMENT_HEADER", new String[]{"CharMap.AGREEMENT_HEADER[0]", "en:" + "CharMap.AGREEMENT_HEADER[1]"});
