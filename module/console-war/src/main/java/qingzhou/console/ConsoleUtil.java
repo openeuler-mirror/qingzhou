@@ -277,7 +277,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
                         continue;
                     }
 
-                    if (!AccessControl.canAccess(request.getTargetType(), request.getTargetName(), request.getAppName() + "/" + modelName + "/" + actionName, request.getUserName())) {
+                    if (!AccessControl.canAccess(request.getTargetType(), request.getTargetName(), request.getAppName() + "/" + modelName + "/" + actionName, request.getUserName())) { // todo
                         continue;
                     }
 

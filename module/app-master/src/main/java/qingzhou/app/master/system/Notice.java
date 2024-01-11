@@ -1,6 +1,11 @@
 package qingzhou.app.master.system;
 
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 
 @Model(name = "notice", icon = "bell-alt",
         menuName = "Basic", menuOrder = 4,
@@ -30,9 +35,4 @@ public class Notice extends ModelBase implements ListModel {
 
     @ModelField(showToList = true, nameI18n = {"细节", "en:Detail"}, infoI18n = {"通知的细节信息。", "en:The details of the notification."})
     public String detail;
-
-    @Override
-    public void init() {
-        super.init();
-    }
 }
