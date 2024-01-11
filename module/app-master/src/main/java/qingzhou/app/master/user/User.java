@@ -32,7 +32,6 @@ public class User extends ModelBase implements AddModel {
         super.init();
         ConsoleContext consoleContext = getAppContext().getConsoleContext();
         consoleContext.addI18N("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
-        consoleContext.addI18N("permissions.cannot.users", new String[]{"出于安全考虑，系统内置用户的权限不能更改", "en:For security reasons, permissions cannot be changed for built-in users of the system"});
         consoleContext.addI18N("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
         consoleContext.addI18N("operate.system.users.not", new String[]{"为安全起见，请勿操作系统内置用户", "en:For security reasons, do not operate the system built-in users"});
         consoleContext.addI18N("tenant.not.exist", new String[]{"租户[%s]不存在", "en:Tenant [%s] does not exist"});

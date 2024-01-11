@@ -34,8 +34,5 @@ public class Notice extends ModelBase implements ListModel {
     @Override
     public void init() {
         super.init();
-        ConsoleContext master = getAppContext().getConsoleContext();
-        master.addI18N("NOTICE_TYPE_RESTART", new String[]{"有配置项发生变更，需重启 QingZhou 以使其生效",
-                "en:If a configuration item is changed, QingZhou needs to be restarted for it to take effect"});
     }
 }
