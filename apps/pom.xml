@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>tomcat</module>
+        <module>Tomcat</module>
         <module>IzPack</module>
         <module>RocketMQ</module>
         <module>Redis</module>

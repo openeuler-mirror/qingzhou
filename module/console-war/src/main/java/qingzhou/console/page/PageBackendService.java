@@ -27,7 +27,8 @@ import java.util.Properties;
  * 建议多使用 VO 类的对象，可便于后续转换为 json
  */
 public class PageBackendService {
-
+    
+    private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
     public static String TARGET_TYPE_SET_FLAG = "targetType";
     public static String TARGET_NAME_SET_FLAG = "targetName";
 
@@ -48,22 +49,22 @@ public class PageBackendService {
 
     static void printParentMenu(Properties menu, String targetType, String targetName, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
         String model = menu.getProperty("name");
-        menuBuilder.append("<li class=\"treeview" + (model.equals(curModel) ? " active" : "") + "\">");
-        menuBuilder.append("<a href=\"javascript:void(0);\">");
-        menuBuilder.append(" <i class=\"icon icon-" + menu.getProperty("icon") + "\"></i>");
-        ConsoleContext consoleContext = getAppContext(appName).getConsoleContext();
         String menuText = "未分类";
+        boolean isDefaultActive = false;
         if (StringUtil.notBlank(model)) {
-            MenuInfo menuInfo = consoleContext.getMenuInfo(model);
+            MenuInfo menuInfo = getAppContext(appName).getConsoleContext().getMenuInfo(model);
             if (menuInfo == null) {
                 // todo
-//                menuInfo = ((ConsoleContextImpl) Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME)).getMenuInfo(model);
-            }
-            if (menuInfo != null) {
+                //menuInfo = ((ConsoleContextImpl) Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME)).getMenuInfo(model);
+            } else {
+                isDefaultActive = DEFAULT_EXPAND_MENU_GROUP_NAME.equals(menuInfo.getMenuName());
                 menuText = I18n.getString(menuInfo.getMenuI18n());
             }
         }
-        menuBuilder.append("<span>" + menuText + "</span>");
+        menuBuilder.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append(model.equals(curModel) ? " active" : "").append("\">");
+        menuBuilder.append("<a href=\"javascript:void(0);\">");
+        menuBuilder.append(" <i class=\"icon icon-").append(menu.getProperty("icon")).append("\"></i>");
+        menuBuilder.append("<span>").append(menuText).append("</span>");
         menuBuilder.append("<span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");
         menuBuilder.append("</a>");
         if (childrenBuilder != null && childrenBuilder.length() > 0) {
@@ -77,12 +78,12 @@ public class PageBackendService {
     static void printChildrenMenu(Properties menu, HttpServletRequest request, HttpServletResponse response, String viewName, String targetType, String targetName, String appName, String curModel, StringBuilder menuBuilder) {
         String model = menu.getProperty("name");
         String action = menu.getProperty("entryAction");
-        menuBuilder.append("<li class=\"treeview " + (model.equals(curModel) ? " active" : "") + "\">");
+        menuBuilder.append("<li class=\"treeview ").append((model.equals(curModel) ? " active" : "")).append("\">");
         String contextPath = request.getContextPath();
         String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + targetType + "/" + targetName + "/" + appName + "/" + model + "/" + action;
-        menuBuilder.append("<a href='" + encodeURL(request, response, url) + "' modelName='" + model + "'>");
-        menuBuilder.append("<i class='icon icon-" + menu.getProperty("icon") + "'></i>");
-        menuBuilder.append("<span>" + I18n.getString(appName, "model." + model) + "</span>");
+        menuBuilder.append("<a href='").append(encodeURL(request, response, url)).append("' modelName='").append(model).append("'>");
+        menuBuilder.append("<i class='icon icon-").append(menu.getProperty("icon")).append("'></i>");
+        menuBuilder.append("<span>").append(I18n.getString(appName, "model." + model)).append("</span>");
         menuBuilder.append("</a>");
         menuBuilder.append("</li>");
     }
