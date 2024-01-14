@@ -1,5 +1,6 @@
 package qingzhou.remote.impl;
 
+import java.io.ByteArrayInputStream;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -27,8 +28,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import qingzhou.httpserver.HttpRoute;
 
 public class Controller implements BundleActivator {
     private ServiceReference<FrameworkContext> serviceReference;
@@ -46,22 +47,16 @@ public class Controller implements BundleActivator {
         int port = 7000;// todo 可配置
         path = "/";
         server = frameworkContext.getService(HttpServerService.class).createHttpServer(port, 200);
-        server.addContext(path, httpExchange -> {
+        server.addContext(new HttpRoute(path), (request, response) -> {
             byte[] result;
             try {
-                result = process(httpExchange.getRequestBody());
+                result = process(new ByteArrayInputStream(response.getContent().getBytes()));
             } catch (Exception e) {
                 result = ExceptionUtil.stackTrace(e).getBytes(StandardCharsets.UTF_8);
             }
-            OutputStream os = httpExchange.getResponseBody();
             try {
-                os.write(result);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                os.close();
-            } catch (IOException e) {
+                response.setContent(new String(result, StandardCharsets.UTF_8));
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
