@@ -1,7 +1,7 @@
 package qingzhou.httpserver;
 
 public interface HttpServer {
-    void addContext(String path, HttpHandler httpHandler);
+    void addContext(HttpRoute httpRoute, HttpHandler httpHandler);
 
     void removeContext(String path);
 

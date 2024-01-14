@@ -1,5 +1,6 @@
 package qingzhou.httpserver;
 
+@FunctionalInterface
 public interface HttpHandler {
-    void handle(HttpExchange httpExchange);
+    void handle(HttpRequest request, HttpResponse response) throws Exception;
 }
