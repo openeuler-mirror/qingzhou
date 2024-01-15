@@ -1,4 +1,10 @@
-package qingzhou.httpserver.impl.tinyserver;
+package qingzhou.remote.impl.net.impl.tinyserver;
+
+import qingzhou.remote.impl.net.HttpHandler;
+import qingzhou.remote.impl.net.HttpRequest;
+import qingzhou.remote.impl.net.HttpResponse;
+import qingzhou.remote.impl.net.HttpRoute;
+import qingzhou.remote.impl.net.HttpServer;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -27,12 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import qingzhou.httpserver.HttpServer;
-import qingzhou.httpserver.HttpHandler;
-import qingzhou.httpserver.HttpRequest;
-import qingzhou.httpserver.HttpResponse;
-import qingzhou.httpserver.HttpRoute;
 
 public class TinyHttpServer implements HttpServer {
 

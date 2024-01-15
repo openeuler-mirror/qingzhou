@@ -1,4 +1,4 @@
-package qingzhou.httpserver;
+package qingzhou.remote.impl.net;
 
 @FunctionalInterface
 public interface HttpHandler {

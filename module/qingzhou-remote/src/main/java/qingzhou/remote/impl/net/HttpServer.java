@@ -1,4 +1,4 @@
-package qingzhou.httpserver;
+package qingzhou.remote.impl.net;
 
 public interface HttpServer {
     void addContext(HttpRoute httpRoute, HttpHandler httpHandler);

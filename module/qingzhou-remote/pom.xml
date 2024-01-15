@@ -19,7 +19,7 @@
                             <Bundle-Activator>qingzhou.remote.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,qingzhou.framework,qingzhou.framework.api,qingzhou.crypto,qingzhou.serializer,qingzhou.httpserver,qingzhou.logger
+                                org.osgi.framework,qingzhou.framework,qingzhou.framework.api,qingzhou.crypto,qingzhou.serializer,qingzhou.logger
                             </Import-Package>
                             <Export-Package>qingzhou.remote</Export-Package>
                         </manifestEntries>
@@ -49,12 +49,6 @@
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-serializer</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-httpserver</artifactId>
             <version>0.1.0</version>
         </dependency>
     </dependencies>

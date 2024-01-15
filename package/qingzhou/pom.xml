@@ -117,11 +117,5 @@
             <artifactId>app-common</artifactId>
             <version>0.1.0</version>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-httpserver</artifactId>
-            <classifier>jar-with-dependencies</classifier>
-            <version>0.1.0</version>
-        </dependency>
     </dependencies>
 </project>

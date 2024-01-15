@@ -1,4 +1,4 @@
-package qingzhou.httpserver;
+package qingzhou.remote.impl.net;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Date;

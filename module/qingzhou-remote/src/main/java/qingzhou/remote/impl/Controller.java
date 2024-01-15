@@ -1,6 +1,5 @@
 package qingzhou.remote.impl;
 
-import java.io.ByteArrayInputStream;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -16,20 +15,21 @@ import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StreamUtil;
-import qingzhou.httpserver.HttpServer;
-import qingzhou.httpserver.HttpServerService;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
 import qingzhou.remote.RemoteConstants;
+import qingzhou.remote.impl.net.HttpRoute;
+import qingzhou.remote.impl.net.HttpServer;
+import qingzhou.remote.impl.net.impl.tinyserver.HttpServerServiceImpl;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import qingzhou.httpserver.HttpRoute;
 
 public class Controller implements BundleActivator {
     private ServiceReference<FrameworkContext> serviceReference;
@@ -46,7 +46,7 @@ public class Controller implements BundleActivator {
 
         int port = 7000;// todo 可配置
         path = "/";
-        server = frameworkContext.getService(HttpServerService.class).createHttpServer(port, 200);
+        server = new HttpServerServiceImpl().createHttpServer(port, 200);
         server.addContext(new HttpRoute(path), (request, response) -> {
             byte[] result;
             try {
