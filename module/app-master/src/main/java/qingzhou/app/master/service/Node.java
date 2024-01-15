@@ -17,6 +17,7 @@ import java.util.Map;
         infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
                 "en:A node is an abstraction of a physical or virtual computer environment and is the infrastructure that runs instances."})
 public class Node extends ModelBase implements AddModel {
+    public static final String DEFAULT_NODE_NAME = "default";
 
     @ModelField(
             required = true, showToList = true,
@@ -45,7 +46,7 @@ public class Node extends ModelBase implements AddModel {
     @Override
     public void list(Request request, Response response) throws Exception {
         Map<String, String> node = new HashMap<>();
-        node.put("id", "default");
+        node.put("id", Node.DEFAULT_NODE_NAME);
         node.put("ip", "0.0.0.0");
         node.put("port", "9060");
         node.put("running", "true");

@@ -38,10 +38,10 @@ public class HtmlView implements View {
 
 
         if (ConsoleUtil.ACTION_NAME_TARGET.equals(actionName)) {
-            if (ConsoleConstants.MODEL_NAME_cluster.equals(modelName) || ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
+            if (ConsoleConstants.MODEL_NAME_cluster.equals(modelName) || ConsoleConstants.MODEL_NAME_node.equals(modelName)) { // todo 这个还需要？
                 request.setModelName(ConsoleConstants.MODEL_NAME_home);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
-            } else if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {
+            } else if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {// todo 是不是只有 app 会有 target action？ target设计是否有问题?
                 String appName = request.getId();
                 ModelManager modelManager = PageBackendService.getModelManager(appName);
                 if (modelManager != null) {
