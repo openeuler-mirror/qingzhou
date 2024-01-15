@@ -6,6 +6,7 @@ import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.XmlUtil;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +21,11 @@ public class DataStoreImpl implements DataStore {
 
     @Override
     public List<Map<String, String>> getAllData(String type) throws Exception {
-        return xmlUtil.getAttributesList("//" + type);
+        List<Map<String, String>> datas = xmlUtil.getAttributesList("//" + type);
+        if(datas == null){
+            return new ArrayList<>();
+        }
+        return datas;
     }
 
     @Override
