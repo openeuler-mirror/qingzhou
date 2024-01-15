@@ -13,7 +13,7 @@ Business value: Quickly and centrally develop, configure, and observe your busin
 
 == 软件架构
 
-image::doc/img/architecture.png[Architecture,700,500]
+image::doc/img/architecture.jpg[Architecture,700,500]
 
 == 安装教程
 
