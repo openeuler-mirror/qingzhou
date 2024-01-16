@@ -89,7 +89,7 @@ public class App extends ModelBase implements AddModel {
     public Options options(String fieldName) {
         if ("nodes".equals(fieldName)) {
             Options options = super.options(fieldName);
-            return Options.merge(options, Option.of(Node.DEFAULT_NODE_NAME));
+            return Options.merge(options, Option.of(ConsoleConstants.LOCAL_NODE_NAME));
         }
 
         return super.options(fieldName);

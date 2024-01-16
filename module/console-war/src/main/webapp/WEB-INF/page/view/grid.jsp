@@ -36,7 +36,7 @@
 
     <div class="block-bg">
         <form name="filterForm" id="filterForm" method="POST"
-              action="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getTargetType() + "/" + qzRequest.getTargetName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
+              action="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
             <div class="row filterForm" style="margin-top: 10px;">
                 <%
                     for (Integer i : indexToShow) {
@@ -98,7 +98,7 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    boolean canAccess = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
+                    boolean canAccess = (AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
                     ModelAction listCreateAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_CREATE);
                     ModelAction listAddAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_ADD);
                     if (canAccess && listCreateAction != null && listAddAction != null) {
@@ -111,8 +111,8 @@
                 <%
                     }
 
-                    boolean downloadPermission = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADFILE, LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADLIST, LoginManager.getLoginUser(session)));
+                    boolean downloadPermission = (AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADFILE, LoginManager.getLoginUser(session))
+                            && AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + DownloadModel.ACTION_NAME_DOWNLOADLIST, LoginManager.getLoginUser(session)));
                     final ModelAction downloadListModelAction = modelManager.getModelAction(qzRequest.getModelName(), DownloadModel.ACTION_NAME_DOWNLOADLIST);
                     if (downloadListModelAction != null && downloadPermission && Arrays.asList(modelManager.getActionNamesShowToListHead(qzRequest.getModelName())).contains(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
                 %>

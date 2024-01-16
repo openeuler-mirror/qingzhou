@@ -291,7 +291,7 @@
                             <%
                             // 菜单
                             List<Properties> menuList = PageBackendService.getAppMenuList(currentUser, ConsoleConstants.MASTER_APP_NAME);
-                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, "node", ConsoleConstants.LOCAL_NODE_NAME, ConsoleConstants.MASTER_APP_NAME, qzRequest.getModelName()));
+                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, ConsoleConstants.MASTER_APP_NAME, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>

@@ -7,12 +7,14 @@ import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.remote.RemoteConstants;
 
@@ -21,12 +23,15 @@ import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static qingzhou.console.impl.ConsoleWarHelper.getAppInfoManager;
 
 public class InvokeAction implements Filter<RestContext> {
     InvokeAction() {
@@ -101,34 +106,8 @@ public class InvokeAction implements Filter<RestContext> {
 
     public Response invoke(RequestImpl request) {
         Response response = new ResponseImpl();
-        List<String> nodes = new ArrayList<>();
         try {
-            String targetType = request.getTargetType();
-            String targetName = request.getTargetName();
-            switch (TargetType.valueOf(targetType)) {
-                case node:
-                    if (!targetName.equals(ConsoleConstants.LOCAL_NODE_NAME)) {
-                        nodes.add(targetName);
-                    }
-                    break;
-                case cluster:
-                    Map<String, String> cluster = ServerXml.get().getClusterById(targetName);
-                    nodes.addAll(Arrays.asList(cluster.get("nodes").split(ConsoleConstants.DATA_SEPARATOR)));
-                    break;
-                default:
-                    throw new IllegalStateException("Unknown TargetType: " + targetType);
-            }
-
-            if (nodes.isEmpty()) {
-                ConsoleWarHelper.getAppInfoManager().getAppInfo(request.getAppName()).invokeAction(request, response);
-            } else {
-                KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
-                String remoteKey = keyManager.getKeyOrElseInit(ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()), RemoteConstants.REMOTE_KEY_NAME, null);
-                for (String node : nodes) {
-                    String remoteUrl = buildRemoteUrl(node);
-                    response = RemoteClient.sendReq(remoteUrl, request, remoteKey);// todo : 每个 response 会被后来的覆盖掉，导致状态信息丢失
-                }
-            }
+            Map<String, Response> responseMap = processRequest(request, response); // TODO 多条结果如何展示？
         } catch (Exception e) {
             response.setSuccess(false);
             Set<Throwable> set = new HashSet<>();
@@ -176,6 +155,72 @@ public class InvokeAction implements Filter<RestContext> {
                 retrieveException(thx, set);
             }
         }
+    }
+
+    public Map<String, Response> processRequest(Request request, Response response) throws Exception {
+        Map<String, Response> result = new HashMap<>();
+        String appName = request.getAppName();
+        // 本地执行
+        if (ConsoleConstants.MASTER_APP_NAME.equals(appName)) {
+            handleLocalRequest(appName, request, response);
+            result.put(appName, response);
+            return result;
+        }
+
+        Map<String, String> app = getAppInfo(appName);
+        if (app == null || app.isEmpty()) {
+            throw ExceptionUtil.unexpectedException("App information is not found.");
+        }
+
+        List<String> nodes = extractNodes(app);
+        boolean containsLocal = nodes.remove(ConsoleConstants.LOCAL_NODE_NAME);
+
+        if (nodes.isEmpty() || containsLocal) {
+            handleLocalRequest(appName, request, response);
+            result.put(appName, response);
+        }
+
+        if (!nodes.isEmpty()) {
+            KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
+            String remoteKey = keyManager.getKeyOrElseInit(
+                    ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()),
+                    RemoteConstants.REMOTE_KEY_NAME,
+                    null
+            );
+            result.putAll(handleRemoteRequest( nodes, request, remoteKey));
+        }
+
+        return result;
+    }
+
+    // 处理本地执行
+    private void handleLocalRequest(String appName, Request request, Response response) throws Exception {
+        getAppInfoManager().getAppInfo(appName).invokeAction(request, response);
+    }
+
+    // 处理远程请求
+    private Map<String, Response> handleRemoteRequest(List<String> nodes, Request request, String remoteKey) throws Exception {
+        Map<String, Response> responses = new HashMap<>();
+        for (String node : nodes) {
+            String remoteUrl = buildRemoteUrl(node);
+            Response remoteResponse = RemoteClient.sendReq(remoteUrl, request, remoteKey);
+            responses.put(node, remoteResponse);
+        }
+        return responses;
+    }
+
+    private List<String> extractNodes(Map<String, String> app) {
+        List<String> nodes = new ArrayList<>();
+        String appNodes = app.get("nodes");
+        String[] nodeIds = appNodes.split(ConsoleConstants.DATA_SEPARATOR);
+        Collections.addAll(nodes, nodeIds);
+
+        return nodes;
+    }
+
+    private Map<String, String> getAppInfo(String appName) throws Exception {
+        return getAppInfoManager().getAppInfo(ConsoleConstants.MASTER_APP_NAME)
+                .getAppContext().getDataStore().getDataById(ConsoleConstants.MODEL_NAME_app, appName);
     }
 
     private String buildRemoteUrl(String nodeName) {

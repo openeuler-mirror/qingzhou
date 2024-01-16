@@ -58,7 +58,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
     }
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getTargetType() + "/" + request.getTargetName() + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
+        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
         return response.encodeURL(url);
     }
 
@@ -277,7 +277,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
                         continue;
                     }
 
-                    if (!AccessControl.canAccess(request.getTargetType(), request.getTargetName(), request.getAppName() + "/" + modelName + "/" + actionName, request.getUserName())) { // todo
+                    if (!AccessControl.canAccess(request.getAppName(), request.getAppName() + "/" + modelName + "/" + actionName, request.getUserName())) { // todo
                         continue;
                     }
 

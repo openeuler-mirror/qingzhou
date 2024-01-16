@@ -7,6 +7,7 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.console.ConsoleConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,8 +18,6 @@ import java.util.Map;
         infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
                 "en:A node is an abstraction of a physical or virtual computer environment and is the infrastructure that runs instances."})
 public class Node extends ModelBase implements AddModel {
-    public static final String DEFAULT_NODE_NAME = "default";
-
     @ModelField(
             required = true, showToList = true,
             nameI18n = {"名称", "en:Name"},
@@ -46,7 +45,7 @@ public class Node extends ModelBase implements AddModel {
     @Override
     public void list(Request request, Response response) throws Exception {
         Map<String, String> node = new HashMap<>();
-        node.put("id", Node.DEFAULT_NODE_NAME);
+        node.put("id", ConsoleConstants.LOCAL_NODE_NAME);
         node.put("ip", "0.0.0.0");
         node.put("port", "9060");
         node.put("running", "true");

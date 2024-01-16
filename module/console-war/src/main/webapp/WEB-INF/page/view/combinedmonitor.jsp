@@ -6,7 +6,7 @@
     if (ConsoleSDK.needEncode(encodedId)) {
         encodedId = ConsoleSDK.encodeId(encodedId);
     }
-    String url = PageBackendService.encodeURL(request, response, ViewManager.jsonView + "/" + qzRequest.getTargetType() + "/"+ qzRequest.getTargetName() +"/" + qzRequest.getModelName() + "/" + MonitorModel.ACTION_NAME_MONITOR + "/" + encodedId);
+    String url = PageBackendService.encodeURL(request, response, ViewManager.jsonView + "/" + qzRequest.getModelName() + "/" + MonitorModel.ACTION_NAME_MONITOR + "/" + encodedId);
 %>
 
 <div class="bodyDiv">

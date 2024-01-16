@@ -6,8 +6,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 public class RequestImpl implements Request, Serializable, Cloneable {
-    private String targetType;
-    private String targetName;
     private String appName;
     private String modelName;
     private String actionName;
@@ -15,16 +13,6 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     private String id;
     private String userName;
     private HashMap<String, String> parameters;
-
-    @Override
-    public String getTargetType() {
-        return targetType;
-    }
-
-    @Override
-    public String getTargetName() {
-        return targetName;
-    }
 
     @Override
     public String getAppName() {
@@ -68,14 +56,6 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     @Override
     public String getUserName() {
         return userName;
-    }
-
-    public void setTargetType(String targetType) {
-        this.targetType = targetType;
-    }
-
-    public void setTargetName(String targetName) {
-        this.targetName = targetName;
     }
 
     public void setAppName(String appName) {
