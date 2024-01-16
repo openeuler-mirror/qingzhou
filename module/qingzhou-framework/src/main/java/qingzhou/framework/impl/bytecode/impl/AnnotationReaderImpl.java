@@ -25,7 +25,8 @@ public class AnnotationReaderImpl implements AnnotationReader {
 
     @Override
     public Map<String, ModelField> getFieldAnnotations(String classname) throws Exception {
-        Field[] fields = classLoader.loadClass(classname).getFields();
+        Class<?> clazz = classLoader.loadClass(classname);
+        Field[] fields = clazz.getFields();//.getDeclaredFields();
         Map<String, ModelField> map = new LinkedHashMap<>(fields.length);
         for (Field field : fields) {
             if (Modifier.isStatic(field.getModifiers())) {
