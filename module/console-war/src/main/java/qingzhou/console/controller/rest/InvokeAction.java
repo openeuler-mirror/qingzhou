@@ -22,14 +22,7 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static qingzhou.console.impl.ConsoleWarHelper.getAppInfoManager;
 
@@ -105,10 +98,15 @@ public class InvokeAction implements Filter<RestContext> {
     }
 
     public Response invoke(RequestImpl request) {
-        Response response = new ResponseImpl();
         try {
-            Map<String, Response> responseMap = processRequest(request, response); // TODO 多条结果如何展示？
+            Map<String, Response> responseOnNode = processRequest(request);
+            for (Map.Entry<String, Response> entry : responseOnNode.entrySet()) {
+                return entry.getValue(); // TODO 多条结果如何展示？
+            }
+
+            throw ExceptionUtil.unexpectedException("It should return at least one Response");
         } catch (Exception e) {
+            Response response = new ResponseImpl();
             response.setSuccess(false);
             Set<Throwable> set = new HashSet<>();
             retrieveException(e, set);
@@ -136,8 +134,8 @@ public class InvokeAction implements Filter<RestContext> {
             }
 
             response.setMsg(msg);
+            return response;
         }
-        return response;
     }
 
     private void retrieveException(Throwable t, Set<Throwable> set) {
@@ -157,76 +155,50 @@ public class InvokeAction implements Filter<RestContext> {
         }
     }
 
-    public Map<String, Response> processRequest(Request request, Response response) throws Exception {
-        Map<String, Response> result = new HashMap<>();
+    public Map<String, Response> processRequest(Request request) throws Exception {
+        Map<String, Response> resultOnNode = new HashMap<>();
         String appName = request.getAppName();
-        // 本地执行
-        if (ConsoleConstants.MASTER_APP_NAME.equals(appName)) {
-            handleLocalRequest(appName, request, response);
-            result.put(appName, response);
-            return result;
-        }
 
-        Map<String, String> app = getAppInfo(appName);
-        if (app == null || app.isEmpty()) {
-            throw ExceptionUtil.unexpectedException("App information is not found.");
-        }
-
-        List<String> nodes = extractNodes(app);
-        boolean containsLocal = nodes.remove(ConsoleConstants.LOCAL_NODE_NAME);
-
-        if (nodes.isEmpty() || containsLocal) {
-            handleLocalRequest(appName, request, response);
-            result.put(appName, response);
-        }
-
-        if (!nodes.isEmpty()) {
-            KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
-            String remoteKey = keyManager.getKeyOrElseInit(
-                    ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()),
-                    RemoteConstants.REMOTE_KEY_NAME,
-                    null
-            );
-            result.putAll(handleRemoteRequest( nodes, request, remoteKey));
-        }
-
-        return result;
-    }
-
-    // 处理本地执行
-    private void handleLocalRequest(String appName, Request request, Response response) throws Exception {
-        getAppInfoManager().getAppInfo(appName).invokeAction(request, response);
-    }
-
-    // 处理远程请求
-    private Map<String, Response> handleRemoteRequest(List<String> nodes, Request request, String remoteKey) throws Exception {
-        Map<String, Response> responses = new HashMap<>();
-        for (String node : nodes) {
-            String remoteUrl = buildRemoteUrl(node);
-            Response remoteResponse = RemoteClient.sendReq(remoteUrl, request, remoteKey);
-            responses.put(node, remoteResponse);
-        }
-        return responses;
-    }
-
-    private List<String> extractNodes(Map<String, String> app) {
         List<String> nodes = new ArrayList<>();
-        String appNodes = app.get("nodes");
-        String[] nodeIds = appNodes.split(ConsoleConstants.DATA_SEPARATOR);
-        Collections.addAll(nodes, nodeIds);
+        if (ConsoleConstants.MASTER_APP_NAME.equals(appName)) {
+            nodes.add(ConsoleConstants.LOCAL_NODE_NAME);
+        } else {
+            Map<String, String> app = getAppInfoManager().getAppInfo(ConsoleConstants.MASTER_APP_NAME)
+                    .getAppContext().getDataStore()
+                    .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
+            if (app == null || app.isEmpty()) {
+                throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
+            }
+            String[] appNodes = app.get("nodes").split(ConsoleConstants.DATA_SEPARATOR);
+            nodes.addAll(Arrays.asList(appNodes));
+        }
 
-        return nodes;
-    }
+        String remoteKey = null;
+        for (String node : nodes) {
+            Response responseOnNode;
+            if (node.equals(ConsoleConstants.LOCAL_NODE_NAME)) {
+                Response response = new ResponseImpl();
+                getAppInfoManager().getAppInfo(appName).invokeAction(request, response);
+                responseOnNode = response;
+            } else {
+                if (remoteKey == null) {
+                    KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
+                    remoteKey = keyManager.getKeyOrElseInit(
+                            ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()),
+                            RemoteConstants.REMOTE_KEY_NAME,
+                            null
+                    );
+                }
 
-    private Map<String, String> getAppInfo(String appName) throws Exception {
-        return getAppInfoManager().getAppInfo(ConsoleConstants.MASTER_APP_NAME)
-                .getAppContext().getDataStore().getDataById(ConsoleConstants.MODEL_NAME_app, appName);
-    }
+                Map<String, String> nodeById = ServerXml.get().getNodeById(node);
+                String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
+                String port = nodeById.get("port");
+                String remoteUrl = String.format("http://%s:%s", ip, port);
+                responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
+            }
+            resultOnNode.put(node, responseOnNode);
+        }
 
-    private String buildRemoteUrl(String nodeName) {
-        Map<String, String> nodeById = ServerXml.get().getNodeById(nodeName);
-        String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
-        String port = nodeById.get("port");
-        return String.format("http://%s:%s", ip, port);
+        return resultOnNode;
     }
 }

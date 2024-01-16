@@ -99,9 +99,7 @@
             <div class="tools-group">
                 <%
                 for (String action : modelManager.getActionNamesShowToListHead(qzRequest.getModelName())) {
-                    // boolean canAccess = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
                     ModelAction modelAction = modelManager.getModelAction(qzRequest.getModelName(), action);
-                    // ModelAction listAddAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_ADD);
                     if (modelAction != null) {
                         String viewName = ViewManager.htmlView;
                         %>
