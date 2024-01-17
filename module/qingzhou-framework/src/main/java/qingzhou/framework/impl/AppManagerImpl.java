@@ -73,6 +73,7 @@ public class AppManagerImpl implements AppManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return appInfo;
     }
 
