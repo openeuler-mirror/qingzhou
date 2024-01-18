@@ -86,7 +86,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/sysapp/master</outputDirectory>
+            <outputDirectory>lib/version/sysapp/master/lib</outputDirectory>
         </dependencySet>
 
         <dependencySet>

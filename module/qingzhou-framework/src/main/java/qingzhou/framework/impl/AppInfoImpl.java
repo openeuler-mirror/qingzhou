@@ -14,11 +14,18 @@ import qingzhou.framework.impl.model.ModelManagerImpl;
 
 import java.net.URLClassLoader;
 import java.util.List;
+import java.util.Properties;
 
 public class AppInfoImpl implements AppInfo {
     private QingZhouApp qingZhouApp;
     private AppContextImpl appContext;
     private URLClassLoader loader;
+    private Properties appProperties;
+
+    @Override
+    public Properties getAppProperties() {
+        return appProperties;
+    }
 
     @Override
     public AppContext getAppContext() {
@@ -67,5 +74,9 @@ public class AppInfoImpl implements AppInfo {
 
     public void setLoader(URLClassLoader loader) {
         this.loader = loader;
+    }
+
+    public void setAppProperties(Properties appProperties) {
+        this.appProperties = appProperties;
     }
 }

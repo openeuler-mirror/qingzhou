@@ -7,6 +7,7 @@ import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
@@ -22,7 +23,14 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static qingzhou.console.impl.ConsoleWarHelper.getAppInfoManager;
 
@@ -43,7 +51,15 @@ public class InvokeAction implements Filter<RestContext> {
 
     private boolean isBatchAction(RequestImpl request) {
         String ids = request.getParameter(ListModel.FIELD_NAME_ID);
-        return StringUtil.notBlank(ids);
+        if (StringUtil.isBlank(ids)) return false;
+
+        ModelManager modelManager = getAppInfoManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
+        String[] actionNamesSupportBatch = modelManager.getActionNamesSupportBatch(request.getModelName());
+        for (String batch : actionNamesSupportBatch) {
+            if (batch.equals(request.getActionName())) return true;
+        }
+
+        return false;
     }
 
     private Response invokeBatch(RequestImpl request) {

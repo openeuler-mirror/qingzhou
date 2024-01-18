@@ -13,6 +13,7 @@ import qingzhou.framework.api.Options;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
@@ -46,6 +47,7 @@ public class App extends ModelBase implements AddModel {
     @ModelField(
             showToList = true,
             effectiveWhen = "appFrom=false",
+            disableOnEdit = true,
             required = true,
             notSupportedCharacters = "#",
             maxLength = 255,// for #NC-1418 及其它文件目录操作的，文件长度不能大于 255
@@ -118,32 +120,41 @@ public class App extends ModelBase implements AddModel {
             return;
         }
         String srcFileName = srcFile.getName();
-        String appName = srcFileName;
-        int index = appName.lastIndexOf(".");
-        if (index > -1) {
-            appName = appName.substring(0, index);
-        }
-        File app = FileUtil.newFile(getApps(), srcFileName);
-        try {
+        String appName;
+        if (srcFile.isDirectory()) {
+            appName = srcFileName;
+            File app = FileUtil.newFile(getApps(), appName);
             FileUtil.copyFileOrDirectory(srcFile, app);
-        } catch (IOException e) {
-            e.printStackTrace();
-            response.setSuccess(false);
-            return;
+        } else if (srcFileName.endsWith(".jar")) {
+            int index = srcFileName.lastIndexOf(".");
+            appName = srcFileName.substring(0, index);
+            File app = FileUtil.newFile(getApps(), appName);
+            FileUtil.copyFileOrDirectory(srcFile, new File(app, "lib"));
+        } else if (srcFileName.endsWith(".zip")) {
+            int index = srcFileName.lastIndexOf(".");
+            appName = srcFileName.substring(0, index);
+            File app = FileUtil.newFile(getApps(), appName);
+            FileUtil.unZipToDir(srcFile, app);// todo: 如果不需要部署到 本地节点，这里的解压就没有必要了
+        } else {
+            throw ExceptionUtil.unexpectedException("unknown app type");
         }
-        p.put("id", appName);
-        p.put("filename", srcFileName);
 
-        try {
-            String nodes = p.get("nodes");// TODO 这里要区分远程和本地
-
-            getAppManager().installApp(appName, false, app);
-            getDataStore().addData(request.getModelName(), appName, p);
-        } catch (Exception e) {
-            e.printStackTrace();
-            FileUtil.delete(app);
-            response.setSuccess(false);
-            return;
+        String[] nodes = p.get("nodes").split(ConsoleConstants.DATA_SEPARATOR);
+        for (String node : nodes) {
+            if (ConsoleConstants.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
+                File app = FileUtil.newFile(getApps(), appName);
+                try {
+                    getAppManager().installApp(app);
+                    p.put("id", appName);
+                    getDataStore().addData(request.getModelName(), appName, p);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    FileUtil.forceDeleteQuietly(app);
+                    response.setSuccess(false);
+                }
+            } else {
+                // TODO：调用远端 node 上 master 的 app add？（将其node设置为 LOCAL_NODE_NAME 后在发送远程请求？）
+            }
         }
     }
 

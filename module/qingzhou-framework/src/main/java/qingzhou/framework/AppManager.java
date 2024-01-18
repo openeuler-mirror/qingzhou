@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Set;
 
 public interface AppManager {
-    void installApp(String name, boolean includeCommon, File... file) throws Exception;
+    void installApp(File appDir) throws Exception;
 
     void uninstallApp(String name) throws Exception;
 

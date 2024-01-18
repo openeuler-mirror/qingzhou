@@ -5,7 +5,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
@@ -32,29 +31,18 @@ public class Controller implements BundleActivator {
 
     private void installMaster() throws Exception {
         logger.info("install master app");
-        File[] files = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "master").listFiles();
-        appManager.installApp(ConsoleConstants.MASTER_APP_NAME, false, files);
+        File masterApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "master");
+        appManager.installApp(masterApp);
     }
 
     private void installApps() throws Exception {
         File[] files = new File(frameworkContext.getDomain(), "apps").listFiles();
         if (files != null) {
             for (File file : files) {
-                String appName = buildAppName(file);// todo 改为可配置？
-                logger.info("install app: " + appName);
-                boolean includeCommon = true;// todo 改为可配置？
-                appManager.installApp(appName, includeCommon, file);
+                logger.info("install app: " + file.getName());
+                appManager.installApp(file);
             }
         }
-    }
-
-    private String buildAppName(File file) {
-        String appType = ".jar";
-        String fileName = file.getName();
-        if (!fileName.endsWith(appType)) {
-            throw new IllegalArgumentException(fileName);
-        }
-        return fileName.substring(0, fileName.length() - appType.length());
     }
 
     @Override

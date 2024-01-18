@@ -1,17 +1,15 @@
 package qingzhou.app.master;
 
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.FrameworkContextAware;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.QingZhouApp;
+import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
-public class Main implements QingZhouApp, FrameworkContextAware {
-    public static FrameworkContext FC;
-
+public class Main extends QingZhouApp {
     @Override
     public void start(AppContext appContext) {
         ConsoleContext consoleContext = appContext.getConsoleContext();
@@ -27,12 +25,7 @@ public class Main implements QingZhouApp, FrameworkContextAware {
         appContext.setDataStore(new DataStoreImpl(serverXml));
     }
 
-    @Override
-    public void setFrameworkContext(FrameworkContext frameworkContext) {
-        FC = frameworkContext;
-    }
-
     public static FrameworkContext getFC() {
-        return FC;
+        return FrameworkContextImpl.getFrameworkContext(); // todo 没有报找不到？
     }
 }
