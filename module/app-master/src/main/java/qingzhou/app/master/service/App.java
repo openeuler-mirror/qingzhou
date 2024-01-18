@@ -214,6 +214,7 @@ public class App extends ModelBase implements AddModel {
             }
         }
         appNames.remove(ConsoleConstants.MASTER_APP_NAME);// master系统应用不显示
+        appNames.remove(ConsoleConstants.NODE_APP_NAME);//node 应用不显示
 
         List<Map<String, String>> dataInfo = response.getDataList();
         response.setTotalSize(appNames.size());

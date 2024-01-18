@@ -35,5 +35,6 @@ public interface ConsoleConstants { // TODO 需要清理失效的项目
     String DATA_SEPARATOR = ",";
     String LOCAL_NODE_NAME = "local";
     String MASTER_APP_NAME = "master";
+    String NODE_APP_NAME = "node";
     String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
 }
