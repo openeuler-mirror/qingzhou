@@ -129,7 +129,7 @@ public class App extends ModelBase implements AddModel {
             int index = srcFileName.lastIndexOf(".");
             appName = srcFileName.substring(0, index);
             File app = FileUtil.newFile(getApps(), appName);
-            FileUtil.copyFileOrDirectory(srcFile, new File(app, "lib"));
+            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, "lib", srcFileName));
         } else if (srcFileName.endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             appName = srcFileName.substring(0, index);

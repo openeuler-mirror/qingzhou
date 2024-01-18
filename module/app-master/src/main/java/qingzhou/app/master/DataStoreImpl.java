@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DataStoreImpl implements DataStore {
-    private final XmlUtil xmlUtil;
+    protected XmlUtil xmlUtil;
     private final String rootPath;
 
     public DataStoreImpl(File dataXmlFile) {
