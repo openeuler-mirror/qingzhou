@@ -12,18 +12,28 @@ import java.util.Map;
 import java.util.Set;
 
 public class FrameworkContextImpl implements FrameworkContext {
-    private static File libDir;
-    private static File home;
-    private static File domain;
-
     static FrameworkContextImpl frameworkContext;
 
     public static FrameworkContextImpl getFrameworkContext() {
         return frameworkContext;
     }
 
+    private File libDir;
+    private File home;
+    private File domain;
     private final AppManagerImpl appInfoManager = new AppManagerImpl();
     private final Map<Class<?>, Object> services = new HashMap<>();
+    private Boolean isMaster;
+
+    @Override
+    public boolean isMaster() {
+        if (isMaster == null) {
+            File console = FileUtil.newFile(getLib(), "sysapp", "console");
+            isMaster = console.isDirectory();
+        }
+
+        return isMaster;
+    }
 
     @Override
     public AppManager getAppManager() {
@@ -53,14 +63,14 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public File getDomain() {
-        if (FrameworkContextImpl.domain == null) {
+        if (domain == null) {
             String domainName = System.getProperty("qingzhou.domain");
             if (domainName == null || domainName.trim().isEmpty()) {
                 throw new NullPointerException("qingzhou.domain");
             }
-            FrameworkContextImpl.domain = new File(domainName).getAbsoluteFile();
+            domain = new File(domainName).getAbsoluteFile();
         }
-        return FrameworkContextImpl.domain;
+        return domain;
     }
 
     @Override
