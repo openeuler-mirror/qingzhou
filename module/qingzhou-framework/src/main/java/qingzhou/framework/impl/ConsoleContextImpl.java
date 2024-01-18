@@ -46,14 +46,6 @@ public class ConsoleContextImpl implements ConsoleContext, Serializable {
                 }
             });
 
-            modelManager.getMonitorFieldMap(modelName).forEach((k, v) -> {
-                addI18N("model.field." + modelName + "." + k, v.nameI18n());
-                String[] info = v.infoI18n();
-                if (info.length > 0) {
-                    addI18N("model.field.info." + modelName + "." + k, info);
-                }
-            });
-
             for (String actionName : modelManager.getActionNames(modelName)) {
                 ModelAction modelAction = modelManager.getModelAction(modelName, actionName);
                 addI18N("model.action." + modelName + "." + modelAction.name(), modelAction.nameI18n());

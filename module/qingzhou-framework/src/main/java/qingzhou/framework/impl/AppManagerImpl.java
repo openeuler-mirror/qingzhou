@@ -7,12 +7,10 @@ import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.QingZhouApp;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.impl.model.ModelInfo;
 import qingzhou.framework.impl.model.ModelManagerImpl;
 import qingzhou.framework.util.ClassLoaderUtil;
 import qingzhou.framework.util.ExceptionUtil;
-import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -21,10 +19,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -37,21 +32,14 @@ public class AppManagerImpl implements AppManager {
         if (listFiles == null) {
             throw ExceptionUtil.unexpectedException("app lib not found: " + appName);
         }
-        List<File> appLib = new ArrayList<>(Arrays.asList(listFiles));
-        if (!ConsoleConstants.MASTER_APP_NAME.equals(appName)) {
-            File[] files = FileUtil.newFile(FrameworkContextImpl.getFrameworkContext().getLib(), "sysapp", "common").listFiles();
-            if (files != null) {
-                appLib.addAll(Arrays.asList(files));
-            }
-        }
 
         AppInfoImpl appInfo = new AppInfoImpl();
 
         AppContextImpl appContext = new AppContextImpl(FrameworkContextImpl.getFrameworkContext());
         appContext.setAppName(appName);
-        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLib, QingZhouApp.class.getClassLoader());
+        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(listFiles, QingZhouApp.class.getClassLoader());
         appInfo.setLoader(loader);
-        ModelManager modelManager = buildModelManager(appLib.toArray(new File[0]), loader);
+        ModelManager modelManager = buildModelManager(listFiles, loader);
         ConsoleContextImpl consoleContext = new ConsoleContextImpl();
         consoleContext.setModelManager(modelManager);
         appContext.setConsoleContext(consoleContext);

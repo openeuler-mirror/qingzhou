@@ -9,18 +9,28 @@ import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
 import qingzhou.framework.util.FileUtil;
+import qingzhou.logger.Logger;
+import qingzhou.logger.LoggerService;
 
 import java.io.File;
 
 public class Controller implements BundleActivator {
     private ProcessSequence sequence;
-    FrameworkContext frameworkContext;
-    ServletService servletService;
+    private FrameworkContext frameworkContext;
+    private ServletService servletService;
+    private Logger logger;
+    private ServiceReference<FrameworkContext> reference;
 
     @Override
     public void start(BundleContext context) throws Exception {
+        reference = context.getServiceReference(FrameworkContext.class);
+        frameworkContext = context.getService(reference);
+        logger = frameworkContext.getService(LoggerService.class).getLogger();
+
+        if (!frameworkContext.isMaster()) return;
+
         sequence = new ProcessSequence(
-                new InitConsoleEnv(context),
+                new InstallMasterApp(),
                 new StartServlet(),
                 new RunWar()
         );
@@ -29,7 +39,21 @@ public class Controller implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) {
+        if (!frameworkContext.isMaster()) return;
+
         sequence.undo();
+        frameworkContext = null;
+        context.ungetService(reference);
+    }
+
+    private class InstallMasterApp implements Process {
+
+        @Override
+        public void exec() throws Exception {
+            logger.info("install master app");
+            File masterApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "master");
+            frameworkContext.getAppManager().installApp(masterApp);
+        }
     }
 
     private class RunWar implements Process {
@@ -37,19 +61,15 @@ public class Controller implements BundleActivator {
 
         @Override
         public void exec() {
-            if (!frameworkContext.isMaster()) return;
-
             File console = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "console");
             String docBase = console.getAbsolutePath();
             contextPath = "/console"; // TODO 需要可配置
             servletService.addWebapp(contextPath, docBase);
-            ConsoleWarHelper.getLogger().info("Open a browser to access the QingZhou console: http://localhost:9060" + contextPath);// todo 9060 应该动态获取到
+            logger.info("Open a browser to access the QingZhou console: http://localhost:9060" + contextPath);// todo 9060 应该动态获取到
         }
 
         @Override
         public void undo() {
-            if (!frameworkContext.isMaster()) return;
-
             servletService.removeApp(contextPath);
         }
     }
@@ -57,6 +77,8 @@ public class Controller implements BundleActivator {
     private class StartServlet implements Process {
         @Override
         public void exec() throws Exception {
+            ConsoleWarHelper.fc = frameworkContext; //给 tonmcat 部署的 war 内部使用
+
             servletService = new ServletImpl();
             servletService.start(9060, // TODO 端口需要可以配置
                     frameworkContext.getCache().getAbsolutePath());
@@ -65,29 +87,6 @@ public class Controller implements BundleActivator {
         @Override
         public void undo() {
             servletService.stop();
-        }
-    }
-
-    private class InitConsoleEnv implements Process {
-        private final BundleContext context;
-        private ServiceReference<FrameworkContext> reference;
-
-        private InitConsoleEnv(BundleContext context) {
-            this.context = context;
-        }
-
-        @Override
-        public void exec() {
-            reference = context.getServiceReference(FrameworkContext.class);
-            frameworkContext = context.getService(this.reference);
-
-            ConsoleWarHelper.fc = frameworkContext;
-        }
-
-        @Override
-        public void undo() {
-            frameworkContext = null;
-            context.ungetService(reference);
         }
     }
 }
