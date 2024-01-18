@@ -40,10 +40,10 @@ public class Controller implements BundleActivator {
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
-        if (frameworkContext.isMaster()) return;
-
         serviceReference = bundleContext.getServiceReference(FrameworkContext.class);
         frameworkContext = bundleContext.getService(serviceReference);
+        if (frameworkContext.isMaster()) return;
+
         Logger logger = frameworkContext.getService(LoggerService.class).getLogger();
 
         int port = 7000;// todo 可配置

@@ -49,7 +49,9 @@ public class AppInfoImpl implements AppInfo {
         List<ActionFilter> actionFilters = appContext.getActionFilters();
         if (actionFilters != null) {
             for (ActionFilter actionFilter : actionFilters) {
-                actionFilter.doFilter(request, response);
+                if (!actionFilter.doFilter(request, response)) {
+                    return;
+                }
             }
         }
 
