@@ -9,7 +9,7 @@
         <version>0.1.0</version>
     </parent>
 
-    <artifactId>app-common</artifactId>
+    <artifactId>app-node</artifactId>
 
     <dependencies>
         <dependency>

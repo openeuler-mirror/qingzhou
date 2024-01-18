@@ -91,13 +91,13 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:app-common</include>
+                <include>${project.groupId}:app-node</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/sysapp/common</outputDirectory>
+            <outputDirectory>lib/version/sysapp/node/lib</outputDirectory>
         </dependencySet>
 
     </dependencySets>

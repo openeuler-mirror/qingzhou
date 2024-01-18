@@ -25,14 +25,14 @@ public class Controller implements BundleActivator {
         appManager = frameworkContext.getAppManager();
         logger = frameworkContext.getService(LoggerService.class).getLogger();
 
-        installMaster();
+        installNodeApp();
         installApps();
     }
 
-    private void installMaster() throws Exception {
-        logger.info("install master app");
-        File masterApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "master");
-        appManager.installApp(masterApp);
+    private void installNodeApp() throws Exception {
+        logger.info("install node app");
+        File nodeApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "node");
+        appManager.installApp(nodeApp);
     }
 
     private void installApps() throws Exception {

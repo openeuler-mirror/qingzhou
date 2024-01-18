@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClassLoaderUtil {
-    public static URLClassLoader newURLClassLoader(List<File> files, ClassLoader parentLoader) {
+    public static URLClassLoader newURLClassLoader(File[] files, ClassLoader parentLoader) {
         List<URL> urls = new ArrayList<>();
         if (files != null) {
             for (File file : files) {

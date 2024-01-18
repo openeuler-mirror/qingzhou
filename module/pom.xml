@@ -23,7 +23,7 @@
         <module>console-war</module>
         <module>qingzhou-app</module>
         <module>app-master</module>
-        <module>app-common</module>
+        <module>app-node</module>
         <module>qingzhou-remote</module>
     </modules>
 </project>

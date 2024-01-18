@@ -8,8 +8,8 @@ import java.util.Map;
 
 public enum Lang {
     zh("简体", "zh"),
-    tr("繁體", "tr"),
-    en("English", "en");
+    en("English", "en"),
+    tr("繁體", "tr");
 
     private final String fullName;
     private final String flag;
