@@ -276,32 +276,6 @@
                 <%
             }
             %>
-
-            <%
-            for (String actionName: modelManager.getActionNamesShowToFormBottom(qzRequest.getModelName())) {
-                boolean hasPermission = AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + actionName, LoginManager.getLoginUser(session));
-                if (!hasPermission) continue;
-
-                if (actionName.equals(MonitorModel.ACTION_NAME_MONITOR)) {
-                    %>
-                    <a href='<%=ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DownloadModel.ACTION_NAME_DOWNLOADLIST)%>'
-                        <%
-                        out.print(ConsoleUtil.isDisableDownload() ? " disabled ":"" + " downloadfile='" + ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE + "/" + encodedId) + "' ");
-                        %>
-                        btn-type="<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>" class="btn">
-                        <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + DownloadModel.ACTION_NAME_DOWNLOADLIST)%>
-                    </a>
-                    <%
-                } else {
-                    %>
-                    <a href='<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, actionName)%>'
-                        btn-type="<%=actionName%>" class="btn">
-                        <%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionName)%>
-                    </a>
-                    <%
-                }
-            }
-            %>
         </div>
     </div>
 
