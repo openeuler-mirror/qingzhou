@@ -1,16 +1,12 @@
 package qingzhou.app.master.service;
 
+import qingzhou.app.master.Main;
 import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.DataStore;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.console.ConsoleConstants;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Model(name = "node", icon = "node",
         menuName = "Service",
@@ -43,13 +39,7 @@ public class Node extends ModelBase implements AddModel {
     public boolean running;
 
     @Override
-    public void list(Request request, Response response) throws Exception {
-        Map<String, String> node = new HashMap<>();
-        node.put("id", ConsoleConstants.LOCAL_NODE_NAME);
-        node.put("ip", "0.0.0.0");
-        node.put("port", "9060");
-        node.put("running", "true");
-        response.addData(node);
-        response.setPageNum(1);
+    public DataStore getDataStore() {
+        return new NodeDataStoreImpl(Main.serverXml);
     }
 }
