@@ -43,7 +43,7 @@ public class InvokeAction implements Filter<RestContext> {
 
     private boolean isBatchAction(RequestImpl request) {
         String ids = request.getParameter(ListModel.FIELD_NAME_ID);
-        return StringUtil.notBlank(ids) && ids.contains(ConsoleConstants.DATA_SEPARATOR);
+        return StringUtil.notBlank(ids);
     }
 
     private Response invokeBatch(RequestImpl request) {

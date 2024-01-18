@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Model(name = "app", icon = "rss",
+@Model(name = "app", icon = "cube-alt",
         menuName = "Service", menuOrder = 1,
         nameI18n = {"应用", "en:App"},
         infoI18n = {"应用。",
