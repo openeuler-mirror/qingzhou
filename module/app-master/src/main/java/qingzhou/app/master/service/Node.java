@@ -40,6 +40,12 @@ public class Node extends ModelBase implements AddModel {
 
     @Override
     public DataStore getDataStore() {
-        return new NodeDataStoreImpl(Main.serverXml);
+        if (dataStore == null) {
+            dataStore = new NodeDataStoreImpl(Main.serverXml);
+        }
+
+        return dataStore;
     }
+
+    private DataStore dataStore;
 }
