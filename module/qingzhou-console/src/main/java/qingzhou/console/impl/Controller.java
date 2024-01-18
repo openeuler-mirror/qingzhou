@@ -34,24 +34,21 @@ public class Controller implements BundleActivator {
 
     private class RunWar implements Process {
         private String contextPath;
-        boolean isMaster;
 
         @Override
         public void exec() {
-            File console = FileUtil.newFile(ConsoleWarHelper.getLibDir(), "sysapp", "console");
-            isMaster = console.isDirectory();
-            if (!isMaster) return;
+            if (!frameworkContext.isMaster()) return;
 
-            contextPath = "/console"; // TODO 需要可配置
+            File console = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "console");
             String docBase = console.getAbsolutePath();
+            contextPath = "/console"; // TODO 需要可配置
             servletService.addWebapp(contextPath, docBase);
-
             ConsoleWarHelper.getLogger().info("Open a browser to access the QingZhou console: http://localhost:9060" + contextPath);// todo 9060 应该动态获取到
         }
 
         @Override
         public void undo() {
-            if (!isMaster) return;
+            if (!frameworkContext.isMaster()) return;
 
             servletService.removeApp(contextPath);
         }

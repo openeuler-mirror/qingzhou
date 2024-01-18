@@ -40,6 +40,8 @@ public class Controller implements BundleActivator {
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
+        if (frameworkContext.isMaster()) return;
+
         serviceReference = bundleContext.getServiceReference(FrameworkContext.class);
         frameworkContext = bundleContext.getService(serviceReference);
         Logger logger = frameworkContext.getService(LoggerService.class).getLogger();
@@ -67,6 +69,8 @@ public class Controller implements BundleActivator {
 
     @Override
     public void stop(BundleContext bundleContext) {
+        if (frameworkContext.isMaster()) return;
+
         if (server != null) {
             server.removeContext(path);
             server.stop(5000);

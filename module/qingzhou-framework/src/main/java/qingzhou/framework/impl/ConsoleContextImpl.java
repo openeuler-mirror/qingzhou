@@ -68,11 +68,6 @@ public class ConsoleContextImpl implements ConsoleContext, Serializable {
     }
 
     @Override
-    public void setZhTrMap(char zh, char tr) {
-        I18n.setZhTrMap(zh, tr);
-    }
-
-    @Override
     public void addI18N(String key, String[] i18n) {
         addI18N(key, i18n, true);
     }
