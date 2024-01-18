@@ -50,5 +50,6 @@ public class Node extends ModelBase implements AddModel {
         node.put("port", "9060");
         node.put("running", "true");
         response.addData(node);
+        response.setPageNum(1);
     }
 }
