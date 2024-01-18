@@ -18,6 +18,7 @@ public interface AddModel extends EditModel, DeleteModel {
 
     @ModelAction(name = ACTION_NAME_ADD,
             icon = "save",
+            showToFormBottom = true,
             nameI18n = {"添加", "en:Add"},
             infoI18n = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     default void add(Request request, Response response) throws Exception {

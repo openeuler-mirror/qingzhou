@@ -7,12 +7,14 @@ import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.remote.RemoteConstants;
 
@@ -20,13 +22,9 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import static qingzhou.console.impl.ConsoleWarHelper.getAppInfoManager;
 
 public class InvokeAction implements Filter<RestContext> {
     InvokeAction() {
@@ -100,36 +98,15 @@ public class InvokeAction implements Filter<RestContext> {
     }
 
     public Response invoke(RequestImpl request) {
-        Response response = new ResponseImpl();
-        List<String> nodes = new ArrayList<>();
         try {
-            String targetType = request.getTargetType();
-            String targetName = request.getTargetName();
-            switch (TargetType.valueOf(targetType)) {
-                case node:
-                    if (!targetName.equals(ConsoleConstants.LOCAL_NODE_NAME)) {
-                        nodes.add(targetName);
-                    }
-                    break;
-                case cluster:
-                    Map<String, String> cluster = ServerXml.get().getClusterById(targetName);
-                    nodes.addAll(Arrays.asList(cluster.get("nodes").split(ConsoleConstants.DATA_SEPARATOR)));
-                    break;
-                default:
-                    throw new IllegalStateException("Unknown TargetType: " + targetType);
+            Map<String, Response> responseOnNode = processRequest(request);
+            for (Map.Entry<String, Response> entry : responseOnNode.entrySet()) {
+                return entry.getValue(); // TODO 多条结果如何展示？
             }
 
-            if (nodes.isEmpty()) {
-                ConsoleWarHelper.getAppInfoManager().getAppInfo(request.getAppName()).invokeAction(request, response);
-            } else {
-                KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
-                String remoteKey = keyManager.getKeyOrElseInit(ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()), RemoteConstants.REMOTE_KEY_NAME, null);
-                for (String node : nodes) {
-                    String remoteUrl = buildRemoteUrl(node);
-                    response = RemoteClient.sendReq(remoteUrl, request, remoteKey);// todo : 每个 response 会被后来的覆盖掉，导致状态信息丢失
-                }
-            }
+            throw ExceptionUtil.unexpectedException("It should return at least one Response");
         } catch (Exception e) {
+            Response response = new ResponseImpl();
             response.setSuccess(false);
             Set<Throwable> set = new HashSet<>();
             retrieveException(e, set);
@@ -157,8 +134,8 @@ public class InvokeAction implements Filter<RestContext> {
             }
 
             response.setMsg(msg);
+            return response;
         }
-        return response;
     }
 
     private void retrieveException(Throwable t, Set<Throwable> set) {
@@ -178,10 +155,50 @@ public class InvokeAction implements Filter<RestContext> {
         }
     }
 
-    private String buildRemoteUrl(String nodeName) {
-        Map<String, String> nodeById = ServerXml.get().getNodeById(nodeName);
-        String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
-        String port = nodeById.get("port");
-        return String.format("http://%s:%s", ip, port);
+    public Map<String, Response> processRequest(Request request) throws Exception {
+        Map<String, Response> resultOnNode = new HashMap<>();
+        String appName = request.getAppName();
+
+        List<String> nodes = new ArrayList<>();
+        if (ConsoleConstants.MASTER_APP_NAME.equals(appName)) {
+            nodes.add(ConsoleConstants.LOCAL_NODE_NAME);
+        } else {
+            Map<String, String> app = getAppInfoManager().getAppInfo(ConsoleConstants.MASTER_APP_NAME)
+                    .getAppContext().getDataStore()
+                    .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
+            if (app == null || app.isEmpty()) {
+                throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
+            }
+            String[] appNodes = app.get("nodes").split(ConsoleConstants.DATA_SEPARATOR);
+            nodes.addAll(Arrays.asList(appNodes));
+        }
+
+        String remoteKey = null;
+        for (String node : nodes) {
+            Response responseOnNode;
+            if (node.equals(ConsoleConstants.LOCAL_NODE_NAME)) {
+                Response response = new ResponseImpl();
+                getAppInfoManager().getAppInfo(appName).invokeAction(request, response);
+                responseOnNode = response;
+            } else {
+                if (remoteKey == null) {
+                    KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
+                    remoteKey = keyManager.getKeyOrElseInit(
+                            ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()),
+                            RemoteConstants.REMOTE_KEY_NAME,
+                            null
+                    );
+                }
+
+                Map<String, String> nodeById = ServerXml.get().getNodeById(node);
+                String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
+                String port = nodeById.get("port");
+                String remoteUrl = String.format("http://%s:%s", ip, port);
+                responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
+            }
+            resultOnNode.put(node, responseOnNode);
+        }
+
+        return resultOnNode;
     }
 }

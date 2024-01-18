@@ -278,29 +278,6 @@
                     <label><%=PageBackendService.getMasterAppI18NString( "page.index.centralized")%></label>
                 </a>
             </li>
-
-            <%
-            if(AccessControl.hasAppPermission(currentUser,ConsoleConstants.MASTER_APP_NAME)){
-                %>
-                <li class="inactive" local="true">
-                    <a href="javascript:void(0);">
-                        <i class="icon icon-cube"></i>
-                        <label>
-                            <%=PageBackendService.getMasterAppI18NString( "page.localInstance")%>
-                            <%-- 通知 --%>
-                            <%
-                            int tabNoticeSize = 0;
-                            if (AccessControl.canAccess(qzRequest.getTargetType(), ConsoleConstants.MASTER_APP_NAME+"/notice/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session))) {
-                                tabNoticeSize = StringUtil.isBlank(currentUser) ? 0 : ConsoleUtil.listModels(request, TargetType.node.name(), ConsoleConstants.LOCAL_NODE_NAME, ConsoleConstants.MASTER_APP_NAME, "notice").size();
-                            }
-                            %>
-                            <span class="noticeNumber label label-badge" style="display:<%=tabNoticeSize > 0 ? "inline-block" : "none" %>;"><%=tabNoticeSize%></span>
-                        </label>
-                    </a>
-                </li>
-                <%
-            }
-            %>
         </ul>
     </section>
 
@@ -314,7 +291,7 @@
                             <%
                             // 菜单
                             List<Properties> menuList = PageBackendService.getAppMenuList(currentUser, ConsoleConstants.MASTER_APP_NAME);
-                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, "node", ConsoleConstants.LOCAL_NODE_NAME, ConsoleConstants.MASTER_APP_NAME, qzRequest.getModelName()));
+                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, ConsoleConstants.MASTER_APP_NAME, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>
@@ -334,24 +311,6 @@
                     <%@ include file="../fragment/home.jsp" %>
                 </section>
             </li>
-            <%
-            if(AccessControl.hasAppPermission(currentUser,ConsoleConstants.MASTER_APP_NAME)){
-                %>
-                <li class="inactive" local="true">
-                    <%-- 初始化的本地实例页面 --%>
-                    <%@ include file="../fragment/menu.jsp" %>
-
-                    <section class="main-body">
-                        <%-- 面包屑分级导航 --%>
-                        <%@ include file="../fragment/breadcrumb.jsp" %>
-
-                        <%-- 首页面主体部分 --%>
-                        <%@ include file="../fragment/home.jsp" %>
-                    </section>
-                </li>
-                <%
-            }
-            %>
         </ul>
     </section>
 </main>

@@ -55,9 +55,4 @@
             </tenants>
         </auth>
     </console>
-
-    <!--实例-->
-    <instances>
-        <instance app=""/>
-    </instances>
 </root>

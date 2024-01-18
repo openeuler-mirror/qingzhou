@@ -25,6 +25,5 @@
         <module>app-master</module>
         <module>app-common</module>
         <module>qingzhou-remote</module>
-        <module>qingzhou-httpserver</module>
     </modules>
 </project>

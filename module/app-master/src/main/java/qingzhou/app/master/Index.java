@@ -39,7 +39,7 @@ public class Index extends ModelBase {
     public void home(Request request, Response response) throws Exception {
         Index index = new Index();
         index.serverInfo = "QingZhou（轻舟）";
-        index.domainPath = getAppContext().getDomain().getPath();
+        index.domainPath = Main.getFC().getDomain().getPath();
         index.javaHome = "";// TODO JDKUtil.getJavaHome();
         response.addDataObject(index);
     }

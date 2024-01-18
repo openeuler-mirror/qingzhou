@@ -36,7 +36,7 @@
 
     <div class="block-bg">
         <form name="filterForm" id="filterForm" method="POST"
-              action="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getTargetType() + "/" + qzRequest.getTargetName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
+              action="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getAppName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
             <div class="row filterForm" style="margin-top: 10px;">
                 <%
                     for (Integer i : indexToShow) {
@@ -99,9 +99,7 @@
             <div class="tools-group">
                 <%
                 for (String action : modelManager.getActionNamesShowToListHead(qzRequest.getModelName())) {
-                    // boolean canAccess = (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + AddModel.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
                     ModelAction modelAction = modelManager.getModelAction(qzRequest.getModelName(), action);
-                    // ModelAction listAddAction = modelManager.getModelAction(qzRequest.getModelName(), AddModel.ACTION_NAME_ADD);
                     if (modelAction != null) {
                         String viewName = ViewManager.htmlView;
                         %>
@@ -132,7 +130,7 @@
                         } else {
                             titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
                         }
-                        boolean isAjaxAction = ConsoleUtil.actionsWithAjax(qzRequest, actionKey);
+                        boolean isAjaxAction = action.showToFormBottom();
                         String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                         %>
                         <a id="<%=actionKey%>"
@@ -231,12 +229,12 @@
                             <td><%=++listOrder%></td>
                             <%
                             ModelAction targetAction = null;
-                            if (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
-                                    && AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
+                            if (AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
+                                    && AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
                                 targetAction = modelManager.getModelAction(qzRequest.getModelName(), EditModel.ACTION_NAME_EDIT);
                             }
                             if (targetAction == null) {
-                                if (AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + ShowModel.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
+                                if (AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + ShowModel.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
                                     targetAction = modelManager.getModelAction(qzRequest.getModelName(), ShowModel.ACTION_NAME_SHOW);
                                 }
                             }
@@ -269,7 +267,7 @@
                                         String idFieldValue = modelBase.get(ListModel.FIELD_NAME_ID);
                                         %>
                                         <td>
-                                            <a href='<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getTargetType() + "/" + qzRequest.getTargetName() + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
+                                            <a href='<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
                                                onclick='difModelActive("<%=qzRequest.getModelName()%>","<%=split[0]%>")'
                                                class="dataid tooltips" record-action-id="<%=split[1]%>"
                                                data-tip='<%=I18n.getString(qzRequest.getAppName(), "model." + split[0])%>'
@@ -303,7 +301,11 @@
                                         continue;
                                     }
 
-                                    if (!AccessControl.canAccess(qzRequest.getTargetType(), qzRequest.getTargetName(), qzRequest.getModelName() + "/" + actionKey, LoginManager.getLoginUser(session))) {
+                                    if (!action.showToList()  || action.showToListHead()) {
+                                        continue;
+                                    }
+
+                                    if (!AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + actionKey, LoginManager.getLoginUser(session))) {
                                         continue;
                                     }
 
@@ -314,7 +316,7 @@
                                         titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
                                     }
 
-                                    boolean isAjaxAction = ConsoleUtil.actionsWithAjax(qzRequest, actionKey);
+                                    boolean isAjaxAction = action.showToFormBottom();
                                     String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                                     %>
                                     <a href="<%=actionKey.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST) && ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>

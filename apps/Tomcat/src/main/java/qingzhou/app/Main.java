@@ -8,6 +8,8 @@ import java.io.File;
 public class Main implements QingZhouApp {
     @Override
     public void start(AppContext appContext) {
+        appContext.getConsoleContext().setMenuInfo("tomcat-service", new String[] {"Tomcat 服务管理。", "en:Tomcat service management."}, "layout", 1);
+        appContext.setDataStore(new ServiceDataStore());
         System.out.println("Load app: " + new File(Main.class.getProtectionDomain().getCodeSource().getLocation().getFile()).getName());
     }
 }

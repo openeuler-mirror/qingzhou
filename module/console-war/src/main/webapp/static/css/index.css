@@ -100,6 +100,7 @@ label.checkbox-inline, label.radio-inline {padding-left: 0px; padding-right: 20p
 .sidebar-menu .menu-open>a>.pull-right-container>.icon-angle-down::before {color:black;transform: rotate(180deg);}
 .sidebar-menu>li>.treeview-menu { display: none;}
 .sidebar-menu>li.active>.treeview-menu {display: block;}
+.sidebar-menu>li.expandsub>.treeview-menu {display: block;}
 .treeview-menu {padding-left: 0px;}
 .treeview-menu>li>a {padding: 12px 5px 15px 52px; display: block;}
 .treeview-menu>li>a:focus,

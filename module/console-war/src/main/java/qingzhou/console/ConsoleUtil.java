@@ -3,11 +3,22 @@ package qingzhou.console;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.DeleteModel;
+import qingzhou.framework.api.DownloadModel;
+import qingzhou.framework.api.EditModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Option;
+import qingzhou.framework.api.Options;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Validator;
@@ -22,7 +33,6 @@ import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,7 +58,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
     }
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getTargetType() + "/" + request.getTargetName() + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
+        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
         return response.encodeURL(url);
     }
 
@@ -94,12 +104,6 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         } else {
             groupedMap.putAll(tempGroup);
         }
-    }
-
-    public static boolean actionsWithAjax(Request request, String actionName) {
-        return AddModel.ACTION_NAME_ADD.equals(actionName)
-                || EditModel.ACTION_NAME_UPDATE.equals(actionName)
-                || DeleteModel.ACTION_NAME_DELETE.equals(actionName);
     }
 
     /**
@@ -163,7 +167,7 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
             if (!effective) {
                 return String.format(
                         I18n.getString(ConsoleConstants.MASTER_APP_NAME, "validator.ActionEffective.notsupported"),
-                        I18n.getString(request.toString(), "model.action." + request.getModelName() + "." + request.getActionName()),// todo
+                        I18n.getString(request.getAppName(), "model.action." + request.getModelName() + "." + request.getActionName()),// todo
                         effectiveWhen);
             }
         }
@@ -210,22 +214,6 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
         }
 
         return result;
-    }
-
-    public Map<String, List<String>> getInRefField(String modelName) {
-        Map<String, List<String>> inRefModelField = new HashMap<>();
-//        for (ModelInfo mi : modelInfoMap.values()) {
-//            for (FieldInfo fieldInfo : mi.fieldInfoMap.values()) {
-//                String refModel = fieldInfo.modelField.refModel();
-//                if (StringUtil.notBlank(refModel)) {
-//                    if (refModel.equals(modelName)) {
-//                        List<String> fields = inRefModelField.computeIfAbsent(mi.model.name(), model -> new ArrayList<>());
-//                        fields.add(fieldInfo.field.getName());
-//                    }
-//                }
-//            }
-//        }
-        return inRefModelField;
     }
 
     public static String getSubmitActionName(Request request) {
@@ -285,15 +273,11 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
                         continue;
                     }
 
-                    if (!action.showToList() || Arrays.asList(modelManager.getActionNamesShowToListHead(modelName)).contains(actionName)) {
+                    if (!action.showToList() || action.showToListHead()) {
                         continue;
                     }
 
-                    if (!AccessControl.canAccess(null, null, modelName + "/" + actionName, LoginManager.getLoginUser(session))) {
-                        continue;
-                    }
-
-                    if (!Arrays.asList(modelManager.getActionNamesSupportBatch(modelName)).contains(actionName)) {
+                    if (!AccessControl.canAccess(request.getAppName(), request.getAppName() + "/" + modelName + "/" + actionName, request.getUserName())) { // todo
                         continue;
                     }
 
@@ -324,6 +308,10 @@ public class ConsoleUtil {// todo 临时工具类，后续考虑移除
 
         @Override
         public boolean visitAndEnd(ModelAction action) {
+            if (!action.supportBatch()) {
+                return true;
+            }
+
             if (!modelActions.contains(action)) {
                 modelActions.add(action);
             }

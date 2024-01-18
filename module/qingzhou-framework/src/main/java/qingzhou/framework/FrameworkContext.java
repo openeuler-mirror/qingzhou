@@ -12,6 +12,8 @@ public interface FrameworkContext {
 
     File getCache();
 
+    File getCache(File parent);
+
     File getDomain();
 
     File getLib();

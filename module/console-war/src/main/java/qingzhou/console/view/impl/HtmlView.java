@@ -4,10 +4,11 @@ import qingzhou.console.ConsoleUtil;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
-import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.framework.console.RequestImpl;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -37,9 +38,22 @@ public class HtmlView implements View {
 
 
         if (ConsoleUtil.ACTION_NAME_TARGET.equals(actionName)) {
-            if (ConsoleConstants.MODEL_NAME_cluster.equals(modelName) || ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
+            if (ConsoleConstants.MODEL_NAME_cluster.equals(modelName) || ConsoleConstants.MODEL_NAME_node.equals(modelName)) { // todo 这个还需要？
                 request.setModelName(ConsoleConstants.MODEL_NAME_home);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
+            } else if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {// todo 是不是只有 app 会有 target action？ target设计是否有问题?
+                String appName = request.getId();
+                ModelManager modelManager = PageBackendService.getModelManager(appName);
+                if (modelManager != null) {
+                    String[] modelNames = modelManager.getModelNames();// TODO 应用管理是否需要配置一个默认展示model？
+                    String targetModelName = "";
+                    if (modelNames.length > 0) {
+                        targetModelName = modelNames[0];
+                    }
+                    request.setAppName(request.getId());
+                    request.setModelName(targetModelName);
+                    request.setActionName(modelManager.getModel(targetModelName).entryAction());
+                }
             }
         }
 

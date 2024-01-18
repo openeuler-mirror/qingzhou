@@ -5,8 +5,11 @@ import qingzhou.framework.AppManager;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Option;
+import qingzhou.framework.api.Options;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
@@ -20,14 +23,15 @@ import java.util.Map;
 
 @Model(name = "app", icon = "rss",
         menuName = "Service", menuOrder = 1,
-        nameI18n = {"应用管理", "en:App Management"},
-        infoI18n = {"应用管理。",
+        nameI18n = {"应用", "en:App"},
+        infoI18n = {"应用。",
                 "en:App Management."})
 public class App extends ModelBase implements AddModel {
     @ModelField(
-            required = true, showToList = true,
+            showToList = true,
+            disableOnCreate = true, disableOnEdit = true,
             nameI18n = {"名称", "en:Name"},
-            infoI18n = {"应用名称。", "en:Instance Name"})
+            infoI18n = {"应用名称。", "en:App Name"})
     public String id;
 
     @ModelField(
@@ -58,9 +62,16 @@ public class App extends ModelBase implements AddModel {
             notSupportedCharacters = "#",
             required = true,
             nameI18n = {"上传应用", "en:Upload Application"},
-            infoI18n = {"上传一个应用文件到服务器，文件须是 *.war *.ear 等 Java EE 标准类型的文件，否则可能会导致部署失败。",
-                    "en:Upload an application file to the server, the file must be a Java EE standard type file such as *.war *.ear, otherwise, the deployment may fail."})
+            infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 类型的轻舟应用文件，否则可能会导致部署失败。",
+                    "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the deployment may fail."})
     public String fromUpload;
+
+    @ModelField(
+            required = true, type = FieldType.checkbox,
+            refModel = "node", showToList = true,
+            nameI18n = {"节点", "en:Node"},
+            infoI18n = {"选择部署应用的节点。", "en:Select the node where you want to deploy the application."})
+    public String nodes;
 
     @ModelField(
             showToList = true,
@@ -75,6 +86,26 @@ public class App extends ModelBase implements AddModel {
     public String type;
 
     @Override
+    public Options options(String fieldName) {
+        if ("nodes".equals(fieldName)) {
+            Options options = super.options(fieldName);
+            return Options.merge(options, Option.of(ConsoleConstants.LOCAL_NODE_NAME));
+        }
+
+        return super.options(fieldName);
+    }
+
+    @Override
+    @ModelAction(name = ACTION_NAME_CREATE,
+            showToListHead = true,
+            icon = "plus-sign", forwardToPage = "form",
+            nameI18n = {"部署", "en:Deploy"},
+            infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
+    public void create(Request request, Response response) throws Exception {
+        AddModel.super.create(request, response);
+    }
+
+    @Override
     public void add(Request request, Response response) throws Exception {
         Map<String, String> p = prepareParameters(request);
         File srcFile;
@@ -87,23 +118,27 @@ public class App extends ModelBase implements AddModel {
             return;
         }
         String srcFileName = srcFile.getName();
-        int index = srcFileName.lastIndexOf(".");
+        String appName = srcFileName;
+        int index = appName.lastIndexOf(".");
         if (index > -1) {
-            srcFileName = srcFileName.substring(0, index);
+            appName = appName.substring(0, index);
         }
+        File app = FileUtil.newFile(getApps(), srcFileName);
         try {
-            FileUtil.copyFileOrDirectory(srcFile, getApps());
+            FileUtil.copyFileOrDirectory(srcFile, app);
         } catch (IOException e) {
             e.printStackTrace();
             response.setSuccess(false);
             return;
         }
-        File app = FileUtil.newFile(getApps(), srcFileName);
+        p.put("id", appName);
         p.put("filename", srcFileName);
 
         try {
-            getAppManager().installApp(srcFileName, false, app);
-            getDataStore().addData(request.getModelName(), p.get("id"), p);
+            String nodes = p.get("nodes");// TODO 这里要区分远程和本地
+
+            getAppManager().installApp(appName, false, app);
+            getDataStore().addData(request.getModelName(), appName, p);
         } catch (Exception e) {
             e.printStackTrace();
             FileUtil.delete(app);
@@ -121,19 +156,21 @@ public class App extends ModelBase implements AddModel {
         }
 
         String filename = appInfo.get("filename");
-        File app = FileUtil.newFile(getApps(), filename);
-        if (app.exists()) {
-            try {
-                FileUtil.forceDelete(app);
-            } catch (IOException e) {
-                e.printStackTrace();
-                response.setSuccess(false);
-                return;
-            }
-        }
-
         try {
-            getAppManager().uninstallApp(filename);
+            // TODO 这里还要卸载远程节点的。
+            getAppManager().uninstallApp(id);
+
+            File app = FileUtil.newFile(getApps(), filename);
+            if (app.exists()) {
+                try {
+                    FileUtil.forceDelete(app);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    response.setSuccess(false);
+                    return;
+                }
+            }
+
             getDataStore().deleteDataById(request.getModelName(), id);
         } catch (Exception e) {
             e.printStackTrace();
@@ -182,11 +219,25 @@ public class App extends ModelBase implements AddModel {
         }
     }
 
+    @ModelAction(name = "target",
+            icon = "location-arrow", forwardToPage = "target",
+            nameI18n = {"管理", "en:Manage"}, showToList = true,
+            infoI18n = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
+    public void switchTarget(Request request, Response response) throws Exception {
+        // 需要获取应用的i18n信息，内存没有的需要从缓存拉取
+
+    }
+
     private AppManager getAppManager() {
         return Main.getFC().getAppManager();
     }
 
     public File getApps() {
-        return FileUtil.newFile(getAppContext().getDomain(), "apps");
+        File apps = FileUtil.newFile(Main.getFC().getDomain(), "apps");
+        if (!apps.exists()) {
+            FileUtil.mkdirs(apps);
+        }
+
+        return apps;
     }
 }

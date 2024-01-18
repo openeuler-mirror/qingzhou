@@ -179,7 +179,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     @Override
     public Map<String, String> getModelDefaultProperties(String modelName) {
-        return Collections.unmodifiableMap(modelDefaultProperties.get(modelName));
+        return Collections.unmodifiableMap(modelDefaultProperties.getOrDefault(modelName, new HashMap<>()));
     }
 
     @Override

@@ -22,7 +22,7 @@
                             <Bundle-Activator>qingzhou.framework.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,qingzhou.logger,javax.xml.xpath,org.w3c.dom,javax.xml.transform,javax.xml.parsers,org.xml.sax
+                                org.osgi.framework,qingzhou.logger,javax.xml.xpath,org.w3c.dom,javax.xml.transform,javax.xml.parsers,org.xml.sax,javax.xml.transform.dom,javax.xml.transform.stream
                             </Import-Package>
 
                             <Export-Package>

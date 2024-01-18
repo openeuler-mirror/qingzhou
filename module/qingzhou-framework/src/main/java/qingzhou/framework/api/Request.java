@@ -1,10 +1,6 @@
 package qingzhou.framework.api;
 
 public interface Request {
-    String getTargetType();
-
-    String getTargetName();
-
     String getAppName();
 
     String getModelName();

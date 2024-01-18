@@ -162,19 +162,7 @@ public class AccessControl implements Filter<RestContext> {
         return models.toArray(new Model[0]);
     }
 
-    public static boolean canAccess(String targetType, String targetName, String modelAction, String user) {
-        return true;
-    }
-
-    public static boolean canAccess(String targetType, String appModelAction, String user) {
-        return true;
-    }
-
-    public static boolean canAccess(String targetType, String targetName, String modelAction, String user, boolean skipClusterChecking) {
-        return true;
-    }
-
-    public static boolean canAccess(String targetType, String appModelAction, String user, boolean skipClusterChecking) {
+    public static boolean canAccess(String appName, String modelAction, String user) {
         return true;
     }
 
@@ -214,13 +202,12 @@ public class AccessControl implements Filter<RestContext> {
         String user = LoginManager.getLoginUser(httpServletRequest.getSession(false));
         if (StringUtil.notBlank(user)) {
             List<String> rest = RESTController.retrieveRestPathInfo(httpServletRequest);
-            if (rest.size() >= 5) {
-                String targetType = rest.get(1);
-                String targetName = rest.get(2);
-                String model = rest.get(3);
-                String action = rest.get(4);
+            if (rest.size() >= 4) {
+                String appName = rest.get(1);
+                String model = rest.get(2);
+                String action = rest.get(3);
                 String detectRest = model + "/" + action;
-                if (canAccess(targetType, targetName, detectRest, user)) {
+                if (canAccess(appName, detectRest, user)) {
                     return true;
                 }
             }

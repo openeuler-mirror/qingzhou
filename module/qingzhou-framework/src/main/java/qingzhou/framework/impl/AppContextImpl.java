@@ -23,13 +23,18 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public File getDomain() {
-        return frameworkContext.getDomain();
+    public File getAppDomain() {
+        return new File(frameworkContext.getDomain(), getAppName());
     }
 
     @Override
-    public File getCache() {
-        return frameworkContext.getCache();
+    public File getAppCache() {
+        return frameworkContext.getCache(getAppDomain());
+    }
+
+    @Override
+    public File getAppLogs() {
+        return new File(getAppDomain(), "logs");
     }
 
     @Override

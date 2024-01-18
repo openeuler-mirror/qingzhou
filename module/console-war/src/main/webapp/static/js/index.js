@@ -180,6 +180,7 @@
         }
 
         if ($(".treeview-menu", parentLi).length > 0) {
+            parentLi.removeClass("expandsub");
             if (parentLi.hasClass(ClassName.open)) {
                 this.collapse(treeviewMenu, parentLi);
             } else {
@@ -265,8 +266,7 @@ $(document).ready(function () {
     bindTabEvent();
     // 设置或重新设置（如事件绑定、赋初始值等）
     setOrReset();
-    // NC-1616 菜单展示优化
-    var menuLevel1 = $("ul.sidebar-menu>li", $(".content-box>ul>li[local='true']"));
+    // 菜单展示优化
     $(".sidebar-menu>li").hover(function () {
         if ($(document.body).hasClass("sidebar-collapse")) {
             $(".main-sidebar .sidebar").removeClass("sidebar-scroll");
@@ -340,6 +340,7 @@ $(document).ready(function () {
         e.preventDefault();
         $(".tab-box>ul>li[central='true']").click();
         $(".sidebar-menu .active", getRestrictedArea()).removeClass("menu-open active");
+        $(".sidebar-menu .expandsub", getRestrictedArea()).removeClass("menu-open expandsub");
         var matchPart = $(this).attr("href");
         var menuItemLink = $("ul.sidebar-menu li a[href='" + matchPart + "']", getRestrictedArea());
         if (menuItemLink.length > 0) {

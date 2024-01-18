@@ -7,11 +7,11 @@ import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.pattern.FilterPattern;
-import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -35,7 +35,7 @@ import java.util.Map;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MODEL_NAME_node + "/" + ConsoleConstants.LOCAL_NODE_NAME + "/" + ConsoleConstants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/" + ConsoleConstants.ACTION_NAME_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/" + ConsoleConstants.ACTION_NAME_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache();
 
@@ -129,7 +129,7 @@ public class RESTController extends HttpServlet {
 
     private Request buildRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> fileAttachments) throws IOException {
         List<String> rest = retrieveRestPathInfo(req);
-        int restDepth = 6;
+        int restDepth = 4;
         if (rest.size() < restDepth) { // must have model & action
             String msg = "Parameters missing, make sure to use the correct REST interface: " + req.getRequestURI();
             resp.getWriter().print(JsonView.buildErrorResponse(msg));
@@ -139,11 +139,9 @@ public class RESTController extends HttpServlet {
 
         RequestImpl request = new RequestImpl();
         request.setViewName(rest.get(0));
-        request.setTargetType(rest.get(1));
-        request.setTargetName(rest.get(2));
-        request.setAppName(rest.get(3));
-        request.setModelName(rest.get(4));
-        request.setActionName(rest.get(5));
+        request.setAppName(rest.get(1));
+        request.setModelName(rest.get(2));
+        request.setActionName(rest.get(3));
         request.setUserName(LoginManager.getLoginUser(req.getSession(false)));
 
         if (rest.size() > restDepth) {
@@ -175,22 +173,12 @@ public class RESTController extends HttpServlet {
                 data.put(k, String.join(ConsoleConstants.DATA_SEPARATOR, v));
             }
         }
-        request.setParameters(data);
+
         if (fileAttachments != null) {
-            // todo
-//                requestImpl.setFileAttachments(fileAttachments);
-//                for (Map.Entry<String, String> entry : fileAttachments.entrySet()) {
-//                    if (StringUtil.notBlank(entry.getValue())) {
-//                        int i = names.indexOf(entry.getKey());
-//                        if (i == -1) {
-//                            names.add(entry.getKey());
-//                            vals.add(entry.getValue());
-//                        } else {
-//                            names.set(i, entry.getValue());
-//                        }
-//                    }
-//                }
+            data.putAll(fileAttachments);
         }
+
+        request.setParameters(data);
 
         return request;
     }

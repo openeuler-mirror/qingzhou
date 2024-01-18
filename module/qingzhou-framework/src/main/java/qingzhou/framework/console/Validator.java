@@ -41,10 +41,7 @@ public class Validator {
     static {
         ConsoleContext consoleContext = getMasterConsoleContext();
         if (consoleContext != null) {
-            consoleContext.addI18N("validator.arg.memory.invalid", new String[]{"参数不合法，此参数应以数字加单位(m/M、g/G)构成", "en:The parameter is not legal, this parameter should be composed of numbers plus units (m/M, g/G)."});
-            consoleContext.addI18N("validator.arg.memory.union.invalid", new String[]{"联合校验参数【%s】不合法，该参数应以数字加单位(m/M、g/G)构成", "en:The joint verification parameter [%s] is illegal, and the parameter should be composed of numbers plus units (m/m, g/g)."});
             consoleContext.addI18N("validator.cannotWrite", new String[]{"不支持写入", "en:Cannot write"});
-            consoleContext.addI18N("validator.cannotEdit", new String[]{"不支持编辑", "en:Cannot be edited"});
             consoleContext.addI18N("validator.cannotCreate", new String[]{"不支持创建", "en:Cannot be created"});
             consoleContext.addI18N("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
             consoleContext.addI18N("validator.dataInvalid", new String[]{"数据不合法，如不支持包含 %s 等特殊字符", "en:Data is invalid, for example, it cannot contain special characters such as %s"});
@@ -56,7 +53,6 @@ public class Validator {
             consoleContext.addI18N("validator.lengthBetween", new String[]{"长度必须介于%s - %s之间", "en:Length must be between %s and %s"});
             consoleContext.addI18N("validator.number", new String[]{"须是数字类型", "en:Must be a numeric type"});
             consoleContext.addI18N("validator.decimal", new String[]{"须是数字（含浮点）类型", "en:Must be a decimal (float included) type"});
-            consoleContext.addI18N("validator.exist", new String[]{"已存在", "en:Already exists"});
             consoleContext.addI18N("validator.ip.illegal", new String[]{"非法的IP地址或域名", "en:Illegal IP address or host name"});
             consoleContext.addI18N("validator.larger.cannot", new String[]{"不支持大于%s", "en:Cannot be larger than %s"});
             consoleContext.addI18N("validator.date.larger.cannot", new String[]{"不能晚于%s", "en:No later than %s"});
@@ -74,10 +70,7 @@ public class Validator {
             consoleContext.addI18N("validator.kv.name.duplicate", new String[]{"变量名不能重复", "en:Variable names cannot be duplicated"});
             consoleContext.addI18N("validator.date-time.format", new String[]{"须使用 " + ConsoleConstants.DATE_FORMAT + " 的时间格式", "en:Must use the time format " + ConsoleConstants.DATE_FORMAT});
             consoleContext.addI18N("validator.xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
-            consoleContext.addI18N("validation.error.cron", new String[]{"内容格式有误，不是一个合法的 Cron 表达式",
-                    "en:The content is malformed and is not a valid cron expression"});
             consoleContext.addI18N("validation.error.centralizedConsoleUrl", new String[]{"不支持的URL协议或内容格式", "en:Unsupported URL protocol or content format"});
-            consoleContext.addI18N("validator.hasRefModel", new String[]{"%s 正在被其它模块使用，不支持对其进行该操作，使用模块：%s", "en:%s is being used by other modules, this operation cannot be performed on it, using module: %s"});
         }
     }
 

@@ -4,17 +4,19 @@ import java.io.File;
 import java.util.Set;
 
 public interface AppContext {
-    File getDomain();
+    String getAppName();
 
-    File getCache();
+    File getAppDomain();
+
+    File getAppCache();
+
+    File getAppLogs();
 
     File getHome();
 
     Set<Class<?>> getServiceTypes();
 
     <T> T getService(Class<T> serviceType);
-
-    String getAppName();
 
     void setDataStore(DataStore dataStore);
 
