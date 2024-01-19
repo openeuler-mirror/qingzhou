@@ -36,7 +36,6 @@ public class AppManagerImpl implements AppManager {
         AppInfoImpl appInfo = new AppInfoImpl();
 
         AppContextImpl appContext = new AppContextImpl(FrameworkContextImpl.getFrameworkContext());
-        appContext.setAppName(appName);
         URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(listFiles, QingZhouApp.class.getClassLoader());
         appInfo.setLoader(loader);
         ModelManager modelManager = buildModelManager(listFiles, loader);
@@ -110,8 +109,7 @@ public class AppManagerImpl implements AppManager {
     }
 
     @Override
-    public void installApp(File appDir) throws Exception {
-        String appName = appDir.getName();
+    public void installApp(String appName, File appDir) throws Exception {
         if (appInfoMap.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }

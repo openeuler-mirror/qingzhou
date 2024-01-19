@@ -1,38 +1,41 @@
-package qingzhou.framework.console;
+package qingzhou.console.page;
 
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.impl.FrameworkContextImpl;
+import qingzhou.framework.console.ConsoleConstants;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConsoleContextCache {
-    public static final Map<String, ConsoleContext> appConsoleContextCache = new ConcurrentHashMap<>();
+public class AppStub {
+    public static final Map<String, ConsoleContext> appStubMap = new ConcurrentHashMap<>();
 
     public static ConsoleContext getAppConsoleContext(String appName) {
-        if (appConsoleContextCache.isEmpty()) {
+        if (appStubMap.isEmpty()) {
             initAppsCache();
         }
 
-        return ConsoleContextCache.appConsoleContextCache.get(appName);
+        return AppStub.appStubMap.computeIfAbsent(appName, s -> {
+            return null;//todo 需要获取应用的i18n信息，内存没有的需要从缓存拉取
+        });
     }
 
     public static void addAppConsoleContext(String appName, ConsoleContext context) {
-        ConsoleContextCache.appConsoleContextCache.put(appName, context);
+        AppStub.appStubMap.put(appName, context);
     }
 
     public static void removeAppConsoleContext(String appName) {
-        ConsoleContextCache.appConsoleContextCache.remove(appName);
+        AppStub.appStubMap.remove(appName);
     }
 
     private static void initAppsCache() {
-        AppManager appManager = FrameworkContextImpl.getFrameworkContext().getAppManager();
+        AppManager appManager = ConsoleWarHelper.getAppInfoManager();
         if (appManager != null) {
             Set<String> apps = appManager.getApps();
             for (String app : apps) {
-                appConsoleContextCache.put(app, appManager.getAppInfo(app).getAppContext().getConsoleContext());
+                appStubMap.put(app, appManager.getAppInfo(app).getAppContext().getConsoleContext());
             }
         }
     }
@@ -41,7 +44,7 @@ public class ConsoleContextCache {
         return getAppConsoleContext(ConsoleConstants.MASTER_APP_NAME);
     }
 
-    private ConsoleContextCache() {
+    private AppStub() {
         initAppsCache();
     }
 }

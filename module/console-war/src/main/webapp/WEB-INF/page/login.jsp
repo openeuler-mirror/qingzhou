@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
 String contextPath = request.getContextPath();

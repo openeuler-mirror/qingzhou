@@ -1,6 +1,7 @@
 package qingzhou.app.node.monitor;
 
 
+import qingzhou.app.node.Main;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
@@ -176,7 +177,7 @@ public class Jvm extends ModelBase implements MonitorModel {
         }
         String result = path.toString();
         try {
-            result = result.replace(getAppContext().getHome().getCanonicalPath(), "${qingzhou.home}");
+            result = result.replace(Main.getFC().getHome().getCanonicalPath(), "${qingzhou.home}");
         } catch (Exception ignored) {
         }
         return result;

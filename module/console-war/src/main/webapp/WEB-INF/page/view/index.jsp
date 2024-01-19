@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
 <%

@@ -16,6 +16,7 @@
 <%@ page import="qingzhou.console.view.impl.*" %>
 <%@ page import="qingzhou.console.sdk.*" %>
 <%@ page import="qingzhou.console.page.PageBackendService" %>
+<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);

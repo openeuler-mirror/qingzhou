@@ -2,13 +2,11 @@ package qingzhou.console.page;
 
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.MenuInfo;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.console.ConsoleConstants;
-import qingzhou.framework.console.ConsoleContextCache;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.util.StringUtil;
@@ -44,7 +42,7 @@ public class PageBackendService {
     }
 
     public static ModelManager getModelManager(String appName) {
-        return ConsoleContextCache.getAppConsoleContext(appName).getModelManager();
+        return AppStub.getAppConsoleContext(appName).getModelManager();
     }
 
     static void printParentMenu(Properties menu, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -52,7 +50,7 @@ public class PageBackendService {
         String menuText = "未分类";
         boolean isDefaultActive = false;
         if (StringUtil.notBlank(model)) {
-            MenuInfo menuInfo = ConsoleContextCache.getAppConsoleContext(appName).getMenuInfo(model);
+            MenuInfo menuInfo = AppStub.getAppConsoleContext(appName).getMenuInfo(model);
             if (menuInfo == null) {
                 // todo
                 //menuInfo = ((ConsoleContextImpl) Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME)).getMenuInfo(model);
@@ -133,7 +131,7 @@ public class PageBackendService {
          *  order -> int
          *  children -> Properties
          */
-        ConsoleContext consoleContext = ConsoleContextCache.getAppConsoleContext(appName);
+        ConsoleContext consoleContext = AppStub.getAppConsoleContext(appName);
         Map<String, Properties> modelMap = new HashMap<>();
         for (Model model : allModels) {
             String modelName = model.name();

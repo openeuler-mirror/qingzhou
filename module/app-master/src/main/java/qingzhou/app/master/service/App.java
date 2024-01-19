@@ -3,7 +3,6 @@ package qingzhou.app.master.service;
 import qingzhou.app.master.Main;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.Model;
@@ -13,12 +12,10 @@ import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
-import qingzhou.framework.console.ConsoleContextCache;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 
 @Model(name = "app", icon = "cube-alt",
@@ -37,6 +34,7 @@ public class App extends ModelBase implements AddModel {
     @ModelField(
             required = true,
             disableOnEdit = true,
+            showToEdit = false,
             type = FieldType.bool,
             nameI18n = {"使用上传", "en:Enable Upload"},
             infoI18n = {"部署的应用可以从客户端上传，也可以从服务器端指定的位置读取。注：出于安全考虑，QingZhou 出厂设置禁用了文件上传功能，您可在“控制台安全”模块了解详情和进行相关的配置操作。",
@@ -47,6 +45,7 @@ public class App extends ModelBase implements AddModel {
             showToList = true,
             effectiveWhen = "appFrom=false",
             disableOnEdit = true,
+            showToEdit = false,
             required = true,
             notSupportedCharacters = "#",
             maxLength = 255,// for #NC-1418 及其它文件目录操作的，文件长度不能大于 255
@@ -124,10 +123,10 @@ public class App extends ModelBase implements AddModel {
     public void add(Request request, Response response) throws Exception {
         Map<String, String> p = prepareParameters(request);
         File srcFile;
-        if (Boolean.parseBoolean(p.get("appFrom"))) {
+        if (Boolean.parseBoolean(p.remove("appFrom"))) {
             srcFile = FileUtil.newFile(p.remove("fromUpload"));
         } else {
-            srcFile = new File(p.get("filename"));
+            srcFile = new File(p.remove("filename"));
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
             return;
@@ -157,7 +156,7 @@ public class App extends ModelBase implements AddModel {
             if (ConsoleConstants.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
                 File app = FileUtil.newFile(getAppsDir(), appName);
                 try {
-                    getAppManager().installApp(app);
+                    getAppManager().installApp(appName, app);
                     p.put("id", appName);
                     getDataStore().addData(request.getModelName(), appName, p);
                 } catch (Exception e) {
@@ -171,50 +170,11 @@ public class App extends ModelBase implements AddModel {
         }
     }
 
-    @Override
-    public void delete(Request request, Response response) throws Exception {
-        String id = request.getId();
-        Map<String, String> appInfo = getDataStore().getDataById("app", id);
-        if (appInfo == null || appInfo.isEmpty()) {
-            return;
-        }
-
-        try {
-            if (Main.getFC().getAppManager().getApps().contains(id)) {
-                getAppManager().uninstallApp(id);
-            } else {
-                // TODO 这里还要卸载远程节点的
-            }
-            ConsoleContextCache.removeAppConsoleContext(id);
-
-            File app = FileUtil.newFile(getAppsDir(), id);
-            if (app.exists()) {
-                try {
-                    FileUtil.forceDelete(app);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    response.setSuccess(false);
-                    return;
-                }
-            }
-
-            getDataStore().deleteDataById(request.getModelName(), id);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.setSuccess(false);
-        }
-    }
-
     @ModelAction(name = "target",
             icon = "location-arrow", forwardToPage = "target",
             nameI18n = {"管理", "en:Manage"}, showToList = true,
             infoI18n = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
     public void switchTarget(Request request, Response response) throws Exception {
-        if (ConsoleContextCache.getAppConsoleContext(request.getAppName()) == null) {
-            // TODO 需要从远程获取应用的ConsoleContext
-            ConsoleContext context = null;
-            ConsoleContextCache.addAppConsoleContext(request.getAppName(), context);
-        }
     }
 
     private AppManager getAppManager() {

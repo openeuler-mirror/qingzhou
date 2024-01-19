@@ -7,7 +7,6 @@ import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
 
 @Model(name = "node", icon = Node.MODEL_NAME,
@@ -22,8 +21,6 @@ public class Node extends ModelBase implements AddModel {
     public void init() {
         super.init();
         getAppContext().getConsoleContext().addI18N("node.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
-        getAppContext().getConsoleContext().addI18N("node.update.local.not.support", new String[]{"不支持编辑默认节点。", "en:Editing the default node is not supported."});
-        getAppContext().getConsoleContext().addI18N("node.delete.local.not.support", new String[]{"不支持删除默认节点。", "en:Deleting a default node is not supported."});
     }
 
     @ModelField(
@@ -59,28 +56,6 @@ public class Node extends ModelBase implements AddModel {
         }
 
         return super.validate(request, fieldName);
-    }
-
-    @Override
-    public void update(Request request, Response response) throws Exception {
-        if (ConsoleConstants.LOCAL_NODE_NAME.equals(request.getId())) {
-            response.setSuccess(false);
-            response.setMsg(getAppContext().getConsoleContext().getI18N("node.update.local.not.support"));
-            return;
-        }
-
-        AddModel.super.update(request, response);
-    }
-
-    @Override
-    public void delete(Request request, Response response) throws Exception {
-        if (ConsoleConstants.LOCAL_NODE_NAME.equals(request.getId())) {
-            response.setSuccess(false);
-            response.setMsg(getAppContext().getConsoleContext().getI18N("node.delete.local.not.support"));
-            return;
-        }
-
-        AddModel.super.delete(request, response);
     }
 
     @Override

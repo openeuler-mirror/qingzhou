@@ -5,6 +5,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
@@ -25,22 +26,34 @@ public class Controller implements BundleActivator {
         appManager = frameworkContext.getAppManager();
         logger = frameworkContext.getService(LoggerService.class).getLogger();
 
-        installNodeApp();
+        if (frameworkContext.isMaster()) {
+            installMasterApp();
+        } else {
+            installNodeApp();
+        }
+
         installApps();
+    }
+
+    private void installMasterApp() throws Exception {
+        logger.info("install master app");
+        File masterApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "master");
+        frameworkContext.getAppManager().installApp(ConsoleConstants.MASTER_APP_NAME, masterApp);
     }
 
     private void installNodeApp() throws Exception {
         logger.info("install node app");
         File nodeApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "node");
-        appManager.installApp(nodeApp);
+        appManager.installApp(ConsoleConstants.NODE_APP_NAME, nodeApp);
     }
 
     private void installApps() throws Exception {
         File[] files = new File(frameworkContext.getDomain(), "apps").listFiles();
         if (files != null) {
             for (File file : files) {
-                logger.info("install app: " + file.getName());
-                appManager.installApp(file);
+                String appName = file.getName();
+                logger.info("install app: " + appName);
+                appManager.installApp(appName, file);
             }
         }
     }

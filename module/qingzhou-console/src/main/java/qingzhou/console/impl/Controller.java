@@ -30,7 +30,6 @@ public class Controller implements BundleActivator {
         if (!frameworkContext.isMaster()) return;
 
         sequence = new ProcessSequence(
-                new InstallMasterApp(),
                 new StartServlet(),
                 new RunWar()
         );
@@ -39,21 +38,10 @@ public class Controller implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) {
+        context.ungetService(reference);
         if (!frameworkContext.isMaster()) return;
 
         sequence.undo();
-        frameworkContext = null;
-        context.ungetService(reference);
-    }
-
-    private class InstallMasterApp implements Process {
-
-        @Override
-        public void exec() throws Exception {
-            logger.info("install master app");
-            File masterApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "master");
-            frameworkContext.getAppManager().installApp(masterApp);
-        }
     }
 
     private class RunWar implements Process {
