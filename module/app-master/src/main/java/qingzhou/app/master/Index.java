@@ -6,6 +6,7 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.util.JDKUtil;
 
 @Model(name = "index", icon = "home", entryAction = "home",
         nameI18n = {"主页", "en:Main"},
@@ -40,7 +41,7 @@ public class Index extends ModelBase {
         Index index = new Index();
         index.serverInfo = "QingZhou（轻舟）";
         index.domainPath = Main.getFC().getDomain().getPath();
-        index.javaHome = "";// TODO JDKUtil.getJavaHome();
+        index.javaHome = JDKUtil.getJavaHome();
         response.addDataObject(index);
     }
 
