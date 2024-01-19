@@ -7,6 +7,7 @@ import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.DeleteModel;
 import qingzhou.framework.api.EditModel;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ListModel;
@@ -283,6 +284,16 @@ public class ConsoleWarHelper {
         return false;
     }
 
+    public static boolean isAjaxAction(String actionName) {
+        if (EditModel.ACTION_NAME_UPDATE.equals(actionName) ||
+                AddModel.ACTION_NAME_ADD.equals(actionName) ||
+                DeleteModel.ACTION_NAME_DELETE.equals(actionName)) {
+            return true;
+        }
+
+        return false;
+    }
+
 
     /********************* 批量操作 start ************************/
     public static ModelAction[] listCommonOps(Request request, Response response) throws Exception {
@@ -363,6 +374,7 @@ public class ConsoleWarHelper {
             return false;
         }
     }
+
     /********************* 批量操作 end ************************/
 
     private ConsoleWarHelper() {

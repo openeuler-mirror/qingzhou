@@ -149,7 +149,7 @@
                             } else {
                                 titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
                             }
-                            boolean isAjaxAction = action.showToFormBottom();
+                            boolean isAjaxAction = ConsoleWarHelper.isAjaxAction(actionKey);
                             String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                 %>
                 <a id="<%=actionKey%>"
