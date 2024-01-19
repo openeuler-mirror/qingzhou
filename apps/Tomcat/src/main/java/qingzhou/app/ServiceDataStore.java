@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -31,7 +32,8 @@ import qingzhou.framework.util.StringCollector;
 
 public class ServiceDataStore implements DataStore {
 
-    private static final String ID_NAME = "name";
+    private static final String PK_ID = "id";
+    private static final String UK_NAME = "name";
     // 注意：这里直接放到内存中，用来代替数据库或配置文件，实际开发中要持久化到文件或数据库中
     private static final List<Map<String, String>> DATAS = new ArrayList<>();
 
@@ -43,12 +45,20 @@ public class ServiceDataStore implements DataStore {
     @Override
     public void addData(String type, String id, Map<String, String> properties) throws Exception {
         try {
-            if (!getData(properties.get(ID_NAME)).isEmpty()) {
-                throw new IllegalStateException("Tomcat 服务已存在！");
-            } else {
-                properties.put("tomcatPort", parseTomcatPort(properties.get("tomcatPath")));
-                datas().add(properties);
+            String randId = UUID.nameUUIDFromBytes((properties.getOrDefault(UK_NAME, "")).getBytes()).toString();
+            List<Map<String, String>> list = getAllData(type);
+            for (Map<String, String> item : list) {
+                if (item.get(UK_NAME).equals(properties.get(UK_NAME))) {
+                    throw new IllegalStateException("Tomcat 服务已存在！");
+                }
+                if (item.get(PK_ID).equals(randId)) {
+                    String factor = String.valueOf(System.currentTimeMillis());
+                    randId = randId.substring(0, randId.length() - factor.length()) + factor;
+                }
             }
+            properties.put(PK_ID, randId);
+            properties.put("tomcatPort", parseTomcatPort(properties.get("tomcatPath")));
+            datas().add(properties);
         } catch (IllegalStateException e) {
             throw e;
         }
@@ -61,7 +71,7 @@ public class ServiceDataStore implements DataStore {
             int endIndex = (list.size() >= pageSize * pageNum ?  pageSize * pageNum : list.size()) - 1;
             return list.subList(pageSize * (pageNum - 1), endIndex).stream()
             .flatMap(map -> map.entrySet().stream())
-            .filter(entry -> ID_NAME.equals(entry.getKey()))
+            .filter(entry -> PK_ID.equals(entry.getKey()))
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
         } catch (Exception e) {
@@ -91,7 +101,7 @@ public class ServiceDataStore implements DataStore {
     public void deleteDataById(String type, String id) throws Exception {
         try {
             for (int i = 0; i < datas().size(); i++) {
-                if (datas().get(i).get(ID_NAME).equals(id)) {
+                if (datas().get(i).get(PK_ID).equals(id)) {
                     datas().remove(i);
                 }
             }
@@ -102,7 +112,7 @@ public class ServiceDataStore implements DataStore {
 
     public Map<String, String> getData(String id) {
         for (Map<String, String> item : datas()) {
-            if (item.get(ID_NAME).equals(id)) {
+            if (item.get(PK_ID).equals(id)) {
                 return item;
             }
         }
@@ -141,18 +151,18 @@ public class ServiceDataStore implements DataStore {
         while (time > 0) {
             try {
                 StringCollector sc = new StringCollector();
-                NativeCommandUtil.runNativeCommand(System.getProperty("os.name").contains("Windows") ? ("netstat -aon|findstr " + port) : ("netstat -lnp | grep " + port), new File(one.get("tomcatPath"), "bin"), sc,2);
+                NativeCommandUtil.runNativeCommand(System.getProperty("os.name").contains("Windows") ? ("netstat -aon|findstr " + port) : ("netstat -lnp | grep " + port), new File(one.get("tomcatPath"), "bin"), sc, 2);
                 try (ByteArrayInputStream inStream = new ByteArrayInputStream(sc.destroy().getBytes()); InputStreamReader reader = new InputStreamReader(inStream, "UTF-8"); 
                 BufferedReader in = new BufferedReader(reader)) {
                     String l;
                     while ((l = in.readLine()) != null) {
                         if (System.getProperty("os.name").contains("Windows")) {
-                            if (l.trim().startsWith("TCP") && l.contains(":" + port) && l.contains(" LISTENING ")) {
+                            if (l.trim().startsWith("stdout>TCP") && l.contains(":" + port) && l.contains(" LISTENING ")) {
                                 time = 0;
                                 break;
                             }
                         } else {
-                            if (l.trim().startsWith("tcp") && l.contains(":" + port) && l.trim().endsWith("/java")) {
+                            if (l.trim().startsWith("stdout>tcp") && l.contains(":" + port) && l.trim().endsWith("/java")) {
                                 time = 0;
                                 break;
                             }
@@ -242,5 +252,4 @@ public class ServiceDataStore implements DataStore {
             return false;
         }
     }
-    
 }

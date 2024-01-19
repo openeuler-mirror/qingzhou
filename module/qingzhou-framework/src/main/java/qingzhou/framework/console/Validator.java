@@ -139,6 +139,14 @@ public class Validator {
                 }
             }
         } else {
+            if (newValue.isEmpty()) {
+                if (modelField.required()) { // 必填项，但页面的输入框为空的情况！！！例如安全域用户的用户名
+                    boolean isUpdatingFile = isUpdate && modelField.type() == FieldType.file; // 上传应用，编辑时候
+                    if (!isUpdatingFile) {
+                        return ConsoleContextCache.getMasterConsoleContext().getI18N("validator.require");
+                    }
+                }
+            }
             ValidatorContext vc = new ValidatorContext(newValue, modelField, fieldName, request, modelManager, tempModel);
 
             Class<?>[] preValidatorClass = { // 有顺序要求
