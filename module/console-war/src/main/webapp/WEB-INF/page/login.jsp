@@ -101,7 +101,7 @@ for (Lang lang : Lang.values()) {
                         </div>
                     </div>
                     <textarea id="pubkey" rows="3" style="display:none;">
-                        <%=ConsoleWarHelper.getPublicKeyString()%>
+                        <%=PageBackendService.getPublicKeyString()%>
                     </textarea>
                 </form>
             </section>
@@ -130,7 +130,7 @@ for (Lang lang : Lang.values()) {
             $("#loginForm").submit(function (e) {
                 if ($("#<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>").is(":checked")) {
                     $("#<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>").val("true");
-                    var encrypt = new JSEncrypt({"default_key_size":<%=ConsoleWarHelper.getKeySize()%>});
+                    var encrypt = new JSEncrypt({"default_key_size":<%=PageBackendService.getKeySize()%>});
                     encrypt.setPublicKey($('#pubkey').val());
                     var inputs = $("#loginForm").find("input");
                     for (var i = 0; i < inputs.length; i++) {

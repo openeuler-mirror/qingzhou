@@ -2,6 +2,7 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.crypto.KeyManager;
@@ -199,7 +200,7 @@ public class InvokeAction implements Filter<RestContext> {
                 if (remoteKey == null) {
                     KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
                     remoteKey = keyManager.getKeyOrElseInit(
-                            ConsoleWarHelper.getSecureFile(ConsoleWarHelper.getDomain()),
+                            PageBackendService.getSecureFile(ConsoleWarHelper.getDomain()),
                             RemoteConstants.REMOTE_KEY_NAME,
                             null
                     );

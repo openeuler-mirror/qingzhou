@@ -1,5 +1,6 @@
 package qingzhou.console.remote;
 
+import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.servlet.UploadFileContext;
@@ -41,7 +42,7 @@ public class RemoteClient {
             try {
                 CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
                 qingzhou.crypto.KeyManager keyManager = cryptoService.getKeyManager();
-                String localKey = keyManager.getKeyOrElseInit(ConsoleWarHelper.getSecureFile(ConsoleWarHelper.getDomain()), ConsoleConstants.localKeyName, null);
+                String localKey = keyManager.getKeyOrElseInit(PageBackendService.getSecureFile(ConsoleWarHelper.getDomain()), ConsoleConstants.localKeyName, null);
                 cipher = cryptoService.getPasswordCipher(cryptoService.getPasswordCipher(localKey).decrypt(remoteKey));
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");

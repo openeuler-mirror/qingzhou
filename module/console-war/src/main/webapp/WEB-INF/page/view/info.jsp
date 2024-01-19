@@ -2,7 +2,7 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-    boolean hasId = ConsoleWarHelper.hasIDField(qzRequest);
+    boolean hasId = PageBackendService.hasIDField(qzRequest);
     boolean chartEnabled = !qzResponse.getDataList().isEmpty();
     boolean isMonitor = MonitorModel.ACTION_NAME_MONITOR.equals(qzRequest.getActionName());
 
