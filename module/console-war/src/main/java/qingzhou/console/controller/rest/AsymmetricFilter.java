@@ -1,6 +1,6 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleUtil;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ModelField;
@@ -23,7 +23,7 @@ public class AsymmetricFilter implements Filter<RestContext> {
                 String val = request.getParameter(fieldName);
                 if (!StringUtil.isBlank(val)) {
                     try {
-                        String result = ConsoleUtil.decryptWithConsolePrivateKey(val);
+                        String result = ConsoleWarHelper.decryptWithConsolePrivateKey(val);
                         request.updateParameter(fieldName, result);
                     } catch (Exception ignored) {
                     }

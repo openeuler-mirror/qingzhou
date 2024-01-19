@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
 <%
@@ -336,7 +337,7 @@
         confirmBtnText: '<%=PageBackendService.getMasterAppI18NString("page.confirm")%>',
         cancelBtnText: '<%=PageBackendService.getMasterAppI18NString("page.cancel")%>',
         notLogin: '<%=PageBackendService.getMasterAppI18NString("page.login.need")%>',
-        encrypt_key_size: '<%=ConsoleUtil.getKeySize()%>',
+        encrypt_key_size: '<%=ConsoleWarHelper.getKeySize()%>',
         reloginBtnText: '<%=PageBackendService.getMasterAppI18NString("page.relogin")%>',
         iknowBtnText: '<%=PageBackendService.getMasterAppI18NString("page.gotit")%>',
         switchLang: '<%=PageBackendService.getMasterAppI18NString("page.lang.switch.confirm")%>',

@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
 String contextPath = request.getContextPath();
@@ -101,7 +102,7 @@ for (Lang lang : Lang.values()) {
                         </div>
                     </div>
                     <textarea id="pubkey" rows="3" style="display:none;">
-                        <%=ConsoleUtil.getPublicKeyString()%>
+                        <%=ConsoleWarHelper.getPublicKeyString()%>
                     </textarea>
                 </form>
             </section>
@@ -130,7 +131,7 @@ for (Lang lang : Lang.values()) {
             $("#loginForm").submit(function (e) {
                 if ($("#<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>").is(":checked")) {
                     $("#<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>").val("true");
-                    var encrypt = new JSEncrypt({"default_key_size":<%=ConsoleUtil.getKeySize()%>});
+                    var encrypt = new JSEncrypt({"default_key_size":<%=ConsoleWarHelper.getKeySize()%>});
                     encrypt.setPublicKey($('#pubkey').val());
                     var inputs = $("#loginForm").find("input");
                     for (var i = 0; i < inputs.length; i++) {

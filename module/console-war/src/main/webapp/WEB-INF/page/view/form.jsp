@@ -7,7 +7,7 @@
     }
 
     boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, qzRequest.getModelName());
-    String submitActionName = ConsoleUtil.getSubmitActionName(qzRequest);
+    String submitActionName = ConsoleWarHelper.getSubmitActionName(qzRequest);
     String idFieldName = ListModel.FIELD_NAME_ID;
     ModelField idField = modelManager.getModelField(qzRequest.getModelName(), idFieldName);
     final boolean hasId = idField != null;
@@ -35,7 +35,7 @@
         List<Map<String, String>> models = qzResponse.getDataList();
         if (!models.isEmpty()) {
             model = models.get(0);
-            Map<String, Map<String, ModelField>> fieldMapWithGroup = ConsoleUtil.getGroupedModelFieldMap(qzRequest);
+            Map<String, Map<String, ModelField>> fieldMapWithGroup = ConsoleWarHelper.getGroupedModelFieldMap(qzRequest);
             Set<String> groups = fieldMapWithGroup.keySet();
             long suffixId = System.currentTimeMillis();
             if (groups.size() > 1) {
@@ -97,7 +97,7 @@
                             readonly = "readonly";
                         }
                     }
-                    if (ConsoleUtil.isFieldReadOnly(qzRequest, fieldName)) {
+                    if (ConsoleWarHelper.isFieldReadOnly(qzRequest, fieldName)) {
                         readonly = "readonly";
                     }
 
@@ -281,7 +281,7 @@
 
     <div id="tempZone" style="display:none;"></div>
     <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-            <%=ConsoleUtil.getPublicKeyString()%>
+            <%=ConsoleWarHelper.getPublicKeyString()%>
     </textarea>
 
     <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">
@@ -289,7 +289,7 @@
         // added by yuanwc for: ModelField 注解 effectiveWhen()
         StringBuilder conditionBuilder = new StringBuilder();
         conditionBuilder.append("{");
-        Map<String, String> conditions = ConsoleUtil.modelFieldEffectiveWhenMap(qzRequest);
+        Map<String, String> conditions = ConsoleWarHelper.modelFieldEffectiveWhenMap(qzRequest);
         for (Map.Entry<String, String> e : conditions.entrySet()) {
             //e.getValue().replace(/\&\&/g, '&').replace(/\|\|/g, '|');
             conditionBuilder.append("'").append(e.getKey()).append("' : '")

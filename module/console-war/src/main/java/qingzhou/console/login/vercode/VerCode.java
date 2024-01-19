@@ -85,7 +85,7 @@ public class VerCode implements Filter<HttpServletContext> {
      * 校验用户输入的验证码是否正确
      */
     public static boolean validate(HttpServletRequest request) {
-        String clientCode = ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA));
+        String clientCode = ConsoleWarHelper.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA));
         if (StringUtil.isBlank(clientCode)) {
             return false;
         }

@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -5,7 +6,7 @@
     if (qzRequest == null || qzResponse == null || modelManager == null) {
         return; // for 静态源码漏洞扫描
     }
-    final boolean hasId = ConsoleUtil.hasIDField(qzRequest);
+    final boolean hasId = ConsoleWarHelper.hasIDField(qzRequest);
     if (!qzResponse.getDataList().isEmpty()) {
 %>
 

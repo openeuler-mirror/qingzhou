@@ -1,8 +1,9 @@
+<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-    boolean hasId = ConsoleUtil.hasIDField(qzRequest);
+    boolean hasId = ConsoleWarHelper.hasIDField(qzRequest);
     boolean chartEnabled = !qzResponse.getDataList().isEmpty();
     boolean isMonitor = MonitorModel.ACTION_NAME_MONITOR.equals(qzRequest.getActionName());
 

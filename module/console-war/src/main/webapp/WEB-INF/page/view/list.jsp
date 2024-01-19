@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -7,7 +8,7 @@
         return; // for 静态源码漏洞扫描
     }
 
-    final boolean hasId = ConsoleUtil.hasIDField(qzRequest);
+    final boolean hasId = ConsoleWarHelper.hasIDField(qzRequest);
 
     LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
     String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
@@ -42,7 +43,7 @@
                     for (Integer i : indexToShow) {
                         String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
                         List<Option> modelOptionsEntry = null;
-                        if (ConsoleUtil.isFilterSelect(qzRequest, i)) {
+                        if (ConsoleWarHelper.isFilterSelect(qzRequest, i)) {
                             try {
                                 Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
                                 if (modelOptions != null) {
@@ -118,8 +119,8 @@
                         }
                     }
                 // 用于判断是否需要操作列
-                boolean needOperationColumn = ConsoleUtil.needOperationColumn(qzRequest, qzResponse, session);
-                ModelAction[] opsActions = ConsoleUtil.listCommonOps(qzRequest, qzResponse, session);
+                boolean needOperationColumn = ConsoleWarHelper.needOperationColumn(qzRequest, qzResponse);
+                ModelAction[] opsActions = ConsoleWarHelper.listCommonOps(qzRequest, qzResponse);
                 if (needOperationColumn) {
                     String modelIcon = modelManager.getModel(qzRequest.getModelName()).icon();
                     for (ModelAction action : opsActions) {
@@ -215,7 +216,7 @@
                             if (hasId) {
                                 String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
                                 if (opsActions.length > 0) {
-                                    boolean hasCheckAction = ConsoleUtil.listModelBaseOps(qzRequest, qzResponse, session, modelBase).length > 0;
+                                    boolean hasCheckAction = ConsoleWarHelper.listModelBaseOps(qzRequest, qzResponse, modelBase).length > 0;
                                     %>
                                     <td>
                                         <input type="checkbox"
@@ -293,7 +294,7 @@
                                     if (action == null) {
                                         continue;
                                     }
-                                    if (ConsoleUtil.isActionEffective(qzRequest, modelBase, action) != null) {
+                                    if (ConsoleWarHelper.isActionEffective(qzRequest, modelBase, action) != null) {
                                         continue;
                                     }
                                     String actionKey = action.name();

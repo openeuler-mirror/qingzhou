@@ -200,7 +200,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static boolean check2FA(HttpServletRequest request) throws Exception {
-        return check2FA(request.getParameter(LOGIN_USER), ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
+        return check2FA(request.getParameter(LOGIN_USER), ConsoleWarHelper.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
     }
 
     public static boolean check2FA(String user, String login2FA) throws Exception {
@@ -226,7 +226,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static String checkPassword(String user, String password) {
         try {
-            password = ConsoleUtil.decryptWithConsolePrivateKey(password);
+            password = ConsoleWarHelper.decryptWithConsolePrivateKey(password);
         } catch (Exception ignored) {
         }
 

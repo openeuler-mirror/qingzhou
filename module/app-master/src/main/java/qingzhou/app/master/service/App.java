@@ -10,8 +10,6 @@ import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
@@ -105,16 +103,6 @@ public class App extends ModelBase implements AddModel {
         }
 
         return super.validate(request, fieldName);
-    }
-
-    @Override
-    public Options options(String fieldName) {
-        if ("nodes".equals(fieldName)) {
-            Options options = super.options(fieldName);
-            return Options.merge(options, Option.of(ConsoleConstants.LOCAL_NODE_NAME, new String[]{"默认节点", "en:default"}));
-        }
-
-        return super.options(fieldName);
     }
 
     @Override
