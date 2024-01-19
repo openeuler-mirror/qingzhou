@@ -91,7 +91,7 @@ public class ResponseImpl implements Response, Serializable {
     }
 
     @Override
-    public void addDataObject(Object data) throws Exception {
+    public void addDataObject(Object data) {
         Map<String, String> map = new HashMap<>();
 
         Field[] fields = data.getClass().getFields();

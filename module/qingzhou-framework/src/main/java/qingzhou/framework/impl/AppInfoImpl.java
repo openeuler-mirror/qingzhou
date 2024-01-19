@@ -7,7 +7,6 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.QingZhouApp;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.console.Validator;
 import qingzhou.framework.impl.model.ActionInfo;
 import qingzhou.framework.impl.model.ModelInfo;
 import qingzhou.framework.impl.model.ModelManagerImpl;
@@ -35,8 +34,6 @@ public class AppInfoImpl implements AppInfo {
     @Override
     public void invokeAction(Request request, Response response) throws Exception {
         ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getConsoleContext().getModelManager();
-        boolean ok = Validator.validate(request, response, modelManager);
-        if (!ok) return;
 
         ModelInfo modelInfo = modelManager.getModelInfo(request.getModelName());
         if (modelInfo == null) return;

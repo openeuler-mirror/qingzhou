@@ -1,12 +1,12 @@
 package qingzhou.console.view;
 
+import qingzhou.console.I18n;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.impl.FileView;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.console.view.impl.View;
-import qingzhou.framework.console.ConsoleConstants;
-import qingzhou.framework.console.I18n;
+import qingzhou.framework.console.ConsoleI18n;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
@@ -34,7 +34,7 @@ public class ViewManager {
         if (StringUtil.isBlank(response.getMsg())) {
             String appName = request.getAppName();
             String SP = I18n.getI18nLang().isZH() ? "" : " ";
-            String msg = response.isSuccess() ? I18n.getString(ConsoleConstants.MASTER_APP_NAME, "msg.success") : I18n.getString(appName, "msg.fail");
+            String msg = response.isSuccess() ? ConsoleI18n.getI18N(I18n.getI18nLang(), "msg.success") : I18n.getString(appName, "msg.fail");
             String model = I18n.getString(appName, "model." + request.getModelName());
             String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
             String operation = Objects.equals(model, action) ? model : model + SP + action;

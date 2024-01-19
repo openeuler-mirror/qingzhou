@@ -1,7 +1,7 @@
 package qingzhou.app.master.service;
 
 import qingzhou.app.master.ConsoleDataStore;
-import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.framework.FrameworkContext;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +12,7 @@ public class NodeDataStore extends ConsoleDataStore {
 
     public NodeDataStore() {
         localNode = new HashMap<>();
-        localNode.put("id", ConsoleConstants.LOCAL_NODE_NAME);
+        localNode.put("id", FrameworkContext.LOCAL_NODE_NAME);
         localNode.put("ip", "0.0.0.0");
         localNode.put("port", "9060");
         localNode.put("running", "true");

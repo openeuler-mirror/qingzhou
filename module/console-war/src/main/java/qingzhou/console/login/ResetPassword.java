@@ -1,16 +1,16 @@
 package qingzhou.console.login;
 
-import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
+import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
-import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.console.I18n;
+import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.console.ConsoleI18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.ExceptionUtil;
@@ -28,12 +28,9 @@ public class ResetPassword implements Filter<HttpServletContext> {
     private static final String set2FAMsg = "page.warn.set2fa";
 
     static {
-        ConsoleContext master = ConsoleWarHelper.getMasterConsoleContext();
-        if (master != null) {
-            master.addI18N(setPasswordMsg, new String[]{"请先重置默认密码", "en:Please reset your default password first"});
-            master.addI18N(set2FAMsg, new String[]{"请先扫描二维码绑定双因子认证密钥", "en:Please scan the QR code to bind the two-factor authentication key"});
-            master.addI18N("password.max", new String[]{"已达到密码最长使用期限 %s 天，上次修改时间为：%s", "en:The maximum password age of %s days has been reached, last modified: %s"});
-        }
+        ConsoleI18n.addI18N(setPasswordMsg, new String[]{"请先重置默认密码", "en:Please reset your default password first"});
+        ConsoleI18n.addI18N(set2FAMsg, new String[]{"请先扫描二维码绑定双因子认证密钥", "en:Please scan the QR code to bind the two-factor authentication key"});
+        ConsoleI18n.addI18N("password.max", new String[]{"已达到密码最长使用期限 %s 天，上次修改时间为：%s", "en:The maximum password age of %s days has been reached, last modified: %s"});
     }
 
     @Override
@@ -77,7 +74,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + ConsoleConstants.MODEL_NAME_node +
-                    "/" + ConsoleConstants.MASTER_APP_NAME +
+                    "/" + FrameworkContext.MASTER_APP_NAME +
                     "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +

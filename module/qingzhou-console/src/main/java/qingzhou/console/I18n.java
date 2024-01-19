@@ -1,8 +1,7 @@
-package qingzhou.framework.console;
+package qingzhou.console;
 
-import qingzhou.framework.AppInfo;
-import qingzhou.framework.impl.ConsoleContextImpl;
-import qingzhou.framework.impl.FrameworkContextImpl;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.console.Lang;
 
 import java.util.Map;
 
@@ -33,19 +32,13 @@ public class I18n {
         return DEFAULT_LANG;
     }
 
-    public static String getString(String appName, String i18nKey, Lang lang) {
-        AppInfo appInfo = FrameworkContextImpl.getFrameworkContext().getAppManager().getAppInfo(appName);
-        ConsoleContextImpl consoleContext = (ConsoleContextImpl) appInfo.getAppContext().getConsoleContext();
-        return consoleContext.getI18N(lang, i18nKey);
-    }
-
     public static String getString(String appName, String i18nKey) {
-        AppInfo appInfo = FrameworkContextImpl.getFrameworkContext().getAppManager().getAppInfo(appName);
-        return appInfo.getAppContext().getConsoleContext().getI18N(i18nKey);
+        ConsoleContext appConsoleContext = AppStub.getConsoleContext(appName);
+        return appConsoleContext.getI18N(I18n.getI18nLang().getFlag(), i18nKey);
     }
 
     public static String getString(String[] i18n) {
-        Map<Lang, String> i18nMap = Lang.parseI18n(i18n);
+        Map<Lang, String> i18nMap = Lang.retrieveI18n(i18n);
 
         return i18nMap.get(getI18nLang());
     }

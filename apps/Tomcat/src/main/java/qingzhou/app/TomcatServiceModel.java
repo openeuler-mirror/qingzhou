@@ -14,10 +14,10 @@ import java.util.Map;
 
 @Model(name = "tomcatService", icon = "folder-open-alt", nameI18n = {"Tomcat 服务管理", "en:Tomcat service management"}, infoI18n = {"Tomcat 服务管理。", "en:Tomcat service management."})
 public class TomcatServiceModel extends ModelBase implements AddModel {
-    
+
     @ModelField(showToList = false, showToEdit = false, disableOnCreate = true, disableOnEdit = true, nameI18n = {"主键", "en:ID"}, infoI18n = {"名称。", "en:Name."})
     public String id;
-    
+
     @ModelField(showToList = true, required = true, nameI18n = {"名称", "en:Name"}, infoI18n = {"名称。", "en:Name."})
     public String name;
 
@@ -45,14 +45,14 @@ public class TomcatServiceModel extends ModelBase implements AddModel {
             String value = request.getParameter(fieldName);
             if (value != null && !"".equals(value)) {
                 if (!new File(value).exists() || new File(value).isFile()) {
-                    return getAppContext().getConsoleContext().getI18N("app.tomcat.path.notexist");
+                    return "app.tomcat.path.notexist";
                 }
             }
         }
 
         return super.validate(request, fieldName);
     }
-    
+
     @Override
     public void add(Request request, Response response) throws Exception {
         Map<String, String> p = prepareParameters(request);
@@ -90,7 +90,7 @@ public class TomcatServiceModel extends ModelBase implements AddModel {
         response.setSuccess(true);
         response.setMsg("删除成功！");
     }
-    
+
     @ModelAction(name = "start", icon = "play", showToList = true, effectiveWhen = "started=false", nameI18n = {"启动", "en:Start"}, infoI18n = {"启动 Tomcat 服务。", "en:Start Tomcat service."})
     public void start(Request request, Response response) throws Exception {
         ServiceDataStore storeSrv = getDataStore();

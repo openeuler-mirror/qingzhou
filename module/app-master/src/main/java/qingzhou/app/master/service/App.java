@@ -2,6 +2,7 @@ package qingzhou.app.master.service;
 
 import qingzhou.app.master.Main;
 import qingzhou.framework.AppManager;
+import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ListModel;
@@ -11,7 +12,6 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
@@ -95,9 +95,9 @@ public class App extends ModelBase implements AddModel {
     public String validate(Request request, String fieldName) {
         if (fieldName.equals(ListModel.FIELD_NAME_ID)) {
             String id = request.getParameter(ListModel.FIELD_NAME_ID);
-            if (ConsoleConstants.MASTER_APP_NAME.equals(id) ||
-                    ConsoleConstants.NODE_APP_NAME.equals(id)) {
-                return getAppContext().getConsoleContext().getI18N("app.id.system");
+            if (FrameworkContext.MASTER_APP_NAME.equals(id) ||
+                    FrameworkContext.NODE_APP_NAME.equals(id)) {
+                return "app.id.system";
             }
         }
 
@@ -151,9 +151,9 @@ public class App extends ModelBase implements AddModel {
             throw ExceptionUtil.unexpectedException("unknown app type");
         }
 
-        String[] nodes = p.get("nodes").split(ConsoleConstants.DATA_SEPARATOR);
+        String[] nodes = p.get("nodes").split(",");
         for (String node : nodes) {
-            if (ConsoleConstants.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
+            if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
                 File app = FileUtil.newFile(getAppsDir(), appName);
                 try {
                     getAppManager().installApp(appName, app);

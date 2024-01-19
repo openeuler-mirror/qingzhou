@@ -1,12 +1,12 @@
 package qingzhou.console.view.impl;
 
+import qingzhou.console.DownLoadUtil;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.framework.api.DownloadModel;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
-import qingzhou.console.DownLoadUtil;
 import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.ServletOutputStream;

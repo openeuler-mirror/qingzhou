@@ -1,30 +1,17 @@
 package qingzhou.console.page;
 
+import qingzhou.console.AppStub;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.I18n;
+import qingzhou.console.Validator;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.DeleteModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.MenuInfo;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.console.ConsoleConstants;
-import qingzhou.framework.console.ConsoleContextCache;
-import qingzhou.framework.console.I18n;
+import qingzhou.framework.api.*;
+import qingzhou.framework.console.ConsoleI18n;
 import qingzhou.framework.console.Lang;
-import qingzhou.framework.console.Validator;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
@@ -56,16 +43,16 @@ public class PageBackendService {
     private PageBackendService() {
     }
 
-    public static String getMasterAppI18NString(String key) {
-        return I18n.getString(ConsoleConstants.MASTER_APP_NAME, key);
+    public static String getMasterAppI18NString(String key, Lang lang) {
+        return ConsoleI18n.getI18N(lang, key);
     }
 
-    public static String getMasterAppI18NString(String key, Lang lang) {
-        return I18n.getString(ConsoleConstants.MASTER_APP_NAME, key, lang);
+    public static String getMasterAppI18NString(String key) {
+        return ConsoleI18n.getI18N(I18n.getI18nLang(), key);
     }
 
     public static ModelManager getModelManager(String appName) {
-        return AppStub.getAppConsoleContext(appName).getModelManager();
+        return AppStub.getConsoleContext(appName).getModelManager();
     }
 
     static void printParentMenu(Properties menu, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -73,7 +60,7 @@ public class PageBackendService {
         String menuText = "未分类";
         boolean isDefaultActive = false;
         if (StringUtil.notBlank(model)) {
-            MenuInfo menuInfo = AppStub.getAppConsoleContext(appName).getMenuInfo(model);
+            MenuInfo menuInfo = AppStub.getConsoleContext(appName).getMenuInfo(model);
             if (menuInfo == null) {
                 // todo
                 //menuInfo = ((ConsoleContextImpl) Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME)).getMenuInfo(model);
@@ -154,7 +141,7 @@ public class PageBackendService {
          *  order -> int
          *  children -> Properties
          */
-        ConsoleContext consoleContext = AppStub.getAppConsoleContext(appName);
+        ConsoleContext consoleContext = AppStub.getConsoleContext(appName);
         Map<String, Properties> modelMap = new HashMap<>();
         for (Model model : allModels) {
             String modelName = model.name();
@@ -257,10 +244,6 @@ public class PageBackendService {
 
         sb.append(anchor);
         return sb.toString();
-    }
-
-    public static ModelManager getModelManager(String appName) {
-        return ConsoleWarHelper.getAppInfoManager().getAppInfo(appName).getAppContext().getConsoleContext().getModelManager();
     }
 
     public static void multiSelectGroup(LinkedHashMap<String, String> groupDes,
@@ -398,7 +381,7 @@ public class PageBackendService {
             }
             if (!effective) {
                 return String.format(
-                        I18n.getString(ConsoleConstants.MASTER_APP_NAME, "validator.ActionEffective.notsupported"),
+                        ConsoleI18n.getI18N(I18n.getI18nLang(), "validator.ActionEffective.notsupported"),
                         I18n.getString(request.getAppName(), "model.action." + request.getModelName() + "." + request.getActionName()),// todo
                         effectiveWhen);
             }
@@ -464,13 +447,9 @@ public class PageBackendService {
     }
 
     public static boolean isAjaxAction(String actionName) {
-        if (EditModel.ACTION_NAME_UPDATE.equals(actionName) ||
+        return EditModel.ACTION_NAME_UPDATE.equals(actionName) ||
                 AddModel.ACTION_NAME_ADD.equals(actionName) ||
-                DeleteModel.ACTION_NAME_DELETE.equals(actionName)) {
-            return true;
-        }
-
-        return false;
+                DeleteModel.ACTION_NAME_DELETE.equals(actionName);
     }
 
     /********************* 批量操作 start ************************/

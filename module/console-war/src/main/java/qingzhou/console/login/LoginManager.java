@@ -1,18 +1,20 @@
 package qingzhou.console.login;
 
-import qingzhou.console.page.PageBackendService;
-import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
+import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.controller.system.I18nFilter;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.vercode.VerCode;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.console.I18n;
+import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.console.ConsoleI18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
@@ -274,7 +276,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static String getMsg(String msg) {
-        String i18n = I18n.getString(ConsoleConstants.MASTER_APP_NAME, msg);
+        String i18n = ConsoleI18n.getI18N(I18n.getI18nLang(), msg);
         return StringUtil.notBlank(i18n) ? i18n : msg;
     }
 
@@ -330,7 +332,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
                     response.setContentType("application/json;charset=UTF-8");
                     try (PrintWriter writer = context.resp.getWriter()) {
-                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.login.need") + "\"}");
+                        writer.write("{\"success\":\"false\",\"msg\":\"" + ConsoleI18n.getI18N(I18n.getI18nLang(), "page.login.need") + "\"}");
                         writer.flush();
                     }
                     return false;

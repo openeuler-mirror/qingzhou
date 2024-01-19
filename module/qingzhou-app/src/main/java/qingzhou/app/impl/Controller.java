@@ -5,7 +5,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
@@ -38,13 +37,13 @@ public class Controller implements BundleActivator {
     private void installMasterApp() throws Exception {
         logger.info("install master app");
         File masterApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "master");
-        frameworkContext.getAppManager().installApp(ConsoleConstants.MASTER_APP_NAME, masterApp);
+        frameworkContext.getAppManager().installApp(FrameworkContext.MASTER_APP_NAME, masterApp);
     }
 
     private void installNodeApp() throws Exception {
         logger.info("install node app");
         File nodeApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "node");
-        appManager.installApp(ConsoleConstants.NODE_APP_NAME, nodeApp);
+        appManager.installApp(FrameworkContext.NODE_APP_NAME, nodeApp);
     }
 
     private void installApps() throws Exception {

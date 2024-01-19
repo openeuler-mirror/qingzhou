@@ -9,6 +9,7 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Option;
 import qingzhou.framework.api.Options;
+import qingzhou.framework.console.ConsoleI18n;
 
 @Model(name = "user", icon = "user",
         menuName = "Security", menuOrder = 1,
@@ -284,24 +285,6 @@ public class User extends ModelBase implements AddModel {
 //        return super.validate(request, fieldName);
 //    }
 //
-//    public static String checkPwd(String password, String... infos) {
-//        if (ConsoleConstants.PASSWORD_FLAG.equals(password)) {
-//            return null;
-//        }
-//        ConsoleContext consoleContext = getMasterConsoleContext();
-//        int minLength = 10;
-//        int maxLength = 20;
-//        if (password.length() < minLength || password.length() > maxLength) {
-//            return String.format(consoleContext.getI18N("validator.lengthBetween"), minLength, maxLength);
-//        }
-//
-//        if (infos != null && infos.length > 0) {
-//            if (infos[0] != null) { // for #ITAIT-5014
-//                if (password.contains(infos[0])) { // 包含身份信息
-//                    return consoleContext.getI18N("password.passwordContainsUsername");
-//                }
-//            }
-//        }
 //
 //        //特殊符号包含下划线
 //        String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";

@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ModelField { // todo 内容太多，可以按照 Validation、Monitor 分为不同的注解？
+public @interface ModelField { // 注意: 不能支持原数据查询，如 唯一性校验，需要比对源库数据，不应该在此处实现，而应放在自己业务逻辑的action里面
     String group() default "";
 
     String[] nameI18n();

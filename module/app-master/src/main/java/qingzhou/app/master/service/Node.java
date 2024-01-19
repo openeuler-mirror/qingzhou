@@ -1,5 +1,6 @@
 package qingzhou.app.master.service;
 
+import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.DataStore;
 import qingzhou.framework.api.FieldType;
@@ -7,7 +8,6 @@ import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
-import qingzhou.framework.console.ConsoleConstants;
 
 @Model(name = "node", icon = Node.MODEL_NAME,
         menuName = "Service",
@@ -50,8 +50,8 @@ public class Node extends ModelBase implements AddModel {
     @Override
     public String validate(Request request, String fieldName) {
         if (fieldName.equals("id")) {
-            if (request.getParameter("id").equals(ConsoleConstants.LOCAL_NODE_NAME)) {
-                return getAppContext().getConsoleContext().getI18N("node.id.system");
+            if (request.getParameter("id").equals(FrameworkContext.LOCAL_NODE_NAME)) {
+                return "node.id.system";
             }
         }
 

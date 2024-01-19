@@ -4,6 +4,10 @@ import java.io.File;
 import java.util.Set;
 
 public interface FrameworkContext {
+    String LOCAL_NODE_NAME = "local";
+    String MASTER_APP_NAME = "master";
+    String NODE_APP_NAME = "node";
+
     boolean isMaster();
 
     AppManager getAppManager();

@@ -1,7 +1,5 @@
 package qingzhou.framework.api;
 
-import qingzhou.framework.console.ConsoleConstants;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +11,7 @@ public interface DownloadModel {
     String PARAMETER_DOWNLOAD_FILE_NAMES = "downloadFileNames";
     String DOWNLOAD_KEY = "DOWNLOAD_KEY";
     String DOWNLOAD_OFFSET = "DOWNLOAD_OFFSET";
+    String DOWNLOAD_NAME_SEPARATOR = "/";
 
     @ModelAction(name = ACTION_NAME_DOWNLOADLIST,
             showToList = true,
@@ -32,7 +31,7 @@ public interface DownloadModel {
                 for (Map.Entry<String, List<String[]>> entry : result.entrySet()) {
                     String group = entry.getKey();
                     for (String[] file : entry.getValue()) {
-                        map.put(group + ConsoleConstants.DOWNLOAD_NAME_SEPARATOR + file[0], file[0] + " (" + file[1] + ")");
+                        map.put(group + DOWNLOAD_NAME_SEPARATOR + file[0], file[0] + " (" + file[1] + ")");
                     }
                 }
             }

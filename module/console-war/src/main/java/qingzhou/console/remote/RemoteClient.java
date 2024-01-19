@@ -1,7 +1,7 @@
 package qingzhou.console.remote;
 
 import qingzhou.console.page.PageBackendService;
-import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.servlet.UploadFileContext;
 import qingzhou.crypto.CryptoService;

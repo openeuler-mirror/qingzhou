@@ -31,7 +31,7 @@ public enum Lang {
         return this == zh || this == tr;
     }
 
-    public static Map<Lang, String> parseI18n(String[] i18n) {
+    public static Map<Lang, String> retrieveI18n(String[] i18n) {
         Map<Lang, String> i18nMap = new HashMap<>();
         for (String langLine : i18n) {
             if (langLine.contains("'")) {

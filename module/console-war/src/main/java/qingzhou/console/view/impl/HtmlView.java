@@ -3,11 +3,12 @@ package qingzhou.console.view.impl;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.page.PageBackendService;
+import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
-import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.framework.console.RequestImpl;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,7 +40,7 @@ public class HtmlView implements View {
 
         if (ConsoleUtil.ACTION_NAME_TARGET.equals(actionName)) {
             if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) { // todo 这个还需要？
-                request.setAppName(ConsoleConstants.NODE_APP_NAME);
+                request.setAppName(FrameworkContext.NODE_APP_NAME);
                 request.setModelName(ConsoleConstants.MODEL_NAME_home);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
             } else if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {// todo 是不是只有 app 会有 target action？ target设计是否有问题?

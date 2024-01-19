@@ -23,7 +23,7 @@ public abstract class ModelBase implements ShowModel {
     public void init() {
     }
 
-    // 定制校验逻辑，返回 i18n，方式：getAppContext().getConsoleContext().getI18N("my i18n key", args...)
+    // 定制校验逻辑，返回 i18n 的 key
     public String validate(Request request, String fieldName) {
         return null;
     }

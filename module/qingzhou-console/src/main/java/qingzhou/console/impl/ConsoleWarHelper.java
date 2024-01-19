@@ -1,11 +1,8 @@
 package qingzhou.console.impl;
 
 import qingzhou.crypto.CryptoService;
-import qingzhou.framework.AppInfo;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.logger.Logger;
 import qingzhou.logger.LoggerService;
 import qingzhou.serializer.Serializer;
@@ -46,11 +43,6 @@ public class ConsoleWarHelper {
 
     public static Logger getLogger() {
         return fc.getService(LoggerService.class).getLogger();
-    }
-
-    public static ConsoleContext getMasterConsoleContext() {
-        AppInfo appInfo = fc.getAppManager().getAppInfo(ConsoleConstants.MASTER_APP_NAME);
-        return appInfo.getAppContext().getConsoleContext();
     }
 
     private ConsoleWarHelper() {
