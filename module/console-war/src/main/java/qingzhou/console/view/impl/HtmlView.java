@@ -38,7 +38,8 @@ public class HtmlView implements View {
 
 
         if (ConsoleUtil.ACTION_NAME_TARGET.equals(actionName)) {
-            if (ConsoleConstants.MODEL_NAME_cluster.equals(modelName) || ConsoleConstants.MODEL_NAME_node.equals(modelName)) { // todo 这个还需要？
+            if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) { // todo 这个还需要？
+                request.setAppName(ConsoleConstants.NODE_APP_NAME);
                 request.setModelName(ConsoleConstants.MODEL_NAME_home);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
             } else if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {// todo 是不是只有 app 会有 target action？ target设计是否有问题?

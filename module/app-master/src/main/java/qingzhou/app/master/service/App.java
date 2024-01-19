@@ -234,7 +234,7 @@ public class App extends ModelBase implements AddModel {
     }
 
     public File getAppsDir() {
-        File apps = FileUtil.newFile(getAppContext().getAppDomain(), "apps");
+        File apps = FileUtil.newFile(Main.getFC().getDomain(), "apps");
         if (!apps.exists()) {
             FileUtil.mkdirs(apps);
         }

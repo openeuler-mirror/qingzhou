@@ -50,6 +50,7 @@ public class AppInfoImpl implements AppInfo {
         if (actionFilters != null) {
             for (ActionFilter actionFilter : actionFilters) {
                 if (!actionFilter.doFilter(request, response)) {
+                    response.setSuccess(false);
                     return;
                 }
             }
