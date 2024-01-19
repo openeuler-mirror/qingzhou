@@ -6,7 +6,7 @@
     if (qzRequest == null || qzResponse == null || modelManager == null) {
         return; // for 静态源码漏洞扫描
     }
-    final boolean hasId = ConsoleWarHelper.hasIDField(qzRequest);
+    final boolean hasId = PageBackendService.hasIDField(qzRequest);
     if (!qzResponse.getDataList().isEmpty()) {
 %>
 

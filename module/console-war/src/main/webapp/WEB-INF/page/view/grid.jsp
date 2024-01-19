@@ -41,7 +41,7 @@
                     for (Integer i : indexToShow) {
                         String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
                         List<Option> modelOptionsEntry = null;
-                        if (ConsoleWarHelper.isFilterSelect(qzRequest, i)) {
+                        if (PageBackendService.isFilterSelect(qzRequest, i)) {
                             try {
                                 Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
                                 if (modelOptions != null) {

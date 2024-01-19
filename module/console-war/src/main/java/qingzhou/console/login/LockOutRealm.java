@@ -1,7 +1,7 @@
 package qingzhou.console.login;
 
 import qingzhou.console.ServerXml;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.TimeUtil;
 
@@ -44,7 +44,7 @@ public class LockOutRealm {
                 lockOutTime = Integer.parseInt(count);
             }
         } catch (Exception e) {
-            ConsoleWarHelper.error("Failed to get console lockOutTime", e);
+            PageBackendService.error("Failed to get console lockOutTime", e);
         }
         return lockOutTime;
     }
@@ -57,7 +57,7 @@ public class LockOutRealm {
                 failureCount = Integer.parseInt(count);
             }
         } catch (Exception e) {
-            ConsoleWarHelper.error("Failed to get console failureCount", e);
+            PageBackendService.error("Failed to get console failureCount", e);
         }
         return failureCount;
     }
@@ -98,7 +98,7 @@ public class LockOutRealm {
                             eldest.getValue().getLastFailureTime()) / 1000;
 
                     if (timeInCache < cacheRemovalWarningTime) {
-                        ConsoleWarHelper.warn("User [" + eldest.getKey() + "] was removed from the failed users cache after [" + timeInCache + "] seconds to keep the cache size within the limit set");
+                        PageBackendService.warn("User [" + eldest.getKey() + "] was removed from the failed users cache after [" + timeInCache + "] seconds to keep the cache size within the limit set");
                     }
                     return true;
                 }
