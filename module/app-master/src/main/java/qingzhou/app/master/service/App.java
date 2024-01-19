@@ -3,6 +3,7 @@ package qingzhou.app.master.service;
 import qingzhou.app.master.Main;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
@@ -13,6 +14,8 @@ import qingzhou.framework.api.Options;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.framework.console.ConsoleContextCache;
+import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
@@ -171,6 +174,11 @@ public class App extends ModelBase implements AddModel {
             // TODO 这里还要卸载远程节点的。
             getAppManager().uninstallApp(id);
 
+            FrameworkContextImpl fc = (FrameworkContextImpl) Main.getFC();
+            if (!fc.getAppManager().getApps().contains(id)) {
+                ConsoleContextCache.removeAppConsoleContext(id);// 删除远程的
+            }
+
             File app = FileUtil.newFile(getApps(), filename);
             if (app.exists()) {
                 try {
@@ -237,7 +245,10 @@ public class App extends ModelBase implements AddModel {
             infoI18n = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
     public void switchTarget(Request request, Response response) throws Exception {
         // 需要获取应用的i18n信息，内存没有的需要从缓存拉取
-
+        if (ConsoleContextCache.getAppConsoleContext(request.getAppName()) == null) {
+            ConsoleContext context = null;
+            ConsoleContextCache.addAppConsoleContext(request.getAppName(), context);
+        }
     }
 
     private AppManager getAppManager() {

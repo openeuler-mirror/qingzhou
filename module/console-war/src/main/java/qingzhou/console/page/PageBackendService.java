@@ -3,12 +3,12 @@ package qingzhou.console.page;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.MenuInfo;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.framework.console.ConsoleContextCache;
 import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.Lang;
 import qingzhou.framework.util.StringUtil;
@@ -27,7 +27,7 @@ import java.util.Properties;
  * 建议多使用 VO 类的对象，可便于后续转换为 json
  */
 public class PageBackendService {
-    
+
     private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
     public static String TARGET_TYPE_SET_FLAG = "targetType";
     public static String TARGET_NAME_SET_FLAG = "targetName";
@@ -44,7 +44,7 @@ public class PageBackendService {
     }
 
     public static ModelManager getModelManager(String appName) {
-        return getAppContext(appName).getConsoleContext().getModelManager();
+        return ConsoleContextCache.getAppConsoleContext(appName).getModelManager();
     }
 
     static void printParentMenu(Properties menu, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -52,7 +52,7 @@ public class PageBackendService {
         String menuText = "未分类";
         boolean isDefaultActive = false;
         if (StringUtil.notBlank(model)) {
-            MenuInfo menuInfo = getAppContext(appName).getConsoleContext().getMenuInfo(model);
+            MenuInfo menuInfo = ConsoleContextCache.getAppConsoleContext(appName).getMenuInfo(model);
             if (menuInfo == null) {
                 // todo
                 //menuInfo = ((ConsoleContextImpl) Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME)).getMenuInfo(model);
@@ -75,7 +75,7 @@ public class PageBackendService {
         menuBuilder.append("</li>");
     }
 
-    static void printChildrenMenu(Properties menu, HttpServletRequest request, HttpServletResponse response, String viewName,  String appName, String curModel, StringBuilder menuBuilder) {
+    static void printChildrenMenu(Properties menu, HttpServletRequest request, HttpServletResponse response, String viewName, String appName, String curModel, StringBuilder menuBuilder) {
         String model = menu.getProperty("name");
         String action = menu.getProperty("entryAction");
         menuBuilder.append("<li class=\"treeview ").append((model.equals(curModel) ? " active" : "")).append("\">");
@@ -106,7 +106,7 @@ public class PageBackendService {
             StringBuilder childrenBuilder = new StringBuilder();
             Object c = menu.get("children");
             if (c == null) {
-                printChildrenMenu(menu, request, response, viewName,  appName, curModel, childrenBuilder);
+                printChildrenMenu(menu, request, response, viewName, appName, curModel, childrenBuilder);
                 builder.append(childrenBuilder);
             } else {
                 List<Properties> childrenMenus = (List<Properties>) c;
@@ -117,11 +117,6 @@ public class PageBackendService {
             }
 
         }
-    }
-
-    // todo 临时，仅支持单应用
-    public static AppContext getAppContext(String appName) {
-        return ConsoleWarHelper.getAppInfoManager().getAppInfo(appName).getAppContext();
     }
 
     public static List<Properties> getAppMenuList(String loginUser, String appName) {
@@ -138,7 +133,7 @@ public class PageBackendService {
          *  order -> int
          *  children -> Properties
          */
-        ConsoleContext consoleContext = getAppContext(appName).getConsoleContext();
+        ConsoleContext consoleContext = ConsoleContextCache.getAppConsoleContext(appName);
         Map<String, Properties> modelMap = new HashMap<>();
         for (Model model : allModels) {
             String modelName = model.name();
