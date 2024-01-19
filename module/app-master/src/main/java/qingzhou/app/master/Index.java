@@ -10,8 +10,8 @@ import qingzhou.framework.util.JDKUtil;
 
 @Model(name = "index", icon = "home", entryAction = "home",
         nameI18n = {"主页", "en:Main"},
-        infoI18n = {"查看当前轻舟实例的产品、授权等信息。",
-                "en:View the product, license, and other information of the current QingZhou instance."})
+        infoI18n = {"查看当前轻舟节点的产品、授权等信息。",
+                "en:View the product, license, and other information of the current QingZhou node."})
 public class Index extends ModelBase {
     @ModelField(
             group = "product",
@@ -22,14 +22,14 @@ public class Index extends ModelBase {
 
     @ModelField(
             group = "product",
-            nameI18n = {"实例目录", "en:Domain Path"},
-            infoI18n = {"当前运行的轻舟实例所对应的文件路径。", "en:The file path corresponding to the currently running QingZhou instance."})
+            nameI18n = {"节点目录", "en:Node Path"},
+            infoI18n = {"当前运行的轻舟节点所对应的文件路径。", "en:The file path corresponding to the currently running QingZhou node."})
     public String domainPath;
 
     @ModelField(
             group = "product",
             nameI18n = {"Java 环境", "en:Java Env"},
-            infoI18n = {"当前运行的轻舟实例所使用的 Java 环境。", "en:The Java environment used by the currently running QingZhou instance."})
+            infoI18n = {"当前运行的轻舟节点所使用的 Java 环境。", "en:The Java environment used by the currently running QingZhou node."})
     public String javaHome;
 
     @ModelAction(name = "home",
