@@ -37,6 +37,10 @@ public class ConsoleContextCache {
         }
     }
 
+    public static ConsoleContext getMasterConsoleContext() {
+        return getAppConsoleContext(ConsoleConstants.MASTER_APP_NAME);
+    }
+
     private ConsoleContextCache() {
         initAppsCache();
     }

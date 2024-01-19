@@ -5,6 +5,7 @@ import qingzhou.framework.AppManager;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
@@ -15,14 +16,11 @@ import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.ConsoleConstants;
 import qingzhou.framework.console.ConsoleContextCache;
-import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @Model(name = "app", icon = "cube-alt",
@@ -91,10 +89,29 @@ public class App extends ModelBase implements AddModel {
     public String type;
 
     @Override
+    public void init() {
+        super.init();
+        getAppContext().getConsoleContext().addI18N("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
+    }
+
+    @Override
+    public String validate(Request request, String fieldName) {
+        if (fieldName.equals(ListModel.FIELD_NAME_ID)) {
+            String id = request.getParameter(ListModel.FIELD_NAME_ID);
+            if (ConsoleConstants.MASTER_APP_NAME.equals(id) ||
+                    ConsoleConstants.NODE_APP_NAME.equals(id)) {
+                return getAppContext().getConsoleContext().getI18N("app.id.system");
+            }
+        }
+
+        return super.validate(request, fieldName);
+    }
+
+    @Override
     public Options options(String fieldName) {
         if ("nodes".equals(fieldName)) {
             Options options = super.options(fieldName);
-            return Options.merge(options, Option.of(ConsoleConstants.LOCAL_NODE_NAME));
+            return Options.merge(options, Option.of(ConsoleConstants.LOCAL_NODE_NAME, new String[]{"默认节点", "en:default"}));
         }
 
         return super.options(fieldName);
@@ -111,6 +128,11 @@ public class App extends ModelBase implements AddModel {
     }
 
     @Override
+    @ModelAction(name = ACTION_NAME_ADD,
+            icon = "save",
+            showToFormBottom = true,
+            nameI18n = {"部署", "en:Deploy"},
+            infoI18n = {"按配置要求部署应用到指定的节点。", "en:Deploy the app to the specified node as required."})
     public void add(Request request, Response response) throws Exception {
         Map<String, String> p = prepareParameters(request);
         File srcFile;
@@ -126,17 +148,17 @@ public class App extends ModelBase implements AddModel {
         String appName;
         if (srcFile.isDirectory()) {
             appName = srcFileName;
-            File app = FileUtil.newFile(getApps(), appName);
+            File app = FileUtil.newFile(getAppsDir(), appName);
             FileUtil.copyFileOrDirectory(srcFile, app);
         } else if (srcFileName.endsWith(".jar")) {
             int index = srcFileName.lastIndexOf(".");
             appName = srcFileName.substring(0, index);
-            File app = FileUtil.newFile(getApps(), appName);
+            File app = FileUtil.newFile(getAppsDir(), appName);
             FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, "lib", srcFileName));
         } else if (srcFileName.endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             appName = srcFileName.substring(0, index);
-            File app = FileUtil.newFile(getApps(), appName);
+            File app = FileUtil.newFile(getAppsDir(), appName);
             FileUtil.unZipToDir(srcFile, app);// todo: 如果不需要部署到 本地节点，这里的解压就没有必要了
         } else {
             throw ExceptionUtil.unexpectedException("unknown app type");
@@ -145,7 +167,7 @@ public class App extends ModelBase implements AddModel {
         String[] nodes = p.get("nodes").split(ConsoleConstants.DATA_SEPARATOR);
         for (String node : nodes) {
             if (ConsoleConstants.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                File app = FileUtil.newFile(getApps(), appName);
+                File app = FileUtil.newFile(getAppsDir(), appName);
                 try {
                     getAppManager().installApp(app);
                     p.put("id", appName);
@@ -169,17 +191,15 @@ public class App extends ModelBase implements AddModel {
             return;
         }
 
-        String filename = appInfo.get("filename");
         try {
-            // TODO 这里还要卸载远程节点的。
-            getAppManager().uninstallApp(id);
-
-            FrameworkContextImpl fc = (FrameworkContextImpl) Main.getFC();
-            if (!fc.getAppManager().getApps().contains(id)) {
-                ConsoleContextCache.removeAppConsoleContext(id);// 删除远程的
+            if (Main.getFC().getAppManager().getApps().contains(id)) {
+                getAppManager().uninstallApp(id);
+            } else {
+                // TODO 这里还要卸载远程节点的
             }
+            ConsoleContextCache.removeAppConsoleContext(id);
 
-            File app = FileUtil.newFile(getApps(), filename);
+            File app = FileUtil.newFile(getAppsDir(), id);
             if (app.exists()) {
                 try {
                     FileUtil.forceDelete(app);
@@ -197,55 +217,13 @@ public class App extends ModelBase implements AddModel {
         }
     }
 
-    @Override
-    public void list(Request request, Response response) throws Exception {
-        int pageNum = 1;
-        String pageNumParameter = request.getParameter(PARAMETER_PAGE_NUM);
-        if (pageNumParameter != null) {
-            try {
-                pageNum = Integer.parseInt(pageNumParameter);
-            } catch (NumberFormatException ignored) {
-            }
-        }
-
-        List<String> appNames = new ArrayList<>(getAppManager().getApps());
-        if (getDataStore() != null) {
-            List<Map<String, String>> apps = getDataStore().getAllData("app");
-            if (apps != null && apps.size() > 0) {
-                for (Map<String, String> app : apps) {
-                    String filename = app.getOrDefault("filename", "");
-                    if (appNames.contains(filename)) {
-                        appNames.add(app.get("id"));
-                        appNames.remove(filename);
-                    }
-                }
-            }
-        }
-        appNames.remove(ConsoleConstants.MASTER_APP_NAME);// master系统应用不显示
-        appNames.remove(ConsoleConstants.NODE_APP_NAME);//node 应用不显示
-
-        List<Map<String, String>> dataInfo = response.getDataList();
-        response.setTotalSize(appNames.size());
-        response.setPageSize(pageSize());
-        response.setPageNum(pageNum);
-
-        int start = (pageNum - 1) * pageSize();
-        int end = appNames.size() < pageSize() ? appNames.size() : (start + pageSize());
-        for (int i = start; i < end; i++) {
-            String appName = appNames.get(i);
-            if (getDataStore() != null) {
-                dataInfo.add(getDataStore().getDataById("app", appName));
-            }
-        }
-    }
-
     @ModelAction(name = "target",
             icon = "location-arrow", forwardToPage = "target",
             nameI18n = {"管理", "en:Manage"}, showToList = true,
             infoI18n = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
     public void switchTarget(Request request, Response response) throws Exception {
-        // 需要获取应用的i18n信息，内存没有的需要从缓存拉取
         if (ConsoleContextCache.getAppConsoleContext(request.getAppName()) == null) {
+            // TODO 需要从远程获取应用的ConsoleContext
             ConsoleContext context = null;
             ConsoleContextCache.addAppConsoleContext(request.getAppName(), context);
         }
@@ -255,8 +233,8 @@ public class App extends ModelBase implements AddModel {
         return Main.getFC().getAppManager();
     }
 
-    public File getApps() {
-        File apps = FileUtil.newFile(Main.getFC().getDomain(), "apps");
+    public File getAppsDir() {
+        File apps = FileUtil.newFile(getAppContext().getAppDomain(), "apps");
         if (!apps.exists()) {
             FileUtil.mkdirs(apps);
         }
