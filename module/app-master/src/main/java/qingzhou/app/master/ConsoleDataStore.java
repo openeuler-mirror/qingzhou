@@ -2,7 +2,6 @@ package qingzhou.app.master;
 
 import qingzhou.framework.api.DataStore;
 import qingzhou.framework.api.ListModel;
-import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.XmlUtil;
 
@@ -12,12 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 public class ConsoleDataStore implements DataStore {
+    private static final String rootPath = "/root/console";
     private final XmlUtil xmlUtil;
-    private final String rootPath;
 
-    public ConsoleDataStore() {
-        this.rootPath = "/root/console";
-        File serverXml = FileUtil.newFile(Main.getFC().getDomain(), "conf", "server.xml");
+    public ConsoleDataStore(File serverXml) {
         xmlUtil = new XmlUtil(serverXml);
     }
 

@@ -1,17 +1,7 @@
 package qingzhou.app.master.service;
 
-import qingzhou.app.master.Main;
-import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.framework.api.*;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
@@ -156,8 +146,8 @@ public class App extends ModelBase implements AddModel {
             if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
                 File app = FileUtil.newFile(getAppsDir(), appName);
                 try {
-                    getAppManager().installApp(appName, app);
-                    p.put("id", appName);
+                    //getAppManager().installApp(appName, app);// 应该调用local节点服务上的app来安装应用
+                    p.put("id", appName);// todo 本地 local 不需要记录到server。xml里面
                     getDataStore().addData(request.getModelName(), appName, p);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -177,12 +167,8 @@ public class App extends ModelBase implements AddModel {
     public void switchTarget(Request request, Response response) throws Exception {
     }
 
-    private AppManager getAppManager() {
-        return Main.getFC().getAppManager();
-    }
-
     public File getAppsDir() {
-        File apps = FileUtil.newFile(Main.getFC().getDomain(), "apps");
+        File apps = FileUtil.newFile(getAppContext().getDomain(), "apps");
         if (!apps.exists()) {
             FileUtil.mkdirs(apps);
         }

@@ -1,11 +1,6 @@
 package qingzhou.app.master;
 
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.framework.api.*;
 
 @Model(name = "index", icon = "home", entryAction = "home",
         nameI18n = {"主页", "en:Main"},
@@ -48,7 +43,7 @@ public class Index extends ModelBase {
     public void show(Request request, Response response) throws Exception {
         Index index = new Index();
         index.info = "QingZhou（轻舟）";
-        index.path = Main.getFC().getHome().getPath();
+        index.path = getAppContext().getHome().getPath();
         response.addDataObject(index);
     }
 }

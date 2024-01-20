@@ -2,15 +2,10 @@ package qingzhou.app.master;
 
 import qingzhou.app.master.service.Node;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.ActionFilter;
-import qingzhou.framework.api.AppContext;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.DeleteModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.QingZhouApp;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.impl.FrameworkContextImpl;
+import qingzhou.framework.api.*;
+import qingzhou.framework.util.FileUtil;
+
+import java.io.File;
 
 public class Main extends QingZhouApp {
     @Override
@@ -20,13 +15,10 @@ public class Main extends QingZhouApp {
         consoleContext.setMenuInfo("Security", new String[]{"安全管理", "en:Security"}, "shield", 2);
         consoleContext.setMenuInfo("System", new String[]{"系统管理", "en:System"}, "cog", 3);
 
-        appContext.setDataStore(new ConsoleDataStore());
+        File serverXml = FileUtil.newFile(appContext.getDomain(), "conf", "server.xml");
+        appContext.setDataStore(new ConsoleDataStore(serverXml));
 
         appContext.addActionFilter(new LocalNodeProtection());// 禁止修改本地节点
-    }
-
-    public static FrameworkContext getFC() {
-        return FrameworkContextImpl.getFrameworkContext();
     }
 
     private static class LocalNodeProtection implements ActionFilter {

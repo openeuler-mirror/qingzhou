@@ -6,6 +6,7 @@ import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.DataStore;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -16,8 +17,18 @@ public class AppContextImpl implements AppContext {
     private DataStore dataStore;
     private List<ActionFilter> actionFilters;
 
-    public AppContextImpl(FrameworkContextImpl frameworkContext) {
+    public AppContextImpl(FrameworkContext frameworkContext) {
         this.frameworkContext = frameworkContext;
+    }
+
+    @Override
+    public File getDomain() {
+        return frameworkContext.getDomain();
+    }
+
+    @Override
+    public File getHome() {
+        return frameworkContext.getHome();
     }
 
     @Override

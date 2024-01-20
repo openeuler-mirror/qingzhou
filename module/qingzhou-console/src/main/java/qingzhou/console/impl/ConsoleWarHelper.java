@@ -13,7 +13,7 @@ import java.io.File;
 public class ConsoleWarHelper {
     static FrameworkContext fc;
 
-    public static AppManager getAppInfoManager() {
+    public static AppManager getAppManager() {
         return fc.getAppManager();
     }
 
@@ -29,7 +29,7 @@ public class ConsoleWarHelper {
         return fc.getCache();
     }
 
-    public static File getLibDir() {
+    public static File getLib() {
         return fc.getLib();
     }
 

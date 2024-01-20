@@ -12,16 +12,10 @@ import java.util.Map;
 import java.util.Set;
 
 public class FrameworkContextImpl implements FrameworkContext {
-    static FrameworkContextImpl frameworkContext;
-
-    public static FrameworkContextImpl getFrameworkContext() {
-        return frameworkContext;
-    }
-
     private File libDir;
     private File home;
     private File domain;
-    private final AppManagerImpl appInfoManager = new AppManagerImpl();
+    private final AppManagerImpl appInfoManager = new AppManagerImpl(this);
     private final Map<Class<?>, Object> services = new HashMap<>();
     private Boolean isMaster;
 

@@ -1,19 +1,8 @@
 package qingzhou.console;
 
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.framework.api.*;
 import qingzhou.framework.console.ConsoleI18n;
-import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.SafeCheckerUtil;
@@ -26,15 +15,7 @@ import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class Validator {
@@ -201,7 +182,7 @@ public class Validator {
         }
 
         // 最后进行自定义校验
-        ConsoleContext consoleContext = FrameworkContextImpl.getFrameworkContext().getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
+        ConsoleContext consoleContext = ConsoleWarHelper.getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
         return consoleContext.getI18N(I18n.getI18nLang().getFlag(), tempModel.validate(request, fieldName));
     }
 
@@ -250,7 +231,7 @@ public class Validator {
             this.request = request;
             this.modelManager = modelManager;
             this.tempModel = tempModel;
-            this.context = FrameworkContextImpl.getFrameworkContext().getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
+            this.context = ConsoleWarHelper.getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
         }
 
         boolean isAdd() {

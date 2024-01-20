@@ -2,11 +2,8 @@ package qingzhou.framework.impl;
 
 import qingzhou.framework.AppInfo;
 import qingzhou.framework.AppManager;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.QingZhouApp;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.api.*;
 import qingzhou.framework.impl.model.ModelInfo;
 import qingzhou.framework.impl.model.ModelManagerImpl;
 import qingzhou.framework.util.ClassLoaderUtil;
@@ -25,7 +22,12 @@ import java.util.Properties;
 import java.util.Set;
 
 public class AppManagerImpl implements AppManager {
+    private final FrameworkContext frameworkContext;
     private final Map<String, AppInfo> appInfoMap = new HashMap<>();
+
+    public AppManagerImpl(FrameworkContext frameworkContext) {
+        this.frameworkContext = frameworkContext;
+    }
 
     private AppInfoImpl buildAppInfo(String appName, File appDir) {
         File[] listFiles = new File(appDir, "lib").listFiles();
@@ -35,7 +37,7 @@ public class AppManagerImpl implements AppManager {
 
         AppInfoImpl appInfo = new AppInfoImpl();
 
-        AppContextImpl appContext = new AppContextImpl(FrameworkContextImpl.getFrameworkContext());
+        AppContextImpl appContext = new AppContextImpl(frameworkContext);
         URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(listFiles, QingZhouApp.class.getClassLoader());
         appInfo.setLoader(loader);
         ModelManager modelManager = buildModelManager(listFiles, loader);

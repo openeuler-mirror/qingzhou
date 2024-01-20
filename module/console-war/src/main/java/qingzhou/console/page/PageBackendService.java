@@ -275,7 +275,7 @@ public class PageBackendService {
 
     public static Map<String, Map<String, ModelField>> getGroupedModelFieldMap(Request request) {
         Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
-        ModelManager manager = ConsoleWarHelper.getAppInfoManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
+        ModelManager manager = ConsoleWarHelper.getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
         String modelName = request.getModelName();
         for (String groupName : manager.getGroupNames(modelName)) {
             Map<String, ModelField> map = new LinkedHashMap<>();
@@ -334,7 +334,7 @@ public class PageBackendService {
 
     public static String getSubmitActionName(Request request) {
         boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, request.getActionName());
-        final ModelManager modelManager = ConsoleWarHelper.getAppInfoManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
+        final ModelManager modelManager = ConsoleWarHelper.getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
         if (modelManager == null) {
             return null;
         }

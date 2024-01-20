@@ -29,7 +29,7 @@ public class Manual implements Filter<HttpServletContext> {
         ServletOutputStream out = response.getOutputStream();
         if (pdfCache == null) {
             File file = null;
-            File docDir = new File(ConsoleWarHelper.getLibDir(), "docs");
+            File docDir = new File(ConsoleWarHelper.getLib(), "docs");
             String[] docs = docDir.list();
             if (docs != null) {
                 for (String doc : docs) {

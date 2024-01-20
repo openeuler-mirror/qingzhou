@@ -1,11 +1,6 @@
 package qingzhou.app.node;
 
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.api.ShowModel;
+import qingzhou.framework.api.*;
 import qingzhou.framework.util.JDKUtil;
 
 @Model(name = "home", icon = "home", entryAction = "show",
@@ -36,7 +31,7 @@ public class Home extends ModelBase implements ShowModel {
     public void show(Request request, Response response) throws Exception {
         Home home = new Home();
         home.info = "QingZhou（轻舟）节点";
-        home.path = Main.getFC().getDomain().getPath();
+        home.path = getAppContext().getDomain().getPath();
         home.javaHome = JDKUtil.getJavaHome();
         response.addDataObject(home);
     }

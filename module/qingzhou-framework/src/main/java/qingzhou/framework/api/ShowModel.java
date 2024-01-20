@@ -18,8 +18,9 @@ public interface ShowModel {
         return dataStore.getDataById(request.getModelName(), request.getId());
     }
 
-    default <T extends DataStore> T getDataStore() {
-        return (T) getAppContext().getDataStore();
+
+    default DataStore getDataStore() {
+        return getAppContext().getDataStore();
     }
 
     AppContext getAppContext();

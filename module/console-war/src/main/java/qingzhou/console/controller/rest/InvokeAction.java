@@ -33,7 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static qingzhou.console.impl.ConsoleWarHelper.getAppInfoManager;
+import static qingzhou.console.impl.ConsoleWarHelper.getAppManager;
 
 public class InvokeAction implements Filter<RestContext> {
     InvokeAction() {
@@ -189,7 +189,7 @@ public class InvokeAction implements Filter<RestContext> {
             Response responseOnNode;
             if (node.equals(FrameworkContext.LOCAL_NODE_NAME)) {
                 Response response = new ResponseImpl();
-                getAppInfoManager().getAppInfo(appName).invokeAction(request, response);
+                getAppManager().getAppInfo(appName).invokeAction(request, response);
                 responseOnNode = response;
             } else {
                 if (remoteKey == null) {

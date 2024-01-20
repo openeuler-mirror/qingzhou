@@ -1,13 +1,10 @@
 package qingzhou.app.master.service;
 
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
+import qingzhou.framework.api.*;
+import qingzhou.framework.util.FileUtil;
+
+import java.io.File;
 
 @Model(name = "node", icon = Node.MODEL_NAME,
         menuName = "Service",
@@ -61,7 +58,8 @@ public class Node extends ModelBase implements AddModel {
     @Override
     public DataStore getDataStore() {
         if (dataStore == null) {
-            dataStore = new NodeDataStore();
+            File serverXml = FileUtil.newFile(getAppContext().getDomain(), "conf", "server.xml");
+            dataStore = new NodeDataStore(serverXml);
         }
 
         return dataStore;

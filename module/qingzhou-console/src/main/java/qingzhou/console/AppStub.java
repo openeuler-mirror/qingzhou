@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static qingzhou.console.impl.ConsoleWarHelper.getAppInfoManager;
+import static qingzhou.console.impl.ConsoleWarHelper.getAppManager;
 
 public class AppStub {
     public static final Map<String, ConsoleContext> appStubMap = new ConcurrentHashMap<>();
@@ -19,7 +19,7 @@ public class AppStub {
         return appStubMap.computeIfAbsent(appName, s -> {
             List<String> nodes = getAppNodes(s);
             if (nodes.contains(FrameworkContext.LOCAL_NODE_NAME)) {
-                return getAppInfoManager().getAppInfo(s).getAppContext().getConsoleContext();
+                return getAppManager().getAppInfo(s).getAppContext().getConsoleContext();
             } else {
                 for (String node : nodes) {
                     try {
@@ -40,7 +40,7 @@ public class AppStub {
         } else {
             Map<String, String> app;
             try {
-                app = getAppInfoManager().getAppInfo(FrameworkContext.MASTER_APP_NAME)
+                app = getAppManager().getAppInfo(FrameworkContext.MASTER_APP_NAME)
                         .getAppContext().getDataStore()
                         .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
             } catch (Exception e) {

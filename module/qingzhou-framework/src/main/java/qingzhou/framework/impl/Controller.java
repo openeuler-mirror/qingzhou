@@ -95,8 +95,6 @@ public class Controller implements BundleActivator {
         public void exec() {
             frameworkContext = new FrameworkContextImpl();
             registration = context.registerService(FrameworkContext.class, frameworkContext, null);
-
-            FrameworkContextImpl.frameworkContext = frameworkContext;
         }
 
         @Override
