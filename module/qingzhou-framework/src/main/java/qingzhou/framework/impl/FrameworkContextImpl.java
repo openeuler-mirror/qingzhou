@@ -2,22 +2,23 @@ package qingzhou.framework.impl;
 
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.ServiceListener;
+import qingzhou.framework.api.Logger;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class FrameworkContextImpl implements FrameworkContext {
     private File libDir;
     private File home;
     private File domain;
-    private final AppManagerImpl appInfoManager = new AppManagerImpl(this);
+    private final AppManagerImpl appInfoManager = new AppManagerImpl();
     private final Map<Class<?>, Object> services = new HashMap<>();
+    private final Set<ServiceListener> listeners = new HashSet<>();
     private Boolean isMaster;
+    private Logger logger;
 
     @Override
     public boolean isMaster() {
@@ -27,6 +28,15 @@ public class FrameworkContextImpl implements FrameworkContext {
         }
 
         return isMaster;
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public void setLogger(Logger logger) {
+        this.logger = logger;
     }
 
     @Override
@@ -40,6 +50,12 @@ public class FrameworkContextImpl implements FrameworkContext {
             throw new IllegalArgumentException();
         }
         services.put(clazz, service);
+        listeners.forEach(serviceListener -> serviceListener.serviceRegistered(clazz));
+    }
+
+    @Override
+    public void addServiceListener(ServiceListener listener) {
+        listeners.add(listener);
     }
 
     @Override

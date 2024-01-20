@@ -1,12 +1,7 @@
-package qingzhou.framework.impl;
+package qingzhou.app.impl;
 
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.MenuInfo;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.console.Lang;
+import qingzhou.framework.api.*;
+import qingzhou.framework.console.I18NStore;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -63,8 +58,8 @@ public class ConsoleContextImpl implements ConsoleContext, Serializable {
     }
 
     @Override
-    public String getI18N(String lang, String key, Object... args) {
-        return i18NStore.getI18N(Lang.valueOf(lang), key, args);
+    public String getI18N(Lang lang, String key, Object... args) {
+        return i18NStore.getI18N(lang, key, args);
     }
 
     @Override

@@ -1,12 +1,11 @@
 package qingzhou.framework;
 
-import java.io.File;
 import java.util.Set;
 
 public interface AppManager {
-    void installApp(String name, File appDir) throws Exception;
+    void installApp(String name, AppInfo appInfo) throws Exception;
 
-    void uninstallApp(String name) throws Exception;
+    AppInfo uninstallApp(String name) throws Exception;
 
     Set<String> getApps();
 

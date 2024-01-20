@@ -7,7 +7,7 @@ import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.login.LockOutRealm;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.framework.console.ConsoleI18n;
+import qingzhou.console.ConsoleI18n;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;

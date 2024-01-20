@@ -4,8 +4,8 @@ import qingzhou.console.ConsoleUtil;
 import qingzhou.console.I18n;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.ViewManager;
-import qingzhou.framework.console.ConsoleI18n;
-import qingzhou.framework.console.Lang;
+import qingzhou.console.ConsoleI18n;
+import qingzhou.framework.api.Lang;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.StringUtil;
 

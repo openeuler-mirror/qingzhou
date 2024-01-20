@@ -1,6 +1,6 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.console.Lang;
+import qingzhou.framework.api.Lang;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -49,8 +49,8 @@ public class CharMap {
                     for (Character character : detected) {
                         needAdd.append(character);
                     }
-                    System.out.println(Lang.tr.getFullName() + " char (" + c + ") not found for: " + msg);
-                    System.out.println(Lang.tr.getFullName() + " chars not found: " + needAdd);
+                    System.out.println(Lang.tr.info + " char (" + c + ") not found for: " + msg);
+                    System.out.println(Lang.tr.info + " chars not found: " + needAdd);
                 }
             }
             twMsg.append(twChar);

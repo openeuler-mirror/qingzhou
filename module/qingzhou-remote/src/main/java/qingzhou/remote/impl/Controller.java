@@ -8,6 +8,7 @@ import qingzhou.crypto.PasswordCipher;
 import qingzhou.framework.AppInfo;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.api.Logger;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.RequestImpl;
@@ -15,8 +16,6 @@ import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StreamUtil;
-import qingzhou.logger.Logger;
-import qingzhou.logger.LoggerService;
 import qingzhou.remote.RemoteConstants;
 import qingzhou.remote.impl.net.HttpRoute;
 import qingzhou.remote.impl.net.HttpServer;
@@ -24,11 +23,7 @@ import qingzhou.remote.impl.net.impl.tinyserver.HttpServerServiceImpl;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class Controller implements BundleActivator {
@@ -44,7 +39,7 @@ public class Controller implements BundleActivator {
         frameworkContext = bundleContext.getService(serviceReference);
         if (frameworkContext.isMaster()) return;
 
-        Logger logger = frameworkContext.getService(LoggerService.class).getLogger();
+        Logger logger = frameworkContext.getLogger();
 
         int port = 7000;// todo 可配置
         path = "/";
@@ -69,14 +64,13 @@ public class Controller implements BundleActivator {
 
     @Override
     public void stop(BundleContext bundleContext) {
+        bundleContext.ungetService(serviceReference);
         if (frameworkContext.isMaster()) return;
 
         if (server != null) {
             server.removeContext(path);
             server.stop(5000);
         }
-
-        bundleContext.ungetService(serviceReference);
     }
 
     private byte[] process(InputStream in) throws Exception {

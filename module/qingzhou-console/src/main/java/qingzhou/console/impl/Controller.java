@@ -6,11 +6,10 @@ import org.osgi.framework.ServiceReference;
 import qingzhou.console.servlet.ServletService;
 import qingzhou.console.servlet.impl.ServletImpl;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.api.Logger;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
 import qingzhou.framework.util.FileUtil;
-import qingzhou.logger.Logger;
-import qingzhou.logger.LoggerService;
 
 import java.io.File;
 
@@ -25,7 +24,7 @@ public class Controller implements BundleActivator {
     public void start(BundleContext context) throws Exception {
         reference = context.getServiceReference(FrameworkContext.class);
         frameworkContext = context.getService(reference);
-        logger = frameworkContext.getService(LoggerService.class).getLogger();
+        logger = frameworkContext.getLogger();
 
         if (!frameworkContext.isMaster()) return;
 

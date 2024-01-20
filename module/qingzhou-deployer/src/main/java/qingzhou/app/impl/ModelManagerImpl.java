@@ -1,27 +1,18 @@
-package qingzhou.framework.impl.model;
+package qingzhou.app.impl;
 
-import qingzhou.framework.api.Group;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.impl.bytecode.AnnotationReader;
-import qingzhou.framework.impl.bytecode.impl.BytecodeImpl;
+import qingzhou.app.impl.bytecode.AnnotationReader;
+import qingzhou.app.impl.bytecode.impl.BytecodeImpl;
+import qingzhou.app.impl.model.ActionInfo;
+import qingzhou.app.impl.model.FieldInfo;
+import qingzhou.app.impl.model.ModelInfo;
+import qingzhou.framework.api.*;
 import qingzhou.framework.pattern.Visitor;
 
 import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 

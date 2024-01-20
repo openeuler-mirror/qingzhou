@@ -5,7 +5,7 @@ public interface ConsoleContext {
 
     void addI18N(String key, String[] i18n);
 
-    String getI18N(String lang, String key, Object... args);
+    String getI18N(Lang lang, String key, Object... args);
 
     void setMenuInfo(String menuName, String[] menuI18n, String menuIcon, int menuOrder);
 

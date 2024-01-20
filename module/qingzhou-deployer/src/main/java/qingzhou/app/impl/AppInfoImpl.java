@@ -1,15 +1,9 @@
-package qingzhou.framework.impl;
+package qingzhou.app.impl;
 
+import qingzhou.app.impl.model.ActionInfo;
+import qingzhou.app.impl.model.ModelInfo;
 import qingzhou.framework.AppInfo;
-import qingzhou.framework.api.ActionFilter;
-import qingzhou.framework.api.AppContext;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.QingZhouApp;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.impl.model.ActionInfo;
-import qingzhou.framework.impl.model.ModelInfo;
-import qingzhou.framework.impl.model.ModelManagerImpl;
+import qingzhou.framework.api.*;
 
 import java.net.URLClassLoader;
 import java.util.List;
@@ -60,6 +54,7 @@ public class AppInfoImpl implements AppInfo {
         this.appContext = appContext;
     }
 
+    @Override
     public QingZhouApp getQingZhouApp() {
         return qingZhouApp;
     }

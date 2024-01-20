@@ -7,8 +7,8 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.console.ConsoleI18n;
-import qingzhou.framework.console.Lang;
+import qingzhou.console.ConsoleI18n;
+import qingzhou.framework.api.Lang;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
 

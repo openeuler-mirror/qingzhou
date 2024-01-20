@@ -104,7 +104,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-app</artifactId>
+            <artifactId>qingzhou-deployer</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>

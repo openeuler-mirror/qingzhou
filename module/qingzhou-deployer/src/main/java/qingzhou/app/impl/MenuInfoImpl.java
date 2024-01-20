@@ -1,4 +1,4 @@
-package qingzhou.framework.impl;
+package qingzhou.app.impl;
 
 import qingzhou.framework.api.MenuInfo;
 

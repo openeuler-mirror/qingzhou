@@ -1,4 +1,4 @@
-package qingzhou.logger;
+package qingzhou.framework.api;
 
 public interface Logger {
     boolean isDebugEnabled();

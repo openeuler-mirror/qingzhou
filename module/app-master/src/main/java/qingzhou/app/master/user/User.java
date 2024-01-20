@@ -1,15 +1,6 @@
 package qingzhou.app.master.user;
 
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.Group;
-import qingzhou.framework.api.Groups;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.console.ConsoleI18n;
+import qingzhou.framework.api.*;
 
 @Model(name = "user", icon = "user",
         menuName = "Security", menuOrder = 1,

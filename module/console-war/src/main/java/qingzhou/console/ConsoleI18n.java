@@ -1,6 +1,7 @@
-package qingzhou.framework.console;
+package qingzhou.console;
 
-import qingzhou.framework.impl.I18NStore;
+import qingzhou.framework.api.Lang;
+import qingzhou.framework.console.I18NStore;
 
 public class ConsoleI18n {
     private static final I18NStore i18NStore = new I18NStore();

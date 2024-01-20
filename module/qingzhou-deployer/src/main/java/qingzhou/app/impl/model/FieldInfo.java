@@ -1,4 +1,4 @@
-package qingzhou.framework.impl.model;
+package qingzhou.app.impl.model;
 
 import qingzhou.framework.api.ModelField;
 

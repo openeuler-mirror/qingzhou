@@ -2,7 +2,6 @@ package qingzhou.console;
 
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.api.*;
-import qingzhou.framework.console.ConsoleI18n;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.SafeCheckerUtil;
@@ -148,7 +147,7 @@ public class Validator {
                     return null;
                 } else {
                     // sessionHa  tdg  密码字段有时候为空，有时候不为空，需要走自定义校验
-                    return vc.context.getI18N(I18n.getI18nLang().getFlag(), tempModel.validate(request, fieldName));
+                    return vc.context.getI18N(I18n.getI18nLang(), tempModel.validate(request, fieldName));
                 }
             }
 
@@ -183,7 +182,7 @@ public class Validator {
 
         // 最后进行自定义校验
         ConsoleContext consoleContext = ConsoleWarHelper.getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
-        return consoleContext.getI18N(I18n.getI18nLang().getFlag(), tempModel.validate(request, fieldName));
+        return consoleContext.getI18N(I18n.getI18nLang(), tempModel.validate(request, fieldName));
     }
 
     private static String validate(Class<?>[] validatorClass, ValidatorContext vc) throws Exception {
@@ -510,7 +509,7 @@ public class Validator {
                             Date otherDateTime = dateFormat.parse(thanObj);
                             if (!thisDateTime.before(otherDateTime)) {
                                 String msg = getConsoleI18n("validator.date.larger.cannot");
-                                return String.format(msg, vc.context.getI18N(I18n.getI18nLang().getFlag(), "model.field." + modelName + "." + noGreaterThan));
+                                return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + modelName + "." + noGreaterThan));
                             }
                         } catch (Exception ignored) {
                         }
@@ -524,7 +523,7 @@ public class Validator {
                                 Date otherDateTime = dateFormat.parse(thanObj);
                                 if (!thisDateTime.after(otherDateTime)) {
                                     String msg = getConsoleI18n("validator.date.less.cannot");
-                                    return String.format(msg, vc.context.getI18N(I18n.getI18nLang().getFlag(), "model.field." + modelName + "." + noLessThan));
+                                    return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + modelName + "." + noLessThan));
                                 }
                             }
                         } catch (Exception ignored) {
@@ -670,7 +669,7 @@ public class Validator {
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue()) {
                         String msg = getConsoleI18n("validator.larger.cannot");
-                        return String.format(msg, vc.context.getI18N(I18n.getI18nLang().getFlag(), "model.field." + vc.modelName + "." + noGreaterThan));
+                        return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThan));
                     }
                 }
             }
@@ -689,7 +688,7 @@ public class Validator {
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue() - 1) {
                         String msg = getConsoleI18n("validator.larger.minusOne.cannot");
-                        return String.format(msg, vc.context.getI18N(I18n.getI18nLang().getFlag(), "model.field." + vc.modelName + "." + noGreaterThanMinusOne));
+                        return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThanMinusOne));
                     }
                 }
             }
@@ -708,7 +707,7 @@ public class Validator {
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) { // 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) < arg.longValue()) {
                         String msg = getConsoleI18n("validator.less.cannot");
-                        return String.format(msg, vc.context.getI18N(I18n.getI18nLang().getFlag(), "model.field." + vc.modelName + "." + noLessThan));
+                        return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noLessThan));
                     }
                 }
             }
@@ -729,7 +728,7 @@ public class Validator {
                         fieldValue = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, field));
                     }
                     if (Objects.equals(fieldValue, vc.newValue)) {
-                        String p1 = vc.context.getI18N(I18n.getI18nLang().getFlag(), "model.field." + vc.modelName + "." + field);
+                        String p1 = vc.context.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + field);
                         return String.format(getConsoleI18n("app.threadpool.canot.eq"), p1);
                     }
                 }

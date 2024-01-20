@@ -1,7 +1,8 @@
 package qingzhou.console;
 
 import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.console.Lang;
+import qingzhou.framework.api.Lang;
+import qingzhou.framework.console.I18NStore;
 
 import java.util.Map;
 
@@ -32,13 +33,18 @@ public class I18n {
         return DEFAULT_LANG;
     }
 
+    public static boolean isZH() {
+        Lang currentLang = getI18nLang();
+        return currentLang == Lang.zh || currentLang == Lang.tr;
+    }
+
     public static String getString(String appName, String i18nKey) {
         ConsoleContext appConsoleContext = AppStub.getConsoleContext(appName);
-        return appConsoleContext.getI18N(I18n.getI18nLang().getFlag(), i18nKey);
+        return appConsoleContext.getI18N(I18n.getI18nLang(), i18nKey);
     }
 
     public static String getString(String[] i18n) {
-        Map<Lang, String> i18nMap = Lang.retrieveI18n(i18n);
+        Map<Lang, String> i18nMap = I18NStore.retrieveI18n(i18n);
 
         return i18nMap.get(getI18nLang());
     }

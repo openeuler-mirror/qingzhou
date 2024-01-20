@@ -15,7 +15,7 @@ import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.console.ConsoleI18n;
+import qingzhou.console.ConsoleI18n;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;

@@ -9,7 +9,7 @@
         <version>0.1.0</version>
     </parent>
 
-    <artifactId>qingzhou-app</artifactId>
+    <artifactId>qingzhou-deployer</artifactId>
 
     <build>
         <plugins>
@@ -22,7 +22,7 @@
                             <Bundle-Activator>qingzhou.app.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,qingzhou.framework,qingzhou.framework.util,qingzhou.logger
+                                org.osgi.framework,qingzhou.framework,qingzhou.framework.api,qingzhou.framework.util,qingzhou.framework.console,qingzhou.framework.pattern
                             </Import-Package>
                         </manifestEntries>
                     </archive>

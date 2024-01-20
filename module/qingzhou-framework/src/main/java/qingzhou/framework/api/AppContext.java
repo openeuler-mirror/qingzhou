@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.Set;
 
 public interface AppContext {
+    Logger getLogger();
+
     File getDomain();
 
     File getHome();

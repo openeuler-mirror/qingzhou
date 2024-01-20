@@ -1,9 +1,9 @@
-package qingzhou.framework.impl.bytecode.impl;
+package qingzhou.app.impl.bytecode.impl;
 
+import qingzhou.app.impl.bytecode.AnnotationReader;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelField;
-import qingzhou.framework.impl.bytecode.AnnotationReader;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

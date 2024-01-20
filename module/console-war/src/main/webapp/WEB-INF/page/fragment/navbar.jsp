@@ -60,7 +60,7 @@
                             <%
                                 for(Lang lang : Lang.values()) {
                                     out.print("<li>");
-                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", PageBackendService.encodeURL(request, response, contextPath + I18nFilter.LANG_SWITCH_URI + "/" + lang), lang.getFullName()));
+                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", PageBackendService.encodeURL(request, response, contextPath + I18nFilter.LANG_SWITCH_URI + "/" + lang), lang.info));
                                     out.print("</li>");
                                 }
                             %>

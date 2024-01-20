@@ -1,7 +1,7 @@
-package qingzhou.framework.impl.bytecode.impl;
+package qingzhou.app.impl.bytecode.impl;
 
-import qingzhou.framework.impl.bytecode.AnnotationReader;
-import qingzhou.framework.impl.bytecode.BytecodeService;
+import qingzhou.app.impl.bytecode.AnnotationReader;
+import qingzhou.app.impl.bytecode.BytecodeService;
 
 import java.io.File;
 
