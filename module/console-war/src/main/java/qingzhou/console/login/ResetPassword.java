@@ -1,20 +1,15 @@
 package qingzhou.console.login;
 
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleUtil;
-import qingzhou.console.I18n;
-import qingzhou.console.ServerXml;
+import qingzhou.console.*;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.console.ConsoleI18n;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.ExceptionUtil;
-import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -113,7 +108,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                 String maxAge = userP.get("passwordMaxAge");
                 if (maxAge != null && !maxAge.equals("0")) {
                     long max = time + Integer.parseInt(maxAge) * ConsoleConstants.DAY_MILLIS_VALUE;
-                    if (TimeUtil.getCurrentTime() > max) {
+                    if (System.currentTimeMillis() > max) {
                         return "password.max," + maxAge + "," + passwordLastModifiedTime;
                     }
                 }

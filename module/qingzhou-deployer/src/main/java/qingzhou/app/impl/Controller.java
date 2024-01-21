@@ -3,7 +3,7 @@ package qingzhou.app.impl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import qingzhou.app.impl.model.ModelInfo;
+import qingzhou.framework.App;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.*;
@@ -32,36 +32,43 @@ public class Controller implements BundleActivator {
 
         if (frameworkContext.isMaster()) {
             installMasterApp();
-        } else {
-            installNodeApp();
         }
+
+        installNodeApp();
 
         installApps();
     }
 
     private void installMasterApp() throws Exception {
         logger.info("install master app");
-        File masterApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "master");
-        AppInfoImpl appInfo = buildAppInfo(masterApp);
-        frameworkContext.getAppManager().installApp(FrameworkContext.MASTER_APP_NAME, appInfo);
+        File masterApp = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", "master");
+        AppImpl app = buildApp(masterApp);
+        installApp(FrameworkContext.MASTER_APP_NAME, app);
     }
 
     private void installNodeApp() throws Exception {
         logger.info("install node app");
-        File nodeApp = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "node");
-        AppInfoImpl appInfo = buildAppInfo(nodeApp);
-        appManager.installApp(FrameworkContext.NODE_APP_NAME, appInfo);
+        File nodeApp = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", "node");
+        AppImpl app = buildApp(nodeApp);
+        installApp(FrameworkContext.NODE_APP_NAME, app);
     }
 
     private void installApps() throws Exception {
-        File[] files = new File(frameworkContext.getDomain(), "apps").listFiles();
+        File[] files = new File(frameworkContext.getFileManager().getDomain(), "apps").listFiles();
         if (files != null) {
             for (File file : files) {
                 String appName = file.getName();
                 logger.info("install app: " + appName);
-                AppInfoImpl appInfo = buildAppInfo(file);
-                appManager.installApp(appName, appInfo);
+                AppImpl app = buildApp(file);
+                installApp(appName, app);
             }
+        }
+    }
+
+    private void installApp(String name, App app) throws Exception {
+        appManager.installApp(name, app);
+        if (frameworkContext.isMaster()) {
+            frameworkContext.getAppStubManager().registerAppStub(name, app.getAppContext().getConsoleContext());
         }
     }
 
@@ -70,9 +77,9 @@ public class Controller implements BundleActivator {
         String[] apps = appManager.getApps().toArray(new String[0]);
         Arrays.stream(apps).forEach(appName -> {
             try {
-                AppInfoImpl appInfo = (AppInfoImpl) appManager.uninstallApp(appName);
-                if (appInfo != null) {
-                    appInfo.getLoader().close();
+                AppImpl app = (AppImpl) appManager.uninstallApp(appName);
+                if (app != null) {
+                    app.getLoader().close();
                 }
                 logger.info("uninstall app: " + appName);
             } catch (Exception e) {
@@ -82,17 +89,17 @@ public class Controller implements BundleActivator {
         context.ungetService(serviceReference);
     }
 
-    private AppInfoImpl buildAppInfo(File appDir) {
+    private AppImpl buildApp(File appDir) {
         File[] listFiles = new File(appDir, "lib").listFiles();
         if (listFiles == null) {
             throw ExceptionUtil.unexpectedException("app lib not found: " + appDir.getName());
         }
 
-        AppInfoImpl appInfo = new AppInfoImpl();
+        AppImpl app = new AppImpl();
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
         URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(listFiles, QingZhouApp.class.getClassLoader());
-        appInfo.setLoader(loader);
+        app.setLoader(loader);
         ConsoleContextImpl consoleContext = new ConsoleContextImpl();
         ModelManager modelManager = buildModelManager(listFiles, loader);
         consoleContext.setModelManager(modelManager);
@@ -102,21 +109,21 @@ public class Controller implements BundleActivator {
             modelInstance.setAppContext(appContext);
             modelInstance.init();
         }
-        appInfo.setAppContext(appContext);
+        app.setAppContext(appContext);
 
         try (InputStream inputStream = loader.getResourceAsStream("app.properties")) {
             Properties properties = ObjectUtil.streamToProperties(inputStream);
-            appInfo.setAppProperties(properties);
-            String appClass = appInfo.getAppProperties().getProperty("qingzhou.app");
+            app.setAppProperties(properties);
+            String appClass = app.getAppProperties().getProperty("qingzhou.app");
             if (StringUtil.notBlank(appClass)) {
                 QingZhouApp qingZhouApp = (QingZhouApp) loader.loadClass(appClass).newInstance();
-                appInfo.setQingZhouApp(qingZhouApp);
+                app.setQingZhouApp(qingZhouApp);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return appInfo;
+        return app;
     }
 
     private ModelManagerImpl buildModelManager(File[] appLib, URLClassLoader loader) {

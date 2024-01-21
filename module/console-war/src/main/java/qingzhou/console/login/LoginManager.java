@@ -1,9 +1,6 @@
 package qingzhou.console.login;
 
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleUtil;
-import qingzhou.console.I18n;
-import qingzhou.console.ServerXml;
+import qingzhou.console.*;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.controller.system.I18nFilter;
@@ -13,12 +10,10 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
-import qingzhou.console.ConsoleI18n;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -157,7 +152,7 @@ public class LoginManager implements Filter<HttpServletContext> {
         // 锁定了，就提前返回，不再验证密码
         LockOutRealm lockOutRealm = getLockOutRealm(request);
         if (lockOutRealm.isLocked(user)) {
-            long left = lockOutRealm.getLockOutTime() - (TimeUtil.getCurrentTime() - lockOutRealm.getLockRecord(user).getLastFailureTime()) / 1000 + 1;
+            long left = lockOutRealm.getLockOutTime() - (System.currentTimeMillis() - lockOutRealm.getLockRecord(user).getLastFailureTime()) / 1000 + 1;
             if (left < 60) {
                 left = 60;
             }

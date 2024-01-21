@@ -1,6 +1,7 @@
 package qingzhou.console;
 
-import qingzhou.framework.api.ConsoleContext;
+import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.framework.api.AppStub;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.console.I18NStore;
 
@@ -39,8 +40,8 @@ public class I18n {
     }
 
     public static String getString(String appName, String i18nKey) {
-        ConsoleContext appConsoleContext = AppStub.getConsoleContext(appName);
-        return appConsoleContext.getI18N(I18n.getI18nLang(), i18nKey);
+        AppStub appStub = ConsoleWarHelper.getAppStub(appName);
+        return appStub.getI18N(I18n.getI18nLang(), i18nKey);
     }
 
     public static String getString(String[] i18n) {

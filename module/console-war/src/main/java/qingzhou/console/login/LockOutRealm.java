@@ -3,7 +3,6 @@ package qingzhou.console.login;
 import qingzhou.console.ServerXml;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.TimeUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -94,7 +93,7 @@ public class LockOutRealm {
                     Map.Entry<String, LockRecord> eldest) {
                 if (size() > cacheSize) {
                     // Check to see if this element has been removed too quickly
-                    long timeInCache = (TimeUtil.getCurrentTime() -
+                    long timeInCache = (System.currentTimeMillis() -
                             eldest.getValue().getLastFailureTime()) / 1000;
 
                     if (timeInCache < cacheRemovalWarningTime) {
@@ -120,7 +119,7 @@ public class LockOutRealm {
 
         // Check to see if user is locked. Or: User has not, yet, exceeded lock thresholds
         return lockRecord.getFailures() >= getFailureCount() &&
-                (TimeUtil.getCurrentTime() -
+                (System.currentTimeMillis() -
                         lockRecord.getLastFailureTime()) / 1000 < getLockOutTime();
     }
 
@@ -137,7 +136,7 @@ public class LockOutRealm {
             } else {
                 lockRecord = failedUsers.get(username);
                 if (lockRecord.getFailures() >= getFailureCount() &&
-                        ((TimeUtil.getCurrentTime() - lockRecord.getLastFailureTime()) / 1000)
+                        ((System.currentTimeMillis() - lockRecord.getLastFailureTime()) / 1000)
                                 > getLockOutTime()) {
                     // User was previously locked out but lockout has now
                     // expired so reset failure count
@@ -176,7 +175,7 @@ public class LockOutRealm {
 
         void registerFailure() {
             failures.incrementAndGet();
-            lastFailureTime = TimeUtil.getCurrentTime();
+            lastFailureTime = System.currentTimeMillis();
         }
     }
 }

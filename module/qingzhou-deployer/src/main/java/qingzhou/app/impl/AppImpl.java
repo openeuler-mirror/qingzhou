@@ -1,15 +1,13 @@
 package qingzhou.app.impl;
 
-import qingzhou.app.impl.model.ActionInfo;
-import qingzhou.app.impl.model.ModelInfo;
-import qingzhou.framework.AppInfo;
+import qingzhou.framework.App;
 import qingzhou.framework.api.*;
 
 import java.net.URLClassLoader;
 import java.util.List;
 import java.util.Properties;
 
-public class AppInfoImpl implements AppInfo {
+public class AppImpl implements App {
     private QingZhouApp qingZhouApp;
     private AppContextImpl appContext;
     private URLClassLoader loader;
@@ -26,7 +24,7 @@ public class AppInfoImpl implements AppInfo {
     }
 
     @Override
-    public void invokeAction(Request request, Response response) throws Exception {
+    public void invoke(Request request, Response response) throws Exception {
         ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getConsoleContext().getModelManager();
 
         ModelInfo modelInfo = modelManager.getModelInfo(request.getModelName());

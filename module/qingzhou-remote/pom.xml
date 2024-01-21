@@ -21,7 +21,6 @@
                             <Import-Package>
                                 org.osgi.framework,qingzhou.framework,qingzhou.framework.api,qingzhou.crypto,qingzhou.serializer
                             </Import-Package>
-                            <Export-Package>qingzhou.remote</Export-Package>
                         </manifestEntries>
                     </archive>
                 </configuration>

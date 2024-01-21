@@ -7,12 +7,12 @@ import qingzhou.framework.api.Response;
 
 import java.util.Properties;
 
-public interface AppInfo {
+public interface App {
     QingZhouApp getQingZhouApp();
 
     AppContext getAppContext();
 
     Properties getAppProperties();
 
-    void invokeAction(Request request, Response response) throws Exception;
+    void invoke(Request request, Response response) throws Exception;
 }

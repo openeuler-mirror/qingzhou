@@ -1,7 +1,7 @@
 package qingzhou.console.page;
 
-import qingzhou.console.AppStub;
 import qingzhou.console.ConsoleConstants;
+import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
 import qingzhou.console.Validator;
 import qingzhou.console.controller.rest.AccessControl;
@@ -10,8 +10,6 @@ import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.api.*;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.framework.api.Lang;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
@@ -21,13 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * 为前端提供展示需要的数据，应包括：master 菜单数据、app菜单数据、表单 group 分组、国际化等
@@ -52,7 +44,7 @@ public class PageBackendService {
     }
 
     public static ModelManager getModelManager(String appName) {
-        return AppStub.getConsoleContext(appName).getModelManager();
+        return ConsoleWarHelper.getAppStub(appName).getModelManager();
     }
 
     static void printParentMenu(Properties menu, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -60,7 +52,7 @@ public class PageBackendService {
         String menuText = "未分类";
         boolean isDefaultActive = false;
         if (StringUtil.notBlank(model)) {
-            MenuInfo menuInfo = AppStub.getConsoleContext(appName).getMenuInfo(model);
+            MenuInfo menuInfo = ConsoleWarHelper.getAppStub(appName).getMenuInfo(model);
             if (menuInfo == null) {
                 // todo
                 //menuInfo = ((ConsoleContextImpl) Main.getInternalService(ConsoleContextFinder.class).find(Constants.QINGZHOU_DEFAULT_APP_NAME)).getMenuInfo(model);
@@ -141,7 +133,7 @@ public class PageBackendService {
          *  order -> int
          *  children -> Properties
          */
-        ConsoleContext consoleContext = AppStub.getConsoleContext(appName);
+        AppStub appStub = ConsoleWarHelper.getAppStub(appName);
         Map<String, Properties> modelMap = new HashMap<>();
         for (Model model : allModels) {
             String modelName = model.name();
@@ -152,9 +144,9 @@ public class PageBackendService {
             menu.put("entryAction", model.entryAction());
             String menuName = model.menuName();
             if (StringUtil.notBlank(menuName)) {
-                MenuInfo menuInfo = consoleContext.getMenuInfo(menuName);
+                MenuInfo menuInfo = appStub.getMenuInfo(menuName);
                 if (menuInfo == null) {
-                    menuInfo = consoleContext.getMenuInfo(menuName);
+                    menuInfo = appStub.getMenuInfo(menuName);
                     if (menuInfo == null) {
                         continue;
                     }
@@ -275,7 +267,7 @@ public class PageBackendService {
 
     public static Map<String, Map<String, ModelField>> getGroupedModelFieldMap(Request request) {
         Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
-        ModelManager manager = ConsoleWarHelper.getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
+        ModelManager manager = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
         String modelName = request.getModelName();
         for (String groupName : manager.getGroupNames(modelName)) {
             Map<String, ModelField> map = new LinkedHashMap<>();
@@ -334,7 +326,7 @@ public class PageBackendService {
 
     public static String getSubmitActionName(Request request) {
         boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, request.getActionName());
-        final ModelManager modelManager = ConsoleWarHelper.getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
+        final ModelManager modelManager = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
         if (modelManager == null) {
             return null;
         }

@@ -1,6 +1,8 @@
 package qingzhou.ssh;
 
 public interface SSHSession extends AutoCloseable {
+    void addSessionListener(LifecycleListener listener);
+
     SSHResult execCmd(String cmd) throws Exception;
 
     SSHResult execCmdAsLogin(String cmd) throws Exception;

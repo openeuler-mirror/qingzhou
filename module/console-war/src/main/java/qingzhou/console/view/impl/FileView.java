@@ -7,7 +7,6 @@ import qingzhou.framework.api.DownloadModel;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
-import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +18,7 @@ public class FileView implements View {
     public void render(RestContext restContext) throws Exception {
         Request request = restContext.request;
         ResponseImpl response = (ResponseImpl) restContext.response;
-        String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModelName() + "-" + TimeUtil.getCurrentTime()) : request.getId();
+        String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModelName() + "-" + System.currentTimeMillis()) : request.getId();
         HttpServletResponse servletResponse = restContext.servletResponse;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
 

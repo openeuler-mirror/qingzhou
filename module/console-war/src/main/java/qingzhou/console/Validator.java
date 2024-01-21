@@ -61,7 +61,7 @@ public class Validator {
         }
 
         Map<String, String> errorData = new HashMap<>();
-        ModelManager modelManager = AppStub.getConsoleContext(request.getAppName()).getModelManager();
+        ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
         boolean singleFieldValidation = isSingleFieldValidation(request);
         String singleField = request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM);
@@ -181,7 +181,7 @@ public class Validator {
         }
 
         // 最后进行自定义校验
-        ConsoleContext consoleContext = ConsoleWarHelper.getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
+        ConsoleContext consoleContext = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext();
         return consoleContext.getI18N(I18n.getI18nLang(), tempModel.validate(request, fieldName));
     }
 
@@ -230,7 +230,7 @@ public class Validator {
             this.request = request;
             this.modelManager = modelManager;
             this.tempModel = tempModel;
-            this.context = ConsoleWarHelper.getAppManager().getAppInfo(request.getAppName()).getAppContext().getConsoleContext();
+            this.context = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext();
         }
 
         boolean isAdd() {

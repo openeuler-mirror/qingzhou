@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package qingzhou.jnet;
+package org.apache.commons.jnet;
 
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;

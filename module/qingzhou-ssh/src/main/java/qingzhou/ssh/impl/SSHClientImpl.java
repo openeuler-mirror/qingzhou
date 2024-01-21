@@ -7,10 +7,7 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
 import org.apache.sshd.core.CoreModuleProperties;
 import qingzhou.framework.pattern.Callback;
-import qingzhou.ssh.SSHClient;
-import qingzhou.ssh.SSHConfig;
-import qingzhou.ssh.SSHResult;
-import qingzhou.ssh.SSHSession;
+import qingzhou.ssh.*;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -22,7 +19,8 @@ import java.util.List;
 public class SSHClientImpl implements SSHClient {
     private final SSHConfig config;
     private final SshClient sshClient;
-    private final List<SSHSession> sessionList = new ArrayList<>();
+    private final List<SSHSessionImpl> sessionList = new ArrayList<>();
+    private final List<LifecycleListener> lifecycleListeners = new ArrayList<>();
 
     public SSHClientImpl(SSHConfig config) {
         this.config = config;
@@ -33,14 +31,19 @@ public class SSHClientImpl implements SSHClient {
 
     @Override
     public SSHSession createSession() throws Exception {
-        SSHSession sshSession = createSessionInternal();
+        SSHSessionImpl sshSession = createSessionInternal();
         sessionList.add(sshSession);
+        sshSession.addSessionListener(() -> sessionList.remove(sshSession));
         return sshSession;
-
     }
 
     private SSHSessionImpl createSessionInternal() throws Exception {
         return new SSHSessionImpl(createClientSession());
+    }
+
+    @Override
+    public void addSessionListener(LifecycleListener listener) {
+        lifecycleListeners.add(listener);
     }
 
     @Override
@@ -77,12 +80,19 @@ public class SSHClientImpl implements SSHClient {
 
     @Override
     public void close() throws Exception {
+        closeInternal();
+
+        lifecycleListeners.forEach(LifecycleListener::closed);
+    }
+
+    public void closeInternal() throws Exception {
         sessionList.forEach(sshSession -> {
             try {
-                sshSession.close();
+                sshSession.closeInternal();
             } catch (Exception ignored) {
             }
         });
+        sessionList.clear();
 
         if (sshClient != null) {
             sshClient.close();

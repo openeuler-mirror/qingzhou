@@ -3,11 +3,11 @@ package qingzhou.framework;
 import java.util.Set;
 
 public interface AppManager {
-    void installApp(String name, AppInfo appInfo) throws Exception;
+    void installApp(String name, App app) throws Exception;
 
-    AppInfo uninstallApp(String name) throws Exception;
+    App uninstallApp(String name) throws Exception;
 
     Set<String> getApps();
 
-    AppInfo getAppInfo(String name);
+    App getApp(String name);
 }

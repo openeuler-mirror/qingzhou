@@ -99,11 +99,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-jnet</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-deployer</artifactId>
             <version>0.1.0</version>
         </dependency>

@@ -1,24 +1,13 @@
 package qingzhou.app.impl;
 
 import qingzhou.framework.api.*;
-import qingzhou.framework.console.I18NStore;
 
-import java.io.Serializable;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
-public class ConsoleContextImpl implements ConsoleContext, Serializable {
-    private final I18NStore i18NStore = new I18NStore();
-    private final Map<String, MenuInfoImpl> menuInfoMap = new HashMap<>();
-    private ModelManager modelManager;
+public class ConsoleContextImpl extends AppStubImpl implements ConsoleContext {
 
     public void setModelManager(ModelManager modelManager) {
         this.modelManager = modelManager;
-        init();
-    }
-
-    public void init() {
         initI18N();
     }
 
@@ -48,18 +37,8 @@ public class ConsoleContextImpl implements ConsoleContext, Serializable {
     }
 
     @Override
-    public ModelManager getModelManager() {
-        return modelManager;
-    }
-
-    @Override
     public void addI18N(String key, String[] i18n) {
         i18NStore.addI18N(key, i18n, true);
-    }
-
-    @Override
-    public String getI18N(Lang lang, String key, Object... args) {
-        return i18NStore.getI18N(lang, key, args);
     }
 
     @Override
@@ -68,10 +47,5 @@ public class ConsoleContextImpl implements ConsoleContext, Serializable {
         menuInfo.setMenuI18n(menuI18n);
         menuInfo.setMenuIcon(menuIcon);
         menuInfo.setMenuOrder(menuOrder);
-    }
-
-    @Override
-    public MenuInfo getMenuInfo(String menuName) {
-        return menuInfoMap.get(menuName);
     }
 }

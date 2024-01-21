@@ -2,9 +2,6 @@ package qingzhou.app.impl;
 
 import qingzhou.app.impl.bytecode.AnnotationReader;
 import qingzhou.app.impl.bytecode.impl.BytecodeImpl;
-import qingzhou.app.impl.model.ActionInfo;
-import qingzhou.app.impl.model.FieldInfo;
-import qingzhou.app.impl.model.ModelInfo;
 import qingzhou.framework.api.*;
 import qingzhou.framework.pattern.Visitor;
 

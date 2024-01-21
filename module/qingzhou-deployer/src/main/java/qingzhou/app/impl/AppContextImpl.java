@@ -25,22 +25,22 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public File getDomain() {
-        return frameworkContext.getDomain();
+        return frameworkContext.getFileManager().getDomain();
     }
 
     @Override
     public File getHome() {
-        return frameworkContext.getHome();
+        return frameworkContext.getFileManager().getHome();
     }
 
     @Override
     public Set<Class<?>> getServiceTypes() {
-        return frameworkContext.getServiceTypes();
+        return frameworkContext.getServiceManager().getServiceTypes();
     }
 
     @Override
     public <T> T getService(Class<T> serviceType) {
-        return frameworkContext.getService(serviceType);
+        return frameworkContext.getServiceManager().getService(serviceType);
     }
 
     @Override

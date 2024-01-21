@@ -52,7 +52,6 @@
                 <include>${project.groupId}:qingzhou-ssh</include>
                 <include>${project.groupId}:qingzhou-crypto</include>
                 <include>${project.groupId}:qingzhou-remote</include>
-                <include>${project.groupId}:qingzhou-jnet</include>
                 <include>${project.groupId}:qingzhou-deployer</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>

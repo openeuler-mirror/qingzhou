@@ -1,10 +1,6 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.AppStub;
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.I18n;
-import qingzhou.console.ServerXml;
-import qingzhou.console.Validator;
+import qingzhou.console.*;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
@@ -15,23 +11,17 @@ import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.console.ConsoleI18n;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.remote.RemoteConstants;
 
 import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static qingzhou.console.impl.ConsoleWarHelper.getAppManager;
 
@@ -62,7 +52,7 @@ public class InvokeAction implements Filter<RestContext> {
         String ids = request.getParameter(ListModel.FIELD_NAME_ID);
         if (StringUtil.isBlank(ids)) return false;
 
-        ModelManager modelManager = AppStub.getConsoleContext(request.getAppName()).getModelManager();
+        ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         String[] actionNamesSupportBatch = modelManager.getActionNamesSupportBatch(request.getModelName());
         for (String batch : actionNamesSupportBatch) {
             if (batch.equals(request.getActionName())) return true;
@@ -185,18 +175,18 @@ public class InvokeAction implements Filter<RestContext> {
         String appName = request.getAppName();
 
         String remoteKey = null;
-        for (String node : AppStub.getAppNodes(appName)) {
+        for (String node : getAppNodes(appName)) {
             Response responseOnNode;
             if (node.equals(FrameworkContext.LOCAL_NODE_NAME)) {
                 Response response = new ResponseImpl();
-                getAppManager().getAppInfo(appName).invokeAction(request, response);
+                getAppManager().getApp(appName).invoke(request, response);
                 responseOnNode = response;
             } else {
                 if (remoteKey == null) {
                     KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
                     remoteKey = keyManager.getKeyOrElseInit(
                             PageBackendService.getSecureFile(ConsoleWarHelper.getDomain()),
-                            RemoteConstants.REMOTE_KEY_NAME,
+                            "remoteKey",
                             null
                     );
                 }
@@ -211,5 +201,27 @@ public class InvokeAction implements Filter<RestContext> {
         }
 
         return resultOnNode;
+    }
+
+    public static List<String> getAppNodes(String appName) {
+        List<String> nodes = new ArrayList<>();
+        if (FrameworkContext.MASTER_APP_NAME.equals(appName)) {
+            nodes.add(FrameworkContext.LOCAL_NODE_NAME);
+        } else {
+            Map<String, String> app;
+            try {
+                app = getAppManager().getApp(FrameworkContext.MASTER_APP_NAME)
+                        .getAppContext().getDataStore()
+                        .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
+            } catch (Exception e) {
+                throw ExceptionUtil.unexpectedException(e);
+            }
+            if (app == null || app.isEmpty()) {
+                throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
+            }
+            String[] appNodes = app.get("nodes").split(",");
+            nodes.addAll(Arrays.asList(appNodes));
+        }
+        return nodes;
     }
 }

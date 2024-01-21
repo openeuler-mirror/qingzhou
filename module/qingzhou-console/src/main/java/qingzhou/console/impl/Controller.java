@@ -4,7 +4,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import qingzhou.console.servlet.ServletService;
-import qingzhou.console.servlet.impl.ServletImpl;
+import qingzhou.console.servlet.impl.ServletServiceImpl;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Logger;
 import qingzhou.framework.pattern.Process;
@@ -29,8 +29,8 @@ public class Controller implements BundleActivator {
         if (!frameworkContext.isMaster()) return;
 
         sequence = new ProcessSequence(
-                new StartServlet(),
-                new RunWar()
+                new StartServletContainer(),
+                new DeployWar()
         );
         sequence.exec();
     }
@@ -43,12 +43,12 @@ public class Controller implements BundleActivator {
         sequence.undo();
     }
 
-    private class RunWar implements Process {
+    private class DeployWar implements Process {
         private String contextPath;
 
         @Override
         public void exec() {
-            File console = FileUtil.newFile(frameworkContext.getLib(), "sysapp", "console");
+            File console = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", "console");
             String docBase = console.getAbsolutePath();
             contextPath = "/console"; // TODO 需要可配置
             servletService.addWebapp(contextPath, docBase);
@@ -61,19 +61,21 @@ public class Controller implements BundleActivator {
         }
     }
 
-    private class StartServlet implements Process {
+    private class StartServletContainer implements Process {
         @Override
         public void exec() throws Exception {
             ConsoleWarHelper.fc = frameworkContext; //给 tonmcat 部署的 war 内部使用
 
-            servletService = new ServletImpl();
+            servletService = new ServletServiceImpl();
             servletService.start(9060, // TODO 端口需要可以配置
-                    frameworkContext.getCache().getAbsolutePath());
+                    frameworkContext.getFileManager().getCache().getAbsolutePath());
         }
 
         @Override
         public void undo() {
             servletService.stop();
+
+            ConsoleWarHelper.fc = null;
         }
     }
 }

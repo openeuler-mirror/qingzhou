@@ -1,4 +1,4 @@
-package qingzhou.app.impl.model;
+package qingzhou.app.impl;
 
 import qingzhou.framework.api.ModelAction;
 

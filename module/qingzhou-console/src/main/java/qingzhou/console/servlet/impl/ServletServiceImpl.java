@@ -6,22 +6,21 @@ import org.apache.catalina.Host;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
-import qingzhou.console.servlet.ServletProcessor;
 import qingzhou.console.servlet.ServletService;
-import qingzhou.framework.util.ClassLoaderUtil;
 import qingzhou.framework.pattern.Callback;
+import qingzhou.framework.util.ClassLoaderUtil;
 
 import java.nio.charset.StandardCharsets;
 
-public class ServletImpl implements ServletService {
+public class ServletServiceImpl implements ServletService {
     private Tomcat tomcat;
 
     @Override
-    public void start(int port, String baseDir) throws Exception {
+    public void start(int port, String cacheDir) throws Exception {
         ClassLoaderUtil.runUnderClassLoader((Callback<Void, Void>) args -> {
             tomcat = new Tomcat();
-            if (null != baseDir && !"".equals(baseDir)) {
-                tomcat.setBaseDir(baseDir);
+            if (null != cacheDir && !"".equals(cacheDir)) {
+                tomcat.setBaseDir(cacheDir);
             }
             tomcat.setPort(port); // 设置默认连接器端口
             tomcat.getHost().setParentClassLoader(Tomcat.class.getClassLoader());// 应用需要依赖 tomcat 里面的 javax.servlet api
@@ -30,20 +29,14 @@ public class ServletImpl implements ServletService {
             connector.setMaxPostSize(104857600);// 100 MB
             tomcat.start(); // 启动服务器
             return null;
-        }, ServletImpl.class.getClassLoader());
-    }
-
-    @Override
-    public void addSingleServletWebapp(String contextPath, String mapping, String docBase, ServletProcessor processor) {
-        Host host = tomcat.getHost();
-        host.addChild(new SingleServletContext(contextPath, mapping, docBase, new AdapterServlet(processor)));
+        }, ServletServiceImpl.class.getClassLoader());
     }
 
     @Override
     public void addWebapp(String contextPath, String docBase) {
         Context context = tomcat.addWebapp(contextPath, docBase);// 指定部署应用的信息
         // 添加Multipart配置
-        if(context instanceof StandardContext){
+        if (context instanceof StandardContext) {
             context.setAllowCasualMultipartParsing(true);
         }
         context.setRequestCharacterEncoding(StandardCharsets.UTF_8.name());
