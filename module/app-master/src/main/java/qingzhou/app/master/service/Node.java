@@ -7,7 +7,7 @@ import qingzhou.framework.util.FileUtil;
 import java.io.File;
 
 @Model(name = "node", icon = Node.MODEL_NAME,
-        menuName = "Service",
+        menuName = "Service", menuOrder = 2,
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
                 "en:A node is an abstraction of a physical or virtual computer environment and is the infrastructure that runs instances."})

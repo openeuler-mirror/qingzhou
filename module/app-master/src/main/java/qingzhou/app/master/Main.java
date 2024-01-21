@@ -12,8 +12,7 @@ public class Main extends QingZhouApp {
     public void start(AppContext appContext) {
         ConsoleContext consoleContext = appContext.getConsoleContext();
         consoleContext.setMenuInfo("Service", new String[]{"服务管理", "en:Service"}, "server", 1);
-        consoleContext.setMenuInfo("Security", new String[]{"安全管理", "en:Security"}, "shield", 2);
-        consoleContext.setMenuInfo("System", new String[]{"系统管理", "en:System"}, "cog", 3);
+        consoleContext.setMenuInfo("User", new String[]{"用户管理", "en:User"}, "user", 2);
 
         File serverXml = FileUtil.newFile(appContext.getDomain(), "conf", "server.xml");
         appContext.setDataStore(new ConsoleDataStore(serverXml));

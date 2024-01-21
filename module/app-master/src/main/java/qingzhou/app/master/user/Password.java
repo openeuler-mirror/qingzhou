@@ -12,7 +12,7 @@ import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 
 @Model(name = "password", icon = "key",
-        menuName = "Security", menuOrder = 5,
+        menuName = "User", menuOrder = 2,
         entryAction = EditModel.ACTION_NAME_EDIT,
         nameI18n = {"修改密码", "en:Change Password"},
         infoI18n = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
