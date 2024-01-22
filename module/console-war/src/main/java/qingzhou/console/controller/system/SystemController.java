@@ -30,6 +30,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new LoginFreeFilter(),
             new LoginManager(),
             new Manual(),
+            new NodeRegister(),
             new ResetPassword(),
             new LastDecision()
     };
