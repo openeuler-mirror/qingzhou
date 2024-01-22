@@ -1,22 +1,19 @@
 package qingzhou.console.login;
 
-import qingzhou.framework.console.ConsoleConstants;
-import qingzhou.console.ConsoleUtil;
-import qingzhou.console.ServerXml;
+import qingzhou.console.*;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.controller.system.I18nFilter;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.vercode.VerCode;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.console.I18n;
-import qingzhou.framework.console.Lang;
+import qingzhou.framework.api.Lang;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.TimeUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -155,7 +152,7 @@ public class LoginManager implements Filter<HttpServletContext> {
         // 锁定了，就提前返回，不再验证密码
         LockOutRealm lockOutRealm = getLockOutRealm(request);
         if (lockOutRealm.isLocked(user)) {
-            long left = lockOutRealm.getLockOutTime() - (TimeUtil.getCurrentTime() - lockOutRealm.getLockRecord(user).getLastFailureTime()) / 1000 + 1;
+            long left = lockOutRealm.getLockOutTime() - (System.currentTimeMillis() - lockOutRealm.getLockRecord(user).getLastFailureTime()) / 1000 + 1;
             if (left < 60) {
                 left = 60;
             }
@@ -200,7 +197,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static boolean check2FA(HttpServletRequest request) throws Exception {
-        return check2FA(request.getParameter(LOGIN_USER), ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
+        return check2FA(request.getParameter(LOGIN_USER), PageBackendService.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
     }
 
     public static boolean check2FA(String user, String login2FA) throws Exception {
@@ -226,7 +223,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static String checkPassword(String user, String password) {
         try {
-            password = ConsoleUtil.decryptWithConsolePrivateKey(password);
+            password = PageBackendService.decryptWithConsolePrivateKey(password);
         } catch (Exception ignored) {
         }
 
@@ -273,7 +270,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static String getMsg(String msg) {
-        String i18n = I18n.getString(ConsoleConstants.MASTER_APP_NAME, msg);
+        String i18n = ConsoleI18n.getI18N(I18n.getI18nLang(), msg);
         return StringUtil.notBlank(i18n) ? i18n : msg;
     }
 
@@ -329,7 +326,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
                     response.setContentType("application/json;charset=UTF-8");
                     try (PrintWriter writer = context.resp.getWriter()) {
-                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getString(ConsoleConstants.MASTER_APP_NAME, "page.login.need") + "\"}");
+                        writer.write("{\"success\":\"false\",\"msg\":\"" + ConsoleI18n.getI18N(I18n.getI18nLang(), "page.login.need") + "\"}");
                         writer.flush();
                     }
                     return false;

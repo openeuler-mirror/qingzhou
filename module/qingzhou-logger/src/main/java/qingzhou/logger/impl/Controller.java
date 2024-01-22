@@ -1,20 +1,26 @@
 package qingzhou.logger.impl;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import qingzhou.logger.LoggerService;
+import qingzhou.framework.ServiceRegister;
+import qingzhou.framework.api.Logger;
 
-public class Controller implements BundleActivator {
-    private ServiceRegistration<LoggerService> registerService;
+public class Controller extends ServiceRegister<Logger> {
+    private final LoggerImpl defaultLogger = new LoggerImpl();
 
     @Override
-    public void start(BundleContext context) {
-        registerService = context.registerService(LoggerService.class, new LoggerServiceImpl(), null);
+    protected Class<Logger> serviceType() {
+        return Logger.class;
     }
 
     @Override
-    public void stop(BundleContext context) {
-        registerService.unregister();
+    protected Logger serviceObject() {
+        return defaultLogger;
+    }
+
+    @Override
+    protected void stopService() {
+        try {
+            defaultLogger.close();
+        } catch (Exception ignored) {
+        }
     }
 }

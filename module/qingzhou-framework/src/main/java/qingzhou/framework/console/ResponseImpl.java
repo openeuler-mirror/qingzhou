@@ -2,11 +2,9 @@ package qingzhou.framework.console;
 
 import qingzhou.framework.api.Response;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.Serializable;
-import java.lang.reflect.Method;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -93,15 +91,17 @@ public class ResponseImpl implements Response, Serializable {
     }
 
     @Override
-    public void addDataObject(Object data) throws Exception {
+    public void addDataObject(Object data) {
         Map<String, String> map = new HashMap<>();
 
-        BeanInfo beanInfo = Introspector.getBeanInfo(data.getClass());
-        for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
-            Method readMethod = pd.getReadMethod();
-            if (readMethod != null) {
-                Object val = readMethod.invoke(data);
-                map.put(pd.getName(), String.valueOf(val));
+        Field[] fields = data.getClass().getFields();
+        for (Field field : fields) {
+            try {
+                int modifiers = field.getModifiers();
+                if (Modifier.isPublic(modifiers) && !Modifier.isStatic(modifiers)) {
+                    map.put(field.getName(), String.valueOf(field.get(data)));
+                }
+            } catch (IllegalAccessException ignored) {
             }
         }
 

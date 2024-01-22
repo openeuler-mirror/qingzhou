@@ -5,6 +5,7 @@ import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.apache.sshd.sftp.client.fs.SftpFileSystem;
+import qingzhou.ssh.LifecycleListener;
 import qingzhou.ssh.SSHResult;
 import qingzhou.ssh.SSHSession;
 
@@ -12,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,9 +21,15 @@ import java.util.stream.Stream;
 
 public class SSHSessionImpl implements SSHSession {
     private final ClientSession clientSession;
+    private final List<LifecycleListener> lifecycleListeners = new ArrayList<>();
 
     public SSHSessionImpl(ClientSession clientSession) {
         this.clientSession = clientSession;
+    }
+
+    @Override
+    public void addSessionListener(LifecycleListener listener) {
+        lifecycleListeners.add(listener);
     }
 
     @Override
@@ -141,6 +149,12 @@ public class SSHSessionImpl implements SSHSession {
 
     @Override
     public void close() throws Exception {
+        closeInternal();
+
+        lifecycleListeners.forEach(LifecycleListener::closed);
+    }
+
+    public void closeInternal() throws Exception {
         if (clientSession != null) {
             clientSession.close();
         }

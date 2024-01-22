@@ -4,6 +4,7 @@
 <%@ page import="java.io.*" %>
 <%@ page import="java.time.*" %>
 <%@ page import="java.time.format.*" %>
+<%@ page import="qingzhou.framework.*" %>
 <%@ page import="qingzhou.framework.api.*" %>
 <%@ page import="qingzhou.framework.console.*" %>
 <%@ page import="qingzhou.framework.util.*" %>
@@ -16,12 +17,13 @@
 <%@ page import="qingzhou.console.view.impl.*" %>
 <%@ page import="qingzhou.console.sdk.*" %>
 <%@ page import="qingzhou.console.page.PageBackendService" %>
+<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
     Request qzRequest = (Request) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
-    String initAppName = qzRequest == null ? ConsoleConstants.MASTER_APP_NAME : qzRequest.getAppName();
+    String initAppName = qzRequest == null ? FrameworkContext.MASTER_APP_NAME : qzRequest.getAppName();
     ModelManager modelManager = PageBackendService.getModelManager(initAppName);
 %>
 

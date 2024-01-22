@@ -4,10 +4,10 @@ import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
-import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LockOutRealm;
 import qingzhou.console.login.LoginManager;
-import qingzhou.framework.api.ConsoleContext;
+import qingzhou.console.page.PageBackendService;
+import qingzhou.console.ConsoleI18n;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
@@ -38,10 +38,7 @@ public class VerCode implements Filter<HttpServletContext> {
     };
 
     static {
-        ConsoleContext master = ConsoleWarHelper.getMasterConsoleContext();
-        if (master != null) {
-            master.addI18N(captchaError, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
-        }
+        ConsoleI18n.addI18N(captchaError, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
     }
 
     private final String verCodeFormat = "jpeg";
@@ -85,7 +82,7 @@ public class VerCode implements Filter<HttpServletContext> {
      * 校验用户输入的验证码是否正确
      */
     public static boolean validate(HttpServletRequest request) {
-        String clientCode = ConsoleUtil.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA));
+        String clientCode = PageBackendService.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA));
         if (StringUtil.isBlank(clientCode)) {
             return false;
         }

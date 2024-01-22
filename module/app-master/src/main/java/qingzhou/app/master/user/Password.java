@@ -12,7 +12,7 @@ import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 
 @Model(name = "password", icon = "key",
-        menuName = "Security", menuOrder = 5,
+        menuName = "User", menuOrder = 2,
         entryAction = EditModel.ACTION_NAME_EDIT,
         nameI18n = {"修改密码", "en:Change Password"},
         infoI18n = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
@@ -62,7 +62,6 @@ public class Password extends ModelBase implements EditModel {
                 "en:For security reasons, the use of old passwords that have been used last %s is prohibited"});
 
         master.addI18N("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少10位", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
-        master.addI18N("password.passwordContainsUsername", new String[]{"密码不能包含用户名", "en:A weak password, the password cannot contain the username"});
         master.addI18N("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
 
     }

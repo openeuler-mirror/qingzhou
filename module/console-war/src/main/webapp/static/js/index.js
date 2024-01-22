@@ -1392,7 +1392,7 @@ function sendRequest(charts, chartOption, url, callback, restrictedArea, retryOp
             if (data.success == false) {
                 showError(data.message);
             } else {
-                var monitorData = data.monitor[0];
+                var monitorData = data.data[0];
                 var dataArrays;
                 if(monitorData != null){
                     dataArrays = eval('(' + monitorData.json + ')');
@@ -1750,7 +1750,7 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
-                var monitorData = data.monitor[0];
+                var monitorData = data.data[0];
                 if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
                     var models = [{
                         dataTime: getTime(),
@@ -1785,7 +1785,7 @@ function monitorHandler(chartObj, chartOption, url, restrictedArea, retryOption,
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
-                addData(chartObj, chartOption, data.models, data.monitor[0], restrictedArea);
+                addData(chartObj, chartOption, data.models, data.data[0], restrictedArea);
             } else {
                 showError(data.message);
             }

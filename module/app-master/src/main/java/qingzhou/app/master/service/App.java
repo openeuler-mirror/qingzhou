@@ -1,24 +1,11 @@
 package qingzhou.app.master.service;
 
-import qingzhou.app.master.Main;
-import qingzhou.framework.AppManager;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.console.ConsoleConstants;
+import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.api.*;
+import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @Model(name = "app", icon = "cube-alt",
@@ -37,6 +24,7 @@ public class App extends ModelBase implements AddModel {
     @ModelField(
             required = true,
             disableOnEdit = true,
+            showToEdit = false,
             type = FieldType.bool,
             nameI18n = {"使用上传", "en:Enable Upload"},
             infoI18n = {"部署的应用可以从客户端上传，也可以从服务器端指定的位置读取。注：出于安全考虑，QingZhou 出厂设置禁用了文件上传功能，您可在“控制台安全”模块了解详情和进行相关的配置操作。",
@@ -46,6 +34,8 @@ public class App extends ModelBase implements AddModel {
     @ModelField(
             showToList = true,
             effectiveWhen = "appFrom=false",
+            disableOnEdit = true,
+            showToEdit = false,
             required = true,
             notSupportedCharacters = "#",
             maxLength = 255,// for #NC-1418 及其它文件目录操作的，文件长度不能大于 255
@@ -86,13 +76,22 @@ public class App extends ModelBase implements AddModel {
     public String type;
 
     @Override
-    public Options options(String fieldName) {
-        if ("nodes".equals(fieldName)) {
-            Options options = super.options(fieldName);
-            return Options.merge(options, Option.of(ConsoleConstants.LOCAL_NODE_NAME));
+    public void init() {
+        super.init();
+        getAppContext().getConsoleContext().addI18N("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
+    }
+
+    @Override
+    public String validate(Request request, String fieldName) {
+        if (fieldName.equals(ListModel.FIELD_NAME_ID)) {
+            String id = request.getParameter(ListModel.FIELD_NAME_ID);
+            if (FrameworkContext.MASTER_APP_NAME.equals(id) ||
+                    FrameworkContext.NODE_APP_NAME.equals(id)) {
+                return "app.id.system";
+            }
         }
 
-        return super.options(fieldName);
+        return super.validate(request, fieldName);
     }
 
     @Override
@@ -106,115 +105,57 @@ public class App extends ModelBase implements AddModel {
     }
 
     @Override
+    @ModelAction(name = ACTION_NAME_ADD,
+            icon = "save",
+            showToFormBottom = true,
+            nameI18n = {"部署", "en:Deploy"},
+            infoI18n = {"按配置要求部署应用到指定的节点。", "en:Deploy the app to the specified node as required."})
     public void add(Request request, Response response) throws Exception {
         Map<String, String> p = prepareParameters(request);
         File srcFile;
-        if (Boolean.parseBoolean(p.get("appFrom"))) {
+        if (Boolean.parseBoolean(p.remove("appFrom"))) {
             srcFile = FileUtil.newFile(p.remove("fromUpload"));
         } else {
-            srcFile = new File(p.get("filename"));
+            srcFile = new File(p.remove("filename"));
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
             return;
         }
         String srcFileName = srcFile.getName();
-        String appName = srcFileName;
-        int index = appName.lastIndexOf(".");
-        if (index > -1) {
-            appName = appName.substring(0, index);
-        }
-        File app = FileUtil.newFile(getApps(), srcFileName);
-        try {
+        String appName;
+        if (srcFile.isDirectory()) {
+            appName = srcFileName;
+            File app = FileUtil.newFile(getAppsDir(), appName);
             FileUtil.copyFileOrDirectory(srcFile, app);
-        } catch (IOException e) {
-            e.printStackTrace();
-            response.setSuccess(false);
-            return;
-        }
-        p.put("id", appName);
-        p.put("filename", srcFileName);
-
-        try {
-            String nodes = p.get("nodes");// TODO 这里要区分远程和本地
-
-            getAppManager().installApp(appName, false, app);
-            getDataStore().addData(request.getModelName(), appName, p);
-        } catch (Exception e) {
-            e.printStackTrace();
-            FileUtil.delete(app);
-            response.setSuccess(false);
-            return;
-        }
-    }
-
-    @Override
-    public void delete(Request request, Response response) throws Exception {
-        String id = request.getId();
-        Map<String, String> appInfo = getDataStore().getDataById("app", id);
-        if (appInfo == null || appInfo.isEmpty()) {
-            return;
+        } else if (srcFileName.endsWith(".jar")) {
+            int index = srcFileName.lastIndexOf(".");
+            appName = srcFileName.substring(0, index);
+            File app = FileUtil.newFile(getAppsDir(), appName);
+            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, "lib", srcFileName));
+        } else if (srcFileName.endsWith(".zip")) {
+            int index = srcFileName.lastIndexOf(".");
+            appName = srcFileName.substring(0, index);
+            File app = FileUtil.newFile(getAppsDir(), appName);
+            FileUtil.unZipToDir(srcFile, app);// todo: 如果不需要部署到 本地节点，这里的解压就没有必要了
+        } else {
+            throw ExceptionUtil.unexpectedException("unknown app type");
         }
 
-        String filename = appInfo.get("filename");
-        try {
-            // TODO 这里还要卸载远程节点的。
-            getAppManager().uninstallApp(id);
-
-            File app = FileUtil.newFile(getApps(), filename);
-            if (app.exists()) {
+        String[] nodes = p.get("nodes").split(",");
+        for (String node : nodes) {
+            if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
+                File app = FileUtil.newFile(getAppsDir(), appName);
                 try {
-                    FileUtil.forceDelete(app);
-                } catch (IOException e) {
+                    //getAppManager().installApp(appName, app);// 应该调用local节点服务上的app来安装应用
+                    p.put("id", appName);// todo 本地 local 不需要记录到server。xml里面
+                    getDataStore().addData(request.getModelName(), appName, p);
+                } catch (Exception e) {
                     e.printStackTrace();
+                    FileUtil.forceDeleteQuietly(app);
                     response.setSuccess(false);
-                    return;
                 }
-            }
-
-            getDataStore().deleteDataById(request.getModelName(), id);
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.setSuccess(false);
-        }
-    }
-
-    @Override
-    public void list(Request request, Response response) throws Exception {
-        int pageNum = 1;
-        String pageNumParameter = request.getParameter(PARAMETER_PAGE_NUM);
-        if (pageNumParameter != null) {
-            try {
-                pageNum = Integer.parseInt(pageNumParameter);
-            } catch (NumberFormatException ignored) {
-            }
-        }
-
-        List<String> appNames = new ArrayList<>(getAppManager().getApps());
-        if (getDataStore() != null) {
-            List<Map<String, String>> apps = getDataStore().getAllData("app");
-            if (apps != null && apps.size() > 0) {
-                for (Map<String, String> app : apps) {
-                    String filename = app.getOrDefault("filename", "");
-                    if (appNames.contains(filename)) {
-                        appNames.add(app.get("id"));
-                        appNames.remove(filename);
-                    }
-                }
-            }
-        }
-        appNames.remove(ConsoleConstants.MASTER_APP_NAME);// master系统应用不显示
-
-        List<Map<String, String>> dataInfo = response.getDataList();
-        response.setTotalSize(appNames.size());
-        response.setPageSize(pageSize());
-        response.setPageNum(pageNum);
-
-        int start = (pageNum - 1) * pageSize();
-        int end = appNames.size() < pageSize() ? appNames.size() : (start + pageSize());
-        for (int i = start; i < end; i++) {
-            String appName = appNames.get(i);
-            if (getDataStore() != null) {
-                dataInfo.add(getDataStore().getDataById("app", appName));
+            } else {
+                // TODO：调用远端 node 上 master 的 app add？（将其node设置为 LOCAL_NODE_NAME 后在发送远程请求？）
             }
         }
     }
@@ -224,16 +165,10 @@ public class App extends ModelBase implements AddModel {
             nameI18n = {"管理", "en:Manage"}, showToList = true,
             infoI18n = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
     public void switchTarget(Request request, Response response) throws Exception {
-        // 需要获取应用的i18n信息，内存没有的需要从缓存拉取
-
     }
 
-    private AppManager getAppManager() {
-        return Main.getFC().getAppManager();
-    }
-
-    public File getApps() {
-        File apps = FileUtil.newFile(Main.getFC().getDomain(), "apps");
+    public File getAppsDir() {
+        File apps = FileUtil.newFile(getAppContext().getDomain(), "apps");
         if (!apps.exists()) {
             FileUtil.mkdirs(apps);
         }

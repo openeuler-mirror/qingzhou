@@ -13,17 +13,16 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>qingzhou-framework</module>
         <module>qingzhou-logger</module>
         <module>qingzhou-serializer</module>
-        <module>qingzhou-framework</module>
         <module>qingzhou-ssh</module>
         <module>qingzhou-crypto</module>
-        <module>qingzhou-jnet</module>
         <module>qingzhou-console</module>
         <module>console-war</module>
-        <module>qingzhou-app</module>
+        <module>qingzhou-deployer</module>
         <module>app-master</module>
-        <module>app-common</module>
+        <module>app-node</module>
         <module>qingzhou-remote</module>
     </modules>
 </project>

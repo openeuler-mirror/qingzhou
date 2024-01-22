@@ -60,7 +60,7 @@
                             <%
                                 for(Lang lang : Lang.values()) {
                                     out.print("<li>");
-                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", PageBackendService.encodeURL(request, response, contextPath + I18nFilter.LANG_SWITCH_URI + "/" + lang), lang.getFullName()));
+                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", PageBackendService.encodeURL(request, response, contextPath + I18nFilter.LANG_SWITCH_URI + "/" + lang), lang.info));
                                     out.print("</li>");
                                 }
                             %>
@@ -68,10 +68,10 @@
                     </li>
                     <%-- 用户/修改密码 --%>
                     <li>
-                        <a id="reset-password-btn" href="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView+"/"+ ConsoleConstants.MASTER_APP_NAME +"/password/"+ "edit")%>"
+                        <a id="reset-password-btn" href="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView+"/"+ FrameworkContext.MASTER_APP_NAME +"/password/"+ "edit")%>"
                         class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=PageBackendService.getModelManager(ConsoleConstants.MASTER_APP_NAME).getModel("user").icon()%>"></i>
+                                <i class="icon icon-<%=PageBackendService.getModelManager(FrameworkContext.MASTER_APP_NAME).getModel("user").icon()%>"></i>
                             </span>
                         </a>
                     </li>

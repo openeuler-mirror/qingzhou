@@ -52,8 +52,7 @@
                 <include>${project.groupId}:qingzhou-ssh</include>
                 <include>${project.groupId}:qingzhou-crypto</include>
                 <include>${project.groupId}:qingzhou-remote</include>
-                <include>${project.groupId}:qingzhou-jnet</include>
-                <include>${project.groupId}:qingzhou-app</include>
+                <include>${project.groupId}:qingzhou-deployer</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
@@ -86,18 +85,18 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/sysapp/master</outputDirectory>
+            <outputDirectory>lib/version/sysapp/master/lib</outputDirectory>
         </dependencySet>
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:app-common</include>
+                <include>${project.groupId}:app-node</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/sysapp/common</outputDirectory>
+            <outputDirectory>lib/version/sysapp/node/lib</outputDirectory>
         </dependencySet>
 
     </dependencySets>

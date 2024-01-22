@@ -26,11 +26,5 @@
             <version>0.1.0</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-remote</artifactId>
-            <version>0.1.0</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 </project>

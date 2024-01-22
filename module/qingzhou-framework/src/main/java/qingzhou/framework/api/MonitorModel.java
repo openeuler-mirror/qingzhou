@@ -22,7 +22,7 @@ public interface MonitorModel extends ShowModel {
     default void monitor(Request request, Response response) throws Exception {
         Map<String, String> p = monitorData();
 
-        if (p.isEmpty()) {
+        if (p == null || p.isEmpty()) {
             return;
         }
         List<String> graphicalDynamicFields = new ArrayList<>();
@@ -56,5 +56,7 @@ public interface MonitorModel extends ShowModel {
         response.addData(monitorData);
     }
 
-    Map<String, String> monitorData();
+    default Map<String, String> monitorData() {
+        return null;
+    }
 }

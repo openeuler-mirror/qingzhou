@@ -1,22 +1,21 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleUtil;
-import qingzhou.console.ServerXml;
+import qingzhou.console.*;
 import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.crypto.KeyManager;
+import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.console.ConsoleConstants;
-import qingzhou.framework.console.I18n;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.remote.RemoteConstants;
 
 import javax.naming.NameNotFoundException;
 import java.net.SocketException;
@@ -24,7 +23,7 @@ import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
 import java.util.*;
 
-import static qingzhou.console.impl.ConsoleWarHelper.getAppInfoManager;
+import static qingzhou.console.impl.ConsoleWarHelper.getAppManager;
 
 public class InvokeAction implements Filter<RestContext> {
     InvokeAction() {
@@ -33,17 +32,33 @@ public class InvokeAction implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = (RequestImpl) context.request;
-        if (isBatchAction(request)) {
-            context.response = invokeBatch(request);
+
+        Response validationResponse = new ResponseImpl();
+        boolean ok = Validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
+        if (!ok) {
+            context.response = validationResponse;
         } else {
-            context.response = invoke(request);
+            if (isBatchAction(request)) {
+                context.response = invokeBatch(request);
+            } else {
+                context.response = invoke(request);
+            }
         }
+
         return context.response.isSuccess(); // 触发后续的响应
     }
 
     private boolean isBatchAction(RequestImpl request) {
         String ids = request.getParameter(ListModel.FIELD_NAME_ID);
-        return StringUtil.notBlank(ids);
+        if (StringUtil.isBlank(ids)) return false;
+
+        ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
+        String[] actionNamesSupportBatch = modelManager.getActionNamesSupportBatch(request.getModelName());
+        for (String batch : actionNamesSupportBatch) {
+            if (batch.equals(request.getActionName())) return true;
+        }
+
+        return false;
     }
 
     private Response invokeBatch(RequestImpl request) {
@@ -80,11 +95,11 @@ public class InvokeAction implements Filter<RestContext> {
         String model = I18n.getString(appName, "model." + request.getModelName());
         String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
         if (result.isEmpty()) {
-            String resultMsg = String.format(I18n.getString(ConsoleConstants.MASTER_APP_NAME, "batch.ops.success"), model, action, suc);
+            String resultMsg = ConsoleI18n.getI18N(I18n.getI18nLang(), "batch.ops.success", model, action, suc);
             response.setMsg(resultMsg);
         } else {
             response.setSuccess(suc > 0);
-            errbuilder.append(String.format(I18n.getString(ConsoleConstants.MASTER_APP_NAME, "batch.ops.fail"), model, action, suc, fail));
+            errbuilder.append(ConsoleI18n.getI18N(I18n.getI18nLang(), "batch.ops.fail", model, action, suc, fail));
             errbuilder.append("<br/>");
             for (Map.Entry<String, String> entry : result.entrySet()) {
                 String key = entry.getKey();
@@ -159,33 +174,19 @@ public class InvokeAction implements Filter<RestContext> {
         Map<String, Response> resultOnNode = new HashMap<>();
         String appName = request.getAppName();
 
-        List<String> nodes = new ArrayList<>();
-        if (ConsoleConstants.MASTER_APP_NAME.equals(appName)) {
-            nodes.add(ConsoleConstants.LOCAL_NODE_NAME);
-        } else {
-            Map<String, String> app = getAppInfoManager().getAppInfo(ConsoleConstants.MASTER_APP_NAME)
-                    .getAppContext().getDataStore()
-                    .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
-            if (app == null || app.isEmpty()) {
-                throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
-            }
-            String[] appNodes = app.get("nodes").split(ConsoleConstants.DATA_SEPARATOR);
-            nodes.addAll(Arrays.asList(appNodes));
-        }
-
         String remoteKey = null;
-        for (String node : nodes) {
+        for (String node : getAppNodes(appName)) {
             Response responseOnNode;
-            if (node.equals(ConsoleConstants.LOCAL_NODE_NAME)) {
+            if (node.equals(FrameworkContext.LOCAL_NODE_NAME)) {
                 Response response = new ResponseImpl();
-                getAppInfoManager().getAppInfo(appName).invokeAction(request, response);
+                getAppManager().getApp(appName).invoke(request, response);
                 responseOnNode = response;
             } else {
                 if (remoteKey == null) {
                     KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
                     remoteKey = keyManager.getKeyOrElseInit(
-                            ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()),
-                            RemoteConstants.REMOTE_KEY_NAME,
+                            PageBackendService.getSecureFile(ConsoleWarHelper.getDomain()),
+                            "remoteKey",
                             null
                     );
                 }
@@ -200,5 +201,27 @@ public class InvokeAction implements Filter<RestContext> {
         }
 
         return resultOnNode;
+    }
+
+    public static List<String> getAppNodes(String appName) {
+        List<String> nodes = new ArrayList<>();
+        if (FrameworkContext.MASTER_APP_NAME.equals(appName)) {
+            nodes.add(FrameworkContext.LOCAL_NODE_NAME);
+        } else {
+            Map<String, String> app;
+            try {
+                app = getAppManager().getApp(FrameworkContext.MASTER_APP_NAME)
+                        .getAppContext().getDataStore()
+                        .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
+            } catch (Exception e) {
+                throw ExceptionUtil.unexpectedException(e);
+            }
+            if (app == null || app.isEmpty()) {
+                throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
+            }
+            String[] appNodes = app.get("nodes").split(",");
+            nodes.addAll(Arrays.asList(appNodes));
+        }
+        return nodes;
     }
 }

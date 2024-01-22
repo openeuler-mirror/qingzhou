@@ -1,6 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ page import="java.util.*" %>
-<%@ page import="qingzhou.framework.console.ConsoleConstants" %>
+<%@ page import="qingzhou.console.ConsoleConstants" %>
 <%
     String statusCode = String.valueOf(response.getStatus());
     String errorMsg = response.getHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY);

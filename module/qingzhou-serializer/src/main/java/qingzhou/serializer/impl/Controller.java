@@ -5,6 +5,8 @@ import qingzhou.serializer.SerializerService;
 import qingzhou.serializer.impl.java.JavaSerializer;
 
 public class Controller extends ServiceRegister<SerializerService> {
+    private final SerializerService serializerService = JavaSerializer::new;
+
     @Override
     protected Class<SerializerService> serviceType() {
         return SerializerService.class;
@@ -12,6 +14,6 @@ public class Controller extends ServiceRegister<SerializerService> {
 
     @Override
     protected SerializerService serviceObject() {
-        return JavaSerializer::new;
+        return serializerService;
     }
 }

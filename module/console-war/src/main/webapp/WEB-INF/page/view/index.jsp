@@ -290,8 +290,8 @@
                         <ul class="sidebar-menu" data-widget="tree">
                             <%
                             // 菜单
-                            List<Properties> menuList = PageBackendService.getAppMenuList(currentUser, ConsoleConstants.MASTER_APP_NAME);
-                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, ConsoleConstants.MASTER_APP_NAME, qzRequest.getModelName()));
+                            List<Properties> menuList = PageBackendService.getAppMenuList(currentUser, FrameworkContext.MASTER_APP_NAME);
+                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, FrameworkContext.MASTER_APP_NAME, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>
@@ -329,14 +329,14 @@
         check2FA: '<%=ConsoleConstants.LOGIN_2FA%>',
         separa: '<%=ConsoleConstants.DATA_SEPARATOR%>',
         downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
-        locale: '<%=(I18n.getI18nLang().isZH() ? "zh-CN":"en-US")%>',
-        pageLang: '<%=(I18n.getI18nLang().isZH() ? "zh_cn":"en")%>',
+        locale: '<%=(I18n.isZH() ? "zh-CN":"en-US")%>',
+        pageLang: '<%=(I18n.isZH() ? "zh_cn":"en")%>',
         pageErrorMsg: '<%=PageBackendService.getMasterAppI18NString("page.error")%>',
         pageConfirmTitle: '<%=PageBackendService.getMasterAppI18NString("page.confirm.title")%>',
         confirmBtnText: '<%=PageBackendService.getMasterAppI18NString("page.confirm")%>',
         cancelBtnText: '<%=PageBackendService.getMasterAppI18NString("page.cancel")%>',
         notLogin: '<%=PageBackendService.getMasterAppI18NString("page.login.need")%>',
-        encrypt_key_size: '<%=ConsoleUtil.getKeySize()%>',
+        encrypt_key_size: '<%=PageBackendService.getKeySize()%>',
         reloginBtnText: '<%=PageBackendService.getMasterAppI18NString("page.relogin")%>',
         iknowBtnText: '<%=PageBackendService.getMasterAppI18NString("page.gotit")%>',
         switchLang: '<%=PageBackendService.getMasterAppI18NString("page.lang.switch.confirm")%>',

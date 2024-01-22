@@ -1,19 +1,11 @@
 package qingzhou.app.master.user;
 
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.Group;
-import qingzhou.framework.api.Groups;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
+import qingzhou.framework.api.*;
 
 @Model(name = "user", icon = "user",
-        menuName = "Security", menuOrder = 1,
-        nameI18n = {"用户管理", "en:User"},
-        infoI18n = {"管理登录和操作服务器的管理员，管理员可登录控制台、REST接口等。", "en:Manages the administrator who logs in and operates the server. The administrator can log in to the console, REST interface, etc."})
+        menuName = "User", menuOrder = 1,
+        nameI18n = {"用户", "en:User"},
+        infoI18n = {"管理登录和操作服务器的用户，用户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements AddModel {
     public static final String pwdKey = "password";
     public static final String confirmPwdKey = "confirmPassword";
@@ -57,7 +49,7 @@ public class User extends ModelBase implements AddModel {
 //            required = true,
 //            type = FieldType.password,
 //            nameI18n = {"确认密码", "en:Confirm Password"},
-//            infoI18n = {"确认管理员登录系统的新密码。", "en:Confirm the administrator new password for logging in to the system."})
+//            infoI18n = {"确认登录系统的新密码。", "en:Confirm the new password for logging in to the system."})
 //    public String confirmPassword;
 //
 //    @ModelField(
@@ -196,7 +188,7 @@ public class User extends ModelBase implements AddModel {
 //        }
 //
 //        if (ServerXml.ConsoleRole.isRootUser(loginUser)) {
-//            // TODO 超级管理员能看所有
+//            // TODO 超级用户能看所有
 //        }
 //        AddModel.super.list(request, response);
 //    }
@@ -284,24 +276,6 @@ public class User extends ModelBase implements AddModel {
 //        return super.validate(request, fieldName);
 //    }
 //
-//    public static String checkPwd(String password, String... infos) {
-//        if (ConsoleConstants.PASSWORD_FLAG.equals(password)) {
-//            return null;
-//        }
-//        ConsoleContext consoleContext = getMasterConsoleContext();
-//        int minLength = 10;
-//        int maxLength = 20;
-//        if (password.length() < minLength || password.length() > maxLength) {
-//            return String.format(consoleContext.getI18N("validator.lengthBetween"), minLength, maxLength);
-//        }
-//
-//        if (infos != null && infos.length > 0) {
-//            if (infos[0] != null) { // for #ITAIT-5014
-//                if (password.contains(infos[0])) { // 包含身份信息
-//                    return consoleContext.getI18N("password.passwordContainsUsername");
-//                }
-//            }
-//        }
 //
 //        //特殊符号包含下划线
 //        String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";

@@ -22,7 +22,7 @@
                             <Bundle-Activator>qingzhou.framework.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,qingzhou.logger,javax.xml.xpath,org.w3c.dom,javax.xml.transform,javax.xml.parsers,org.xml.sax,javax.xml.transform.dom,javax.xml.transform.stream
+                                org.osgi.framework,org.w3c.dom,org.xml.sax,javax.xml.xpath,javax.xml.parsers,javax.xml.transform,javax.xml.transform.dom,javax.xml.transform.stream
                             </Import-Package>
 
                             <Export-Package>
@@ -39,12 +39,6 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-logger</artifactId>
-            <version>0.1.0</version>
         </dependency>
     </dependencies>
 </project>

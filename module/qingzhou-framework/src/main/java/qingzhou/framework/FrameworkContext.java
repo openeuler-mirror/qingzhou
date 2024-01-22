@@ -1,25 +1,21 @@
 package qingzhou.framework;
 
-import java.io.File;
-import java.util.Set;
+import qingzhou.framework.api.Logger;
 
 public interface FrameworkContext {
+    String LOCAL_NODE_NAME = "local";
+    String MASTER_APP_NAME = "master";
+    String NODE_APP_NAME = "node";
+
+    boolean isMaster();
+
+    Logger getLogger();
+
+    AppStubManager getAppStubManager();
+
     AppManager getAppManager();
 
-    Set<Class<?>> getServiceTypes();
+    ServiceManager getServiceManager();
 
-    <T> T getService(Class<T> serviceType);
-
-    File getCache();
-
-    File getCache(File parent);
-
-    File getDomain();
-
-    File getLib();
-
-    File getHome();
-
-    // （注意：此处注册的服务，会通过 AppContext 开放给所有应用，须确保服务是无状态的，像 SSH、Servlet 等内部服务也不请勿注册）
-    <T> void registerService(Class<T> clazz, T service);
+    FileManager getFileManager();
 }

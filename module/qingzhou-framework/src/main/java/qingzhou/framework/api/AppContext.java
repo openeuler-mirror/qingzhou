@@ -4,13 +4,9 @@ import java.io.File;
 import java.util.Set;
 
 public interface AppContext {
-    String getAppName();
+    Logger getLogger();
 
-    File getAppDomain();
-
-    File getAppCache();
-
-    File getAppLogs();
+    File getDomain();
 
     File getHome();
 

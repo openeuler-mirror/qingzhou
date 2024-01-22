@@ -1,36 +1,27 @@
 package qingzhou.console.remote;
 
-import qingzhou.framework.console.ConsoleConstants;
-import qingzhou.console.ConsoleUtil;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.servlet.UploadFileContext;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PasswordCipher;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.ExceptionUtil;
-import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.serializer.Serializer;
 
 import javax.net.ssl.*;
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.StandardOpenOption;
 import java.security.SecureRandom;
-import java.util.List;
 
 public class RemoteClient {
     private static SSLSocketFactory ssf;
     public static final X509TrustManager TRUST_ALL_MANAGER = new X509TrustManagerInternal();
-    public static String NEW_LINE = "\r\n";
-    private static final String PREFIX = "--";
-    private static final String BOUNDART = "*****";
 
     public static ResponseImpl sendReq(String url, Object object, String remoteKey) throws Exception {
         HttpURLConnection connection = null;
@@ -42,7 +33,7 @@ public class RemoteClient {
             try {
                 CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
                 qingzhou.crypto.KeyManager keyManager = cryptoService.getKeyManager();
-                String localKey = keyManager.getKeyOrElseInit(ConsoleUtil.getSecureFile(ConsoleWarHelper.getDomain()), ConsoleConstants.localKeyName, null);
+                String localKey = keyManager.getKeyOrElseInit(PageBackendService.getSecureFile(ConsoleWarHelper.getDomain()), ConsoleConstants.localKeyName, null);
                 cipher = cryptoService.getPasswordCipher(cryptoService.getPasswordCipher(localKey).decrypt(remoteKey));
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
@@ -132,61 +123,5 @@ public class RemoteClient {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");// 设置文件类型
         conn.setRequestProperty("accept", "*/*");// 设置接收类型否则返回415错误
         conn.setInstanceFollowRedirects(false);// 不处理重定向，否则“双因子密钥需要刷新”提示信息收不到。。。
-    }
-
-    public static String uploadFile(String url, String fileName) throws Exception {
-        File file = FileUtil.newFile(fileName);
-        HttpURLConnection conn = buildConnection(url);
-        try {
-            setConnectionProperties(conn, true);
-            conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + BOUNDART);
-            conn.setChunkedStreamingMode(4 * 1024);
-
-            try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
-                 OutputStream outputStream = conn.getOutputStream()) {
-                DataOutputStream os = new DataOutputStream(outputStream);
-                os.writeBytes(PREFIX + BOUNDART + NEW_LINE);
-                os.writeBytes(("Content-Disposition: form-data; name=\"" + UploadFileContext.uploadFileParam + "\"; filename=\"" + file.getName() + "\"" + NEW_LINE));
-                os.writeBytes(NEW_LINE);
-                channel.transferTo(0, channel.size(), Channels.newChannel(os));
-                os.writeBytes(NEW_LINE);
-                os.writeBytes(PREFIX + BOUNDART + PREFIX + NEW_LINE);
-                os.close();
-            }
-            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                try (InputStream is = conn.getInputStream()) {
-                    return ObjectUtil.inputStreamToString(is, StandardCharsets.UTF_8);
-                }
-            } else {
-                throw new RuntimeException(String.format("Failed to upload file, url: %s, file: %s.", url, fileName));
-            }
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
-    }
-
-    public static void deleteFiles(String url, List<String> uploadFiles) {
-        HttpURLConnection conn = null;
-        try {
-            conn = buildConnection(url);
-            setConnectionProperties(conn, true);
-            StringBuilder param = new StringBuilder();
-            for (String uploadFile : uploadFiles) {
-                param.append("deleteFiles=").append(URLEncoder.encode(uploadFile, "utf-8")).append("&");
-            }
-            try (OutputStream os = conn.getOutputStream()) {
-                os.write(param.toString().getBytes(StandardCharsets.UTF_8));
-                os.flush();
-            }
-            conn.getResponseCode();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
     }
 }

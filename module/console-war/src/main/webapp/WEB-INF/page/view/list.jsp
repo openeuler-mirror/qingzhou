@@ -7,7 +7,7 @@
         return; // for 静态源码漏洞扫描
     }
 
-    final boolean hasId = ConsoleUtil.hasIDField(qzRequest);
+    final boolean hasId = PageBackendService.hasIDField(qzRequest);
 
     LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
     String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
@@ -42,7 +42,7 @@
                     for (Integer i : indexToShow) {
                         String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
                         List<Option> modelOptionsEntry = null;
-                        if (ConsoleUtil.isFilterSelect(qzRequest, i)) {
+                        if (PageBackendService.isFilterSelect(qzRequest, i)) {
                             try {
                                 Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
                                 if (modelOptions != null) {
@@ -118,8 +118,8 @@
                         }
                     }
                 // 用于判断是否需要操作列
-                boolean needOperationColumn = ConsoleUtil.needOperationColumn(qzRequest, qzResponse, session);
-                ModelAction[] opsActions = ConsoleUtil.listCommonOps(qzRequest, qzResponse, session);
+                boolean needOperationColumn = PageBackendService.needOperationColumn(qzRequest, qzResponse);
+                ModelAction[] opsActions = PageBackendService.listCommonOps(qzRequest, qzResponse);
                 if (needOperationColumn) {
                     String modelIcon = modelManager.getModel(qzRequest.getModelName()).icon();
                     for (ModelAction action : opsActions) {
@@ -130,7 +130,7 @@
                         } else {
                             titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
                         }
-                        boolean isAjaxAction = action.showToFormBottom();
+                        boolean isAjaxAction = PageBackendService.isAjaxAction(actionKey);
                         String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                         %>
                         <a id="<%=actionKey%>"
@@ -215,7 +215,7 @@
                             if (hasId) {
                                 String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
                                 if (opsActions.length > 0) {
-                                    boolean hasCheckAction = ConsoleUtil.listModelBaseOps(qzRequest, qzResponse, session, modelBase).length > 0;
+                                    boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, qzResponse, modelBase).length > 0;
                                     %>
                                     <td>
                                         <input type="checkbox"
@@ -281,9 +281,9 @@
                                         %>
                                         <td><%=value%></td>
                                         <%
-                                        }
                                     }
                                 }
+                            }
                             %>
                             <td>
                                 <%
@@ -293,7 +293,7 @@
                                     if (action == null) {
                                         continue;
                                     }
-                                    if (ConsoleUtil.isActionEffective(qzRequest, modelBase, action) != null) {
+                                    if (PageBackendService.isActionEffective(qzRequest, modelBase, action) != null) {
                                         continue;
                                     }
                                     String actionKey = action.name();
@@ -316,7 +316,7 @@
                                         titleStr = "data-tip='" + I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
                                     }
 
-                                    boolean isAjaxAction = action.showToFormBottom();
+                                    boolean isAjaxAction = PageBackendService.isAjaxAction(actionName);
                                     String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                                     %>
                                     <a href="<%=actionKey.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST) && ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : ConsoleUtil.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>

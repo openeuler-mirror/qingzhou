@@ -8,7 +8,17 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public interface DataStore {
-    List<Map<String, String>> getAllData(String type) throws Exception;// 加载全部数据，性能差，尽量使用下面的方法
+    // 加载全部数据，性能差，尽量使用下面的方法
+    List<Map<String, String>> getAllData(String type) throws Exception;
+
+    /***** 添加 *****/
+    void addData(String type, String id, Map<String, String> properties) throws Exception;
+
+    /***** 更新 *****/
+    void updateDataById(String type, String id, Map<String, String> data) throws Exception;
+
+    /***** 删除 *****/
+    void deleteDataById(String type, String id) throws Exception;
 
     default List<String> getAllDataId(String type) throws Exception {
         List<String> ids = new ArrayList<>();
@@ -24,13 +34,19 @@ public interface DataStore {
         return getAllDataId(type).size();
     }
 
-    /***** 添加 *****/
+    default List<String> getDataIdInPage(String type, int pageSize, int pageNum) throws Exception {
+        List<String> allDataId = getAllDataId(type);
+        int from = pageSize * (pageNum - 1);
+        int to = pageSize * pageNum - 1;
+        if (from < 0) from = 0;
+        if (to > allDataId.size() - 1) to = allDataId.size() - 1;
 
-    void addData(String type, String id, Map<String, String> properties) throws Exception;
-
-    /***** 读取 *****/
-
-    List<String> getDataIdInPage(String type, int pageSize, int pageNum) throws Exception;
+        List<String> result = new ArrayList<>();
+        for (int i = from; i <= to; i++) {
+            result.add(allDataId.get(i));
+        }
+        return result;
+    }
 
     default Map<String, String> getDataById(String type, String id) throws Exception {
         return getAllData(type).stream().filter(data -> data.get(ListModel.FIELD_NAME_ID).equals(id)).findAny().get();
@@ -64,12 +80,4 @@ public interface DataStore {
     default List<Map<String, String>> getDataByFieldLike(String type, String field, String likeValue) throws Exception {
         return getAllData(type).stream().filter(data -> data.get(field).toLowerCase().contains(likeValue.toLowerCase())).collect(Collectors.toList());
     }
-
-    /***** 更新 *****/
-
-    void updateDataById(String type, String id, Map<String, String> data) throws Exception;
-
-    /***** 删除 *****/
-
-    void deleteDataById(String type, String id) throws Exception;
 }

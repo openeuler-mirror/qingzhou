@@ -2,7 +2,6 @@ package qingzhou.console.login;
 
 import qingzhou.framework.util.Base32Util;
 import qingzhou.framework.util.HexUtil;
-import qingzhou.framework.util.TimeUtil;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -75,7 +74,7 @@ public class Totp {
         long X = 30;
 
         StringBuilder steps;
-        long currentTime = TimeUtil.getCurrentTime() / 1000L;
+        long currentTime = System.currentTimeMillis() / 1000L;
         long t = currentTime / X;
         steps = new StringBuilder(Long.toHexString(t).toUpperCase());
         while (steps.length() < 16) {
