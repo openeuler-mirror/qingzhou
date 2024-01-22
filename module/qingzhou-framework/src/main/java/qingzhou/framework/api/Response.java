@@ -1,5 +1,6 @@
 package qingzhou.framework.api;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,12 @@ public interface Response {
     void setContentType(String contentType);
 
     String getContentType();
+
+    void setHeader(String name, String value);
+
+    Collection<String> getHeaderNames();
+
+    String getHeader(String name);
 
     void addData(Map<String, String> data);
 

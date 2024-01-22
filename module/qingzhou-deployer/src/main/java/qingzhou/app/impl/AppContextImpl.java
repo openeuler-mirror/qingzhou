@@ -1,7 +1,11 @@
 package qingzhou.app.impl;
 
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.ActionFilter;
+import qingzhou.framework.api.AppContext;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.DataStore;
+import qingzhou.framework.api.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -21,6 +25,11 @@ public class AppContextImpl implements AppContext {
     @Override
     public Logger getLogger() {
         return frameworkContext.getLogger();
+    }
+
+    @Override
+    public File getCache() {
+        return frameworkContext.getFileManager().getCache();
     }
 
     @Override

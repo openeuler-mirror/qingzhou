@@ -6,6 +6,8 @@ import java.util.Set;
 public interface AppContext {
     Logger getLogger();
 
+    File getCache();
+
     File getDomain();
 
     File getHome();

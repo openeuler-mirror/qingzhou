@@ -35,14 +35,9 @@ public class FileManagerImpl implements FileManager {
     @Override
     public File getCache() {
         File temp = new File(getTempDir(), "cache");
-        return getCache(temp);
-    }
-
-    @Override
-    public File getCache(File parent) {
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
         String timeFlag = df.format(new Date());
-        File result = new File(parent, timeFlag);
+        File result = new File(temp, timeFlag);
         FileUtil.mkdirs(result);
         return result;
     }

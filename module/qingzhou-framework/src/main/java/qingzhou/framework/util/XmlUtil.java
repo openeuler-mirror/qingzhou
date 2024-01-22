@@ -158,14 +158,12 @@ public class XmlUtil {
     }
 
     public String getSpecifiedAttribute(String nodeExpression, String specifiedKey) {
-        // todo 有没有更高效的方式？
         Map<String, String> attributes = getSpecifiedAttributes(nodeExpression, new String[]{specifiedKey});
         if (attributes == null) return null;
         return attributes.get(specifiedKey);
     }
 
     public Map<String, String> getSpecifiedAttributes(String nodeExpression, String[] specifiedKeys) {
-        // todo 有没有更高效的方式？
         Map<String, String> attributes = getAttributes(nodeExpression);
         if (attributes == null) return null;
         Map<String, String> properties = new LinkedHashMap<>();
