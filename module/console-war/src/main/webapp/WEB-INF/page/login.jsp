@@ -86,16 +86,16 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
                         <div id="agreementTxt" style="display:none;">
                             <pre align="left">
 
-<%
-for (Lang lang : Lang.values()) {
-    %>
-    <h3 align="center"><%=PageBackendService.getMasterAppI18NString( "AGREEMENT_HEADER", lang)%></h3>
-    <%=PageBackendService.getMasterAppI18NString( "AGREEMENT_BODY", lang)%>
-    <br><br>
-    <p align="center">----------------------------------------------------------------------------</p>
-    <%
-}
-%>
+                                <%
+                                for (Lang lang : Lang.values()) {
+                                    %>
+                                    <h3 align="center"><%=PageBackendService.getMasterAppI18NString( "AGREEMENT_HEADER", lang)%></h3>
+                                    <%=PageBackendService.getMasterAppI18NString( "AGREEMENT_BODY", lang)%>
+                                    <br><br>
+                                    <p align="center">----------------------------------------------------------------------------</p>
+                                    <%
+                                }
+                                %>
 
                             </pre>
                         </div>

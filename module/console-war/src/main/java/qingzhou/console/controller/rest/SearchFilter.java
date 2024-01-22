@@ -16,16 +16,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// TODO: 在所有应用 AppStub 内搜索，结果可以显示出 应用名-模块名-属性名/操作名？能否包含 info ?
 public class SearchFilter implements Filter<RestContext> {
-
     public static final String SEARCH_URI = "/search";
     private static final Map<Lang, List<Map<String, String>>> INFOS_FOR_SEARCH = new HashMap<>();
 
-//    static { todo  需要根据请求的应用，动态获取 modelmanager
+//    static {
 //        ModelManager modelManager = ConsoleUtil.getModelManager();
 //        for (String modelName : modelManager.getAllModelNames()) {
 //            Model model = modelManager.getModel(modelName);
-//            Map<String, Map<String, ModelField>> fieldMapWithGroup = todo;
+//            Map<String, Map<String, ModelField>> fieldMapWithGroup =;
 //            if (!modelManager.getModelFieldMap(modelName).isEmpty()) {
 //                fieldMapWithGroup.put("", modelManager.getModelFieldMap(modelName));
 //            }
@@ -63,7 +63,7 @@ public class SearchFilter implements Filter<RestContext> {
 //                    continue;
 //                }
 //
-//                if (fieldMapWithGroup.isEmpty()) {// todo 缺少实现
+//                if (fieldMapWithGroup.isEmpty()) {
 ////                    if (manager.getModelAction(modelName, MonitorModel.ACTION_NAME_MONITOR) != null)) {
 ////                        for (MonitorFieldInfo monitoringFieldInfo : modelManager.getMonitoringFieldInfos(modelName).values()) {
 ////                            if (!MonitorFieldFieldInfo.monitoringField.supportGraphicalDynamic()) {

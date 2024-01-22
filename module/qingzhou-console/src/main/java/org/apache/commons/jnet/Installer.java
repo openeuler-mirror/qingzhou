@@ -25,7 +25,6 @@ import java.net.URLStreamHandlerFactory;
  * The installer is a general purpose class to install an own
  * {@link URLStreamHandlerFactory} in any environment.
  *
- * TODO Uninstall
  */
 public class Installer {
 
