@@ -13,7 +13,6 @@
         <module>module</module>
         <module>package</module>
         <module>module-ext</module>
-        <module>apps</module>
         <module>test</module>
     </modules>
 
