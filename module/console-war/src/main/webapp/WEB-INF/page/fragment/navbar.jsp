@@ -28,14 +28,6 @@
                                  <div id="searchResult" class="search-list"></div>
                             </div>
                        </div>
-                   </li>
-                    <%-- 新手引导 --%>
-                    <li>
-                        <a id="guide-btn" href="javascript:void(0);" class="tooltips" data-tip='<%=PageBackendService.getMasterAppI18NString( "page.guide")%>' data-tip-arrow="bottom">
-                            <span class="circle-bg">
-                                <i class="icon icon-lightbulb"></i>
-                            </span>
-                        </a>
                     </li>
 
                     <%-- 手册 --%>
