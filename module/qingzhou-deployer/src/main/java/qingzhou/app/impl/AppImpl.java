@@ -1,7 +1,12 @@
 package qingzhou.app.impl;
 
 import qingzhou.framework.App;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.ActionFilter;
+import qingzhou.framework.api.AppContext;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.QingZhouApp;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 
 import java.net.URLClassLoader;
 import java.util.List;
@@ -38,7 +43,7 @@ public class AppImpl implements App {
         List<ActionFilter> actionFilters = appContext.getActionFilters();
         if (actionFilters != null) {
             for (ActionFilter actionFilter : actionFilters) {
-                if (!actionFilter.doFilter(request, response)) {
+                if (!actionFilter.doFilter(request, response, appContext)) {
                     response.setSuccess(false);
                     return;
                 }
