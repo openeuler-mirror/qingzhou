@@ -65,6 +65,9 @@ public class PublicKeyCipherImpl implements PublicKeyCipher {
     }
 
     private PublicKey convertPublic(String keyAsBase64) throws Exception {
+        if (keyAsBase64 == null) {
+            return null;
+        }
         byte[] pubBytes = Hex.hexToBytes(keyAsBase64);
         X509EncodedKeySpec encPubKeySpec = new X509EncodedKeySpec(pubBytes);
         return KeyFactory.getInstance(ALG).generatePublic(encPubKeySpec);
