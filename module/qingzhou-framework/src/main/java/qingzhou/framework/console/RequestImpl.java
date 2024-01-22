@@ -1,5 +1,6 @@
 package qingzhou.framework.console;
 
+import qingzhou.framework.api.Lang;
 import qingzhou.framework.api.Request;
 
 import java.io.Serializable;
@@ -12,6 +13,7 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     private String viewName;
     private String id;
     private String userName;
+    private Lang lang;
     private HashMap<String, String> parameters;
 
     @Override
@@ -58,6 +60,11 @@ public class RequestImpl implements Request, Serializable, Cloneable {
         return userName;
     }
 
+    @Override
+    public Lang getI18nLang() {
+        return lang;
+    }
+
     public void setAppName(String appName) {
         this.appName = appName;
     }
@@ -76,6 +83,10 @@ public class RequestImpl implements Request, Serializable, Cloneable {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public void setI18nLang(Lang lang) {
+        this.lang = lang;
     }
 
     public void updateParameter(String parameterName, String parameterValue) {

@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.console.I18n;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
@@ -144,6 +145,7 @@ public class RESTController extends HttpServlet {
         request.setModelName(rest.get(2));
         request.setActionName(rest.get(3));
         request.setUserName(LoginManager.getLoginUser(req.getSession(false)));
+        request.setI18nLang(I18n.getI18nLang());
 
         if (rest.size() > restDepth) {
             String id = rest.get(restDepth);
