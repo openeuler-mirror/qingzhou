@@ -1,4 +1,4 @@
-package qingzhou.console.model;
+package qingzhou.console.page;
 
 import java.util.ArrayList;
 import java.util.List;

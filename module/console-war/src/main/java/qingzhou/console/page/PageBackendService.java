@@ -10,7 +10,6 @@ import qingzhou.framework.api.MenuInfo;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.model.MenuItem;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.api.*;

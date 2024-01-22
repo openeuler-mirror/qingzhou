@@ -17,7 +17,7 @@
 <%@ page import="qingzhou.console.view.impl.*" %>
 <%@ page import="qingzhou.console.sdk.*" %>
 <%@ page import="qingzhou.console.page.PageBackendService" %>
-<%@ page import="qingzhou.console.model.MenuItem" %>
+<%@ page import="qingzhou.console.page.MenuItem" %>
 <%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 
 <%
