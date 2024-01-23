@@ -1,5 +1,6 @@
 package qingzhou.app.master.service;
 
+import qingzhou.app.master.Main;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.FieldType;
@@ -103,16 +104,6 @@ public class App extends ModelBase implements AddModel {
     }
 
     @Override
-    @ModelAction(name = ACTION_NAME_CREATE,
-            showToListHead = true,
-            icon = "plus-sign", forwardToPage = "form",
-            nameI18n = {"部署", "en:Deploy"},
-            infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
-    public void create(Request request, Response response) throws Exception {
-        AddModel.super.create(request, response);
-    }
-
-    @Override
     @ModelAction(name = ACTION_NAME_ADD,
             icon = "save",
             showToFormBottom = true,
@@ -144,7 +135,8 @@ public class App extends ModelBase implements AddModel {
         for (String node : nodes) {
             if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
                 try {
-
+                    AddModel app = (AddModel) Main.getFc().getAppStubManager().getAppStub(FrameworkContext.NODE_APP_NAME).getModelManager().getModelInstance("app");
+                    app.add(request, response);
                 } catch (Exception e) {
                     e.printStackTrace();
                     response.setSuccess(false);
@@ -158,10 +150,41 @@ public class App extends ModelBase implements AddModel {
         getDataStore().addData(request.getModelName(), appName, p);
     }
 
+    @Override
+    public void delete(Request request, Response response) throws Exception {
+        String appName = request.getId();
+        Map<String, String> p = getDataStore().getDataById("app", appName);
+        String[] nodes = p.get("nodes").split(",");
+        for (String node : nodes) {
+            if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
+                try {
+                    AddModel app = (AddModel) Main.getFc().getAppStubManager().getAppStub(FrameworkContext.NODE_APP_NAME).getModelManager().getModelInstance("app");
+                    app.delete(request, response);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.setSuccess(false);
+                }
+            } else {
+                // TODO：调用远端 node 上的app delete
+            }
+        }
+        getDataStore().deleteDataById("app", appName);
+    }
+
     @ModelAction(name = "target",
             icon = "location-arrow", forwardToPage = "target",
             nameI18n = {"管理", "en:Manage"}, showToList = true,
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
+    }
+
+    @Override
+    @ModelAction(name = ACTION_NAME_CREATE,
+            showToListHead = true,
+            icon = "plus-sign", forwardToPage = "form",
+            nameI18n = {"部署", "en:Deploy"},
+            infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
+    public void create(Request request, Response response) throws Exception {
+        AddModel.super.create(request, response);
     }
 }

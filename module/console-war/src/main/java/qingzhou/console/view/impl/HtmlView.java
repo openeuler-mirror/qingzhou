@@ -52,7 +52,7 @@ public class HtmlView implements View {
                     if (modelNames.length > 0) {
                         targetModelName = modelNames[0];
                     }
-                    request.setAppName(request.getId());
+                    request.setAppName(appName);
                     request.setModelName(targetModelName);
                     request.setActionName(modelManager.getModel(targetModelName).entryAction());
                 }

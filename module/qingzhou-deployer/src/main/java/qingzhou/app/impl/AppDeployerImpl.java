@@ -31,6 +31,10 @@ public class AppDeployerImpl implements AppDeployer {
     public void installApp(String name, File appFile) throws Exception {
         AppImpl app = buildApp(appFile);
         frameworkContext.getAppManager().addApp(name, app);
+
+        if (frameworkContext.isMaster()) {
+            frameworkContext.getAppStubManager().registerAppStub(name, frameworkContext.getAppManager().getApp(name).getAppContext().getConsoleContext());
+        }
     }
 
     @Override

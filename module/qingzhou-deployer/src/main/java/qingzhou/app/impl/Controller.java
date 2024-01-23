@@ -43,13 +43,13 @@ public class Controller implements BundleActivator {
     private void installMasterApp() throws Exception {
         logger.info("install master app");
         File masterApp = FileUtil.newFile(fileManager.getLib(), "sysapp", "master");
-        installApp(FrameworkContext.MASTER_APP_NAME, masterApp);
+        appDeployer.installApp(FrameworkContext.MASTER_APP_NAME, masterApp);
     }
 
     private void installNodeApp() throws Exception {
         logger.info("install node app");
         File nodeApp = FileUtil.newFile(fileManager.getLib(), "sysapp", "node");
-        installApp(FrameworkContext.NODE_APP_NAME, nodeApp);
+        appDeployer.installApp(FrameworkContext.NODE_APP_NAME, nodeApp);
     }
 
     private void installApps() throws Exception {
@@ -58,15 +58,8 @@ public class Controller implements BundleActivator {
             for (File file : files) {
                 String appName = file.getName();
                 logger.info("install app: " + appName);
-                installApp(appName, file);
+                appDeployer.installApp(appName, file);
             }
-        }
-    }
-
-    private void installApp(String name, File app) throws Exception {
-        appDeployer.installApp(name, app);
-        if (frameworkContext.isMaster()) {
-            frameworkContext.getAppStubManager().registerAppStub(name, appManager.getApp(name).getAppContext().getConsoleContext());
         }
     }
 

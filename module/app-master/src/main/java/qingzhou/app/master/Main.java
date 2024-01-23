@@ -2,6 +2,7 @@ package qingzhou.app.master;
 
 import qingzhou.app.master.service.Node;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.QingZhouSystemApp;
 import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
@@ -14,9 +15,12 @@ import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
-public class Main extends QingZhouApp {
+public class Main extends QingZhouSystemApp {
+    private static FrameworkContext fc;
+
     @Override
     public void start(AppContext appContext) {
+        fc = this.frameworkContext;
         appContext.getConsoleContext().addI18N("validator.master.system", new String[]{"为保障系统安全可用，请勿修改此配置", "en:To ensure the security and availability of the system, do not modify this configuration"});
 
         ConsoleContext consoleContext = appContext.getConsoleContext();
@@ -27,6 +31,10 @@ public class Main extends QingZhouApp {
         appContext.setDataStore(new ConsoleDataStore(serverXml));
 
         appContext.addActionFilter(new LocalNodeProtection());// 禁止修改本地节点
+    }
+
+    public static FrameworkContext getFc() {
+        return fc;
     }
 
     private static class LocalNodeProtection implements ActionFilter {

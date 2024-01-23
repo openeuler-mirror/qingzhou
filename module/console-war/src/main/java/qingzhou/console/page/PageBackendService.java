@@ -6,13 +6,25 @@ import qingzhou.console.I18n;
 import qingzhou.console.Validator;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.framework.api.MenuInfo;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelManager;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.AppStub;
+import qingzhou.framework.api.DeleteModel;
+import qingzhou.framework.api.EditModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.Lang;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.MenuInfo;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Option;
+import qingzhou.framework.api.Options;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
@@ -22,7 +34,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -128,32 +147,34 @@ public class PageBackendService {
         Map<String, List<Model>> groupMap = Arrays.asList(allModels).stream().collect(Collectors.groupingBy(i -> i.menuName()));
         groupMap.forEach((menuGroup, models) -> {
             MenuInfo menuInfo = appStub.getMenuInfo(menuGroup);
-            if (menuInfo == null) {
-                menuInfo = appStub.getMenuInfo(menuGroup);
-                if (menuInfo == null) {
-                    return;
-                }
-            }
             MenuItem parentMenu = new MenuItem();
-            parentMenu.setMenuName(menuGroup);
-            parentMenu.setMenuIcon(menuInfo.getMenuIcon());
-            parentMenu.setI18ns(menuInfo.getMenuI18n());
-            parentMenu.setOrder(menuInfo.getMenuOrder());
-            models.sort((Model m1, Model m2) -> m1.menuOrder() - m2.menuOrder());
+            if (menuInfo != null) {
+                parentMenu.setMenuName(menuGroup);
+                parentMenu.setMenuIcon(menuInfo.getMenuIcon());
+                parentMenu.setI18ns(menuInfo.getMenuI18n());
+                parentMenu.setOrder(menuInfo.getMenuOrder());
+            }
+            models.sort(Comparator.comparingInt(Model::menuOrder));
             models.forEach(i -> {
                 MenuItem subMenu = new MenuItem();
-                subMenu.setParentMenu(parentMenu.getMenuName());
                 subMenu.setMenuName(i.name());
                 subMenu.setMenuIcon(i.icon());
                 subMenu.setI18ns(i.nameI18n());
                 subMenu.setMenuAction(i.entryAction());
                 subMenu.setOrder(i.menuOrder());
-                parentMenu.getChildren().add(subMenu);
+                if (menuInfo == null) {
+                    menus.add(subMenu);
+                }else{
+                    subMenu.setParentMenu(parentMenu.getMenuName());
+                    parentMenu.getChildren().add(subMenu);
+                }
             });
-            menus.add(parentMenu);
+            if (menuInfo != null) {
+                menus.add(parentMenu);
+            }
         });
-        menus.sort((MenuItem m1, MenuItem m2) -> m1.getOrder() - m2.getOrder());
-        
+        menus.sort(Comparator.comparingInt(MenuItem::getOrder));
+
         return menus;
     }
 

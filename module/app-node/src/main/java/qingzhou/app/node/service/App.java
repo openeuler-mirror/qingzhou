@@ -3,6 +3,7 @@ package qingzhou.app.node.service;
 import qingzhou.app.node.Main;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
@@ -12,10 +13,16 @@ import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class App extends ModelBase implements AddModel { // todo 接收 master 的安装和卸载应用等请求
+@Model(name = "app", icon = "cube-alt",
+        menuName = "Service", menuOrder = 1,
+        nameI18n = {"服务", "en:Service"},
+        infoI18n = {"服务。",
+                "en:Service Management."})
+public class App extends ModelBase implements AddModel {
     @ModelField(
             showToList = true,
             disableOnCreate = true, disableOnEdit = true,
@@ -37,7 +44,11 @@ public class App extends ModelBase implements AddModel { // todo 接收 master �
 
     @Override
     public void add(Request request, Response response) throws Exception {
-        Map<String, String> p = prepareParameters(request);
+        Map<String, String> p = new HashMap<>();
+        String[] parameterNames = request.getParameterNames();
+        for (String argName : parameterNames) {
+            p.put(argName, request.getParameter(argName));
+        }
         File srcFile;
         if (Boolean.parseBoolean(p.remove("appFrom"))) {
             srcFile = FileUtil.newFile(p.remove("fromUpload"));
