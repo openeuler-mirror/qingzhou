@@ -10,21 +10,20 @@ import qingzhou.framework.pattern.Filter;
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 public class NodeRegister implements Filter<HttpServletContext> {
-    private static final String NODE_REGISTER_PATH = "/register";
 
     @Override
     public boolean doFilter(HttpServletContext context) throws Exception {
         HttpServletRequest request = context.req;
         String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
-        if (!checkPath.equals(NODE_REGISTER_PATH)) {
+        if (!checkPath.equals(ConsoleConstants.REGISTER_URI)) {
             return true;
         }
+
         Map<String, String> map = new HashMap<>();
         Enumeration<String> names = request.getParameterNames();
         while (names.hasMoreElements()) {

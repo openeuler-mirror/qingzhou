@@ -68,9 +68,10 @@ public class Controller implements BundleActivator {
         String[] apps = appManager.getApps().toArray(new String[0]);
         Arrays.stream(apps).forEach(appName -> {
             try {
-                AppImpl app = (AppImpl) appManager.removeApp(appName);
+                AppImpl app = (AppImpl) appManager.getApp(appName);
                 if (app != null) {
                     app.getLoader().close();
+                    appDeployer.unInstallApp(appName);
                 }
                 logger.info("uninstall app: " + appName);
             } catch (Exception e) {

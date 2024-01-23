@@ -26,11 +26,11 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new TrustedIPChecker(),
             new JspInterceptor(),
             new I18nFilter(),
+            new NodeRegister(),
             new VerCode(),
             new LoginFreeFilter(),
             new LoginManager(),
             new Manual(),
-            new NodeRegister(),
             new ResetPassword(),
             new LastDecision()
     };

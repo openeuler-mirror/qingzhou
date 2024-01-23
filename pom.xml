@@ -14,6 +14,7 @@
         <module>package</module>
         <module>module-ext</module>
         <module>test</module>
+        <module>service</module>
     </modules>
 
     <properties>

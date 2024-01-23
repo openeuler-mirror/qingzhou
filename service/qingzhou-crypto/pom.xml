@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>qingzhou</groupId>
-        <artifactId>module</artifactId>
+        <artifactId>service</artifactId>
         <version>0.1.0</version>
     </parent>
 
-    <artifactId>qingzhou-serializer</artifactId>
+    <artifactId>qingzhou-crypto</artifactId>
 
     <build>
         <plugins>
@@ -17,10 +17,12 @@
                     <archive>
                         <manifestEntries>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-Activator>qingzhou.serializer.impl.Controller</Bundle-Activator>
+                            <Bundle-Activator>qingzhou.crypto.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework,qingzhou.framework</Import-Package>
-                            <Export-Package>qingzhou.serializer</Export-Package>
+                            <Import-Package>
+                                org.osgi.framework,javax.crypto,javax.crypto.spec,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util
+                            </Import-Package>
+                            <Export-Package>qingzhou.crypto</Export-Package>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -28,16 +30,15 @@
         </plugins>
     </build>
 
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>osgi.core</artifactId>
         </dependency>
-
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-framework</artifactId>
         </dependency>
     </dependencies>
-
 </project>
