@@ -3,10 +3,6 @@ package qingzhou.logger.impl;
 import qingzhou.framework.api.Logger;
 
 public class LoggerImpl implements Logger {
-    public void close() throws Exception {
-        org.tinylog.provider.ProviderRegistry.getLoggingProvider().shutdown();
-    }
-
     @Override
     public boolean isDebugEnabled() {
         return org.tinylog.Logger.isDebugEnabled();

@@ -15,12 +15,4 @@ public class Controller extends ServiceRegister<Logger> {
     protected Logger serviceObject() {
         return defaultLogger;
     }
-
-    @Override
-    protected void stopService() {
-        try {
-            defaultLogger.close();
-        } catch (Exception ignored) {
-        }
-    }
 }
