@@ -56,6 +56,10 @@ public class PageBackendService {
         return ConsoleWarHelper.getAppStub(appName).getModelManager();
     }
 
+    public static String getAppEntryModel(String appName) {
+        return ConsoleWarHelper.getAppStub(appName).getEntryModel();
+    }
+
     static void printParentMenu(MenuItem menu, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
         boolean isDefaultActive = DEFAULT_EXPAND_MENU_GROUP_NAME.equals(menu.getMenuName());
         String model = menu.getMenuName();
