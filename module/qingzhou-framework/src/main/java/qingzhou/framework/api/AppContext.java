@@ -1,6 +1,7 @@
 package qingzhou.framework.api;
 
 import java.io.File;
+import java.util.Collection;
 
 public interface AppContext {
     Logger getLogger();
@@ -10,6 +11,8 @@ public interface AppContext {
     File getDomain();
 
     File getHome();
+
+    Collection<Class<?>> getServiceTypes();
 
     <T> T getService(Class<T> serviceType);
 

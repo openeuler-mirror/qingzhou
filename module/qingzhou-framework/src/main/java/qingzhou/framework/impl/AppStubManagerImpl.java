@@ -1,7 +1,7 @@
 package qingzhou.framework.impl;
 
 import qingzhou.framework.AppStubManager;
-import qingzhou.framework.api.AppStub;
+import qingzhou.framework.AppStub;
 
 import java.util.HashMap;
 import java.util.Map;

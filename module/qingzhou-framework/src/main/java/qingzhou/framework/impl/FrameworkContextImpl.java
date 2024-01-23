@@ -16,7 +16,6 @@ public class FrameworkContextImpl implements FrameworkContext {
     private final AppManagerImpl appManager = new AppManagerImpl();
     private final ServiceManagerImpl serviceManager = new ServiceManagerImpl();
     private final FileManagerImpl fileManager = new FileManagerImpl();
-    private AppDeployer appDeployer;
     private Boolean isMaster;
     private Logger logger;
 
@@ -61,11 +60,6 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public AppDeployer getAppDeployer() {
-        return appDeployer;
-    }
-
-    @Override
-    public void setAppDeployer(AppDeployer appDeployer) {
-        this.appDeployer = appDeployer;
+        return serviceManager.getService(AppDeployer.class);
     }
 }

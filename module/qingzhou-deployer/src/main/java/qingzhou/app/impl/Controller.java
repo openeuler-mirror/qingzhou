@@ -5,9 +5,14 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import qingzhou.framework.AppDeployer;
 import qingzhou.framework.AppManager;
+import qingzhou.framework.AppStub;
 import qingzhou.framework.FileManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.Lang;
 import qingzhou.framework.api.Logger;
+import qingzhou.framework.api.MenuInfo;
+import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
@@ -29,7 +34,6 @@ public class Controller implements BundleActivator {
         fileManager = frameworkContext.getFileManager();
         logger = frameworkContext.getLogger();
         appDeployer = new AppDeployerImpl(frameworkContext);
-        frameworkContext.setAppDeployer(appDeployer);
 
         if (frameworkContext.isMaster()) {
             installMasterApp();
@@ -43,13 +47,13 @@ public class Controller implements BundleActivator {
     private void installMasterApp() throws Exception {
         logger.info("install master app");
         File masterApp = FileUtil.newFile(fileManager.getLib(), "sysapp", "master");
-        appDeployer.installApp(FrameworkContext.MASTER_APP_NAME, masterApp);
+        installApp(FrameworkContext.MASTER_APP_NAME, masterApp);
     }
 
     private void installNodeApp() throws Exception {
         logger.info("install node app");
         File nodeApp = FileUtil.newFile(fileManager.getLib(), "sysapp", "node");
-        appDeployer.installApp(FrameworkContext.NODE_APP_NAME, nodeApp);
+        installApp(FrameworkContext.NODE_APP_NAME, nodeApp);
     }
 
     private void installApps() throws Exception {
@@ -58,8 +62,32 @@ public class Controller implements BundleActivator {
             for (File file : files) {
                 String appName = file.getName();
                 logger.info("install app: " + appName);
-                appDeployer.installApp(appName, file);
+                installApp(appName, file);
             }
+        }
+    }
+
+    private void installApp(String name, File app) throws Exception {
+        appDeployer.installApp(name, app);
+
+        if (frameworkContext.isMaster()) {
+            ConsoleContext consoleContext = appManager.getApp(name).getAppContext().getConsoleContext();
+            frameworkContext.getAppStubManager().registerAppStub(name, new AppStub() {
+                @Override
+                public ModelManager getModelManager() {
+                    return consoleContext.getModelManager();
+                }
+
+                @Override
+                public String getI18N(Lang lang, String key, Object... args) {
+                    return consoleContext.getI18N(lang, key, args);
+                }
+
+                @Override
+                public MenuInfo getMenuInfo(String menuName) {
+                    return consoleContext.getMenuInfo(menuName);
+                }
+            });
         }
     }
 

@@ -1,4 +1,4 @@
-package qingzhou.app.node.monitor;
+package qingzhou.app.node;
 
 
 import qingzhou.framework.api.Model;
@@ -8,7 +8,11 @@ import qingzhou.framework.api.MonitorModel;
 import qingzhou.framework.util.MathUtil;
 
 import java.io.File;
-import java.lang.management.*;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -16,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(name = "jvm", icon = "coffee",
-        menuName = "Monitor", menuOrder = 1,
+        menuOrder = 1,
         nameI18n = {"JVM", "en:JVM"},
         infoI18n = {"描述 Java 虚拟机（JVM）的版本、厂商等基本信息，以及Java进程的堆内存、非堆内存等使用情况。",
                 "en:Describes basic information such as the version and manufacturer of the Java Virtual Machine (JVM), as well as the usage of heap memory and non-heap memory of the Java process."})

@@ -1,6 +1,6 @@
 package qingzhou.app.impl;
 
-import qingzhou.framework.api.AppStub;
+import qingzhou.framework.AppStub;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.api.MenuInfo;
 import qingzhou.framework.api.ModelManager;

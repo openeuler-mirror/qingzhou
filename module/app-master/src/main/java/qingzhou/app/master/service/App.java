@@ -133,16 +133,15 @@ public class App extends ModelBase implements AddModel {
 
         String[] nodes = p.get("nodes").split(",");
         for (String node : nodes) {
-            if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                try {
-                    AddModel app = (AddModel) Main.getFc().getAppStubManager().getAppStub(FrameworkContext.NODE_APP_NAME).getModelManager().getModelInstance("app");
-                    app.add(request, response);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    response.setSuccess(false);
+            try {
+                if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
+                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(request, response);
+                } else {
+                    // TODO：调用远端 node 上的app add
                 }
-            } else {
-                // TODO：调用远端 node 上的app add
+            } catch (Exception e) { // todo 部分失败，如何显示到页面？
+                response.setSuccess(false);
+                e.printStackTrace();
             }
         }
 
@@ -156,16 +155,15 @@ public class App extends ModelBase implements AddModel {
         Map<String, String> p = getDataStore().getDataById("app", appName);
         String[] nodes = p.get("nodes").split(",");
         for (String node : nodes) {
-            if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                try {
-                    AddModel app = (AddModel) Main.getFc().getAppStubManager().getAppStub(FrameworkContext.NODE_APP_NAME).getModelManager().getModelInstance("app");
-                    app.delete(request, response);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    response.setSuccess(false);
+            try {
+                if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
+                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(request, response);
+                } else {
+                    // TODO：调用远端 node 上的app delete
                 }
-            } else {
-                // TODO：调用远端 node 上的app delete
+            } catch (Exception e) { // todo 部分失败，如何显示到页面？
+                response.setSuccess(false);
+                e.printStackTrace();
             }
         }
         getDataStore().deleteDataById("app", appName);
@@ -183,7 +181,7 @@ public class App extends ModelBase implements AddModel {
             showToListHead = true,
             icon = "plus-sign", forwardToPage = "form",
             nameI18n = {"部署", "en:Deploy"},
-            infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
+            infoI18n = {"在该节点上部署应用。", "en:Deploy the application on the node."})
     public void create(Request request, Response response) throws Exception {
         AddModel.super.create(request, response);
     }

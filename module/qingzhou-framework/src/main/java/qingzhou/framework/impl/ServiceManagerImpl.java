@@ -4,6 +4,7 @@ import qingzhou.framework.RegistryKey;
 import qingzhou.framework.ServiceListener;
 import qingzhou.framework.ServiceManager;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -47,7 +48,7 @@ public class ServiceManagerImpl implements ServiceManager {
     }
 
     @Override
-    public Set<Class<?>> getServiceTypes() {
+    public Collection<Class<?>> getServiceTypes() {
         return services.keySet();
     }
 }

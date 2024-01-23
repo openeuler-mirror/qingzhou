@@ -1,6 +1,7 @@
 package qingzhou.app.impl;
 
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.InternalService;
 import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
@@ -9,7 +10,9 @@ import qingzhou.framework.api.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AppContextImpl implements AppContext {
     private final FrameworkContext frameworkContext;
@@ -42,8 +45,18 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
+    public Collection<Class<?>> getServiceTypes() {
+        return frameworkContext.getServiceManager().getServiceTypes().stream().filter(aClass -> !isInternalService(aClass)).collect(Collectors.toSet());
+    }
+
+    @Override
     public <T> T getService(Class<T> serviceType) {
+        if (isInternalService(serviceType)) return null;
         return frameworkContext.getServiceManager().getService(serviceType);
+    }
+
+    private boolean isInternalService(Class<?> serviceType) {
+        return InternalService.class.isAssignableFrom(serviceType);
     }
 
     @Override

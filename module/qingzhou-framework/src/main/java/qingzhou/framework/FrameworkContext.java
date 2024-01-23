@@ -13,8 +13,6 @@ public interface FrameworkContext {
 
     AppDeployer getAppDeployer();
 
-    void setAppDeployer(AppDeployer appDeployer);
-
     AppStubManager getAppStubManager();
 
     AppManager getAppManager();

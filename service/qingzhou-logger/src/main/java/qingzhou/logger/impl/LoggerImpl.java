@@ -1,8 +1,9 @@
 package qingzhou.logger.impl;
 
+import qingzhou.framework.InternalService;
 import qingzhou.framework.api.Logger;
 
-public class LoggerImpl implements Logger {
+public class LoggerImpl implements Logger, InternalService {
     @Override
     public boolean isDebugEnabled() {
         return org.tinylog.Logger.isDebugEnabled();
