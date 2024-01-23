@@ -16,7 +16,7 @@
         <module>qingzhou-framework</module>
         <module>qingzhou-console</module>
         <module>console-war</module>
-        <module>qingzhou-deployer</module>
+        <module>qingzhou-appmanager</module>
         <module>app-master</module>
         <module>app-node</module>
         <module>qingzhou-remote</module>

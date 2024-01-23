@@ -10,9 +10,10 @@ public abstract class ServiceRegister<T> implements BundleActivator {
     private RegistryKey registryKey;
 
     @Override
-    public final void start(BundleContext context) {
+    public final void start(BundleContext context) throws Exception {
         serviceReference = context.getServiceReference(FrameworkContext.class);
         frameworkContext = context.getService(serviceReference);
+        startService(frameworkContext);
         registryKey = frameworkContext.getServiceManager().registerService(serviceType(), serviceObject());
     }
 
@@ -20,12 +21,16 @@ public abstract class ServiceRegister<T> implements BundleActivator {
     public final void stop(BundleContext context) {
         frameworkContext.getServiceManager().unregisterService(registryKey);
         context.ungetService(serviceReference);
+
         stopService();
     }
 
     protected abstract Class<T> serviceType();
 
     protected abstract T serviceObject();
+
+    protected void startService(FrameworkContext frameworkContext) throws Exception {
+    }
 
     protected void stopService() {
     }

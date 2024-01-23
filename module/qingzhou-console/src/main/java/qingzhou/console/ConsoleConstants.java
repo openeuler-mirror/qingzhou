@@ -1,6 +1,6 @@
 package qingzhou.console;
 
-public interface ConsoleConstants { // TODO 需要清理失效的项目
+public interface ConsoleConstants {
     String localKeyName = "localKey";
     String publicKeyName = "publicKey";
     String privateKeyName = "privateKey";

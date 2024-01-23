@@ -30,7 +30,6 @@ public class Controller implements BundleActivator {
                 if (serviceType == Logger.class) {
                     Logger logger = frameworkContext.getServiceManager().getService(Logger.class);
                     frameworkContext.setLogger(logger);
-
                     startInfo();
                 }
             }

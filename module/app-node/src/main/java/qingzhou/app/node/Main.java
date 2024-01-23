@@ -4,7 +4,7 @@ import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.QingZhouSystemApp;
 import qingzhou.framework.api.AppContext;
 
-public class Main extends QingZhouSystemApp { // todo： 节点支持“管理”，可查看节点的状态信息
+public class Main extends QingZhouSystemApp {
     private static FrameworkContext fc;
 
     @Override

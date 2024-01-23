@@ -54,14 +54,14 @@ public class NodeAgent extends ModelBase {
             throw ExceptionUtil.unexpectedException("unknown app type");
         }
 
-        Main.getFc().getAppDeployer().installApp(appName, app);
+        Main.getFc().getAppManager().installApp(appName, app);
     }
 
     @ModelAction(name = "uninstall-app",
             nameI18n = {"卸载应用", "en:UnInstall App"},
             infoI18n = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {
-        Main.getFc().getAppDeployer().unInstallApp(request.getId());
+        Main.getFc().getAppManager().unInstallApp(request.getId());
     }
 
     private File getAppsDir() {

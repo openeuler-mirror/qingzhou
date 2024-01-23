@@ -1,6 +1,5 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.AppDeployer;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.AppStubManager;
 import qingzhou.framework.FileManager;
@@ -13,7 +12,6 @@ import java.io.File;
 
 public class FrameworkContextImpl implements FrameworkContext {
     private final AppStubManagerImpl appStubManager = new AppStubManagerImpl();
-    private final AppManagerImpl appManager = new AppManagerImpl();
     private final ServiceManagerImpl serviceManager = new ServiceManagerImpl();
     private final FileManagerImpl fileManager = new FileManagerImpl();
     private Boolean isMaster;
@@ -45,7 +43,7 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public AppManager getAppManager() {
-        return appManager;
+        return serviceManager.getService(AppManager.class);
     }
 
     @Override
@@ -56,10 +54,5 @@ public class FrameworkContextImpl implements FrameworkContext {
     @Override
     public FileManager getFileManager() {
         return fileManager;
-    }
-
-    @Override
-    public AppDeployer getAppDeployer() {
-        return serviceManager.getService(AppDeployer.class);
     }
 }

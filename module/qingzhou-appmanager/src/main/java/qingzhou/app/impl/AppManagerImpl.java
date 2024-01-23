@@ -1,7 +1,9 @@
 package qingzhou.app.impl;
 
-import qingzhou.framework.AppDeployer;
+import qingzhou.framework.App;
+import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.InternalService;
 import qingzhou.framework.QingZhouSystemApp;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelManager;
@@ -18,25 +20,55 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
-public class AppDeployerImpl implements AppDeployer {
+public class AppManagerImpl implements AppManager, InternalService {
+    private final Map<String, App> apps = new HashMap<>();
     private final FrameworkContext frameworkContext;
 
-    public AppDeployerImpl(FrameworkContext frameworkContext) {
+    public AppManagerImpl(FrameworkContext frameworkContext) {
         this.frameworkContext = frameworkContext;
     }
 
     @Override
-    public void installApp(String name, File appFile) throws Exception {
+    public void installApp(String appName, File appFile) throws Exception {
+        if (apps.containsKey(appName)) {
+            throw new IllegalArgumentException("The app already exists: " + appName);
+        }
+
         AppImpl app = buildApp(appFile);
-        frameworkContext.getAppManager().addApp(name, app);
+        apps.put(appName, app);
+
+        QingZhouApp qingZhouApp = app.getQingZhouApp();
+        if (qingZhouApp != null) {
+            qingZhouApp.start(app.getAppContext());
+        }
     }
 
     @Override
-    public void unInstallApp(String name) throws Exception {
-        frameworkContext.getAppManager().removeApp(name);
+    public void unInstallApp(String appName) throws Exception {
+        App app = apps.remove(appName);
+        if (app != null) {
+            QingZhouApp qingZhouApp = app.getQingZhouApp();
+            if (qingZhouApp != null) {
+                qingZhouApp.stop();
+            }
+        }
     }
+
+    @Override
+    public Set<String> getApps() {
+        return apps.keySet();
+    }
+
+    @Override
+    public App getApp(String name) {
+        return apps.get(name);
+    }
+
 
     private AppImpl buildApp(File appDir) {
         File[] listFiles = new File(appDir, "lib").listFiles();

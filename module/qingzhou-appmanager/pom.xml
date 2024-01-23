@@ -9,7 +9,7 @@
         <version>0.1.0</version>
     </parent>
 
-    <artifactId>qingzhou-deployer</artifactId>
+    <artifactId>qingzhou-appmanager</artifactId>
 
     <build>
         <plugins>

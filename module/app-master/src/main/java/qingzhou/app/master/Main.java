@@ -8,7 +8,6 @@ import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.DeleteModel;
 import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.QingZhouApp;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.util.FileUtil;
