@@ -12,4 +12,6 @@ public interface ConsoleContext {
     void setMenuInfo(String menuName, String[] menuI18n, String menuIcon, int menuOrder);
 
     void setEntryModel(String model);
+
+    String getEntryModel();
 }

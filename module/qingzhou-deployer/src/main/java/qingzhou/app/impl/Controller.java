@@ -87,6 +87,11 @@ public class Controller implements BundleActivator {
                 public MenuInfo getMenuInfo(String menuName) {
                     return consoleContext.getMenuInfo(menuName);
                 }
+
+                @Override
+                public String getEntryModel() {
+                    return consoleContext.getEntryModel();
+                }
             });
         }
     }
