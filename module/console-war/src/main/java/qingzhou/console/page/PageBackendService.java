@@ -6,28 +6,11 @@ import qingzhou.console.I18n;
 import qingzhou.console.Validator;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.framework.api.MenuInfo;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelManager;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.AppStub;
-import qingzhou.framework.api.DeleteModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Lang;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.MenuInfo;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.framework.AppStub;
+import qingzhou.framework.api.*;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
@@ -37,7 +20,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -140,7 +130,7 @@ public class PageBackendService {
          *  children -> Properties
          */
         AppStub appStub = ConsoleWarHelper.getAppStub(appName);
-        Map<String, List<Model>> groupMap = Arrays.asList(allModels).stream().collect(Collectors.groupingBy(i -> i.menuName()));
+        Map<String, List<Model>> groupMap = Arrays.stream(allModels).filter(Model::showToMenu).collect(Collectors.groupingBy(Model::menuName));
         groupMap.forEach((menuGroup, models) -> {
             MenuInfo menuInfo = appStub.getMenuInfo(menuGroup);
             MenuItem parentMenu = new MenuItem();
@@ -160,7 +150,7 @@ public class PageBackendService {
                 subMenu.setOrder(i.menuOrder());
                 if (menuInfo == null) {
                     menus.add(subMenu);
-                }else{
+                } else {
                     subMenu.setParentMenu(parentMenu.getMenuName());
                     parentMenu.getChildren().add(subMenu);
                 }
