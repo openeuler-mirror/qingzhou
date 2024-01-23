@@ -3,6 +3,7 @@ package qingzhou.remote.impl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PasswordCipher;
 import qingzhou.crypto.PublicKeyCipher;
@@ -187,6 +188,6 @@ public class Controller implements BundleActivator {
     }
 
     public String getMasterAddress() {
-        return "";
+        return "" + ConsoleConstants.REGISTER_URI;
     }
 }

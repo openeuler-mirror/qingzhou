@@ -30,6 +30,7 @@ public class Controller implements BundleActivator {
             @Override
             public void serviceUnregistered(Class<?> serviceType, Object serviceObj) {
                 if (serviceType == Logger.class) {
+                    stopInfo();
                     frameworkContext.setLogger(null);
                 }
             }
@@ -40,6 +41,10 @@ public class Controller implements BundleActivator {
     public void stop(BundleContext context) {
         registration.unregister();
         frameworkContext = null;
+    }
+
+    private void stopInfo() {
+
     }
 
     private void startInfo() {

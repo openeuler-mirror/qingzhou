@@ -19,4 +19,5 @@ public interface ConsoleConstants { // TODO 需要清理失效的项目
     String DATA_SEPARATOR = ",";
     String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
     String GROUP_SEPARATOR = "/";
+    String REGISTER_URI = "/register";
 }
