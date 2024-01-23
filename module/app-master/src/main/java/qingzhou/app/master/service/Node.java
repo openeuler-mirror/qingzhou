@@ -1,7 +1,15 @@
 package qingzhou.app.master.service;
 
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.DataStore;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
@@ -53,6 +61,13 @@ public class Node extends ModelBase implements AddModel {
         }
 
         return super.validate(request, fieldName);
+    }
+
+    @ModelAction(name = "target",
+            icon = "location-arrow", forwardToPage = "target",
+            nameI18n = {"管理", "en:Manage"}, showToList = true,
+            infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
+    public void switchTarget(Request request, Response response) throws Exception {
     }
 
     @Override

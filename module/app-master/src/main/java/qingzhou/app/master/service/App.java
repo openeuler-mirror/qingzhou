@@ -1,7 +1,15 @@
 package qingzhou.app.master.service;
 
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
@@ -125,18 +133,9 @@ public class App extends ModelBase implements AddModel {
         String appName;
         if (srcFile.isDirectory()) {
             appName = srcFileName;
-            File app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.copyFileOrDirectory(srcFile, app);
-        } else if (srcFileName.endsWith(".jar")) {
+        } else if (srcFileName.endsWith(".jar") || srcFileName.endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             appName = srcFileName.substring(0, index);
-            File app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, "lib", srcFileName));
-        } else if (srcFileName.endsWith(".zip")) {
-            int index = srcFileName.lastIndexOf(".");
-            appName = srcFileName.substring(0, index);
-            File app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.unZipToDir(srcFile, app);// todo: 如果不需要部署到 本地节点，这里的解压就没有必要了
         } else {
             throw ExceptionUtil.unexpectedException("unknown app type");
         }
@@ -144,35 +143,25 @@ public class App extends ModelBase implements AddModel {
         String[] nodes = p.get("nodes").split(",");
         for (String node : nodes) {
             if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                File app = FileUtil.newFile(getAppsDir(), appName);
                 try {
-                    //getAppManager().installApp(appName, app);// 应该调用local节点服务上的app来安装应用
-                    p.put("id", appName);// todo 本地 local 不需要记录到server。xml里面
-                    getDataStore().addData(request.getModelName(), appName, p);
+
                 } catch (Exception e) {
                     e.printStackTrace();
-                    FileUtil.forceDeleteQuietly(app);
                     response.setSuccess(false);
                 }
             } else {
-                // TODO：调用远端 node 上 master 的 app add？（将其node设置为 LOCAL_NODE_NAME 后在发送远程请求？）
+                // TODO：调用远端 node 上的app add
             }
         }
+
+        p.put("id", appName);
+        getDataStore().addData(request.getModelName(), appName, p);
     }
 
     @ModelAction(name = "target",
             icon = "location-arrow", forwardToPage = "target",
             nameI18n = {"管理", "en:Manage"}, showToList = true,
-            infoI18n = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
+            infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
-    }
-
-    public File getAppsDir() {
-        File apps = FileUtil.newFile(getAppContext().getDomain(), "apps");
-        if (!apps.exists()) {
-            FileUtil.mkdirs(apps);
-        }
-
-        return apps;
     }
 }

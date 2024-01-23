@@ -12,7 +12,7 @@ public class AppManagerImpl implements AppManager {
     private final Map<String, App> apps = new HashMap<>();
 
     @Override
-    public void installApp(String appName, App app) throws Exception {
+    public void addApp(String appName, App app) throws Exception {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
@@ -26,7 +26,7 @@ public class AppManagerImpl implements AppManager {
     }
 
     @Override
-    public App uninstallApp(String name) throws Exception {
+    public App removeApp(String name) throws Exception {
         App app = apps.remove(name);
         if (app != null) {
             QingZhouApp qingZhouApp = app.getQingZhouApp();

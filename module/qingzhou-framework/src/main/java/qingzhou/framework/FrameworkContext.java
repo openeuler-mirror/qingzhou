@@ -11,6 +11,10 @@ public interface FrameworkContext {
 
     Logger getLogger();
 
+    AppDeployer getAppDeployer();
+
+    void setAppDeployer(AppDeployer appDeployer);
+
     AppStubManager getAppStubManager();
 
     AppManager getAppManager();
