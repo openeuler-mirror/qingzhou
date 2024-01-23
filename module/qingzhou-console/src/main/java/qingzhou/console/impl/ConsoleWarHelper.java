@@ -33,8 +33,8 @@ public class ConsoleWarHelper {
         return fc.getServiceManager().getService(CryptoService.class);
     }
 
-    public static File getCache() {
-        return fc.getFileManager().getCache();
+    public static File getCache(String subName) {
+        return fc.getFileManager().getTemp(subName);
     }
 
     public static File getLib() {

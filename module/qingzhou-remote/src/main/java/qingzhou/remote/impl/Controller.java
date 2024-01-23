@@ -24,9 +24,17 @@ import qingzhou.remote.impl.net.impl.tinyserver.HttpServerServiceImpl;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Controller implements BundleActivator {
     private ServiceReference<FrameworkContext> serviceReference;
@@ -149,8 +157,6 @@ public class Controller implements BundleActivator {
         }
 
         private void register() {
-            // todo: 根据配置的 master 的参数，发起定时检测和注册，范围包含所有的应用
-            frameworkContext.getLogger().info("根据配置的 master 的参数，发起定时检测和注册，范围包含所有的应用");
             Set<String> apps = frameworkContext.getAppManager().getApps();
             Map<String, String> map = new HashMap<>();
             map.put("nodeIp", getIp());

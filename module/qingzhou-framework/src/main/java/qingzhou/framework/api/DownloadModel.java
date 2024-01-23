@@ -66,7 +66,7 @@ public interface DownloadModel {
             infoI18n = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。注：指定的文件集合须以 " + PARAMETER_DOWNLOAD_FILE_NAMES + " 参数传递给服务器，多个文件之间用英文逗号分隔。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files. Note: The specified file set must be passed to the server with the " + PARAMETER_DOWNLOAD_FILE_NAMES + " parameter, and multiple files are separated by commas."})
     default void downloadfile(Request request, Response response) throws Exception {
-        File keyDir = getAppContext().getCache(); // todo: 需要将这个返回值固定下来，否则续传时候会找不到文件
+        File keyDir = getAppContext().getTemp("download");
 
         String downloadKey = request.getParameter(DOWNLOAD_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {

@@ -2,10 +2,9 @@ package qingzhou.framework.impl;
 
 import qingzhou.framework.FileManager;
 import qingzhou.framework.util.FileUtil;
+import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class FileManagerImpl implements FileManager {
     private File libDir;
@@ -33,13 +32,19 @@ public class FileManagerImpl implements FileManager {
     }
 
     @Override
-    public File getCache() {
-        File temp = new File(getTempDir(), "cache");
-        SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-        String timeFlag = df.format(new Date());
-        File result = new File(temp, timeFlag);
-        FileUtil.mkdirs(result);
-        return result;
+    public File getTemp(String subName) {
+        File tmpdir;
+        File domain = getDomain();
+        if (domain != null) {
+            tmpdir = new File(domain, "temp");
+        } else {
+            tmpdir = new File(System.getProperty("java.io.tmpdir"));
+        }
+        if (StringUtil.notBlank(subName)) {
+            tmpdir = new File(tmpdir, subName);
+        }
+        FileUtil.mkdirs(tmpdir);
+        return tmpdir;
     }
 
     @Override
@@ -52,17 +57,5 @@ public class FileManagerImpl implements FileManager {
             libDir = new File(new File(getHome(), "lib"), jarPath.substring(i + 1, j));
         }
         return libDir;
-    }
-
-    private File getTempDir() {
-        File tmpdir;
-        File domain = getDomain();
-        if (domain != null) {
-            tmpdir = new File(domain, "temp");
-        } else {
-            tmpdir = new File(System.getProperty("java.io.tmpdir"));
-        }
-        FileUtil.mkdirs(tmpdir);
-        return tmpdir;
     }
 }

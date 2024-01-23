@@ -16,11 +16,11 @@ public class ServletServiceImpl implements ServletService {
     private Tomcat tomcat;
 
     @Override
-    public void start(int port, String cacheDir) throws Exception {
+    public void start(int port, String baseDir) throws Exception {
         ClassLoaderUtil.runUnderClassLoader((Callback<Void, Void>) args -> {
             tomcat = new Tomcat();
-            if (null != cacheDir && !"".equals(cacheDir)) {
-                tomcat.setBaseDir(cacheDir);
+            if (null != baseDir && !"".equals(baseDir)) {
+                tomcat.setBaseDir(baseDir);
             }
             tomcat.setPort(port); // 设置默认连接器端口
             tomcat.getHost().setParentClassLoader(Tomcat.class.getClassLoader());// 应用需要依赖 tomcat 里面的 javax.servlet api

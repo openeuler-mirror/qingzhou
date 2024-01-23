@@ -10,7 +10,6 @@ import qingzhou.framework.api.Logger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class AppContextImpl implements AppContext {
     private final FrameworkContext frameworkContext;
@@ -28,8 +27,8 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public File getCache() {
-        return frameworkContext.getFileManager().getCache();
+    public File getTemp(String subName) {
+        return frameworkContext.getFileManager().getTemp(subName);
     }
 
     @Override
@@ -40,11 +39,6 @@ public class AppContextImpl implements AppContext {
     @Override
     public File getHome() {
         return frameworkContext.getFileManager().getHome();
-    }
-
-    @Override
-    public Set<Class<?>> getServiceTypes() {
-        return frameworkContext.getServiceManager().getServiceTypes();
     }
 
     @Override

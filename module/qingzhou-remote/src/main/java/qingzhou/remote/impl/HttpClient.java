@@ -2,15 +2,23 @@ package qingzhou.remote.impl;
 
 import qingzhou.framework.pattern.Callback;
 
-import javax.net.ssl.*;
-import java.io.*;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
@@ -94,7 +102,7 @@ public class HttpClient {
         return sb.toString();
     }
 
-    public static HttpURLConnection buildConnection(String url) throws NoSuchAlgorithmException, IOException, KeyManagementException {
+    private static HttpURLConnection buildConnection(String url) throws NoSuchAlgorithmException, IOException, KeyManagementException {
         HttpURLConnection conn;
         URL http = new URL(url);
         if (url.startsWith("https:")) {
@@ -115,15 +123,13 @@ public class HttpClient {
     }
 
     private static SSLSocketFactory ssf;
-    public static final X509TrustManager TRUST_ALL_MANAGER = new X509TrustManager() {
+    private static final X509TrustManager TRUST_ALL_MANAGER = new X509TrustManager() {
         @Override
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
         }
 
         @Override
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
         }
 
         @Override
