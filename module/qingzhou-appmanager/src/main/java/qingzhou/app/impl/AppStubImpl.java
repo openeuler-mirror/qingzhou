@@ -14,6 +14,7 @@ public class AppStubImpl implements AppStub, Serializable {
     protected ModelManager modelManager;
     protected I18NStore i18NStore = new I18NStore();
     protected Map<String, MenuInfoImpl> menuInfoMap = new HashMap<>();
+    protected String entryModel;
 
     @Override
     public ModelManager getModelManager() {
@@ -28,5 +29,10 @@ public class AppStubImpl implements AppStub, Serializable {
     @Override
     public MenuInfo getMenuInfo(String menuName) {
         return menuInfoMap.get(menuName);
+    }
+
+    @Override
+    public String getEntryModel() {
+        return entryModel;
     }
 }

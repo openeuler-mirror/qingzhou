@@ -10,4 +10,6 @@ public interface AppStub {
     String getI18N(Lang lang, String key, Object... args);
 
     MenuInfo getMenuInfo(String menuName);
+
+    String getEntryModel();
 }

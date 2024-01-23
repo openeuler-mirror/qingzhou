@@ -10,6 +10,7 @@ import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
+import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -47,14 +48,16 @@ public class HtmlView implements View {
                 String appName = request.getId();
                 ModelManager modelManager = PageBackendService.getModelManager(appName);
                 if (modelManager != null) {
-                    String[] modelNames = modelManager.getModelNames();// TODO 应用管理是否需要配置一个默认展示model？
-                    String targetModelName = "";
-                    if (modelNames.length > 0) {
-                        targetModelName = modelNames[0];
+                    String appEntryModel = PageBackendService.getAppEntryModel(appName);
+                    if (StringUtil.isBlank(appEntryModel) || modelManager.getModel(appEntryModel) == null) {
+                        String[] modelNames = modelManager.getModelNames();
+                        if (modelNames.length > 0) {
+                            appEntryModel = modelNames[0];
+                        }
                     }
                     request.setAppName(appName);
-                    request.setModelName(targetModelName);
-                    request.setActionName(modelManager.getModel(targetModelName).entryAction());
+                    request.setModelName(appEntryModel);
+                    request.setActionName(modelManager.getModel(appEntryModel).entryAction());
                 }
             }
         }

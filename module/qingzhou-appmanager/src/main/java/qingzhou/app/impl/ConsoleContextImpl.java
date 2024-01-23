@@ -1,6 +1,10 @@
 package qingzhou.app.impl;
 
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
 
 import java.util.Arrays;
 
@@ -47,5 +51,10 @@ public class ConsoleContextImpl extends AppStubImpl implements ConsoleContext {
         menuInfo.setMenuI18n(menuI18n);
         menuInfo.setMenuIcon(menuIcon);
         menuInfo.setMenuOrder(menuOrder);
+    }
+
+    @Override
+    public void setEntryModel(String entryModel) {
+        this.entryModel = entryModel;
     }
 }

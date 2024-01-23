@@ -10,4 +10,8 @@ public interface ConsoleContext {
     void addI18N(String key, String[] i18n);
 
     void setMenuInfo(String menuName, String[] menuI18n, String menuIcon, int menuOrder);
+
+    void setEntryModel(String model);
+
+    String getEntryModel();
 }
