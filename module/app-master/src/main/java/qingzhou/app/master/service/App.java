@@ -24,8 +24,9 @@ import java.util.Map;
                 "en:App Management."})
 public class App extends ModelBase implements AddModel {
     @ModelField(
+            required = true,
             showToList = true,
-            disableOnCreate = true, disableOnEdit = true,
+            disableOnEdit = true,
             nameI18n = {"名称", "en:Name"},
             infoI18n = {"应用名称。", "en:App Name"})
     public String id;
@@ -141,12 +142,15 @@ public class App extends ModelBase implements AddModel {
                 }
             } catch (Exception e) { // todo 部分失败，如何显示到页面？
                 response.setSuccess(false);
+                response.setMsg(e.getMessage());
                 e.printStackTrace();
             }
         }
 
-        p.put("id", appName);
-        getDataStore().addData(request.getModelName(), appName, p);
+        if(response.isSuccess()){
+            p.put("id", appName);
+            getDataStore().addData(request.getModelName(), appName, p);
+        }
     }
 
     @Override

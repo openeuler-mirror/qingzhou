@@ -78,6 +78,7 @@ public class Validator {
         if (!errorData.isEmpty()) {
             response.addData(errorData);
             response.setSuccess(false);
+            response.setMsg("There are Illegal inputs");
             return false;
         }
 
