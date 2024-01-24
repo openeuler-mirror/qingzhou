@@ -30,15 +30,20 @@ public class AppImpl implements App {
 
     @Override
     public void invoke(Request request, Response response) throws Exception {
+        invoke(request.getModelName(), request.getActionName(), request, response);
+    }
+
+    @Override
+    public void invoke(String modelName, String actionName, Request request, Response response) throws Exception {
         ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getConsoleContext().getModelManager();
 
-        ModelInfo modelInfo = modelManager.getModelInfo(request.getModelName());
+        ModelInfo modelInfo = modelManager.getModelInfo(modelName);
         if (modelInfo == null) return;
 
-        ActionInfo actionInfo = modelInfo.actionInfoMap.get(request.getActionName());
+        ActionInfo actionInfo = modelInfo.actionInfoMap.get(actionName);
         if (actionInfo == null) return;
 
-        ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
+        ModelBase modelInstance = modelManager.getModelInstance(modelName);
         modelInstance.setAppContext(appContext);
         List<ActionFilter> actionFilters = appContext.getActionFilters();
         if (actionFilters != null) {

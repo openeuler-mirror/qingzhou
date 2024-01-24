@@ -15,7 +15,6 @@ public class FrameworkContextImpl implements FrameworkContext {
     private final ServiceManagerImpl serviceManager = new ServiceManagerImpl();
     private final FileManagerImpl fileManager = new FileManagerImpl();
     private Boolean isMaster;
-    private Logger logger;
 
     @Override
     public AppStubManager getAppStubManager() {
@@ -34,11 +33,7 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public Logger getLogger() {
-        return logger;
-    }
-
-    public void setLogger(Logger logger) {
-        this.logger = logger;
+        return serviceManager.getService(Logger.class);
     }
 
     @Override

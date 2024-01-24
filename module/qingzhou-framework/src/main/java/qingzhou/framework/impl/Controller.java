@@ -28,8 +28,6 @@ public class Controller implements BundleActivator {
             @Override
             public void serviceRegistered(Class<?> serviceType) {
                 if (serviceType == Logger.class) {
-                    Logger logger = frameworkContext.getServiceManager().getService(Logger.class);
-                    frameworkContext.setLogger(logger);
                     startInfo();
                 }
             }
@@ -37,8 +35,7 @@ public class Controller implements BundleActivator {
             @Override
             public void serviceUnregistered(Class<?> serviceType, Object serviceObj) {
                 if (serviceType == Logger.class) {
-                    stopInfo();
-                    frameworkContext.setLogger(null);
+                    stopInfo((Logger) serviceObj);
                 }
             }
         });
@@ -67,10 +64,10 @@ public class Controller implements BundleActivator {
         }
     }
 
-    private void stopInfo() {
+    private void stopInfo(Logger logger) {
         long stopTime = System.currentTimeMillis();
         String time = calculateTimeDifference(startTime, stopTime);
-        frameworkContext.getLogger().info("QingZhou has been successfully stopped, duration of this runtime: " + time);
+        logger.info("QingZhou has been successfully stopped, duration of this runtime: " + time);
     }
 
     /**

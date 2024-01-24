@@ -24,8 +24,9 @@ import java.util.Map;
                 "en:App Management."})
 public class App extends ModelBase implements AddModel {
     @ModelField(
+            required = true,
             showToList = true,
-            disableOnCreate = true, disableOnEdit = true,
+            disableOnEdit = true,
             nameI18n = {"名称", "en:Name"},
             infoI18n = {"应用名称。", "en:App Name"})
     public String id;
@@ -135,18 +136,21 @@ public class App extends ModelBase implements AddModel {
         for (String node : nodes) {
             try {
                 if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(request, response);
+                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_INSTALL_APP_ACTION_NAME, request, response);
                 } else {
                     // TODO：调用远端 node 上的app add
                 }
             } catch (Exception e) { // todo 部分失败，如何显示到页面？
                 response.setSuccess(false);
+                response.setMsg(e.getMessage());
                 e.printStackTrace();
             }
         }
 
-        p.put("id", appName);
-        getDataStore().addData(request.getModelName(), appName, p);
+        if(response.isSuccess()){
+            p.put("id", appName);
+            getDataStore().addData(request.getModelName(), appName, p);
+        }
     }
 
     @Override
@@ -157,7 +161,7 @@ public class App extends ModelBase implements AddModel {
         for (String node : nodes) {
             try {
                 if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(request, response);
+                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_UN_INSTALL_APP_ACTION_NAME, request, response);
                 } else {
                     // TODO：调用远端 node 上的app delete
                 }

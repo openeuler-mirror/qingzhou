@@ -10,18 +10,17 @@ import qingzhou.bootstrap.Utils;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 import java.util.TreeMap;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        TreeMap<Integer, Set<File>> moduleLevel = moduleLevel();
+        TreeMap<Integer, List<File>> moduleLevel = moduleLevel();
 
         Map<String, String> configuration = new HashMap<>();
         File bundleCache = Utils.getCache(Utils.getDomain(), "bundle");
@@ -40,11 +39,11 @@ public class Main {
         waitForStop(framework);
     }
 
-    private static TreeMap<Integer, Set<File>> moduleLevel() throws Exception {
-        TreeMap<Integer, Set<String>> levelProperties = new TreeMap<>();
+    private static TreeMap<Integer, List<File>> moduleLevel() throws Exception {
+        TreeMap<Integer, List<String>> levelProperties = new TreeMap<>();
         try (InputStream inputStream = Main.class.getResourceAsStream("/level.properties")) {
             Properties properties = Utils.streamToProperties(inputStream);
-            properties.forEach((k, v) -> levelProperties.put(Integer.parseInt((String) k), new HashSet<String>() {{
+            properties.forEach((k, v) -> levelProperties.put(Integer.parseInt((String) k), new ArrayList<String>() {{
                 for (String s : ((String) v).split(",")) {
                     if (!s.trim().isEmpty()) {
                         add(s.trim());
@@ -54,7 +53,7 @@ public class Main {
         }
         int otherLevel = levelProperties.size() + 1;
 
-        TreeMap<Integer, Set<File>> startLevels = new TreeMap<>();
+        TreeMap<Integer, List<File>> startLevels = new TreeMap<>();
 
         String[] searchDir = {"module", "service"};
         for (String dir : searchDir) {
@@ -67,9 +66,9 @@ public class Main {
                     String moduleName = fileName.substring(0, i);
 
                     boolean match = false;
-                    for (Map.Entry<Integer, Set<String>> entry : levelProperties.entrySet()) {
+                    for (Map.Entry<Integer, List<String>> entry : levelProperties.entrySet()) {
                         if (entry.getValue().contains(moduleName)) {
-                            Set<File> files = startLevels.computeIfAbsent(entry.getKey(), integer -> new HashSet<>());
+                            List<File> files = startLevels.computeIfAbsent(entry.getKey(), integer -> new ArrayList<>());
                             files.add(module);
                             match = true;
                             break;
@@ -77,7 +76,7 @@ public class Main {
                     }
 
                     if (!match) {
-                        Set<File> files = startLevels.computeIfAbsent(otherLevel, integer -> new HashSet<>());
+                        List<File> files = startLevels.computeIfAbsent(otherLevel, integer -> new ArrayList<>());
                         files.add(module);
                     }
                 }
@@ -87,8 +86,8 @@ public class Main {
         return startLevels;
     }
 
-    private static void installBundle(Framework framework, TreeMap<Integer, Set<File>> moduleLevel) {
-        for (Map.Entry<Integer, Set<File>> entry : moduleLevel.entrySet()) {
+    private static void installBundle(Framework framework, TreeMap<Integer, List<File>> moduleLevel) {
+        for (Map.Entry<Integer, List<File>> entry : moduleLevel.entrySet()) {
             entry.getValue().forEach(moduleJar -> {
                 if (moduleJar.exists()) {
                     installBundleFile(framework, moduleJar);
