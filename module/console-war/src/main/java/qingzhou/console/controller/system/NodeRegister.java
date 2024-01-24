@@ -2,10 +2,14 @@ package qingzhou.console.controller.system;
 
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
+import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.PasswordCipher;
 import qingzhou.crypto.PublicKeyCipher;
 import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.XmlUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -32,8 +36,8 @@ public class NodeRegister implements Filter<HttpServletContext> {
             map.put(name, value);
         }
         String arg = map.get("A");
+        CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
         if (arg != null) {
-            CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
             String privateKey = cryptoService.getKeyManager().getKeyPair(null, ConsoleConstants.privateKeyName, ConsoleConstants.privateKeyName, ConsoleConstants.privateKeyName);
             PublicKeyCipher publicKeyCipher = cryptoService.getPublicKeyCipher(null, privateKey);
             arg = publicKeyCipher.decryptWithPrivateKey(arg);
@@ -53,8 +57,24 @@ public class NodeRegister implements Filter<HttpServletContext> {
                 }
             }
         }
+        PasswordCipher passwordCipher = getPasswordCipher(cryptoService);
+        Map<String, String> node = new HashMap<>();
+        node.put("id", nodeIp + ":" + nodePort);
+        node.put("nodeIp", nodeIp);
+        node.put("nodePort", nodePort);
+        node.put("apps", apps);
+        node.put("key", passwordCipher.encrypt(key)); // todo 是否持久化，考虑每次重新注册后生成新的key
+        XmlUtil xmlUtil = new XmlUtil(ServerXml.getServerXml());
+        xmlUtil.setAttributes("/server/nodes/node", node);
+        xmlUtil.write();
+
         System.out.printf("Node Registration Done. ip:%s, port:%s.%n", nodeIp, nodePort);
         return false;
+    }
+
+    private static PasswordCipher getPasswordCipher(CryptoService cryptoService) throws Exception {
+        String localKey = cryptoService.getKeyManager().getKey(PageBackendService.getSecureFile(ConsoleWarHelper.getDomain()), ConsoleConstants.localKeyName);
+        return cryptoService.getPasswordCipher(localKey);
     }
 
     private Map<String, String> parseArg(String arg, String encoding) throws UnsupportedEncodingException {
