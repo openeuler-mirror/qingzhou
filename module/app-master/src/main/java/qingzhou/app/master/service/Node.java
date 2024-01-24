@@ -63,7 +63,7 @@ public class Node extends ModelBase implements AddModel {
         return super.validate(request, fieldName);
     }
 
-    @ModelAction(name = "target",
+    @ModelAction(name = "manage",
             icon = "location-arrow", forwardToPage = "target",
             nameI18n = {"管理", "en:Manage"}, showToList = true,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})

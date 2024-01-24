@@ -262,7 +262,7 @@
                             <%
                             // 菜单
                             List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, FrameworkContext.MASTER_APP_NAME);
-                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, FrameworkContext.MASTER_APP_NAME, qzRequest.getModelName()));
+                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, request, response, ViewManager.htmlView, FrameworkContext.MASTER_APP_NAME, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>

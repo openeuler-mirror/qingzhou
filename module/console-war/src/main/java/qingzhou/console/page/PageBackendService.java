@@ -60,7 +60,7 @@ public class PageBackendService {
         return ConsoleWarHelper.getAppStub(appName).getEntryModel();
     }
 
-    static void printParentMenu(MenuItem menu, String appName, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
+    static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
         boolean isDefaultActive = DEFAULT_EXPAND_MENU_GROUP_NAME.equals(menu.getMenuName());
         String model = menu.getMenuName();
         String menuText = I18n.getString(menu.getI18ns());
@@ -91,7 +91,7 @@ public class PageBackendService {
         menuBuilder.append("</li>");
     }
 
-    public static String buildMenuHtmlBuilder(List<MenuItem> models, String loginUser, HttpServletRequest request, HttpServletResponse response, String viewName, String appName, String curModel) {
+    public static String buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, String appName, String curModel) {
         StringBuilder builder = new StringBuilder();
         buildMenuHtmlBuilder(models, request, response, viewName, appName, curModel, builder, true);
         String menus = builder.toString();
@@ -112,7 +112,7 @@ public class PageBackendService {
             } else {
                 StringBuilder parentBuilder = new StringBuilder();
                 buildMenuHtmlBuilder(children, request, response, viewName, appName, curModel, childrenBuilder, false);
-                printParentMenu(menu, appName, curModel, parentBuilder, childrenBuilder);
+                printParentMenu(menu, curModel, parentBuilder, childrenBuilder);
                 builder.append(parentBuilder.toString());
             }
         }
