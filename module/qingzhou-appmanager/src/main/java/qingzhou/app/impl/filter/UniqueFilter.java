@@ -18,7 +18,10 @@ public class UniqueFilter implements ActionFilter {
 
         if (request.getActionName().equals(AddModel.ACTION_NAME_ADD)) {
             String id = request.getParameter(ListModel.FIELD_NAME_ID);
-            boolean exists = appContext.getDataStore().exists(request.getModelName(), id);
+            boolean exists = false;
+            if(appContext.getDataStore()!=null){
+                exists = appContext.getDataStore().exists(request.getModelName(), id);
+            }
             if (exists) {
                 return i18NStore.getI18N(request.getI18nLang(), "list.id.exists");
             }
