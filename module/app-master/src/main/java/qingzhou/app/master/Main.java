@@ -27,6 +27,8 @@ public class Main extends QingZhouSystemApp {
         consoleContext.setMenuInfo("System", new String[]{"系统管理", "en:System"}, "cog", 2);
         consoleContext.setMenuInfo("Guide", new String[]{"用户指引", "en:Guide"}, "hand-up", 3);
 
+        consoleContext.setEntryModel("index");
+
         File serverXml = FileUtil.newFile(appContext.getDomain(), "conf", "server.xml");
         appContext.setDataStore(new ConsoleDataStore(serverXml));
 
