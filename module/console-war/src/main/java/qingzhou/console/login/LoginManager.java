@@ -30,7 +30,6 @@ public class LoginManager implements Filter<HttpServletContext> {
     public static final String LOGIN_USER = "j_username";
     public static final String LOGIN_PASSWORD = "j_password";
 
-    public static final String LOGIN_ACCEPT_AGREEMENT = "acceptAgreement";
     public static final String LOGIN_PATH = "/login";
     public static final String LOGIN_URI = "/j_login";
     public static final String LOGOUT_FLAG = "invalidate";
@@ -139,14 +138,6 @@ public class LoginManager implements Filter<HttpServletContext> {
         String password = request.getParameter(LOGIN_PASSWORD);
         if (StringUtil.isBlank(user) || StringUtil.isBlank(password)) {
             return new LoginFailedMsg("jmx.credentials.element.isNull", null);
-        }
-        String parameter = request.getParameter(LOGIN_ACCEPT_AGREEMENT);
-        if (StringUtil.isBlank(parameter)) {
-            return new LoginFailedMsg(ACCEPT_AGREEMENT_MSG_KEY_MISSING, null);
-        } else {
-            if (!Boolean.parseBoolean(parameter)) {
-                return new LoginFailedMsg(ACCEPT_AGREEMENT_MSG_KEY, null);
-            }
         }
 
         // 锁定了，就提前返回，不再验证密码

@@ -26,6 +26,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new TrustedIPChecker(),
             new JspInterceptor(),
             new I18nFilter(),
+            new About(),
             new NodeRegister(),
             new VerCode(),
             new LoginFreeFilter(),
