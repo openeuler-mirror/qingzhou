@@ -11,7 +11,7 @@ public class Main extends QingZhouSystemApp {
     public void start(AppContext appContext) {
         fc = this.frameworkContext;
 
-        appContext.getConsoleContext().setEntryModel("index");
+        appContext.getConsoleContext().setEntryModel(Home.modelName);
     }
 
     public static FrameworkContext getFc() {

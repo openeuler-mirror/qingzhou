@@ -37,6 +37,10 @@ import java.util.Set;
 import static qingzhou.console.impl.ConsoleWarHelper.getAppManager;
 
 public class InvokeAction implements Filter<RestContext> {
+    static {
+        ConsoleI18n.addI18N("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
+    }
+
     InvokeAction() {
     }
 
@@ -48,6 +52,9 @@ public class InvokeAction implements Filter<RestContext> {
         boolean ok = Validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
         if (!ok) {
             context.response = validationResponse;
+            if (StringUtil.isBlank(context.response.getMsg())) {
+                context.response.setMsg(ConsoleI18n.getI18N(request.getI18nLang(), "validator.fail"));
+            }
         } else {
             if (isBatchAction(request)) {
                 context.response = invokeBatch(request);

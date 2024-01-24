@@ -3,7 +3,10 @@ package qingzhou.app.impl.filter;
 import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.AppContext;
+import qingzhou.framework.api.DataStore;
 import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.console.I18NStore;
@@ -19,8 +22,11 @@ public class UniqueFilter implements ActionFilter {
         if (request.getActionName().equals(AddModel.ACTION_NAME_ADD)) {
             String id = request.getParameter(ListModel.FIELD_NAME_ID);
             boolean exists = false;
-            if(appContext.getDataStore()!=null){
-                exists = appContext.getDataStore().exists(request.getModelName(), id);
+            ModelManager modelManager = appContext.getConsoleContext().getModelManager();
+            ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
+            DataStore dataStore = modelInstance.getDataStore();
+            if (dataStore != null) {
+                exists = dataStore.exists(request.getModelName(), id);
             }
             if (exists) {
                 return i18NStore.getI18N(request.getI18nLang(), "list.id.exists");
