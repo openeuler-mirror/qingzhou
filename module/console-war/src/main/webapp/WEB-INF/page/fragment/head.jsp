@@ -49,13 +49,15 @@
 %>
 <script>
     $(document).ready(function () {
-        var common_msgIndex = showError("<%=common_msg%>");
-        // 记录最后一次通知弹窗
-        try {
-            $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
-        } catch (e) {
-            // login.jsp
-        }
+        window.setTimeout(function() {
+            var common_msgIndex = showError("<%=common_msg%>");
+            // 记录最后一次通知弹窗
+            try {
+                $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
+            } catch (e) {
+                // login.jsp
+            }
+        }, 350);
     });
 </script>
 <%

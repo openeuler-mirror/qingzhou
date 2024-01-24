@@ -342,13 +342,13 @@ $(document).ready(function () {
         $(".sidebar-menu .active", getRestrictedArea()).removeClass("menu-open active");
         $(".sidebar-menu .expandsub", getRestrictedArea()).removeClass("menu-open expandsub");
         var matchPart = $(this).attr("href");
-        var menuItemLink = $("ul.sidebar-menu li a[href='" + matchPart + "']", getRestrictedArea());
+        var menuItemLink = $("ul.sidebar-menu li a[href*='" + matchPart + "']", getRestrictedArea());
         if (menuItemLink.length > 0) {
             $(menuItemLink).parents("li.treeview").addClass("menu-open active");
             $(menuItemLink).parents("ul.treeview-menu").show();
             $(menuItemLink).parent().addClass("active");
             $(menuItemLink).parents(".sidebar.sidebar-scroll").animate({scrollTop: $(menuItemLink).parents(".sidebar.sidebar-scroll").scrollTop() + $(menuItemLink).parent().offset().top - $(menuItemLink).parents(".sidebar.sidebar-scroll").offset().top}, 1000);
-            tw.fill($(this).attr("href"), {}, ".main-body", false);
+            tw.fill($(menuItemLink).attr("href"), {}, ".main-body", false);
         }
         return false;
     });
