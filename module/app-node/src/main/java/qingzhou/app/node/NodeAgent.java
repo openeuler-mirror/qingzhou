@@ -1,5 +1,6 @@
 package qingzhou.app.node;
 
+import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
@@ -10,14 +11,14 @@ import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
-@Model(name = "nodeagent", icon = "",
+@Model(name = FrameworkContext.NODEAGENT_MODEL_NAME, icon = "",
         showToMenu = false,
         nameI18n = {"节点代理", "en:Node Agent"},
         infoI18n = {"执行管理节点的指令，如安装和卸载应用等。",
                 "en:Execute commands from the management node, such as installing and uninstalling applications."})
 public class NodeAgent extends ModelBase {
 
-    @ModelAction(name = "install-app",
+    @ModelAction(name = FrameworkContext.NODEAGENT_INSTALL_APP_ACTION_NAME,
             nameI18n = {"部署应用", "en:Install App"},
             infoI18n = {"在该节点上部署应用。", "en:Deploy the application on the node."})
     public void installApp(Request request, Response response) throws Exception {
@@ -57,7 +58,7 @@ public class NodeAgent extends ModelBase {
         Main.getFc().getAppManager().installApp(appName, app);
     }
 
-    @ModelAction(name = "uninstall-app",
+    @ModelAction(name = FrameworkContext.NODEAGENT_UN_INSTALL_APP_ACTION_NAME,
             nameI18n = {"卸载应用", "en:UnInstall App"},
             infoI18n = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {

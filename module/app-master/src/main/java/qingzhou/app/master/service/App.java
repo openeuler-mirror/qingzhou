@@ -135,7 +135,7 @@ public class App extends ModelBase implements AddModel {
         for (String node : nodes) {
             try {
                 if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(request, response);
+                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_INSTALL_APP_ACTION_NAME, request, response);
                 } else {
                     // TODO：调用远端 node 上的app add
                 }
@@ -157,7 +157,7 @@ public class App extends ModelBase implements AddModel {
         for (String node : nodes) {
             try {
                 if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(request, response);
+                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_UN_INSTALL_APP_ACTION_NAME, request, response);
                 } else {
                     // TODO：调用远端 node 上的app delete
                 }

@@ -15,4 +15,6 @@ public interface App {
     Properties getAppProperties();
 
     void invoke(Request request, Response response) throws Exception;
+
+    void invoke(String modelName, String actionName, Request request, Response response) throws Exception;
 }
