@@ -30,16 +30,6 @@
                        </div>
                     </li>
 
-                    <%-- 手册 --%>
-                    <li>
-                        <a id="help-btn" href='<%=PageBackendService.encodeURL(request, response, contextPath + "/manual")%>' target="_blank"
-                           class="tooltips" data-tip='<%=PageBackendService.getMasterAppI18NString( "page.document")%>' data-tip-arrow="bottom">
-                            <span class="circle-bg">
-                                <i class="icon icon-file-pdf"></i>
-                            </span>
-                        </a>
-                    </li>
-
                     <%-- 切换语言 --%>
                     <li id="switch-lang" class="dropdown">
                         <a href="javascript:void(0);" data-toggle="dropdown"
