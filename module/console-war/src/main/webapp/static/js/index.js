@@ -812,8 +812,8 @@ function bindFormEvent() {
                         $("input[name='" + passwordFields[i] + "']", thisForm).val($("input[name='" + passwordFields[i] + "']", thisForm).attr("originVal"));
                     }
                     var first = true;
-                    if (data.error && !$.isEmptyObject(data.error)) {
-                        var errorData = data.error[0];
+                    if (data.data && !$.isEmptyObject(data.data)) {
+                        var errorData = data.data[0];
                         for (var key in errorData) {
                             $("#form-item-" + key + " > div", thisForm).attr("error-key", key).addClass("has-error");
                             if ($(".nav.nav-tabs", thisForm).length < 1) {
