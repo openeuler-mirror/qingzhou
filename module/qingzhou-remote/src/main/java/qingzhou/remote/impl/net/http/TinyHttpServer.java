@@ -1,6 +1,4 @@
-package qingzhou.remote.impl.net.impl.tinyserver;
-
-import qingzhou.remote.impl.net.*;
+package qingzhou.remote.impl.net.http;
 
 import java.io.*;
 import java.net.InetSocketAddress;

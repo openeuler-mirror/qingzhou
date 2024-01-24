@@ -1,4 +1,4 @@
-package qingzhou.remote.impl.net;
+package qingzhou.remote.impl.net.http;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
