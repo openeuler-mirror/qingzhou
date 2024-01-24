@@ -44,7 +44,7 @@ public class HtmlView implements View {
                 request.setAppName(FrameworkContext.NODE_APP_NAME);
                 request.setModelName(ConsoleConstants.MODEL_NAME_home);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
-            } else if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {// todo 是不是只有 app 会有 target action？ target设计是否有问题?
+            } else if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {
                 String appName = request.getId();
                 ModelManager modelManager = PageBackendService.getModelManager(appName);
                 if (modelManager != null) {

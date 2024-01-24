@@ -24,7 +24,8 @@ public class Main extends QingZhouSystemApp {
 
         ConsoleContext consoleContext = appContext.getConsoleContext();
         consoleContext.setMenuInfo("Service", new String[]{"服务管理", "en:Service"}, "server", 1);
-        consoleContext.setMenuInfo("User", new String[]{"用户管理", "en:User"}, "user", 2);
+        consoleContext.setMenuInfo("System", new String[]{"系统管理", "en:System"}, "cog", 2);
+        consoleContext.setMenuInfo("Guide", new String[]{"用户指引", "en:Guide"}, "hand-up", 3);
 
         File serverXml = FileUtil.newFile(appContext.getDomain(), "conf", "server.xml");
         appContext.setDataStore(new ConsoleDataStore(serverXml));
@@ -39,17 +40,16 @@ public class Main extends QingZhouSystemApp {
     private static class LocalNodeProtection implements ActionFilter {
 
         @Override
-        public boolean doFilter(Request request, Response response, AppContext appContext) {
+        public String doFilter(Request request, Response response, AppContext appContext) {
             if (Node.MODEL_NAME.equals(request.getModelName())
                     && FrameworkContext.LOCAL_NODE_NAME.equals(request.getId())) {
                 if (EditModel.ACTION_NAME_UPDATE.equals(request.getActionName())
                         || DeleteModel.ACTION_NAME_DELETE.equals(request.getActionName())) {
-                    response.setMsg(appContext.getConsoleContext().getI18N(request.getI18nLang(), "validator.master.system"));
-                    return false;
+                    return appContext.getConsoleContext().getI18N(request.getI18nLang(), "validator.master.system");
                 }
             }
 
-            return true;
+            return null;
         }
     }
 }

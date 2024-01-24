@@ -43,7 +43,9 @@ public class AppImpl implements App {
         List<ActionFilter> actionFilters = appContext.getActionFilters();
         if (actionFilters != null) {
             for (ActionFilter actionFilter : actionFilters) {
-                if (!actionFilter.doFilter(request, response, appContext)) {
+                String msg = actionFilter.doFilter(request, response, appContext);
+                if (msg != null) {
+                    response.setMsg(msg);
                     response.setSuccess(false);
                     return;
                 }

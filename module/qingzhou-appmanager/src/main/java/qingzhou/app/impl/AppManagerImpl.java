@@ -1,5 +1,6 @@
 package qingzhou.app.impl;
 
+import qingzhou.app.impl.filter.UniqueFilter;
 import qingzhou.framework.App;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
@@ -85,6 +86,7 @@ public class AppManagerImpl implements AppManager, InternalService {
         ModelManager modelManager = buildModelManager(listFiles, loader);
         consoleContext.setModelManager(modelManager);
         appContext.setConsoleContext(consoleContext);
+        appContext.addActionFilter(new UniqueFilter());
         for (String modelName : modelManager.getModelNames()) {
             ModelBase modelInstance = modelManager.getModelInstance(modelName);
             modelInstance.setAppContext(appContext);

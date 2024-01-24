@@ -1,6 +1,10 @@
 package qingzhou.console.login;
 
-import qingzhou.console.*;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.ConsoleI18n;
+import qingzhou.console.ConsoleUtil;
+import qingzhou.console.I18n;
+import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.controller.system.I18nFilter;
@@ -144,10 +148,10 @@ public class LoginManager implements Filter<HttpServletContext> {
         LockOutRealm lockOutRealm = getLockOutRealm(request);
         if (lockOutRealm.isLocked(user)) {
             long left = lockOutRealm.getLockOutTime() - (System.currentTimeMillis() - lockOutRealm.getLockRecord(user).getLastFailureTime()) / 1000 + 1;
-            if (left < 60) {
-                left = 60;
+            if (left < 0) {
+                left = 0;
             }
-            String msgKey = LOCKED_MSG_KEY + "," + lockOutRealm.getFailureCount() + "," + left / 60;
+            String msgKey = LOCKED_MSG_KEY + "," + lockOutRealm.getFailureCount() + "," + (left / 60 + 1);
             // login.jsp 已经在 application.xml 中配置了过滤，
             // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
             return new LoginFailedMsg(msgKey, null);
