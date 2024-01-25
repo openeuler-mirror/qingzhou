@@ -11,8 +11,6 @@ import qingzhou.crypto.PublicKeyCipher;
 import qingzhou.framework.AppStub;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.XmlUtil;
-import qingzhou.remote.impl.net.Channel;
-import qingzhou.remote.impl.net.bio.BIOConnector;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -57,18 +55,19 @@ public class NodeRegister implements Filter<HttpServletContext> {
             for (String app : apps.split(",")) {
                 if (app != null && !app.trim().isEmpty()) {
                     String appToken = buildAppToken(nodeIp, nodePort, app);
-                    AppStub appStub = (AppStub) Proxy.newProxyInstance(AppStub.class.getClassLoader(), new Class[]{AppStub.class}, (proxy, method, args) -> {
-                        InetSocketAddress socketAddress = new InetSocketAddress(nodeIp, Integer.parseInt(nodePort));
-                        BIOConnector connector = new BIOConnector(socketAddress);
-                        connector.setCodec(null);
-                        connector.setHandler(null);
-                        Channel channel = connector.connect();
-                        // todo 封装对象 req
-                        Object req = null;
-                        channel.write(req);
-                        return channel.read();
-                    });
-                    ConsoleWarHelper.registerApp(appToken, appStub);
+// TODO 这块需要改成 Service 方式，只依赖接口，不要依赖实现，另外 console 模块不能依赖 remote 模块，否则就形成，因为设计上 remote 是依赖 console 的。
+//                    AppStub appStub = (AppStub) Proxy.newProxyInstance(AppStub.class.getClassLoader(), new Class[]{AppStub.class}, (proxy, method, args) -> {
+//                        InetSocketAddress socketAddress = new InetSocketAddress(nodeIp, Integer.parseInt(nodePort));
+//                        BIOConnector connector = new BIOConnector(socketAddress);
+//                        connector.setCodec(null);
+//                        connector.setHandler(null);
+//                        Channel channel = connector.connect();
+//                        // todo 封装对象 req
+//                        Object req = null;
+//                        channel.write(req);
+//                        return channel.read();
+//                    });
+//                    ConsoleWarHelper.registerApp(appToken, appStub);
                 }
             }
         }

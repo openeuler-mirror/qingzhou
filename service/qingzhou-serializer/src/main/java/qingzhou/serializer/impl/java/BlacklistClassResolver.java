@@ -12,10 +12,10 @@ public class BlacklistClassResolver {
     private final String[] whitelist;
 
     protected BlacklistClassResolver() {
-        String whitelist = "org.codehaus.groovy.runtime.,org.apache.commons.collections.functors.,org.apache.commons.collections4.functors.,org.apache.xalan,java.lang.Process,javax.management.BadAttributeValueExpException,com.sun.org.apache.xalan,org.springframework.beans.factory.ObjectFactory,org.apache.commons.fileupload,org.apache.commons.beanutils,java.lang.Integer,java.lang.Number,qingzhou.remote.Request,qingzhou.remote.Response";// 安全起见，不要修改，应该追加
-        String blacklist = "";// 安全起见，默认没有白名单，不允许序列化任何类
-        this.whitelist = toArray(whitelist);
-        this.blacklist = toArray(blacklist);
+        String BLACK_LIST = "org.codehaus.groovy.runtime.,org.apache.commons.collections.functors.,org.apache.commons.collections4.functors.,org.apache.xalan,java.lang.Process,javax.management.BadAttributeValueExpException,com.sun.org.apache.xalan,org.springframework.beans.factory.ObjectFactory,org.apache.commons.fileupload,org.apache.commons.beanutils";// 安全起见，不要修改，应该追加
+        String WHITE_LIST = "";// 安全起见，默认没有白名单，不允许序列化任何类
+        this.whitelist = toArray(WHITE_LIST);
+        this.blacklist = toArray(BLACK_LIST);
     }
 
     private static String[] toArray(String property) {
