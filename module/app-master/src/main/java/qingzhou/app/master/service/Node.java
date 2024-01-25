@@ -55,7 +55,7 @@ public class Node extends ModelBase implements AddModel {
     @Override
     public String validate(Request request, String fieldName) {
         if (fieldName.equals("id")) {
-            if (request.getParameter("id").equals(FrameworkContext.LOCAL_NODE_NAME)) {
+            if (request.getParameter("id").equals(FrameworkContext.SYS_NODE_LOCAL)) {
                 return "node.id.system";
             }
         }

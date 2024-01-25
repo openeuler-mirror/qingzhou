@@ -17,14 +17,12 @@ public class Controller implements BundleActivator {
     private ProcessSequence sequence;
     private FrameworkContext frameworkContext;
     private ServletService servletService;
-    private Logger logger;
     private ServiceReference<FrameworkContext> reference;
 
     @Override
     public void start(BundleContext context) throws Exception {
         reference = context.getServiceReference(FrameworkContext.class);
         frameworkContext = context.getService(reference);
-        logger = frameworkContext.getLogger();
 
         if (!frameworkContext.isMaster()) return;
 
@@ -52,6 +50,7 @@ public class Controller implements BundleActivator {
             String docBase = console.getAbsolutePath();
             contextPath = "/console"; // TODO 需要可配置
             servletService.addWebapp(contextPath, docBase);
+            Logger logger = frameworkContext.getServiceManager().getService(Logger.class);
             logger.info("Open a browser to access the QingZhou console: http://localhost:9060" + contextPath);// todo 9060 应该动态获取到
         }
 

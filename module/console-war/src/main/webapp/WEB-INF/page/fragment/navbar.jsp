@@ -50,10 +50,10 @@
                     </li>
                     <%-- 用户/修改密码 --%>
                     <li>
-                        <a id="reset-password-btn" href="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView+"/"+ FrameworkContext.MASTER_APP_NAME +"/password/"+ "edit")%>"
+                        <a id="reset-password-btn" href="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView+"/"+ FrameworkContext.SYS_APP_MASTER +"/password/"+ "edit")%>"
                         class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=PageBackendService.getModelManager(FrameworkContext.MASTER_APP_NAME).getModel("user").icon()%>"></i>
+                                <i class="icon icon-<%=PageBackendService.getModelManager(FrameworkContext.SYS_APP_MASTER).getModel("user").icon()%>"></i>
                             </span>
                         </a>
                     </li>

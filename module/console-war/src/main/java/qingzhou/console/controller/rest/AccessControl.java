@@ -30,8 +30,8 @@ public class AccessControl implements Filter<RestContext> {
     // 开放的model，不需要检测权限
     // NOTE: 为方便自动测试集使用，此处设置为 public
     public static final String[] commonActions = {
-            FrameworkContext.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/index",
-            FrameworkContext.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/home"};
+            FrameworkContext.SYS_APP_MASTER + "/" + ConsoleConstants.MODEL_NAME_index + "/index",
+            FrameworkContext.SYS_APP_MASTER + "/" + ConsoleConstants.MODEL_NAME_index + "/home"};
 
     private static final List<String> generalUris = new ArrayList<String>() {{
         for (String commonAction : commonActions) {
@@ -214,7 +214,7 @@ public class AccessControl implements Filter<RestContext> {
             }
         }
 
-//    todo    String msg = I18n.getString(qingzhou.framework.api.Constants.MASTER_APP_NAME, "page.error.permission.deny");
+//    todo    String msg = I18n.getString(qingzhou.framework.api.Constants.SYS_APP_MASTER, "page.error.permission.deny");
         String msg = "page.error.permission.deny";
         httpServletResponse.getWriter().print(JsonView.buildErrorResponse(msg));
         //        response.setStatus(HttpServletResponse.SC_FORBIDDEN);// 会引起命令行403，拿不到json提示信息

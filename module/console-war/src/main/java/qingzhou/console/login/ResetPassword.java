@@ -69,7 +69,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + ConsoleConstants.MODEL_NAME_node +
-                    "/" + FrameworkContext.MASTER_APP_NAME +
+                    "/" + FrameworkContext.SYS_APP_MASTER +
                     "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +

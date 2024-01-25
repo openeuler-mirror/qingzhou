@@ -5,7 +5,6 @@ import qingzhou.framework.AppStubManager;
 import qingzhou.framework.FileManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.ServiceManager;
-import qingzhou.framework.api.Logger;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
@@ -29,11 +28,6 @@ public class FrameworkContextImpl implements FrameworkContext {
         }
 
         return isMaster;
-    }
-
-    @Override
-    public Logger getLogger() {
-        return serviceManager.getService(Logger.class);
     }
 
     @Override

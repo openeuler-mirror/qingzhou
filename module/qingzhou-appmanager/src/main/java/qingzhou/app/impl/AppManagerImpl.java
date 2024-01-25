@@ -17,6 +17,7 @@ import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -51,8 +52,14 @@ public class AppManagerImpl implements AppManager, InternalService {
 
     @Override
     public void unInstallApp(String appName) throws Exception {
-        App app = apps.remove(appName);
+        AppImpl app = (AppImpl) apps.remove(appName);
         if (app != null) {
+            try {
+                app.getLoader().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             QingZhouApp qingZhouApp = app.getQingZhouApp();
             if (qingZhouApp != null) {
                 qingZhouApp.stop();

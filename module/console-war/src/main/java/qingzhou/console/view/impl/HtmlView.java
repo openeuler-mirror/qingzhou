@@ -58,7 +58,7 @@ public class HtmlView implements View {
             }
         } else if ("manage".equals(actionName)) {
             if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
-                request.setAppName(FrameworkContext.NODE_APP_NAME);
+                request.setAppName(FrameworkContext.SYS_APP_NODE_AGENT);
                 request.setModelName(ConsoleConstants.MODEL_NAME_home);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
             }

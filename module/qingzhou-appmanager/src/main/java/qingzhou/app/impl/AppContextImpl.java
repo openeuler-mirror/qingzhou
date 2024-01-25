@@ -26,7 +26,7 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public Logger getLogger() {
-        return frameworkContext.getLogger();
+        return frameworkContext.getServiceManager().getService(Logger.class);
     }
 
     @Override

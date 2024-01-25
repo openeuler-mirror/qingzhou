@@ -7,7 +7,6 @@ import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.ServiceRegister;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.Lang;
-import qingzhou.framework.api.Logger;
 import qingzhou.framework.api.MenuInfo;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.util.FileUtil;
@@ -18,33 +17,41 @@ import java.util.Arrays;
 public class Controller extends ServiceRegister<AppManager> {
     private FrameworkContext frameworkContext;
     private AppManagerImpl appManager;
-    private FileManager fileManager;
-    private Logger logger;
 
-    private void installMasterApp() throws Exception {
-        logger.info("install master app");
-        File masterApp = FileUtil.newFile(fileManager.getLib(), "sysapp", "master");
-        installApp(FrameworkContext.MASTER_APP_NAME, masterApp);
+    @Override
+    protected Class<AppManager> serviceType() {
+        return AppManager.class;
     }
 
-    private void installNodeApp() throws Exception {
-        logger.info("install node app");
-        File nodeApp = FileUtil.newFile(fileManager.getLib(), "sysapp", "node");
-        installApp(FrameworkContext.NODE_APP_NAME, nodeApp);
+    @Override
+    protected AppManager serviceObject() {
+        return appManager;
     }
 
-    private void installApps() throws Exception {
+    @Override
+    protected void startService(FrameworkContext frameworkContext) throws Exception {
+        this.frameworkContext = frameworkContext;
+        this.appManager = new AppManagerImpl(frameworkContext);
+        FileManager fileManager = frameworkContext.getFileManager();
+
+        if (frameworkContext.isMaster()) {
+            File masterApp = FileUtil.newFile(fileManager.getLib(), "sysapp", FrameworkContext.SYS_APP_MASTER);
+            installApp(masterApp);
+        }
+
+        File nodeApp = FileUtil.newFile(fileManager.getLib(), "sysapp", FrameworkContext.SYS_APP_NODE_AGENT);
+        installApp(nodeApp);
+
         File[] files = new File(fileManager.getDomain(), "apps").listFiles();
         if (files != null) {
             for (File file : files) {
-                String appName = file.getName();
-                logger.info("install app: " + appName);
-                installApp(appName, file);
+                installApp(file);
             }
         }
     }
 
-    private void installApp(String name, File app) throws Exception {
+    private void installApp(File app) throws Exception {
+        String name = app.getName();
         appManager.installApp(name, app);
 
         if (frameworkContext.isMaster()) {
@@ -74,44 +81,13 @@ public class Controller extends ServiceRegister<AppManager> {
     }
 
     @Override
-    protected Class<AppManager> serviceType() {
-        return AppManager.class;
-    }
-
-    @Override
-    protected AppManager serviceObject() {
-        return appManager;
-    }
-
-    @Override
-    protected void startService(FrameworkContext frameworkContext) throws Exception {
-        this.frameworkContext = frameworkContext;
-        this.fileManager = frameworkContext.getFileManager();
-        this.logger = frameworkContext.getLogger();
-        this.appManager = new AppManagerImpl(frameworkContext);
-
-        if (frameworkContext.isMaster()) {
-            installMasterApp();
-        }
-
-        installNodeApp();
-
-        installApps();
-    }
-
-    @Override
     protected void stopService() {
         String[] apps = appManager.getApps().toArray(new String[0]);
         Arrays.stream(apps).forEach(appName -> {
             try {
-                AppImpl app = (AppImpl) appManager.getApp(appName);
-                if (app != null) {
-                    app.getLoader().close();
-                    appManager.unInstallApp(appName);
-                }
-                logger.info("uninstall app: " + appName);
+                appManager.unInstallApp(appName);
             } catch (Exception e) {
-                logger.warn("failed to uninstall app: " + appName, e);
+                e.printStackTrace();
             }
         });
     }

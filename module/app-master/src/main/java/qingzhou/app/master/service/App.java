@@ -95,8 +95,8 @@ public class App extends ModelBase implements AddModel {
     public String validate(Request request, String fieldName) {
         if (fieldName.equals(ListModel.FIELD_NAME_ID)) {
             String id = request.getParameter(ListModel.FIELD_NAME_ID);
-            if (FrameworkContext.MASTER_APP_NAME.equals(id) ||
-                    FrameworkContext.NODE_APP_NAME.equals(id)) {
+            if (FrameworkContext.SYS_APP_MASTER.equals(id) ||
+                    FrameworkContext.SYS_APP_NODE_AGENT.equals(id)) {
                 return "app.id.system";
             }
         }
@@ -135,8 +135,8 @@ public class App extends ModelBase implements AddModel {
         String[] nodes = p.get("nodes").split(",");
         for (String node : nodes) {
             try {
-                if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_INSTALL_APP_ACTION_NAME, request, response);
+                if (FrameworkContext.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                    Main.getFc().getAppManager().getApp(FrameworkContext.SYS_APP_NODE_AGENT).invoke(FrameworkContext.NODE_AGENT_APP_INSTALLER_MODEL, FrameworkContext.NODE_AGENT_INSTALL_APP_ACTION, request, response);
                 } else {
                     // TODO：调用远端 node 上的app add
                 }
@@ -160,8 +160,8 @@ public class App extends ModelBase implements AddModel {
         String[] nodes = p.get("nodes").split(",");
         for (String node : nodes) {
             try {
-                if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_UN_INSTALL_APP_ACTION_NAME, request, response);
+                if (FrameworkContext.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                    Main.getFc().getAppManager().getApp(FrameworkContext.SYS_APP_NODE_AGENT).invoke(FrameworkContext.NODE_AGENT_APP_INSTALLER_MODEL, FrameworkContext.NODE_AGENT_UNINSTALL_APP_ACTION, request, response);
                 } else {
                     // TODO：调用远端 node 上的app delete
                 }

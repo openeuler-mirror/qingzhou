@@ -2,8 +2,8 @@ package qingzhou.console.impl;
 
 import qingzhou.crypto.CryptoService;
 import qingzhou.framework.AppManager;
-import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.AppStub;
+import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Logger;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
@@ -50,7 +50,7 @@ public class ConsoleWarHelper {
     }
 
     public static Logger getLogger() {
-        return fc.getLogger();
+        return fc.getServiceManager().getService(Logger.class);
     }
 
     private ConsoleWarHelper() {

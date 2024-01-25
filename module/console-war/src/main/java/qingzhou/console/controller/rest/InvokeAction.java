@@ -195,7 +195,7 @@ public class InvokeAction implements Filter<RestContext> {
         String remoteKey = null;
         for (String node : getAppNodes(appName)) {
             Response responseOnNode;
-            if (node.equals(FrameworkContext.LOCAL_NODE_NAME)) {
+            if (node.equals(FrameworkContext.SYS_NODE_LOCAL)) {
                 Response response = new ResponseImpl();
                 getAppManager().getApp(appName).invoke(request, response);
                 responseOnNode = response;
@@ -223,12 +223,12 @@ public class InvokeAction implements Filter<RestContext> {
 
     public static List<String> getAppNodes(String appName) {
         List<String> nodes = new ArrayList<>();
-        if (FrameworkContext.MASTER_APP_NAME.equals(appName)) {
-            nodes.add(FrameworkContext.LOCAL_NODE_NAME);
+        if (FrameworkContext.SYS_APP_MASTER.equals(appName)) {
+            nodes.add(FrameworkContext.SYS_NODE_LOCAL);
         } else {
             Map<String, String> app;
             try {
-                app = getAppManager().getApp(FrameworkContext.MASTER_APP_NAME)
+                app = getAppManager().getApp(FrameworkContext.SYS_APP_MASTER)
                         .getAppContext().getDataStore()
                         .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
             } catch (Exception e) {

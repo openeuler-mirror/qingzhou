@@ -14,7 +14,7 @@ public class NodeDataStore extends ConsoleDataStore {
     public NodeDataStore(File serverXml) {
         super(serverXml);
         localNode = new HashMap<>();
-        localNode.put("id", FrameworkContext.LOCAL_NODE_NAME);
+        localNode.put("id", FrameworkContext.SYS_NODE_LOCAL);
         localNode.put("ip", "0.0.0.0");
         localNode.put("port", "9060");
         localNode.put("running", "true");

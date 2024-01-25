@@ -44,7 +44,7 @@ public class Main extends QingZhouSystemApp {
         @Override
         public String doFilter(Request request, Response response, AppContext appContext) {
             if (Node.MODEL_NAME.equals(request.getModelName())
-                    && FrameworkContext.LOCAL_NODE_NAME.equals(request.getId())) {
+                    && FrameworkContext.SYS_NODE_LOCAL.equals(request.getId())) {
                 if (EditModel.ACTION_NAME_UPDATE.equals(request.getActionName())
                         || DeleteModel.ACTION_NAME_DELETE.equals(request.getActionName())) {
                     return appContext.getConsoleContext().getI18N(request.getI18nLang(), "validator.master.system");

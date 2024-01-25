@@ -12,6 +12,7 @@ import qingzhou.crypto.PublicKeyCipher;
 import qingzhou.framework.App;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.api.Logger;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.pattern.Process;
@@ -87,7 +88,7 @@ public class Controller implements BundleActivator {
             });
             server.start();
 
-            frameworkContext.getLogger().info("The remote service is started on the port: " + port);
+            frameworkContext.getServiceManager().getService(Logger.class).info("The remote service is started on the port: " + port);
         }
 
         @Override

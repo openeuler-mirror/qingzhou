@@ -261,8 +261,8 @@
                         <ul class="sidebar-menu" data-widget="tree">
                             <%
                             // 菜单
-                            List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, FrameworkContext.MASTER_APP_NAME);
-                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, request, response, ViewManager.htmlView, FrameworkContext.MASTER_APP_NAME, qzRequest.getModelName()));
+                            List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, FrameworkContext.SYS_APP_MASTER);
+                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, request, response, ViewManager.htmlView, FrameworkContext.SYS_APP_MASTER, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>

@@ -11,16 +11,16 @@ import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
-@Model(name = FrameworkContext.NODEAGENT_MODEL_NAME, icon = "",
+@Model(name = FrameworkContext.NODE_AGENT_APP_INSTALLER_MODEL, icon = "",
         showToMenu = false,
-        nameI18n = {"节点代理", "en:Node Agent"},
-        infoI18n = {"执行管理节点的指令，如安装和卸载应用等。",
-                "en:Execute commands from the management node, such as installing and uninstalling applications."})
-public class NodeAgent extends ModelBase {
+        nameI18n = {"应用安装器", "en:App Installer"},
+        infoI18n = {"执行管理节点下发的应用安装、卸载等指令。",
+                "en:Execute the commands issued by the management node to install and uninstall applications."})
+public class AppInstaller extends ModelBase {
 
-    @ModelAction(name = FrameworkContext.NODEAGENT_INSTALL_APP_ACTION_NAME,
-            nameI18n = {"部署应用", "en:Install App"},
-            infoI18n = {"在该节点上部署应用。", "en:Deploy the application on the node."})
+    @ModelAction(name = FrameworkContext.NODE_AGENT_INSTALL_APP_ACTION,
+            nameI18n = {"安装应用", "en:Install App"},
+            infoI18n = {"在该节点上安装应用。", "en:Install the application on the node."})
     public void installApp(Request request, Response response) throws Exception {
         File srcFile;
         if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
@@ -58,7 +58,7 @@ public class NodeAgent extends ModelBase {
         Main.getFc().getAppManager().installApp(appName, app);
     }
 
-    @ModelAction(name = FrameworkContext.NODEAGENT_UN_INSTALL_APP_ACTION_NAME,
+    @ModelAction(name = FrameworkContext.NODE_AGENT_UNINSTALL_APP_ACTION,
             nameI18n = {"卸载应用", "en:UnInstall App"},
             infoI18n = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {

@@ -24,7 +24,7 @@
     String currentUser = LoginManager.getLoginUser(session);
     Request qzRequest = (Request) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
-    String initAppName = qzRequest == null ? FrameworkContext.MASTER_APP_NAME : qzRequest.getAppName();
+    String initAppName = qzRequest == null ? FrameworkContext.SYS_APP_MASTER : qzRequest.getAppName();
     ModelManager modelManager = PageBackendService.getModelManager(initAppName);
 %>
 
