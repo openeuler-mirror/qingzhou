@@ -30,11 +30,9 @@ public class AppImpl implements App {
 
     @Override
     public void invoke(Request request, Response response) throws Exception {
-        invoke(request.getModelName(), request.getActionName(), request, response);
-    }
+        String modelName = request.getModelName();
+        String actionName = request.getActionName();
 
-    @Override
-    public void invoke(String modelName, String actionName, Request request, Response response) throws Exception {
         ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getConsoleContext().getModelManager();
 
         ModelInfo modelInfo = modelManager.getModelInfo(modelName);

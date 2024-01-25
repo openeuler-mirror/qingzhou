@@ -2,7 +2,7 @@ package qingzhou.console.view.impl;
 
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
-import qingzhou.console.RequestImpl;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.FrameworkContext;
