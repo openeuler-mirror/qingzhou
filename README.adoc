@@ -6,26 +6,19 @@
 :numbered:
 :ziti: images/sim_images
 
-== 介绍
-轻舟，提供了一套开发Web管理软件的基础平台，基于声明式API、充血模型等思想，开发者只需编写后端业务模型代码，即可自动获得前端页面，并自动化实现参数校验、REST接口、远程管理、角色权限、页面国际化、云上对接等能力。
-
-Business value: Quickly and centrally develop, configure, and observe your business systems
+== 平台简介
+轻舟，提供了一套快速、轻量的开发框架，可用于实现对本地和分布式软件系统的运行时进行集中式、统一化管理。
 
 == 软件架构
 
 image::doc/img/architecture.jpg[Architecture,700,500]
 
-== 安装教程
+== 安装使用
 
-. 打包，在项目根目录执行 `mvn clean package` 命令，之后在 `package/qingzhou/target/qingzhou/qingzhou` 可得到安装包。
-
-. 安装，将安装包复制到目标目录即完成安装。注：若安装包为压缩文件，则需自行解压。
-
-== 使用说明
-
-. 确保已具备 java 环境。
-. 进入安装目录，在 bin 目录下根据操作系统平台执行对应的 start 脚本即完成启动。
-. 可选，免脚本启动方式：`java -jar ~/qingzhou/bin/qingzhou-launcher.jar server start`。
+. 安装：在项目根目录执行 `mvn clean package` 命令，之后在 `package/qingzhou/target/qingzhou/qingzhou` 可得到安装包。
+. 启动：进入安装包根目录，在 bin 目录下根据操作系统平台执行对应的 start 脚本即开始启动，看到类似如下的日志则表示启动完成：`Open a browser to access the QingZhou console: http://localhost:9060/console`。
+. 【可选】免脚本启动方式：`java -jar ~/qingzhou/bin/qingzhou-launcher.jar server start`。
+. 访问：启动完成后，可打开浏览器访问轻舟的可视化管理平台： http://localhost:9060/console[http://localhost:9060/console]
 
 == 参与贡献
 
