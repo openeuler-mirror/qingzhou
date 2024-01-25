@@ -1,9 +1,9 @@
 package qingzhou.console.controller.system;
 
 import qingzhou.console.ConsoleI18n;
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.I18n;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.pattern.Filter;
@@ -47,7 +47,7 @@ public class I18nFilter implements Filter<HttpServletContext> {
             return true;
         }
 
-        String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
+        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
         if (checkPath.startsWith(LANG_SWITCH_URI + "/")) {
             Lang lang = null;
             for (Lang l : Lang.values()) {
@@ -64,7 +64,7 @@ public class I18nFilter implements Filter<HttpServletContext> {
                 if (StringUtil.isBlank(lastUri)) {
                     lastUri = request.getContextPath() + RESTController.INDEX_PATH;
                 }
-                response.sendRedirect(ConsoleUtil.encodeRedirectURL(request, response, lastUri)); // to welcome page
+                response.sendRedirect(PageBackendService.encodeURL(response, lastUri)); // to welcome page
             }
 
             return false;

@@ -6,7 +6,7 @@
     if (ConsoleSDK.needEncode(encodedId)) {
         encodedId = ConsoleSDK.encodeId(encodedId);
     }
-    String url = PageBackendService.encodeURL(request, response, ViewManager.jsonView + "/" + qzRequest.getModelName() + "/" + MonitorModel.ACTION_NAME_MONITOR + "/" + encodedId);
+    String url = PageBackendService.encodeURL(response, ViewManager.jsonView + "/" + qzRequest.getModelName() + "/" + MonitorModel.ACTION_NAME_MONITOR + "/" + encodedId);
 %>
 
 <div class="bodyDiv">
@@ -44,9 +44,9 @@
 
                     String i18n = "";
                     if (StringUtil.notBlank(fieldDataId)) {
-                        i18n = I18n.getString(qzRequest.getAppName(), "model." + theModelName) + "(" + fieldDataId + "):" + I18n.getString(qzRequest.getAppName(), "model.field." + theModelName + "." + fieldName);
+                        i18n = I18n.getString(menuAppName, "model." + theModelName) + "(" + fieldDataId + "):" + I18n.getString(menuAppName, "model.field." + theModelName + "." + fieldName);
                     } else {
-                        i18n = I18n.getString(qzRequest.getAppName(), "model." + theModelName) + ":" + I18n.getString(qzRequest.getAppName(), "model.field." + theModelName + "." + fieldName);
+                        i18n = I18n.getString(menuAppName, "model." + theModelName) + ":" + I18n.getString(menuAppName, "model.field." + theModelName + "." + fieldName);
                     }
                     keysBuilder.append("\"").append(key).append("\":\"").append(i18n).append("\",");
                 }

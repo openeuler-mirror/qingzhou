@@ -20,4 +20,7 @@ public interface ConsoleConstants {
     String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
     String GROUP_SEPARATOR = "/";
     String REGISTER_URI = "/register";
+    String MANAGE_TYPE_APP = "app";
+    String MANAGE_TYPE_NODE = "node";
+    String ACTION_NAME_TARGET = "target";
 }

@@ -1,6 +1,7 @@
 package qingzhou.app.node;
 
 import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
@@ -35,6 +36,10 @@ public class Home extends ModelBase implements ShowModel {
     public String javaHome;
 
     @Override
+    @ModelAction(name = ACTION_NAME_SHOW,
+            icon = "info-sign", forwardToPage = "home",
+            nameI18n = {"首页", "en:Home"},
+            infoI18n = {"展示节点的首页信息。", "en:Displays the homepage information of the node."})
     public void show(Request request, Response response) throws Exception {
         Home home = new Home();
         home.info = "QingZhou（轻舟）节点";

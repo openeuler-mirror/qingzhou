@@ -22,10 +22,10 @@
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
-    Request qzRequest = (Request) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
+    RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
-    String initAppName = qzRequest == null ? FrameworkContext.SYS_APP_MASTER : qzRequest.getAppName();
-    ModelManager modelManager = PageBackendService.getModelManager(initAppName);
+    String menuAppName = PageBackendService.getInitAppName(qzRequest);
+    ModelManager modelManager = PageBackendService.getModelManager(menuAppName);
 %>
 
 <script type="text/javascript">

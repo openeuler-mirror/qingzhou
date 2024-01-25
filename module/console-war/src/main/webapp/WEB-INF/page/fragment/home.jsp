@@ -7,12 +7,12 @@
             List<Map<String, String>> dataList = qzResponse.getDataList();
             if(dataList!=null && !dataList.isEmpty()){
                 Map<String, String> data = dataList.get(0);
-                for (String fieldName : PageBackendService.getModelManager(qzRequest.getAppName()).getFieldNames(qzRequest.getModelName())) {
+                for (String fieldName : PageBackendService.getModelManager(menuAppName).getFieldNames(qzRequest.getModelName())) {
                     %>
                     <tr>
                         <td class="home-field-info" field="<%=fieldName%>">
-                            <label for="<%=fieldName%>"><%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%></label>
-                            <span class="tooltips" data-tip="<%=I18n.getString(qzRequest.getAppName(), "model.field.info." + qzRequest.getModelName() + "." + fieldName)%>" data-tip-arrow="right" style="line-height:25px;">
+                            <label for="<%=fieldName%>"><%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%></label>
+                            <span class="tooltips" data-tip="<%=I18n.getString(menuAppName, "model.field.info." + qzRequest.getModelName() + "." + fieldName)%>" data-tip-arrow="right" style="line-height:25px;">
                                 <i class="icon icon-question-sign"></i>
                             </span>
                         </td>

@@ -2,7 +2,6 @@ package qingzhou.console.login;
 
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleI18n;
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
@@ -85,7 +84,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
 
                 // 进入主页
-                response.sendRedirect(ConsoleUtil.encodeRedirectURL(request, response, request.getContextPath() + RESTController.INDEX_PATH)); // to welcome page
+                response.sendRedirect(PageBackendService.encodeURL(response, request.getContextPath() + RESTController.INDEX_PATH)); // to welcome page
             } finally {
                 I18n.resetI18nLang();
             }
@@ -273,7 +272,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     public boolean doFilter(HttpServletContext context) throws Exception {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
-        String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
+        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
 
         if (checkPath.startsWith("/static/")) {
             for (String suffix : STATIC_RES_SUFFIX) {

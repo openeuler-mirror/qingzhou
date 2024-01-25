@@ -1,7 +1,6 @@
 package qingzhou.console.controller.system;
 
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
@@ -26,7 +25,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
     @Override
     public boolean doFilter(HttpServletContext context) throws Exception {
         HttpServletRequest request = context.req;
-        String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
+        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
         if (!checkPath.equals(ConsoleConstants.REGISTER_URI)) {
             return true;
         }

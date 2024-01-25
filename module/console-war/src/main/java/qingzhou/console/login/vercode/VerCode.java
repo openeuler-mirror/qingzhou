@@ -1,6 +1,5 @@
 package qingzhou.console.login.vercode;
 
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
@@ -104,7 +103,7 @@ public class VerCode implements Filter<HttpServletContext> {
 
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
-        String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
+        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
 
         if (checkPath.equals(CAPTCHA_URI)) {
             render(request, response);

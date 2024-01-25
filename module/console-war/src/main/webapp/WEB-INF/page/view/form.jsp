@@ -27,7 +27,7 @@
 <%@ include file="../fragment/breadcrumb.jsp" %>
 
 <form name="pageForm"
-      action="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, submitActionName+"/"+encodedId)%>"
+      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, submitActionName+"/"+encodedId)%>"
       method="post" class="form-horizontal">
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
@@ -122,9 +122,9 @@
                     <div class="form-group" id="form-item-<%=fieldName%>">
                         <label for="<%=fieldName%>" class="col-sm-4">
                             <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
-                            <%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%>
+                            <%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
                             <%
-                            String fieldInfo = I18n.getString(qzRequest.getAppName(), "model.field.info." + qzRequest.getModelName() + "." + fieldName);
+                            String fieldInfo = I18n.getString(menuAppName, "model.field.info." + qzRequest.getModelName() + "." + fieldName);
                             if (fieldInfo != null) {
                                 // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
                                 fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
@@ -262,14 +262,14 @@
             if (submitPermission) {
                 %>
                 <input type="submit" class="btn"
-                       value='<%=I18n.getString(qzRequest.getAppName(), "model.action." + qzRequest.getModelName() + "." + submitActionName)%>'>
+                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + submitActionName)%>'>
                 <%
             }
 
             boolean listPermission = AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
             if (hasId && listPermission) {
                 %>
-                <a href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>"
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>"
                    btn-type="goback" class="btn">
                     <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
                 </a>

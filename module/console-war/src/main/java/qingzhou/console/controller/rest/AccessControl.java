@@ -1,6 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
@@ -72,7 +71,7 @@ public class AccessControl implements Filter<RestContext> {
             ListModel.ACTION_NAME_LIST,
             AddModel.ACTION_NAME_CREATE,
             DownloadModel.ACTION_NAME_DOWNLOADLIST,
-            ConsoleUtil.ACTION_NAME_TARGET
+            ConsoleConstants.ACTION_NAME_TARGET
     };
 
     // note: this is a simply impl ...

@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 public class RequestImpl implements Request, Serializable, Cloneable {
+    private String manageType;
     private String appName;
     private String modelName;
     private String actionName;
@@ -95,6 +96,14 @@ public class RequestImpl implements Request, Serializable, Cloneable {
 
     public void setParameters(HashMap<String, String> parameters) {
         this.parameters = parameters;
+    }
+
+    public String getManageType() {
+        return manageType;
+    }
+
+    public void setManageType(String manageType) {
+        this.manageType = manageType;
     }
 
     @Override

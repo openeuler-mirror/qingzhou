@@ -262,7 +262,7 @@
                             <%
                             // 菜单
                             List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, FrameworkContext.SYS_APP_MASTER);
-                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, request, response, ViewManager.htmlView, FrameworkContext.SYS_APP_MASTER, qzRequest.getModelName()));
+                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, request, response, ViewManager.htmlView, ConsoleConstants.MANAGE_TYPE_APP, FrameworkContext.SYS_APP_MASTER, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>
@@ -308,8 +308,7 @@
         logout: '<%=PageBackendService.getMasterAppI18NString("page.logout.confirm")%>',
         downloadlistName: '<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>',
         downloadTip: '<%=PageBackendService.getMasterAppI18NString("page.download.log.tip")%>',
-        actionName_target: '<%=ConsoleUtil.ACTION_NAME_TARGET%>',
-        actionName_manage: '<%=ConsoleUtil.ACTION_NAME_MANAGE%>',
+        actionName_target: '<%=ConsoleConstants.ACTION_NAME_TARGET%>',
         downloadFileNames: '<%=DownloadModel.PARAMETER_DOWNLOAD_FILE_NAMES%>',
         showAction: '<%=ShowModel.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18NString("page.download.checkall")%>',
@@ -325,7 +324,7 @@
         passwordConfirmFailed: '<%=PageBackendService.getMasterAppI18NString("password.confirm.notequal")%>',
         SINGLE_FIELD_VALIDATE_PARAM: '<%=ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM%>'
     };
-    var searchUrl = '<%=PageBackendService.encodeURL(request, response, contextPath + "/search")%>';
+    var searchUrl = '<%=PageBackendService.encodeURL( response, contextPath + "/search")%>';
 </script>
 <script type="text/javascript" src="<%=contextPath%>/static/js/main.js"></script>
 <script type="text/javascript" src="<%=contextPath%>/static/js/index.js"></script>

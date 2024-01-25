@@ -39,7 +39,7 @@
             </section>
             <section class="panel-body">
                 <div class="logo"><%=PageBackendService.getMasterAppI18NString( "page.userlogin")%></div>
-                <form id="loginForm" method="post" action="<%=PageBackendService.encodeURL(request, response, contextPath+LoginManager.LOGIN_URI)%>" class="form-group" autocomplete="off">
+                <form id="loginForm" method="post" action="<%=PageBackendService.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>" class="form-group" autocomplete="off">
                     <div class="input-control has-icon-left">
                         <input value="thanos" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" class="form-control" placeholder="name<%=PageBackendService.getMasterAppI18NString( "model.field.user.name")%>" autofocus required>
                         <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel("user").icon()%> "></i></label>
@@ -62,7 +62,7 @@
                     <div class="input-control has-icon-left">
                         <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control" required style="width:250px;display:inline-block;float:left;" placeholder="<%=PageBackendService.getMasterAppI18NString( "page.vercode")%>">
                         <label for="randomcode" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
-                        <img src="<%=PageBackendService.encodeURL(request, response, contextPath + VerCode.CAPTCHA_URI)%>" class="captcha" onclick="this.src = '<%=PageBackendService.encodeURL(request, response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
+                        <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>" class="captcha" onclick="this.src = '<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
                     </div>
                     <%
                     }

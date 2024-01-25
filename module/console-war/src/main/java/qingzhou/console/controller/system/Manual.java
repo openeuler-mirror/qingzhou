@@ -1,8 +1,8 @@
 package qingzhou.console.controller.system;
 
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.ConsoleConstants;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StreamUtil;
@@ -19,7 +19,7 @@ public class Manual implements Filter<HttpServletContext> {
 
     @Override
     public boolean doFilter(HttpServletContext context) throws Exception {
-        String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(context.req);
+        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(context.req);
         if (!checkPath.equals("/" + ConsoleConstants.MANUAL_PDF)) {
             return true;
         }

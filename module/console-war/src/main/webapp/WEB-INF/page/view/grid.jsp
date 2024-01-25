@@ -34,7 +34,7 @@
 
     <div class="block-bg">
         <form name="filterForm" id="filterForm" method="POST"
-              action="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
+              action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
             <div class="row filterForm" style="margin-top: 10px;">
                 <%
                     for (Integer i : indexToShow) {
@@ -72,7 +72,7 @@
                             }
                         %>
                         <label for="<%=fieldName%>"
-                               class="input-control-label-left"><%=I18n.getString(qzRequest.getAppName(), "model.field." + qzRequest.getModelName() + "." + fieldName)%>
+                               class="input-control-label-left"><%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
                         </label>
                     </div>
                 </div>
@@ -82,7 +82,7 @@
                 <div class="col-md-3 search-btn" style="margin-bottom: 16px;">
                     <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
                         <a class="btn"
-                           href="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
+                           href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
                            form="filterForm">
                             <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18NString( "page.filter")%>
                         </a>
@@ -229,7 +229,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST + "?markForAddCsrf")%>&<%=ListModel.PARAMETER_PAGE_NUM%>="
+                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST + "?markForAddCsrf")%>&<%=ListModel.PARAMETER_PAGE_NUM%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>

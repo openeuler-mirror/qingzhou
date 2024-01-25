@@ -3,8 +3,6 @@ package qingzhou.console.controller.rest;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.console.ResponseImpl;
 import qingzhou.console.ServerXml;
 import qingzhou.console.Validator;
 import qingzhou.console.impl.ConsoleWarHelper;
@@ -15,8 +13,9 @@ import qingzhou.crypto.KeyManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
@@ -188,12 +187,23 @@ public class InvokeAction implements Filter<RestContext> {
         }
     }
 
-    public Map<String, Response> processRequest(Request request) throws Exception {
+    public Map<String, Response> processRequest(RequestImpl request) throws Exception {
         Map<String, Response> resultOnNode = new HashMap<>();
+        List<String> appNodes = new ArrayList<>();
+        String manageType = request.getManageType();
         String appName = request.getAppName();
+        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
+            if (FrameworkContext.SYS_APP_NODE_AGENT.equals(appName)) {
+                appNodes.add(FrameworkContext.SYS_NODE_LOCAL);
+            } else {
+                appNodes = Arrays.asList(getAppNodes(ConsoleConstants.MODEL_NAME_node, appName));
+            }
+        } else if (ConsoleConstants.MANAGE_TYPE_APP.equals(manageType)) {
+            appNodes = getAppNodes(appName);
+        }
 
         String remoteKey = null;
-        for (String node : getAppNodes(appName)) {
+        for (String node : appNodes) {
             Response responseOnNode;
             if (node.equals(FrameworkContext.SYS_NODE_LOCAL)) {
                 Response response = new ResponseImpl();
@@ -226,20 +236,24 @@ public class InvokeAction implements Filter<RestContext> {
         if (FrameworkContext.SYS_APP_MASTER.equals(appName)) {
             nodes.add(FrameworkContext.SYS_NODE_LOCAL);
         } else {
-            Map<String, String> app;
-            try {
-                app = getAppManager().getApp(FrameworkContext.SYS_APP_MASTER)
-                        .getAppContext().getDataStore()
-                        .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
-            } catch (Exception e) {
-                throw ExceptionUtil.unexpectedException(e);
-            }
-            if (app == null || app.isEmpty()) {
-                throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
-            }
-            String[] appNodes = app.get("nodes").split(",");
-            nodes.addAll(Arrays.asList(appNodes));
+            nodes.addAll(Arrays.asList(getAppNodes(ConsoleConstants.MODEL_NAME_app, appName)));
         }
         return nodes;
+    }
+
+    private static String[] getAppNodes(String type, String id) {
+        Map<String, String> app;
+        try {
+            app = getAppManager().getApp(FrameworkContext.SYS_APP_MASTER)
+                    .getAppContext().getDataStore()
+                    .getDataById(type, id);
+        } catch (Exception e) {
+            throw ExceptionUtil.unexpectedException(e);
+        }
+        if (app == null || app.isEmpty()) {
+            throw ExceptionUtil.unexpectedException("App [ " + id + " ] not found.");
+        }
+
+        return app.get("nodes").split(",");
     }
 }

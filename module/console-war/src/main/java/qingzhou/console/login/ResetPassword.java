@@ -4,6 +4,7 @@ import qingzhou.console.*;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.system.HttpServletContext;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.FrameworkContext;
@@ -65,7 +66,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                 httpServletResponse.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
             }
 
-            httpServletResponse.sendRedirect(ConsoleUtil.encodeRedirectURL(httpServletRequest, httpServletResponse, httpServletRequest.getContextPath() +
+            httpServletResponse.sendRedirect(PageBackendService.encodeURL(httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + ConsoleConstants.MODEL_NAME_node +

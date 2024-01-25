@@ -42,7 +42,7 @@
                             <%
                                 for(Lang lang : Lang.values()) {
                                     out.print("<li>");
-                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", PageBackendService.encodeURL(request, response, contextPath + I18nFilter.LANG_SWITCH_URI + "/" + lang), lang.info));
+                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", PageBackendService.encodeURL(response, contextPath + I18nFilter.LANG_SWITCH_URI + "/" + lang), lang.info));
                                     out.print("</li>");
                                 }
                             %>
@@ -50,7 +50,7 @@
                     </li>
                     <%-- 用户/修改密码 --%>
                     <li>
-                        <a id="reset-password-btn" href="<%=PageBackendService.encodeURL(request, response, ViewManager.htmlView+"/"+ FrameworkContext.SYS_APP_MASTER +"/password/"+ "edit")%>"
+                        <a id="reset-password-btn" href="<%=PageBackendService.encodeURL( response, ViewManager.htmlView+"/"+ FrameworkContext.SYS_APP_MASTER +"/password/"+ "edit")%>"
                         class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
                                 <i class="icon icon-<%=PageBackendService.getModelManager(FrameworkContext.SYS_APP_MASTER).getModel("user").icon()%>"></i>
@@ -59,7 +59,7 @@
                     </li>
                     <%-- 注销 --%>
                     <li>
-                        <a id="logout-btn" href="<%=PageBackendService.encodeURL(request, response, contextPath + LoginManager.LOGIN_PATH + "?" + LoginManager.LOGOUT_FLAG)%>"
+                        <a id="logout-btn" href="<%=PageBackendService.encodeURL( response, contextPath + LoginManager.LOGIN_PATH + "?" + LoginManager.LOGOUT_FLAG)%>"
                         class="tooltips" data-tip='<%=PageBackendService.getMasterAppI18NString( "page.invalidate")%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
                                 <i class="icon icon-signout"></i>

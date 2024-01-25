@@ -1167,7 +1167,7 @@ function bindEventForListPage() {
         return false;
     });
     // 集群实例点击[管理]，打开新 Tab 并切换
-    $("table a[action-name='" + getSetting("actionName_target") + "'], a[action-name='" + getSetting("actionName_manage") + "']")
+    $("table a[action-name='" + getSetting("actionName_target") + "']")
     .unbind("click").bind("click", function (e) {
         e.preventDefault();
         var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");

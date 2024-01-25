@@ -6,7 +6,7 @@
     if (ConsoleSDK.needEncode(encodedId)) {
         encodedId = ConsoleSDK.encodeId(encodedId);
     }
-    String url = ConsoleUtil.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, MonitorModel.ACTION_NAME_MONITOR + "/" + encodedId);
+    String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, MonitorModel.ACTION_NAME_MONITOR + "/" + encodedId);
 %>
 
 <div class="bodyDiv">

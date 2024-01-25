@@ -1,8 +1,6 @@
 package qingzhou.console.view.impl;
 
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleUtil;
-import qingzhou.framework.console.RequestImpl;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.FrameworkContext;
@@ -10,6 +8,7 @@ import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,10 +37,11 @@ public class HtmlView implements View {
             pageForward = "default";
         }
 
-
-        if (ConsoleUtil.ACTION_NAME_TARGET.equals(actionName)) {
+        if (ConsoleConstants.ACTION_NAME_TARGET.equals(actionName)) {
+            String appName = request.getId();
+            String targetModelName = null;
+            String targetModelAction = null;
             if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {
-                String appName = request.getId();
                 ModelManager modelManager = PageBackendService.getModelManager(appName);
                 if (modelManager != null) {
                     String appEntryModel = PageBackendService.getAppEntryModel(appName);
@@ -51,17 +51,20 @@ public class HtmlView implements View {
                             appEntryModel = modelNames[0];
                         }
                     }
-                    request.setAppName(appName);
+                    request.setManageType(ConsoleConstants.MANAGE_TYPE_APP);
                     request.setModelName(appEntryModel);
-                    request.setActionName(modelManager.getModel(appEntryModel).entryAction());
+                    targetModelName = appEntryModel;
+                    targetModelAction = modelManager.getModel(appEntryModel).entryAction();
                 }
+            } else if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
+                request.setManageType(ConsoleConstants.MANAGE_TYPE_NODE);
+                appName = FrameworkContext.SYS_NODE_LOCAL;
+                targetModelName = ConsoleConstants.MODEL_NAME_home;
+                targetModelAction = ShowModel.ACTION_NAME_SHOW;
             }
-        } else if (ConsoleUtil.ACTION_NAME_MANAGE.equals(actionName)) {
-            if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
-                request.setAppName(FrameworkContext.SYS_APP_NODE_AGENT);
-                request.setModelName(ConsoleConstants.MODEL_NAME_home);
-                request.setActionName(ShowModel.ACTION_NAME_SHOW);
-            }
+            request.setAppName(appName);
+            request.setModelName(targetModelName);
+            request.setActionName(targetModelAction);
         }
 
         String forwardToPage = HtmlView.htmlPageBase + "view/" + pageForward + ".jsp";
