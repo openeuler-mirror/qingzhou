@@ -481,7 +481,7 @@ var tw = {
             cache: false,
             async: false,
             dataType: "html",
-            type: (data && data !== {} ? "POST" : "GET"),
+            type: (data && data != {} ? "POST" : "GET"),
             error: function (e) {
                 handleError(e);
             },
@@ -524,9 +524,9 @@ var tw = {
                 tooltip(".tooltips", {transition: true, time: 200});
                 var browserInfo = browserNV();
                 // 火狐浏览器特殊适配89.0版本开始浏览器通用，89版本之前，采用css中定义的hack设置
-                if (browserInfo !== {} && browserInfo.core === "Firefox" && browserInfo.v >= 89.0) {
+                if (browserInfo != {} && browserInfo.core === "Firefox" && browserInfo.v >= 89.0) {
                     $(".main-body", getRestrictedArea()).css({"min-height": "100%", "height": "100%"});
-                } else if (browserInfo !== {} && ((browserInfo.core === "Edge" && browserInfo.v <= 60.0) || (browserInfo.core === "IE" && browserInfo.v <= 11.0))) {
+                } else if (browserInfo != {} && ((browserInfo.core === "Edge" && browserInfo.v <= 60.0) || (browserInfo.core === "IE" && browserInfo.v <= 11.0))) {
                     // ITAIT-4984 微软自研浏览器 Edge 样式特殊处理，解决滚动条样式问题
                     $(".main-body", getRestrictedArea()).css({"min-height": "calc(-100px + 100%)", "height": "auto", "top": "100px", "bottom": "100px"});
                 }

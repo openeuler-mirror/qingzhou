@@ -790,8 +790,7 @@ function bindFormEvent() {
                                 "title": getSetting("pageConfirmTitle"),
                                 "btn": [getSetting("reloginBtnText"), getSetting("iknowBtnText")]
                             }, function () {
-                                var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname))
-                                        + "/" + window.location.pathname.replace("/", "").substring(0, window.location.pathname.replace("/", "").indexOf("/"));
+                                var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname)) + $("#logout-btn").attr("href");
                                 window.location.href = loginUrl;
                             }, function () {});
                             return;
