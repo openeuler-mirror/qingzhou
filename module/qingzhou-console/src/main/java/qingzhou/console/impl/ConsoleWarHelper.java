@@ -3,7 +3,7 @@ package qingzhou.console.impl;
 import qingzhou.crypto.CryptoService;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.AppStub;
+import qingzhou.framework.AppStub;
 import qingzhou.framework.api.Logger;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
@@ -12,6 +12,10 @@ import java.io.File;
 
 public class ConsoleWarHelper {
     static FrameworkContext fc;
+
+    public static void registerApp(String appToken, AppStub appStub) {
+        fc.getAppStubManager().registerAppStub(appToken, appStub);
+    }
 
     public static AppStub getAppStub(String appName) {
         return fc.getAppStubManager().getAppStub(appName);
@@ -29,8 +33,8 @@ public class ConsoleWarHelper {
         return fc.getServiceManager().getService(CryptoService.class);
     }
 
-    public static File getCache() {
-        return fc.getFileManager().getCache();
+    public static File getCache(String subName) {
+        return fc.getFileManager().getTemp(subName);
     }
 
     public static File getLib() {

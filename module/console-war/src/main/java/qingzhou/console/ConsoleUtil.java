@@ -9,9 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class ConsoleUtil {// todo 临时工具类，后续考虑移除
-    public static String ACTION_NAME_SERVER = "server";
     public static String ACTION_NAME_TARGET = "target";
-    public static String ACTION_NAME_validate = "validate";
     private static Boolean disableDownload;
 
     private ConsoleUtil() {

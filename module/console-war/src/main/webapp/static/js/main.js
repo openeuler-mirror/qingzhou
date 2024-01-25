@@ -639,7 +639,6 @@ var tw = {
             bindings.push({"el": trigger, "touchstart": showEvent, "touchend": destroyEvent});
         });
         function tipContentSetter(tipContent, tip, direction) {
-            // TODO 确定规则或继续优化兼容，以对 html 片段元素进行支持，实现部分内容定义样式(如颜色、加粗等)
             tipContent.innerHTML = tip.replace(/</g, "&#60;").replace(/>/g, "&#62;").replace(/"/g, "&#34;").replace(/'/g, "&#39;");
             tipContent.className = "tw-tooltip tw-tooltip-" + direction;
             document.body.appendChild(tipContent);

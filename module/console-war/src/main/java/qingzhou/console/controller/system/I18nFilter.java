@@ -1,10 +1,10 @@
 package qingzhou.console.controller.system;
 
+import qingzhou.console.ConsoleI18n;
 import qingzhou.console.ConsoleUtil;
 import qingzhou.console.I18n;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.ViewManager;
-import qingzhou.console.ConsoleI18n;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.StringUtil;
@@ -96,11 +96,10 @@ public class I18nFilter implements Filter<HttpServletContext> {
         ConsoleI18n.addI18N(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
         ConsoleI18n.addI18N(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
         ConsoleI18n.addI18N(TWO_FA_MSG_KEY, new String[]{"双因子认证认证失败：动态密码错误", "en:Two-factor authentication authentication failed: dynamic password error"});
-        ConsoleI18n.addI18N(ACCEPT_AGREEMENT_MSG_KEY_MISSING, new String[]{"请输入同意本产品《许可协议》的参数：" + LOGIN_ACCEPT_AGREEMENT + "=true", "en:Please enter the parameters of agreeing to the License Agreement of this product:" + LOGIN_ACCEPT_AGREEMENT + "=true"});
         ConsoleI18n.addI18N(ACCEPT_AGREEMENT_MSG_KEY, new String[]{"请确保您已阅读并同意本产品的《许可协议》", "en:Please ensure that you have read and agree to the <License Agreement> for this product"});
         ConsoleI18n.addI18N("jmx.credentials.element.isNull", new String[]{"用户名或密码不能为空", "en:The user name or password cannot be empty"});
 
-        ConsoleI18n.addI18N("page.index", new String[]{"管理控制台", "en:Console"});
+        ConsoleI18n.addI18N("page.index", new String[]{"轻舟平台", "en:QingZhou Platform"});
         ConsoleI18n.addI18N("page.index.centralized", new String[]{"集中管理", "en:Centralized Management"});
         ConsoleI18n.addI18N("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
         ConsoleI18n.addI18N("page.action", new String[]{"操作", "en:Action"});
@@ -157,9 +156,5 @@ public class I18nFilter implements Filter<HttpServletContext> {
         ConsoleI18n.addI18N("page.guide.help", new String[]{"查看用户手册，帮助您详细了解如何使用产品", "en:View the user manual to help you learn more about how to use products"});
         ConsoleI18n.addI18N("page.guide.home", new String[]{"点击“首页”，可查看产品的名称、版本号、命名空间、运行模式及授权等信息", "en:Click \"Home\" to view the name, version number, namespace, operating mode and authorization of the product"});
         ConsoleI18n.addI18N("page.guide.res", new String[]{"展开“资源管理”，可创建应用所需要使用的数据库、会话服务器、应用类库等资源", "en:Expand Resource Management to create resources such as databases, session servers, and application class libraries that your application needs to use"});
-
-        // todo
-        ConsoleI18n.addI18N("AGREEMENT_HEADER", new String[]{"CharMap.AGREEMENT_HEADER[0]", "en:" + "CharMap.AGREEMENT_HEADER[1]"});
-        ConsoleI18n.addI18N("AGREEMENT_BODY", new String[]{"CharMap.AGREEMENT_BODY[0]", "en:" + "CharMap.AGREEMENT_BODY[1]"});
     }
 }

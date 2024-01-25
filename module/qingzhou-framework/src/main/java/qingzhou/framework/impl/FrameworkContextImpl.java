@@ -1,6 +1,10 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.*;
+import qingzhou.framework.AppManager;
+import qingzhou.framework.AppStubManager;
+import qingzhou.framework.FileManager;
+import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.ServiceManager;
 import qingzhou.framework.api.Logger;
 import qingzhou.framework.util.FileUtil;
 
@@ -8,11 +12,9 @@ import java.io.File;
 
 public class FrameworkContextImpl implements FrameworkContext {
     private final AppStubManagerImpl appStubManager = new AppStubManagerImpl();
-    private final AppManagerImpl appManager = new AppManagerImpl();
     private final ServiceManagerImpl serviceManager = new ServiceManagerImpl();
     private final FileManagerImpl fileManager = new FileManagerImpl();
     private Boolean isMaster;
-    private Logger logger;
 
     @Override
     public AppStubManager getAppStubManager() {
@@ -31,16 +33,12 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public Logger getLogger() {
-        return logger;
-    }
-
-    public void setLogger(Logger logger) {
-        this.logger = logger;
+        return serviceManager.getService(Logger.class);
     }
 
     @Override
     public AppManager getAppManager() {
-        return appManager;
+        return serviceManager.getService(AppManager.class);
     }
 
     @Override

@@ -1,6 +1,12 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.*;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.ConsoleI18n;
+import qingzhou.console.I18n;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
+import qingzhou.console.ServerXml;
+import qingzhou.console.Validator;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
@@ -11,8 +17,6 @@ import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
@@ -21,11 +25,22 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static qingzhou.console.impl.ConsoleWarHelper.getAppManager;
 
 public class InvokeAction implements Filter<RestContext> {
+    static {
+        ConsoleI18n.addI18N("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
+    }
+
     InvokeAction() {
     }
 
@@ -37,6 +52,9 @@ public class InvokeAction implements Filter<RestContext> {
         boolean ok = Validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
         if (!ok) {
             context.response = validationResponse;
+            if (StringUtil.isBlank(context.response.getMsg())) {
+                context.response.setMsg(ConsoleI18n.getI18N(request.getI18nLang(), "validator.fail"));
+            }
         } else {
             if (isBatchAction(request)) {
                 context.response = invokeBatch(request);

@@ -1,7 +1,16 @@
 package qingzhou.app.master.service;
 
+import qingzhou.app.master.Main;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
@@ -15,8 +24,9 @@ import java.util.Map;
                 "en:App Management."})
 public class App extends ModelBase implements AddModel {
     @ModelField(
+            required = true,
             showToList = true,
-            disableOnCreate = true, disableOnEdit = true,
+            disableOnEdit = true,
             nameI18n = {"名称", "en:Name"},
             infoI18n = {"应用名称。", "en:App Name"})
     public String id;
@@ -95,16 +105,6 @@ public class App extends ModelBase implements AddModel {
     }
 
     @Override
-    @ModelAction(name = ACTION_NAME_CREATE,
-            showToListHead = true,
-            icon = "plus-sign", forwardToPage = "form",
-            nameI18n = {"部署", "en:Deploy"},
-            infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
-    public void create(Request request, Response response) throws Exception {
-        AddModel.super.create(request, response);
-    }
-
-    @Override
     @ModelAction(name = ACTION_NAME_ADD,
             icon = "save",
             showToFormBottom = true,
@@ -125,54 +125,68 @@ public class App extends ModelBase implements AddModel {
         String appName;
         if (srcFile.isDirectory()) {
             appName = srcFileName;
-            File app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.copyFileOrDirectory(srcFile, app);
-        } else if (srcFileName.endsWith(".jar")) {
+        } else if (srcFileName.endsWith(".jar") || srcFileName.endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             appName = srcFileName.substring(0, index);
-            File app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, "lib", srcFileName));
-        } else if (srcFileName.endsWith(".zip")) {
-            int index = srcFileName.lastIndexOf(".");
-            appName = srcFileName.substring(0, index);
-            File app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.unZipToDir(srcFile, app);// todo: 如果不需要部署到 本地节点，这里的解压就没有必要了
         } else {
             throw ExceptionUtil.unexpectedException("unknown app type");
         }
 
         String[] nodes = p.get("nodes").split(",");
         for (String node : nodes) {
-            if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                File app = FileUtil.newFile(getAppsDir(), appName);
-                try {
-                    //getAppManager().installApp(appName, app);// 应该调用local节点服务上的app来安装应用
-                    p.put("id", appName);// todo 本地 local 不需要记录到server。xml里面
-                    getDataStore().addData(request.getModelName(), appName, p);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    FileUtil.forceDeleteQuietly(app);
-                    response.setSuccess(false);
+            try {
+                if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
+                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_INSTALL_APP_ACTION_NAME, request, response);
+                } else {
+                    // TODO：调用远端 node 上的app add
                 }
-            } else {
-                // TODO：调用远端 node 上 master 的 app add？（将其node设置为 LOCAL_NODE_NAME 后在发送远程请求？）
+            } catch (Exception e) { // todo 部分失败，如何显示到页面？
+                response.setSuccess(false);
+                response.setMsg(e.getMessage());
+                e.printStackTrace();
             }
         }
+
+        if(response.isSuccess()){
+            p.put("id", appName);
+            getDataStore().addData(request.getModelName(), appName, p);
+        }
+    }
+
+    @Override
+    public void delete(Request request, Response response) throws Exception {
+        String appName = request.getId();
+        Map<String, String> p = getDataStore().getDataById("app", appName);
+        String[] nodes = p.get("nodes").split(",");
+        for (String node : nodes) {
+            try {
+                if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
+                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_UN_INSTALL_APP_ACTION_NAME, request, response);
+                } else {
+                    // TODO：调用远端 node 上的app delete
+                }
+            } catch (Exception e) { // todo 部分失败，如何显示到页面？
+                response.setSuccess(false);
+                e.printStackTrace();
+            }
+        }
+        getDataStore().deleteDataById("app", appName);
     }
 
     @ModelAction(name = "target",
             icon = "location-arrow", forwardToPage = "target",
             nameI18n = {"管理", "en:Manage"}, showToList = true,
-            infoI18n = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
+            infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
     }
 
-    public File getAppsDir() {
-        File apps = FileUtil.newFile(getAppContext().getDomain(), "apps");
-        if (!apps.exists()) {
-            FileUtil.mkdirs(apps);
-        }
-
-        return apps;
+    @Override
+    @ModelAction(name = ACTION_NAME_CREATE,
+            showToListHead = true,
+            icon = "plus-sign", forwardToPage = "form",
+            nameI18n = {"部署", "en:Deploy"},
+            infoI18n = {"在该节点上部署应用。", "en:Deploy the application on the node."})
+    public void create(Request request, Response response) throws Exception {
+        AddModel.super.create(request, response);
     }
 }

@@ -1,16 +1,17 @@
 package qingzhou.console.view.impl;
 
-import qingzhou.console.DownLoadUtil;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.framework.api.DownloadModel;
 import qingzhou.framework.api.Request;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.console.ResponseImpl;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
+import qingzhou.framework.util.HexUtil;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FileView implements View {
@@ -22,18 +23,17 @@ public class FileView implements View {
         HttpServletResponse servletResponse = restContext.servletResponse;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
 
-        Map<String, Object> result = null;// todo: response.downloadData()
-        if (result.isEmpty()) {
+        List<Map<String, String>> dataList = response.getDataList();
+        if (dataList.isEmpty()) {
+            response.setSuccess(false);
             return;
         }
 
-        String key = (String) result.get(DownloadModel.DOWNLOAD_KEY);
-        long offset = (long) result.get(DownloadModel.DOWNLOAD_OFFSET);
+        Map<String, String> result = dataList.get(0);
+        String key = result.get(DownloadModel.DOWNLOAD_KEY);
+        long offset = Long.parseLong(result.get(DownloadModel.DOWNLOAD_OFFSET));
         while (true) {
-            byte[] content = (byte[]) result.get(DownLoadUtil.DOWNLOAD_BLOCK);
-            if (content == null) {
-                break;
-            }
+            byte[] content = HexUtil.hexToBytes(result.get(DownloadModel.DOWNLOAD_BLOCK));
 
             ServletOutputStream outputStream = servletResponse.getOutputStream();
             outputStream.write(content);
@@ -47,11 +47,11 @@ public class FileView implements View {
             data.put(DownloadModel.DOWNLOAD_KEY, key);
             data.put(DownloadModel.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);
-            ResponseImpl res = (ResponseImpl) RESTController.invokeAction.invoke(req);
+            ResponseImpl res = (ResponseImpl) RESTController.invokeAction.invoke(req); // 续传
             if (res.isSuccess()) {
-                result = null; // todo: res.downloadData();
-                offset = (long) result.get(DownloadModel.DOWNLOAD_OFFSET);  // 续传
-                key = (String) result.get(DownloadModel.DOWNLOAD_KEY);      // 性能优化
+                result = res.getDataList().get(0);
+                offset = Long.parseLong(result.get(DownloadModel.DOWNLOAD_OFFSET));
+                key = result.get(DownloadModel.DOWNLOAD_KEY);
             } else {
                 response.setSuccess(false);
                 response.setMsg(res.getMsg());

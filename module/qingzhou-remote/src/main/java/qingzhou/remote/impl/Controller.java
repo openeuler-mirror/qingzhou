@@ -3,15 +3,17 @@ package qingzhou.remote.impl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PasswordCipher;
+import qingzhou.crypto.PublicKeyCipher;
 import qingzhou.framework.App;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
 import qingzhou.framework.util.ExceptionUtil;
@@ -23,8 +25,15 @@ import qingzhou.remote.impl.net.impl.tinyserver.HttpServerServiceImpl;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -149,8 +158,36 @@ public class Controller implements BundleActivator {
         }
 
         private void register() {
-            // todo: 根据配置的 master 的参数，发起定时检测和注册，范围包含所有的应用
-            frameworkContext.getLogger().info("根据配置的 master 的参数，发起定时检测和注册，范围包含所有的应用");
+            Set<String> apps = frameworkContext.getAppManager().getApps();
+            Map<String, String> map = new HashMap<>();
+            map.put("nodeIp", getIp());
+            map.put("nodePort", String.valueOf(getPort()));
+            map.put("apps", String.join(",", apps));
+            try {
+                // 获取master公钥，计算堆成密钥
+                String publicKey = "";
+                CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
+                PublicKeyCipher publicKeyCipher = cryptoService.getPublicKeyCipher(publicKey, null);
+                String key = cryptoService.getKeyManager().getKeyOrElseInit(null, "", null);
+                map.put("key", key);
+
+                String res = HttpClient.seqHttp(getMasterAddress(), map, publicKeyCipher::encryptWithPublicKey);
+                // todo 解析 res
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+    public String getIp() {
+        return "";
+    }
+
+    public int getPort() {
+        return 9999;
+    }
+
+    public String getMasterAddress() {
+        return "" + ConsoleConstants.REGISTER_URI;
     }
 }

@@ -18,6 +18,8 @@ public @interface Model {
 
     String entryAction() default ListModel.ACTION_NAME_LIST;
 
+    boolean showToMenu() default true;
+
     String menuName() default "";
 
     int menuOrder() default 0;

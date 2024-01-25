@@ -1,5 +1,7 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.I18n;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
@@ -8,9 +10,8 @@ import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.console.ConsoleConstants;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.console.ResponseImpl;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.pattern.FilterPattern;
 import qingzhou.framework.util.FileUtil;
@@ -38,7 +39,7 @@ public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
     public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + FrameworkContext.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/" + ConsoleConstants.ACTION_NAME_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
-    public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache();
+    public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache("upload");
 
     public static List<String> retrieveRestPathInfo(HttpServletRequest req) {
         List<String> result = new ArrayList<>();
@@ -144,6 +145,7 @@ public class RESTController extends HttpServlet {
         request.setModelName(rest.get(2));
         request.setActionName(rest.get(3));
         request.setUserName(LoginManager.getLoginUser(req.getSession(false)));
+        request.setI18nLang(I18n.getI18nLang());
 
         if (rest.size() > restDepth) {
             String id = rest.get(restDepth);

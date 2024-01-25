@@ -16,4 +16,6 @@ public interface Request {
     String getParameter(String parameterName);
 
     String getUserName();
+
+    Lang getI18nLang();
 }

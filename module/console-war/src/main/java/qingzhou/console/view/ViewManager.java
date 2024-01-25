@@ -1,14 +1,14 @@
 package qingzhou.console.view;
 
+import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.impl.FileView;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.console.view.impl.View;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.console.ResponseImpl;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.HashMap;
@@ -51,6 +51,9 @@ public class ViewManager {
             response.setContentType(view.getContentType());
             restContext.servletResponse.setContentType(view.getContentType());
         }
+
+        response.getHeaderNames().forEach(s -> restContext.servletResponse.setHeader(s, response.getHeader(s)));
+
         view.render(restContext);
 
         return true;

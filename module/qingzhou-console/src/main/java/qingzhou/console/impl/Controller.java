@@ -68,7 +68,7 @@ public class Controller implements BundleActivator {
 
             servletService = new ServletServiceImpl();
             servletService.start(9060, // TODO 端口需要可以配置
-                    frameworkContext.getFileManager().getCache().getAbsolutePath());
+                    frameworkContext.getFileManager().getTemp("ServletContainer").getAbsolutePath());
         }
 
         @Override

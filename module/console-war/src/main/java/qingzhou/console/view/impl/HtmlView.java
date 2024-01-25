@@ -1,6 +1,8 @@
 package qingzhou.console.view.impl;
 
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleUtil;
+import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.FrameworkContext;
@@ -8,8 +10,7 @@ import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
-import qingzhou.console.ConsoleConstants;
-import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -39,23 +40,27 @@ public class HtmlView implements View {
 
 
         if (ConsoleUtil.ACTION_NAME_TARGET.equals(actionName)) {
-            if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) { // todo 这个还需要？
-                request.setAppName(FrameworkContext.NODE_APP_NAME);
-                request.setModelName(ConsoleConstants.MODEL_NAME_home);
-                request.setActionName(ShowModel.ACTION_NAME_SHOW);
-            } else if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {// todo 是不是只有 app 会有 target action？ target设计是否有问题?
+            if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {
                 String appName = request.getId();
                 ModelManager modelManager = PageBackendService.getModelManager(appName);
                 if (modelManager != null) {
-                    String[] modelNames = modelManager.getModelNames();// TODO 应用管理是否需要配置一个默认展示model？
-                    String targetModelName = "";
-                    if (modelNames.length > 0) {
-                        targetModelName = modelNames[0];
+                    String appEntryModel = PageBackendService.getAppEntryModel(appName);
+                    if (StringUtil.isBlank(appEntryModel) || modelManager.getModel(appEntryModel) == null) {
+                        String[] modelNames = modelManager.getModelNames();
+                        if (modelNames.length > 0) {
+                            appEntryModel = modelNames[0];
+                        }
                     }
-                    request.setAppName(request.getId());
-                    request.setModelName(targetModelName);
-                    request.setActionName(modelManager.getModel(targetModelName).entryAction());
+                    request.setAppName(appName);
+                    request.setModelName(appEntryModel);
+                    request.setActionName(modelManager.getModel(appEntryModel).entryAction());
                 }
+            }
+        } else if ("manage".equals(actionName)) {
+            if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
+                request.setAppName(FrameworkContext.NODE_APP_NAME);
+                request.setModelName(ConsoleConstants.MODEL_NAME_home);
+                request.setActionName(ShowModel.ACTION_NAME_SHOW);
             }
         }
 

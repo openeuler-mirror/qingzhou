@@ -20,7 +20,6 @@
     <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/css/index.css">
     <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/css/nice-select.css">
     <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.css">
-    <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/intro/introjs.css">
 
     <style type="text/css">
         /* list.jsp */
@@ -217,32 +216,6 @@
             height: 30px;
             line-height: 30px;
         }
-
-        /* 用于用户引导 */
-        #guide {
-            position: relative;
-            width: 98%;
-            height: 0;
-            padding-top: 98%;
-        }
-
-        #guide .guideImg {
-            position: absolute;
-            width: 100%;
-            top: 0;
-            left: 0;
-        }
-
-        #guide .guideLayer {
-            position: absolute;
-            border: 0px;
-        }
-
-        #guide .guideMarker {
-            position: absolute;
-            min-width: 3px;
-            min-height: 3px;
-        }
     </style>
     <%--注意：后面的<!--\>一定不能省略，否则在 IE 之外的浏览器就无法加载 jQuery --%>
     <script type="text/javascript" src="<%=contextPath%>/static/js/jquery.min.js"></script>
@@ -256,9 +229,7 @@
     <script type="text/javascript" src="<%=contextPath%>/static/js/msg.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/lib/layer/layer.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.js"></script>
-    <script type="text/javascript"
-            src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/lib/intro/intro.js"></script>
+    <script src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
 </head>
 
 <%@ include file="../fragment/head.jsp" %>
@@ -290,8 +261,8 @@
                         <ul class="sidebar-menu" data-widget="tree">
                             <%
                             // 菜单
-                            List<Properties> menuList = PageBackendService.getAppMenuList(currentUser, FrameworkContext.MASTER_APP_NAME);
-                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, currentUser, request, response, ViewManager.htmlView, FrameworkContext.MASTER_APP_NAME, qzRequest.getModelName()));
+                            List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, FrameworkContext.MASTER_APP_NAME);
+                            out.print(PageBackendService.buildMenuHtmlBuilder(menuList, request, response, ViewManager.htmlView, FrameworkContext.MASTER_APP_NAME, qzRequest.getModelName()));
                             %>
                         </ul>
                     </div>
@@ -316,12 +287,6 @@
 </main>
 <div id="mask-loading" class="mask-loading">
     <div class="loading"></div>
-</div>
-
-<!-- 用户向导 -->
-<div id="guide" class="guide" style="display:none;">
-    <img id="guideImg" src="<%=contextPath%>/static/images/guide/index.png" class="guideImg" alt="">
-    <div class="guideLayer"></div>
 </div>
 
 <script type="text/javascript">
@@ -365,64 +330,6 @@
 <script type="text/javascript" src="<%=contextPath%>/static/js/index.js"></script>
 <script type="text/javascript">
     tooltip(".tooltips", {transition: true, time: 200});
-    // Beginner Guide
-    var guideInited = false;
-    var defaultBgImageSrc = $("#guide>#guideImg").attr("src");
-    $("#guide-btn").bind("click", function () {
-        $(document.body).children("header,main").hide();
-        $("#guide").show();
-        var guideOptions = {
-            "prevLabel": "&larr; <%=PageBackendService.getMasterAppI18NString("page.guide.previous")%>",
-            "nextLabel": "<%=PageBackendService.getMasterAppI18NString("page.guide.next")%> &rarr;",
-            "skipLabel": "<%=PageBackendService.getMasterAppI18NString("page.guide.skip")%>",
-            "doneLabel": "<%=PageBackendService.getMasterAppI18NString("page.guide.finish")%>",
-            "exitOnOverlayClick": false, "overlayOpacity": 0.5, "showStepNumbers": false
-        };
-        guideOptions["steps"] = [
-            {"element": "#JiyYEh", "intro": '<%=PageBackendService.getMasterAppI18NString( "page.guide.pwd")%>', "image": "index.png", "position": "left", "rl": 92.98618490967057, "rt": 0.21253985122210414, "rw": 3.9319872476089266, "rh": 3.4006376195536663},
-            {"element": "#NcDLKd", "intro": '<%=PageBackendService.getMasterAppI18NString( "page.guide.help")%>', "image": "index.png", "position": "bottom", "rl": 84.9096705632306, "rt": 0.26567481402763016, "rw": 4.0913921360255046, "rh": 3.1880977683315623},
-            {"element": "#SRvTcb", "intro": '<%=PageBackendService.getMasterAppI18NString( "page.guide.home")%>', "image": "index.png", "position": "right", "rl": -0.3188097768331562, "rt": 7.1200850159404885, "rw": 15.834218916046758, "rh": 3.5600425079702442},
-            {"element": "#tPFOOB", "intro": '<%=PageBackendService.getMasterAppI18NString( "page.guide.res")%>', "image": "create-ds.png", "position": "top", "rl": -0.21253985122210414, "rt": 23.645058448459086, "rw": 15.037194473963869, "rh": 3.1349628055260363}
-        ];
-        if (!guideInited) {
-            guideInited = true;
-            for (var i = 0; i < guideOptions["steps"].length; i++) {
-                $("#guide").append("<div id='" + guideOptions["steps"][i]["element"].substring(1) + "' class='guideMarker'></div>");
-            }
-            var adjustGuidePosition = function () {
-                var guideContainer = document.getElementById("guide");
-                for (var i = 0; i < guideOptions["steps"].length; i++) {
-                    $(guideOptions["steps"][i]["element"]).css({
-                        "top": guideOptions["steps"][i]["rt"] * guideContainer.clientHeight / 100 + "px",
-                        "left": guideOptions["steps"][i]["rl"] * guideContainer.clientWidth / 100 + "px",
-                        "width": guideOptions["steps"][i]["rw"] * guideContainer.clientWidth / 100 + "px",
-                        "height": guideOptions["steps"][i]["rh"] * guideContainer.clientHeight / 100 + "px"
-                    });
-                }
-            };
-            adjustGuidePosition();
-            // 窗口大小改变事件
-            $(window).resize(adjustGuidePosition);
-        }
-        // 上一页 / 下一页 是否切换背景图片
-        guideOptions.stepAction = function (image) {
-            if (image === undefined || image === null || image === "") {
-                image = defaultBgImageSrc.substring(defaultBgImageSrc.lastIndexOf("/") + 1);
-            }
-            var imgSrc = $("#guide>#guideImg").attr("src");
-            if (!imgSrc.endsWith(image)) {
-                $("#guide>#guideImg").attr("src", imgSrc.substring(0, imgSrc.lastIndexOf("/") + 1) + image);
-            }
-        };
-        // 引导关闭时
-        guideOptions.onClose = function () {
-            $("#guide>#guideImg").attr("src", defaultBgImageSrc);
-            $(document.body).children("header,main").show();
-            $("#guide").hide();
-            window.scrollBy(0, -500);
-        };
-        introJs().setOptions(guideOptions).start();
-    });
 </script>
 </body>
 </html>

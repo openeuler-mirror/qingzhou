@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 public @interface ModelAction {
     String name();
 
-    String icon();
+    String icon() default "";
 
     String[] nameI18n();
 

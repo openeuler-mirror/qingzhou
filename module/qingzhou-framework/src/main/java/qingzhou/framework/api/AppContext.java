@@ -1,16 +1,18 @@
 package qingzhou.framework.api;
 
 import java.io.File;
-import java.util.Set;
+import java.util.Collection;
 
 public interface AppContext {
     Logger getLogger();
+
+    File getTemp(String subName);
 
     File getDomain();
 
     File getHome();
 
-    Set<Class<?>> getServiceTypes();
+    Collection<Class<?>> getServiceTypes();
 
     <T> T getService(Class<T> serviceType);
 

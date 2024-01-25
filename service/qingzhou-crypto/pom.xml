@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>qingzhou</groupId>
+        <artifactId>service</artifactId>
+        <version>0.1.0</version>
+    </parent>
+
+    <artifactId>qingzhou-crypto</artifactId>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                            <Bundle-Activator>qingzhou.crypto.impl.Controller</Bundle-Activator>
+
+                            <Import-Package>
+                                org.osgi.framework,javax.crypto,javax.crypto.spec,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util
+                            </Import-Package>
+                            <Export-Package>qingzhou.crypto</Export-Package>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-framework</artifactId>
+        </dependency>
+    </dependencies>
+</project>

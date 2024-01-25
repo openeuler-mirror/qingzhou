@@ -10,11 +10,17 @@ import qingzhou.bootstrap.Utils;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.TreeMap;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        TreeMap<Integer, Set<String>> moduleLevel = moduleLevel();
+        TreeMap<Integer, List<File>> moduleLevel = moduleLevel();
 
         Map<String, String> configuration = new HashMap<>();
         File bundleCache = Utils.getCache(Utils.getDomain(), "bundle");
@@ -33,12 +39,11 @@ public class Main {
         waitForStop(framework);
     }
 
-    private static TreeMap<Integer, Set<String>> moduleLevel() throws Exception {
-        TreeMap<Integer, Set<String>> startLevels = new TreeMap<>();
-
+    private static TreeMap<Integer, List<File>> moduleLevel() throws Exception {
+        TreeMap<Integer, List<String>> levelProperties = new TreeMap<>();
         try (InputStream inputStream = Main.class.getResourceAsStream("/level.properties")) {
             Properties properties = Utils.streamToProperties(inputStream);
-            properties.forEach((k, v) -> startLevels.put(Integer.parseInt((String) k), new HashSet<String>() {{
+            properties.forEach((k, v) -> levelProperties.put(Integer.parseInt((String) k), new ArrayList<String>() {{
                 for (String s : ((String) v).split(",")) {
                     if (!s.trim().isEmpty()) {
                         add(s.trim());
@@ -46,20 +51,34 @@ public class Main {
                 }
             }}));
         }
+        int otherLevel = levelProperties.size() + 1;
 
-        int otherLevel = startLevels.size() + 1;
+        TreeMap<Integer, List<File>> startLevels = new TreeMap<>();
 
-        File[] modules = new File(Utils.getLibDir(), "module").listFiles();
-        for (File module : Objects.requireNonNull(modules)) {
-            String fileName = module.getName();
-            String suffix = ".jar";
-            int i = fileName.indexOf(suffix);
-            if (i > 0) {
-                String moduleName = fileName.substring(0, i);
-                boolean match = startLevels.values().stream().anyMatch(set -> set.contains(moduleName));
-                if (!match) {
-                    Set<String> set = startLevels.computeIfAbsent(otherLevel, integer -> new HashSet<>());
-                    set.add(moduleName);
+        String[] searchDir = {"module", "service"};
+        for (String dir : searchDir) {
+            File[] modules = new File(Utils.getLibDir(), dir).listFiles();
+            for (File module : Objects.requireNonNull(modules)) {
+                String fileName = module.getName();
+                String suffix = ".jar";
+                int i = fileName.indexOf(suffix);
+                if (i > 0) {
+                    String moduleName = fileName.substring(0, i);
+
+                    boolean match = false;
+                    for (Map.Entry<Integer, List<String>> entry : levelProperties.entrySet()) {
+                        if (entry.getValue().contains(moduleName)) {
+                            List<File> files = startLevels.computeIfAbsent(entry.getKey(), integer -> new ArrayList<>());
+                            files.add(module);
+                            match = true;
+                            break;
+                        }
+                    }
+
+                    if (!match) {
+                        List<File> files = startLevels.computeIfAbsent(otherLevel, integer -> new ArrayList<>());
+                        files.add(module);
+                    }
                 }
             }
         }
@@ -67,11 +86,9 @@ public class Main {
         return startLevels;
     }
 
-    private static void installBundle(Framework framework, TreeMap<Integer, Set<String>> moduleLevel) {
-        File moduleBase = new File(Utils.getLibDir(), "module");
-        for (Map.Entry<Integer, Set<String>> entry : moduleLevel.entrySet()) {
-            entry.getValue().forEach(moduleName -> {
-                File moduleJar = new File(moduleBase, moduleName + ".jar");
+    private static void installBundle(Framework framework, TreeMap<Integer, List<File>> moduleLevel) {
+        for (Map.Entry<Integer, List<File>> entry : moduleLevel.entrySet()) {
+            entry.getValue().forEach(moduleJar -> {
                 if (moduleJar.exists()) {
                     installBundleFile(framework, moduleJar);
                 } else {

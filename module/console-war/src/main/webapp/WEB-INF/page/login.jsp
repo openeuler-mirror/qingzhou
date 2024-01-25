@@ -1,8 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
 <%
-String contextPath = request.getContextPath();
-session.invalidate();
-I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
+    String contextPath = request.getContextPath();
+    session.invalidate();
+    I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
 %>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -16,15 +16,7 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
         <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
         <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
         <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/css/login.css">
-        <%--注意：后面的<!--\>一定不能省略，否则在 IE 之外的浏览器就无法加载 jQuery --%>
-        <!--[if gte IE 9]><!-->
         <script type="text/javascript" src="<%=contextPath%>/static/js/jquery.min.js"></script>
-        <!--<![endif]-->
-        <!--[if lt IE 9]>
-            <script type="text/javascript" src="<%=contextPath%>/static/js/jquery.suport.js"></script>
-            <script type="text/javascript" src="<%=contextPath%>/static/lib/zui/lib/ieonly/html5shiv.js"></script>
-            <script type="text/javascript" src="<%=contextPath%>/static/lib/zui/lib/ieonly/respond.js"></script>
-        <![endif]-->
         <script type="text/javascript" src="<%=contextPath%>/static/js/jquery.form.min.js"></script>
         <script type="text/javascript" src="<%=contextPath%>/static/lib/zui/js/zui.min.js"></script>
         <script type="text/javascript" src="<%=contextPath%>/static/js/jsencrypt.min.js"></script>
@@ -77,29 +69,6 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
                     %>
 
                     <input type="submit" value='<%=PageBackendService.getMasterAppI18NString( "page.login")%>' class="login_btn">
-                    <div style="display:block;">
-                        <div style="text-align:right; padding-right:30px; padding-top:12px;">
-                            <input checked type="checkbox" id="<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>" name="<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>" value="false" style="cursor:pointer;vertical-align:middle;">
-                            <label for="<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>" style="cursor:pointer; vertical-align:middle; margin-top: 10px;">已阅读并同意</label>
-                            <label style="vertical-align:middle; margin-top: 10px;">《<a href="javascript:void(0);" onclick="agreementInfo();">许可协议</a>》</label>
-                        </div>
-                        <div id="agreementTxt" style="display:none;">
-                            <pre align="left">
-
-<%
-for (Lang lang : Lang.values()) {
-    %>
-    <h3 align="center"><%=PageBackendService.getMasterAppI18NString( "AGREEMENT_HEADER", lang)%></h3>
-    <%=PageBackendService.getMasterAppI18NString( "AGREEMENT_BODY", lang)%>
-    <br><br>
-    <p align="center">----------------------------------------------------------------------------</p>
-    <%
-}
-%>
-
-                            </pre>
-                        </div>
-                    </div>
                     <textarea id="pubkey" rows="3" style="display:none;">
                         <%=PageBackendService.getPublicKeyString()%>
                     </textarea>
@@ -109,6 +78,7 @@ for (Lang lang : Lang.values()) {
         
         <footer class="page-copyright">
             <%=PageBackendService.getMasterAppI18NString( "page.copyright")%>&nbsp;<a href="https://www.openeuler.org/" target="_blank">www.openeuler.org</a>
+            &nbsp;<a href="javascript:about();">关于</a>
         </footer>
         
         <script type="text/javascript">
@@ -128,32 +98,25 @@ for (Lang lang : Lang.values()) {
                 }
             });
             $("#loginForm").submit(function (e) {
-                if ($("#<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>").is(":checked")) {
-                    $("#<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>").val("true");
-                    var encrypt = new JSEncrypt({"default_key_size":<%=PageBackendService.getKeySize()%>});
-                    encrypt.setPublicKey($('#pubkey').val());
-                    var inputs = $("#loginForm").find("input");
-                    for (var i = 0; i < inputs.length; i++) {
-                        var input = inputs[i];
-                        $(input).change();
-                        if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=ConsoleConstants.LOGIN_2FA%>") {
-                            $(input).val(encrypt.encryptLong2($(input).val()));
-                        }
+                var encrypt = new JSEncrypt({"default_key_size":<%=PageBackendService.getKeySize()%>});
+                encrypt.setPublicKey($('#pubkey').val());
+                var inputs = $("#loginForm").find("input");
+                for (var i = 0; i < inputs.length; i++) {
+                    var input = inputs[i];
+                    $(input).change();
+                    if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=ConsoleConstants.LOGIN_2FA%>") {
+                        $(input).val(encrypt.encryptLong2($(input).val()));
                     }
-                    return true;
-                } else {
-                    $("#<%=LoginManager.LOGIN_ACCEPT_AGREEMENT%>").val("false");
-                    layer.msg("<%=PageBackendService.getMasterAppI18NString( LoginManager.ACCEPT_AGREEMENT_MSG_KEY)%>", function () {});
-                    return false;
                 }
+                return true;
             });
             function escapeFrame() {
                 if (window.top.location.href !== window.location.href) {
                     window.top.location.reload();
                 }
             };
-            function agreementInfo() {
-                layer.open({type: 1, shade: 0.2, shadeClose: true, title: ["许可协议", 'font-size:14px;text-align:left;font-weight:bold;'], area: ['35%', '70%'], content: $("#agreementTxt")});
+            function about() {
+                layer.open({type: 2, shade: 0.2, shadeClose: true, maxmin: true, title: ["关于", 'font-size:20px;text-align:left;font-weight:bold;'], area: ['65%', '80%'], content: "<%=contextPath%>/about"});
             };
         </script>
     </body>

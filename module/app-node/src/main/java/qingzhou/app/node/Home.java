@@ -1,13 +1,20 @@
 package qingzhou.app.node;
 
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
+import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.util.JDKUtil;
 
-@Model(name = "home", icon = "home", entryAction = "show",
+@Model(name = Home.modelName, icon = "home", entryAction = "show",
         nameI18n = {"主页", "en:Main"},
         infoI18n = {"展示当前应用的说明信息。",
                 "en:Displays the description of the current app."})
 public class Home extends ModelBase implements ShowModel {
+    public static final String modelName = "home";
+
     @ModelField(
             group = "product",
             nameI18n = {"产品信息", "en:Server Info"},

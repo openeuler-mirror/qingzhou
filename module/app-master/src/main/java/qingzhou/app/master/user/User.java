@@ -3,7 +3,7 @@ package qingzhou.app.master.user;
 import qingzhou.framework.api.*;
 
 @Model(name = "user", icon = "user",
-        menuName = "User", menuOrder = 1,
+        menuName = "System", menuOrder = 1,
         nameI18n = {"用户", "en:User"},
         infoI18n = {"管理登录和操作服务器的用户，用户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements AddModel {
