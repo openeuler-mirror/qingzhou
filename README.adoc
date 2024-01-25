@@ -1,4 +1,4 @@
-= 轻舟Web管理软件开发平台
+= 轻舟软件运行时管理平台
 
 :encoding: utf-8
 :toc-title: 目录

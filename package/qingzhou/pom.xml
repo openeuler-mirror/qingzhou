@@ -109,7 +109,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>app-node</artifactId>
+            <artifactId>app-nodeagent</artifactId>
             <version>0.1.0</version>
         </dependency>
     </dependencies>
