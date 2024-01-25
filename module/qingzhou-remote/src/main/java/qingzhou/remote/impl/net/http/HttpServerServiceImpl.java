@@ -1,7 +1,4 @@
-package qingzhou.remote.impl.net.impl.tinyserver;
-
-import qingzhou.remote.impl.net.HttpServer;
-import qingzhou.remote.impl.net.HttpServerService;
+package qingzhou.remote.impl.net.http;
 
 public class HttpServerServiceImpl implements HttpServerService {
     @Override

@@ -1,6 +1,7 @@
-package qingzhou.remote.impl.net;
+package qingzhou.remote.impl.net.http;
 
 public interface HttpServer {
+
     void addContext(HttpRoute httpRoute, HttpHandler httpHandler);
 
     void removeContext(String path);

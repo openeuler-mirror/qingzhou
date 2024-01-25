@@ -8,11 +8,16 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PasswordCipher;
 import qingzhou.crypto.PublicKeyCipher;
+import qingzhou.framework.AppStub;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.XmlUtil;
+import qingzhou.remote.impl.net.Channel;
+import qingzhou.remote.impl.net.bio.BIOConnector;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -52,8 +57,18 @@ public class NodeRegister implements Filter<HttpServletContext> {
             for (String app : apps.split(",")) {
                 if (app != null && !app.trim().isEmpty()) {
                     String appToken = buildAppToken(nodeIp, nodePort, app);
-                    // todo 生成 appStub 代理
-                    ConsoleWarHelper.registerApp(appToken, null);
+                    AppStub appStub = (AppStub) Proxy.newProxyInstance(AppStub.class.getClassLoader(), new Class[]{AppStub.class}, (proxy, method, args) -> {
+                        InetSocketAddress socketAddress = new InetSocketAddress(nodeIp, Integer.parseInt(nodePort));
+                        BIOConnector connector = new BIOConnector(socketAddress);
+                        connector.setCodec(null);
+                        connector.setHandler(null);
+                        Channel channel = connector.connect();
+                        // todo 封装对象 req
+                        Object req = null;
+                        channel.write(req);
+                        return channel.read();
+                    });
+                    ConsoleWarHelper.registerApp(appToken, appStub);
                 }
             }
         }
