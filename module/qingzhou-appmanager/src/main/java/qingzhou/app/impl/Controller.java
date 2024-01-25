@@ -56,6 +56,8 @@ public class Controller extends ServiceRegister<AppManager> {
 
         if (frameworkContext.isMaster()) {
             ConsoleContext consoleContext = appManager.getApp(name).getAppContext().getConsoleContext();
+
+            //todo： AppStubManager 不应该是 app 容器的内容，从 FrameworkContext 根上移动走 ？
             frameworkContext.getAppStubManager().registerAppStub(name, new AppStub() {
                 @Override
                 public ModelManager getModelManager() {

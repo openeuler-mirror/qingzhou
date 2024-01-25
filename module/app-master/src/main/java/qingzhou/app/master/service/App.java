@@ -193,8 +193,8 @@ public class App extends ModelBase implements AddModel {
         getDataStore().deleteDataById("app", appName);
     }
 
-    @ModelAction(name = "target",
-            icon = "location-arrow", forwardToPage = "target",
+    @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
+            icon = "location-arrow", forwardToPage = FrameworkContext.SYS_ACTION_MANAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true,
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {

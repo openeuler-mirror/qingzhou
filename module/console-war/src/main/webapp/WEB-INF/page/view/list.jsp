@@ -104,10 +104,10 @@
                         String viewName = ViewManager.htmlView;
                         %>
                         <a class="btn" btn-type="<%=action%>" action-name="<%=action%>"
-                           href="<%= ConsoleUtil.isDisable(action) ? "javascript:void(0);" : PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, action)%>"
+                           href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, action)%>"
                                 <%
                                 if (action.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
-                                    out.print(ConsoleUtil.isDisable(action) ? " disabled " : " downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE) + "' ");
+                                    out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE) + "'");
                                 }
                                 %>
                         >
@@ -319,20 +319,21 @@
                                     boolean isAjaxAction = PageBackendService.isAjaxAction(actionName);
                                     String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                                     %>
-                                    <a href="<%=actionKey.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST) && ConsoleUtil.isDisableDownload() ? "javascript:void(0);" : PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>
+                                    <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>
                                        class="tw-action-link tooltips" data-tip-arrow="top"
                                        model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
                                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzRequest.getModelName() + "|" + encodedId)%>"
                                             <%
                                             if (actionKey.equals(DownloadModel.ACTION_NAME_DOWNLOADLIST)) {
-                                                out.print(ConsoleUtil.isDisableDownload() ? " disabled " : "" + "downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE + "/" + encodedId) + "' ");
+                                                out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DownloadModel.ACTION_NAME_DOWNLOADFILE + "/" + encodedId) + "'");
                                             }
                                             if (isAjaxAction) {
-                                                out.print("act-ajax='true' act-confirm='" +
-                                                        String.format(PageBackendService.getMasterAppI18NString( "page.operationConfirm"),
+                                                out.print(" act-ajax='true' act-confirm='"
+                                                    + String.format(PageBackendService.getMasterAppI18NString( "page.operationConfirm"),
                                                                 I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + actionKey),
-                                                                I18n.getString(menuAppName, "model." + qzRequest.getModelName())) + " " + originUnEncodedId
-                                                        + " ?' ");
+                                                                I18n.getString(menuAppName, "model." + qzRequest.getModelName()))
+                                                                 + " " + originUnEncodedId
+                                                        + "'");
                                             }
                                             %>
                                     >

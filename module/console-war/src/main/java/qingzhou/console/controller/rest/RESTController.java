@@ -37,7 +37,7 @@ import java.util.Map;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MODEL_NAME_app + "/" + FrameworkContext.SYS_APP_MASTER + "/" + ConsoleConstants.MODEL_NAME_index + "/" + ConsoleConstants.ACTION_NAME_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + FrameworkContext.SYS_APP_MASTER + "/" + ConsoleConstants.MODEL_NAME_index + "/" + ConsoleConstants.ACTION_NAME_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache("upload");
 

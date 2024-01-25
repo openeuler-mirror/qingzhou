@@ -6,7 +6,6 @@ import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22,11 +21,6 @@ public class AppContextImpl implements AppContext {
 
     public AppContextImpl(FrameworkContext frameworkContext) {
         this.frameworkContext = frameworkContext;
-    }
-
-    @Override
-    public Logger getLogger() {
-        return frameworkContext.getServiceManager().getService(Logger.class);
     }
 
     @Override

@@ -37,7 +37,7 @@ public class HtmlView implements View {
             pageForward = "default";
         }
 
-        if (ConsoleConstants.ACTION_NAME_TARGET.equals(actionName)) {
+        if (FrameworkContext.SYS_ACTION_MANAGE.equals(actionName)) {
             String appName = request.getId();
             String targetModelName = null;
             String targetModelAction = null;

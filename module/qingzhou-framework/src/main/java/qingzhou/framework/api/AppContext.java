@@ -4,8 +4,6 @@ import java.io.File;
 import java.util.Collection;
 
 public interface AppContext {
-    Logger getLogger();
-
     File getTemp(String subName);
 
     File getDomain();

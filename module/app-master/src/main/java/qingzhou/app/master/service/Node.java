@@ -63,8 +63,8 @@ public class Node extends ModelBase implements AddModel {
         return super.validate(request, fieldName);
     }
 
-    @ModelAction(name = "target",
-            icon = "location-arrow", forwardToPage = "target",
+    @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
+            icon = "location-arrow", forwardToPage = FrameworkContext.SYS_ACTION_MANAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {

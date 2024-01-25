@@ -292,12 +292,12 @@ public class LoginManager implements Filter<HttpServletContext> {
             request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
             return false;
         }
-        
+
         if (checkPath.equals("/")) {
             HttpSession session = request.getSession(false);
             if (session != null) {
-                response.sendRedirect(ConsoleUtil.encodeRedirectURL(request, response, request.getContextPath() + RESTController.INDEX_PATH));
-            } else  {
+                response.sendRedirect(PageBackendService.encodeURL(response, request.getContextPath() + RESTController.INDEX_PATH));
+            } else {
                 request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
                 return false;
             }

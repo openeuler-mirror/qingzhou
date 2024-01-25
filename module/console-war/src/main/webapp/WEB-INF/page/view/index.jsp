@@ -308,7 +308,7 @@
         logout: '<%=PageBackendService.getMasterAppI18NString("page.logout.confirm")%>',
         downloadlistName: '<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>',
         downloadTip: '<%=PageBackendService.getMasterAppI18NString("page.download.log.tip")%>',
-        actionName_target: '<%=ConsoleConstants.ACTION_NAME_TARGET%>',
+        actionName_target: '<%=FrameworkContext.SYS_ACTION_MANAGE%>',
         downloadFileNames: '<%=DownloadModel.PARAMETER_DOWNLOAD_FILE_NAMES%>',
         showAction: '<%=ShowModel.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18NString("page.download.checkall")%>',

@@ -195,8 +195,6 @@ public class InvokeAction implements Filter<RestContext> {
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
             if (FrameworkContext.SYS_APP_NODE_AGENT.equals(appName)) {
                 appNodes.add(FrameworkContext.SYS_NODE_LOCAL);
-            } else {
-                appNodes = Arrays.asList(getAppNodes(ConsoleConstants.MODEL_NAME_node, appName));
             }
         } else if (ConsoleConstants.MANAGE_TYPE_APP.equals(manageType)) {
             appNodes = getAppNodes(appName);
@@ -236,24 +234,20 @@ public class InvokeAction implements Filter<RestContext> {
         if (FrameworkContext.SYS_APP_MASTER.equals(appName)) {
             nodes.add(FrameworkContext.SYS_NODE_LOCAL);
         } else {
-            nodes.addAll(Arrays.asList(getAppNodes(ConsoleConstants.MODEL_NAME_app, appName)));
+            Map<String, String> res;
+            try {
+                res = getAppManager().getApp(FrameworkContext.SYS_APP_MASTER)
+                        .getAppContext().getDataStore()
+                        .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
+            } catch (Exception e) {
+                throw ExceptionUtil.unexpectedException(e);
+            }
+            if (res == null || res.isEmpty()) {
+                throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
+            }
+
+            nodes.addAll(Arrays.asList(res.get("nodes").split(",")));
         }
         return nodes;
-    }
-
-    private static String[] getAppNodes(String type, String id) {
-        Map<String, String> app;
-        try {
-            app = getAppManager().getApp(FrameworkContext.SYS_APP_MASTER)
-                    .getAppContext().getDataStore()
-                    .getDataById(type, id);
-        } catch (Exception e) {
-            throw ExceptionUtil.unexpectedException(e);
-        }
-        if (app == null || app.isEmpty()) {
-            throw ExceptionUtil.unexpectedException("App [ " + id + " ] not found.");
-        }
-
-        return app.get("nodes").split(",");
     }
 }
