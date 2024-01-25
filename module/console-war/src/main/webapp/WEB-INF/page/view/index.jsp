@@ -309,6 +309,7 @@
         downloadlistName: '<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>',
         downloadTip: '<%=PageBackendService.getMasterAppI18NString("page.download.log.tip")%>',
         actionName_target: '<%=ConsoleUtil.ACTION_NAME_TARGET%>',
+        actionName_manage: '<%=ConsoleUtil.ACTION_NAME_MANAGE%>',
         downloadFileNames: '<%=DownloadModel.PARAMETER_DOWNLOAD_FILE_NAMES%>',
         showAction: '<%=ShowModel.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18NString("page.download.checkall")%>',
