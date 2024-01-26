@@ -2,6 +2,7 @@ package qingzhou.console.view.impl;
 
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RestContext;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.ModelAction;
@@ -61,10 +62,15 @@ public class HtmlView implements View {
                 appName = FrameworkContext.SYS_NODE_LOCAL;
                 targetModelName = ConsoleConstants.MODEL_NAME_home;
                 targetModelAction = ShowModel.ACTION_NAME_SHOW;
+
             }
             request.setAppName(appName);
             request.setModelName(targetModelName);
             request.setActionName(targetModelAction);
+
+            if(ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
+                ConsoleWarHelper.getAppManager().getApp(FrameworkContext.SYS_APP_NODE_AGENT).invoke(request, response);
+            }
         }
 
         String forwardToPage = HtmlView.htmlPageBase + "view/" + pageForward + ".jsp";

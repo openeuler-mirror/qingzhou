@@ -1,5 +1,7 @@
 package qingzhou.app.node;
 
+import qingzhou.framework.AppManager;
+import qingzhou.framework.AppStub;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
@@ -55,7 +57,9 @@ public class AppInstaller extends ModelBase {
             throw ExceptionUtil.unexpectedException("unknown app type");
         }
 
-        Main.getFc().getAppManager().installApp(appName, app);
+        AppManager appManager = Main.getFc().getAppManager();
+        appManager.installApp(appName, app);
+        Main.getFc().getAppStubManager().registerAppStub(appName, (AppStub) appManager.getApp(appName).getAppContext().getConsoleContext());
     }
 
     @ModelAction(name = FrameworkContext.NODE_AGENT_UNINSTALL_APP_ACTION,
