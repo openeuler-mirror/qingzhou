@@ -1,16 +1,8 @@
 package qingzhou.app.impl;
 
 import qingzhou.app.impl.filter.UniqueFilter;
-import qingzhou.framework.App;
-import qingzhou.framework.AppManager;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.InternalService;
-import qingzhou.framework.QingZhouSystemApp;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.QingZhouApp;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.framework.*;
+import qingzhou.framework.api.*;
 import qingzhou.framework.util.ClassLoaderUtil;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.ObjectUtil;
@@ -36,7 +28,8 @@ public class AppManagerImpl implements AppManager, InternalService {
     }
 
     @Override
-    public void installApp(String appName, File appFile) throws Exception {
+    public void installApp(File appFile) throws Exception {
+        String appName = appFile.getName();
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }

@@ -20,5 +20,6 @@
         <module>app-master</module>
         <module>app-nodeagent</module>
         <module>qingzhou-remote</module>
+        <module>qingzhou-config</module>
     </modules>
 </project>

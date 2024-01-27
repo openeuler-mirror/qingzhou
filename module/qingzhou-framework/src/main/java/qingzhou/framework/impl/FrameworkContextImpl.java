@@ -1,34 +1,10 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.AppManager;
-import qingzhou.framework.AppStubManager;
-import qingzhou.framework.FileManager;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.ServiceManager;
-import qingzhou.framework.util.FileUtil;
-
-import java.io.File;
+import qingzhou.framework.*;
 
 public class FrameworkContextImpl implements FrameworkContext {
-    private final AppStubManagerImpl appStubManager = new AppStubManagerImpl();
-    private final ServiceManagerImpl serviceManager = new ServiceManagerImpl();
-    private final FileManagerImpl fileManager = new FileManagerImpl();
-    private Boolean isMaster;
-
-    @Override
-    public AppStubManager getAppStubManager() {
-        return appStubManager;
-    }
-
-    @Override
-    public boolean isMaster() {
-        if (isMaster == null) {
-            File console = FileUtil.newFile(getFileManager().getLib(), "sysapp", "console");
-            isMaster = console.isDirectory();
-        }
-
-        return isMaster;
-    }
+    private final ServiceManager serviceManager = new ServiceManagerImpl();
+    private final FileManager fileManager = new FileManagerImpl();
 
     @Override
     public AppManager getAppManager() {
@@ -43,5 +19,10 @@ public class FrameworkContextImpl implements FrameworkContext {
     @Override
     public FileManager getFileManager() {
         return fileManager;
+    }
+
+    @Override
+    public ConfigManager getConfigManager() {
+        return serviceManager.getService(ConfigManager.class);
     }
 }

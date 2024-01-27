@@ -6,7 +6,7 @@ import org.osgi.framework.ServiceReference;
 
 public abstract class ServiceRegister<T> implements BundleActivator {
     private ServiceReference<FrameworkContext> serviceReference;
-    private FrameworkContext frameworkContext;
+    protected FrameworkContext frameworkContext;
     private RegistryKey registryKey;
 
     @Override

@@ -5,17 +5,15 @@ public interface FrameworkContext {
     String SYS_APP_MASTER = "master";
     String SYS_APP_NODE_AGENT = "nodeagent";
     String SYS_ACTION_MANAGE = "manage";
-    String NODE_AGENT_APP_INSTALLER_MODEL = "appinstaller";
+    String NODE_AGENT_INSTALL_APP_MODEL = "appinstaller";
     String NODE_AGENT_INSTALL_APP_ACTION = "install";
     String NODE_AGENT_UNINSTALL_APP_ACTION = "uninstall";
-
-    boolean isMaster();
-
-    AppStubManager getAppStubManager();
 
     AppManager getAppManager();
 
     ServiceManager getServiceManager();
 
     FileManager getFileManager();
+
+    ConfigManager getConfigManager();
 }

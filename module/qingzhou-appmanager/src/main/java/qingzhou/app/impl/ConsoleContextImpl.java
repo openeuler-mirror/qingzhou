@@ -1,14 +1,37 @@
 package qingzhou.app.impl;
 
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.I18NStore;
+import qingzhou.framework.api.*;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
-public class ConsoleContextImpl extends AppStubImpl implements ConsoleContext {
+public class ConsoleContextImpl implements ConsoleContext {
+    private ModelManager modelManager;
+    private final I18NStore i18NStore = new I18NStore();
+    private final Map<String, MenuInfo> menuInfoMap = new HashMap<>();
+    private String entryModel;
+
+    @Override
+    public ModelManager getModelManager() {
+        return modelManager;
+    }
+
+    @Override
+    public String getI18N(Lang lang, String key, Object... args) {
+        return i18NStore.getI18N(lang, key, args);
+    }
+
+    @Override
+    public MenuInfo getMenuInfo(String menuName) {
+        return menuInfoMap.get(menuName);
+    }
+
+    @Override
+    public String getEntryModel() {
+        return entryModel;
+    }
 
     public void setModelManager(ModelManager modelManager) {
         this.modelManager = modelManager;
@@ -47,7 +70,7 @@ public class ConsoleContextImpl extends AppStubImpl implements ConsoleContext {
 
     @Override
     public void setMenuInfo(String menuName, String[] menuI18n, String menuIcon, int menuOrder) {
-        MenuInfoImpl menuInfo = menuInfoMap.computeIfAbsent(menuName, s -> new MenuInfoImpl(menuName));
+        MenuInfoImpl menuInfo = (MenuInfoImpl) menuInfoMap.computeIfAbsent(menuName, s -> new MenuInfoImpl(menuName));
         menuInfo.setMenuI18n(menuI18n);
         menuInfo.setMenuIcon(menuIcon);
         menuInfo.setMenuOrder(menuOrder);

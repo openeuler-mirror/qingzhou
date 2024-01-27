@@ -1,17 +1,9 @@
 package qingzhou.app.master.service;
 
 import qingzhou.app.master.Main;
+import qingzhou.console.RequestImpl;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.api.*;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
@@ -137,7 +129,7 @@ public class App extends ModelBase implements AddModel {
         }
 
         String[] nodes = p.get("nodes").split(",");
-        request.setModelName(FrameworkContext.NODE_AGENT_APP_INSTALLER_MODEL);
+        request.setModelName(FrameworkContext.NODE_AGENT_INSTALL_APP_MODEL);
         request.setActionName(FrameworkContext.NODE_AGENT_INSTALL_APP_ACTION);
         try {
             for (String node : nodes) {
@@ -159,7 +151,7 @@ public class App extends ModelBase implements AddModel {
         }
 
         if (response.isSuccess()) {
-            p.put("id", appName);
+            p.put(ListModel.FIELD_NAME_ID, appName);
             getDataStore().addData(modelName, appName, p);
         }
     }
@@ -171,7 +163,7 @@ public class App extends ModelBase implements AddModel {
         Map<String, String> p = getDataStore().getDataById("app", appName);
         String[] nodes = p.get("nodes").split(",");
 
-        request.setModelName(FrameworkContext.NODE_AGENT_APP_INSTALLER_MODEL);
+        request.setModelName(FrameworkContext.NODE_AGENT_INSTALL_APP_MODEL);
         request.setActionName(FrameworkContext.NODE_AGENT_UNINSTALL_APP_ACTION);
         try {
             for (String node : nodes) {

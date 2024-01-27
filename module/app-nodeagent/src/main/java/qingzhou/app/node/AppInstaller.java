@@ -1,19 +1,14 @@
 package qingzhou.app.node;
 
 import qingzhou.framework.AppManager;
-import qingzhou.framework.AppStub;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.framework.api.*;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
-@Model(name = FrameworkContext.NODE_AGENT_APP_INSTALLER_MODEL, icon = "",
+@Model(name = FrameworkContext.NODE_AGENT_INSTALL_APP_MODEL, icon = "",
         showToMenu = false,
         nameI18n = {"应用安装器", "en:App Installer"},
         infoI18n = {"执行管理节点下发的应用安装、卸载等指令。",
@@ -37,20 +32,18 @@ public class AppInstaller extends ModelBase {
         }
 
         String srcFileName = srcFile.getName();
-        String appName;
         File app;
         if (srcFile.isDirectory()) {
-            appName = srcFileName;
-            app = FileUtil.newFile(getAppsDir(), appName);
+            app = FileUtil.newFile(getAppsDir(), srcFileName);
             FileUtil.copyFileOrDirectory(srcFile, app);
         } else if (srcFileName.endsWith(".jar")) {
             int index = srcFileName.lastIndexOf(".");
-            appName = srcFileName.substring(0, index);
+            String appName = srcFileName.substring(0, index);
             app = FileUtil.newFile(getAppsDir(), appName);
             FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, "lib", srcFileName));
         } else if (srcFileName.endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
-            appName = srcFileName.substring(0, index);
+            String appName = srcFileName.substring(0, index);
             app = FileUtil.newFile(getAppsDir(), appName);
             FileUtil.unZipToDir(srcFile, app);
         } else {
@@ -58,8 +51,7 @@ public class AppInstaller extends ModelBase {
         }
 
         AppManager appManager = Main.getFc().getAppManager();
-        appManager.installApp(appName, app);
-        Main.getFc().getAppStubManager().registerAppStub(appName, (AppStub) appManager.getApp(appName).getAppContext().getConsoleContext());
+        appManager.installApp(app);
     }
 
     @ModelAction(name = FrameworkContext.NODE_AGENT_UNINSTALL_APP_ACTION,

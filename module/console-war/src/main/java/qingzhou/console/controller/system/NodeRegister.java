@@ -7,14 +7,11 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PasswordCipher;
 import qingzhou.crypto.PublicKeyCipher;
-import qingzhou.framework.AppStub;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.XmlUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Proxy;
-import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -66,7 +63,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
 //                        channel.write(req);
 //                        return channel.read();
 //                    });
-//                    ConsoleWarHelper.registerApp(appToken, appStub);
+                    ConsoleWarHelper.getAppStubManager().registerAppStub(appToken, null);// todo 序列化过来吗？
                 }
             }
         }

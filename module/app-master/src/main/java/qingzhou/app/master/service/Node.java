@@ -45,7 +45,7 @@ public class Node extends ModelBase implements AddModel {
             isPort = true,
             nameI18n = {"管理端口", "en:Management Port"},
             infoI18n = {"节点的管理端口。", "en:The management port of the node."})
-    public int port = 9060;
+    public int port = 7000;
 
     @ModelField(showToList = true, disableOnCreate = true, disableOnEdit = true,
             type = FieldType.bool,

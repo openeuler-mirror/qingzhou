@@ -3,14 +3,7 @@ package qingzhou.framework.util;
 import qingzhou.framework.pattern.Callback;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,7 +67,7 @@ public class StringUtil {
         for (Map.Entry<Object, Object> entry : entries) {
             list.add(entry.getKey() + "=" + entry.getValue());
         }
-        return StringUtil.join(list, System.lineSeparator());
+        return String.join(System.lineSeparator(), list);
     }
 
     public static String mapToString(Map<String, String> map) {
@@ -124,45 +117,6 @@ public class StringUtil {
 
     public static boolean notBlank(String value) {
         return !isBlank(value);
-    }
-
-    public static String join(final Iterable<?> iterable, final String separator) {
-        if (iterable == null) {
-            return null;
-        }
-        return join(iterable.iterator(), separator);
-    }
-
-    public static String join(final Iterator<?> iterator, final String separator) {
-
-        // handle null, zero and one elements before building a buffer
-        if (iterator == null) {
-            return null;
-        }
-        if (!iterator.hasNext()) {
-            return "";
-        }
-        final Object first = iterator.next();
-        if (!iterator.hasNext()) {
-            return Objects.toString(first, "");
-        }
-
-        // two or more elements
-        final StringBuilder buf = new StringBuilder(256); // Java default is 16, probably too small
-        if (first != null) {
-            buf.append(first);
-        }
-
-        while (iterator.hasNext()) {
-            if (separator != null) {
-                buf.append(separator);
-            }
-            final Object obj = iterator.next();
-            if (obj != null) {
-                buf.append(obj);
-            }
-        }
-        return buf.toString();
     }
 
     /**

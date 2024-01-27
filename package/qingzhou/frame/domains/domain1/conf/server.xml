@@ -26,13 +26,15 @@
         </args>
     </jvm>
 
-    <!--服务器-->
-    <server>
-        <connector port="7900"/>
-    </server>
+    <!--注册到 master 的地址信息，可以是多个-->
+    <remote enabled="false" host="" port="7000">
+        <masters>
+            <!--<master url="http://localhost:9000/console/" publicKey="xxx"/>-->
+        </masters>
+    </remote>
 
     <!--控制台-->
-    <console contextRoot="/console" trustedIP="">
+    <console enabled="true" port="9000" contextRoot="/console" trustedIP="">
         <auth verCodeEnabled="true">
             <tenants>
                 <tenant id="default" info="默认租户">

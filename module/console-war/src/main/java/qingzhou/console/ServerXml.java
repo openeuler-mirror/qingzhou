@@ -8,7 +8,7 @@ import qingzhou.framework.util.XmlUtil;
 import java.io.File;
 import java.util.Map;
 
-public class ServerXml { // todo 考虑由 admin service 来取代
+public class ServerXml { // todo 考虑替代：ConfigManager
     private static File serverXmlFile;
 
     public static ServerXml get() {
@@ -84,6 +84,10 @@ public class ServerXml { // todo 考虑由 admin service 来取代
 
     public String failureCount() {
         return consoleAttribute("failureCount");
+    }
+
+    public String contextRoot() {
+        return consoleAttribute("contextRoot");
     }
 
     private String consoleAttribute(String specifiedKey) {

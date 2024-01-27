@@ -1,26 +1,13 @@
 package qingzhou.framework.util;
 
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.net.*;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class IPUtil {
     private static List<String> localIpsAsFull;
-    private static List<String> inetAddressList;
-    private static String defaultIp;
     private static Set<String> localIps;
-    private static Set<String> localIps0;
 
     public static boolean validateIps(String trustedPattern, String checkIp) {
         if ("*".equals(trustedPattern)) {
@@ -190,40 +177,16 @@ public class IPUtil {
     }
 
     public static boolean isLocalIp(String ip) {
-        if (localIps0 == null) {
-            try {
-                localIps0 = new HashSet<>();
-                localIps0.addAll(getLocalIps());
-                localIps0.add("127.0.0.1");
-                localIps0.add("localhost");
-                localIps0.add("::1");
-                localIps0.add(InetAddress.getByName("::1").getHostAddress());
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
+        if (getLocalIps().contains(ip)) return true;
+        if ("127.0.0.1".equals(ip)) return true;
+        if ("localhost".equals(ip)) return true;
+        if ("::1".equals(ip)) return true;
+        try {
+            if (InetAddress.getByName("::1").getHostAddress().equals(ip)) return true;
+        } catch (UnknownHostException ignored) {
         }
 
-        return localIps0.contains(ip);
-    }
-
-    public static String getDefaultIp() {
-        if (defaultIp == null) {
-            for (String ip : getLocalInetAddress()) {
-                if (ip != null) {
-                    defaultIp = ip;
-                    break;
-                }
-            }
-        }
-        return defaultIp;
-    }
-
-    public static Set<String> getLocalIps() {
-        if (localIps == null) {
-            localIps = new HashSet<>();
-            localIps.addAll(getLocalInetAddress());
-        }
-        return localIps;
+        return false;
     }
 
     public static boolean isLocalPortOpen(int port) {
@@ -233,26 +196,28 @@ public class IPUtil {
             s.close();
             return true;
         } catch (Exception e) {
-            try (Socket s = new Socket()) {
-                s.connect(new InetSocketAddress(getDefaultIp(), port), timeout);// 海光专用机，startd 和 stop 会验证不通过，需要 ip 验证
-                s.close();
-                return true;
-            } catch (Exception ignored) {
+            for (String localIp : getLocalIps()) {
+                try (Socket s = new Socket()) {
+                    s.connect(new InetSocketAddress(localIp, port), timeout);// 海光专用机，startd 和 stop 会验证不通过，需要 ip 验证
+                    s.close();
+                    return true;
+                } catch (Exception ignored) {
+                }
             }
         }
         return false;
     }
 
-    public static List<String> getLocalInetAddress() {
-        if (inetAddressList != null) {
-            return inetAddressList;
+    public static Set<String> getLocalIps() {
+        if (localIps != null) {
+            return localIps;
         }
 
-        inetAddressList = new ArrayList<>();
+        localIps = new HashSet<>();
 
-        List<String> first = new ArrayList<>();
-        List<String> second = new ArrayList<>();
-        List<String> third = new ArrayList<>();
+        Set<String> first = new HashSet<>();
+        Set<String> second = new HashSet<>();
+        Set<String> third = new HashSet<>();
         try {
             OUT:
             for (Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces(); ifaces.hasMoreElements(); ) {
@@ -311,11 +276,11 @@ public class IPUtil {
             System.out.println("Failed to getLocalInetAddress: " + e.getMessage());
         }
 
-        inetAddressList = first;
-        if (inetAddressList.isEmpty()) {
-            inetAddressList.add("127.0.0.1");
+        localIps = first;
+        if (localIps.isEmpty()) {
+            localIps.add("127.0.0.1");
         }
-        return inetAddressList;
+        return localIps;
     }
 
     public static boolean pingIpPort(String ip, int port) {

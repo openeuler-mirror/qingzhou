@@ -1,4 +1,4 @@
-package qingzhou.framework.console;
+package qingzhou.framework.impl;
 
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.util.ObjectUtil;
@@ -10,7 +10,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-class CharMap {
+public class CharMap {
     private static final Map<Character, Character> zh_tr_Map = new HashMap<>();
     private static final Set<Character> detected = new CopyOnWriteArraySet<>();
 
@@ -30,7 +30,7 @@ class CharMap {
         }
     }
 
-    static String zh2tr(String msg) {
+    public static String zh2tr(String msg) {
         if (msg == null) return null;
         msg = msg.trim();
         if (msg.isEmpty()) return null;

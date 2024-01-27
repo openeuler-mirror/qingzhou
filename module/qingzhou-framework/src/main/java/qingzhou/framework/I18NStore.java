@@ -1,6 +1,7 @@
-package qingzhou.framework.console;
+package qingzhou.framework;
 
 import qingzhou.framework.api.Lang;
+import qingzhou.framework.impl.CharMap;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.Arrays;

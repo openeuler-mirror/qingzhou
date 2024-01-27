@@ -1,8 +1,9 @@
 package qingzhou.console.impl;
 
+import qingzhou.console.AppStub;
+import qingzhou.console.AppStubManager;
 import qingzhou.crypto.CryptoService;
 import qingzhou.framework.AppManager;
-import qingzhou.framework.AppStub;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Logger;
 import qingzhou.serializer.Serializer;
@@ -12,13 +13,14 @@ import java.io.File;
 
 public class ConsoleWarHelper {
     static FrameworkContext fc;
+    static AppStubManager appStubManager;
 
-    public static void registerApp(String appToken, AppStub appStub) {
-        fc.getAppStubManager().registerAppStub(appToken, appStub);
+    public static AppStubManager getAppStubManager() {
+        return appStubManager;
     }
 
     public static AppStub getAppStub(String appName) {
-        return fc.getAppStubManager().getAppStub(appName);
+        return appStubManager.getAppStub(appName);
     }
 
     public static AppManager getAppManager() {

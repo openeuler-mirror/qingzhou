@@ -1,38 +1,41 @@
-package qingzhou.app.impl;
+package qingzhou.console;
 
-import qingzhou.framework.AppStub;
+import qingzhou.framework.I18NStore;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.api.MenuInfo;
 import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.console.I18NStore;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AppStubImpl implements AppStub, Serializable {
-    protected ModelManager modelManager;
-    protected I18NStore i18NStore = new I18NStore();
-    protected Map<String, MenuInfoImpl> menuInfoMap = new HashMap<>();
-    protected String entryModel;
+public class AppStub implements Serializable {
+    private ModelManager modelManager;
+    private final I18NStore i18NStore = new I18NStore();
+    private final Map<String, MenuInfo> menuInfoMap = new HashMap<>();
+    private String entryModel;
 
-    @Override
     public ModelManager getModelManager() {
         return modelManager;
     }
 
-    @Override
     public String getI18N(Lang lang, String key, Object... args) {
         return i18NStore.getI18N(lang, key, args);
     }
 
-    @Override
     public MenuInfo getMenuInfo(String menuName) {
         return menuInfoMap.get(menuName);
     }
 
-    @Override
     public String getEntryModel() {
         return entryModel;
+    }
+
+    public void setModelManager(ModelManager modelManager) {
+        this.modelManager = modelManager;
+    }
+
+    public void setEntryModel(String entryModel) {
+        this.entryModel = entryModel;
     }
 }
