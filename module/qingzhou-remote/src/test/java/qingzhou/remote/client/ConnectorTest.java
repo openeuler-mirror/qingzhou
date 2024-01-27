@@ -1,6 +1,7 @@
 package qingzhou.remote.client;
 
-import org.junit.Test;
+
+import org.testng.annotations.Test;
 import qingzhou.remote.impl.net.Channel;
 import qingzhou.remote.impl.net.Connector;
 import qingzhou.remote.impl.net.bio.BIOConnector;

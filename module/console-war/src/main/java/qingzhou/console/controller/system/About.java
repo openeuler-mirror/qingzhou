@@ -1,27 +1,23 @@
 package qingzhou.console.controller.system;
 
-import java.io.BufferedReader;
-import qingzhou.console.ConsoleConstants;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.FileUtil;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import qingzhou.console.page.PageBackendService;
+import java.util.List;
 
 public class About implements Filter<HttpServletContext> {
-
+    public static final String ABOUT_URI = "/about";
     private byte[] byteCache;
-    private final String README_PATH = "static" + File.separator + "help" + File.separator + "README.md";
-    private final String ARCHITECTURE_LINE = "![软件架构](static/images/architecture.jpg)";
 
     @Override
     public boolean doFilter(HttpServletContext context) throws Exception {
         String checkPath = PageBackendService.retrieveServletPathAndPathInfo(context.req);
-        if (!checkPath.equals(ConsoleConstants.ABOUT_URI)) {
+        if (!checkPath.equals(ABOUT_URI)) {
             return true;
         }
 
@@ -30,28 +26,26 @@ public class About implements Filter<HttpServletContext> {
         ServletOutputStream out = response.getOutputStream();
 
         if (byteCache == null) {
-            String classPath = Thread.currentThread().getContextClassLoader().getResource("/").getPath();
-            File file = new File(new File(classPath).getParentFile().getParentFile(), README_PATH);
-            StringBuilder builder = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    if (line.contains("architecture.jpg")) {
-                        builder.append(ARCHITECTURE_LINE);
-                    } else {
-                        builder.append(line);
-                    }
-                    builder.append("\n");
+            String pathPrefix = "/static/readme/";
+            String readmePath = context.req.getServletContext().getRealPath(pathPrefix + "/README.md");
+            List<String> fileLines = FileUtil.fileToLines(new File(readmePath));
+            StringBuilder result = new StringBuilder();
+            fileLines.forEach(line -> {
+                if (line.contains("architecture.jpg")) {
+                    result.append("![architecture](")
+                            .append(context.req.getContextPath())
+                            .append(pathPrefix)
+                            .append("/architecture.jpg)");
+                } else {
+                    result.append(line);
                 }
-                br.close();
-            }
-            byteCache = builder.toString().getBytes(StandardCharsets.UTF_8);
+                result.append("\n");
+            });
+
+            byteCache = result.toString().getBytes(StandardCharsets.UTF_8);
         }
-        if (byteCache != null) {
-            out.write(byteCache);
-        } else {
-            out.write("No manual file found !".getBytes(StandardCharsets.UTF_8));
-        }
+
+        out.write(byteCache);
         out.flush();
         return false;
     }

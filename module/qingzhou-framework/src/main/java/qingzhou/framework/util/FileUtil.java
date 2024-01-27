@@ -1,20 +1,6 @@
 package qingzhou.framework.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
+import java.io.*;
 import java.math.BigDecimal;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -88,6 +74,17 @@ public class FileUtil {
                 }
             }
         }
+    }
+
+    public static List<String> fileToLines(File file) throws IOException {
+        List<String> lineList = new ArrayList<>();
+        try (LineNumberReader reader = new LineNumberReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lineList.add(line);
+            }
+        }
+        return lineList;
     }
 
     public static int fileTotalLines(File file) throws IOException {

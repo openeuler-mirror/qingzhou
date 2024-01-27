@@ -1,6 +1,6 @@
 package qingzhou.remote.server;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 import qingzhou.remote.impl.net.bio.BIOServer;
 import qingzhou.serializer.impl.java.JavaSerializer;
 

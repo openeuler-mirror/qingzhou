@@ -117,7 +117,7 @@
                 }
             };
             function about() {
-                $.post("<%=contextPath%>/about", {}, function(text) {
+                $.post("<%=contextPath + About.ABOUT_URI%>", {}, function(text) {
                     layer.open({type: 1, shade: 0.2, shadeClose: true, maxmin: true, title: ["关于", 'font-size:20px;text-align:left;font-weight:bold;'], area: ['65%', '80%'], 
                     content: "<div style=\"padding: 30px;\"><div id=\"markedShow\"></div></div>"});
                     document.getElementById("markedShow").innerHTML = marked.parse(text);
