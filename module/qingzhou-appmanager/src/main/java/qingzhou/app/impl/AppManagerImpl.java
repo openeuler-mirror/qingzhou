@@ -70,7 +70,6 @@ public class AppManagerImpl implements AppManager, InternalService {
         return apps.get(name);
     }
 
-
     private AppImpl buildApp(File appDir) {
         File[] listFiles = new File(appDir, "lib").listFiles();
         if (listFiles == null) {

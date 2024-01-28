@@ -11,9 +11,9 @@
 ## 安装使用
 
 1. 安装：在项目根目录执行 `mvn clean package` 命令，之后在 `package/qingzhou/target/qingzhou/qingzhou` 可得到安装包。 
-2. 启动：进入安装包根目录，在 bin 目录下，根据操作系统平台执行对应的 start 脚本即开始启动，看到类似如下的日志则表示启动完成：`Open a browser to access the QingZhou console: http://localhost:9060/console`。
+2. 启动：进入安装包根目录，在 bin 目录下，根据操作系统平台执行对应的 start 脚本即开始启动，看到类似如下的日志则表示启动完成：`Open a browser to access the QingZhou console: http://localhost:9000/console`。
 3. 【可选】免脚本启动方式：`java -jar ~/qingzhou/bin/qingzhou-launcher.jar server start`。 
-4. 访问：启动完成后，可打开浏览器访问轻舟的可视化管理平台： [http://localhost:9060/console](http://localhost:9060/console)
+4. 访问：启动完成后，可打开浏览器访问轻舟的可视化管理平台： [http://localhost:9000/console](http://localhost:9000/console)
 
 ## 鸣谢
 

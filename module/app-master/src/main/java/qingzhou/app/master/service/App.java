@@ -1,7 +1,7 @@
 package qingzhou.app.master.service;
 
 import qingzhou.app.master.Main;
-import qingzhou.console.RequestImpl;
+import qingzhou.framework.RequestImpl;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.*;
 import qingzhou.framework.util.ExceptionUtil;

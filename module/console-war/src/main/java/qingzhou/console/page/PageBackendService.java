@@ -8,7 +8,7 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.*;
-import qingzhou.console.RequestImpl;
+import qingzhou.framework.RequestImpl;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;

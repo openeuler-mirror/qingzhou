@@ -4,8 +4,8 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.framework.api.DownloadModel;
 import qingzhou.framework.api.Request;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
+import qingzhou.framework.RequestImpl;
+import qingzhou.framework.ResponseImpl;
 import qingzhou.framework.util.HexUtil;
 
 import javax.servlet.ServletOutputStream;
