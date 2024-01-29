@@ -34,7 +34,7 @@ public class HtmlView implements View {
         if (modelAction != null) {
             pageForward = modelAction.forwardToPage();
         }
-        if (StringUtil.isBlank(pageForward)) {
+        if (pageForward == null || StringUtil.isBlank(pageForward)) {
             pageForward = "default";
         }
 
@@ -55,7 +55,7 @@ public class HtmlView implements View {
             ConsoleWarHelper.invokeLocalApp(manageAppName, request, response);// todo 对于远程的，这里数据不对?
         }
 
-        String forwardToPage = HtmlView.htmlPageBase + "view/" + pageForward + ".jsp";
+        String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
         restContext.servletRequest.getRequestDispatcher(forwardToPage).forward(restContext.servletRequest, restContext.servletResponse);
     }
 
