@@ -37,7 +37,7 @@ public class Index extends ModelBase {
 
     @ModelAction(name = FrameworkContext.SYS_MODEL_INDEX, // NOTE: 这个方法用作是 Login 成功后 跳过的
             icon = "resize",
-            forwardToPage = "index",
+            forwardToPage = "sys/index",
             nameI18n = {"首页", "en:Home"},
             infoI18n = {"查看轻舟的产品和授权信息。",
                     "en:View Qingzhou product and licensing information."})
