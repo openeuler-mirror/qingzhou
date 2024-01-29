@@ -17,7 +17,6 @@ public class ConsoleContextImpl implements ConsoleContext {
     private ModelManager modelManager;
     private final I18NStore i18NStore = new I18NStore();
     private final Map<String, MenuInfo> menuInfoMap = new HashMap<>();
-    private String entryModel;
 
     @Override
     public ModelManager getModelManager() {
@@ -27,6 +26,11 @@ public class ConsoleContextImpl implements ConsoleContext {
     @Override
     public String getI18N(Lang lang, String key, Object... args) {
         return i18NStore.getI18N(lang, key, args);
+    }
+
+    @Override
+    public String[] getMenuNames() {
+        return menuInfoMap.keySet().toArray(new String[0]);
     }
 
     @Override

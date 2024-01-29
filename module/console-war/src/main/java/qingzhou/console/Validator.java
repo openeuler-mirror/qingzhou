@@ -2,7 +2,6 @@ package qingzhou.console;
 
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.EditModel;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ListModel;
@@ -166,7 +165,7 @@ public class Validator {
                     return null;
                 } else {
                     // sessionHa  tdg  密码字段有时候为空，有时候不为空，需要走自定义校验
-                    return vc.context.getI18N(I18n.getI18nLang(), tempModel.validate(request, fieldName));
+                    return vc.appStub.getI18N(I18n.getI18nLang(), tempModel.validate(request, fieldName));
                 }
             }
 
@@ -200,8 +199,8 @@ public class Validator {
         }
 
         // 最后进行自定义校验
-        ConsoleContext consoleContext = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext();
-        return consoleContext.getI18N(I18n.getI18nLang(), tempModel.validate(request, fieldName));
+        AppStub appStub = ConsoleWarHelper.getAppStub(request.getAppName());
+        return appStub.getI18N(I18n.getI18nLang(), tempModel.validate(request, fieldName));
     }
 
     private static String validate(Class<?>[] validatorClass, ValidatorContext vc) throws Exception {
@@ -239,7 +238,7 @@ public class Validator {
         final Request request;
         final ModelBase tempModel;
         final ModelManager modelManager;
-        final ConsoleContext context;
+        final AppStub appStub;
 
         private ValidatorContext(String newValue, ModelField modelField, String fieldName, Request request, ModelManager modelManager, ModelBase tempModel) {
             this.modelName = request.getModelName();
@@ -249,7 +248,7 @@ public class Validator {
             this.request = request;
             this.modelManager = modelManager;
             this.tempModel = tempModel;
-            this.context = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext();
+            this.appStub = ConsoleWarHelper.getAppStub(request.getAppName());
         }
 
         boolean isAdd() {
@@ -528,7 +527,7 @@ public class Validator {
                             Date otherDateTime = dateFormat.parse(thanObj);
                             if (!thisDateTime.before(otherDateTime)) {
                                 String msg = getConsoleI18n("validator.date.larger.cannot");
-                                return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + modelName + "." + noGreaterThan));
+                                return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + modelName + "." + noGreaterThan));
                             }
                         } catch (Exception ignored) {
                         }
@@ -542,7 +541,7 @@ public class Validator {
                                 Date otherDateTime = dateFormat.parse(thanObj);
                                 if (!thisDateTime.after(otherDateTime)) {
                                     String msg = getConsoleI18n("validator.date.less.cannot");
-                                    return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + modelName + "." + noLessThan));
+                                    return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + modelName + "." + noLessThan));
                                 }
                             }
                         } catch (Exception ignored) {
@@ -688,7 +687,7 @@ public class Validator {
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue()) {
                         String msg = getConsoleI18n("validator.larger.cannot");
-                        return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThan));
+                        return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThan));
                     }
                 }
             }
@@ -707,7 +706,7 @@ public class Validator {
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue() - 1) {
                         String msg = getConsoleI18n("validator.larger.minusOne.cannot");
-                        return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThanMinusOne));
+                        return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThanMinusOne));
                     }
                 }
             }
@@ -726,7 +725,7 @@ public class Validator {
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) { // 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) < arg.longValue()) {
                         String msg = getConsoleI18n("validator.less.cannot");
-                        return String.format(msg, vc.context.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noLessThan));
+                        return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noLessThan));
                     }
                 }
             }
@@ -747,7 +746,7 @@ public class Validator {
                         fieldValue = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, field));
                     }
                     if (Objects.equals(fieldValue, vc.newValue)) {
-                        String p1 = vc.context.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + field);
+                        String p1 = vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + field);
                         return String.format(getConsoleI18n("app.threadpool.canot.eq"), p1);
                     }
                 }

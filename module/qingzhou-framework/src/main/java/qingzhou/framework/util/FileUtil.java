@@ -78,7 +78,7 @@ public class FileUtil {
 
     public static List<String> fileToLines(File file) throws IOException {
         List<String> lineList = new ArrayList<>();
-        try (LineNumberReader reader = new LineNumberReader(new FileReader(file))) {
+        try (LineNumberReader reader = new LineNumberReader(new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 lineList.add(line);

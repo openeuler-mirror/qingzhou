@@ -1,9 +1,17 @@
 package qingzhou.app.master.service;
 
 import qingzhou.app.master.Main;
-import qingzhou.framework.RequestImpl;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.*;
+import qingzhou.framework.RequestImpl;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
@@ -129,8 +137,8 @@ public class App extends ModelBase implements AddModel {
         }
 
         String[] nodes = p.get("nodes").split(",");
-        request.setModelName(FrameworkContext.NODE_AGENT_INSTALL_APP_MODEL);
-        request.setActionName(FrameworkContext.NODE_AGENT_INSTALL_APP_ACTION);
+        request.setModelName(FrameworkContext.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(FrameworkContext.SYS_ACTION_INSTALL);
         try {
             for (String node : nodes) {
                 try {
@@ -170,8 +178,8 @@ public class App extends ModelBase implements AddModel {
         Map<String, String> p = getDataStore().getDataById("app", appName);
         String[] nodes = p.get("nodes").split(",");
 
-        request.setModelName(FrameworkContext.NODE_AGENT_INSTALL_APP_MODEL);
-        request.setActionName(FrameworkContext.NODE_AGENT_UNINSTALL_APP_ACTION);
+        request.setModelName(FrameworkContext.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(FrameworkContext.SYS_ACTION_UNINSTALL);
         try {
             for (String node : nodes) {
                 try {

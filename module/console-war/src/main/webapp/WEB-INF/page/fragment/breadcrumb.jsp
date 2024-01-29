@@ -11,15 +11,15 @@
         </div>
     </li>
     <%
-        if (!Objects.equals(I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + qzRequest.getModelName()), I18n.getString(menuAppName, "model." + qzRequest.getModelName()))) {
-            if (StringUtil.notBlank(I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + qzRequest.getActionName()))) {
-                %>
-                <li class="active">
-                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + qzRequest.getActionName())%>
-                </li>
-                <%
-            }
+    if (!Objects.equals(I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + qzRequest.getModelName()), I18n.getString(menuAppName, "model." + qzRequest.getModelName()))) {
+        if (StringUtil.notBlank(I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + qzRequest.getActionName()))) {
+            %>
+            <li class="active">
+                <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + qzRequest.getActionName())%>
+            </li>
+            <%
         }
+    }
     %>
 
     <script type="text/javascript">

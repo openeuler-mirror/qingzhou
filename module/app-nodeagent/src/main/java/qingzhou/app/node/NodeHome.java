@@ -1,5 +1,6 @@
 package qingzhou.app.node;
 
+import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
@@ -9,12 +10,11 @@ import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.util.JDKUtil;
 
-@Model(name = Home.modelName, icon = "home", entryAction = "show",
-        nameI18n = {"主页", "en:Main"},
+@Model(name = FrameworkContext.SYS_MODEL_Home, icon = "home", entryAction = "show",
+        nameI18n = {"节点首页", "en:Node Main"},
         infoI18n = {"展示当前节点的说明信息。",
                 "en:Displays the description of the current node."})
-public class Home extends ModelBase implements ShowModel {
-    public static final String modelName = "home";
+public class NodeHome extends ModelBase implements ShowModel {
 
     @ModelField(
             group = "product",
@@ -41,7 +41,7 @@ public class Home extends ModelBase implements ShowModel {
             nameI18n = {"节点首页", "en:Node Home"},
             infoI18n = {"展示节点的首页信息。", "en:Displays the homepage information of the node."})
     public void show(Request request, Response response) throws Exception {
-        Home home = new Home();
+        NodeHome home = new NodeHome();
         home.info = "QingZhou（轻舟）节点";
         home.path = getAppContext().getDomain().getPath();
         home.javaHome = JDKUtil.getJavaHome();

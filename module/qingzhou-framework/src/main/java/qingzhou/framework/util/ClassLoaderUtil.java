@@ -12,13 +12,11 @@ import java.util.List;
 public class ClassLoaderUtil {
     public static URLClassLoader newURLClassLoader(File[] files, ClassLoader parentLoader) {
         List<URL> urls = new ArrayList<>();
-        if (files != null) {
-            for (File file : files) {
-                try {
-                    urls.add(file.toURI().toURL());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
+        for (File file : files) {
+            try {
+                urls.add(file.toURI().toURL());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
             }
         }
         return new URLClassLoader(urls.toArray(new URL[0]), parentLoader);

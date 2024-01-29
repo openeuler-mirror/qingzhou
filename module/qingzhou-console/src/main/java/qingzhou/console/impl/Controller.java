@@ -3,7 +3,6 @@ package qingzhou.console.impl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import qingzhou.console.AppStubManager;
 import qingzhou.console.servlet.ServletService;
 import qingzhou.console.servlet.impl.ServletServiceImpl;
 import qingzhou.framework.FrameworkContext;
@@ -57,7 +56,6 @@ public class Controller implements BundleActivator {
         @Override
         public void exec() throws Exception {
             ConsoleWarHelper.fc = frameworkContext; //给 tonmcat 部署的 war 内部使用
-            ConsoleWarHelper.appStubManager = new AppStubManager(frameworkContext);
 
             servletService = new ServletServiceImpl();
             consolePort = Integer.parseInt(frameworkContext.getConfigManager().getConfig("//console").get("port"));
@@ -69,7 +67,6 @@ public class Controller implements BundleActivator {
         public void undo() {
             servletService.stop();
 
-            ConsoleWarHelper.appStubManager = null;
             ConsoleWarHelper.fc = null;
         }
     }

@@ -11,11 +11,12 @@ import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.RequestImpl;
+import qingzhou.framework.ResponseImpl;
 import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.RequestImpl;
-import qingzhou.framework.ResponseImpl;
+import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
@@ -32,8 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static qingzhou.console.impl.ConsoleWarHelper.getAppManager;
 
 public class InvokeAction implements Filter<RestContext> {
     static {
@@ -192,11 +191,11 @@ public class InvokeAction implements Filter<RestContext> {
         List<String> appNodes = new ArrayList<>();
         String manageType = request.getManageType();
         String appName = request.getAppName();
-        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
+        if (FrameworkContext.MANAGE_TYPE_NODE.equals(manageType)) {
             if (FrameworkContext.SYS_APP_NODE_AGENT.equals(appName)) {
                 appNodes.add(FrameworkContext.SYS_NODE_LOCAL);
             }
-        } else if (ConsoleConstants.MANAGE_TYPE_APP.equals(manageType)) {
+        } else if (FrameworkContext.MANAGE_TYPE_APP.equals(manageType)) {
             appNodes = getAppNodes(appName);
         }
 
@@ -205,7 +204,7 @@ public class InvokeAction implements Filter<RestContext> {
             Response responseOnNode;
             if (node.equals(FrameworkContext.SYS_NODE_LOCAL)) {
                 Response response = new ResponseImpl();
-                getAppManager().getApp(appName).invoke(request, response);
+                ConsoleWarHelper.invokeLocalApp(appName, request, response);
                 responseOnNode = response;
             } else {
                 if (remoteKey == null) {
@@ -234,11 +233,19 @@ public class InvokeAction implements Filter<RestContext> {
         if (FrameworkContext.SYS_APP_MASTER.equals(appName)) {
             nodes.add(FrameworkContext.SYS_NODE_LOCAL);
         } else {
-            Map<String, String> res;
+            Map<String, String> res = null;
             try {
-                res = getAppManager().getApp(FrameworkContext.SYS_APP_MASTER)
-                        .getAppContext().getDataStore()
-                        .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
+                RequestImpl request = new RequestImpl();
+                Response response = new ResponseImpl();
+                request.setAppName(FrameworkContext.SYS_APP_MASTER);
+                request.setModelName(ConsoleConstants.MODEL_NAME_app);
+                request.setActionName(ShowModel.ACTION_NAME_SHOW);
+                request.setId(appName);
+                ConsoleWarHelper.invokeLocalApp(FrameworkContext.SYS_APP_MASTER, request, response);
+                List<Map<String, String>> dataList = response.getDataList();
+                if (dataList != null && !dataList.isEmpty()) {
+                    res = dataList.get(0);
+                }
             } catch (Exception e) {
                 throw ExceptionUtil.unexpectedException(e);
             }

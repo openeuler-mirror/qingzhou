@@ -9,6 +9,7 @@ import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
+import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,34 +30,29 @@ public class HtmlView implements View {
         String modelName = request.getModelName();
         String actionName = request.getActionName();
         ModelAction modelAction = PageBackendService.getModelManager(request.getAppName()).getModelAction(modelName, actionName);
-        String pageForward;
+        String pageForward = null;
         if (modelAction != null) {
             pageForward = modelAction.forwardToPage();
-        } else {
+        }
+        if (StringUtil.isBlank(pageForward)) {
             pageForward = "default";
         }
 
         if (FrameworkContext.SYS_ACTION_MANAGE.equals(actionName)) {
-            String appName = request.getId();
-            String targetModelName = null;
-            String targetModelAction = null;
+            String manageAppName = request.getId();
             if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {
-                request.setManageType(ConsoleConstants.MANAGE_TYPE_APP);
-                targetModelName = ConsoleConstants.MODEL_NAME_apphome;
-                targetModelAction = ShowModel.ACTION_NAME_SHOW;
+                request.setManageType(FrameworkContext.MANAGE_TYPE_APP);
             } else if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
-                request.setManageType(ConsoleConstants.MANAGE_TYPE_NODE);
-                appName = FrameworkContext.SYS_NODE_LOCAL;
-                targetModelName = ConsoleConstants.MODEL_NAME_home;
-                targetModelAction = ShowModel.ACTION_NAME_SHOW;
+                request.setManageType(FrameworkContext.MANAGE_TYPE_NODE);
+                manageAppName = FrameworkContext.SYS_NODE_LOCAL;
             }
-            request.setAppName(appName);
-            request.setModelName(targetModelName);
-            request.setActionName(targetModelAction);
-            if(FrameworkContext.SYS_NODE_LOCAL.equals(appName)){
-                appName = FrameworkContext.SYS_APP_NODE_AGENT;
+            request.setAppName(manageAppName);
+            request.setModelName(FrameworkContext.SYS_MODEL_Home);
+            request.setActionName(ShowModel.ACTION_NAME_SHOW);
+            if (FrameworkContext.SYS_NODE_LOCAL.equals(manageAppName)) {
+                manageAppName = FrameworkContext.SYS_APP_NODE_AGENT;
             }
-            ConsoleWarHelper.getAppManager().getApp(appName).invoke(request, response);
+            ConsoleWarHelper.invokeLocalApp(manageAppName, request, response);// todo 对于远程的，这里数据不对?
         }
 
         String forwardToPage = HtmlView.htmlPageBase + "view/" + pageForward + ".jsp";

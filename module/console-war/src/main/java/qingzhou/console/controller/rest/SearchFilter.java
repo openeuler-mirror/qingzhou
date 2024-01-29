@@ -22,7 +22,7 @@ public class SearchFilter implements Filter<RestContext> {
     private static final Map<Lang, List<Map<String, String>>> INFOS_FOR_SEARCH = new HashMap<>();
 
 //    static {
-//        ModelManager modelManager = ConsoleUtil.getModelManager();
+//        ModelManager modelManager;
 //        for (String modelName : modelManager.getAllModelNames()) {
 //            Model model = modelManager.getModel(modelName);
 //            Map<String, Map<String, ModelField>> fieldMapWithGroup =;

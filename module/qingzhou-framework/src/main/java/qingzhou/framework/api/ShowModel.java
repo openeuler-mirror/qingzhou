@@ -8,7 +8,7 @@ public interface ShowModel {
     @ModelAction(name = ACTION_NAME_SHOW,
             icon = "info-sign", forwardToPage = "info",
             nameI18n = {"查看", "en:Show"},
-            infoI18n = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
+            infoI18n = {"查看该组件的相关信息。", "en:View the information of this model."})
     default void show(Request request, Response response) throws Exception {
         response.addData(showInternal(request));
     }

@@ -1,18 +1,10 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.DownloadModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.StringUtil;
 
@@ -21,24 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 检查是否有访问权限
- */
 public class AccessControl implements Filter<RestContext> {
-
-    // 开放的model，不需要检测权限
-    // NOTE: 为方便自动测试集使用，此处设置为 public
-    public static final String[] commonActions = {
-            FrameworkContext.SYS_APP_MASTER + "/" + ConsoleConstants.MODEL_NAME_index + "/index",
-            FrameworkContext.SYS_APP_MASTER + "/" + ConsoleConstants.MODEL_NAME_index + "/home"};
-
-    private static final List<String> generalUris = new ArrayList<String>() {{
-        for (String commonAction : commonActions) {
-            add(RESTController.REST_PREFIX + "/" + ViewManager.htmlView + "/" + commonAction);
-            add(RESTController.REST_PREFIX + "/" + ViewManager.jsonView + "/" + commonAction);
-        }
-    }};
-
     public static boolean isOpenedModelAction(String appModelAction) {
         appModelAction = wrapCheckingPath(appModelAction);
 //        for (String oma : ServerXml.ConsoleRole.openedModelActions) {
@@ -50,83 +25,7 @@ public class AccessControl implements Filter<RestContext> {
     }
 
     public static boolean hasAppPermission(String loginUser, String appName) {//todo
-        /*Set<XPermission> userRolePermissions = RoleCache.getUserRolePermissions(loginUser);
-        if (userRolePermissions == null) {
-            return false;
-        }
-        boolean hasPermission = false;
-        for (XPermission permission : userRolePermissions) {
-            hasPermission = permission.checkAppPermission(appName);
-            if (hasPermission) {
-                break;
-            }
-        }*/
-
         return true;
-    }
-
-    private static final String[] basicActionNames = { // 有任何其它权限的，则 附带打开其读 权限
-            EditModel.ACTION_NAME_EDIT,
-            ShowModel.ACTION_NAME_SHOW,
-            ListModel.ACTION_NAME_LIST,
-            AddModel.ACTION_NAME_CREATE,
-            DownloadModel.ACTION_NAME_DOWNLOADLIST,
-            FrameworkContext.SYS_ACTION_MANAGE
-    };
-
-    // note: this is a simply impl ...
-    private static boolean hasModelActionPermission0(String appModelAction, String user) {
-        for (String commonAction : commonActions) {
-            if (commonAction.equals(appModelAction)) {
-                return true;
-            }
-        }
-
-        if (isOpenedModelAction(appModelAction)) {
-            return true;
-        }
-
-//        if (ServerXml.ConsoleRole.isRootUser(user)) {
-//            return true;
-//        }
-
-        String[] ma = appModelAction.split("/");
-//        if (ma.length == 3) {
-//            Set<XPermission> userRolePermissions = RoleCache.getUserRolePermissions(user);
-//            if (userRolePermissions == null) {
-//                return false;
-//            }
-//            String checkApp = ma[0];
-//            String checkModel = ma[1];
-//            String checkAction = ma[2];
-//            boolean hasPermission;
-//            for (XPermission permission : userRolePermissions) {
-//                if (permission == null) {
-//                    continue;
-//                }
-//                hasPermission = permission.checkPermission(checkApp, checkModel, checkAction, false);
-//
-//                if (!hasPermission) {
-//                    // 自动追加权限
-//                    Map<String, String> actionNameMap = new HashMap<String, String>() {{
-//                        put(AddModel.ACTION_NAME_CREATE, AddModel.ACTION_NAME_ADD);
-//                        put(DownloadModel.ACTION_NAME_DOWNLOADLIST, DownloadModel.ACTION_NAME_DOWNLOADFILE);
-//                    }};
-//                    for (Map.Entry<String, String> entry : actionNameMap.entrySet()) {
-//                        if (checkAction.equals(entry.getKey())) {
-//                            hasPermission = permission.checkPermission(checkApp, checkModel, entry.getValue(), false);
-//                            break;
-//                        }
-//                    }
-//                }
-//
-//                if (hasPermission) {
-//                    return true;
-//                }
-//            }
-//        }
-
-        return false;
     }
 
     public static Model[] getLoginUserAppMenuModels(String loginUser, String appName) {

@@ -1,14 +1,18 @@
 package qingzhou.console.page;
 
-import qingzhou.console.*;
+import qingzhou.console.AppStub;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.ConsoleI18n;
+import qingzhou.console.I18n;
+import qingzhou.console.Validator;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.*;
 import qingzhou.framework.RequestImpl;
+import qingzhou.framework.api.*;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
@@ -18,7 +22,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +48,7 @@ public class PageBackendService {
         if (request == null) {
             return FrameworkContext.SYS_APP_MASTER;
         }
-        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(request.getManageType())) {
+        if (FrameworkContext.MANAGE_TYPE_NODE.equals(request.getManageType())) {
             return FrameworkContext.SYS_APP_NODE_AGENT;
         } else {
             return request.getAppName();
@@ -195,7 +206,7 @@ public class PageBackendService {
 
     public static Map<String, Map<String, ModelField>> getGroupedModelFieldMap(Request request) {
         Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
-        ModelManager manager = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
+        ModelManager manager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         String modelName = request.getModelName();
         for (String groupName : manager.getGroupNames(modelName)) {
             Map<String, ModelField> map = new LinkedHashMap<>();
@@ -253,11 +264,11 @@ public class PageBackendService {
     }
 
     public static String getSubmitActionName(Request request) {
-        boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, request.getActionName());
-        final ModelManager modelManager = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
+        final ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         if (modelManager == null) {
             return null;
         }
+        boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, request.getActionName());
         for (String actionName : modelManager.getActionNames(request.getModelName())) {
             if (actionName.equals(EditModel.ACTION_NAME_UPDATE)) {
                 if (isEdit) {

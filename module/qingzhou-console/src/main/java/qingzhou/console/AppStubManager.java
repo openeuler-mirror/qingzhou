@@ -1,6 +1,7 @@
 package qingzhou.console;
 
-import qingzhou.framework.FrameworkContext;
+import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.framework.App;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.api.MenuInfo;
@@ -10,12 +11,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AppStubManager {
-    private final FrameworkContext frameworkContext;
-    private final Map<String, AppStub> appStubMap = new HashMap<>();
+    private static final AppStubManager instance = new AppStubManager();
 
-    public AppStubManager(FrameworkContext frameworkContext) {
-        this.frameworkContext = frameworkContext;
+    public static AppStubManager getInstance() {
+        return instance;
     }
+
+    private final Map<String, AppStub> appStubMap = new HashMap<>();
 
     public void registerAppStub(String appToken, AppStub appStub) {
         appStubMap.put(appToken, appStub);
@@ -27,21 +29,25 @@ public class AppStubManager {
 
     public AppStub getAppStub(String appToken) {
         return appStubMap.computeIfAbsent(appToken, s -> {
-            ConsoleContext consoleContext = frameworkContext.getAppManager().getApp(appToken).getAppContext().getConsoleContext();
+            App localApp = ConsoleWarHelper.getLocalApp(appToken);
+            if (localApp == null) return null;
+
             return new AppStub() {
+                private final ConsoleContext localAppConsole = localApp.getAppContext().getConsoleContext();
+
                 @Override
                 public ModelManager getModelManager() {
-                    return consoleContext.getModelManager();
+                    return localAppConsole.getModelManager();
                 }
 
                 @Override
                 public String getI18N(Lang lang, String key, Object... args) {
-                    return consoleContext.getI18N(lang, key, args);
+                    return localAppConsole.getI18N(lang, key, args);
                 }
 
                 @Override
                 public MenuInfo getMenuInfo(String menuName) {
-                    return consoleContext.getMenuInfo(menuName);
+                    return localAppConsole.getMenuInfo(menuName);
                 }
             };
         });

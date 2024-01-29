@@ -8,6 +8,8 @@ import java.util.Map;
 public interface MonitorModel extends ShowModel {
     String ACTION_NAME_MONITOR = "monitor";
     String MONITOR_EXT_SEPARATOR = ":";
+
+    // todo: 这些参数是否需要?
     String OVERVIEW_DATA_KEY_NAME = "name";
     String OVERVIEW_DATA_KEY_MAX = "max";
     String OVERVIEW_DATA_KEY_VALUE = "value";

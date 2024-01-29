@@ -5,7 +5,7 @@
         <table class="table home-table" style="margin-bottom: 1px;">
             <%
             List<Map<String, String>> dataList = qzResponse.getDataList();
-            if(dataList!=null && !dataList.isEmpty()){
+            if(dataList!=null && !dataList.isEmpty()) {
                 Map<String, String> data = dataList.get(0);
                 for (String fieldName : PageBackendService.getModelManager(menuAppName).getFieldNames(qzRequest.getModelName())) {
                     %>
@@ -24,7 +24,8 @@
                     </tr>
                     <%
                 }
-            }%>
+            }
+            %>
         </table>
     </div>
 </div>

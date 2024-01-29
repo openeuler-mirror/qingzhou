@@ -42,10 +42,7 @@ public class AppManagerImpl implements AppManager, InternalService {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-        boolean needCommonApp = true;
-        if (FrameworkContext.SYS_APP_MASTER.equals(appName) || FrameworkContext.SYS_APP_NODE_AGENT.equals(appName)) {
-            needCommonApp = false;
-        }
+        boolean needCommonApp = !FrameworkContext.SYS_APP_MASTER.equals(appName) && !FrameworkContext.SYS_APP_NODE_AGENT.equals(appName);
         AppImpl app = buildApp(appFile, needCommonApp);
         apps.put(appName, app);
 
@@ -90,14 +87,11 @@ public class AppManagerImpl implements AppManager, InternalService {
         File[] appLibs = appFiles;
         if (needCommonApp) {
             File[] commonFiles = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", FrameworkContext.SYS_APP_COMMON, "lib").listFiles();
-            if (commonFiles == null) {
-                throw ExceptionUtil.unexpectedException("common app lib not found.");
-            }
-            int appFileLength = appFiles.length;
-            int commonFileLength = commonFiles.length;
-            appLibs = new File[appFileLength + commonFileLength];
-            System.arraycopy(appFiles, 0, appLibs, 0, appFileLength);
-            if (commonFileLength > 0) {
+            if (commonFiles != null) {
+                int appFileLength = appFiles.length;
+                int commonFileLength = commonFiles.length;
+                appLibs = new File[appFileLength + commonFileLength];
+                System.arraycopy(appFiles, 0, appLibs, 0, appFileLength);
                 System.arraycopy(commonFiles, 0, appLibs, appFileLength, commonFileLength);
             }
         }
