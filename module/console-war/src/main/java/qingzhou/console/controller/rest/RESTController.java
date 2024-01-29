@@ -12,7 +12,6 @@ import qingzhou.framework.RequestImpl;
 import qingzhou.framework.ResponseImpl;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.pattern.FilterPattern;
 import qingzhou.framework.util.FileUtil;
@@ -38,7 +37,7 @@ import java.util.Map;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + FrameworkContext.MANAGE_TYPE_APP + "/" + FrameworkContext.SYS_APP_MASTER + "/" + FrameworkContext.SYS_MODEL_INDEX + "/index";// todo : index 可以替换为 ShowModel.ACTION_NAME_SHOW ?
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + FrameworkContext.MANAGE_TYPE_APP + "/" + FrameworkContext.SYS_APP_MASTER + "/" + FrameworkContext.SYS_MODEL_INDEX + "/" + FrameworkContext.SYS_MODEL_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache("upload");
 

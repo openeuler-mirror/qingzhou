@@ -10,7 +10,8 @@ import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.util.JDKUtil;
 
-@Model(name = FrameworkContext.SYS_MODEL_Home, icon = "home", entryAction = "show",
+@Model(name = FrameworkContext.SYS_MODEL_HOME, icon = "home",
+        entryAction = ShowModel.ACTION_NAME_SHOW,
         nameI18n = {"应用首页", "en:App Main"},
         infoI18n = {"展示当前应用的说明信息。",
                 "en:Displays the description of the current app."})
@@ -36,7 +37,7 @@ public class AppHome extends ModelBase implements ShowModel {
 
     @Override
     @ModelAction(name = ACTION_NAME_SHOW,
-            icon = "info-sign", forwardToPage = "home",
+            icon = "info-sign", forwardToPage = "show",
             nameI18n = {"应用首页", "en:App Home"},
             infoI18n = {"展示应用的首页信息。", "en:Displays the homepage information of the app."})
     public void show(Request request, Response response) throws Exception {

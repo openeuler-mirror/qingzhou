@@ -10,5 +10,5 @@
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
     <%-- 首页面主体部分 --%>
-    <%@ include file="../fragment/home.jsp" %>
+    <%@ include file="../fragment/info.jsp" %>
 </section>

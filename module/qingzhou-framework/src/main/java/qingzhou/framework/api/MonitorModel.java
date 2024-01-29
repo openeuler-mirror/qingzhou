@@ -17,7 +17,7 @@ public interface MonitorModel extends ShowModel {
 
     @ModelAction(name = ACTION_NAME_MONITOR,
             showToList = true,
-            icon = "area-chart", forwardToPage = "info",
+            icon = "area-chart", forwardToPage = "show",
             nameI18n = {"监视", "en:Monitor"},
             infoI18n = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})

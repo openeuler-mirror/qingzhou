@@ -47,7 +47,7 @@ public class HtmlView implements View {
                 manageAppName = FrameworkContext.SYS_NODE_LOCAL;
             }
             request.setAppName(manageAppName);
-            request.setModelName(FrameworkContext.SYS_MODEL_Home);
+            request.setModelName(FrameworkContext.SYS_MODEL_HOME);
             request.setActionName(ShowModel.ACTION_NAME_SHOW);
             if (FrameworkContext.SYS_NODE_LOCAL.equals(manageAppName)) {
                 manageAppName = FrameworkContext.SYS_APP_NODE_AGENT;

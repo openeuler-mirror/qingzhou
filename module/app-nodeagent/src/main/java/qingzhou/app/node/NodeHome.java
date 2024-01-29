@@ -10,7 +10,8 @@ import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.util.JDKUtil;
 
-@Model(name = FrameworkContext.SYS_MODEL_Home, icon = "home", entryAction = "show",
+@Model(name = FrameworkContext.SYS_MODEL_HOME, icon = "home",
+        entryAction = ShowModel.ACTION_NAME_SHOW,
         nameI18n = {"节点首页", "en:Node Main"},
         infoI18n = {"展示当前节点的说明信息。",
                 "en:Displays the description of the current node."})
@@ -37,7 +38,7 @@ public class NodeHome extends ModelBase implements ShowModel {
 
     @Override
     @ModelAction(name = ACTION_NAME_SHOW,
-            icon = "info-sign", forwardToPage = "home",
+            icon = "info-sign", forwardToPage = "show",
             nameI18n = {"节点首页", "en:Node Home"},
             infoI18n = {"展示节点的首页信息。", "en:Displays the homepage information of the node."})
     public void show(Request request, Response response) throws Exception {
