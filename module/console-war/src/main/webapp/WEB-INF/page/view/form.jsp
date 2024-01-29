@@ -245,11 +245,11 @@
                     </div>
                     <%
                 }
-            }
-            if (groups.size() > 1) {
-                %>
-                </div>
-                <%
+                if (groups.size() > 1) {
+                    %>
+                    </div>
+                    <%
+                }
             }
         }
         %>
