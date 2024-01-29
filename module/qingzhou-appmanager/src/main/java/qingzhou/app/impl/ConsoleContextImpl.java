@@ -1,7 +1,13 @@
 package qingzhou.app.impl;
 
 import qingzhou.framework.I18NStore;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.Lang;
+import qingzhou.framework.api.MenuInfo;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,11 +32,6 @@ public class ConsoleContextImpl implements ConsoleContext {
     @Override
     public MenuInfo getMenuInfo(String menuName) {
         return menuInfoMap.get(menuName);
-    }
-
-    @Override
-    public String getEntryModel() {
-        return entryModel;
     }
 
     public void setModelManager(ModelManager modelManager) {
@@ -74,10 +75,5 @@ public class ConsoleContextImpl implements ConsoleContext {
         menuInfo.setMenuI18n(menuI18n);
         menuInfo.setMenuIcon(menuIcon);
         menuInfo.setMenuOrder(menuOrder);
-    }
-
-    @Override
-    public void setEntryModel(String entryModel) {
-        this.entryModel = entryModel;
     }
 }

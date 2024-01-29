@@ -10,8 +10,6 @@ public class Main extends QingZhouSystemApp {
     @Override
     public void start(AppContext appContext) {
         fc = this.frameworkContext;
-
-        appContext.getConsoleContext().setEntryModel(Home.modelName);
     }
 
     public static FrameworkContext getFc() {

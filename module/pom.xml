@@ -21,5 +21,6 @@
         <module>app-nodeagent</module>
         <module>qingzhou-remote</module>
         <module>qingzhou-config</module>
+        <module>app-common</module>
     </modules>
 </project>

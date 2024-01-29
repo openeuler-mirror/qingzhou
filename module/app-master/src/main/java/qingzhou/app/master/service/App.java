@@ -156,6 +156,13 @@ public class App extends ModelBase implements AddModel {
         }
     }
 
+    @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
+            icon = "location-arrow", forwardToPage = FrameworkContext.SYS_ACTION_MANAGE,
+            nameI18n = {"管理", "en:Manage"}, showToList = true,
+            infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
+    public void switchTarget(Request request, Response response) throws Exception {
+    }
+
     @Override
     public void delete(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
@@ -183,13 +190,6 @@ public class App extends ModelBase implements AddModel {
             request.setActionName(ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);
-    }
-
-    @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
-            icon = "location-arrow", forwardToPage = FrameworkContext.SYS_ACTION_MANAGE,
-            nameI18n = {"管理", "en:Manage"}, showToList = true,
-            infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
-    public void switchTarget(Request request, Response response) throws Exception {
     }
 
     @Override

@@ -15,6 +15,7 @@ public interface ConsoleConstants {
     String MODEL_NAME_index = "index";
     String MODEL_NAME_home = "home";
     String MODEL_NAME_app = "app";
+    String MODEL_NAME_apphome = "apphome";
     String MODEL_NAME_password = "password";
     String DATA_SEPARATOR = ",";
     String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";

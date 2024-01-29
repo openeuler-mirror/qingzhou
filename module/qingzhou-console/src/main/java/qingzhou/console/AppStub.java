@@ -13,7 +13,6 @@ public class AppStub implements Serializable {
     private ModelManager modelManager;
     private final I18NStore i18NStore = new I18NStore();
     private final Map<String, MenuInfo> menuInfoMap = new HashMap<>();
-    private String entryModel;
 
     public ModelManager getModelManager() {
         return modelManager;
@@ -27,15 +26,7 @@ public class AppStub implements Serializable {
         return menuInfoMap.get(menuName);
     }
 
-    public String getEntryModel() {
-        return entryModel;
-    }
-
     public void setModelManager(ModelManager modelManager) {
         this.modelManager = modelManager;
-    }
-
-    public void setEntryModel(String entryModel) {
-        this.entryModel = entryModel;
     }
 }

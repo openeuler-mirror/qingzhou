@@ -43,11 +43,6 @@ public class AppStubManager {
                 public MenuInfo getMenuInfo(String menuName) {
                     return consoleContext.getMenuInfo(menuName);
                 }
-
-                @Override
-                public String getEntryModel() {
-                    return consoleContext.getEntryModel();
-                }
             };
         });
     }
