@@ -1,8 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
 <%
-    if (!"".equals(readonly)) {
-        readonly = " disallowed";
-    }
+if (!"".equals(readonly)) {
+    readonly = " disallowed";
+}
 %>
 <div class="switch-btn<%=readonly%>">
     <div class="switchedge <%="true".equals(fieldValue) ? "switch-bg":""%>">

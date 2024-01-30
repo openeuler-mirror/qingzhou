@@ -1,23 +1,23 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    if (readonly == null) {
-        return; // for 静态源码漏洞扫描
-    }
-    if (model == null) {
-        return; // for 静态源码漏洞扫描
-    }
-    if (fieldValues == null) {
-        return; // for 静态源码漏洞扫描
-    }
+if (readonly == null) {
+    return; // for 静态源码漏洞扫描
+}
+if (model == null) {
+    return; // for 静态源码漏洞扫描
+}
+if (fieldValues == null) {
+    return; // for 静态源码漏洞扫描
+}
 
-    if (!"".equals(readonly)) {
-        readonly = "onfocus='this.defaultIndex=this.selectedIndex;' onchange='this.selectedIndex=this.defaultIndex;' readonly";
-    }
-    LinkedHashMap<String, String> groupMultiDes = new LinkedHashMap<>();
-    LinkedHashMap<String, LinkedHashMap<String, String>> groupedMultiMap = new LinkedHashMap<>();
-    Options multiselectOptionManager = modelManager.getOptions(qzRequest.getModelName(), fieldName);
-    PageBackendService.multiSelectGroup(groupMultiDes, groupedMultiMap, multiselectOptionManager);
+if (!"".equals(readonly)) {
+    readonly = "onfocus='this.defaultIndex=this.selectedIndex;' onchange='this.selectedIndex=this.defaultIndex;' readonly";
+}
+LinkedHashMap<String, String> groupMultiDes = new LinkedHashMap<>();
+LinkedHashMap<String, LinkedHashMap<String, String>> groupedMultiMap = new LinkedHashMap<>();
+Options multiselectOptionManager = modelManager.getOptions(qzRequest.getModelName(), fieldName);
+PageBackendService.multiSelectGroup(groupMultiDes, groupedMultiMap, multiselectOptionManager);
 %>
 <select name="<%=fieldName%>" multiple="multiple" <%=readonly%> style="width:100%;">
     <%

@@ -2,30 +2,30 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-    String contextPath = request.getContextPath();
-    if (qzRequest == null || qzResponse == null) {
-        return; // for 静态源码漏洞扫描
-    }
+String contextPath = request.getContextPath();
+if (qzRequest == null || qzResponse == null) {
+    return; // for 静态源码漏洞扫描
+}
 
-    LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
-    String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
-    for (String fieldName : fieldNames) {
-        fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModelName(), fieldName));
+LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
+String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
+for (String fieldName : fieldNames) {
+    fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModelName(), fieldName));
+}
+int num = -1;
+List<Integer> indexToShow = new ArrayList<>();
+for (Map.Entry<String, ModelField> e : fieldInfos.entrySet()) {
+    num++;
+    ModelField modelField = e.getValue();
+    if (!modelField.showToList()) {
+        continue;
     }
-    int num = -1;
-    List<Integer> indexToShow = new ArrayList<>();
-    for (Map.Entry<String, ModelField> e : fieldInfos.entrySet()) {
-        num++;
-        ModelField modelField = e.getValue();
-        if (!modelField.showToList()) {
-            continue;
-        }
-        indexToShow.add(num);
-    }
+    indexToShow.add(num);
+}
 
-    int totalSize = qzResponse.getTotalSize();
-    int pageNum = qzResponse.getPageNum();
-    int pageSize = qzResponse.getPageSize();
+int totalSize = qzResponse.getTotalSize();
+int pageNum = qzResponse.getPageNum();
+int pageSize = qzResponse.getPageSize();
 %>
 
 <div class="bodyDiv">

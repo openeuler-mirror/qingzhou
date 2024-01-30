@@ -2,24 +2,24 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-    if (qzRequest == null || qzResponse == null || modelManager == null) {
-        return; // for 静态源码漏洞扫描
-    }
+if (qzRequest == null || qzResponse == null || modelManager == null) {
+    return; // for 静态源码漏洞扫描
+}
 
-    boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, qzRequest.getActionName());
-    String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
-    String idFieldName = ListModel.FIELD_NAME_ID;
-    ModelField idField = modelManager.getModelField(qzRequest.getModelName(), idFieldName);
-    final boolean hasId = idField != null;
-    List<String> passwordFields = new ArrayList();
-    String id = qzRequest.getId();
-    String encodedId = id;
-    if (ConsoleSDK.needEncode(id)) {
-        encodedId = ConsoleSDK.encodeId(id);
-    }
-    if (encodedId == null) {
-        encodedId = "";
-    }
+boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, qzRequest.getActionName());
+String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
+String idFieldName = ListModel.FIELD_NAME_ID;
+ModelField idField = modelManager.getModelField(qzRequest.getModelName(), idFieldName);
+final boolean hasId = idField != null;
+List<String> passwordFields = new ArrayList();
+String id = qzRequest.getId();
+String encodedId = id;
+if (ConsoleSDK.needEncode(id)) {
+    encodedId = ConsoleSDK.encodeId(id);
+}
+if (encodedId == null) {
+    encodedId = "";
+}
 %>
 
 <%-- <div class="bodyDiv"> --%>

@@ -1,8 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
 <%
-    String contextPath = request.getContextPath();
-    session.invalidate();
-    I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
+String contextPath = request.getContextPath();
+session.invalidate();
+I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
 %>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -58,13 +58,13 @@
                     
                     <%
                     if (request.getParameter(VerCode.SHOW_CAPTCHA_FLAG) != null) {
-                    %>
-                    <div class="input-control has-icon-left">
-                        <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control" required style="width:250px;display:inline-block;float:left;" placeholder="<%=PageBackendService.getMasterAppI18NString( "page.vercode")%>">
-                        <label for="randomcode" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
-                        <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>" class="captcha" onclick="this.src = '<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
-                    </div>
-                    <%
+                        %>
+                        <div class="input-control has-icon-left">
+                            <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control" required style="width:250px;display:inline-block;float:left;" placeholder="<%=PageBackendService.getMasterAppI18NString( "page.vercode")%>">
+                            <label for="randomcode" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
+                            <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>" class="captcha" onclick="this.src = '<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
+                        </div>
+                        <%
                     }
                     %>
 

@@ -73,7 +73,7 @@ public class Password extends ModelBase implements EditModel {
 
     @Override
     @ModelAction(name = ShowModel.ACTION_NAME_SHOW,
-            icon = "info-sign", forwardToPage = "sys/show",
+            icon = "info-sign", forwardToPage = "show",
             nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
     public void show(Request request, Response response) {

@@ -1,15 +1,15 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    if (readonly == null) {
-        return; // for 静态源码漏洞扫描
-    }
+if (readonly == null) {
+    return; // for 静态源码漏洞扫描
+}
 
-    String tempId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
-    String tempEleId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
-    if (!"".equals(readonly)) {
-        readonly = " onclick='return false;' readonly";
-    }
+String tempId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
+String tempEleId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
+if (!"".equals(readonly)) {
+    readonly = " onclick='return false;' readonly";
+}
 %>
 <div id="uploader" class="uploader">
     <a href="javascript:;" onclick="$('#<%=tempId%>').click();" class="btn uploader-btn-browse"
