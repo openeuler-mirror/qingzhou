@@ -261,16 +261,14 @@
             boolean submitPermission = AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + submitActionName, LoginManager.getLoginUser(session));
             if (submitPermission) {
                 %>
-                <input type="submit" class="btn"
-                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + submitActionName)%>'>
+                <input type="submit" class="btn" value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + submitActionName)%>'>
                 <%
             }
 
             boolean listPermission = AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
             if (hasId && listPermission) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>"
-                   btn-type="goback" class="btn">
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>" btn-type="goback" class="btn">
                     <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
                 </a>
                 <%
@@ -281,7 +279,7 @@
 
     <div id="tempZone" style="display:none;"></div>
     <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-            <%=PageBackendService.getPublicKeyString()%>
+        <%=PageBackendService.getPublicKeyString()%>
     </textarea>
 
     <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">

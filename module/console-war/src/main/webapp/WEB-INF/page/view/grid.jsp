@@ -57,21 +57,19 @@
                         %>
                         <%@ include file="../fragment/filter_select.jsp" %>
                         <%
-                        } else {
-                            String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
-                            if (StringUtil.notBlank(showHtml)) {
-                                if (SafeCheckerUtil.checkIsXSS(showHtml)) {
-                                    showHtml = "";
+                            } else {
+                                String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
+                                if (StringUtil.notBlank(showHtml)) {
+                                    if (SafeCheckerUtil.checkIsXSS(showHtml)) {
+                                        showHtml = "";
+                                    }
                                 }
-                            }
                         %>
-                        <input id="<%=fieldName%>" type="text" name="<%=fieldName%>"
-                               value='<%=showHtml%>'
-                               class="form-control" placeholder="">
+                        <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control" placeholder="">
                         <%
                             }
                         %>
-                        <label for="<%=fieldName%>"
+                        <label for="<%=fieldName%>" 
                                class="input-control-label-left"><%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
                         </label>
                     </div>
@@ -81,9 +79,8 @@
                 %>
                 <div class="col-md-3 search-btn" style="margin-bottom: 16px;">
                     <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
-                        <a class="btn"
-                           href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
-                           form="filterForm">
+                        <a class="btn" form="filterForm"
+                           href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>">
                             <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18NString( "page.filter")%>
                         </a>
                     </span>
