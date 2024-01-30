@@ -10,7 +10,7 @@
 
     <artifactId>console-war</artifactId>
     <packaging>war</packaging>
-    
+
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
@@ -24,7 +24,7 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-    
+
     <build>
         <finalName>console</finalName>
         <plugins>
@@ -40,8 +40,13 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="${project.basedir}/../../README.md" tofile="${project.build.directory}/${project.build.finalName}/static/readme/README.md" overwrite="true" />
-                                <copy file="${project.basedir}/../../doc/img/architecture.jpg" tofile="${project.build.directory}/${project.build.finalName}/static/readme/architecture.jpg" overwrite="true" />
+                                <copy file="${project.basedir}/../../README.md"
+                                      tofile="${project.build.directory}/${project.build.finalName}/static/readme/README.md"
+                                      overwrite="true"/>
+                                <copy todir="${project.build.directory}/${project.build.finalName}/static/readme/"
+                                      overwrite="true">
+                                    <fileset dir="${project.basedir}/../../doc/readme/"/>
+                                </copy>
                             </target>
                         </configuration>
                     </execution>

@@ -34,7 +34,7 @@ public class HtmlView implements View {
         if (modelAction != null) {
             pageForward = modelAction.forwardToPage();
         }
-        if (pageForward == null || StringUtil.isBlank(pageForward)) {
+        if (StringUtil.isBlank(pageForward)) {
             pageForward = "default";
         }
 

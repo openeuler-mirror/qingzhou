@@ -30,12 +30,16 @@ public class About implements Filter<HttpServletContext> {
             String readmePath = context.req.getServletContext().getRealPath(pathPrefix + "/README.md");
             List<String> fileLines = FileUtil.fileToLines(new File(readmePath));
             StringBuilder result = new StringBuilder();
+            String begin = "![](doc/readme/";
+            String end = ")";
             fileLines.forEach(line -> {
-                if (line.contains("architecture.jpg")) {
-                    result.append("![architecture](")
+                if (line.startsWith(begin) && line.endsWith(end)) {
+                    String imgName = line.substring(begin.length(), line.lastIndexOf(end));
+                    result.append("![](")
                             .append(context.req.getContextPath())
                             .append(pathPrefix)
-                            .append("/architecture.jpg)");
+                            .append("/").append(imgName)
+                            .append(")");
                 } else {
                     result.append(line);
                 }
