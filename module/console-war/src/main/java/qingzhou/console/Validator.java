@@ -13,7 +13,6 @@ import qingzhou.framework.api.Options;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.util.IPUtil;
-import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.SafeCheckerUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -83,11 +82,14 @@ public class Validator {
         String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
         boolean singleFieldValidation = isSingleFieldValidation(request);
         String singleField = request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM);
+        ModelBase tempModel = modelManager.getModelInstance(request.getModelName());
+        Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
         for (String fieldName : allFieldNames) {
             if (singleFieldValidation && !fieldName.equals(singleField)) {
                 continue;
             }
-            String validate = validate(request, modelManager, fieldName, request.getParameter(fieldName));
+
+            String validate = validate(request, modelManager, dataMap, fieldName, request.getParameter(fieldName));
             if (StringUtil.notBlank(validate)) {
                 errorData.put(fieldName, validate);
             }
@@ -102,7 +104,7 @@ public class Validator {
         return !singleFieldValidation;// 单字段的校验不需要走后续的持久化
     }
 
-    private static String validate(Request request, ModelManager modelManager, String fieldName, String newValue) throws Exception {
+    private static String validate(Request request, ModelManager modelManager, Map<String, String> data, String fieldName, String newValue) throws Exception {
         // 上下文环境
         String modelName = request.getModelName();
         ModelField modelField = modelManager.getModelField(modelName, fieldName);
@@ -110,20 +112,15 @@ public class Validator {
             return null;
         }
 
-        ModelBase tempModel = modelManager.getModelInstance(modelName);
-
         try {
-            Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
-            ObjectUtil.setObjectValues(tempModel, dataMap);
-            if (!isEffective(fieldName0 -> String.valueOf(tempModel.getClass().getField(fieldName0)
-                    .get(tempModel)), modelField.effectiveWhen().trim())) {// TODO: 不显示的属性不需要校验
+            if (!isEffective(fieldName0 -> String.valueOf(data.get(fieldName0)), modelField.effectiveWhen().trim())) {// TODO: 不显示的属性不需要校验
                 return null;
             }
-
         } catch (Exception e) {
             // 如果这里出错，多数数据类型错误，例如本该数字的，却传值为 字符串 等。
         }
 
+        ModelBase tempModel = modelManager.getModelInstance(request.getModelName());
         boolean isUpdate = EditModel.ACTION_NAME_UPDATE.equals(request.getActionName());
         if (newValue == null) { // NOTE：不能使用 StringUtil.isBlank 来判断，空串 "" 表示有值，且与 null（无值） 是不同含义
             if (modelField.required()) {
@@ -148,7 +145,7 @@ public class Validator {
                     }
                 }
             }
-            ValidatorContext vc = new ValidatorContext(newValue, modelField, fieldName, request, modelManager, tempModel);
+            ValidatorContext vc = new ValidatorContext(newValue, modelField, fieldName, request, modelManager, data);
 
             Class<?>[] preValidatorClass = { // 有顺序要求
                     disableOnCreate.class,
@@ -236,18 +233,18 @@ public class Validator {
         final String newValue;
         final String fieldName;
         final Request request;
-        final ModelBase tempModel;
+        final Map<String, String> data;
         final ModelManager modelManager;
         final AppStub appStub;
 
-        private ValidatorContext(String newValue, ModelField modelField, String fieldName, Request request, ModelManager modelManager, ModelBase tempModel) {
+        private ValidatorContext(String newValue, ModelField modelField, String fieldName, Request request, ModelManager modelManager, Map<String, String> data) {
             this.modelName = request.getModelName();
             this.modelField = modelField;
             this.newValue = newValue;
             this.fieldName = fieldName;
             this.request = request;
             this.modelManager = modelManager;
-            this.tempModel = tempModel;
+            this.data = data;
             this.appStub = ConsoleWarHelper.getAppStub(request.getAppName());
         }
 
@@ -523,7 +520,7 @@ public class Validator {
                     String noGreaterThan = vc.modelField.noGreaterOrEqualThanDate().trim();
                     if (!noGreaterThan.isEmpty()) {
                         try {
-                            String thanObj = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, noGreaterThan));
+                            String thanObj = vc.data.get(noGreaterThan);
                             Date otherDateTime = dateFormat.parse(thanObj);
                             if (!thisDateTime.before(otherDateTime)) {
                                 String msg = getConsoleI18n("validator.date.larger.cannot");
@@ -536,7 +533,7 @@ public class Validator {
                     String noLessThan = vc.modelField.noLessOrEqualThanDate().trim();
                     if (!noLessThan.isEmpty()) {
                         try {
-                            String thanObj = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, noGreaterThan));
+                            String thanObj = vc.data.get(noGreaterThan);
                             if (StringUtil.notBlank(thanObj)) {
                                 Date otherDateTime = dateFormat.parse(thanObj);
                                 if (!thisDateTime.after(otherDateTime)) {
@@ -682,7 +679,7 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             String noGreaterThan = vc.modelField.noGreaterThan().trim();
             if (!noGreaterThan.isEmpty() && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
-                String value = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, noGreaterThan));
+                String value = vc.data.get(noGreaterThan);
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue()) {
@@ -701,7 +698,7 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             String noGreaterThanMinusOne = vc.modelField.noGreaterThanMinusOne().trim();
             if (!noGreaterThanMinusOne.isEmpty() && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
-                String value = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, noGreaterThanMinusOne));
+                String value = vc.data.get(noGreaterThanMinusOne);
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue() - 1) {
@@ -720,7 +717,7 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             String noLessThan = vc.modelField.noLessThan().trim();
             if (!noLessThan.isEmpty() && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
-                String value = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, noLessThan));
+                String value = vc.data.get(noLessThan);
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) { // 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) < arg.longValue()) {
@@ -743,7 +740,7 @@ public class Validator {
                 for (String field : cannotBeTheSameAs.split(ConsoleConstants.DATA_SEPARATOR)) {
                     String fieldValue = vc.request.getParameter(field);
                     if (fieldValue == null && vc.isUpdate()) {
-                        fieldValue = String.valueOf(ObjectUtil.getObjectValue(vc.tempModel, field));
+                        fieldValue = vc.data.get(field);
                     }
                     if (Objects.equals(fieldValue, vc.newValue)) {
                         String p1 = vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + field);
