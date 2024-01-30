@@ -379,6 +379,7 @@ public class PageBackendService {
     public static ModelAction[] listCommonOps(Request request, Response response) throws Exception {
         BatchVisitor batchVisitor = new BatchVisitor();
         visitActions(request, response, batchVisitor);
+        batchVisitor.modelActions.sort(Comparator.comparingInt(ModelAction::orderOnList));
         return batchVisitor.modelActions.toArray(new ModelAction[0]);
     }
 

@@ -118,7 +118,7 @@ public class I18nFilter implements Filter<HttpServletContext> {
         ConsoleI18n.addI18N("msg.fail", new String[]{"失败", "en:Failed"});
         ConsoleI18n.addI18N("page.selectfile", new String[]{"选择文件", "en:Select file"});
         ConsoleI18n.addI18N("page.list.order", new String[]{"序号", "en:No."});
-        ConsoleI18n.addI18N("page.copyright", new String[]{"版权所有 © 2023 openEuler 保留一切权利", "en:Copyright © 2023 openEuler. All rights reserved."});
+        ConsoleI18n.addI18N("page.copyright", new String[]{"版权所有 © 2023 保留一切权利", "en:Copyright © 2023. All rights reserved."});
         ConsoleI18n.addI18N("page.userlogin", new String[]{"用户登录", "en:User Login"});
         ConsoleI18n.addI18N("page.login", new String[]{"登录", "en:Login"});
         ConsoleI18n.addI18N("page.relogin", new String[]{"重新登录", "en:Re Login"});

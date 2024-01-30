@@ -33,7 +33,7 @@ public interface DownloadModel {
     String DOWNLOAD_BLOCK = "DOWNLOAD_BLOCK";
 
     @ModelAction(name = ACTION_NAME_DOWNLOADLIST,
-            showToList = true,
+            showToList = true, orderOnList = 98,
             icon = "download-alt",
             nameI18n = {"下载", "en:Download"},
             infoI18n = {"获取该组件可下载文件的列表。",

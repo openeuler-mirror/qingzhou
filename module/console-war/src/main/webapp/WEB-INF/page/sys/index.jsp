@@ -10,7 +10,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="www.openeuler.org">
+    <meta name="author" content="https://gitee.com/openeuler/qingzhou">
     <title>QingZhou Console</title>
     <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
     <%--  echarts   https://echarts.apache.org/zh/builder.html  定制的 4.9.0 如果缺少要用的模块请重新定制 --%>

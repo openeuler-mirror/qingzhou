@@ -9,6 +9,10 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MessageDigestImpl implements MessageDigest {
+    public static void main(String[] args) {
+        String digest = new MessageDigestImpl().digest("qingzhou123.com", "SHA-256", 2, 2);
+        System.out.println(digest);
+    }
     private final Random random = ThreadLocalRandom.current();
 
     private final String SP = "$";

@@ -17,6 +17,7 @@ import java.lang.reflect.Field;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -152,6 +153,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
         return actionInfoMap.values().stream()
                 .filter(actionInfo -> actionInfo.modelAction.showToList())
+                .sorted(Comparator.comparingInt(o -> o.modelAction.orderOnList()))
                 .map(actionInfo -> actionInfo.modelAction.name())
                 .toArray(String[]::new);
     }

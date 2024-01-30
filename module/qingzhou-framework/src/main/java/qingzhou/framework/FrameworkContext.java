@@ -18,6 +18,12 @@ public interface FrameworkContext {
     String SYS_ACTION_INSTALL = "install";
     String SYS_ACTION_UNINSTALL = "uninstall";
 
+    // 轻舟产品名词
+    String getName();
+
+    // 产品版本信息
+    String getVersion();
+
     AppManager getAppManager();
 
     ServiceManager getServiceManager();

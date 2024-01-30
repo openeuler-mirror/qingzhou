@@ -46,14 +46,8 @@ public class Jvm extends ModelBase implements MonitorModel {
     @ModelField(isMonitorField = true, nameI18n = {"启动时间", "en:Start Time"}, infoI18n = {"Java 虚拟机的启动时间。", "en:The Java virtual machine startup time."})
     public String StartTime;
 
-    @ModelField(isMonitorField = true, nameI18n = {"引导类路径", "en:Boot Class Path"}, infoI18n = {"引导类加载器用来搜索类文件的引导类路径。", "en:The boot class path that is used by the bootstrap class loader."})
-    public String BootClassPath = "";// null on jvm 14
-
     @ModelField(isMonitorField = true, nameI18n = {"系统类路径", "en:Class Path"}, infoI18n = {"系统类加载器用来搜索类文件的Java类路径。", "en:The Java class path that is used by the system class loader."})
     public String ClassPath;
-
-    @ModelField(isMonitorField = true, nameI18n = {"本地库路径", "en:Library Path"}, infoI18n = {"Java库路径中的多个路径由要监视的 Java 虚拟机平台的路径分隔符分隔。", "en:Multiple paths in the Java library path are separated by the path separator character of the platform of the Java virtual machine being monitored."})
-    public String LibraryPath;
 
     @ModelField(isMonitorField = true, nameI18n = {"启动参数", "en:Input Arguments"}, infoI18n = {"传递给 Java 虚拟机的输入参数。", "en:The input arguments passed to the Java virtual machine."})
     public String InputArguments;
@@ -140,16 +134,8 @@ public class Jvm extends ModelBase implements MonitorModel {
 
         String format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(mxBean.getStartTime()));
         data.put("StartTime", format);
-        try {
-            data.put("BootClassPath", mxBean.getBootClassPath());
-        } catch (Exception e) {
-            // jdk14: Boot class path mechanism is not supported
-        }
 
         data.put("ClassPath", rectifyPath(mxBean.getClassPath()));
-        data.put("LibraryPath", rectifyPath(mxBean.getLibraryPath()));
-
-//        properties.put("InputArguments", mxBean.getInputArguments().toString());// ITAIT-2658 不能格式化： json 返回时候不能带有中括号 []
         StringBuilder args = new StringBuilder();
         for (String s : mxBean.getInputArguments()) {
             args.append(s).append(" ");

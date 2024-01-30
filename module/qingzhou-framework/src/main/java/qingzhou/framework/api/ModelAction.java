@@ -24,6 +24,8 @@ public @interface ModelAction {
 
     boolean showToList() default false;
 
+    int orderOnList() default 0;
+
     boolean showToFormBottom() default false;
 
     boolean supportBatch() default false;

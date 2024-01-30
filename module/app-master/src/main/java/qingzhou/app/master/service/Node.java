@@ -65,7 +65,7 @@ public class Node extends ModelBase implements AddModel {
 
     @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
             icon = "location-arrow", forwardToPage = "sys/" + FrameworkContext.SYS_ACTION_MANAGE,
-            nameI18n = {"管理", "en:Manage"}, showToList = true,
+            nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {
     }

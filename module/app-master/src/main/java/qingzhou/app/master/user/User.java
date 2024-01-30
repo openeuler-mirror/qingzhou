@@ -412,7 +412,7 @@ public class User extends ModelBase implements AddModel {
 //    @Override
 //    @ModelAction(
 //            name = DeleteModel.ACTION_NAME_DELETE,
-//            effectiveWhen = "id!=thanos&id!=security&id!=auditor&id!=monitor",
+//            effectiveWhen = "id!=qingzhou&id!=security&id!=auditor&id!=monitor",
 //            icon = "trash",
 //            nameI18n = {"删除", "en:Delete"},
 //            infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",

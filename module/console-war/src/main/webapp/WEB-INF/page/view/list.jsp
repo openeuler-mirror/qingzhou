@@ -287,7 +287,7 @@
                             %>
                             <td>
                                 <%
-                                String[] actions = modelManager.getActionNames(qzRequest.getModelName());
+                                String[] actions = modelManager.getActionNamesShowToList(qzRequest.getModelName());
                                 for (String actionName : actions) {
                                     ModelAction action = modelManager.getModelAction(qzRequest.getModelName(), actionName);
                                     if (action == null) {
@@ -298,10 +298,6 @@
                                     }
                                     String actionKey = action.name();
                                     if (actionKey.equals(EditModel.ACTION_NAME_EDIT)) {
-                                        continue;
-                                    }
-
-                                    if (!action.showToList()  || action.showToListHead()) {
                                         continue;
                                     }
 
