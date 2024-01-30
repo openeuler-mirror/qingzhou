@@ -1,5 +1,6 @@
 package qingzhou.console.page;
 
+import qingzhou.console.AppStub;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
@@ -9,7 +10,8 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
-import qingzhou.framework.AppStub;
+import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.*;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ExceptionUtil;
@@ -38,10 +40,19 @@ import java.util.stream.Collectors;
 public class PageBackendService {
 
     private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
-    public static String TARGET_TYPE_SET_FLAG = "targetType";
-    public static String TARGET_NAME_SET_FLAG = "targetName";
 
     private PageBackendService() {
+    }
+
+    public static String getInitAppName(RequestImpl request) {
+        if (request == null) {
+            return FrameworkContext.SYS_APP_MASTER;
+        }
+        if (FrameworkContext.MANAGE_TYPE_NODE.equals(request.getManageType())) {
+            return FrameworkContext.SYS_APP_NODE_AGENT;
+        } else {
+            return request.getAppName();
+        }
     }
 
     public static String getMasterAppI18NString(String key, Lang lang) {
@@ -54,10 +65,6 @@ public class PageBackendService {
 
     public static ModelManager getModelManager(String appName) {
         return ConsoleWarHelper.getAppStub(appName).getModelManager();
-    }
-
-    public static String getAppEntryModel(String appName) {
-        return ConsoleWarHelper.getAppStub(appName).getEntryModel();
     }
 
     static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -78,27 +85,27 @@ public class PageBackendService {
         menuBuilder.append("</li>");
     }
 
-    static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, String appName, String curModel, StringBuilder menuBuilder) {
+    static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, String manageType, String appName, String curModel, StringBuilder menuBuilder) {
         String model = menu.getMenuName();
         String action = menu.getMenuAction();
         menuBuilder.append("<li class=\"treeview ").append((model.equals(curModel) ? " active" : "")).append("\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + appName + "/" + model + "/" + action;
-        menuBuilder.append("<a href='").append(encodeURL(request, response, url)).append("' modelName='").append(model).append("'>");
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + manageType + "/" + appName + "/" + model + "/" + action;
+        menuBuilder.append("<a href='").append(encodeURL(response, url)).append("' modelName='").append(model).append("'>");
         menuBuilder.append("<i class='icon icon-").append(menu.getMenuIcon()).append("'></i>");
         menuBuilder.append("<span>").append(I18n.getString(appName, "model." + model)).append("</span>");
         menuBuilder.append("</a>");
         menuBuilder.append("</li>");
     }
 
-    public static String buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, String appName, String curModel) {
+    public static String buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, String manageType, String appName, String curModel) {
         StringBuilder builder = new StringBuilder();
-        buildMenuHtmlBuilder(models, request, response, viewName, appName, curModel, builder, true);
+        buildMenuHtmlBuilder(models, request, response, viewName, manageType, appName, curModel, builder, true);
         String menus = builder.toString();
         return String.format(menus, " ");
     }
 
-    private static void buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, String appName, String curModel, StringBuilder builder, boolean needFavoritesMenu) {
+    private static void buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, String manageType, String appName, String curModel, StringBuilder builder, boolean needFavoritesMenu) {
         for (int i = 0; i < models.size(); i++) {
             if (needFavoritesMenu && i == 1) {
                 builder.append("%s");
@@ -107,11 +114,11 @@ public class PageBackendService {
             StringBuilder childrenBuilder = new StringBuilder();
             List<MenuItem> children = menu.getChildren();
             if (children.isEmpty()) {
-                printChildrenMenu(menu, request, response, viewName, appName, curModel, childrenBuilder);
+                printChildrenMenu(menu, request, response, viewName, manageType, appName, curModel, childrenBuilder);
                 builder.append(childrenBuilder);
             } else {
                 StringBuilder parentBuilder = new StringBuilder();
-                buildMenuHtmlBuilder(children, request, response, viewName, appName, curModel, childrenBuilder, false);
+                buildMenuHtmlBuilder(children, request, response, viewName, manageType, appName, curModel, childrenBuilder, false);
                 printParentMenu(menu, curModel, parentBuilder, childrenBuilder);
                 builder.append(parentBuilder.toString());
             }
@@ -168,50 +175,8 @@ public class PageBackendService {
         return menus;
     }
 
-    public static String encodeURL(HttpServletRequest request, HttpServletResponse response, String url) {// 应该优先考虑使用 非静态 的同名方法，而不是这个
-        return response.encodeURL(encodeTarget(request, url));
-    }
-
-    public static String encodeTarget(HttpServletRequest request, String url) {
-        String type = (String) request.getAttribute(TARGET_TYPE_SET_FLAG);
-        String name = (String) request.getAttribute(TARGET_NAME_SET_FLAG);
-        if (StringUtil.isBlank(type) || StringUtil.isBlank(name)) {// || isCentralizedUrl(url) todo 集中管理的url需要标识，以不用 wrap url
-            return url;
-        }
-
-        String path = url;
-        String query = "";
-        String anchor = "";
-        int pound = path.indexOf('#');
-        if (pound >= 0) {
-            anchor = path.substring(pound);
-            path = path.substring(0, pound);
-        }
-        int question = path.indexOf('?');
-        if (question >= 0) {
-            query = path.substring(question);
-            path = path.substring(0, question);
-        }
-        StringBuilder sb = new StringBuilder(path);
-        if (query.length() > 0) {
-            sb.append(query);
-            sb.append('&');
-        } else {
-            sb.append('?');
-        }
-
-        // 扩充的内容 begin
-        sb.append(TARGET_TYPE_SET_FLAG);
-        sb.append('=');
-        sb.append(type);
-        sb.append('&');
-        sb.append(TARGET_NAME_SET_FLAG);
-        sb.append('=');
-        sb.append(name);
-        // 扩充的内容 end
-
-        sb.append(anchor);
-        return sb.toString();
+    public static String encodeURL(HttpServletResponse response, String url) {// 应该优先考虑使用 非静态 的同名方法，而不是这个
+        return response.encodeURL(url);
     }
 
     public static void multiSelectGroup(LinkedHashMap<String, String> groupDes, LinkedHashMap<String, LinkedHashMap<String, String>> groupedMap, Options options) {
@@ -241,7 +206,7 @@ public class PageBackendService {
 
     public static Map<String, Map<String, ModelField>> getGroupedModelFieldMap(Request request) {
         Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
-        ModelManager manager = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
+        ModelManager manager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         String modelName = request.getModelName();
         for (String groupName : manager.getGroupNames(modelName)) {
             Map<String, ModelField> map = new LinkedHashMap<>();
@@ -299,11 +264,11 @@ public class PageBackendService {
     }
 
     public static String getSubmitActionName(Request request) {
-        boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, request.getActionName());
-        final ModelManager modelManager = ConsoleWarHelper.getAppManager().getApp(request.getAppName()).getAppContext().getConsoleContext().getModelManager();
+        final ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         if (modelManager == null) {
             return null;
         }
+        boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, request.getActionName());
         for (String actionName : modelManager.getActionNames(request.getModelName())) {
             if (actionName.equals(EditModel.ACTION_NAME_UPDATE)) {
                 if (isEdit) {
@@ -353,10 +318,6 @@ public class PageBackendService {
             }
         }
         return null;
-    }
-
-    public static void error(String msg, Throwable t) {
-        ConsoleWarHelper.getLogger().error(msg, t);
     }
 
     public static void warn(String msg) {
@@ -475,6 +436,15 @@ public class PageBackendService {
                 }
             }
         }
+    }
+
+    public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
+        return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
+    }
+
+    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, RequestImpl request, String viewName, String actionName) {
+        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getManageType() + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
+        return response.encodeURL(url);
     }
 
     private static class BatchVisitor implements Visitor<ModelAction> {

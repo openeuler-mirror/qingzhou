@@ -41,12 +41,6 @@
 
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-console</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
             <artifactId>qingzhou-crypto</artifactId>
             <version>0.1.0</version>
         </dependency>
@@ -55,6 +49,17 @@
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-serializer</artifactId>
             <version>0.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.83</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

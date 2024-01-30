@@ -49,6 +49,7 @@
                 <include>${project.groupId}:qingzhou-console</include>
                 <include>${project.groupId}:qingzhou-remote</include>
                 <include>${project.groupId}:qingzhou-appmanager</include>
+                <include>${project.groupId}:qingzhou-config</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
@@ -100,13 +101,24 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:app-node</include>
+                <include>${project.groupId}:app-nodeagent</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/sysapp/node/lib</outputDirectory>
+            <outputDirectory>lib/version/sysapp/nodeagent/lib</outputDirectory>
+        </dependencySet>
+
+        <dependencySet>
+            <includes>
+                <include>${project.groupId}:app-common</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version/sysapp/common/lib</outputDirectory>
         </dependencySet>
 
     </dependencySets>

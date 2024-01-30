@@ -1,10 +1,10 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.I18n;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.api.Lang;
-import qingzhou.console.RequestImpl;
+import qingzhou.framework.RequestImpl;
 import qingzhou.framework.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ public class SearchFilter implements Filter<RestContext> {
     private static final Map<Lang, List<Map<String, String>>> INFOS_FOR_SEARCH = new HashMap<>();
 
 //    static {
-//        ModelManager modelManager = ConsoleUtil.getModelManager();
+//        ModelManager modelManager;
 //        for (String modelName : modelManager.getAllModelNames()) {
 //            Model model = modelManager.getModel(modelName);
 //            Map<String, Map<String, ModelField>> fieldMapWithGroup =;
@@ -102,7 +102,7 @@ public class SearchFilter implements Filter<RestContext> {
     public boolean doFilter(RestContext context) throws Exception {
         HttpServletRequest request = context.servletRequest;
         HttpServletResponse response = context.servletResponse;
-        String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
+        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
         if (checkPath.equals(SEARCH_URI)) {
             response.setContentType("application/json;charset=UTF-8");
             String user = LoginManager.getLoginUser(request.getSession());

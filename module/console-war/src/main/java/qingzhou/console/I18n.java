@@ -1,9 +1,8 @@
 package qingzhou.console;
 
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.AppStub;
+import qingzhou.framework.I18NStore;
 import qingzhou.framework.api.Lang;
-import qingzhou.framework.console.I18NStore;
 
 import java.util.Map;
 

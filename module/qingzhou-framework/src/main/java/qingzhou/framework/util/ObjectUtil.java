@@ -14,12 +14,7 @@ import java.lang.reflect.Modifier;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 public class ObjectUtil {
     public static String inputStreamToString(InputStream is, Charset cs) throws IOException {
@@ -28,7 +23,7 @@ public class ObjectUtil {
         for (String line; (line = reader.readLine()) != null; ) {
             content.add(line);
         }
-        return StringUtil.join(content, System.lineSeparator());
+        return String.join(System.lineSeparator(), content);
     }
 
     public static Properties streamToProperties(InputStream inputStream) throws Exception {

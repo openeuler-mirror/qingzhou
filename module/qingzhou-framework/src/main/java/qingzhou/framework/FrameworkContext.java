@@ -1,24 +1,28 @@
 package qingzhou.framework;
 
-import qingzhou.framework.api.Logger;
-
 public interface FrameworkContext {
-    String LOCAL_NODE_NAME = "local";
-    String MASTER_APP_NAME = "master";
-    String NODE_APP_NAME = "node";
-    String NODEAGENT_MODEL_NAME = "nodeagent";
-    String NODEAGENT_INSTALL_APP_ACTION_NAME = "install-app";
-    String NODEAGENT_UN_INSTALL_APP_ACTION_NAME = "uninstall-app";
+    String SYS_NODE_LOCAL = "local";
 
-    boolean isMaster();
+    String MANAGE_TYPE_APP = "app";
+    String MANAGE_TYPE_NODE = "node";
 
-    Logger getLogger();
+    String SYS_APP_MASTER = "master";
+    String SYS_APP_NODE_AGENT = "nodeagent";
+    String SYS_APP_COMMON = "common";
 
-    AppStubManager getAppStubManager();
+    String SYS_MODEL_INDEX = "index";
+    String SYS_MODEL_HOME = "home";
+    String SYS_MODEL_APP_INSTALLER = "appinstaller";
+
+    String SYS_ACTION_MANAGE = "manage";
+    String SYS_ACTION_INSTALL = "install";
+    String SYS_ACTION_UNINSTALL = "uninstall";
 
     AppManager getAppManager();
 
     ServiceManager getServiceManager();
 
     FileManager getFileManager();
+
+    ConfigManager getConfigManager();
 }

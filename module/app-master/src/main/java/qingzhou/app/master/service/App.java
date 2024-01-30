@@ -2,6 +2,7 @@ package qingzhou.app.master.service;
 
 import qingzhou.app.master.Main;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ListModel;
@@ -17,12 +18,14 @@ import qingzhou.framework.util.FileUtil;
 import java.io.File;
 import java.util.Map;
 
-@Model(name = "app", icon = "cube-alt",
+@Model(name = App.modelName, icon = "cube-alt",
         menuName = "Service", menuOrder = 1,
         nameI18n = {"应用", "en:App"},
         infoI18n = {"应用。",
                 "en:App Management."})
 public class App extends ModelBase implements AddModel {
+    public static final String modelName = "app";
+
     @ModelField(
             required = true,
             showToList = true,
@@ -95,8 +98,8 @@ public class App extends ModelBase implements AddModel {
     public String validate(Request request, String fieldName) {
         if (fieldName.equals(ListModel.FIELD_NAME_ID)) {
             String id = request.getParameter(ListModel.FIELD_NAME_ID);
-            if (FrameworkContext.MASTER_APP_NAME.equals(id) ||
-                    FrameworkContext.NODE_APP_NAME.equals(id)) {
+            if (FrameworkContext.SYS_APP_MASTER.equals(id) ||
+                    FrameworkContext.SYS_APP_NODE_AGENT.equals(id)) {
                 return "app.id.system";
             }
         }
@@ -110,7 +113,8 @@ public class App extends ModelBase implements AddModel {
             showToFormBottom = true,
             nameI18n = {"部署", "en:Deploy"},
             infoI18n = {"按配置要求部署应用到指定的节点。", "en:Deploy the app to the specified node as required."})
-    public void add(Request request, Response response) throws Exception {
+    public void add(Request req, Response response) throws Exception {
+        RequestImpl request = (RequestImpl) req;
         Map<String, String> p = prepareParameters(request);
         File srcFile;
         if (Boolean.parseBoolean(p.remove("appFrom"))) {
@@ -133,51 +137,67 @@ public class App extends ModelBase implements AddModel {
         }
 
         String[] nodes = p.get("nodes").split(",");
-        for (String node : nodes) {
-            try {
-                if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_INSTALL_APP_ACTION_NAME, request, response);
-                } else {
-                    // TODO：调用远端 node 上的app add
+        request.setModelName(FrameworkContext.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(FrameworkContext.SYS_ACTION_INSTALL);
+        try {
+            for (String node : nodes) {
+                try {
+                    if (FrameworkContext.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                        Main.getFc().getAppManager().getApp(FrameworkContext.SYS_APP_NODE_AGENT).invoke(request, response);
+                    } else {
+                        // TODO：调用远端 node 上的app add
+                    }
+                } catch (Exception e) { // todo 部分失败，如何显示到页面？
+                    response.setSuccess(false);
+                    response.setMsg(e.getMessage());
+                    e.printStackTrace();
                 }
-            } catch (Exception e) { // todo 部分失败，如何显示到页面？
-                response.setSuccess(false);
-                response.setMsg(e.getMessage());
-                e.printStackTrace();
             }
+        } finally {
+            request.setModelName(modelName);
+            request.setActionName(ACTION_NAME_ADD);
         }
 
-        if(response.isSuccess()){
-            p.put("id", appName);
-            getDataStore().addData(request.getModelName(), appName, p);
+        if (response.isSuccess()) {
+            p.put(ListModel.FIELD_NAME_ID, appName);
+            getDataStore().addData(modelName, appName, p);
         }
     }
 
-    @Override
-    public void delete(Request request, Response response) throws Exception {
-        String appName = request.getId();
-        Map<String, String> p = getDataStore().getDataById("app", appName);
-        String[] nodes = p.get("nodes").split(",");
-        for (String node : nodes) {
-            try {
-                if (FrameworkContext.LOCAL_NODE_NAME.equals(node)) { // 安装到本地节点
-                    Main.getFc().getAppManager().getApp(FrameworkContext.NODE_APP_NAME).invoke(FrameworkContext.NODEAGENT_MODEL_NAME, FrameworkContext.NODEAGENT_UN_INSTALL_APP_ACTION_NAME, request, response);
-                } else {
-                    // TODO：调用远端 node 上的app delete
-                }
-            } catch (Exception e) { // todo 部分失败，如何显示到页面？
-                response.setSuccess(false);
-                e.printStackTrace();
-            }
-        }
-        getDataStore().deleteDataById("app", appName);
-    }
-
-    @ModelAction(name = "target",
-            icon = "location-arrow", forwardToPage = "target",
+    @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + FrameworkContext.SYS_ACTION_MANAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true,
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
+    }
+
+    @Override
+    public void delete(Request req, Response response) throws Exception {
+        RequestImpl request = (RequestImpl) req;
+        String appName = request.getId();
+        Map<String, String> p = getDataStore().getDataById("app", appName);
+        String[] nodes = p.get("nodes").split(",");
+
+        request.setModelName(FrameworkContext.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(FrameworkContext.SYS_ACTION_UNINSTALL);
+        try {
+            for (String node : nodes) {
+                try {
+                    if (FrameworkContext.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                        Main.getFc().getAppManager().getApp(FrameworkContext.SYS_APP_NODE_AGENT).invoke(request, response);
+                    } else {
+                        // TODO：调用远端 node 上的app delete
+                    }
+                } catch (Exception e) { // todo 部分失败，如何显示到页面？
+                    response.setSuccess(false);
+                    e.printStackTrace();
+                }
+            }
+        } finally {
+            request.setModelName(modelName);
+            request.setActionName(ACTION_NAME_DELETE);
+        }
+        getDataStore().deleteDataById("app", appName);
     }
 
     @Override

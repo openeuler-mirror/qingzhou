@@ -8,6 +8,8 @@ import java.util.Map;
 public interface MonitorModel extends ShowModel {
     String ACTION_NAME_MONITOR = "monitor";
     String MONITOR_EXT_SEPARATOR = ":";
+
+    // todo: 这些参数是否需要?
     String OVERVIEW_DATA_KEY_NAME = "name";
     String OVERVIEW_DATA_KEY_MAX = "max";
     String OVERVIEW_DATA_KEY_VALUE = "value";
@@ -15,7 +17,7 @@ public interface MonitorModel extends ShowModel {
 
     @ModelAction(name = ACTION_NAME_MONITOR,
             showToList = true,
-            icon = "area-chart", forwardToPage = "info",
+            icon = "area-chart", forwardToPage = "show",
             nameI18n = {"监视", "en:Monitor"},
             infoI18n = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -27,6 +29,7 @@ public interface MonitorModel extends ShowModel {
         }
         List<String> graphicalDynamicFields = new ArrayList<>();
         Map<String, String> monitorData = new HashMap<>();
+        Map<String, String> infoData = new HashMap<>();
         for (Map.Entry<String, ModelField> entry : getAppContext().getConsoleContext().getModelManager().getMonitorFieldMap(request.getModelName()).entrySet()) {
             String fieldName = entry.getKey();
             ModelField monitorField = entry.getValue();
@@ -39,6 +42,8 @@ public interface MonitorModel extends ShowModel {
                         graphicalDynamicFields.add(fieldName);
                     } else if (monitorField.supportGraphical()) {
                         monitorData.put(fieldName, value);
+                    } else {
+                        infoData.put(fieldName, value);
                     }
                 }
             }
@@ -54,6 +59,7 @@ public interface MonitorModel extends ShowModel {
         }
 
         response.addData(monitorData);
+        response.addData(infoData);
     }
 
     default Map<String, String> monitorData() {

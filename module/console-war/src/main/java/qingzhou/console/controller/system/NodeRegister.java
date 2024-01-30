@@ -1,7 +1,7 @@
 package qingzhou.console.controller.system;
 
+import qingzhou.console.AppStubManager;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
@@ -23,7 +23,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
     @Override
     public boolean doFilter(HttpServletContext context) throws Exception {
         HttpServletRequest request = context.req;
-        String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
+        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
         if (!checkPath.equals(ConsoleConstants.REGISTER_URI)) {
             return true;
         }
@@ -52,8 +52,19 @@ public class NodeRegister implements Filter<HttpServletContext> {
             for (String app : apps.split(",")) {
                 if (app != null && !app.trim().isEmpty()) {
                     String appToken = buildAppToken(nodeIp, nodePort, app);
-                    // todo 生成 appStub 代理
-                    ConsoleWarHelper.registerApp(appToken, null);
+// TODO 这块需要改成 Service 方式，只依赖接口，不要依赖实现，另外 console 模块不能依赖 remote 模块，否则就形成，因为设计上 remote 是依赖 console 的。
+//                    AppStub appStub = (AppStub) Proxy.newProxyInstance(AppStub.class.getClassLoader(), new Class[]{AppStub.class}, (proxy, method, args) -> {
+//                        InetSocketAddress socketAddress = new InetSocketAddress(nodeIp, Integer.parseInt(nodePort));
+//                        BIOConnector connector = new BIOConnector(socketAddress);
+//                        connector.setCodec(null);
+//                        connector.setHandler(null);
+//                        Channel channel = connector.connect();
+//                        // todo 封装对象 req
+//                        Object req = null;
+//                        channel.write(req);
+//                        return channel.read();
+//                    });
+                    AppStubManager.getInstance().registerAppStub(appToken, null);// todo 序列化过来吗？ unregisterAppStub 何时调用？
                 }
             }
         }

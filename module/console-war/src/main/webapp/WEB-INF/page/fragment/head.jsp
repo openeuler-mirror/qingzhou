@@ -6,7 +6,6 @@
 <%@ page import="java.time.format.*" %>
 <%@ page import="qingzhou.framework.*" %>
 <%@ page import="qingzhou.framework.api.*" %>
-<%@ page import="qingzhou.framework.console.*" %>
 <%@ page import="qingzhou.framework.util.*" %>
 <%@ page import="qingzhou.console.*" %>
 <%@ page import="qingzhou.console.controller.rest.*" %>
@@ -22,10 +21,10 @@
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
-    Request qzRequest = (Request) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
+    RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
-    String initAppName = qzRequest == null ? FrameworkContext.MASTER_APP_NAME : qzRequest.getAppName();
-    ModelManager modelManager = PageBackendService.getModelManager(initAppName);
+    String menuAppName = PageBackendService.getInitAppName(qzRequest);
+    ModelManager modelManager = PageBackendService.getModelManager(menuAppName);
 %>
 
 <script type="text/javascript">

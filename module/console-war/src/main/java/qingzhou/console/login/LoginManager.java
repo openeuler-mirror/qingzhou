@@ -2,7 +2,6 @@ package qingzhou.console.login;
 
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleI18n;
-import qingzhou.console.ConsoleUtil;
 import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
@@ -41,7 +40,6 @@ public class LoginManager implements Filter<HttpServletContext> {
     public static final String LOCKED_MSG_KEY = "page.login.locked";
     public static final String TWO_FA_MSG_KEY = "page.login.2fa";
 
-    public static final String ACCEPT_AGREEMENT_MSG_KEY_MISSING = "page.login.agreement.missing";
     public static final String ACCEPT_AGREEMENT_MSG_KEY = "page.login.agreement";
     public static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
     private static final Map<String, LockOutRealm> userLockOutRealms = new LinkedHashMap<String, LockOutRealm>() {
@@ -85,7 +83,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
 
                 // 进入主页
-                response.sendRedirect(ConsoleUtil.encodeRedirectURL(request, response, request.getContextPath() + RESTController.INDEX_PATH)); // to welcome page
+                response.sendRedirect(PageBackendService.encodeURL(response, request.getContextPath() + RESTController.INDEX_PATH)); // to welcome page
             } finally {
                 I18n.resetI18nLang();
             }
@@ -273,7 +271,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     public boolean doFilter(HttpServletContext context) throws Exception {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
-        String checkPath = ConsoleUtil.retrieveServletPathAndPathInfo(request);
+        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
 
         if (checkPath.startsWith("/static/")) {
             for (String suffix : STATIC_RES_SUFFIX) {
@@ -292,6 +290,16 @@ public class LoginManager implements Filter<HttpServletContext> {
             }
             request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
             return false;
+        }
+
+        if (checkPath.equals("/")) {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                response.sendRedirect(PageBackendService.encodeURL(response, request.getContextPath() + RESTController.INDEX_PATH));
+            } else {
+                request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
+                return false;
+            }
         }
 
         if (checkPath.equals(LOGIN_URI)) {

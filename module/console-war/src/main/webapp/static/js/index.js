@@ -304,7 +304,7 @@ $(document).ready(function () {
 
     // ITAIT-4984 微软自研浏览器 Edge 样式特殊处理，解决滚动条样式问题
     var browserInfo = browserNV();
-    if (browserInfo !== {} && browserInfo.core === "Edge" && browserInfo.v <= 60.0) {
+    if (browserInfo != {} && browserInfo.core === "Edge" && browserInfo.v <= 60.0) {
         $(".main-body").css({"min-height": "calc(-100px + 100%)", "height": "auto", "top": "100px", "bottom": "100px"});
     }
     // 切换语言点击事件
@@ -790,8 +790,7 @@ function bindFormEvent() {
                                 "title": getSetting("pageConfirmTitle"),
                                 "btn": [getSetting("reloginBtnText"), getSetting("iknowBtnText")]
                             }, function () {
-                                var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname))
-                                        + "/" + window.location.pathname.replace("/", "").substring(0, window.location.pathname.replace("/", "").indexOf("/"));
+                                var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname)) + $("#logout-btn").attr("href");
                                 window.location.href = loginUrl;
                             }, function () {});
                             return;
@@ -1168,7 +1167,8 @@ function bindEventForListPage() {
         return false;
     });
     // 集群实例点击[管理]，打开新 Tab 并切换
-    $("table a[action-name='" + getSetting("actionName_target") + "']").unbind("click").bind("click", function (e) {
+    $("table a[action-name='" + getSetting("actionName_target") + "']")
+    .unbind("click").bind("click", function (e) {
         e.preventDefault();
         var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");
         if (tab.length > 0) {
@@ -1785,7 +1785,8 @@ function monitorHandler(chartObj, chartOption, url, restrictedArea, retryOption,
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
-                addData(chartObj, chartOption, data.models, data.data[0], restrictedArea);
+                var monitorData = data.data[0];
+                addData(chartObj, chartOption, data.models, monitorData, restrictedArea);
             } else {
                 showError(data.message);
             }

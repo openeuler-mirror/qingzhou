@@ -49,7 +49,12 @@ public interface DataStore {
     }
 
     default Map<String, String> getDataById(String type, String id) throws Exception {
-        return getAllData(type).stream().filter(data -> data.get(ListModel.FIELD_NAME_ID).equals(id)).findAny().get();
+        for (Map<String, String> data : getAllData(type)) {
+            if (data.get(ListModel.FIELD_NAME_ID).equals(id)) {
+                return data;
+            }
+        }
+        return null;
     }
 
     default List<Map<String, String>> getDataByIds(String type, String[] ids) throws Exception {

@@ -1,13 +1,12 @@
 package qingzhou.console.view.impl;
 
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleUtil;
-import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.rest.RestContext;
+import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.util.StringUtil;
@@ -31,40 +30,32 @@ public class HtmlView implements View {
         String modelName = request.getModelName();
         String actionName = request.getActionName();
         ModelAction modelAction = PageBackendService.getModelManager(request.getAppName()).getModelAction(modelName, actionName);
-        String pageForward;
+        String pageForward = null;
         if (modelAction != null) {
             pageForward = modelAction.forwardToPage();
-        } else {
+        }
+        if (StringUtil.isBlank(pageForward)) {
             pageForward = "default";
         }
 
-
-        if (ConsoleUtil.ACTION_NAME_TARGET.equals(actionName)) {
+        if (FrameworkContext.SYS_ACTION_MANAGE.equals(actionName)) {
+            String manageAppName = request.getId();
             if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {
-                String appName = request.getId();
-                ModelManager modelManager = PageBackendService.getModelManager(appName);
-                if (modelManager != null) {
-                    String appEntryModel = PageBackendService.getAppEntryModel(appName);
-                    if (StringUtil.isBlank(appEntryModel) || modelManager.getModel(appEntryModel) == null) {
-                        String[] modelNames = modelManager.getModelNames();
-                        if (modelNames.length > 0) {
-                            appEntryModel = modelNames[0];
-                        }
-                    }
-                    request.setAppName(appName);
-                    request.setModelName(appEntryModel);
-                    request.setActionName(modelManager.getModel(appEntryModel).entryAction());
-                }
+                request.setManageType(FrameworkContext.MANAGE_TYPE_APP);
+            } else if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
+                request.setManageType(FrameworkContext.MANAGE_TYPE_NODE);
+                manageAppName = FrameworkContext.SYS_NODE_LOCAL;
             }
-        } else if ("manage".equals(actionName)) {
-            if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
-                request.setAppName(FrameworkContext.NODE_APP_NAME);
-                request.setModelName(ConsoleConstants.MODEL_NAME_home);
-                request.setActionName(ShowModel.ACTION_NAME_SHOW);
+            request.setAppName(manageAppName);
+            request.setModelName(FrameworkContext.SYS_MODEL_HOME);
+            request.setActionName(ShowModel.ACTION_NAME_SHOW);
+            if (FrameworkContext.SYS_NODE_LOCAL.equals(manageAppName)) {
+                manageAppName = FrameworkContext.SYS_APP_NODE_AGENT;
             }
+            ConsoleWarHelper.invokeLocalApp(manageAppName, request, response);// todo 对于远程的，这里数据不对?
         }
 
-        String forwardToPage = HtmlView.htmlPageBase + "view/" + pageForward + ".jsp";
+        String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
         restContext.servletRequest.getRequestDispatcher(forwardToPage).forward(restContext.servletRequest, restContext.servletResponse);
     }
 

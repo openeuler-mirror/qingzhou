@@ -5,13 +5,11 @@ public interface ConsoleContext {
 
     String getI18N(Lang lang, String key, Object... args);
 
+    String[] getMenuNames();
+
     MenuInfo getMenuInfo(String menuName);
 
     void addI18N(String key, String[] i18n);
 
     void setMenuInfo(String menuName, String[] menuI18n, String menuIcon, int menuOrder);
-
-    void setEntryModel(String model);
-
-    String getEntryModel();
 }

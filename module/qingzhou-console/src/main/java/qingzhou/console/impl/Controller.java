@@ -17,18 +17,18 @@ public class Controller implements BundleActivator {
     private ProcessSequence sequence;
     private FrameworkContext frameworkContext;
     private ServletService servletService;
-    private Logger logger;
     private ServiceReference<FrameworkContext> reference;
+    private int consolePort;
 
     @Override
     public void start(BundleContext context) throws Exception {
         reference = context.getServiceReference(FrameworkContext.class);
         frameworkContext = context.getService(reference);
-        logger = frameworkContext.getLogger();
 
-        if (!frameworkContext.isMaster()) return;
+        if (!Boolean.parseBoolean(frameworkContext.getConfigManager().getConfig("//console").get("enabled"))) return;
 
         sequence = new ProcessSequence(
+                new InstallMasterApp(),
                 new StartServletContainer(),
                 new DeployWar()
         );
@@ -38,26 +38,17 @@ public class Controller implements BundleActivator {
     @Override
     public void stop(BundleContext context) {
         context.ungetService(reference);
-        if (!frameworkContext.isMaster()) return;
 
-        sequence.undo();
+        if (sequence != null) {
+            sequence.undo();
+        }
     }
 
-    private class DeployWar implements Process {
-        private String contextPath;
-
+    private class InstallMasterApp implements Process {
         @Override
-        public void exec() {
-            File console = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", "console");
-            String docBase = console.getAbsolutePath();
-            contextPath = "/console"; // TODO 需要可配置
-            servletService.addWebapp(contextPath, docBase);
-            logger.info("Open a browser to access the QingZhou console: http://localhost:9060" + contextPath);// todo 9060 应该动态获取到
-        }
-
-        @Override
-        public void undo() {
-            servletService.removeApp(contextPath);
+        public void exec() throws Exception {
+            File masterApp = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", FrameworkContext.SYS_APP_MASTER);
+            frameworkContext.getAppManager().installApp(masterApp);
         }
     }
 
@@ -67,7 +58,8 @@ public class Controller implements BundleActivator {
             ConsoleWarHelper.fc = frameworkContext; //给 tonmcat 部署的 war 内部使用
 
             servletService = new ServletServiceImpl();
-            servletService.start(9060, // TODO 端口需要可以配置
+            consolePort = Integer.parseInt(frameworkContext.getConfigManager().getConfig("//console").get("port"));
+            servletService.start(consolePort,
                     frameworkContext.getFileManager().getTemp("ServletContainer").getAbsolutePath());
         }
 
@@ -76,6 +68,25 @@ public class Controller implements BundleActivator {
             servletService.stop();
 
             ConsoleWarHelper.fc = null;
+        }
+    }
+
+    private class DeployWar implements Process {
+        private String contextPath;
+
+        @Override
+        public void exec() {
+            File console = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", "console");
+            String docBase = console.getAbsolutePath();
+            contextPath = frameworkContext.getConfigManager().getConfig("//console").get("contextRoot");
+            servletService.addWebapp(contextPath, docBase);
+            Logger logger = frameworkContext.getServiceManager().getService(Logger.class);
+            logger.info("Open a browser to access the QingZhou console: http://localhost:" + consolePort + contextPath);
+        }
+
+        @Override
+        public void undo() {
+            servletService.removeApp(contextPath);
         }
     }
 }

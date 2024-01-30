@@ -60,7 +60,7 @@ public class Controller implements BundleActivator {
                 "  '~~ ~~~~~~~~~~~~~~~",
                 ""};
         for (String line : banner) {
-            frameworkContext.getLogger().info(line);
+            frameworkContext.getServiceManager().getService(Logger.class).info(line);
         }
     }
 

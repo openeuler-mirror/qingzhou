@@ -13,10 +13,12 @@ import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.util.ClassLoaderUtil;
 import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -35,12 +37,13 @@ public class AppManagerImpl implements AppManager, InternalService {
     }
 
     @Override
-    public void installApp(String appName, File appFile) throws Exception {
+    public void installApp(File appFile) throws Exception {
+        String appName = appFile.getName();
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-
-        AppImpl app = buildApp(appFile);
+        boolean needCommonApp = !FrameworkContext.SYS_APP_MASTER.equals(appName) && !FrameworkContext.SYS_APP_NODE_AGENT.equals(appName);
+        AppImpl app = buildApp(appFile, needCommonApp);
         apps.put(appName, app);
 
         QingZhouApp qingZhouApp = app.getQingZhouApp();
@@ -51,8 +54,14 @@ public class AppManagerImpl implements AppManager, InternalService {
 
     @Override
     public void unInstallApp(String appName) throws Exception {
-        App app = apps.remove(appName);
+        AppImpl app = (AppImpl) apps.remove(appName);
         if (app != null) {
+            try {
+                app.getLoader().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             QingZhouApp qingZhouApp = app.getQingZhouApp();
             if (qingZhouApp != null) {
                 qingZhouApp.stop();
@@ -70,20 +79,30 @@ public class AppManagerImpl implements AppManager, InternalService {
         return apps.get(name);
     }
 
-
-    private AppImpl buildApp(File appDir) {
-        File[] listFiles = new File(appDir, "lib").listFiles();
-        if (listFiles == null) {
+    private AppImpl buildApp(File appDir, boolean needCommonApp) {
+        File[] appFiles = new File(appDir, "lib").listFiles();
+        if (appFiles == null) {
             throw ExceptionUtil.unexpectedException("app lib not found: " + appDir.getName());
+        }
+        File[] appLibs = appFiles;
+        if (needCommonApp) {
+            File[] commonFiles = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", FrameworkContext.SYS_APP_COMMON, "lib").listFiles();
+            if (commonFiles != null) {
+                int appFileLength = appFiles.length;
+                int commonFileLength = commonFiles.length;
+                appLibs = new File[appFileLength + commonFileLength];
+                System.arraycopy(appFiles, 0, appLibs, 0, appFileLength);
+                System.arraycopy(commonFiles, 0, appLibs, appFileLength, commonFileLength);
+            }
         }
 
         AppImpl app = new AppImpl();
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
-        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(listFiles, QingZhouApp.class.getClassLoader());
+        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLibs, QingZhouApp.class.getClassLoader());
         app.setLoader(loader);
         ConsoleContextImpl consoleContext = new ConsoleContextImpl();
-        ModelManager modelManager = buildModelManager(listFiles, loader);
+        ModelManager modelManager = buildModelManager(appLibs, loader);
         consoleContext.setModelManager(modelManager);
         appContext.setConsoleContext(consoleContext);
         appContext.addActionFilter(new UniqueFilter());

@@ -16,13 +16,17 @@ public class PublicKeyCipherImpl implements PublicKeyCipher {
     static final String ALG = "RSA";
     private static final int ENCRYPT_BLOCK = 117;
     private static final int DECRYPT_BLOCK = 128;
-    private final PublicKey publicKey;
-    private final PrivateKey privateKey;
+    private PublicKey publicKey;
+    private PrivateKey privateKey;
 
     public PublicKeyCipherImpl(String pubKeyAsBase64, String priKeyAsBase64) {
         try {
-            publicKey = convertPublic(pubKeyAsBase64);
-            privateKey = convertPrivate(priKeyAsBase64);
+            if (pubKeyAsBase64 != null) {
+                publicKey = convertPublic(pubKeyAsBase64);
+            }
+            if (priKeyAsBase64 != null) {
+                privateKey = convertPrivate(priKeyAsBase64);
+            }
         } catch (Exception e) {
             throw new IllegalArgumentException(e);
         }

@@ -22,7 +22,7 @@
                             <Bundle-Activator>qingzhou.app.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,qingzhou.framework,qingzhou.framework.api,qingzhou.framework.util,qingzhou.framework.console,qingzhou.framework.pattern
+                                org.osgi.framework,qingzhou.framework,qingzhou.framework.api,qingzhou.framework.util,qingzhou.framework.pattern
                             </Import-Package>
                         </manifestEntries>
                     </archive>

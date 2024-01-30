@@ -3,50 +3,45 @@ package qingzhou.remote.impl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PasswordCipher;
 import qingzhou.crypto.PublicKeyCipher;
 import qingzhou.framework.App;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.api.Logger;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.RequestImpl;
+import qingzhou.framework.ResponseImpl;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
-import qingzhou.framework.util.ExceptionUtil;
-import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.StreamUtil;
-import qingzhou.remote.impl.net.HttpRoute;
-import qingzhou.remote.impl.net.HttpServer;
-import qingzhou.remote.impl.net.impl.tinyserver.HttpServerServiceImpl;
+import qingzhou.framework.util.*;
+import qingzhou.remote.impl.net.http.HttpRoute;
+import qingzhou.remote.impl.net.http.HttpServer;
+import qingzhou.remote.impl.net.http.HttpServerServiceImpl;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class Controller implements BundleActivator {
     private ServiceReference<FrameworkContext> serviceReference;
     private FrameworkContext frameworkContext;
     private ProcessSequence sequence;
+    private Map<String, String> remoteConfig;
+    private String remoteHost;
+    private int remotePort;
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         serviceReference = bundleContext.getServiceReference(FrameworkContext.class);
         frameworkContext = bundleContext.getService(serviceReference);
-        if (frameworkContext.isMaster()) return;
+
+        remoteConfig = frameworkContext.getConfigManager().getConfig("//remote");
+        if (!Boolean.parseBoolean(remoteConfig.get("enabled"))) return;
 
         sequence = new ProcessSequence(
                 new StartServer(),
@@ -58,9 +53,10 @@ public class Controller implements BundleActivator {
     @Override
     public void stop(BundleContext bundleContext) {
         bundleContext.ungetService(serviceReference);
-        if (frameworkContext.isMaster()) return;
 
-        sequence.undo();
+        if (sequence != null) {
+            sequence.undo();
+        }
     }
 
     private class StartServer implements Process {
@@ -68,10 +64,14 @@ public class Controller implements BundleActivator {
         private String path;
 
         @Override
-        public void exec() throws Exception {
-            int port = 7000;// todo 可配置
+        public void exec() {
             path = "/";
-            server = new HttpServerServiceImpl().createHttpServer(port, 200);
+            remoteHost = remoteConfig.get("host");
+            remotePort = Integer.parseInt(remoteConfig.get("port"));
+            server = new HttpServerServiceImpl().createHttpServer(
+                    remoteHost,
+                    remotePort,
+                    200);
             server.addContext(new HttpRoute(path), (request, response) -> {
                 byte[] result;
                 try {
@@ -87,13 +87,15 @@ public class Controller implements BundleActivator {
             });
             server.start();
 
-            frameworkContext.getLogger().info("The remote service is started on the port: " + port);
+            frameworkContext.getServiceManager().getService(Logger.class).info("The remote service is started on the port: " + remotePort);
         }
 
         @Override
         public void undo() {
-            server.removeContext(path);
-            server.stop(5000);
+            if (server != null) {
+                server.removeContext(path);
+                server.stop(5000);
+            }
         }
 
         private byte[] process(InputStream in) throws Exception {
@@ -140,6 +142,7 @@ public class Controller implements BundleActivator {
     }
 
     private class RegisterToMaster implements Process {
+        // 定时器设计目的：解决 master 未启动或者宕机重启等引起的注册失效问题
         private final Timer timer = new Timer();
 
         @Override
@@ -158,36 +161,25 @@ public class Controller implements BundleActivator {
         }
 
         private void register() {
-            Set<String> apps = frameworkContext.getAppManager().getApps();
-            Map<String, String> map = new HashMap<>();
-            map.put("nodeIp", getIp());
-            map.put("nodePort", String.valueOf(getPort()));
-            map.put("apps", String.join(",", apps));
-            try {
-                // 获取master公钥，计算堆成密钥
-                String publicKey = "";
-                CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
-                PublicKeyCipher publicKeyCipher = cryptoService.getPublicKeyCipher(publicKey, null);
-                String key = cryptoService.getKeyManager().getKeyOrElseInit(null, "", null);
-                map.put("key", key);
+            List<Map<String, String>> masters = frameworkContext.getConfigManager().getConfigList("//master");
 
-                String res = HttpClient.seqHttp(getMasterAddress(), map, publicKeyCipher::encryptWithPublicKey);
-                // todo 解析 res
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            masters.forEach(master -> {
+                Map<String, String> map = new HashMap<>();
+                map.put("nodeIp", StringUtil.notBlank(remoteHost) ? remoteHost : String.join(",", IPUtil.getLocalIps()));
+                map.put("nodePort", String.valueOf(remotePort));
+                map.put("apps", String.join(",", frameworkContext.getAppManager().getApps()));
+                try {
+                    // 获取master公钥，计算堆成密钥
+                    CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
+                    PublicKeyCipher publicKeyCipher = cryptoService.getPublicKeyCipher(master.get("publicKey"), null);
+//                    String key = cryptoService.getKeyManager().getKeyOrElseInit(null, "", null);
+//                    map.put("key", key);
+                    // todo seqHttp 的参数需要简化
+                    HttpClient.seqHttp(master.get("url"), map, publicKeyCipher::encryptWithPublicKey);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
-    }
-
-    public String getIp() {
-        return "";
-    }
-
-    public int getPort() {
-        return 9999;
-    }
-
-    public String getMasterAddress() {
-        return "" + ConsoleConstants.REGISTER_URI;
     }
 }

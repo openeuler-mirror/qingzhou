@@ -89,6 +89,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-config</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-crypto</artifactId>
             <version>0.1.0</version>
         </dependency>
@@ -109,7 +114,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>app-node</artifactId>
+            <artifactId>app-nodeagent</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>app-common</artifactId>
             <version>0.1.0</version>
         </dependency>
     </dependencies>

@@ -45,7 +45,7 @@ public class Node extends ModelBase implements AddModel {
             isPort = true,
             nameI18n = {"管理端口", "en:Management Port"},
             infoI18n = {"节点的管理端口。", "en:The management port of the node."})
-    public int port = 9060;
+    public int port = 7000;
 
     @ModelField(showToList = true, disableOnCreate = true, disableOnEdit = true,
             type = FieldType.bool,
@@ -55,7 +55,7 @@ public class Node extends ModelBase implements AddModel {
     @Override
     public String validate(Request request, String fieldName) {
         if (fieldName.equals("id")) {
-            if (request.getParameter("id").equals(FrameworkContext.LOCAL_NODE_NAME)) {
+            if (request.getParameter("id").equals(FrameworkContext.SYS_NODE_LOCAL)) {
                 return "node.id.system";
             }
         }
@@ -63,8 +63,8 @@ public class Node extends ModelBase implements AddModel {
         return super.validate(request, fieldName);
     }
 
-    @ModelAction(name = "manage",
-            icon = "location-arrow", forwardToPage = "target",
+    @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + FrameworkContext.SYS_ACTION_MANAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {

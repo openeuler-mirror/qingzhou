@@ -8,10 +8,10 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.RequestImpl;
+import qingzhou.framework.ResponseImpl;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.pattern.FilterPattern;
 import qingzhou.framework.util.FileUtil;
@@ -37,7 +37,7 @@ import java.util.Map;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + FrameworkContext.MASTER_APP_NAME + "/" + ConsoleConstants.MODEL_NAME_index + "/" + ConsoleConstants.ACTION_NAME_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + FrameworkContext.MANAGE_TYPE_APP + "/" + FrameworkContext.SYS_APP_MASTER + "/" + FrameworkContext.SYS_MODEL_INDEX + "/" + FrameworkContext.SYS_MODEL_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache("upload");
 
@@ -131,7 +131,7 @@ public class RESTController extends HttpServlet {
 
     private Request buildRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> fileAttachments) throws IOException {
         List<String> rest = retrieveRestPathInfo(req);
-        int restDepth = 4;
+        int restDepth = 5;
         if (rest.size() < restDepth) { // must have model & action
             String msg = "Parameters missing, make sure to use the correct REST interface: " + req.getRequestURI();
             resp.getWriter().print(JsonView.buildErrorResponse(msg));
@@ -141,9 +141,10 @@ public class RESTController extends HttpServlet {
 
         RequestImpl request = new RequestImpl();
         request.setViewName(rest.get(0));
-        request.setAppName(rest.get(1));
-        request.setModelName(rest.get(2));
-        request.setActionName(rest.get(3));
+        request.setManageType(rest.get(1));
+        request.setAppName(rest.get(2));
+        request.setModelName(rest.get(3));
+        request.setActionName(rest.get(4));
         request.setUserName(LoginManager.getLoginUser(req.getSession(false)));
         request.setI18nLang(I18n.getI18nLang());
 

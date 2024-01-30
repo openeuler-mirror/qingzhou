@@ -3,8 +3,6 @@ package qingzhou.console.controller.rest;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
 import qingzhou.console.ServerXml;
 import qingzhou.console.Validator;
 import qingzhou.console.impl.ConsoleWarHelper;
@@ -13,10 +11,12 @@ import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.RequestImpl;
+import qingzhou.framework.ResponseImpl;
 import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
@@ -33,8 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static qingzhou.console.impl.ConsoleWarHelper.getAppManager;
 
 public class InvokeAction implements Filter<RestContext> {
     static {
@@ -188,16 +186,25 @@ public class InvokeAction implements Filter<RestContext> {
         }
     }
 
-    public Map<String, Response> processRequest(Request request) throws Exception {
+    public Map<String, Response> processRequest(RequestImpl request) throws Exception {
         Map<String, Response> resultOnNode = new HashMap<>();
+        List<String> appNodes = new ArrayList<>();
+        String manageType = request.getManageType();
         String appName = request.getAppName();
+        if (FrameworkContext.MANAGE_TYPE_NODE.equals(manageType)) {
+            if (FrameworkContext.SYS_APP_NODE_AGENT.equals(appName)) {
+                appNodes.add(FrameworkContext.SYS_NODE_LOCAL);
+            }
+        } else if (FrameworkContext.MANAGE_TYPE_APP.equals(manageType)) {
+            appNodes = getAppNodes(appName);
+        }
 
         String remoteKey = null;
-        for (String node : getAppNodes(appName)) {
+        for (String node : appNodes) {
             Response responseOnNode;
-            if (node.equals(FrameworkContext.LOCAL_NODE_NAME)) {
+            if (node.equals(FrameworkContext.SYS_NODE_LOCAL)) {
                 Response response = new ResponseImpl();
-                getAppManager().getApp(appName).invoke(request, response);
+                ConsoleWarHelper.invokeLocalApp(appName, request, response);
                 responseOnNode = response;
             } else {
                 if (remoteKey == null) {
@@ -223,22 +230,30 @@ public class InvokeAction implements Filter<RestContext> {
 
     public static List<String> getAppNodes(String appName) {
         List<String> nodes = new ArrayList<>();
-        if (FrameworkContext.MASTER_APP_NAME.equals(appName)) {
-            nodes.add(FrameworkContext.LOCAL_NODE_NAME);
+        if (FrameworkContext.SYS_APP_MASTER.equals(appName)) {
+            nodes.add(FrameworkContext.SYS_NODE_LOCAL);
         } else {
-            Map<String, String> app;
+            Map<String, String> res = null;
             try {
-                app = getAppManager().getApp(FrameworkContext.MASTER_APP_NAME)
-                        .getAppContext().getDataStore()
-                        .getDataById(ConsoleConstants.MODEL_NAME_app, appName);
+                RequestImpl request = new RequestImpl();
+                Response response = new ResponseImpl();
+                request.setAppName(FrameworkContext.SYS_APP_MASTER);
+                request.setModelName(ConsoleConstants.MODEL_NAME_app);
+                request.setActionName(ShowModel.ACTION_NAME_SHOW);
+                request.setId(appName);
+                ConsoleWarHelper.invokeLocalApp(FrameworkContext.SYS_APP_MASTER, request, response);
+                List<Map<String, String>> dataList = response.getDataList();
+                if (dataList != null && !dataList.isEmpty()) {
+                    res = dataList.get(0);
+                }
             } catch (Exception e) {
                 throw ExceptionUtil.unexpectedException(e);
             }
-            if (app == null || app.isEmpty()) {
+            if (res == null || res.isEmpty()) {
                 throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
             }
-            String[] appNodes = app.get("nodes").split(",");
-            nodes.addAll(Arrays.asList(appNodes));
+
+            nodes.addAll(Arrays.asList(res.get("nodes").split(",")));
         }
         return nodes;
     }

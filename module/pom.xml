@@ -18,7 +18,9 @@
         <module>console-war</module>
         <module>qingzhou-appmanager</module>
         <module>app-master</module>
-        <module>app-node</module>
+        <module>app-nodeagent</module>
         <module>qingzhou-remote</module>
+        <module>qingzhou-config</module>
+        <module>app-common</module>
     </modules>
 </project>

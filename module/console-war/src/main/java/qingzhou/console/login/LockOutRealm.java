@@ -37,26 +37,18 @@ public class LockOutRealm {
 
     public int getLockOutTime() {
         int lockOutTime = 300;
-        try {
-            String count = ServerXml.get().lockOutTime();
-            if (StringUtil.notBlank(count)) {
-                lockOutTime = Integer.parseInt(count);
-            }
-        } catch (Exception e) {
-            PageBackendService.error("Failed to get console lockOutTime", e);
+        String count = ServerXml.get().lockOutTime();
+        if (StringUtil.notBlank(count)) {
+            lockOutTime = Integer.parseInt(count);
         }
         return lockOutTime;
     }
 
     public int getFailureCount() {
         int failureCount = 5;
-        try {
-            String count = ServerXml.get().failureCount();
-            if (StringUtil.notBlank(count)) {
-                failureCount = Integer.parseInt(count);
-            }
-        } catch (Exception e) {
-            PageBackendService.error("Failed to get console failureCount", e);
+        String count = ServerXml.get().failureCount();
+        if (StringUtil.notBlank(count)) {
+            failureCount = Integer.parseInt(count);
         }
         return failureCount;
     }

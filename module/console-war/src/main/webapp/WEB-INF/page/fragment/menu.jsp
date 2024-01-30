@@ -5,8 +5,8 @@
     <div class="sidebar sidebar-scroll">
         <ul class="sidebar-menu" data-widget="tree">
             <%
-            List<MenuItem> appMenuList = PageBackendService.getAppMenuList(currentUser, qzRequest.getAppName());
-            out.print(PageBackendService.buildMenuHtmlBuilder(appMenuList, request, response, ViewManager.htmlView, qzRequest.getAppName(), qzRequest.getModelName()));
+            List<MenuItem> appMenuList = PageBackendService.getAppMenuList(currentUser, menuAppName);
+            out.print(PageBackendService.buildMenuHtmlBuilder(appMenuList, request, response, ViewManager.htmlView, qzRequest.getManageType(), menuAppName, qzRequest.getModelName()));
             %>
         </ul>
     </div>
