@@ -59,17 +59,15 @@
                         %>
                         <%@ include file="../fragment/filter_select.jsp" %>
                         <%
-                        } else {
-                            String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
-                            if (StringUtil.notBlank(showHtml)) {
-                                if (SafeCheckerUtil.checkIsXSS(showHtml)) {
-                                    showHtml = "";
+                            } else {
+                                String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
+                                if (StringUtil.notBlank(showHtml)) {
+                                    if (SafeCheckerUtil.checkIsXSS(showHtml)) {
+                                        showHtml = "";
+                                    }
                                 }
-                            }
                         %>
-                        <input id="<%=fieldName%>" type="text" name="<%=fieldName%>"
-                               value='<%=showHtml%>'
-                               class="form-control" placeholder="">
+                        <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control" placeholder="">
                         <%
                             }
                         %>
@@ -136,11 +134,8 @@
                         <a id="<%=actionKey%>"
                            href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey)%>"
                            onclick='batchOps("<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey)%>","<%=actionKey%>")'
-                                <%=titleStr%>
-                           class="btn batch-ops"
-                           disabled="disabled"
-                           model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
-                           data-name="" data-id=""
+                           <%=titleStr%>
+                           class="btn batch-ops" disabled="disabled" model-icon="<%=modelIcon%>" action-name="<%=actionKey%>" data-name="" data-id=""
                                 <%
                                 if (isAjaxAction) {
                                     out.print("act-ajax='true' act-confirm='" +

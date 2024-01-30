@@ -42,34 +42,30 @@
                                 String value = e.getValue();
                     %>
                     <p>
-                                <span class="key">
-                                    <%
-                                        if (key.startsWith("http")) {
-                                    %>
-                                        <a target="_blank" href="<%=key%>">
-                                            <%=key%>
-                                        </a>
-                                        <%
-                                            } else {
-                                                out.print(key);
-                                            }
-                                        %>
-                                </span>
-                        <span class="value">
-                                    <%
-                                        if (StringUtil.notBlank(value)) {
-                                            if (value.startsWith("http")) {
-                                    %>
-                                            <a target="_blank" href="<%=value%>">
-                                                <%=value%>
-                                            </a>
-                                            <%
-                                                    } else {
-                                                        out.print(value);
-                                                    }
-                                                }
-                                            %>
-                                </span>
+                    <span class="key">
+                        <%
+                            if (key.startsWith("http")) {
+                        %>
+                        <a target="_blank" href="<%=key%>"><%=key%></a>
+                        <%
+                            } else {
+                                out.print(key);
+                            }
+                        %>
+                    </span>
+                    <span class="value">
+                        <%
+                            if (StringUtil.notBlank(value)) {
+                                if (value.startsWith("http")) {
+                        %>
+                        <a target="_blank" href="<%=value%>"><%=value%></a>
+                        <%
+                                } else {
+                                    out.print(value);
+                                }
+                            }
+                        %>
+                    </span>
                     </p>
                     <%
                             }
@@ -85,8 +81,7 @@
         %>
         <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
             <div class="form-btn">
-                <a href="javascript:void(0);" btn-type="goback"
-                   onclick="tw.goback(this);" class="btn">
+                <a href="javascript:void(0);" btn-type="goback" onclick="tw.goback(this);" class="btn">
                     <!--<i class="icon icon-undo"></i>-->
                     <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
                 </a>

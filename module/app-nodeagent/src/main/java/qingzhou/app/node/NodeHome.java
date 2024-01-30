@@ -38,7 +38,7 @@ public class NodeHome extends ModelBase implements ShowModel {
 
     @Override
     @ModelAction(name = ACTION_NAME_SHOW,
-            icon = "info-sign", forwardToPage = "show",
+            icon = "info-sign", forwardToPage = "sys/show",
             nameI18n = {"节点首页", "en:Node Home"},
             infoI18n = {"展示节点的首页信息。", "en:Displays the homepage information of the node."})
     public void show(Request request, Response response) throws Exception {
