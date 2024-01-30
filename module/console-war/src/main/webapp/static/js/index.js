@@ -916,7 +916,7 @@ function validateItem(thisForm, json, item) {
     }
     $.post($(thisForm).attr("action"), json, function (data, textStatus, jqXHR) {
         if (data.success === "false") {
-            var errorData = data.data[0];
+            var errorData = data.error[0];
             var msg = data.message;
             if(errorData != null){
                 msg = errorData[item];
@@ -1785,7 +1785,8 @@ function monitorHandler(chartObj, chartOption, url, restrictedArea, retryOption,
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
-                addData(chartObj, chartOption, data.models, data.data[0], restrictedArea);
+                var monitorData = data.data[0];
+                addData(chartObj, chartOption, data.models, monitorData, restrictedArea);
             } else {
                 showError(data.message);
             }

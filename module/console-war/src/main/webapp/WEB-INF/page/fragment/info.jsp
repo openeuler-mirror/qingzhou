@@ -9,7 +9,7 @@ String encodedId = qzRequest.getId();
 if (ConsoleSDK.needEncode(encodedId)) {
     encodedId = ConsoleSDK.encodeId(encodedId);
 }
-String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, MonitorModel.ACTION_NAME_MONITOR + "/" + encodedId);
+String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, MonitorModel.ACTION_NAME_MONITOR + (hasId ? "/" + encodedId : ""));
 %>
 
 <div class="infoPage" chartMonitor="<%=isMonitor && chartEnabled%>" data-url="<%=url%>">
@@ -28,25 +28,29 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
     <%
     List<Map<String, String>> models = qzResponse.getDataList();
     if (!models.isEmpty()) {
-        Map<String, String> modelData = models.get(0);
-        List<String> fieldMap = new ArrayList<>();
+        Map<String, String> allData = new HashMap<>();
+        Map<String, String> monitorData = new HashMap<>();
+        allData.putAll(models.get(0));
+        if(models.size() > 1){
+            monitorData = models.get(0);
+            allData.putAll(models.get(1));
+        }
+        List<String> infoFieldMap = new ArrayList<>();
         if (isMonitor) {
             for (Map.Entry<String, ModelField> entry : modelManager.getMonitorFieldMap(qzRequest.getModelName()).entrySet()) {
                 ModelField monitoringField = entry.getValue();
                 if (!monitoringField.supportGraphicalDynamic() && !monitoringField.supportGraphical()) {
-                    fieldMap.add(entry.getKey());
+                    infoFieldMap.add(entry.getKey());
                 }
             }
         } else {
             for (String field : modelManager.getFieldNames(qzRequest.getModelName())) {
-                fieldMap.add(field);
+                infoFieldMap.add(field);
             }
         }
         boolean hasItem = false;
-        final List<Map<String, String>> infoMonitorDataList = qzResponse.getDataList();
-        Map<String, String> infoMonitorData = infoMonitorDataList.isEmpty() ? null : infoMonitorDataList.get(0);
-        for (String fieldName : fieldMap) {
-            if (infoMonitorData != null && infoMonitorData.containsKey(fieldName)) {
+        for (String fieldName : infoFieldMap) {
+            if (monitorData.containsKey(fieldName)) {
                 continue;
             }
             hasItem = true;
@@ -60,13 +64,8 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
                     <div class="panel-body" style="word-break: break-all;">
                         <table class="table home-table" style="margin-bottom: 1px;">
                             <%
-                            List<Map<String, String>> dataList = qzResponse.getDataList();
-                            Map<String, String> attachments = new HashMap<>();
-                            if (dataList != null && !dataList.isEmpty()) {
-                                attachments = dataList.get(0);
-                            }
-                            for (String fieldName : fieldMap) {
-                                if (attachments.containsKey(fieldName)) {
+                            for (String fieldName : infoFieldMap) {
+                                if (monitorData.containsKey(fieldName)) {
                                     continue;
                                 }
 
@@ -75,7 +74,7 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
                                 if (msg != null && !msg.startsWith("model.field.")) {
                                     info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-question-sign' data-tip-arrow=\"right\"></i></span>";
                                 }
-                                String fieldValue = modelData.get(fieldName);
+                                String fieldValue = allData.get(fieldName);
                                 fieldValue = fieldValue != null ? fieldValue : "";
                                 fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>")
                                         .replace("<", "&lt;").replace(">", "&gt;");
@@ -114,11 +113,10 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
 
     <textarea name="infoKeys" rows="3" disabled="disabled" style="display:none;">
         <%
-        StringBuilder keysBuilder = new StringBuilder();
-        List<Map<String, String>> dataList = qzResponse.getDataList();
-        if (dataList != null && !dataList.isEmpty()) {
+        if (!models.isEmpty() && models.size() > 1) {
+            StringBuilder keysBuilder = new StringBuilder();
             keysBuilder.append("{");
-            for (Map.Entry<String, String> e : dataList.get(0).entrySet()) {
+            for (Map.Entry<String, String> e : models.get(0).entrySet()) {
                 String key = e.getKey();
                 String i18n = I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + key);
                 int i = key.indexOf(MonitorModel.MONITOR_EXT_SEPARATOR);
@@ -132,8 +130,8 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
                 keysBuilder.deleteCharAt(keysBuilder.lastIndexOf(","));
             }
             keysBuilder.append("}");
+            out.print(keysBuilder.toString());
         }
-        out.print(keysBuilder.toString());
         %>
     </textarea>
 </div>
