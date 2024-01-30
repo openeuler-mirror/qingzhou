@@ -115,7 +115,7 @@ public class Validator {
         try {
             Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
             ObjectUtil.setObjectValues(tempModel, dataMap);
-            if (!isEffective(fieldName0 -> String.valueOf(tempModel.getClass().getField(fieldName)
+            if (!isEffective(fieldName0 -> String.valueOf(tempModel.getClass().getField(fieldName0)
                     .get(tempModel)), modelField.effectiveWhen().trim())) {// TODO: 不显示的属性不需要校验
                 return null;
             }
