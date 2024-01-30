@@ -206,7 +206,7 @@ public class PageBackendService {
 
     public static Map<String, Map<String, ModelField>> getGroupedModelFieldMap(Request request) {
         Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
-        ModelManager manager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
+        ModelManager manager = getModelManager(request.getAppName());
         String modelName = request.getModelName();
         for (String groupName : manager.getGroupNames(modelName)) {
             Map<String, ModelField> map = new LinkedHashMap<>();
@@ -264,7 +264,7 @@ public class PageBackendService {
     }
 
     public static String getSubmitActionName(Request request) {
-        final ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
         }
