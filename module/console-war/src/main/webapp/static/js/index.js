@@ -916,7 +916,7 @@ function validateItem(thisForm, json, item) {
     }
     $.post($(thisForm).attr("action"), json, function (data, textStatus, jqXHR) {
         if (data.success === "false") {
-            var errorData = data.error[0];
+            var errorData = data.data[0];
             var msg = data.message;
             if(errorData != null){
                 msg = errorData[item];
