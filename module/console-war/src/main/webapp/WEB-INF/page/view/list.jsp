@@ -39,6 +39,7 @@ int pageSize = qzResponse.getPageSize();
               action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getAppName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
             <div class="row filterForm" style="margin-top: 10px;">
                 <%
+                    int index = 1;
                 for (Integer i : indexToShow) {
                     String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
                     List<Option> modelOptionsEntry = null;
@@ -51,8 +52,9 @@ int pageSize = qzResponse.getPageSize();
                         } catch (Exception ignored) {
                         }
                     }
+                    boolean changeLast = (index++ == indexToShow.size()&&indexToShow.size() % 4 == 0);
                     %>
-                    <div class='col-md-3 list-page-padding-bottom <%=modelOptionsEntry != null ? "listPageFilterSelect" : "" %>'>
+                    <div class='<%=changeLast?"col-md-2":"col-md-3"%> list-page-padding-bottom <%=modelOptionsEntry != null ? "listPageFilterSelect" : "" %>'>
                         <div class="input-control">
                             <%
                             if (modelOptionsEntry != null) {
@@ -75,16 +77,20 @@ int pageSize = qzResponse.getPageSize();
                     </div>
                     <%
                 }
+                if (!indexToShow.isEmpty()) {
+                    %>
+                    <div class="col-md-1 search-btn" style="margin-bottom: 16px;">
+                        <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
+                            <a class="btn"
+                               href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
+                               form="filterForm">
+                                <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18NString( "page.filter")%>
+                            </a>
+                        </span>
+                    </div>
+                    <%
+                }
                 %>
-                <div class="col-md-3 search-btn" style="margin-bottom: 16px;">
-                    <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
-                        <a class="btn"
-                           href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
-                           form="filterForm">
-                            <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18NString( "page.filter")%>
-                        </a>
-                    </span>
-                </div>
             </div>
         </form>
 
