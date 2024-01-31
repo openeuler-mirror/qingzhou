@@ -11,7 +11,7 @@ String contextPath = request.getContextPath();
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="https://gitee.com/openeuler/qingzhou">
-    <title>QingZhou Console</title>
+    <title>Qingzhou Console</title>
     <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
     <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
     <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.css">

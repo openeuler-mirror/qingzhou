@@ -43,6 +43,7 @@ public class AppImpl implements App {
 
         ModelBase modelInstance = modelManager.getModelInstance(modelName);
         modelInstance.setAppContext(appContext);
+        modelInstance.setI18nLang(request.getI18nLang());
         List<ActionFilter> actionFilters = appContext.getActionFilters();
         if (actionFilters != null) {
             for (ActionFilter actionFilter : actionFilters) {

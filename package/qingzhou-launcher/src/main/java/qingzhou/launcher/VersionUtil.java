@@ -43,7 +43,7 @@ class VersionUtil {
         if (versionFile == null) {
             versionFile = new File(libDir, qzVerName);
             if (!versionFile.isDirectory()) {
-                throw new IllegalStateException("QingZhou " + qzVerName + " file not found !!!");
+                throw new IllegalStateException("Qingzhou " + qzVerName + " file not found !!!");
             }
         }
 
@@ -60,7 +60,7 @@ class VersionUtil {
         if (homeDir.exists()) {
             System.setProperty("qingzhou.home", homeDir.getCanonicalPath());
         } else {
-            throw new IllegalStateException("QingZhou home not found.");
+            throw new IllegalStateException("Qingzhou home not found.");
         }
 
         File qzVerDir = new File(homeDir, "lib");

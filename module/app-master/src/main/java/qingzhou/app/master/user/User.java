@@ -1,6 +1,14 @@
 package qingzhou.app.master.user;
 
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.ConsoleContext;
+import qingzhou.framework.api.Group;
+import qingzhou.framework.api.Groups;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Option;
+import qingzhou.framework.api.Options;
 
 @Model(name = "user", icon = "user",
         menuName = "System", menuOrder = 1,
@@ -21,7 +29,6 @@ public class User extends ModelBase implements AddModel {
 
     @Override
     public void init() {
-        super.init();
         ConsoleContext consoleContext = getAppContext().getConsoleContext();
         consoleContext.addI18N("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
         consoleContext.addI18N("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
@@ -161,22 +168,18 @@ public class User extends ModelBase implements AddModel {
 //
     @Override
     public Groups group() {
-        Groups group = super.group();
-        return Groups.merge(group, Group.of("security", new String[]{"安全", "en:Security"}));
+        return Groups.of(Group.of("security", new String[]{"安全", "en:Security"}));
     }
 
     @Override
     public Options options(String fieldName) {
-        Options options = super.options(fieldName);
-
         if ("digestAlg".equals(fieldName)) {
-            return Options.merge(options,
+            return Options.of(
                     Option.of("SHA-256"),
                     Option.of("SHA-384"),
                     Option.of("SHA-512"));
         }
-
-        return options;
+        return null;
     }
 
 //    public void list(Request request, Response response) throws Exception {
@@ -273,7 +276,7 @@ public class User extends ModelBase implements AddModel {
 //            }
 //        }
 //
-//        return super.validate(request, fieldName);
+//        return null;
 //    }
 //
 //

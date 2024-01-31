@@ -19,7 +19,7 @@
 
 ![](doc/readme/architecture.png)
 
-### 轻舟App容器
+### 容器设计
 
 ![](doc/readme/container.png)
 
@@ -27,16 +27,16 @@
 
 1. 安装：在项目根目录执行 `mvn clean package` 命令，之后在 `package/qingzhou/target/qingzhou/qingzhou` 可得到安装包。
 2. 启动：进入安装包根目录，在 bin 目录下，根据操作系统平台执行对应的 start
-   脚本即开始启动，看到类似如下的日志则表示启动完成：`Open a browser to access the QingZhou
+   脚本即开始启动，看到类似如下的日志则表示启动完成：`Open a browser to access the Qingzhou
    console: http://localhost:9000/console`。
 3. 【可选】免脚本启动方式：`java -jar ~/qingzhou/bin/qingzhou-launcher.jar server start`。
 4. 访问：启动完成后，可打开浏览器访问轻舟的可视化管理平台： [http://localhost:9000/console](http://localhost:9000/console)
 
 ## 鸣谢
 
-本项目开发过程中，借鉴和引用了许多优秀项目的设计思路或代码库文件等，在此特别感谢原作者的贡献付出！同时也感谢众多小伙伴提出项目问题及贡献代码.
+本项目借鉴和引用了一些优秀项目的设计思路或代码库文件，在此特别感谢原作者的贡献与付出，同时也感谢众多小伙伴们提出项目问题、贡献代码等！
 
-主要引用到的项目：
+相关项目：
 
 + marked ([https://github.com/markedjs/marked](https://github.com/markedjs/marked))
 + Multiple Select ([http://multiple-select.wenzhixin.net.cn](http://multiple-select.wenzhixin.net.cn))

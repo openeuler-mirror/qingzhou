@@ -14,7 +14,7 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public String getName() {
-        return "QingZhou（轻舟）";
+        return "Qingzhou（轻舟）";
     }
 
     @Override

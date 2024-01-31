@@ -50,7 +50,6 @@ public class Password extends ModelBase implements EditModel {
 
     @Override
     public void init() {
-        super.init();
         ConsoleContext master = getAppContext().getConsoleContext();
         master.addI18N("update2FA.rebind", new String[]{"双因子认证密钥更新成功，请扫描二维码重新绑定双因子认证密钥",
                 "en:The two-factor authentication key is updated successfully, please scan the QR code to re-bind the two-factor authentication key"});
@@ -233,7 +232,7 @@ public class Password extends ModelBase implements EditModel {
 //            }
 //        }
 //
-//        return super.validate(request, fieldName);
+//        return null;
 //    }
 //
 //    private boolean forbidResetInitPwd(Request request) {

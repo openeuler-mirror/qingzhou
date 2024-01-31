@@ -19,17 +19,17 @@ import qingzhou.framework.util.JDKUtil;
 public class NodeHome extends ModelBase implements ShowModel {
     @ModelField(
             nameI18n = {"Java 环境", "en:Java Env"},
-            infoI18n = {"此轻舟节点所使用的 Java 环境。", "en:The Java environment used by this QingZhou node."})
+            infoI18n = {"此轻舟节点所使用的 Java 环境。", "en:The Java environment used by this Qingzhou node."})
     public String javaHome;
 
     @ModelField(
             nameI18n = {"本地 IP", "en:Local Ip"},
-            infoI18n = {"此轻舟节点的本地 IP 地址列表。", "en:A list of local IP addresses for this QingZhou node."})
+            infoI18n = {"此轻舟节点的本地 IP 地址列表。", "en:A list of local IP addresses for this Qingzhou node."})
     public String localIps;
 
     @ModelField(
             nameI18n = {"节点目录", "en:Node Path"},
-            infoI18n = {"此轻舟节点所对应的文件路径。", "en:The file path of this QingZhou node."})
+            infoI18n = {"此轻舟节点所对应的文件路径。", "en:The file path of this Qingzhou node."})
     public String path;
 
     @Override

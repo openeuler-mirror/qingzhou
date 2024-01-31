@@ -2,14 +2,19 @@ package qingzhou.app.impl;
 
 import qingzhou.app.impl.bytecode.AnnotationReader;
 import qingzhou.app.impl.bytecode.impl.BytecodeImpl;
+import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.Group;
+import qingzhou.framework.api.Groups;
+import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Option;
 import qingzhou.framework.api.Options;
 import qingzhou.framework.pattern.Visitor;
+import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
 import java.io.Serializable;
@@ -213,7 +218,66 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     @Override
     public Options getOptions(String modelName, String fieldName) {
-        return getModelInstance(modelName).options(fieldName);
+        Options defaultOptions = getDefaultOptions(modelName, fieldName);
+        Options userOptions = getModelInstance(modelName).options(fieldName);
+        if (userOptions == null) {
+            return defaultOptions;
+        } else {
+            return Options.merge(defaultOptions, userOptions);
+        }
+    }
+
+    private Options getDefaultOptions(String modelName, String fieldName) {
+        ModelManager manager = this;
+        ModelField modelField = manager.getModelField(modelName, fieldName);
+
+        if (modelField.type() == FieldType.selectCharset) {
+            return Options.of(
+                    Option.of("UTF-8"),
+                    Option.of("GBK"),
+                    Option.of("GB18030"),
+                    Option.of("GB2312"),
+                    Option.of("UTF-16"),
+                    Option.of("US-ASCII")
+            );
+        }
+
+        String refModel = modelField.refModel();
+        if (StringUtil.notBlank(refModel)) {
+            if (modelField.required()) {
+                return refModel(refModel);
+            } else {
+                if (modelField.type() == FieldType.checkbox
+                        || modelField.type() == FieldType.sortableCheckbox
+                        || modelField.type() == FieldType.multiselect) { // 复选框，不选表示为空，不需要有空白项在页面上。
+                    return refModel(refModel);
+                }
+
+                Options options = refModel(refModel);
+                options.options().add(0, Option.of("", new String[0]));
+                return options;
+            }
+        }
+
+        if (modelField.type() == FieldType.bool) {
+            return Options.of(Option.of(Boolean.TRUE.toString()), Option.of(Boolean.FALSE.toString()));
+        }
+
+        return null;
+    }
+
+    private Options refModel(String modelName) {
+        try {
+            ModelBase modelInstance = getModelInstance(modelName);
+            List<Option> options = new ArrayList<>();
+            List<String> dataIdList = ((ListModel) modelInstance).getAllDataId(modelName);
+            for (String dataId : dataIdList) {
+                options.add(Option.of(dataId, new String[]{dataId, "en:" + dataId}));
+            }
+            return () -> options;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
@@ -245,9 +309,15 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     @Override
     public Group getGroup(String modelName, String groupName) {
         ModelBase modelInstance = getModelInstance(modelName);
-        final Group[] found = new Group[1];
-        modelInstance.group().groups().stream().filter(group -> group.name().equals(groupName)).findAny().ifPresent(group -> found[0] = group);
-        return found[0];
+        Groups groups = modelInstance.group();
+        if (groups != null) {
+            for (Group group : groups.groups()) {
+                if (group.name().equals(groupName)) {
+                    return group;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

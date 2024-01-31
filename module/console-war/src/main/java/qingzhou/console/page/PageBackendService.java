@@ -427,7 +427,7 @@ public class PageBackendService {
                         continue;
                     }
 
-                    if (!action.showToList() || action.showToListHead()) {
+                    if (!action.showToList()) {
                         continue;
                     }
 

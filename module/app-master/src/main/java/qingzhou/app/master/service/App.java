@@ -38,8 +38,8 @@ public class App extends ModelBase implements AddModel {
             showToEdit = false,
             type = FieldType.bool,
             nameI18n = {"使用上传", "en:Enable Upload"},
-            infoI18n = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。注：出于安全考虑，QingZhou 出厂设置禁用了文件上传功能，您可在“控制台安全”模块了解详情和进行相关的配置操作。",
-                    "en:The installed app can be uploaded from the client or read from a location specified on the server side. Note: For security reasons, QingZhou factory settings disable file upload, you can learn more and perform related configuration operations in the \"Console Security\" module."})
+            infoI18n = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。注：出于安全考虑，Qingzhou 出厂设置禁用了文件上传功能，您可在“控制台安全”模块了解详情和进行相关的配置操作。",
+                    "en:The installed app can be uploaded from the client or read from a location specified on the server side. Note: For security reasons, Qingzhou factory settings disable file upload, you can learn more and perform related configuration operations in the \"Console Security\" module."})
     public boolean appFrom = false;
 
     @ModelField(
@@ -88,7 +88,6 @@ public class App extends ModelBase implements AddModel {
 
     @Override
     public void init() {
-        super.init();
         getAppContext().getConsoleContext().addI18N("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
         getAppContext().getConsoleContext().addI18N("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
         getAppContext().getConsoleContext().addI18N("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
@@ -104,7 +103,7 @@ public class App extends ModelBase implements AddModel {
             }
         }
 
-        return super.validate(request, fieldName);
+        return null;
     }
 
     @Override

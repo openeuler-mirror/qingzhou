@@ -99,7 +99,7 @@ public class I18nFilter implements Filter<HttpServletContext> {
         ConsoleI18n.addI18N(ACCEPT_AGREEMENT_MSG_KEY, new String[]{"请确保您已阅读并同意本产品的《许可协议》", "en:Please ensure that you have read and agree to the <License Agreement> for this product"});
         ConsoleI18n.addI18N("jmx.credentials.element.isNull", new String[]{"用户名或密码不能为空", "en:The user name or password cannot be empty"});
 
-        ConsoleI18n.addI18N("page.index", new String[]{"轻舟平台", "en:QingZhou Platform"});
+        ConsoleI18n.addI18N("page.index", new String[]{"轻舟平台", "en:Qingzhou Platform"});
         ConsoleI18n.addI18N("page.index.centralized", new String[]{"集中管理", "en:Centralized Management"});
         ConsoleI18n.addI18N("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
         ConsoleI18n.addI18N("page.action", new String[]{"操作", "en:Action"});
