@@ -231,6 +231,7 @@ int pageSize = qzResponse.getPageSize();
                                     }
                                 }
                             }
+                            if (needOperationColumn) {
                             %>
                             <td>
                                 <%
@@ -287,6 +288,9 @@ int pageSize = qzResponse.getPageSize();
                                 }
                                 %>
                             </td>
+                            <%
+                                }
+                            %>
                         </tr>
                         <%
                     }
