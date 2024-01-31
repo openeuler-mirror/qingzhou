@@ -53,7 +53,7 @@ int pageSize = qzResponse.getPageSize();
                     }
                     %>
                     <div class='col-md-3 list-page-padding-bottom <%=modelOptionsEntry != null ? "listPageFilterSelect" : "" %>'>
-                        <div class="input-control has-label-left ">
+                        <div class="input-control">
                             <%
                             if (modelOptionsEntry != null) {
                                 %>
@@ -67,13 +67,10 @@ int pageSize = qzResponse.getPageSize();
                                     }
                                 }
                                 %>
-                                <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control" placeholder="">
+                                <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control" placeholder="<%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>">
                                 <%
                             }
                             %>
-                            <label for="<%=fieldName%>"
-                                   class="input-control-label-left"><%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
-                            </label>
                         </div>
                     </div>
                     <%
