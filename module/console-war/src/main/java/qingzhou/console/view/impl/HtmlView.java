@@ -63,8 +63,10 @@ public class HtmlView implements View {
     private boolean isManageAction(Request request) {
         if (!FrameworkContext.SYS_ACTION_MANAGE.equals(request.getActionName())) return false;
 
-        return FrameworkContext.SYS_MODEL_APP.equals(request.getAppName())
-                || FrameworkContext.SYS_MODEL_APP.equals(request.getAppName());
+        if (!FrameworkContext.SYS_APP_MASTER.equals(request.getAppName())) return false;
+
+        return FrameworkContext.SYS_MODEL_APP.equals(request.getModelName())
+                || FrameworkContext.SYS_MODEL_NODE.equals(request.getModelName());
     }
 
     @Override
