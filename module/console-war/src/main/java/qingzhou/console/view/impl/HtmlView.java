@@ -7,6 +7,7 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 import qingzhou.framework.util.StringUtil;
@@ -38,9 +39,9 @@ public class HtmlView implements View {
             pageForward = "default";
         }
 
-        if (FrameworkContext.SYS_ACTION_MANAGE.equals(actionName)) {
+        if (isManageAction(request)) {
             String manageAppName = request.getId();
-            if (ConsoleConstants.MODEL_NAME_app.equals(modelName)) {
+            if (FrameworkContext.SYS_MODEL_APP.equals(modelName)) {
                 request.setManageType(FrameworkContext.MANAGE_TYPE_APP);
             } else if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
                 request.setManageType(FrameworkContext.MANAGE_TYPE_NODE);
@@ -57,6 +58,13 @@ public class HtmlView implements View {
 
         String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
         restContext.servletRequest.getRequestDispatcher(forwardToPage).forward(restContext.servletRequest, restContext.servletResponse);
+    }
+
+    private boolean isManageAction(Request request) {
+        if (!FrameworkContext.SYS_ACTION_MANAGE.equals(request.getActionName())) return false;
+
+        return FrameworkContext.SYS_MODEL_APP.equals(request.getAppName())
+                || FrameworkContext.SYS_MODEL_APP.equals(request.getAppName());
     }
 
     @Override

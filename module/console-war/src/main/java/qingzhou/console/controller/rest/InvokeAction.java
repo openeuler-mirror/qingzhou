@@ -238,7 +238,7 @@ public class InvokeAction implements Filter<RestContext> {
                 RequestImpl request = new RequestImpl();
                 Response response = new ResponseImpl();
                 request.setAppName(FrameworkContext.SYS_APP_MASTER);
-                request.setModelName(ConsoleConstants.MODEL_NAME_app);
+                request.setModelName(FrameworkContext.SYS_MODEL_APP);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
                 request.setId(appName);
                 ConsoleWarHelper.invokeLocalApp(FrameworkContext.SYS_APP_MASTER, request, response);

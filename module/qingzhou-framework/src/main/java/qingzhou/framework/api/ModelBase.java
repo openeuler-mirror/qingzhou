@@ -23,6 +23,11 @@ public abstract class ModelBase implements ShowModel {
     public void init() {
     }
 
+    // 对于创建时候未传入 id 参数的，如 master 的 App，可以通过此方法计算 id，以进行必要的查重校验等操作
+    public String resolveId(Request request) {
+        return null;
+    }
+
     // 定制校验逻辑，返回 i18n 的 key
     public String validate(Request request, String fieldName) {
         return null;

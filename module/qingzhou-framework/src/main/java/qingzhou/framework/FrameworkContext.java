@@ -10,9 +10,12 @@ public interface FrameworkContext {
     String SYS_APP_NODE_AGENT = "nodeagent";
     String SYS_APP_COMMON = "common";
 
+
     String SYS_MODEL_INDEX = "index";
     String SYS_MODEL_HOME = "home";
     String SYS_MODEL_APP_INSTALLER = "appinstaller";
+    String SYS_MODEL_APP = "app";
+    String SYS_MODEL_NODE = "node";
 
     String SYS_ACTION_MANAGE = "manage";
     String SYS_ACTION_INSTALL = "install";

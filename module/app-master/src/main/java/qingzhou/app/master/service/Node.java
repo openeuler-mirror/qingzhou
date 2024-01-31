@@ -14,13 +14,12 @@ import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
-@Model(name = Node.MODEL_NAME, icon = "node",
+@Model(name = FrameworkContext.SYS_MODEL_NODE, icon = "node",
         menuName = "Service", menuOrder = 2,
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
                 "en:A node is an abstraction of a physical or virtual computer environment and is the infrastructure that runs instances."})
 public class Node extends ModelBase implements AddModel {
-    public static final String MODEL_NAME = "node";
 
     @Override
     public void init() {

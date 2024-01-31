@@ -12,23 +12,21 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 import java.util.Map;
 
-@Model(name = App.modelName, icon = "cube-alt",
+@Model(name = FrameworkContext.SYS_MODEL_APP, icon = "cube-alt",
         menuName = "Service", menuOrder = 1,
         nameI18n = {"应用", "en:App"},
         infoI18n = {"应用。",
                 "en:App Management."})
 public class App extends ModelBase implements AddModel {
-    public static final String modelName = "app";
 
     @ModelField(
-            required = true,
             showToList = true,
+            disableOnCreate = true,
             disableOnEdit = true,
             nameI18n = {"名称", "en:Name"},
             infoI18n = {"应用名称。", "en:App Name"})
@@ -40,8 +38,8 @@ public class App extends ModelBase implements AddModel {
             showToEdit = false,
             type = FieldType.bool,
             nameI18n = {"使用上传", "en:Enable Upload"},
-            infoI18n = {"部署的应用可以从客户端上传，也可以从服务器端指定的位置读取。注：出于安全考虑，QingZhou 出厂设置禁用了文件上传功能，您可在“控制台安全”模块了解详情和进行相关的配置操作。",
-                    "en:The deployed app can be uploaded from the client or read from a location specified on the server side. Note: For security reasons, QingZhou factory settings disable file upload, you can learn more and perform related configuration operations in the \"Console Security\" module."})
+            infoI18n = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。注：出于安全考虑，QingZhou 出厂设置禁用了文件上传功能，您可在“控制台安全”模块了解详情和进行相关的配置操作。",
+                    "en:The installed app can be uploaded from the client or read from a location specified on the server side. Note: For security reasons, QingZhou factory settings disable file upload, you can learn more and perform related configuration operations in the \"Console Security\" module."})
     public boolean appFrom = false;
 
     @ModelField(
@@ -65,15 +63,15 @@ public class App extends ModelBase implements AddModel {
             notSupportedCharacters = "#",
             required = true,
             nameI18n = {"上传应用", "en:Upload Application"},
-            infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 类型的轻舟应用文件，否则可能会导致部署失败。",
-                    "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the deployment may fail."})
+            infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的轻舟应用文件，否则可能会导致安装失败。",
+                    "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
     public String fromUpload;
 
     @ModelField(
             required = true, type = FieldType.checkbox,
             refModel = "node", showToList = true,
             nameI18n = {"节点", "en:Node"},
-            infoI18n = {"选择部署应用的节点。", "en:Select the node where you want to deploy the application."})
+            infoI18n = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
     public String nodes;
 
     @ModelField(
@@ -92,6 +90,8 @@ public class App extends ModelBase implements AddModel {
     public void init() {
         super.init();
         getAppContext().getConsoleContext().addI18N("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
+        getAppContext().getConsoleContext().addI18N("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
+        getAppContext().getConsoleContext().addI18N("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
     }
 
     @Override
@@ -111,8 +111,8 @@ public class App extends ModelBase implements AddModel {
     @ModelAction(name = ACTION_NAME_ADD,
             icon = "save",
             showToFormBottom = true,
-            nameI18n = {"部署", "en:Deploy"},
-            infoI18n = {"按配置要求部署应用到指定的节点。", "en:Deploy the app to the specified node as required."})
+            nameI18n = {"安装", "en:Install"},
+            infoI18n = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
     public void add(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
         Map<String, String> p = prepareParameters(request);
@@ -123,6 +123,9 @@ public class App extends ModelBase implements AddModel {
             srcFile = new File(p.remove("filename"));
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
+            response.setSuccess(false);
+            String msg = getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "app.id.not.exist");
+            response.setMsg(msg);
             return;
         }
         String srcFileName = srcFile.getName();
@@ -133,7 +136,10 @@ public class App extends ModelBase implements AddModel {
             int index = srcFileName.lastIndexOf(".");
             appName = srcFileName.substring(0, index);
         } else {
-            throw ExceptionUtil.unexpectedException("unknown app type");
+            response.setSuccess(false);
+            String msg = getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "app.type.unknown");
+            response.setMsg(msg);
+            return;
         }
 
         String[] nodes = p.get("nodes").split(",");
@@ -154,13 +160,13 @@ public class App extends ModelBase implements AddModel {
                 }
             }
         } finally {
-            request.setModelName(modelName);
+            request.setModelName(FrameworkContext.SYS_MODEL_APP);
             request.setActionName(ACTION_NAME_ADD);
         }
 
         if (response.isSuccess()) {
             p.put(ListModel.FIELD_NAME_ID, appName);
-            getDataStore().addData(modelName, appName, p);
+            getDataStore().addData(FrameworkContext.SYS_MODEL_APP, appName, p);
         }
     }
 
@@ -194,7 +200,7 @@ public class App extends ModelBase implements AddModel {
                 }
             }
         } finally {
-            request.setModelName(modelName);
+            request.setModelName(FrameworkContext.SYS_MODEL_APP);
             request.setActionName(ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);
@@ -204,9 +210,24 @@ public class App extends ModelBase implements AddModel {
     @ModelAction(name = ACTION_NAME_CREATE,
             showToListHead = true,
             icon = "plus-sign", forwardToPage = "form",
-            nameI18n = {"部署", "en:Deploy"},
-            infoI18n = {"在该节点上部署应用。", "en:Deploy the application on the node."})
+            nameI18n = {"安装", "en:Install"},
+            infoI18n = {"在该节点上安装应用。", "en:Install the application on the node."})
     public void create(Request request, Response response) throws Exception {
         AddModel.super.create(request, response);
+    }
+
+    @Override
+    public String resolveId(Request request) {
+        File appFile;
+        if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
+            appFile = FileUtil.newFile(request.getParameter("fromUpload"));
+        } else {
+            appFile = new File(request.getParameter("filename"));
+        }
+
+        String appFileName = appFile.getName();
+        int i = appFileName.lastIndexOf(".");
+        if (i == -1) return appFileName;
+        return appFileName.substring(0, i);
     }
 }
