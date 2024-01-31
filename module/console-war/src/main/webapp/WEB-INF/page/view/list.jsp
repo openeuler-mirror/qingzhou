@@ -68,7 +68,7 @@ int pageSize = qzResponse.getPageSize();
                         }
                     }
                 // 用于判断是否需要操作列
-                boolean needOperationColumn = PageBackendService.needOperationColumn(qzRequest, qzResponse);
+                boolean needOperationColumn = PageBackendService.needOperationColumn(qzRequest);
                 ModelAction[] opsActions = PageBackendService.listCommonOps(qzRequest, qzResponse);
                 if (needOperationColumn) {
                     String modelIcon = modelManager.getModel(qzRequest.getModelName()).icon();
@@ -231,7 +231,7 @@ int pageSize = qzResponse.getPageSize();
                                     }
                                 }
                             }
-                            if (needOperationColumn) {
+                            if(needOperationColumn){
                             %>
                             <td>
                                 <%
@@ -289,7 +289,7 @@ int pageSize = qzResponse.getPageSize();
                                 %>
                             </td>
                             <%
-                                }
+                            }
                             %>
                         </tr>
                         <%

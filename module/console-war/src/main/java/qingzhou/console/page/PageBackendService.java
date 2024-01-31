@@ -12,7 +12,21 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.RequestImpl;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.AddModel;
+import qingzhou.framework.api.DeleteModel;
+import qingzhou.framework.api.EditModel;
+import qingzhou.framework.api.FieldType;
+import qingzhou.framework.api.Lang;
+import qingzhou.framework.api.ListModel;
+import qingzhou.framework.api.MenuInfo;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.api.Option;
+import qingzhou.framework.api.Options;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
@@ -376,67 +390,58 @@ public class PageBackendService {
     }
 
     /********************* 批量操作 start ************************/
-    public static ModelAction[] listCommonOps(Request request, Response response) throws Exception {
-        BatchVisitor batchVisitor = new BatchVisitor();
-        visitActions(request, response, batchVisitor);
-        batchVisitor.modelActions.sort(Comparator.comparingInt(ModelAction::orderOnList));
-        return batchVisitor.modelActions.toArray(new ModelAction[0]);
+    public static ModelAction[] listCommonOps(Request request, Response response) {
+        List<ModelAction> actions = getBatchActions(request, response);
+        actions.sort(Comparator.comparingInt(ModelAction::orderOnList));
+
+        return actions.toArray(new ModelAction[0]);
     }
 
-    public static ModelAction[] listModelBaseOps(Request request, Response response, Map<String, String> obj) throws Exception {
-        BatchVisitor batchVisitor = new BatchVisitor();
-        visitActions(request, response, batchVisitor, new ArrayList<Map<String, String>>() {{
-            add(obj);
-        }}, true);
-        return batchVisitor.modelActions.toArray(new ModelAction[0]);
+    public static ModelAction[] listModelBaseOps(Request request, Response response, Map<String, String> obj) {
+        List<ModelAction> actions = getBatchActions(request, response);
+        actions.sort(Comparator.comparingInt(ModelAction::orderOnList));
+
+        return actions.toArray(new ModelAction[0]);
     }
 
-    //公共操作列表
-    public static boolean needOperationColumn(Request request, Response response) throws Exception {
-        final boolean[] needOperationColumn = {false};
-        visitActions(request, response,
-                obj -> {
-                    needOperationColumn[0] = true;
-                    return false;
-                });
-        return needOperationColumn[0];
-    }
-
-    private static void visitActions(Request request, Response response, Visitor<ModelAction> visitor) throws Exception {
-        visitActions(request, response, visitor, response.getDataList(), true);
-    }
-
-    private static void visitActions(Request request, Response response, Visitor<ModelAction> visitor, List<Map<String, String>> datas, boolean checkEffective) throws Exception {
+    private static List<ModelAction> getBatchActions(Request request, Response response) {
         final String appName = request.getAppName();
         final ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return;
-        }
-        final String modelName = request.getModelName();
-        boolean hasId = hasIDField(request);
-        if (hasId && !response.getDataList().isEmpty()) {
-            for (String ac : modelManager.getActionNames(modelName)) {
-                ModelAction action = modelManager.getModelAction(modelName, ac);
-                for (Map<String, String> data : datas) {
-                    if (checkEffective && isActionEffective(request, data, action) != null) {
-                        continue;
+        List<ModelAction> actions = new ArrayList<>();
+        if (modelManager != null) {
+            final String modelName = request.getModelName();
+            boolean hasId = hasIDField(request);
+            List<Map<String, String>> dataList = response.getDataList();
+            if (hasId && !dataList.isEmpty()) {
+                for (String ac : modelManager.getActionNamesSupportBatch(modelName)) {
+                    ModelAction action = modelManager.getModelAction(modelName, ac);
+                    boolean isShow = true;
+                    for (Map<String, String> data : dataList) {
+                        final String actionName = action.name();
+                        if (isActionEffective(request, data, action) != null || EditModel.ACTION_NAME_EDIT.equals(actionName) || !action.showToList()) {
+                            isShow = false;
+                            break;
+                        }
                     }
-
-                    final String actionName = action.name();
-                    if (EditModel.ACTION_NAME_EDIT.equals(actionName)) {
-                        continue;
-                    }
-
-                    if (!action.showToList()) {
-                        continue;
-                    }
-
-                    if (visitor.visitAndEnd(action)) {
-                        break;
+                    if (isShow) {
+                        actions.add(action);
                     }
                 }
             }
         }
+
+        return actions;
+    }
+
+    //公共操作列表
+    public static boolean needOperationColumn(Request request) {
+        final String appName = request.getAppName();
+        final ModelManager modelManager = getModelManager(appName);
+        if (modelManager == null) {
+            return false;
+        }
+
+        return modelManager.getActionNamesShowToList(request.getModelName()).length > 0;
     }
 
     public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
@@ -448,21 +453,5 @@ public class PageBackendService {
         return response.encodeURL(url);
     }
 
-    private static class BatchVisitor implements Visitor<ModelAction> {
-        List<ModelAction> modelActions = new ArrayList<>();
-
-        @Override
-        public boolean visitAndEnd(ModelAction action) {
-            if (!action.supportBatch()) {
-                return true;
-            }
-
-            if (!modelActions.contains(action)) {
-                modelActions.add(action);
-            }
-
-            return false;
-        }
-    }
     /********************* 批量操作 end ************************/
 }
