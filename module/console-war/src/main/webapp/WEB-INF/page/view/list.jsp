@@ -35,61 +35,13 @@ int pageSize = qzResponse.getPageSize();
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
     <div class="block-bg">
-        <form name="filterForm" id="filterForm" method="POST"
-              action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getAppName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
-            <div class="row filterForm" style="margin-top: 10px;">
-                <%
-                for (Integer i : indexToShow) {
-                    String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
-                    List<Option> modelOptionsEntry = null;
-                    if (PageBackendService.isFilterSelect(qzRequest, i)) {
-                        try {
-                            Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
-                            if (modelOptions != null) {
-                                modelOptionsEntry = modelOptions.options();
-                            }
-                        } catch (Exception ignored) {
-                        }
-                    }
-                    %>
-                    <div class='col-md-3 list-page-padding-bottom <%=modelOptionsEntry != null ? "listPageFilterSelect" : "" %>'>
-                        <div class="input-control has-label-left ">
-                            <%
-                            if (modelOptionsEntry != null) {
-                                %>
-                                <%@ include file="../fragment/filter_select.jsp" %>
-                                <%
-                            } else {
-                                String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
-                                if (StringUtil.notBlank(showHtml)) {
-                                    if (SafeCheckerUtil.checkIsXSS(showHtml)) {
-                                        showHtml = "";
-                                    }
-                                }
-                                %>
-                                <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control" placeholder="">
-                                <%
-                            }
-                            %>
-                            <label for="<%=fieldName%>"
-                                   class="input-control-label-left"><%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
-                            </label>
-                        </div>
-                    </div>
-                    <%
-                }
-                %>
-                <div class="col-md-3 search-btn" style="margin-bottom: 16px;">
-                    <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
-                        <a class="btn"
-                           href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
-                           form="filterForm">
-                            <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18NString( "page.filter")%>
-                        </a>
-                    </span>
-                </div>
-            </div>
-        </form>
+        <%
+            if (!indexToShow.isEmpty()) {
+        %>
+            <%@ include file="../fragment/filter_form.jsp" %>
+        <%
+            }
+        %>
 
         <hr style="margin-top: 4px;">
 

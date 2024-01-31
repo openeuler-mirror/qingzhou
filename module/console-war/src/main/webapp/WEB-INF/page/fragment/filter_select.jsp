@@ -25,7 +25,7 @@ for (Option option : modelOptionsEntry) {
 }
 selectHtml += "</ul>";
 
-selectHtml = "<input type=\"text\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" +  ">" + selectHtml;
+selectHtml = "<input type=\"text\" name=\"" + fieldName + "\" value=\"" + selectVal + "\" placeholder=\"" + I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName) +  "\" >" + selectHtml;
 selectHtml = "<div class=\"form-control nice-select wide\">" + selectHtml + "</div>";
 
 out.print(selectHtml);
