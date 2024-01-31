@@ -2,7 +2,6 @@ package qingzhou.config.impl;
 
 import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.InternalService;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.XmlUtil;
 
@@ -10,7 +9,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-public class ConfigManagerImpl implements ConfigManager, InternalService {
+public class ConfigManagerImpl implements ConfigManager {
     private final File serverXml;
 
     public ConfigManagerImpl(FrameworkContext frameworkContext) {

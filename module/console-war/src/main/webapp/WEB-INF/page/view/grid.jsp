@@ -34,11 +34,11 @@ int pageSize = qzResponse.getPageSize();
 
     <div class="block-bg">
         <%
-            if (!indexToShow.isEmpty()) {
-        %>
-        <%@ include file="../fragment/filter_form.jsp" %>
-        <%
-            }
+        if (!indexToShow.isEmpty()) {
+            %>
+            <%@ include file="../fragment/filter_form.jsp" %>
+            <%
+        }
         %>
 
         <hr style="margin-top: 4px;">
