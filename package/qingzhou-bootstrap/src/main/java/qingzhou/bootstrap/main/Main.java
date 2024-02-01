@@ -2,7 +2,6 @@ package qingzhou.bootstrap.main;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
@@ -96,13 +95,6 @@ public class Main {
                 }
             });
         }
-
-        File[] apps = new File(Utils.getDomain(), "apps").listFiles();
-        if (apps != null) {
-            for (File app : apps) {
-                installBundleFile(framework, app);
-            }
-        }
     }
 
     private static void installBundleFile(Framework framework, File moduleJar) {
@@ -110,9 +102,8 @@ public class Main {
         try {
             Bundle bundle = bundleContext.installBundle(moduleJar.toURI().toString());
             bundle.start();
-        } catch (BundleException e) {
+        } catch (Throwable e) {
             System.err.println("Failed to load module " + moduleJar.getName() + ": " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
