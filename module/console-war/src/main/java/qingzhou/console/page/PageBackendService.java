@@ -391,27 +391,28 @@ public class PageBackendService {
 
     /********************* 批量操作 start ************************/
     public static ModelAction[] listCommonOps(Request request, Response response) {
-        List<ModelAction> actions = getBatchActions(request, response);
+        List<ModelAction> actions = visitActions(request, response.getDataList());
         actions.sort(Comparator.comparingInt(ModelAction::orderOnList));
 
         return actions.toArray(new ModelAction[0]);
     }
 
-    public static ModelAction[] listModelBaseOps(Request request, Response response, Map<String, String> obj) {
-        List<ModelAction> actions = getBatchActions(request, response);
+    public static ModelAction[] listModelBaseOps(Request request, Map<String, String> obj) {
+        List<ModelAction> actions = visitActions(request, new ArrayList<Map<String, String>>() {{
+            add(obj);
+        }});
         actions.sort(Comparator.comparingInt(ModelAction::orderOnList));
 
         return actions.toArray(new ModelAction[0]);
     }
 
-    private static List<ModelAction> getBatchActions(Request request, Response response) {
+    private static List<ModelAction> visitActions(Request request, List<Map<String, String>> dataList) {
         final String appName = request.getAppName();
         final ModelManager modelManager = getModelManager(appName);
         List<ModelAction> actions = new ArrayList<>();
         if (modelManager != null) {
             final String modelName = request.getModelName();
             boolean hasId = hasIDField(request);
-            List<Map<String, String>> dataList = response.getDataList();
             if (hasId && !dataList.isEmpty()) {
                 for (String ac : modelManager.getActionNamesSupportBatch(modelName)) {
                     ModelAction action = modelManager.getModelAction(modelName, ac);

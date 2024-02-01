@@ -162,7 +162,7 @@ int pageSize = qzResponse.getPageSize();
                             if (hasId) {
                                 String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
                                 if (opsActions.length > 0) {
-                                    boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, qzResponse, modelBase).length > 0;
+                                    boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, modelBase).length > 0;
                                     %>
                                     <td>
                                         <input type="checkbox"
