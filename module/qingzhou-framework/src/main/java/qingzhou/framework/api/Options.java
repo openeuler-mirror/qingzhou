@@ -1,5 +1,6 @@
 package qingzhou.framework.api;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -14,13 +15,18 @@ public interface Options {
         if (options == null) {
             options = Options.of();
         }
+        List<Option> modifiableList = new ArrayList<>(options.options());
         if (otherOptions != null) {
             for (Options otherOption : otherOptions) {
-                Options finalOptions = options;
-                otherOption.options().forEach(option -> finalOptions.options().add(option));
+                if (otherOption != null) {
+                    List<Option> otherOptionList = otherOption.options();
+                    if (otherOptionList != null) {
+                        modifiableList.addAll(otherOptionList);
+                    }
+                }
             }
         }
-        return options;
+        return () -> modifiableList;
     }
 
     static Options merge(Options options, Option... option) {
