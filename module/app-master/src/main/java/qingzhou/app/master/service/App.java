@@ -38,8 +38,8 @@ public class App extends ModelBase implements AddModel {
             showToEdit = false,
             type = FieldType.bool,
             nameI18n = {"使用上传", "en:Enable Upload"},
-            infoI18n = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。注：出于安全考虑，Qingzhou 出厂设置禁用了文件上传功能，您可在“控制台安全”模块了解详情和进行相关的配置操作。",
-                    "en:The installed app can be uploaded from the client or read from a location specified on the server side. Note: For security reasons, Qingzhou factory settings disable file upload, you can learn more and perform related configuration operations in the \"Console Security\" module."})
+            infoI18n = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。",
+                    "en:The installed app can be uploaded from the client or read from a location specified on the server side."})
     public boolean appFrom = false;
 
     @ModelField(

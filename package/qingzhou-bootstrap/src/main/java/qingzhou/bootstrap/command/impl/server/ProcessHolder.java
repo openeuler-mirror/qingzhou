@@ -25,7 +25,7 @@ class ProcessHolder {
     }
 
     public static File serverPidFile(File domain) {
-        return Utils.getCache(domain, "server.pid");
+        return Utils.getTemp(domain, "server.pid");
     }
 
     private final File serverXml;

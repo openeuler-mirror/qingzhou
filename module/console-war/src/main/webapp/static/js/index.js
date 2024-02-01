@@ -656,7 +656,6 @@ function bindEventForFormPage() {
 //    $("textarea[readonly]").each(function (i, elem) {
 //        $(this).css("height", elem.scrollHeight);
 //    });
-    bindValidateItemEvent();
     bindFormEvent();
 
     // 日期组件设置
@@ -853,82 +852,6 @@ function bindFormEvent() {
     });
 };
 
-function bindValidateItemEvent() {
-    $("form[name='pageForm']").unbind("change").bind("change", function(e) {
-        e.preventDefault();
-        if (!e.target.hasAttribute("name")) {
-            return;
-        }
-        var events = $.data(e.target, 'events') || $._data(e.target, 'events');
-        for (var event in events) {
-            if (event === "blur" && (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT")) {
-                return;
-            }
-        }
-        var value = new Array();
-        if (e.target.tagName === "TEXTAREA") {
-            value.push($(e.target).val());
-        } else if (e.target.tagName === "SELECT") {
-            var options = e.target.options;
-            for (var i = 0; i < options.length; i++) {
-                if (options[i].selected) {
-                    value.push(options[i].value);
-                }
-            }
-        } else {
-            if (e.target.type === "radio" || e.target.type === "checkbox") {
-                $("input[name='" + e.target.name + "']:checked", this).each(function() {
-                    value.push($(this).val());
-                });
-            } else {
-                value.push($(e.target).val());
-            }
-        }
-        var json = {};
-        json[$(this).attr("name")] = value;
-        validateItem(this, json, $(this).attr("name"));
-    });
-    $("form[name='pageForm'] input,textarea").unbind("blur").bind("blur", function(e) {
-        e.preventDefault();
-        if ($(this)[0].hasAttribute("name")) {
-            var json = {};
-            json[$(this).attr("name")] = $(this).val();
-            validateItem($("form[name='pageForm']", getActiveTabContent()), json, $(this).attr("name"));
-        }
-    });
-};
-
-function validateItem(thisForm, json, item) {
-    json[getSetting("SINGLE_FIELD_VALIDATE_PARAM")] = item;
-    if ($("[name='" + item + "']").attr("type") === "password" || $("[name='" + item + "']").attr("data-type") === "password" || $("[name='" + item + "']").attr("clientEncrypt") === "true") {
-        // 这里是特殊处理，确认密码时要与新密码进行比对
-        if (($(thisForm).attr("action").indexOf("/password/") || $(thisForm).attr("action").indexOf("/user/")) && item.indexOf("confirm") > -1) {
-            var passwordName = $("#form-item-" + item, thisForm).prev().attr("id").replace("form-item-", "");
-            if (json[item] !== $("[name='" + passwordName + "']").val()) {
-                $("#form-item-" + item + " > div", thisForm).attr("error-key", item).addClass("has-error");
-                $("#form-item-" + item + " > div .tw-error-info", thisForm).html(getSetting("passwordConfirmFailed"));
-            } else {
-                $("#form-item-" + item + " > div", thisForm).attr("error-key", item).removeClass("has-error");
-                $("#form-item-" + item + " > div .tw-error-info", thisForm).html("");
-            }
-            return;
-        }
-    }
-    $.post($(thisForm).attr("action"), json, function (data, textStatus, jqXHR) {
-        if (data.success === "false") {
-            var errorData = data.error[0];
-            var msg = data.message;
-            if(errorData != null){
-                msg = errorData[item];
-            }
-            $("#form-item-" + item + " > div", thisForm).attr("error-key", item).addClass("has-error");
-            $("#form-item-" + item + " > div .tw-error-info", thisForm).html(msg);
-        } else {
-            $("#form-item-" + item + " > div", thisForm).attr("error-key", item).removeClass("has-error");
-            $("#form-item-" + item + " > div .tw-error-info", thisForm).html("");
-        }
-    }, "json");
-};
 /**************************************** form.jsp - end *************************************************/
 
 /**************************************** sortable.jsp - start *************************************************/
