@@ -67,16 +67,6 @@ public class Manual extends ModelBase implements ListModel {
                 "## REST interface\n" +
                 "## Command-line interface\n"
         });
-
-        // todo 补充内容包括：公共服务扩展(ServiceRegister)、命令行接口的命令扩展(CommandLineProcessor)等
-        context.addI18N("manual.name.3", new String[]{"平台级能力扩展", "en:Platform-level capability expansion"});
-        context.addI18N("manual.info.3", new String[]{"# 平台级能力扩展\n" +
-                "## ServiceRegister\n" +
-                "## CommandLineProcessor\n"
-                , "en:# Platform-level capability expansion\n" +
-                "## ServiceRegister\n" +
-                "## CommandLineProcessor\n"
-        });
     }
 
     @Override
