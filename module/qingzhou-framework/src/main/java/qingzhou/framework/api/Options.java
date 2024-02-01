@@ -33,13 +33,14 @@ public interface Options {
         if (options == null) {
             options = Options.of();
         }
+        List<Option> modifiableList = new ArrayList<>(options.options());
         if (option != null) {
             for (Option opt : option) {
                 if (opt != null) {
-                    options.options().add(opt);
+                    modifiableList.add(opt);
                 }
             }
         }
-        return options;
+        return () -> modifiableList;
     }
 }
