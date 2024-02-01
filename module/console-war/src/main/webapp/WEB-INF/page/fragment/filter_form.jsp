@@ -19,7 +19,7 @@
                 }
                 boolean changeLast = (index++ == indexToShow.size() && indexToShow.size() % 4 == 0);
         %>
-        <div class='<%=changeLast?"col-md-2":"col-md-3"%> list-page-padding-bottom <%=modelOptionsEntry != null ? "listPageFilterSelect" : "" %>'>
+        <div class='<%=changeLast?"col-xs-2":"col-xs-3"%> list-page-padding-bottom <%=modelOptionsEntry != null ? "listPageFilterSelect" : "" %>'>
             <div class="input-control">
                 <%
                     if (modelOptionsEntry != null) {
@@ -44,7 +44,7 @@
         <%
             }
         %>
-        <div class="col-md-1 search-btn" style="margin-bottom: 16px;">
+        <div class="col-xs-1 search-btn" style="margin-bottom: 16px;">
                         <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
                             <a class="btn"
                                href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
