@@ -1,5 +1,6 @@
 package qingzhou.framework.api;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -14,7 +15,8 @@ public interface Groups {
         if (groups == null) {
             groups = Groups.of();
         }
-        groups.groups().addAll(Arrays.asList(group));
-        return groups;
+        List<Group> modifiableList = new ArrayList<>(groups.groups());
+        modifiableList.addAll(Arrays.asList(group));
+        return () -> modifiableList;
     }
 }
