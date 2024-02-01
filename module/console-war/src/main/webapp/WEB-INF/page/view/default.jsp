@@ -82,7 +82,7 @@ if (!qzResponse.getDataList().isEmpty()) {
                 <div class="form-btn">
                     <a href="javascript:void(0);" btn-type="goback" onclick="tw.goback(this);" class="btn">
                         <!--<i class="icon icon-undo"></i>-->
-                        <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
+                        <%=PageBackendService.getMasterAppI18NString("page.cancel")%>
                     </a>
                 </div>
             </div>

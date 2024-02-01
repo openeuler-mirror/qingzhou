@@ -588,3 +588,5 @@ a.cancelfavorites:active{text-decoration: none;color: black;}
 .appCard .right .installUpgrade a {margin-left: 0px; float:left;}
 .appCard .right a{font-size:13px;color:blue;float:right;margin:8px 0 0px 6px;}
 .appCard .right a:hover{color:#06F;text-decoration: none;}
+
+.markedviewText{display: none;}

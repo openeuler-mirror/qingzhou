@@ -406,6 +406,10 @@ function setOrReset() {
     initOverview();
     // tree.jsp 页面加载
     initTree();
+    // markdown 内容展示
+    $(".markedviewText").each(function() {
+        $(this).prev(".markedview").html(marked.parse($(this).val()));
+    });
     // 菜单区域禁止鼠标右键
     $(".main-sidebar").unbind("contextmenu").bind("contextmenu", function (e) {
         e.preventDefault();

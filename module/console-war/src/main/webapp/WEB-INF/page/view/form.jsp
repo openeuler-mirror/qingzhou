@@ -180,6 +180,12 @@ if (encodedId == null) {
                                                   rows="3"><%=fieldValue%></textarea>
                                         <%
                                         break;
+                                    case markdown:
+                                        %>
+                                        <div class="markedview"></div>
+                                        <textarea name="<%=fieldName%>" class="markedviewText" rows="3"><%=fieldValue%></textarea>
+                                        <%
+                                        break;
                                     case radio:%>
                                         <%@ include file="field_type/radio.jsp" %>
                                         <%
