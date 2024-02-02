@@ -111,13 +111,13 @@ int pageSize = qzResponse.getPageSize();
                 <%
                 if (opsActions.length > 0) {
                     %>
-                    <th>
+                    <th class="custom-checkbox">
                         <input type="checkbox" class="allcheck"/>
                     </th>
                     <%
                 }
                 %>
-                <th><%=PageBackendService.getMasterAppI18NString( "page.list.order")%></th>
+                <th class="sequence"><%=PageBackendService.getMasterAppI18NString( "page.list.order")%></th>
                 <%
                 for (Integer i : indexToShow) {
                     String name = modelManager.getFieldName(qzRequest.getModelName(), i);
@@ -158,7 +158,7 @@ int pageSize = qzResponse.getPageSize();
                             if (opsActions.length > 0) {
                                 boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, modelBase).length > 0;
                                 %>
-                                <td>
+                                <td class="custom-checkbox">
                                     <input type="checkbox"
                                            value="<%= ConsoleSDK.needEncode(idValue) ?  ConsoleSDK.encodeId(idValue) : idValue%>"
                                            name="<%=ListModel.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
@@ -166,7 +166,7 @@ int pageSize = qzResponse.getPageSize();
                                 <%
                             }
                             %>
-                            <td><%=++listOrder%></td>
+                            <td class="sequence"><%=++listOrder%></td>
                             <%
                             ModelAction targetAction = null;
                             if (AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
