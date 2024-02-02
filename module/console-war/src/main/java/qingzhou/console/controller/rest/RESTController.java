@@ -5,6 +5,7 @@ import qingzhou.console.I18n;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
+import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.FrameworkContext;
@@ -148,9 +149,13 @@ public class RESTController extends HttpServlet {
         request.setUserName(LoginManager.getLoginUser(req.getSession(false)));
         request.setI18nLang(I18n.getI18nLang());
 
+        StringBuilder id = new StringBuilder();
         if (rest.size() > restDepth) {
-            String id = rest.get(restDepth);
-            request.setId(id);
+            id.append(rest.get(restDepth));
+            for (int i = restDepth + 1; i < rest.size(); i++) {
+                id.append("/").append(rest.get(i));// support ds jndi: jdbc/test
+            }
+            request.setId(ConsoleSDK.decodeId(id.toString()));
         }
         boolean actionFound = false;
         String[] actions = PageBackendService.getModelManager(request.getAppName()).getActionNames(request.getModelName());
