@@ -12,22 +12,7 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.RequestImpl;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.DeleteModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Lang;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.MenuInfo;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.pattern.Visitor;
+import qingzhou.framework.api.*;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
@@ -298,18 +283,13 @@ public class PageBackendService {
     }
 
     public static boolean hasIDField(Request request) {
-        try {
-            final ModelManager modelManager = getModelManager(request.getAppName());
-            if (modelManager == null) {
-                return false;
-            }
-            ModelField modelField = modelManager.getModelField(request.getModelName(), ListModel.FIELD_NAME_ID);
-            if (modelField != null) {
-                return true;
-            }
-        } catch (Exception ignored) {
+        ModelManager modelManager = getModelManager(request.getAppName());
+        if (modelManager == null) {
+            return false;
         }
-        return false;
+        ModelAction listAction = modelManager.getModelAction(request.getModelName(), ListModel.ACTION_NAME_LIST);
+        ModelField idField = modelManager.getModelField(request.getModelName(), ListModel.FIELD_NAME_ID);
+        return listAction != null && idField != null;
     }
 
     public static String isActionEffective(Request request, Map<String, String> obj, ModelAction modelAction) {

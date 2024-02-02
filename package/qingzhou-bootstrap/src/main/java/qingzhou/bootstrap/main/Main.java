@@ -22,7 +22,7 @@ public class Main {
         TreeMap<Integer, List<File>> moduleLevel = moduleLevel();
 
         Map<String, String> configuration = new HashMap<>();
-        File bundleCache = Utils.getCache(Utils.getDomain(), "bundle");
+        File bundleCache = Utils.getTemp(Utils.getDomain(), "osgi-bundle");
         if (bundleCache.isDirectory()) {
             Utils.cleanDirectory(bundleCache);
         }

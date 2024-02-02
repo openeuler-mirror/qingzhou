@@ -1,4 +1,4 @@
-package qingzhou.app.master.user;
+package qingzhou.app.master;
 
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.EditModel;
@@ -12,7 +12,7 @@ import qingzhou.framework.api.Response;
 import qingzhou.framework.api.ShowModel;
 
 @Model(name = "password", icon = "key",
-        menuName = "System", menuOrder = 2,
+        menuOrder = 99,
         entryAction = EditModel.ACTION_NAME_EDIT,
         nameI18n = {"修改密码", "en:Change Password"},
         infoI18n = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})

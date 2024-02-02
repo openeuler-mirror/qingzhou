@@ -112,6 +112,8 @@ public class PublicKeyCipherImpl implements PublicKeyCipher {
     }
 
     private String decryptWithKey(Key key, String input) throws Exception {
+        if (input == null) return null;
+
         byte[] bytesContent;
         try {
             bytesContent = Hex.hexToBytes(input);// 内部是十六进制编码

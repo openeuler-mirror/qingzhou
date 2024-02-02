@@ -60,7 +60,7 @@ public class Controller implements BundleActivator {
             servletService = new ServletServiceImpl();
             consolePort = Integer.parseInt(frameworkContext.getConfigManager().getConfig("//console").get("port"));
             servletService.start(consolePort,
-                    frameworkContext.getFileManager().getTemp("ServletContainer").getAbsolutePath());
+                    frameworkContext.getFileManager().getTemp("servlet-container").getAbsolutePath());
         }
 
         @Override

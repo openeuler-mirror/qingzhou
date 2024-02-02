@@ -7,8 +7,6 @@ if (qzRequest == null || qzResponse == null) {
     return; // for 静态源码漏洞扫描
 }
 
-final boolean hasId = PageBackendService.hasIDField(qzRequest);
-
 LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
 String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
 for (String fieldName : fieldNames) {
@@ -145,32 +143,27 @@ int pageSize = qzResponse.getPageSize();
                 } else {
                     int listOrder = (pageNum - 1) * pageSize;
                     for (int idx = 0; idx < modelDataList.size(); idx++) {
-                        String originUnEncodedId = null;
-                        String encodedId = null;
                         Map<String, String> modelBase = modelDataList.get(idx);
                         String modelIcon = modelManager.getModel(qzRequest.getModelName()).icon();
-                        if (hasId) {
-                            originUnEncodedId = modelBase.get(ListModel.FIELD_NAME_ID);
-                            encodedId = originUnEncodedId;
-                            if (ConsoleSDK.needEncode(originUnEncodedId)) {
-                                encodedId = ConsoleSDK.encodeId(originUnEncodedId);
-                            }
+
+                        String originUnEncodedId = modelBase.get(ListModel.FIELD_NAME_ID);
+                        String encodedId = originUnEncodedId;
+                        if (ConsoleSDK.needEncode(originUnEncodedId)) {
+                            encodedId = ConsoleSDK.encodeId(originUnEncodedId);
                         }
                         %>
                         <tr>
                             <%
-                            if (hasId) {
-                                String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
-                                if (opsActions.length > 0) {
-                                    boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, modelBase).length > 0;
-                                    %>
-                                    <td>
-                                        <input type="checkbox"
-                                               value="<%= ConsoleSDK.needEncode(idValue) ?  ConsoleSDK.encodeId(idValue) : idValue%>"
-                                               name="<%=ListModel.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
-                                    </td>
-                                    <%
-                                }
+                            String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
+                            if (opsActions.length > 0) {
+                                boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, modelBase).length > 0;
+                                %>
+                                <td>
+                                    <input type="checkbox"
+                                           value="<%= ConsoleSDK.needEncode(idValue) ?  ConsoleSDK.encodeId(idValue) : idValue%>"
+                                           name="<%=ListModel.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
+                                </td>
+                                <%
                             }
                             %>
                             <td><%=++listOrder%></td>
@@ -191,8 +184,7 @@ int pageSize = qzResponse.getPageSize();
                                 if (value == null) {
                                     value = "";
                                 }
-                                ModelAction actionEdit = modelManager.getModelAction(qzRequest.getModelName(), EditModel.ACTION_NAME_EDIT);
-                                if (isFirst && hasId && targetAction != null && actionEdit != null && actionEdit.effectiveWhen() != "") {
+                                if (isFirst && targetAction != null) {
                                     isFirst = false;
                                     %>
                                     <td>

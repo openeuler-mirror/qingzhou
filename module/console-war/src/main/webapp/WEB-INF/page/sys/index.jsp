@@ -320,8 +320,7 @@ String contextPath = request.getContextPath();
             passwordChangedMsg: '<%=PageBackendService.getMasterAppI18NString("page.password.changed")%>',
             resetPasswordUrl: '<%="/password/update"%>',
             searchHiddenTip: '<%=PageBackendService.getMasterAppI18NString("page.search.hidden")%>',
-            passwordConfirmFailed: '<%=PageBackendService.getMasterAppI18NString("password.confirm.notequal")%>',
-            SINGLE_FIELD_VALIDATE_PARAM: '<%=ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM%>'
+            passwordConfirmFailed: '<%=PageBackendService.getMasterAppI18NString("password.confirm.notequal")%>'
         };
         var searchUrl = '<%=PageBackendService.encodeURL( response, contextPath + "/search")%>';
     </script>

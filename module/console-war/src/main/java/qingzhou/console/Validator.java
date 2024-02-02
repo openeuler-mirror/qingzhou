@@ -80,15 +80,9 @@ public class Validator {
         Map<String, String> errorData = new HashMap<>();
         ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
-        boolean singleFieldValidation = isSingleFieldValidation(request);
-        String singleField = request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM);
         ModelBase tempModel = modelManager.getModelInstance(request.getModelName());
         Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
         for (String fieldName : allFieldNames) {
-            if (singleFieldValidation && !fieldName.equals(singleField)) {
-                continue;
-            }
-
             String validate = validate(request, modelManager, dataMap, fieldName, request.getParameter(fieldName));
             if (StringUtil.notBlank(validate)) {
                 errorData.put(fieldName, validate);
@@ -101,7 +95,7 @@ public class Validator {
             return false;
         }
 
-        return !singleFieldValidation;// 单字段的校验不需要走后续的持久化
+        return true;
     }
 
     private static String validate(Request request, ModelManager modelManager, Map<String, String> data, String fieldName, String newValue) throws Exception {
@@ -209,10 +203,6 @@ public class Validator {
             }
         }
         return null;
-    }
-
-    private static boolean isSingleFieldValidation(Request request) {
-        return request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) != null;
     }
 
     public static boolean isMultiVal(FieldType fieldType) {
@@ -350,7 +340,7 @@ public class Validator {
                         boolean isMultiselect = (multiselect && !containsSP);
                         if (isMultiselect || !keyList.contains(data)) {
                             // 多选框如果传递空串，则标识全不选，如果为null则不改变
-                            boolean hasNotSelect = "".equals(data);
+                            boolean hasNotSelect = data.isEmpty();
                             if (!hasNotSelect) {
                                 if (keyList.isEmpty()) {
                                     // 解决提示信息不友好：取值必须在[]中.
@@ -415,7 +405,7 @@ public class Validator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
-            if (vc.modelField.notSupportedCharacters().length() > 0) { // 不能用 isBlank，因为可能只是配置了一个 空白 符
+            if (!vc.modelField.notSupportedCharacters().isEmpty()) { // 不能用 isBlank，因为可能只是配置了一个 空白 符
                 String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(ConsoleConstants.DATA_SEPARATOR) : new String[]{vc.newValue};
                 for (char e : vc.modelField.notSupportedCharacters().toCharArray()) {
                     for (String valueStr : valueStrs) {
@@ -678,7 +668,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String noGreaterThan = vc.modelField.noGreaterThan().trim();
-            if (!noGreaterThan.isEmpty() && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
+            if (!noGreaterThan.isEmpty()) {
                 String value = vc.data.get(noGreaterThan);
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
@@ -697,7 +687,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String noGreaterThanMinusOne = vc.modelField.noGreaterThanMinusOne().trim();
-            if (!noGreaterThanMinusOne.isEmpty() && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
+            if (!noGreaterThanMinusOne.isEmpty()) {
                 String value = vc.data.get(noGreaterThanMinusOne);
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
@@ -716,7 +706,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String noLessThan = vc.modelField.noLessThan().trim();
-            if (!noLessThan.isEmpty() && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
+            if (!noLessThan.isEmpty()) {
                 String value = vc.data.get(noLessThan);
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) { // 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
@@ -736,7 +726,7 @@ public class Validator {
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String cannotBeTheSameAs = vc.modelField.cannotBeTheSameAs();
-            if (StringUtil.notBlank(cannotBeTheSameAs) && StringUtil.notBlank(vc.newValue) && vc.request.getParameter(ConsoleConstants.SINGLE_FIELD_VALIDATE_PARAM) == null) {
+            if (StringUtil.notBlank(cannotBeTheSameAs) && StringUtil.notBlank(vc.newValue)) {
                 for (String field : cannotBeTheSameAs.split(ConsoleConstants.DATA_SEPARATOR)) {
                     String fieldValue = vc.request.getParameter(field);
                     if (fieldValue == null && vc.isUpdate()) {

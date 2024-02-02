@@ -6,11 +6,8 @@ import qingzhou.framework.api.DataStore;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ListModel;
 import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,8 +21,8 @@ import java.util.Map;
 public class Manual extends ModelBase implements ListModel {
     @ModelField(
             showToList = true,
-            nameI18n = {"操作项", "en:Item"},
-            infoI18n = {"操作说明的名称。", "en:The name of the operation instructions."})
+            nameI18n = {"索引", "en:Index"},
+            infoI18n = {"此操作项的索引。", "en:The index of this action item."})
     public String id;
 
     @ModelField(
@@ -83,15 +80,5 @@ public class Manual extends ModelBase implements ListModel {
             }
             return data;
         });
-    }
-
-    @Override
-    @ModelAction(name = ACTION_NAME_SHOW,
-            showToList = true,
-            icon = "info-sign", forwardToPage = "show",
-            nameI18n = {"查看", "en:Show"},
-            infoI18n = {"查看该组件的相关信息。", "en:View the information of this model."})
-    public void show(Request request, Response response) throws Exception {
-        super.show(request, response);
     }
 }
