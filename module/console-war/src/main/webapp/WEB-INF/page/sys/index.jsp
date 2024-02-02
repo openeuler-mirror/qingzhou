@@ -324,6 +324,7 @@ String contextPath = request.getContextPath();
         };
         var searchUrl = '<%=PageBackendService.encodeURL( response, contextPath + "/search")%>';
     </script>
+    <script type="text/javascript" src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/js/main.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/js/index.js"></script>
     <script type="text/javascript">

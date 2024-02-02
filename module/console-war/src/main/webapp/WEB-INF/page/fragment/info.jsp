@@ -74,10 +74,12 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
                                 if (msg != null && !msg.startsWith("model.field.")) {
                                     info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-question-sign' data-tip-arrow=\"right\"></i></span>";
                                 }
+                                ModelField modelField = modelManager.getModelField(qzRequest.getModelName(), fieldName);
                                 String fieldValue = allData.get(fieldName);
                                 fieldValue = fieldValue != null ? fieldValue : "";
-                                fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>")
-                                        .replace("<", "&lt;").replace(">", "&gt;");
+                                if (modelField == null || modelField.type() != FieldType.markdown) {
+                                    fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
+                                }
                                 %>
                                 <tr>
                                     <td class="home-field-info" field="<%=fieldName%>">
@@ -94,7 +96,12 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
                                             </a>
                                             <%
                                         } else {
-                                            out.print(fieldValue);
+                                            if (modelField.type() == FieldType.markdown) {
+                                                out.print("<div class=\"markedview\"></div><textarea name=\"" + fieldName 
+                                                + "\" class=\"markedviewText\" rows=\"3\">" + fieldValue + "</textarea>");
+                                            } else {
+                                                out.print(fieldValue);
+                                            }
                                         }
                                         %>
                                     </td>
@@ -138,9 +145,8 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
 
 <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
     <div class="form-btn">
-        <a href="javascript:void(0);" onclick="tw.goback(this);"
-           btn-type="goback" class="btn">
-            <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
+        <a href="javascript:void(0);" onclick="tw.goback(this);" btn-type="goback" class="btn" pg="info.jsp">
+            <%=PageBackendService.getMasterAppI18NString("page.cancel")%>
         </a>
     </div>
 </div>
