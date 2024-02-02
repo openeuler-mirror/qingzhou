@@ -348,8 +348,8 @@ $(document).ready(function () {
             $(menuItemLink).parents("ul.treeview-menu").show();
             $(menuItemLink).parent().addClass("active");
             $(menuItemLink).parents(".sidebar.sidebar-scroll").animate({scrollTop: $(menuItemLink).parents(".sidebar.sidebar-scroll").scrollTop() + $(menuItemLink).parent().offset().top - $(menuItemLink).parents(".sidebar.sidebar-scroll").offset().top}, 1000);
-            tw.fill($(menuItemLink).attr("href"), {}, ".main-body", false);
         }
+        tw.fill( matchPart, {}, ".main-body", false);
         return false;
     });
 });
