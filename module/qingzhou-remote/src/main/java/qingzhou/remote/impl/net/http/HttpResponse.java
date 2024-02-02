@@ -16,7 +16,7 @@ public class HttpResponse {
     private long contentLength = 0L;
     private final Map<String, String> HEADERS = new ConcurrentHashMap<>(16);
     private String content = "";
-    
+
     public HttpResponse(ByteArrayOutputStream outputStream) {
         HEADERS.put("Connection", "Keep-Alive");
         HEADERS.put("Content-Type", contentType);
@@ -78,7 +78,7 @@ public class HttpResponse {
     public String[] getHeaderNames() {
         return HEADERS.keySet().stream().toArray(String[]::new);
     }
-    
+
     public Map<String, String> getHeaders() {
         return HEADERS;
     }
@@ -90,7 +90,7 @@ public class HttpResponse {
     public void setHeader(String name, String value) {
         HEADERS.put(name, value);
     }
-    
+
     public void removeHeader(String name) {
         HEADERS.remove(name);
     }
@@ -102,11 +102,11 @@ public class HttpResponse {
     public void setContent(String content) {
         this.content = content == null ? "" : content;
     }
-    
+
     public void dispatch(String path) {
         // TODO
     }
-    
+
     public void redirect(String path) {
         // TODO
     }

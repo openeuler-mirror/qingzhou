@@ -1,10 +1,10 @@
 package qingzhou.crypto.impl;
 
 import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyManager;
+import qingzhou.crypto.KeyCipher;
+import qingzhou.crypto.KeyPairCipher;
 import qingzhou.crypto.MessageDigest;
-import qingzhou.crypto.PasswordCipher;
-import qingzhou.crypto.PublicKeyCipher;
+import qingzhou.framework.util.HexUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
@@ -17,13 +17,8 @@ public class CryptoServiceImpl implements CryptoService {
     private final MessageDigest messageDigest = new MessageDigestImpl();
 
     @Override
-    public PasswordCipher getPasswordCipher(String keySeed) {
-        return new PasswordCipherImpl(keySeed);
-    }
-
-    @Override
-    public PasswordCipher getPasswordCipher(byte[] keySeed) {
-        return new PasswordCipherImpl(keySeed);
+    public KeyCipher getKeyCipher(String keySeed) {
+        return new KeyCipherImpl(keySeed);
     }
 
     @Override
@@ -38,14 +33,14 @@ public class CryptoServiceImpl implements CryptoService {
         PrivateKey privateKey = keyPair.getPrivate();
 
         String[] keyPairArray = new String[2];
-        keyPairArray[0] = Hex.bytesToHex(publicKey.getEncoded());
-        keyPairArray[1] = Hex.bytesToHex(privateKey.getEncoded());
+        keyPairArray[0] = HexUtil.bytesToHex(publicKey.getEncoded());
+        keyPairArray[1] = HexUtil.bytesToHex(privateKey.getEncoded());
         return keyPairArray;
     }
 
     @Override
-    public PublicKeyCipher getPublicKeyCipher(String publicKey, String privateKey) {
-        return new PublicKeyCipherImpl(publicKey, privateKey);
+    public KeyPairCipher getKeyPairCipher(String publicKey, String privateKey) {
+        return new KeyPairCipherImpl(publicKey, privateKey);
     }
 
     @Override
@@ -53,13 +48,8 @@ public class CryptoServiceImpl implements CryptoService {
         return messageDigest;
     }
 
-    @Override
-    public KeyManager getKeyManager() {
-        return new KeyManagerImpl();
-    }
-
     private KeyPair genKeyPair(String seedKey) throws Exception {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(PublicKeyCipherImpl.ALG);//KeyPairGenerator.getInstance(ALGORITHM, pro);
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(KeyPairCipherImpl.ALG);//KeyPairGenerator.getInstance(ALGORITHM, pro);
         // windows和linux下SecureRandom的行为不一致
         // 如果使用new SecureRandom(seedKey.getBytes())，在windows会生成相同密钥，在linux会生成不同密钥
         // 因此使用如下方法，确保在相同seedKey下，windows和linux都能生成相同密钥

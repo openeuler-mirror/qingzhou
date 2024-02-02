@@ -21,7 +21,7 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.config.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework,qingzhou.framework,qingzhou.framework.util</Import-Package>
+                            <Import-Package>org.osgi.framework,javax.crypto.spec,qingzhou.framework,qingzhou.framework.util</Import-Package>
                         </manifestEntries>
                     </archive>
                 </configuration>

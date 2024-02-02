@@ -2,6 +2,7 @@ package qingzhou.bootstrap.main;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
@@ -85,26 +86,22 @@ public class Main {
         return startLevels;
     }
 
-    private static void installBundle(Framework framework, TreeMap<Integer, List<File>> moduleLevel) {
+    private static void installBundle(Framework framework, TreeMap<Integer, List<File>> moduleLevel) throws BundleException {
         for (Map.Entry<Integer, List<File>> entry : moduleLevel.entrySet()) {
-            entry.getValue().forEach(moduleJar -> {
+            for (File moduleJar : entry.getValue()) {
                 if (moduleJar.exists()) {
                     installBundleFile(framework, moduleJar);
                 } else {
                     System.err.println("module not found: " + moduleJar.getName());
                 }
-            });
+            }
         }
     }
 
-    private static void installBundleFile(Framework framework, File moduleJar) {
+    private static void installBundleFile(Framework framework, File moduleJar) throws BundleException {
         BundleContext bundleContext = framework.getBundleContext();
-        try {
-            Bundle bundle = bundleContext.installBundle(moduleJar.toURI().toString());
-            bundle.start();
-        } catch (Throwable e) {
-            System.err.println("Failed to load module " + moduleJar.getName() + ": " + e.getMessage());
-        }
+        Bundle bundle = bundleContext.installBundle(moduleJar.toURI().toString());
+        bundle.start();
     }
 
     private static void waitForStop(Framework framework) {

@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NodeDataStore extends ConsoleDataStore {
+class NodeDataStore extends ConsoleDataStore {
     private final Map<String, String> localNode;
 
-    public NodeDataStore(File serverXml) {
+    NodeDataStore(File serverXml) {
         super(serverXml);
         localNode = new HashMap<>();
         localNode.put("id", FrameworkContext.SYS_NODE_LOCAL);

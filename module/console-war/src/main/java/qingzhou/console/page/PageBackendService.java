@@ -8,19 +8,14 @@ import qingzhou.console.Validator;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyManager;
+import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.*;
-import qingzhou.framework.util.ExceptionUtil;
-import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -225,36 +220,17 @@ public class PageBackendService {
             return input;
         }
         try {
-            File secureFile = getSecureFile(ConsoleWarHelper.getDomain());
-            KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
-            String pubKey = keyManager.getKeyPairOrElseInit(secureFile, ConsoleConstants.publicKeyName, ConsoleConstants.publicKeyName, ConsoleConstants.privateKeyName, null);
-            String priKey = keyManager.getKeyPairOrElseInit(secureFile, ConsoleConstants.privateKeyName, ConsoleConstants.publicKeyName, ConsoleConstants.privateKeyName, null);
-
-            return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(pubKey, priKey).decryptWithPrivateKey(input);
+            String pubKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.publicKeyName);
+            String priKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.privateKeyName);
+            return ConsoleWarHelper.getCryptoService().getKeyPairCipher(pubKey, priKey).decryptWithPrivateKey(input);
         } catch (Exception e) {
-            e.printStackTrace();
+            ConsoleWarHelper.getLogger().warn("Decryption error", e);
             return input;
         }
     }
 
-    public static synchronized File getSecureFile(File domain) throws IOException {
-        File secureDir = FileUtil.newFile(domain, "data", "secure");
-        FileUtil.mkdirs(secureDir);
-        File secureFile = FileUtil.newFile(secureDir, "secure");
-        if (!secureFile.exists()) {
-            if (!secureFile.createNewFile()) {
-                throw ExceptionUtil.unexpectedException(secureFile.getPath());
-            }
-        }
-
-        return secureFile;
-    }
-
     public static String getPublicKeyString() throws Exception {
-        CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
-        KeyManager keyManager = cryptoService.getKeyManager();
-        File secureFile = getSecureFile(ConsoleWarHelper.getDomain());
-        return keyManager.getKeyPairOrElseInit(secureFile, ConsoleConstants.publicKeyName, ConsoleConstants.publicKeyName, ConsoleConstants.privateKeyName, null);
+        return ConsoleWarHelper.getConfigManager().getKey(ConfigManager.publicKeyName);
     }
 
     // jsp加密： 获取非对称算法密钥长度

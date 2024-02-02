@@ -4,32 +4,42 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.PasswordCipher;
-import qingzhou.crypto.PublicKeyCipher;
+import qingzhou.crypto.KeyCipher;
+import qingzhou.crypto.KeyPairCipher;
 import qingzhou.framework.App;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
+import qingzhou.framework.RequestImpl;
+import qingzhou.framework.ResponseImpl;
 import qingzhou.framework.api.Logger;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.RequestImpl;
-import qingzhou.framework.ResponseImpl;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
-import qingzhou.framework.util.*;
+import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.util.IPUtil;
+import qingzhou.framework.util.StreamUtil;
+import qingzhou.framework.util.StringUtil;
 import qingzhou.remote.impl.net.http.HttpRoute;
 import qingzhou.remote.impl.net.http.HttpServer;
 import qingzhou.remote.impl.net.http.HttpServerServiceImpl;
 import qingzhou.serializer.Serializer;
 import qingzhou.serializer.SerializerService;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Controller implements BundleActivator {
     private ServiceReference<FrameworkContext> serviceReference;
     private FrameworkContext frameworkContext;
+    private Logger logger;
     private ProcessSequence sequence;
     private Map<String, String> remoteConfig;
     private String remoteHost;
@@ -42,6 +52,8 @@ public class Controller implements BundleActivator {
 
         remoteConfig = frameworkContext.getConfigManager().getConfig("//remote");
         if (!Boolean.parseBoolean(remoteConfig.get("enabled"))) return;
+
+        logger = frameworkContext.getServiceManager().getService(Logger.class);
 
         sequence = new ProcessSequence(
                 new StartServer(),
@@ -79,15 +91,11 @@ public class Controller implements BundleActivator {
                 } catch (Exception e) {
                     result = ExceptionUtil.stackTrace(e).getBytes(StandardCharsets.UTF_8);
                 }
-                try {
-                    response.setContent(new String(result, StandardCharsets.UTF_8));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                response.setContent(new String(result, StandardCharsets.UTF_8));
             });
             server.start();
 
-            frameworkContext.getServiceManager().getService(Logger.class).info("The remote service is started on the port: " + remotePort);
+            logger.info("The remote service is started on the port: " + remotePort);
         }
 
         @Override
@@ -106,9 +114,9 @@ public class Controller implements BundleActivator {
 
             // 数据解密，附带认证能力
             CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
-            String remoteKey = cryptoService.getKeyManager().getKeyOrElseInit(getSecureFile(frameworkContext.getFileManager().getDomain()), "remoteKey", null);
-            PasswordCipher passwordCipher = cryptoService.getPasswordCipher(remoteKey);
-            byte[] decryptedData = passwordCipher.decrypt(requestData);
+            String remoteKey = frameworkContext.getConfigManager().getKey("remoteKey");
+            KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
+            byte[] decryptedData = keyCipher.decrypt(requestData);
 
             // 数据转为请求对象
             Serializer serializer = frameworkContext.getServiceManager().getService(SerializerService.class).getSerializer();
@@ -124,20 +132,7 @@ public class Controller implements BundleActivator {
             byte[] responseData = serializer.serialize(response);
             // 返回数据加密
 
-            return passwordCipher.encrypt(responseData);
-        }
-
-        private File getSecureFile(File domain) throws IOException {
-            File secureDir = FileUtil.newFile(domain, "data", "secure");
-            FileUtil.mkdirs(secureDir);
-            File secureFile = FileUtil.newFile(secureDir, "secure");
-            if (!secureFile.exists()) {
-                if (!secureFile.createNewFile()) {
-                    throw ExceptionUtil.unexpectedException(secureFile.getPath());
-                }
-            }
-
-            return secureFile;
+            return keyCipher.encrypt(responseData);
         }
     }
 
@@ -171,13 +166,13 @@ public class Controller implements BundleActivator {
                 try {
                     // 获取master公钥，计算堆成密钥
                     CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
-                    PublicKeyCipher publicKeyCipher = cryptoService.getPublicKeyCipher(master.get("publicKey"), null);
+                    KeyPairCipher keyPairCipher = cryptoService.getKeyPairCipher(master.get("publicKey"), null);
 //                    String key = cryptoService.getKeyManager().getKeyOrElseInit(null, "", null);
 //                    map.put("key", key);
                     // todo seqHttp 的参数需要简化
-                    HttpClient.seqHttp(master.get("url"), map, publicKeyCipher::encryptWithPublicKey);
+                    HttpClient.seqHttp(master.get("url"), map, keyPairCipher::encryptWithPublicKey);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.warn("An exception occurred during the registration process", e);
                 }
             });
         }

@@ -6,10 +6,8 @@ import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.Validator;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.crypto.KeyManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.RequestImpl;
 import qingzhou.framework.ResponseImpl;
@@ -161,7 +159,8 @@ public class InvokeAction implements Filter<RestContext> {
 
             if (msg == null) {
                 msg = "Server exception, please check log for details.";
-                e.printStackTrace();// 不能抛异常，否则到不了 view 处理
+                // 不能抛异常，否则到不了 view 处理
+                ConsoleWarHelper.getLogger().warn(msg);
             }
 
             response.setMsg(msg);
@@ -199,7 +198,6 @@ public class InvokeAction implements Filter<RestContext> {
             appNodes = getAppNodes(appName);
         }
 
-        String remoteKey = null;
         for (String node : appNodes) {
             Response responseOnNode;
             if (node.equals(FrameworkContext.SYS_NODE_LOCAL)) {
@@ -207,19 +205,11 @@ public class InvokeAction implements Filter<RestContext> {
                 ConsoleWarHelper.invokeLocalApp(appName, request, response);
                 responseOnNode = response;
             } else {
-                if (remoteKey == null) {
-                    KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
-                    remoteKey = keyManager.getKeyOrElseInit(
-                            PageBackendService.getSecureFile(ConsoleWarHelper.getDomain()),
-                            "remoteKey",
-                            null
-                    );
-                }
-
                 Map<String, String> nodeById = ServerXml.get().getNodeById(node);
                 String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
                 String port = nodeById.get("port");
                 String remoteUrl = String.format("http://%s:%s", ip, port);
+                String remoteKey = ConsoleWarHelper.getConfigManager().getKey("remoteKey");
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
             }
             resultOnNode.put(node, responseOnNode);
