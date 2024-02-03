@@ -1,13 +1,7 @@
 package qingzhou.app.master.guide;
 
 import qingzhou.app.master.ReadOnlyDataStore;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,34 +16,34 @@ public class Manual extends ModelBase implements ListModel {
     @ModelField(
             showToList = true,
             nameI18n = {"索引", "en:Index"},
-            infoI18n = {"此操作项的索引。", "en:The index of this action item."})
+            infoI18n = {"此手册的索引。", "en:The index of this manual."})
     public String id;
 
     @ModelField(
             showToList = true,
-            nameI18n = {"操作项", "en:Item"},
-            infoI18n = {"操作说明的名称。", "en:The name of the operation instructions."})
+            nameI18n = {"名称", "en:Name"},
+            infoI18n = {"此手册的名称。", "en:The name of the manual."})
     public String name;
 
-    @ModelField(nameI18n = {"操作说明", "en:Instructions"},
-            type = FieldType.markdown,// todo: 支持在 info.jsp 里面展示 markdown 格式
-            infoI18n = {"操作说明的名称。", "en:The name of the operation instructions."})
+    @ModelField(nameI18n = {"内容", "en:Content"},
+            type = FieldType.markdown,
+            infoI18n = {"此手册的内容。", "en:The content of the manual."})
     public String info;
 
     @Override
     public void init() {
         ConsoleContext context = getAppContext().getConsoleContext();
 
-        context.addI18N("manual.name.1", new String[]{"轻舟Web管理软件开发平台概述", "en:Overview of Qingzhou web management software development platform"});
-        context.addI18N("manual.info.1", new String[]{"# 轻舟Web管理软件开发平台概述\n" +
+        context.addI18N("manual.name.1", new String[]{"平台概述", "en:Overview of Qingzhou platform"});
+        context.addI18N("manual.info.1", new String[]{"# 平台概述\n" +
                 "## 平台简介\n" +
-                "轻舟是一个轻量、快速的软件开发平台，可用于Web管理类软件的开发。基于轻舟，开发者可专注于核心业务代码的编写，而无需关心视图层逻辑的实现，从而提高开发效率。轻舟提供了表单页、列表页、监视页、文件下载页等网页显示模板，用以满足不同类型的UI需求，同时内置了与Web管理相关的认证授权、远程部署、REST接口、参数检查等能力，力求为业务系统提供简单、快速且功能完备的开发与管理一体化支撑能力。\n" +
+                "轻舟是一款轻量级的软件开发平台，主要用于Web应用类型软件的开发。轻舟实现了自动化的前端网页生成、后端参数校验，并内置了用户管理、权限控制、日志接口、系统升级等开箱即用的通用能力，使得开发者只需专注业务本身代码的编写即可，从而提升Web应用的开发效率。与其它类似软件相比，轻舟的特色在于，基于它所开发的Web应用是可插拔的，即在轻舟平台上可按需安装多套相同或不同类型业务系统的Web应用，并可在不需要的时候将其卸载，这正是轻舟的平台性能力所在。轻舟的愿景是为业务系统提供通用的、安全的、简单快速的，开发与管理一体化支撑能力。\n" +
                 "### 典型用途\n" +
                 "1. 开发一般产品的Web管控台\n" +
                 "2. 为分布式软件系统做集中式管理\n"
-                , "en:# Overview of Qingzhou web management software development platform\n" +
+                , "en:# Overview of Qingzhou platform\n" +
                 "## Introduction to the platform\n" +
-                "Qingzhou is a lightweight and fast software development platform, which can be used for the development of web management software. Based on Qingzhou, developers can focus on writing core business code without worrying about the implementation of view layer logic, thereby improving development efficiency. Qingzhou provides web display templates such as form pages, list pages, monitoring pages, and file download pages to meet different types of UI needs, and has built-in capabilities such as authentication and authorization, remote deployment, REST interface, and parameter check related to Web management, striving to provide simple, fast and complete integrated support capabilities for development and management of business systems.\n" +
+                "Qingzhou is a lightweight software development platform, mainly used for the development of web application software. Qingzhou realizes automatic front-end web page generation, back-end parameter verification, and built-in user management, permission control, log interface, system upgrade and other out-of-the-box general capabilities, so that developers only need to focus on the writing of business code, so as to improve the development efficiency of Web applications. Compared with other similar software, the feature of Qingzhou is that the Web applications developed based on it are pluggable, that is, multiple sets of Web applications of the same or different types of business systems can be installed on the Qingzhou platform on demand, and they can be uninstalled when they are not needed, which is where the platform capabilities of Qingzhou lie. Qingzhou's vision is to provide general, safe, simple and fast, integrated development and management support capabilities for business systems.\n" +
                 "### Typical uses\n" +
                 "1. Develop a web console for general products\n" +
                 "2. Centralized management of distributed software systems\n"

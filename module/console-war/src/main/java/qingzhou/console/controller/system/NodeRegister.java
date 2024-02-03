@@ -70,7 +70,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
                 }
             }
         }
-        String localKey = ConsoleWarHelper.getConfigManager().getKey(ConsoleConstants.localKeyName);
+        String localKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.localKeyName);
         KeyCipher keyCipher = cryptoService.getKeyCipher(localKey);
         Map<String, String> node = new HashMap<>();
         node.put("id", nodeIp + ":" + nodePort);

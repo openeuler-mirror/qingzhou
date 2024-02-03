@@ -1,10 +1,6 @@
 package qingzhou.console.page;
 
-import qingzhou.console.AppStub;
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
-import qingzhou.console.Validator;
+import qingzhou.console.*;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
@@ -16,14 +12,7 @@ import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -259,7 +248,12 @@ public class PageBackendService {
     }
 
     public static boolean hasIDField(Request request) {
-        ModelManager modelManager = getModelManager(request.getAppName());
+        RequestImpl requestImpl = (RequestImpl) request;
+        String appName = request.getAppName();
+        if (requestImpl.getManageType().equals(FrameworkContext.MANAGE_TYPE_NODE)) {
+            appName = FrameworkContext.SYS_APP_NODE_AGENT;
+        }
+        ModelManager modelManager = getModelManager(appName);
         if (modelManager == null) {
             return false;
         }

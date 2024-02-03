@@ -1,13 +1,10 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
-import qingzhou.console.ServerXml;
-import qingzhou.console.Validator;
+import qingzhou.console.*;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
+import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.RequestImpl;
 import qingzhou.framework.ResponseImpl;
@@ -23,14 +20,7 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class InvokeAction implements Filter<RestContext> {
     static {
@@ -209,7 +199,7 @@ public class InvokeAction implements Filter<RestContext> {
                 String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
                 String port = nodeById.get("port");
                 String remoteUrl = String.format("http://%s:%s", ip, port);
-                String remoteKey = ConsoleWarHelper.getConfigManager().getKey("remoteKey");
+                String remoteKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.remoteKeyName);
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
             }
             resultOnNode.put(node, responseOnNode);

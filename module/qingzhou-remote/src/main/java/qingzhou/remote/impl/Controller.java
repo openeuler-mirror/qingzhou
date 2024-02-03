@@ -6,11 +6,7 @@ import org.osgi.framework.ServiceReference;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
 import qingzhou.crypto.KeyPairCipher;
-import qingzhou.framework.App;
-import qingzhou.framework.AppManager;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.RequestImpl;
-import qingzhou.framework.ResponseImpl;
+import qingzhou.framework.*;
 import qingzhou.framework.api.Logger;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
@@ -30,11 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class Controller implements BundleActivator {
     private ServiceReference<FrameworkContext> serviceReference;
@@ -114,7 +106,7 @@ public class Controller implements BundleActivator {
 
             // 数据解密，附带认证能力
             CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
-            String remoteKey = frameworkContext.getConfigManager().getKey("remoteKey");
+            String remoteKey = frameworkContext.getConfigManager().getKey(ConfigManager.remoteKeyName);
             KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
             byte[] decryptedData = keyCipher.decrypt(requestData);
 

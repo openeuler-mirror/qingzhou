@@ -1,18 +1,10 @@
 package qingzhou.app.master;
 
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.api.ShowModel;
+import qingzhou.framework.api.*;
 
 @Model(name = "password", icon = "key",
         menuOrder = 99,
+        showToMenu = false,
         entryAction = EditModel.ACTION_NAME_EDIT,
         nameI18n = {"修改密码", "en:Change Password"},
         infoI18n = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})

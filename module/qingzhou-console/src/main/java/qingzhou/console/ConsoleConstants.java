@@ -1,7 +1,6 @@
 package qingzhou.console;
 
 public interface ConsoleConstants {
-    String localKeyName = "localKey";
     String LOGIN_2FA = "password2fa";
     String OPTION_GROUP_SEPARATOR = "/";
     long DAY_MILLIS_VALUE = 24 * 60 * 60 * 1000; // 一天的毫秒值
