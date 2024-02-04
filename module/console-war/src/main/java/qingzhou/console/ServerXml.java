@@ -54,9 +54,8 @@ public class ServerXml { // todo 考虑替代：ConfigManager
     }
 
     public Map<String, String> user(String loginUser) {
-        String tenant = getTenant(loginUser);
         String userName = getLoginUserName(loginUser);
-        Map<String, String> attributes = getAttributes("console/auth/tenants/tenant[@id='" + tenant + "']/users/user[@id='" + userName + "']");
+        Map<String, String> attributes = getAttributes("console/auth/users/user[@id='" + userName + "']");
 
         if (!Boolean.parseBoolean(attributes.get("active"))) {
             return null;

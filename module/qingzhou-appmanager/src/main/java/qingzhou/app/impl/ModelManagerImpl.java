@@ -317,6 +317,15 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                 }
             }
         }
+
+        return getDefaultGroups(groupName);
+    }
+
+    private Group getDefaultGroups(String groupName) {
+        if ("OTHERS".equals(groupName)) {
+            return Group.of("OTHERS", new String[]{"其它", "en:OTHERS"});
+        }
+
         return null;
     }
 

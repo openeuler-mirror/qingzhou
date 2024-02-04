@@ -38,7 +38,6 @@ public class NodeRegister implements Filter<HttpServletContext> {
         CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
         if (arg != null) {
             String privateKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.privateKeyName);
-            ;
             KeyPairCipher keyPairCipher = cryptoService.getKeyPairCipher(null, privateKey);
             arg = keyPairCipher.decryptWithPrivateKey(arg);
             Map<String, String> params = parseArg(arg);
