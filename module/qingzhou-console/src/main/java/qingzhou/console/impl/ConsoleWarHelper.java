@@ -42,15 +42,7 @@ public class ConsoleWarHelper {
     }
 
     public static File getCache(String subName) {
-        return fc.getFileManager().getTemp(subName);
-    }
-
-    public static File getDomain() {
-        return fc.getFileManager().getDomain();
-    }
-
-    public static File getHome() {
-        return fc.getFileManager().getHome();
+        return fc.getConfigManager().getTemp(subName);
     }
 
     public static Logger getLogger() {

@@ -11,6 +11,6 @@ public class Controller extends ServiceRegister<ConfigManager> {
 
     @Override
     protected ConfigManager serviceObject() {
-        return new ConfigManagerImpl(frameworkContext);
+        return new LocalConfigManager(frameworkContext);
     }
 }

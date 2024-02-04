@@ -63,15 +63,10 @@ public class AppInstaller extends ModelBase {
             infoI18n = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {
         Main.getFc().getAppManager().unInstallApp(request.getId());
-        FileUtil.forceDelete(FileUtil.newFile(getAppContext().getDomain(), "apps", request.getId()));
+        FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
 
     private File getAppsDir() {
-        File apps = FileUtil.newFile(getAppContext().getDomain(), "apps");
-        if (!apps.exists()) {
-            FileUtil.mkdirs(apps);
-        }
-
-        return apps;
+        return Main.getFc().getConfigManager().appsDir();
     }
 }

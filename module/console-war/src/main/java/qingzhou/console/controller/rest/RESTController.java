@@ -58,27 +58,6 @@ public class RESTController extends HttpServlet {
         return result;
     }
 
-    public static List<String> retrieveRestPathInfo(String uri) {
-        List<String> result = new ArrayList<>();
-        String[] restTemp = null;
-        if (uri != null) {
-            if (uri.startsWith("/")) {
-                restTemp = uri.substring(1).split("/");
-            } else {
-                restTemp = uri.split("/");
-            }
-        }
-        if (restTemp != null) {
-            for (String r : restTemp) {
-                if (r != null && !r.isEmpty()) {
-                    result.add(r);
-                }
-            }
-        }
-
-        return result;
-    }
-
     public static InvokeAction invokeAction = new InvokeAction();
 
     private final Filter<RestContext>[] filters = new Filter[]{

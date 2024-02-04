@@ -9,7 +9,6 @@ import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Logger;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
-import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
@@ -47,7 +46,7 @@ public class Controller implements BundleActivator {
     private class InstallMasterApp implements Process {
         @Override
         public void exec() throws Exception {
-            File masterApp = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", FrameworkContext.SYS_APP_MASTER);
+            File masterApp = frameworkContext.getConfigManager().masterApp();
             frameworkContext.getAppManager().installApp(masterApp);
         }
     }
@@ -60,7 +59,7 @@ public class Controller implements BundleActivator {
             servletService = new ServletServiceImpl();
             consolePort = Integer.parseInt(frameworkContext.getConfigManager().getConfig("//console").get("port"));
             servletService.start(consolePort,
-                    frameworkContext.getFileManager().getTemp("servlet-container").getAbsolutePath());
+                    frameworkContext.getConfigManager().getTemp("servlet-container").getAbsolutePath());
         }
 
         @Override
@@ -76,8 +75,8 @@ public class Controller implements BundleActivator {
 
         @Override
         public void exec() {
-            File console = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", "console");
-            String docBase = console.getAbsolutePath();
+            File consoleApp = frameworkContext.getConfigManager().consoleApp();
+            String docBase = consoleApp.getAbsolutePath();
             contextPath = frameworkContext.getConfigManager().getConfig("//console").get("contextRoot");
             servletService.addWebapp(contextPath, docBase);
             Logger logger = frameworkContext.getServiceManager().getService(Logger.class);

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @Model(name = "manual", icon = "book",
-        menuName = "Guide", menuOrder = 3,
+        menuName = "Guide", menuOrder = 1,
         nameI18n = {"开发手册", "en:DevManual"},
         infoI18n = {"基于轻舟进行应用开发的具体操作说明。", "en:Specific operating instructions for application development based on Qingzhou."})
 public class Manual extends ModelBase implements ListModel {

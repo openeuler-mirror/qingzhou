@@ -6,10 +6,6 @@ import java.util.Collection;
 public interface AppContext {
     File getTemp(String subName);
 
-    File getDomain();
-
-    File getHome();
-
     Collection<Class<?>> getServiceTypes();
 
     <T> T getService(Class<T> serviceType);

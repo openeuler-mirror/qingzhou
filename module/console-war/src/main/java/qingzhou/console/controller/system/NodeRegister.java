@@ -2,7 +2,6 @@ package qingzhou.console.controller.system;
 
 import qingzhou.console.AppStubManager;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.crypto.CryptoService;
@@ -10,7 +9,6 @@ import qingzhou.crypto.KeyCipher;
 import qingzhou.crypto.KeyPairCipher;
 import qingzhou.framework.ConfigManager;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.XmlUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -78,9 +76,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
         node.put("nodePort", nodePort);
         node.put("apps", apps);
         node.put("key", keyCipher.encrypt(key)); // todo 是否持久化，考虑每次重新注册后生成新的key
-        XmlUtil xmlUtil = new XmlUtil(ServerXml.getServerXml());
-        xmlUtil.setAttributes("/server/nodes/node", node);
-        xmlUtil.write();
+        ConsoleWarHelper.getConfigManager().updateConfig("/server/nodes/node", node);
 
         System.out.printf("Node Registration Done. ip:%s, port:%s.%n", nodeIp, nodePort);
         return false;

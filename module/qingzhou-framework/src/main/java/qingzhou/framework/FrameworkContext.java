@@ -8,8 +8,6 @@ public interface FrameworkContext {
 
     String SYS_APP_MASTER = "master";
     String SYS_APP_NODE_AGENT = "nodeagent";
-    String SYS_APP_COMMON = "common";
-
 
     String SYS_MODEL_INDEX = "index";
     String SYS_MODEL_HOME = "home";
@@ -30,8 +28,6 @@ public interface FrameworkContext {
     AppManager getAppManager();
 
     ServiceManager getServiceManager();
-
-    FileManager getFileManager();
 
     ConfigManager getConfigManager();
 }

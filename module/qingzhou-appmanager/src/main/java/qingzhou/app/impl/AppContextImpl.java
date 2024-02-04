@@ -25,17 +25,7 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public File getTemp(String subName) {
-        return frameworkContext.getFileManager().getTemp(subName);
-    }
-
-    @Override
-    public File getDomain() {
-        return frameworkContext.getFileManager().getDomain();
-    }
-
-    @Override
-    public File getHome() {
-        return frameworkContext.getFileManager().getHome();
+        return frameworkContext.getConfigManager().getTemp(subName);
     }
 
     @Override

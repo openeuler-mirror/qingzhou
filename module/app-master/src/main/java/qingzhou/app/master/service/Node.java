@@ -1,5 +1,7 @@
 package qingzhou.app.master.service;
 
+import qingzhou.app.master.ConsoleDataStore;
+import qingzhou.app.master.Main;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.DataStore;
@@ -10,9 +12,10 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.util.FileUtil;
 
-import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Model(name = FrameworkContext.SYS_MODEL_NODE, icon = "node",
         menuName = "Service", menuOrder = 2,
@@ -71,12 +74,31 @@ public class Node extends ModelBase implements AddModel {
     @Override
     public DataStore getDataStore() {
         if (dataStore == null) {
-            File serverXml = FileUtil.newFile(getAppContext().getDomain(), "conf", "server.xml");
-            dataStore = new NodeDataStore(serverXml);
+            dataStore = new NodeDataStore();
         }
 
         return dataStore;
     }
 
     private DataStore dataStore;
+
+    private static class NodeDataStore extends ConsoleDataStore {
+        private final Map<String, String> localNode;
+
+        NodeDataStore() {
+            localNode = new HashMap<>();
+            localNode.put("id", FrameworkContext.SYS_NODE_LOCAL);
+            localNode.put("ip", "127.0.0.1");
+            localNode.put("port", Main.getFc().getConfigManager().getConfig("//console").get("port"));
+            localNode.put("running", "true");
+        }
+
+        @Override
+        public List<Map<String, String>> getAllData(String type) {
+            List<Map<String, String>> allData = super.getAllData(type);
+            allData.add(0, localNode);
+            return allData;
+        }
+    }
+
 }

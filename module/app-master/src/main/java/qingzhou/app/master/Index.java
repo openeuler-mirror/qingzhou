@@ -24,11 +24,6 @@ public class Index extends ModelBase {
             infoI18n = {"此轻舟平台的版本。", "en:This version of this Qingzhou platform."})
     public String version;
 
-    @ModelField(
-            nameI18n = {"安装目录", "en:Installation path"},
-            infoI18n = {"此轻舟平台的安装目录。", "en:The installation directory of this Qingzhou platform."})
-    public String path;
-
     @Override
     @ModelAction(name = ACTION_NAME_SHOW,
             forwardToPage = "show",
@@ -39,7 +34,6 @@ public class Index extends ModelBase {
         Index index = new Index();
         index.name = Main.getFc().getName();
         index.version = Main.getFc().getVersion();
-        index.path = Main.getFc().getFileManager().getHome().getPath();
         response.addDataObject(index);
     }
 

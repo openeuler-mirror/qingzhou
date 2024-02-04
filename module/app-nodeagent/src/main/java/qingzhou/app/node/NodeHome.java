@@ -18,19 +18,14 @@ import qingzhou.framework.util.JDKUtil;
                 "en:Displays the description of the current node."})
 public class NodeHome extends ModelBase implements ShowModel {
     @ModelField(
-            nameI18n = {"Java 环境", "en:Java Env"},
-            infoI18n = {"此轻舟节点所使用的 Java 环境。", "en:The Java environment used by this Qingzhou node."})
-    public String javaHome;
+            nameI18n = {"Java 版本", "en:Java Version"},
+            infoI18n = {"此轻舟节点所使用的 Java 版本。", "en:The Java version used by this Qingzhou node."})
+    public String javaVer;
 
     @ModelField(
             nameI18n = {"本地 IP", "en:Local Ip"},
             infoI18n = {"此轻舟节点的本地 IP 地址列表。", "en:A list of local IP addresses for this Qingzhou node."})
     public String localIps;
-
-    @ModelField(
-            nameI18n = {"节点目录", "en:Node Path"},
-            infoI18n = {"此轻舟节点所对应的文件路径。", "en:The file path of this Qingzhou node."})
-    public String path;
 
     @Override
     @ModelAction(name = ACTION_NAME_SHOW,
@@ -39,9 +34,8 @@ public class NodeHome extends ModelBase implements ShowModel {
             infoI18n = {"展示节点的首页信息。", "en:Displays the homepage information of the node."})
     public void show(Request request, Response response) throws Exception {
         NodeHome home = new NodeHome();
-        home.javaHome = JDKUtil.getJavaHome();
+        home.javaVer = String.valueOf(JDKUtil.detectJavaVersion(JDKUtil.getJavaHome()));
         home.localIps = String.join(",", IPUtil.getLocalIps());
-        home.path = Main.getFc().getFileManager().getDomain().getPath();
         response.addDataObject(home);
     }
 }
