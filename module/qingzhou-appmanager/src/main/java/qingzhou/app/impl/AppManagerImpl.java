@@ -4,7 +4,6 @@ import qingzhou.app.impl.filter.UniqueFilter;
 import qingzhou.framework.App;
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.InternalService;
 import qingzhou.framework.QingZhouSystemApp;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelManager;
@@ -28,7 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-public class AppManagerImpl implements AppManager, InternalService {
+public class AppManagerImpl implements AppManager {
     private final Map<String, App> apps = new HashMap<>();
     private final FrameworkContext frameworkContext;
 

@@ -1,6 +1,7 @@
 package qingzhou.crypto.impl;
 
-import qingzhou.crypto.PublicKeyCipher;
+import qingzhou.crypto.KeyPairCipher;
+import qingzhou.framework.util.HexUtil;
 
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
@@ -12,14 +13,14 @@ import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-public class PublicKeyCipherImpl implements PublicKeyCipher {
+public class KeyPairCipherImpl implements KeyPairCipher {
     static final String ALG = "RSA";
     private static final int ENCRYPT_BLOCK = 117;
     private static final int DECRYPT_BLOCK = 128;
     private PublicKey publicKey;
     private PrivateKey privateKey;
 
-    public PublicKeyCipherImpl(String pubKeyAsBase64, String priKeyAsBase64) {
+    public KeyPairCipherImpl(String pubKeyAsBase64, String priKeyAsBase64) {
         try {
             if (pubKeyAsBase64 != null) {
                 publicKey = convertPublic(pubKeyAsBase64);
@@ -72,13 +73,13 @@ public class PublicKeyCipherImpl implements PublicKeyCipher {
         if (keyAsBase64 == null) {
             return null;
         }
-        byte[] pubBytes = Hex.hexToBytes(keyAsBase64);
+        byte[] pubBytes = HexUtil.hexToBytes(keyAsBase64);
         X509EncodedKeySpec encPubKeySpec = new X509EncodedKeySpec(pubBytes);
         return KeyFactory.getInstance(ALG).generatePublic(encPubKeySpec);
     }
 
     private PrivateKey convertPrivate(String keyAsBase64) throws Exception {
-        byte[] privateBytes = Hex.hexToBytes(keyAsBase64);
+        byte[] privateBytes = HexUtil.hexToBytes(keyAsBase64);
         PKCS8EncodedKeySpec encPriKeySpec = new PKCS8EncodedKeySpec(privateBytes);
         return KeyFactory.getInstance(ALG).generatePrivate(encPriKeySpec);
     }
@@ -86,7 +87,7 @@ public class PublicKeyCipherImpl implements PublicKeyCipher {
     private String encryptWithKey(Key key, String input) throws Exception {
         byte[] bytesContent = input.getBytes(StandardCharsets.UTF_8);
         byte[] enContent = encryptWithKey(key, bytesContent);
-        return Hex.bytesToHex(enContent);
+        return HexUtil.bytesToHex(enContent);
     }
 
     private byte[] encryptWithKey(Key key, byte[] bytesContent) throws Exception {
@@ -112,9 +113,11 @@ public class PublicKeyCipherImpl implements PublicKeyCipher {
     }
 
     private String decryptWithKey(Key key, String input) throws Exception {
+        if (input == null) return null;
+
         byte[] bytesContent;
         try {
-            bytesContent = Hex.hexToBytes(input);// 内部是十六进制编码
+            bytesContent = HexUtil.hexToBytes(input);// 内部是十六进制编码
         } catch (Exception e) {
             bytesContent = decodeAsBase64(input);// 登录页面是base64编码
         }

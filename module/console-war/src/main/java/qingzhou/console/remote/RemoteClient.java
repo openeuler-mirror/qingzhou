@@ -1,10 +1,9 @@
 package qingzhou.console.remote;
 
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.page.PageBackendService;
 import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.PasswordCipher;
+import qingzhou.crypto.KeyCipher;
+import qingzhou.framework.ConfigManager;
 import qingzhou.framework.ResponseImpl;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
@@ -27,14 +26,13 @@ public class RemoteClient {
         HttpURLConnection connection = null;
         try {
             connection = buildConnection(url);
-            setConnectionProperties(connection, true);
+            setConnectionProperties(connection);
 
-            PasswordCipher cipher;
+            KeyCipher cipher;
             try {
                 CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
-                qingzhou.crypto.KeyManager keyManager = cryptoService.getKeyManager();
-                String localKey = keyManager.getKeyOrElseInit(PageBackendService.getSecureFile(ConsoleWarHelper.getDomain()), ConsoleConstants.localKeyName, null);
-                cipher = cryptoService.getPasswordCipher(cryptoService.getPasswordCipher(localKey).decrypt(remoteKey));
+                String localKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.localKeyName);
+                cipher = cryptoService.getKeyCipher(cryptoService.getKeyCipher(localKey).decrypt(remoteKey));
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }
@@ -65,7 +63,10 @@ public class RemoteClient {
                         read += r;
                     }
                     // 再读取一次返回 -1，表示当前块已结束，close时才能将 sun.net.www.protocol.https.HttpsClient放入缓存中，实现复用
-                    objectInputStream.read();
+                    int last = objectInputStream.read();
+                    if (last != -1) {
+                        ConsoleWarHelper.getLogger().warn("The data parsing is abnormal...");
+                    }
                     if (read == deserializeBytes.length) {
                         byte[] decrypt = cipher.decrypt(deserializeBytes);
                         return serializer.deserialize(decrypt, ResponseImpl.class);
@@ -112,13 +113,13 @@ public class RemoteClient {
         return conn;
     }
 
-    private static void setConnectionProperties(HttpURLConnection conn, boolean keepAlive) throws Exception {
+    private static void setConnectionProperties(HttpURLConnection conn) throws Exception {
         conn.setRequestMethod("POST");
         conn.setDoInput(true);
         conn.setDoOutput(true);
         conn.setUseCaches(false);
         conn.setConnectTimeout(60000);
-        conn.setRequestProperty("Connection", keepAlive ? "keep-alive" : "close");
+        conn.setRequestProperty("Connection", "close");
         conn.setRequestProperty("Charset", "UTF-8");
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");// 设置文件类型
         conn.setRequestProperty("accept", "*/*");// 设置接收类型否则返回415错误

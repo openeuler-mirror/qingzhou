@@ -1,6 +1,5 @@
 package qingzhou.app.master;
 
-import qingzhou.app.master.service.Node;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.QingZhouSystemApp;
 import qingzhou.framework.api.ActionFilter;
@@ -41,7 +40,7 @@ public class Main extends QingZhouSystemApp {
 
         @Override
         public String doFilter(Request request, Response response, AppContext appContext) {
-            if (Node.MODEL_NAME.equals(request.getModelName())
+            if (FrameworkContext.SYS_MODEL_NODE.equals(request.getModelName())
                     && FrameworkContext.SYS_NODE_LOCAL.equals(request.getId())) {
                 if (EditModel.ACTION_NAME_UPDATE.equals(request.getActionName())
                         || DeleteModel.ACTION_NAME_DELETE.equals(request.getActionName())) {

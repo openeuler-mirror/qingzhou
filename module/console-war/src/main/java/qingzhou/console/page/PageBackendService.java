@@ -1,35 +1,18 @@
 package qingzhou.console.page;
 
-import qingzhou.console.AppStub;
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
-import qingzhou.console.Validator;
+import qingzhou.console.*;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyManager;
+import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.*;
-import qingzhou.framework.pattern.Visitor;
-import qingzhou.framework.util.ExceptionUtil;
-import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -206,7 +189,7 @@ public class PageBackendService {
 
     public static Map<String, Map<String, ModelField>> getGroupedModelFieldMap(Request request) {
         Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
-        ModelManager manager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
+        ModelManager manager = getModelManager(request.getAppName());
         String modelName = request.getModelName();
         for (String groupName : manager.getGroupNames(modelName)) {
             Map<String, ModelField> map = new LinkedHashMap<>();
@@ -226,36 +209,17 @@ public class PageBackendService {
             return input;
         }
         try {
-            File secureFile = getSecureFile(ConsoleWarHelper.getDomain());
-            KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
-            String pubKey = keyManager.getKeyPairOrElseInit(secureFile, ConsoleConstants.publicKeyName, ConsoleConstants.publicKeyName, ConsoleConstants.privateKeyName, null);
-            String priKey = keyManager.getKeyPairOrElseInit(secureFile, ConsoleConstants.privateKeyName, ConsoleConstants.publicKeyName, ConsoleConstants.privateKeyName, null);
-
-            return ConsoleWarHelper.getCryptoService().getPublicKeyCipher(pubKey, priKey).decryptWithPrivateKey(input);
+            String pubKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.publicKeyName);
+            String priKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.privateKeyName);
+            return ConsoleWarHelper.getCryptoService().getKeyPairCipher(pubKey, priKey).decryptWithPrivateKey(input);
         } catch (Exception e) {
-            e.printStackTrace();
+            ConsoleWarHelper.getLogger().warn("Decryption error", e);
             return input;
         }
     }
 
-    public static synchronized File getSecureFile(File domain) throws IOException {
-        File secureDir = FileUtil.newFile(domain, "data", "secure");
-        FileUtil.mkdirs(secureDir);
-        File secureFile = FileUtil.newFile(secureDir, "secure");
-        if (!secureFile.exists()) {
-            if (!secureFile.createNewFile()) {
-                throw ExceptionUtil.unexpectedException(secureFile.getPath());
-            }
-        }
-
-        return secureFile;
-    }
-
     public static String getPublicKeyString() throws Exception {
-        CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
-        KeyManager keyManager = cryptoService.getKeyManager();
-        File secureFile = getSecureFile(ConsoleWarHelper.getDomain());
-        return keyManager.getKeyPairOrElseInit(secureFile, ConsoleConstants.publicKeyName, ConsoleConstants.publicKeyName, ConsoleConstants.privateKeyName, null);
+        return ConsoleWarHelper.getConfigManager().getKey(ConfigManager.publicKeyName);
     }
 
     // jsp加密： 获取非对称算法密钥长度
@@ -264,7 +228,7 @@ public class PageBackendService {
     }
 
     public static String getSubmitActionName(Request request) {
-        final ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
+        final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
         }
@@ -284,18 +248,18 @@ public class PageBackendService {
     }
 
     public static boolean hasIDField(Request request) {
-        try {
-            final ModelManager modelManager = getModelManager(request.getAppName());
-            if (modelManager == null) {
-                return false;
-            }
-            ModelField modelField = modelManager.getModelField(request.getModelName(), ListModel.FIELD_NAME_ID);
-            if (modelField != null) {
-                return true;
-            }
-        } catch (Exception ignored) {
+        RequestImpl requestImpl = (RequestImpl) request;
+        String appName = request.getAppName();
+        if (requestImpl.getManageType().equals(FrameworkContext.MANAGE_TYPE_NODE)) {
+            appName = FrameworkContext.SYS_APP_NODE_AGENT;
         }
-        return false;
+        ModelManager modelManager = getModelManager(appName);
+        if (modelManager == null) {
+            return false;
+        }
+        ModelAction listAction = modelManager.getModelAction(request.getModelName(), ListModel.ACTION_NAME_LIST);
+        ModelField idField = modelManager.getModelField(request.getModelName(), ListModel.FIELD_NAME_ID);
+        return listAction != null && idField != null;
     }
 
     public static String isActionEffective(Request request, Map<String, String> obj, ModelAction modelAction) {
@@ -376,66 +340,59 @@ public class PageBackendService {
     }
 
     /********************* 批量操作 start ************************/
-    public static ModelAction[] listCommonOps(Request request, Response response) throws Exception {
-        BatchVisitor batchVisitor = new BatchVisitor();
-        visitActions(request, response, batchVisitor);
-        return batchVisitor.modelActions.toArray(new ModelAction[0]);
+    public static ModelAction[] listCommonOps(Request request, Response response) {
+        List<ModelAction> actions = visitActions(request, response.getDataList());
+        actions.sort(Comparator.comparingInt(ModelAction::orderOnList));
+
+        return actions.toArray(new ModelAction[0]);
     }
 
-    public static ModelAction[] listModelBaseOps(Request request, Response response, Map<String, String> obj) throws Exception {
-        BatchVisitor batchVisitor = new BatchVisitor();
-        visitActions(request, response, batchVisitor, new ArrayList<Map<String, String>>() {{
+    public static ModelAction[] listModelBaseOps(Request request, Map<String, String> obj) {
+        List<ModelAction> actions = visitActions(request, new ArrayList<Map<String, String>>() {{
             add(obj);
-        }}, true);
-        return batchVisitor.modelActions.toArray(new ModelAction[0]);
+        }});
+        actions.sort(Comparator.comparingInt(ModelAction::orderOnList));
+
+        return actions.toArray(new ModelAction[0]);
     }
 
-    //公共操作列表
-    public static boolean needOperationColumn(Request request, Response response) throws Exception {
-        final boolean[] needOperationColumn = {false};
-        visitActions(request, response,
-                obj -> {
-                    needOperationColumn[0] = true;
-                    return false;
-                });
-        return needOperationColumn[0];
-    }
-
-    private static void visitActions(Request request, Response response, Visitor<ModelAction> visitor) throws Exception {
-        visitActions(request, response, visitor, response.getDataList(), true);
-    }
-
-    private static void visitActions(Request request, Response response, Visitor<ModelAction> visitor, List<Map<String, String>> datas, boolean checkEffective) throws Exception {
+    private static List<ModelAction> visitActions(Request request, List<Map<String, String>> dataList) {
         final String appName = request.getAppName();
         final ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return;
-        }
-        final String modelName = request.getModelName();
-        boolean hasId = hasIDField(request);
-        if (hasId && !response.getDataList().isEmpty()) {
-            for (String ac : modelManager.getActionNames(modelName)) {
-                ModelAction action = modelManager.getModelAction(modelName, ac);
-                for (Map<String, String> data : datas) {
-                    if (checkEffective && isActionEffective(request, data, action) != null) {
-                        continue;
+        List<ModelAction> actions = new ArrayList<>();
+        if (modelManager != null) {
+            final String modelName = request.getModelName();
+            boolean hasId = hasIDField(request);
+            if (hasId && !dataList.isEmpty()) {
+                for (String ac : modelManager.getActionNamesSupportBatch(modelName)) {
+                    ModelAction action = modelManager.getModelAction(modelName, ac);
+                    boolean isShow = true;
+                    for (Map<String, String> data : dataList) {
+                        final String actionName = action.name();
+                        if (isActionEffective(request, data, action) != null || EditModel.ACTION_NAME_EDIT.equals(actionName) || !action.showToList()) {
+                            isShow = false;
+                            break;
+                        }
                     }
-
-                    final String actionName = action.name();
-                    if (EditModel.ACTION_NAME_EDIT.equals(actionName)) {
-                        continue;
-                    }
-
-                    if (!action.showToList() || action.showToListHead()) {
-                        continue;
-                    }
-
-                    if (visitor.visitAndEnd(action)) {
-                        break;
+                    if (isShow) {
+                        actions.add(action);
                     }
                 }
             }
         }
+
+        return actions;
+    }
+
+    //公共操作列表
+    public static boolean needOperationColumn(Request request) {
+        final String appName = request.getAppName();
+        final ModelManager modelManager = getModelManager(appName);
+        if (modelManager == null) {
+            return false;
+        }
+
+        return modelManager.getActionNamesShowToList(request.getModelName()).length > 0;
     }
 
     public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
@@ -447,21 +404,5 @@ public class PageBackendService {
         return response.encodeURL(url);
     }
 
-    private static class BatchVisitor implements Visitor<ModelAction> {
-        List<ModelAction> modelActions = new ArrayList<>();
-
-        @Override
-        public boolean visitAndEnd(ModelAction action) {
-            if (!action.supportBatch()) {
-                return true;
-            }
-
-            if (!modelActions.contains(action)) {
-                modelActions.add(action);
-            }
-
-            return false;
-        }
-    }
     /********************* 批量操作 end ************************/
 }

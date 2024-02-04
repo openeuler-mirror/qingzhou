@@ -1,18 +1,10 @@
-package qingzhou.app.master.user;
+package qingzhou.app.master;
 
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.api.ShowModel;
+import qingzhou.framework.api.*;
 
 @Model(name = "password", icon = "key",
-        menuName = "System", menuOrder = 2,
+        menuOrder = 99,
+        showToMenu = false,
         entryAction = EditModel.ACTION_NAME_EDIT,
         nameI18n = {"修改密码", "en:Change Password"},
         infoI18n = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
@@ -50,7 +42,6 @@ public class Password extends ModelBase implements EditModel {
 
     @Override
     public void init() {
-        super.init();
         ConsoleContext master = getAppContext().getConsoleContext();
         master.addI18N("update2FA.rebind", new String[]{"双因子认证密钥更新成功，请扫描二维码重新绑定双因子认证密钥",
                 "en:The two-factor authentication key is updated successfully, please scan the QR code to re-bind the two-factor authentication key"});
@@ -233,7 +224,7 @@ public class Password extends ModelBase implements EditModel {
 //            }
 //        }
 //
-//        return super.validate(request, fieldName);
+//        return null;
 //    }
 //
 //    private boolean forbidResetInitPwd(Request request) {

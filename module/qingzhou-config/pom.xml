@@ -21,7 +21,9 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.config.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework,qingzhou.framework,qingzhou.framework.util</Import-Package>
+                            <Import-Package>
+                                org.osgi.framework,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,qingzhou.crypto
+                            </Import-Package>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -38,6 +40,12 @@
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-framework</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-crypto</artifactId>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 </project>

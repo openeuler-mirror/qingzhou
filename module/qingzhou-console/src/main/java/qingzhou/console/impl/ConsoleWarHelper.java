@@ -4,6 +4,7 @@ import qingzhou.console.AppStub;
 import qingzhou.console.AppStubManager;
 import qingzhou.crypto.CryptoService;
 import qingzhou.framework.App;
+import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Logger;
 import qingzhou.framework.api.Request;
@@ -15,6 +16,10 @@ import java.io.File;
 
 public class ConsoleWarHelper {
     static FrameworkContext fc;
+
+    public static ConfigManager getConfigManager() {
+        return fc.getConfigManager();
+    }
 
     public static App getLocalApp(String appName) {
         return fc.getAppManager().getApp(appName);

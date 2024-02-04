@@ -4,6 +4,7 @@ package qingzhou.framework.api;
  * 用于指示模块的属性在 HTML 网页上的显示样式
  */
 public enum FieldType {
+    markdown,           // Markdown 样式
     textarea,           // 多行文本框
     number,             // 整数文本框
     decimal,            // 浮点数文本框

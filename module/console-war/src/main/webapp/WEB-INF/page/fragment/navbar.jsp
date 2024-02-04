@@ -23,20 +23,18 @@
                     <li>
                        <div class="searchBar">
                             <div class="sample">
-                                 <input type="text" id="searchText" name="search" placeholder="<%=PageBackendService.getMasterAppI18NString( "page.filter")%>">
-                                 <a href="javascript:void(0);" class="btn btn-search"><i class="icon icon-search"></i></a>
-                                 <div id="searchResult" class="search-list"></div>
+                                <input type="text" id="searchText" name="search" placeholder="<%=PageBackendService.getMasterAppI18NString( "page.filter")%>">
+                                <a href="javascript:void(0);" class="btn btn-search"><i class="icon icon-search"></i></a>
+                                <div id="searchResult" class="search-list"></div>
                             </div>
                        </div>
                     </li>
 
                     <%-- 切换语言 --%>
                     <li id="switch-lang" class="dropdown">
-                        <a href="javascript:void(0);" data-toggle="dropdown"
-                           class="tooltips" data-tip='<%=PageBackendService.getMasterAppI18NString( "page.lang.switch")%>' data-tip-arrow="bottom">
-                            <span class="circle-bg">
-                                <i class="icon icon-language"></i>
-                            </span>
+                        <a href="javascript:void(0);" class="tooltips" data-toggle="dropdown" data-tip-arrow="bottom" 
+                           data-tip='<%=PageBackendService.getMasterAppI18NString( "page.lang.switch")%>'>
+                            <span class="circle-bg"><i class="icon icon-language"></i></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-reset">
                             <%
@@ -50,7 +48,7 @@
                     </li>
                     <%-- 用户/修改密码 --%>
                     <li>
-                        <a id="reset-password-btn" href="<%=PageBackendService.encodeURL( response, ViewManager.htmlView+"/"+ FrameworkContext.SYS_APP_MASTER +"/password/"+ "edit")%>"
+                        <a id="reset-password-btn" href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ FrameworkContext.MANAGE_TYPE_APP +"/"+ FrameworkContext.SYS_APP_MASTER +"/password/"+ "edit")%>"
                         class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
                                 <i class="icon icon-<%=PageBackendService.getModelManager(FrameworkContext.SYS_APP_MASTER).getModel("user").icon()%>"></i>
@@ -61,9 +59,7 @@
                     <li>
                         <a id="logout-btn" href="<%=PageBackendService.encodeURL( response, contextPath + LoginManager.LOGIN_PATH + "?" + LoginManager.LOGOUT_FLAG)%>"
                         class="tooltips" data-tip='<%=PageBackendService.getMasterAppI18NString( "page.invalidate")%>' data-tip-arrow="bottom">
-                            <span class="circle-bg">
-                                <i class="icon icon-signout"></i>
-                            </span>
+                            <span class="circle-bg"><i class="icon icon-signout"></i></span>
                         </a>
                     </li>
                 </ul>

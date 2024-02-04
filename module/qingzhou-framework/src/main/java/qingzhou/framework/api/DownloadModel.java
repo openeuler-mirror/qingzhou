@@ -33,7 +33,7 @@ public interface DownloadModel {
     String DOWNLOAD_BLOCK = "DOWNLOAD_BLOCK";
 
     @ModelAction(name = ACTION_NAME_DOWNLOADLIST,
-            showToList = true,
+            showToList = true, orderOnList = 98,
             icon = "download-alt",
             nameI18n = {"下载", "en:Download"},
             infoI18n = {"获取该组件可下载文件的列表。",
@@ -113,7 +113,8 @@ public interface DownloadModel {
         File downloadFile = FileUtil.newFile(keyDir, key);
         result.put(DOWNLOAD_KEY, key);
 
-        byte[] byteRead = null;
+        byte[] byteRead;
+        boolean hasMore = false;
         try (RandomAccessFile raf = new RandomAccessFile(downloadFile, "r")) {
             raf.seek(offset);
             byte[] block = new byte[DOWNLOAD_BLOCK_SIZE];
@@ -121,6 +122,10 @@ public interface DownloadModel {
             if (read > 0) { // ==0 表示上次正好读取到结尾
                 if (read == block.length) {
                     byteRead = block;
+
+                    if (raf.getFilePointer() < raf.length() - 1) {
+                        hasMore = true;
+                    }
                 } else {
                     byteRead = new byte[read];
                     System.arraycopy(block, 0, byteRead, 0, read);
@@ -130,7 +135,7 @@ public interface DownloadModel {
             }
         }
 
-        if (byteRead != null && byteRead.length == DOWNLOAD_BLOCK_SIZE) {
+        if (hasMore) {
             result.put(DOWNLOAD_OFFSET, String.valueOf(offset));
         } else {
             result.put(DOWNLOAD_OFFSET, String.valueOf(-1L));
@@ -150,15 +155,15 @@ public interface DownloadModel {
         String[] list = keyDir.list();
         if (list != null) {
             for (String historicalKey : list) {
-                boolean delete = true;
+                boolean delete = false;
                 try {
                     int i = historicalKey.indexOf(keySP);
                     long time = format.parse(historicalKey.substring(0, i)).getTime();
-                    if (System.currentTimeMillis() - time < 1000 * 60 * 60 * 24) { // 保留下载失败的文件 key 最多一天，之后清理
-                        delete = false;
+                    if (System.currentTimeMillis() - time > 1000 * 60 * 60 * 24 * 7) { // 清理可能下载失败的文件
+                        delete = true;
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.err.println("failed to parse time: " + historicalKey);
                 }
                 if (delete) {
                     File temp = FileUtil.newFile(keyDir, historicalKey);

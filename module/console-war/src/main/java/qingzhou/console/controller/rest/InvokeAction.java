@@ -1,15 +1,10 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
-import qingzhou.console.ServerXml;
-import qingzhou.console.Validator;
+import qingzhou.console.*;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.crypto.KeyManager;
+import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.RequestImpl;
 import qingzhou.framework.ResponseImpl;
@@ -25,14 +20,7 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class InvokeAction implements Filter<RestContext> {
     static {
@@ -161,7 +149,8 @@ public class InvokeAction implements Filter<RestContext> {
 
             if (msg == null) {
                 msg = "Server exception, please check log for details.";
-                e.printStackTrace();// 不能抛异常，否则到不了 view 处理
+                // 不能抛异常，否则到不了 view 处理
+                ConsoleWarHelper.getLogger().warn(msg);
             }
 
             response.setMsg(msg);
@@ -199,7 +188,6 @@ public class InvokeAction implements Filter<RestContext> {
             appNodes = getAppNodes(appName);
         }
 
-        String remoteKey = null;
         for (String node : appNodes) {
             Response responseOnNode;
             if (node.equals(FrameworkContext.SYS_NODE_LOCAL)) {
@@ -207,19 +195,11 @@ public class InvokeAction implements Filter<RestContext> {
                 ConsoleWarHelper.invokeLocalApp(appName, request, response);
                 responseOnNode = response;
             } else {
-                if (remoteKey == null) {
-                    KeyManager keyManager = ConsoleWarHelper.getCryptoService().getKeyManager();
-                    remoteKey = keyManager.getKeyOrElseInit(
-                            PageBackendService.getSecureFile(ConsoleWarHelper.getDomain()),
-                            "remoteKey",
-                            null
-                    );
-                }
-
                 Map<String, String> nodeById = ServerXml.get().getNodeById(node);
                 String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
                 String port = nodeById.get("port");
                 String remoteUrl = String.format("http://%s:%s", ip, port);
+                String remoteKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.remoteKeyName);
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
             }
             resultOnNode.put(node, responseOnNode);
@@ -238,7 +218,7 @@ public class InvokeAction implements Filter<RestContext> {
                 RequestImpl request = new RequestImpl();
                 Response response = new ResponseImpl();
                 request.setAppName(FrameworkContext.SYS_APP_MASTER);
-                request.setModelName(ConsoleConstants.MODEL_NAME_app);
+                request.setModelName(FrameworkContext.SYS_MODEL_APP);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
                 request.setId(appName);
                 ConsoleWarHelper.invokeLocalApp(FrameworkContext.SYS_APP_MASTER, request, response);

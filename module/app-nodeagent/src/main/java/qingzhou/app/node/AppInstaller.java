@@ -2,7 +2,11 @@ package qingzhou.app.node;
 
 import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.*;
+import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
+import qingzhou.framework.api.ModelBase;
+import qingzhou.framework.api.Request;
+import qingzhou.framework.api.Response;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
@@ -59,6 +63,7 @@ public class AppInstaller extends ModelBase {
             infoI18n = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {
         Main.getFc().getAppManager().unInstallApp(request.getId());
+        FileUtil.forceDelete(FileUtil.newFile(getAppContext().getDomain(), "apps", request.getId()));
     }
 
     private File getAppsDir() {

@@ -2,32 +2,30 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-    String contextPath = request.getContextPath();
-    if (qzRequest == null || qzResponse == null) {
-        return; // for 静态源码漏洞扫描
-    }
+String contextPath = request.getContextPath();
+if (qzRequest == null || qzResponse == null) {
+    return; // for 静态源码漏洞扫描
+}
 
-    final boolean hasId = PageBackendService.hasIDField(qzRequest);
-
-    LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
-    String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
-    for (String fieldName : fieldNames) {
-        fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModelName(), fieldName));
+LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
+String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
+for (String fieldName : fieldNames) {
+    fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModelName(), fieldName));
+}
+List<Integer> indexToShow = new ArrayList<>();
+int num = -1;
+for (Map.Entry<String, ModelField> e : fieldInfos.entrySet()) {
+    num++;
+    ModelField modelField = e.getValue();
+    if (!modelField.showToList()) {
+        continue;
     }
-    List<Integer> indexToShow = new ArrayList<>();
-    int num = -1;
-    for (Map.Entry<String, ModelField> e : fieldInfos.entrySet()) {
-        num++;
-        ModelField modelField = e.getValue();
-        if (!modelField.showToList()) {
-            continue;
-        }
-        indexToShow.add(num);
-    }
+    indexToShow.add(num);
+}
 
-    int totalSize = qzResponse.getTotalSize();
-    int pageNum = qzResponse.getPageNum();
-    int pageSize = qzResponse.getPageSize();
+int totalSize = qzResponse.getTotalSize();
+int pageNum = qzResponse.getPageNum();
+int pageSize = qzResponse.getPageSize();
 %>
 
 <div class="bodyDiv">
@@ -35,63 +33,13 @@
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
     <div class="block-bg">
-        <form name="filterForm" id="filterForm" method="POST"
-              action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getAppName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
-            <div class="row filterForm" style="margin-top: 10px;">
-                <%
-                    for (Integer i : indexToShow) {
-                        String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
-                        List<Option> modelOptionsEntry = null;
-                        if (PageBackendService.isFilterSelect(qzRequest, i)) {
-                            try {
-                                Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
-                                if (modelOptions != null) {
-                                    modelOptionsEntry = modelOptions.options();
-                                }
-                            } catch (Exception ignored) {
-                            }
-                        }
-                %>
-                <div class='col-md-3 list-page-padding-bottom <%=modelOptionsEntry != null ? "listPageFilterSelect" : "" %>'>
-                    <div class="input-control has-label-left ">
-                        <%
-                            if (modelOptionsEntry != null) {
-                        %>
-                        <%@ include file="../fragment/filter_select.jsp" %>
-                        <%
-                        } else {
-                            String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
-                            if (StringUtil.notBlank(showHtml)) {
-                                if (SafeCheckerUtil.checkIsXSS(showHtml)) {
-                                    showHtml = "";
-                                }
-                            }
-                        %>
-                        <input id="<%=fieldName%>" type="text" name="<%=fieldName%>"
-                               value='<%=showHtml%>'
-                               class="form-control" placeholder="">
-                        <%
-                            }
-                        %>
-                        <label for="<%=fieldName%>"
-                               class="input-control-label-left"><%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
-                        </label>
-                    </div>
-                </div>
-                <%
-                    }
-                %>
-                <div class="col-md-3 search-btn" style="margin-bottom: 16px;">
-                    <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
-                        <a class="btn"
-                           href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
-                           form="filterForm">
-                            <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18NString( "page.filter")%>
-                        </a>
-                    </span>
-                </div>
-            </div>
-        </form>
+        <%
+        if (!indexToShow.isEmpty()) {
+            %>
+            <%@ include file="../fragment/filter_form.jsp" %>
+            <%
+        }
+        %>
 
         <hr style="margin-top: 4px;">
 
@@ -118,7 +66,7 @@
                         }
                     }
                 // 用于判断是否需要操作列
-                boolean needOperationColumn = PageBackendService.needOperationColumn(qzRequest, qzResponse);
+                boolean needOperationColumn = PageBackendService.needOperationColumn(qzRequest);
                 ModelAction[] opsActions = PageBackendService.listCommonOps(qzRequest, qzResponse);
                 if (needOperationColumn) {
                     String modelIcon = modelManager.getModel(qzRequest.getModelName()).icon();
@@ -136,11 +84,8 @@
                         <a id="<%=actionKey%>"
                            href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey)%>"
                            onclick='batchOps("<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey)%>","<%=actionKey%>")'
-                                <%=titleStr%>
-                           class="btn batch-ops"
-                           disabled="disabled"
-                           model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
-                           data-name="" data-id=""
+                           <%=titleStr%>
+                           class="btn batch-ops" disabled="disabled" model-icon="<%=modelIcon%>" action-name="<%=actionKey%>" data-name="" data-id=""
                                 <%
                                 if (isAjaxAction) {
                                     out.print("act-ajax='true' act-confirm='" +
@@ -166,13 +111,13 @@
                 <%
                 if (opsActions.length > 0) {
                     %>
-                    <th>
+                    <th class="custom-checkbox">
                         <input type="checkbox" class="allcheck"/>
                     </th>
                     <%
                 }
                 %>
-                <th><%=PageBackendService.getMasterAppI18NString( "page.list.order")%></th>
+                <th class="sequence"><%=PageBackendService.getMasterAppI18NString( "page.list.order")%></th>
                 <%
                 for (Integer i : indexToShow) {
                     String name = modelManager.getFieldName(qzRequest.getModelName(), i);
@@ -198,35 +143,30 @@
                 } else {
                     int listOrder = (pageNum - 1) * pageSize;
                     for (int idx = 0; idx < modelDataList.size(); idx++) {
-                        String originUnEncodedId = null;
-                        String encodedId = null;
                         Map<String, String> modelBase = modelDataList.get(idx);
                         String modelIcon = modelManager.getModel(qzRequest.getModelName()).icon();
-                        if (hasId) {
-                            originUnEncodedId = modelBase.get(ListModel.FIELD_NAME_ID);
-                            encodedId = originUnEncodedId;
-                            if (ConsoleSDK.needEncode(originUnEncodedId)) {
-                                encodedId = ConsoleSDK.encodeId(originUnEncodedId);
-                            }
+
+                        String originUnEncodedId = modelBase.get(ListModel.FIELD_NAME_ID);
+                        String encodedId = originUnEncodedId;
+                        if (ConsoleSDK.needEncode(originUnEncodedId)) {
+                            encodedId = ConsoleSDK.encodeId(originUnEncodedId);
                         }
                         %>
                         <tr>
                             <%
-                            if (hasId) {
-                                String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
-                                if (opsActions.length > 0) {
-                                    boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, qzResponse, modelBase).length > 0;
-                                    %>
-                                    <td>
-                                        <input type="checkbox"
-                                               value="<%= ConsoleSDK.needEncode(idValue) ?  ConsoleSDK.encodeId(idValue) : idValue%>"
-                                               name="<%=ListModel.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
-                                    </td>
-                                    <%
-                                }
+                            String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
+                            if (opsActions.length > 0) {
+                                boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, modelBase).length > 0;
+                                %>
+                                <td class="custom-checkbox">
+                                    <input type="checkbox"
+                                           value="<%= ConsoleSDK.needEncode(idValue) ?  ConsoleSDK.encodeId(idValue) : idValue%>"
+                                           name="<%=ListModel.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
+                                </td>
+                                <%
                             }
                             %>
-                            <td><%=++listOrder%></td>
+                            <td class="sequence"><%=++listOrder%></td>
                             <%
                             ModelAction targetAction = null;
                             if (AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
@@ -244,8 +184,7 @@
                                 if (value == null) {
                                     value = "";
                                 }
-                                ModelAction actionEdit = modelManager.getModelAction(qzRequest.getModelName(), EditModel.ACTION_NAME_EDIT);
-                                if (isFirst && hasId && targetAction != null && actionEdit != null && actionEdit.effectiveWhen() != "") {
+                                if (isFirst && targetAction != null) {
                                     isFirst = false;
                                     %>
                                     <td>
@@ -284,10 +223,11 @@
                                     }
                                 }
                             }
+                            if(needOperationColumn){
                             %>
                             <td>
                                 <%
-                                String[] actions = modelManager.getActionNames(qzRequest.getModelName());
+                                String[] actions = modelManager.getActionNamesShowToList(qzRequest.getModelName());
                                 for (String actionName : actions) {
                                     ModelAction action = modelManager.getModelAction(qzRequest.getModelName(), actionName);
                                     if (action == null) {
@@ -298,10 +238,6 @@
                                     }
                                     String actionKey = action.name();
                                     if (actionKey.equals(EditModel.ACTION_NAME_EDIT)) {
-                                        continue;
-                                    }
-
-                                    if (!action.showToList()  || action.showToListHead()) {
                                         continue;
                                     }
 
@@ -344,6 +280,9 @@
                                 }
                                 %>
                             </td>
+                            <%
+                            }
+                            %>
                         </tr>
                         <%
                     }

@@ -67,7 +67,7 @@ public class Controller implements BundleActivator {
     private void stopInfo(Logger logger) {
         long stopTime = System.currentTimeMillis();
         String time = calculateTimeDifference(startTime, stopTime);
-        logger.info("QingZhou has been successfully stopped, duration of this runtime: " + time);
+        logger.info("Qingzhou has been successfully stopped, duration of this runtime: " + time);
     }
 
     /**

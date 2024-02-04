@@ -14,17 +14,15 @@ import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
-@Model(name = Node.MODEL_NAME, icon = "node",
+@Model(name = FrameworkContext.SYS_MODEL_NODE, icon = "node",
         menuName = "Service", menuOrder = 2,
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
                 "en:A node is an abstraction of a physical or virtual computer environment and is the infrastructure that runs instances."})
 public class Node extends ModelBase implements AddModel {
-    public static final String MODEL_NAME = "node";
 
     @Override
     public void init() {
-        super.init();
         getAppContext().getConsoleContext().addI18N("node.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
     }
 
@@ -60,12 +58,12 @@ public class Node extends ModelBase implements AddModel {
             }
         }
 
-        return super.validate(request, fieldName);
+        return null;
     }
 
     @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
             icon = "location-arrow", forwardToPage = "sys/" + FrameworkContext.SYS_ACTION_MANAGE,
-            nameI18n = {"管理", "en:Manage"}, showToList = true,
+            nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {
     }

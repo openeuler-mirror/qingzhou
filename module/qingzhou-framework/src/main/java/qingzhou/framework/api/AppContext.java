@@ -21,4 +21,10 @@ public interface AppContext {
     void addActionFilter(ActionFilter actionFilter);
 
     ConsoleContext getConsoleContext();
+
+    // 轻舟产品名词
+    String getPlatformName();
+
+    // 产品版本信息
+    String getPlatformVersion();
 }

@@ -1,10 +1,10 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.console.page.PageBackendService;
+import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.RequestImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.StringUtil;
 
@@ -23,7 +23,9 @@ public class AsymmetricFilter implements Filter<RestContext> {
                 if (!StringUtil.isBlank(val)) {
                     try {
                         String result = PageBackendService.decryptWithConsolePrivateKey(val);
-                        request.updateParameter(fieldName, result);
+                        if (StringUtil.notBlank(result)) {
+                            request.updateParameter(fieldName, result);
+                        }
                     } catch (Exception ignored) {
                     }
                 }

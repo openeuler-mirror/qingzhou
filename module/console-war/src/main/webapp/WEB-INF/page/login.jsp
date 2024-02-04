@@ -1,8 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
 <%
-    String contextPath = request.getContextPath();
-    session.invalidate();
-    I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
+String contextPath = request.getContextPath();
+session.invalidate();
+I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
 %>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -11,8 +11,8 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="author" content="www.openeuler.org">
-        <title>QingZhou Console</title>
+        <meta name="author" content="https://gitee.com/openeuler/qingzhou">
+        <title>Qingzhou Console</title>
         <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
         <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
         <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/css/login.css">
@@ -41,12 +41,12 @@
                 <div class="logo"><%=PageBackendService.getMasterAppI18NString( "page.userlogin")%></div>
                 <form id="loginForm" method="post" action="<%=PageBackendService.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>" class="form-group" autocomplete="off">
                     <div class="input-control has-icon-left">
-                        <input value="thanos" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" class="form-control" placeholder="name<%=PageBackendService.getMasterAppI18NString( "model.field.user.name")%>" autofocus required>
+                        <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" class="form-control" placeholder="name<%=PageBackendService.getMasterAppI18NString( "model.field.user.name")%>" autofocus required>
                         <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel("user").icon()%> "></i></label>
                     </div>
                     <div class="input-control has-icon-left">
-                        <input value="thanos123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control" placeholder="password<%=PageBackendService.getMasterAppI18NString( "model.field.user.password")%>" dotted onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;">
-                        <input value="thanos123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>" name="<%=LoginManager.LOGIN_PASSWORD%>">
+                        <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control" placeholder="password<%=PageBackendService.getMasterAppI18NString( "model.field.user.password")%>" dotted onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;">
+                        <input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>" name="<%=LoginManager.LOGIN_PASSWORD%>">
                         <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-<%=modelManager.getModel("password").icon()%>"></i></label>
                         <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;"><i class="icon icon-eye-close"></i></label>
                     </div>
@@ -58,13 +58,13 @@
                     
                     <%
                     if (request.getParameter(VerCode.SHOW_CAPTCHA_FLAG) != null) {
-                    %>
-                    <div class="input-control has-icon-left">
-                        <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control" required style="width:250px;display:inline-block;float:left;" placeholder="<%=PageBackendService.getMasterAppI18NString( "page.vercode")%>">
-                        <label for="randomcode" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
-                        <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>" class="captcha" onclick="this.src = '<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
-                    </div>
-                    <%
+                        %>
+                        <div class="input-control has-icon-left">
+                            <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control" required style="width:250px;display:inline-block;float:left;" placeholder="<%=PageBackendService.getMasterAppI18NString( "page.vercode")%>">
+                            <label for="randomcode" class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
+                            <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>" class="captcha" onclick="this.src = '<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
+                        </div>
+                        <%
                     }
                     %>
 
@@ -77,7 +77,7 @@
         </main>
         
         <footer class="page-copyright">
-            <%=PageBackendService.getMasterAppI18NString( "page.copyright")%>&nbsp;<a href="https://www.openeuler.org/" target="_blank">www.openeuler.org</a>
+            <%=PageBackendService.getMasterAppI18NString( "page.copyright")%>&nbsp;<a href="https://gitee.com/openeuler/qingzhou" target="_blank">gitee.com/openeuler/qingzhou</a>
             &nbsp;<a href="javascript:about();">关于</a>
         </footer>
 

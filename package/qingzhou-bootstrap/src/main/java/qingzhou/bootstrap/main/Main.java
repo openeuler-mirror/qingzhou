@@ -23,7 +23,7 @@ public class Main {
         TreeMap<Integer, List<File>> moduleLevel = moduleLevel();
 
         Map<String, String> configuration = new HashMap<>();
-        File bundleCache = Utils.getCache(Utils.getDomain(), "bundle");
+        File bundleCache = Utils.getTemp(Utils.getDomain(), "osgi-bundle");
         if (bundleCache.isDirectory()) {
             Utils.cleanDirectory(bundleCache);
         }
@@ -86,34 +86,22 @@ public class Main {
         return startLevels;
     }
 
-    private static void installBundle(Framework framework, TreeMap<Integer, List<File>> moduleLevel) {
+    private static void installBundle(Framework framework, TreeMap<Integer, List<File>> moduleLevel) throws BundleException {
         for (Map.Entry<Integer, List<File>> entry : moduleLevel.entrySet()) {
-            entry.getValue().forEach(moduleJar -> {
+            for (File moduleJar : entry.getValue()) {
                 if (moduleJar.exists()) {
                     installBundleFile(framework, moduleJar);
                 } else {
                     System.err.println("module not found: " + moduleJar.getName());
                 }
-            });
-        }
-
-        File[] apps = new File(Utils.getDomain(), "apps").listFiles();
-        if (apps != null) {
-            for (File app : apps) {
-                installBundleFile(framework, app);
             }
         }
     }
 
-    private static void installBundleFile(Framework framework, File moduleJar) {
+    private static void installBundleFile(Framework framework, File moduleJar) throws BundleException {
         BundleContext bundleContext = framework.getBundleContext();
-        try {
-            Bundle bundle = bundleContext.installBundle(moduleJar.toURI().toString());
-            bundle.start();
-        } catch (BundleException e) {
-            System.err.println("Failed to load module " + moduleJar.getName() + ": " + e.getMessage());
-            e.printStackTrace();
-        }
+        Bundle bundle = bundleContext.installBundle(moduleJar.toURI().toString());
+        bundle.start();
     }
 
     private static void waitForStop(Framework framework) {

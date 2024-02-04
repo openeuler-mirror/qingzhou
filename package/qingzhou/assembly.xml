@@ -40,7 +40,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/boot</outputDirectory>
+            <outputDirectory>lib/version${project.version}/boot</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -55,7 +55,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/module</outputDirectory>
+            <outputDirectory>lib/version${project.version}/module</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -69,7 +69,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/service</outputDirectory>
+            <outputDirectory>lib/version${project.version}/service</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -80,7 +80,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/sysapp/console</outputDirectory>
+            <outputDirectory>lib/version${project.version}/sysapp/console</outputDirectory>
             <unpackOptions>
                 <excludes>
                     <exclude>META-INF/**</exclude>
@@ -96,7 +96,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/sysapp/master/lib</outputDirectory>
+            <outputDirectory>lib/version${project.version}/sysapp/master/lib</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -107,7 +107,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/sysapp/nodeagent/lib</outputDirectory>
+            <outputDirectory>lib/version${project.version}/sysapp/nodeagent/lib</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -118,7 +118,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version/sysapp/common/lib</outputDirectory>
+            <outputDirectory>lib/version${project.version}/sysapp/common/lib</outputDirectory>
         </dependencySet>
 
     </dependencySets>

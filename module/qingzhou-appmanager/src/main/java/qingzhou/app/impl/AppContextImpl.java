@@ -58,6 +58,16 @@ public class AppContextImpl implements AppContext {
         return consoleContext;
     }
 
+    @Override
+    public String getPlatformName() {
+        return frameworkContext.getName();
+    }
+
+    @Override
+    public String getPlatformVersion() {
+        return frameworkContext.getVersion();
+    }
+
     public void setConsoleContext(ConsoleContext consoleContext) {
         this.consoleContext = consoleContext;
     }

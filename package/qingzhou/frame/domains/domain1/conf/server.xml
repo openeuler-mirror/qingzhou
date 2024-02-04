@@ -33,17 +33,9 @@
                 <tenant id="default" info="默认租户">
                     <users>
                         <user active="true" bound2FA="false" changeInitPwd="${ReleaseModeEncrypted}" enable2FA="false"
-                              enablePasswordAge="true" info="超级管理员" keyFor2FA="" id="thanos"
-                              password="44D3$2$0B8AA118786066B2A9DF05A44B342AE2FC147F2164B5A9F232259E50DE5D9F1C$SHA-256"
+                              enablePasswordAge="true" info="超级管理员" keyFor2FA="" id="qingzhou"
+                              password="E239$2$1CEA50EE641A31AD053B2BCC38A323ECF783DDE35652475495D5B112518C4D29$SHA-256"
                               passwordMaxAge="90" passwordMinAge="0" roles="root"/>
-                        <user active="true" bound2FA="false" changeInitPwd="${ReleaseModeEncrypted}" enable2FA="false"
-                              enablePasswordAge="true" info="系统管理员" keyFor2FA="" id="security"
-                              password="81CF$2$7EB73603DA4BF9EF6CF59C766907573045427ACFBEA43524B94A2EB7543A7BDF$SHA-256"
-                              passwordMaxAge="90" passwordMinAge="0" roles="system"/>
-                        <user active="true" bound2FA="false" changeInitPwd="false" enable2FA="false"
-                              enablePasswordAge="true" info="安全审计员" keyFor2FA="" id="auditor"
-                              password="4797$2$25F343027E465AF76344CDC8CD6C47DD36A8A6DCD9A34DAAA8AA077F0DF27F73$SHA-256"
-                              passwordMaxAge="90" passwordMinAge="0" roles="auditor"/>
                     </users>
                     <roles/>
                 </tenant>

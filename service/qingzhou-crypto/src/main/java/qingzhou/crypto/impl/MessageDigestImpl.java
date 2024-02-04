@@ -1,6 +1,7 @@
 package qingzhou.crypto.impl;
 
 import qingzhou.crypto.MessageDigest;
+import qingzhou.framework.util.HexUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -9,6 +10,11 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MessageDigestImpl implements MessageDigest {
+    public static void main(String[] args) {
+        String digest = new MessageDigestImpl().digest("qingzhou123.com", "SHA-256", 2, 2);
+        System.out.println(digest);
+    }
+
     private final Random random = ThreadLocalRandom.current();
 
     private final String SP = "$";
@@ -41,11 +47,11 @@ public class MessageDigestImpl implements MessageDigest {
     }
 
     private byte[] decode(String encode) {
-        return Hex.hexToBytes(encode);
+        return HexUtil.hexToBytes(encode);
     }
 
     private String encode(byte[] bytes) {
-        return Hex.bytesToHex(bytes);
+        return HexUtil.bytesToHex(bytes);
     }
 
     private String[] splitPwd(String storedCredentials) {

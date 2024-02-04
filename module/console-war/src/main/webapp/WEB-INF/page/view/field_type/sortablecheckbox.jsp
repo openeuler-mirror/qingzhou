@@ -1,19 +1,19 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    if (readonly == null) {
-        return; // for 静态源码漏洞扫描
-    }
-    if (model == null) {
-        return; // for 静态源码漏洞扫描
-    }
-    if (fieldValues == null) {
-        return; // for 静态源码漏洞扫描
-    }
+if (readonly == null) {
+    return; // for 静态源码漏洞扫描
+}
+if (model == null) {
+    return; // for 静态源码漏洞扫描
+}
+if (fieldValues == null) {
+    return; // for 静态源码漏洞扫描
+}
 
-    if (!"".equals(readonly)) {
-        readonly = " onclick='return false;' readonly";
-    }
+if (!"".equals(readonly)) {
+    readonly = " onclick='return false;' readonly";
+}
 %>
 <div class="checkbox-group sortable">
     <%

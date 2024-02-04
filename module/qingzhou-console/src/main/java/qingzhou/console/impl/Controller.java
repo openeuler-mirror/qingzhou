@@ -60,7 +60,7 @@ public class Controller implements BundleActivator {
             servletService = new ServletServiceImpl();
             consolePort = Integer.parseInt(frameworkContext.getConfigManager().getConfig("//console").get("port"));
             servletService.start(consolePort,
-                    frameworkContext.getFileManager().getTemp("ServletContainer").getAbsolutePath());
+                    frameworkContext.getFileManager().getTemp("servlet-container").getAbsolutePath());
         }
 
         @Override
@@ -81,7 +81,7 @@ public class Controller implements BundleActivator {
             contextPath = frameworkContext.getConfigManager().getConfig("//console").get("contextRoot");
             servletService.addWebapp(contextPath, docBase);
             Logger logger = frameworkContext.getServiceManager().getService(Logger.class);
-            logger.info("Open a browser to access the QingZhou console: http://localhost:" + consolePort + contextPath);
+            logger.info("Open a browser to access the Qingzhou console: http://localhost:" + consolePort + contextPath);
         }
 
         @Override

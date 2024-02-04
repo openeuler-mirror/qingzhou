@@ -46,7 +46,7 @@ public class NativeServiceUtil {
             return "Failed to install server as a system self-starting service. Only Linux platform is supported.";
         }
         String s = System.lineSeparator();
-        String context = "[Unit]" + s + "Description=QingZhou" + s + "After=network.target" + s +
+        String context = "[Unit]" + s + "Description=Qingzhou" + s + "After=network.target" + s +
 
                 "[Service]" + s + "Type=forking" + s + (StringUtil.notBlank(javaHome) ? ("Environment=\"JAVA_HOME=" + javaHome + "\"" + s) : "") + "ExecStart=/bin/bash " + startCmdPath + s + //tw8启动服务文件必须加/bin/bash add for ITAIT-4155
                 "PrivateTmp=false" + s + "TimeoutSec=0" + s +

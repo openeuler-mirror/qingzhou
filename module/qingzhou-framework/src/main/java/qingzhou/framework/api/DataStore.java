@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * 用于 framework api 中各种类型的 Model 默认数据来源，注：各Model可能覆写方法，而不一定会使用 DataStore 中的数据，所以请勿在 框架内通过该对象进行数据相关操作
+ */
 public interface DataStore {
     // 加载全部数据，性能差，尽量使用下面的方法
     List<Map<String, String>> getAllData(String type) throws Exception;

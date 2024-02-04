@@ -47,8 +47,8 @@ public class FileUtil {
     }
 
     public static void createNewFile(File newFile) {
-        if (newFile == null)
-            return;
+        if (newFile == null) return;
+        if (newFile.exists()) return;
         try {
             if (!newFile.createNewFile()) {
                 System.err.println("Failed to createNewFile: " + newFile);

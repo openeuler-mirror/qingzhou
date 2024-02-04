@@ -11,34 +11,41 @@ import qingzhou.framework.api.ShowModel;
 
 @Model(name = FrameworkContext.SYS_MODEL_INDEX, icon = "home",
         entryAction = ShowModel.ACTION_NAME_SHOW,
-        nameI18n = {"主页", "en:Main"},
+        nameI18n = {"主页", "en:Home"},
         infoI18n = {"查看轻舟产品的相关信息。", "en:Check out the relevant information of Qingzhou products."})
 public class Index extends ModelBase {
     @ModelField(
-            group = "product",
-            nameI18n = {"产品信息", "en:Server Info"},
-            infoI18n = {"当前轻舟产品的版本等信息。",
-                    "en:Information such as the version of the current QingZhou."})
-    public String info;
+            nameI18n = {"产品名称", "en:Product Name"},
+            infoI18n = {"此轻舟平台的名称。", "en:The name of  this Qingzhou platform."})
+    public String name;
 
     @ModelField(
-            group = "product",
-            nameI18n = {"安装目录", "en:Domain Path"},
-            infoI18n = {"表示轻舟的安装目录。", "en:Indicates the installation directory of QingZhou."})
+            nameI18n = {"产品版本", "en:Product Version"},
+            infoI18n = {"此轻舟平台的版本。", "en:This version of this Qingzhou platform."})
+    public String version;
+
+    @ModelField(
+            nameI18n = {"安装目录", "en:Installation path"},
+            infoI18n = {"此轻舟平台的安装目录。", "en:The installation directory of this Qingzhou platform."})
     public String path;
 
     @Override
+    @ModelAction(name = ACTION_NAME_SHOW,
+            forwardToPage = "show",
+            nameI18n = {"主页", "en:Home"},
+            infoI18n = {"查看轻舟的产品和授权信息。",
+                    "en:View Qingzhou product and licensing information."})
     public void show(Request request, Response response) throws Exception {
         Index index = new Index();
-        index.info = "QingZhou（轻舟）";
-        index.path = getAppContext().getHome().getPath();
+        index.name = Main.getFc().getName();
+        index.version = Main.getFc().getVersion();
+        index.path = Main.getFc().getFileManager().getHome().getPath();
         response.addDataObject(index);
     }
 
     @ModelAction(name = FrameworkContext.SYS_MODEL_INDEX, // NOTE: 这个方法用作是 Login 成功后 跳过的
-            icon = "resize",
             forwardToPage = "sys/index",
-            nameI18n = {"首页", "en:Home"},
+            nameI18n = {"主页", "en:Home"},
             infoI18n = {"查看轻舟的产品和授权信息。",
                     "en:View Qingzhou product and licensing information."})
     public void index(Request request, Response response) throws Exception {

@@ -1,20 +1,20 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    if (readonly == null) {
-        return; // for 静态源码漏洞扫描
-    }
-    if (model == null) {
-        return; // for 静态源码漏洞扫描
-    }
-    if (fieldValues == null) {
-        return; // for 静态源码漏洞扫描
-    }
+if (readonly == null) {
+    return; // for 静态源码漏洞扫描
+}
+if (model == null) {
+    return; // for 静态源码漏洞扫描
+}
+if (fieldValues == null) {
+    return; // for 静态源码漏洞扫描
+}
 
-    if (!"".equals(readonly)) {
-        readonly = "onfocus='this.defaultIndex=this.selectedIndex;' onchange='this.selectedIndex=this.defaultIndex;' readonly";
-    }
-    Options multiOptionManager = modelManager.getOptions(qzRequest.getModelName(), fieldName);
+if (!"".equals(readonly)) {
+    readonly = "onfocus='this.defaultIndex=this.selectedIndex;' onchange='this.selectedIndex=this.defaultIndex;' readonly";
+}
+Options multiOptionManager = modelManager.getOptions(qzRequest.getModelName(), fieldName);
 %>
 <select name="<%=fieldName%>" multiple="multiple" <%=readonly%> style="width:100%;">
     <%

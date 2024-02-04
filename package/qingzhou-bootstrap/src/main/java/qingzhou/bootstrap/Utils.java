@@ -16,7 +16,12 @@ import javax.xml.xpath.XPathFactory;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -25,7 +30,15 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 
 public class Utils {
     private static File home;
@@ -428,16 +441,15 @@ public class Utils {
         return value;
     }
 
-    public static File getCache(File domain, String sub) {
+    public static File getTemp(File domain, String sub) {
         File tmpdir;
         if (domain != null) {
             tmpdir = new File(domain, "temp");
         } else {
             tmpdir = new File(System.getProperty("java.io.tmpdir"));
         }
-        File cacheDir = new File(tmpdir, "cache");
-        mkdirs(cacheDir);
-        return sub == null ? cacheDir : new File(cacheDir, sub);
+        mkdirs(tmpdir);
+        return sub == null ? tmpdir : new File(tmpdir, sub);
     }
 
     public static void mkdirs(File directory) {

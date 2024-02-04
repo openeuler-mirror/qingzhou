@@ -6,8 +6,8 @@
         <div class="model-info">
             <span><%=I18n.getString(menuAppName, "model." + qzRequest.getModelName())%></span>
             <span class="tooltips" data-tip='<%=I18n.getString(menuAppName, "model.info." + qzRequest.getModelName())%>' data-tip-arrow="bottom-right" style="line-height:25px;">
-				<i class="icon icon-question-sign"></i>
-			</span>
+                <i class="icon icon-question-sign"></i>
+            </span>
         </div>
     </li>
     <%
@@ -21,23 +21,23 @@
         }
     }
     %>
-
-    <script type="text/javascript">
-        function favoirtes(url) {
-            $.ajax({
-                url: url,
-                type: "post",
-                async: false,
-                success: function (data) {
-                    if (data.success) {
-                        showSuccess(data.message, function () {
-                            window.location.href = window.location.href;
-                        });
-                    } else {
-                        showError(data.message);
-                    }
-                }
-            });
-        }
-    </script>
 </ol>
+
+<script type="text/javascript">
+    function favoirtes(url) {
+        $.ajax({
+            url: url,
+            type: "post",
+            async: false,
+            success: function (data) {
+                if (data.success) {
+                    showSuccess(data.message, function () {
+                        window.location.href = window.location.href;
+                    });
+                } else {
+                    showError(data.message);
+                }
+            }
+        });
+    }
+</script>

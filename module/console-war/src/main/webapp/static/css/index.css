@@ -171,11 +171,6 @@ label.checkbox-inline, label.radio-inline {padding-left: 0px; padding-right: 20p
     .main-body{width: 100%; margin-left: 0px;}
 }
 
-@media (max-width: 991px) {
-    .listPageFilterSelect {padding-bottom: 50px;}
-    .responseScroll {display:block; min-width:107%; max-width: 200% !important; overflow-x: auto !important;}
-    ul.pager {margin-left:20% !important;}
-}
 @media (max-width: 550px) {
     .responseScroll {display:block; min-width:110%; max-width: 200% !important; overflow-x: auto !important;}
     ul.pager {margin-left:10% !important;}
@@ -474,6 +469,9 @@ tw-tooltip-bottom-left:before {
 .tw-action-link {color:#4C638F; border: none; font-size:14px; text-decoration: none;display: inline-block; padding-left: 6px; padding-right: 6px;}
 .tw-action-link:hover {text-decoration: none !important;}
 .list-table th, .list-table td {padding-left: 16px;}
+.list-table {table-layout: fixed;}
+.custom-checkbox {width: 50px;}
+.sequence {width: 100px;}
 .block-bg .tab-content>.tab-pane {padding: 0px 20px;}
 .dashboard-rect{width:204px; height: 92px; border: 0px; background: #F5F7F9; display: inline-block; padding: 16px 24px; margin-left:16px;}
 .dashboard-rect > div {display: inline-block;}
@@ -588,3 +586,5 @@ a.cancelfavorites:active{text-decoration: none;color: black;}
 .appCard .right .installUpgrade a {margin-left: 0px; float:left;}
 .appCard .right a{font-size:13px;color:blue;float:right;margin:8px 0 0px 6px;}
 .appCard .right a:hover{color:#06F;text-decoration: none;}
+
+.markedviewText{display: none;}

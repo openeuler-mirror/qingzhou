@@ -2,24 +2,24 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-    if (qzRequest == null || qzResponse == null || modelManager == null) {
-        return; // for 静态源码漏洞扫描
-    }
+if (qzRequest == null || qzResponse == null || modelManager == null) {
+    return; // for 静态源码漏洞扫描
+}
 
-    boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, qzRequest.getModelName());
-    String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
-    String idFieldName = ListModel.FIELD_NAME_ID;
-    ModelField idField = modelManager.getModelField(qzRequest.getModelName(), idFieldName);
-    final boolean hasId = idField != null;
-    List<String> passwordFields = new ArrayList();
-    String id = qzRequest.getId();
-    String encodedId = id;
-    if (ConsoleSDK.needEncode(id)) {
-        encodedId = ConsoleSDK.encodeId(id);
-    }
-    if (encodedId == null) {
-        encodedId = "";
-    }
+boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, qzRequest.getActionName());
+String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
+String idFieldName = ListModel.FIELD_NAME_ID;
+ModelField idField = modelManager.getModelField(qzRequest.getModelName(), idFieldName);
+final boolean hasId = idField != null;
+List<String> passwordFields = new ArrayList();
+String id = qzRequest.getId();
+String encodedId = id;
+if (ConsoleSDK.needEncode(id)) {
+    encodedId = ConsoleSDK.encodeId(id);
+}
+if (encodedId == null) {
+    encodedId = "";
+}
 %>
 
 <%-- <div class="bodyDiv"> --%>
@@ -180,6 +180,12 @@
                                                   rows="3"><%=fieldValue%></textarea>
                                         <%
                                         break;
+                                    case markdown:
+                                        %>
+                                        <div class="markedview"></div>
+                                        <textarea name="<%=fieldName%>" class="markedviewText" rows="3"><%=fieldValue%></textarea>
+                                        <%
+                                        break;
                                     case radio:%>
                                         <%@ include file="field_type/radio.jsp" %>
                                         <%
@@ -261,16 +267,14 @@
             boolean submitPermission = AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + submitActionName, LoginManager.getLoginUser(session));
             if (submitPermission) {
                 %>
-                <input type="submit" class="btn"
-                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + submitActionName)%>'>
+                <input type="submit" class="btn" value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + submitActionName)%>'>
                 <%
             }
 
             boolean listPermission = AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
             if (hasId && listPermission) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>"
-                   btn-type="goback" class="btn">
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>" btn-type="goback" class="btn">
                     <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
                 </a>
                 <%
@@ -281,7 +285,7 @@
 
     <div id="tempZone" style="display:none;"></div>
     <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-            <%=PageBackendService.getPublicKeyString()%>
+        <%=PageBackendService.getPublicKeyString()%>
     </textarea>
 
     <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">
