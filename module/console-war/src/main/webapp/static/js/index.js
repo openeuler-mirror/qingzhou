@@ -1985,8 +1985,11 @@ function resizeFilterForm() {
         for (let i = 0; i < divElements.length; i++) {
             divElements[i].style.width = '';
         }
-
-        if (screenWidth >= 1200 && divElements.length <= 13) {
+        if (screenWidth >= 1200 && divElements.length > 9) {
+            for (let i = 0; i < divElements.length; i++) {
+                divElements[i].style.width = '12.5%';
+            }
+        } else if (screenWidth >= 1200 && divElements.length <= 9) {
             for (let i = 0; i < divElements.length - 1; i++) {
                 divElements[i].style.width = (92 / (divElements.length - 1)) + '%';
             }
