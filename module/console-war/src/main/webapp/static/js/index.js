@@ -339,7 +339,14 @@ $(document).ready(function () {
     $("#reset-password-btn").unbind("click").bind("click", function (e) {
         e.preventDefault();
         $(".tab-box>ul>li[central='true']").click();
-        $(".sidebar-menu .active", getRestrictedArea()).removeClass("menu-open active");
+        var lis = $(".sidebar-menu .active", getRestrictedArea());
+        lis.removeClass("menu-open active");
+        for(var i = 0; i < lis.length; i++){
+            var uls = lis[i].querySelectorAll('ul');
+            for (var j = 0; j < uls.length; j++) {
+                uls[j].style.display = 'none';
+            }
+        }
         $(".sidebar-menu .expandsub", getRestrictedArea()).removeClass("menu-open expandsub");
         var matchPart = $(this).attr("href");
         var menuItemLink = $("ul.sidebar-menu li a[href*='" + matchPart + "']", getRestrictedArea());
