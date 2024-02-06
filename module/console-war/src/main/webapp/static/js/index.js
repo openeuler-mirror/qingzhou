@@ -415,6 +415,18 @@ function setOrReset() {
     initOverview();
     // tree.jsp 页面加载
     initTree();
+    // grid.jsp 页面初始化
+    if (document.querySelectorAll(".apps").length > 0) {
+        var apps = document.querySelectorAll(".apps");
+        for (var i = 0; i < apps.length; i++) {
+            new Muuri(apps[i], {
+                items: apps[i].querySelectorAll("div.app"),
+                layoutDuration: 300,
+                layoutEasing: "ease",
+                dragEnabled: false
+            });
+        }
+    }
     // markdown 内容展示
     $(".markedviewText").each(function() {
         $(this).prev(".markedview").html(marked.parse($(this).val()));
