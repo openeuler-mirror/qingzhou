@@ -121,7 +121,7 @@ public class ResponseImpl implements Response, Serializable {
             } catch (IllegalAccessException ignored) {
             }
         }
-
+        
         dataList.add(map);
     }
 }

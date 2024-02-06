@@ -50,10 +50,20 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     public void setId(String id) {
         this.id = id;
     }
-
+    
+    @Override
+    public int getParamToInt(String parameterName, int defaultValue) {
+        return parameters.get(parameterName) == null ? defaultValue : Integer.parseInt(parameters.get(parameterName));
+    }
+    
     @Override
     public String getParameter(String parameterName) {
         return parameters.get(parameterName);
+    }
+
+    @Override
+    public String getParameter(String parameterName, String defaultValue) {
+        return parameters.get(parameterName) == null ? defaultValue : parameters.get(parameterName);
     }
 
     @Override
