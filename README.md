@@ -38,6 +38,7 @@
 
 相关项目：
 
++ Muuri ([https://github.com/haltu/muuri](https://github.com/haltu/muuri))
 + marked ([https://github.com/markedjs/marked](https://github.com/markedjs/marked))
 + Multiple Select ([http://multiple-select.wenzhixin.net.cn](http://multiple-select.wenzhixin.net.cn))
 + Layui layer ([https://gitee.com/layui/layer](https://gitee.com/layui/layer))

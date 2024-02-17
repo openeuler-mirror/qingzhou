@@ -2,17 +2,7 @@ package qingzhou.app.impl;
 
 import qingzhou.app.impl.bytecode.AnnotationReader;
 import qingzhou.app.impl.bytecode.impl.BytecodeImpl;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Group;
-import qingzhou.framework.api.Groups;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
+import qingzhou.framework.api.*;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.StringUtil;
 
@@ -20,14 +10,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -318,10 +301,6 @@ public class ModelManagerImpl implements ModelManager, Serializable {
             }
         }
 
-        return getDefaultGroups(groupName);
-    }
-
-    private Group getDefaultGroups(String groupName) {
         if ("OTHERS".equals(groupName)) {
             return Group.of("OTHERS", new String[]{"其它", "en:OTHERS"});
         }
