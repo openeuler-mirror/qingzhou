@@ -206,11 +206,21 @@ public class User extends ModelBase implements AddModel {
         if (!response.isSuccess()) {
             return;
         }
-        Map<String, String> properties = prepareParameters(request);
-        rectifyParameters(request, properties);
-        getDataStore().addData(request.getModelName(), properties.get(ListModel.FIELD_NAME_ID), properties);
+        Map<String, String> newUser = prepareParameters(request);
+        rectifyParameters(request, newUser, new HashMap<>());
+        getDataStore().addData(request.getModelName(), newUser.get(ListModel.FIELD_NAME_ID), newUser);
     }
 
+    @Override
+    public void show(Request request, Response response) throws Exception {
+        DataStore dataStore = getDataStore();
+        Map<String, String> data = dataStore.getDataById(request.getModelName(), request.getId());
+        if (EditModel.ACTION_NAME_EDIT.equals(request.getActionName())) {
+            data.put("password", PASSWORD_FLAG);
+            data.put("confirmPassword", PASSWORD_FLAG);
+        }
+        response.addData(data);
+    }
 
     @Override
     public String validate(Request request, String fieldName) {
@@ -248,15 +258,15 @@ public class User extends ModelBase implements AddModel {
         DataStore dataStore = getDataStore();
         String modelName = request.getModelName();
         String userId = request.getId();
-        Map<String, String> oldPro = dataStore.getDataById(modelName, userId);
-        Map<String, String> properties = prepareParameters(request);
-        rectifyParameters(request, properties);
-        dataStore.updateDataById(modelName, userId, properties);
+        Map<String, String> oldUser = dataStore.getDataById(modelName, userId);
+        Map<String, String> newUser = prepareParameters(request);
+        rectifyParameters(request, newUser, oldUser);
+        dataStore.updateDataById(modelName, userId, newUser);
 
         Map<String, String> newPro = dataStore.getDataById(modelName, userId);
 
         // 检查是否要重新登录: 简单设计，只要更新即要求重新登录，这可用于强制踢人
-        if (!ObjectUtil.isSameMap(oldPro, newPro)) {
+        if (!ObjectUtil.isSameMap(oldUser, newPro)) {
 //            String encodeUser = LoginManager.encodeUser(actionContext.getId());
 //            ActionContext.invalidateAllSessionAsAttribute(actionContext.getHttpServletRequestInternal(),
 //                    LoginManager.LOGIN_USER, encodeUser);
@@ -294,35 +304,36 @@ public class User extends ModelBase implements AddModel {
         return null;
     }
 
-    protected Map<String, String> rectifyParameters(Request request, Map<String, String> params) throws Exception {
-        String password = params.remove(pwdKey);
-        params.remove(confirmPwdKey);
+    protected Map<String, String> rectifyParameters(Request request, Map<String, String> newUser, Map<String, String> oldUser) throws Exception {
+        String password = newUser.remove(pwdKey);
+        newUser.remove(confirmPwdKey);
         boolean passwordChanged = passwordChanged(password);
         if (passwordChanged) {
-            String digestAlg = params.get("digestAlg");
-            String saltLength = params.get("saltLength");
-            String iterations = params.get("iterations");
-            params.put(pwdKey, messageDigest.digest(password,
+            String digestAlg = newUser.get("digestAlg");
+            String saltLength = newUser.get("saltLength");
+            String iterations = newUser.get("iterations");
+            newUser.put(pwdKey, messageDigest.digest(password,
                     digestAlg,
                     Integer.parseInt(saltLength),
                     Integer.parseInt(iterations)));
-            insertPasswordModifiedTime(params);
+            insertPasswordModifiedTime(newUser);
+
+            String oldPasswords = oldUser.get("oldPasswords");
+            String limitRepeats = newUser.get("limitRepeats");
+            if (StringUtil.isBlank(limitRepeats)) {
+                limitRepeats = oldUser.get("limitRepeats");
+            }
+
+            String cutOldPasswords = cutOldPasswords(oldPasswords, limitRepeats, password);
+            newUser.put("oldPasswords", cutOldPasswords);
+        } else {
+            String oldPassword = oldUser.get("password");
+            if (StringUtil.notBlank(oldPassword)) {
+                newUser.put("password", oldPassword);
+            }
         }
 
-        Map<String, String> oldPro = getAppContext().getDataStore().getDataById(request.getModelName(), params.get(ListModel.FIELD_NAME_ID));
-        if (oldPro == null) {
-            oldPro = new HashMap<>();
-        }
-        String oldPasswords = oldPro.get("oldPasswords");
-        String limitRepeats = params.get("limitRepeats");
-        if (StringUtil.isBlank(limitRepeats)) {
-            limitRepeats = oldPro.get("limitRepeats");
-        }
-
-        String cutOldPasswords = cutOldPasswords(oldPasswords, limitRepeats, passwordChanged ? params.get(pwdKey) : null);
-        params.put("oldPasswords", cutOldPasswords);
-
-        return params;
+        return newUser;
     }
 
     public static String cutOldPasswords(String oldPasswords, String repeats, String newPwd) {
