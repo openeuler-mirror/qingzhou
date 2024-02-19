@@ -6,8 +6,6 @@ import qingzhou.framework.util.HexUtil;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class MessageDigestImpl implements MessageDigest {
     public static void main(String[] args) {
@@ -15,14 +13,12 @@ public class MessageDigestImpl implements MessageDigest {
         System.out.println(digest);
     }
 
-    private final Random random = ThreadLocalRandom.current();
-
     private final String SP = "$";
 
     @Override
     public String digest(String text, String algorithm, int saltLength, int iterations) {
         byte[] salt = new byte[saltLength];
-        random.nextBytes(salt);
+        HexUtil.random.nextBytes(salt);
         return digest(text, algorithm, salt, iterations);
     }
 
