@@ -22,7 +22,7 @@
                             <Bundle-Activator>qingzhou.config.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,qingzhou.crypto
+                                org.osgi.framework,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.service,qingzhou.framework.util,qingzhou.crypto
                             </Import-Package>
                         </manifestEntries>
                     </archive>

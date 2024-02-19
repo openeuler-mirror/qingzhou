@@ -5,7 +5,7 @@ import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.RequestImpl;
+import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;

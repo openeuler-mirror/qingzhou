@@ -1,7 +1,7 @@
 package qingzhou.app.node;
 
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.QingZhouSystemApp;
+import qingzhou.framework.app.QingZhouSystemApp;
 import qingzhou.framework.api.AppContext;
 
 public class Main extends QingZhouSystemApp {

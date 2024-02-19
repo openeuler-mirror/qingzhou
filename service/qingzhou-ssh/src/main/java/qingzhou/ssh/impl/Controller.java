@@ -1,6 +1,6 @@
 package qingzhou.ssh.impl;
 
-import qingzhou.framework.ServiceRegister;
+import qingzhou.framework.service.ServiceRegister;
 import qingzhou.ssh.SSHService;
 
 public class Controller extends ServiceRegister<SSHService> {

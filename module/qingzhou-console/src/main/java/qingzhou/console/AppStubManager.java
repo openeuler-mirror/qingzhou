@@ -1,7 +1,7 @@
 package qingzhou.console;
 
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.App;
+import qingzhou.framework.app.App;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.api.MenuInfo;
@@ -23,6 +23,7 @@ public class AppStubManager {
         appStubMap.put(appToken, appStub);
     }
 
+    // todo: unregisterAppStub 何时调用？
     public void unregisterAppStub(String appToken) {
         appStubMap.remove(appToken);
     }

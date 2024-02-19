@@ -63,7 +63,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
 //                        channel.write(req);
 //                        return channel.read();
 //                    });
-                    AppStubManager.getInstance().registerAppStub(appToken, null);// todo 序列化过来吗？ unregisterAppStub 何时调用？
+                    AppStubManager.getInstance().registerAppStub(appToken, null);// todo 序列化过来吗？
                 }
             }
         }

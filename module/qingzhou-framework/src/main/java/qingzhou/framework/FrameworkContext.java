@@ -1,5 +1,8 @@
 package qingzhou.framework;
 
+import qingzhou.framework.app.AppManager;
+import qingzhou.framework.service.ServiceManager;
+
 public interface FrameworkContext {
     String SYS_NODE_LOCAL = "local";
 

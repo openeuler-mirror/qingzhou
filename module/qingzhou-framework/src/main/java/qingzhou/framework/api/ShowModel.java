@@ -16,7 +16,7 @@ public interface ShowModel {
     }
 
     default DataStore getDataStore() {
-        return getAppContext().getDataStore();
+        return getAppContext().getDefaultDataStore();
     }
 
     AppContext getAppContext();

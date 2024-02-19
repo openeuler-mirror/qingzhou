@@ -1,7 +1,7 @@
 package qingzhou.app.impl;
 
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.InternalService;
+import qingzhou.framework.service.InternalService;
 import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
@@ -18,14 +18,24 @@ public class AppContextImpl implements AppContext {
     private ConsoleContext consoleContext;
     private DataStore dataStore;
     private List<ActionFilter> actionFilters;
+    private String appName;
 
     public AppContextImpl(FrameworkContext frameworkContext) {
         this.frameworkContext = frameworkContext;
     }
 
     @Override
-    public File getTemp(String subName) {
-        return frameworkContext.getConfigManager().getTemp(subName);
+    public String getAppName() {
+        return appName;
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
+    }
+
+    @Override
+    public File getTemp() {
+        return frameworkContext.getConfigManager().getTemp(this.appName);
     }
 
     @Override
@@ -63,12 +73,12 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
-    public void setDataStore(DataStore dataStore) {
+    public void setDefaultDataStore(DataStore dataStore) {
         this.dataStore = dataStore;
     }
 
     @Override
-    public DataStore getDataStore() {
+    public DataStore getDefaultDataStore() {
         return dataStore;
     }
 

@@ -5,6 +5,8 @@ import qingzhou.framework.util.HexUtil;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MessageDigestImpl {
     public static void main(String[] args) {
@@ -16,7 +18,8 @@ public class MessageDigestImpl {
 
     public String digest(String text, String algorithm, int saltLength, int iterations) {
         byte[] salt = new byte[saltLength];
-        HexUtil.random.nextBytes(salt);
+        Random random = ThreadLocalRandom.current();//TODO 临时解决新创建用户无法登录问题
+        random.nextBytes(salt);
         return digest(text, algorithm, salt, iterations);
     }
 

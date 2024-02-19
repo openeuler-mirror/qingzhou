@@ -2,7 +2,6 @@ package qingzhou.app.master.service;
 
 import qingzhou.app.master.Main;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ListModel;
@@ -12,6 +11,7 @@ import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
+import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
@@ -109,7 +109,6 @@ public class App extends ModelBase implements AddModel {
     @Override
     @ModelAction(name = ACTION_NAME_ADD,
             icon = "save",
-            showToFormBottom = true,
             nameI18n = {"安装", "en:Install"},
             infoI18n = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
     public void add(Request req, Response response) throws Exception {

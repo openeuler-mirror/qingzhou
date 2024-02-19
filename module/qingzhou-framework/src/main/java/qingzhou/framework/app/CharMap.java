@@ -1,6 +1,8 @@
-package qingzhou.framework.impl;
+package qingzhou.framework.app;
 
 import qingzhou.framework.api.Lang;
+import qingzhou.framework.api.Logger;
+import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -10,7 +12,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class CharMap {
+class CharMap {
     private static final Map<Character, Character> zh_tr_Map = new HashMap<>();
     private static final Set<Character> detected = new CopyOnWriteArraySet<>();
 
@@ -26,11 +28,12 @@ public class CharMap {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger logger = FrameworkContextImpl.getInstance().getServiceManager().getService(Logger.class);
+            logger.warn(e.getMessage(), e);
         }
     }
 
-    public static String zh2tr(String msg) {
+    static String zh2tr(String msg) {
         if (msg == null) return null;
         msg = msg.trim();
         if (msg.isEmpty()) return null;

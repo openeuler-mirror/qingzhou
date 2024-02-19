@@ -4,7 +4,7 @@ import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
 import qingzhou.framework.ConfigManager;
-import qingzhou.framework.ResponseImpl;
+import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.serializer.Serializer;

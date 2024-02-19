@@ -1,11 +1,20 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.AppManager;
 import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.ServiceManager;
+import qingzhou.framework.app.AppManager;
+import qingzhou.framework.service.ServiceManager;
 
 public class FrameworkContextImpl implements FrameworkContext {
+    private static final FrameworkContext instance = new FrameworkContextImpl();
+
+    public static FrameworkContext getInstance() {
+        return instance;
+    }
+
+    private FrameworkContextImpl() {
+    }
+
     private final ServiceManager serviceManager = new ServiceManagerImpl();
 
     @Override

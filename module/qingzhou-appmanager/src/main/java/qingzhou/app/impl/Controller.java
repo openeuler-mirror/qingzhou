@@ -1,16 +1,16 @@
 package qingzhou.app.impl;
 
-import qingzhou.framework.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.ServiceRegister;
 import qingzhou.framework.api.Logger;
+import qingzhou.framework.app.AppManager;
+import qingzhou.framework.service.ServiceRegister;
 
 import java.io.File;
 import java.util.Arrays;
 
 public class Controller extends ServiceRegister<AppManager> {
     private AppManager appManager;
-    private Logger logger;
+    public static Logger logger;
 
     @Override
     protected Class<AppManager> serviceType() {
@@ -25,7 +25,7 @@ public class Controller extends ServiceRegister<AppManager> {
     @Override
     protected void startService(FrameworkContext frameworkContext) throws Exception {
         this.appManager = new AppManagerImpl(frameworkContext);
-        this.logger = frameworkContext.getServiceManager().getService(Logger.class);
+        Controller.logger = frameworkContext.getServiceManager().getService(Logger.class);
 
         appManager.installApp(frameworkContext.getConfigManager().nodeAgentApp());
 

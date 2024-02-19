@@ -6,6 +6,6 @@ import qingzhou.framework.api.QingZhouApp;
 public class Main extends QingZhouApp {
     @Override
     public void start(AppContext appContext) {
-        appContext.setDataStore(new MemoryDataStore());
+        appContext.setDefaultDataStore(new MemoryDataStore());
     }
 }

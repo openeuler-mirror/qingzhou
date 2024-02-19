@@ -1,5 +1,7 @@
 package qingzhou.framework;
 
+import qingzhou.framework.service.InternalService;
+
 import java.io.File;
 import java.util.List;
 import java.util.Map;

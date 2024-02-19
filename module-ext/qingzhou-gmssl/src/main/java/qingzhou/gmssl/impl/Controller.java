@@ -1,6 +1,6 @@
 package qingzhou.gmssl.impl;
 
-import qingzhou.framework.ServiceRegister;
+import qingzhou.framework.service.ServiceRegister;
 import qingzhou.gmssl.GmSSLService;
 
 public class Controller extends ServiceRegister<GmSSLService> {

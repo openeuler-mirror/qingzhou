@@ -1,4 +1,4 @@
-package qingzhou.framework;
+package qingzhou.framework.app;
 
 import qingzhou.framework.api.Response;
 
@@ -121,7 +121,7 @@ public class ResponseImpl implements Response, Serializable {
             } catch (IllegalAccessException ignored) {
             }
         }
-        
+
         dataList.add(map);
     }
 }

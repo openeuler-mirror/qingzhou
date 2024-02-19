@@ -46,7 +46,7 @@ int pageSize = qzResponse.getPageSize();
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                for (String action : modelManager.getActionNamesShowToListHead(qzRequest.getModelName())) {
+                for (String action : PageBackendService.getActionNamesShowToListHead(qzRequest.getAppName(), qzRequest.getModelName())) {
                     ModelAction modelAction = modelManager.getModelAction(qzRequest.getModelName(), action);
                     if (modelAction != null) {
                         String viewName = ViewManager.htmlView;
@@ -120,7 +120,7 @@ int pageSize = qzResponse.getPageSize();
                 <th class="sequence"><%=PageBackendService.getMasterAppI18NString( "page.list.order")%></th>
                 <%
                 for (Integer i : indexToShow) {
-                    String name = modelManager.getFieldName(qzRequest.getModelName(), i);
+                    String name = PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i);
                     %>
                     <th><%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + name)%>
                     </th>
@@ -180,7 +180,7 @@ int pageSize = qzResponse.getPageSize();
                             }
                             boolean isFirst = true;
                             for (Integer i : indexToShow) {
-                                String value = modelBase.get(modelManager.getFieldName(qzRequest.getModelName(), i));
+                                String value = modelBase.get(PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i));
                                 if (value == null) {
                                     value = "";
                                 }
@@ -199,7 +199,7 @@ int pageSize = qzResponse.getPageSize();
                                     </td>
                                     <%
                                 } else {
-                                    String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
+                                    String fieldName = PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i);
                                     String linkField = modelManager.getModelField(qzRequest.getModelName(), fieldName).linkModel();
                                     if (StringUtil.notBlank(linkField)) {
                                         String[] split = linkField.split("\\.");
@@ -227,7 +227,7 @@ int pageSize = qzResponse.getPageSize();
                             %>
                             <td>
                                 <%
-                                String[] actions = modelManager.getActionNamesShowToList(qzRequest.getModelName());
+                                String[] actions = PageBackendService.getActionNamesShowToList(qzRequest.getAppName(), qzRequest.getModelName());
                                 for (String actionName : actions) {
                                     ModelAction action = modelManager.getModelAction(qzRequest.getModelName(), actionName);
                                     if (action == null) {
@@ -241,7 +241,7 @@ int pageSize = qzResponse.getPageSize();
                                         continue;
                                     }
 
-                                    if (!AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + actionKey, LoginManager.getLoginUser(session))) {
+                                    if (!AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + actionKey, LoginManager.getLoginUser(session))) {
                                         continue;
                                     }
 

@@ -1,6 +1,6 @@
 package qingzhou.app.node;
 
-import qingzhou.framework.AppManager;
+import qingzhou.framework.app.AppManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;

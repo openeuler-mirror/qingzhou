@@ -1,6 +1,6 @@
 package qingzhou.app.impl;
 
-import qingzhou.framework.I18NStore;
+import qingzhou.framework.app.I18NStore;
 import qingzhou.framework.api.ConsoleContext;
 import qingzhou.framework.api.Lang;
 import qingzhou.framework.api.MenuInfo;
@@ -26,11 +26,6 @@ public class ConsoleContextImpl implements ConsoleContext {
     @Override
     public String getI18N(Lang lang, String key, Object... args) {
         return i18NStore.getI18N(lang, key, args);
-    }
-
-    @Override
-    public String[] getMenuNames() {
-        return menuInfoMap.keySet().toArray(new String[0]);
     }
 
     @Override

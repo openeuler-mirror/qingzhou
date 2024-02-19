@@ -1,18 +1,29 @@
 package qingzhou.console.page;
 
-import qingzhou.console.*;
+import qingzhou.console.AppStub;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.ConsoleI18n;
+import qingzhou.console.I18n;
+import qingzhou.console.Validator;
 import qingzhou.console.controller.rest.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.RequestImpl;
 import qingzhou.framework.api.*;
+import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +36,21 @@ public class PageBackendService {
     private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
 
     private PageBackendService() {
+    }
+
+    public static String[] getActionNamesShowToList(String appName, String modelName) {
+        ModelManager modelManager = getModelManager(appName);
+        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(ModelAction::showToList).map(ModelAction::name).toArray(String[]::new);
+    }
+
+    public static String[] getActionNamesShowToListHead(String appName, String modelName) {
+        ModelManager modelManager = getModelManager(appName);
+        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(ModelAction::showToListHead).map(ModelAction::name).toArray(String[]::new);
+    }
+
+    public static String getFieldName(String appName, String modelName, int fieldIndex) {
+        ModelManager modelManager = getModelManager(appName);
+        return modelManager.getFieldNames(modelName)[fieldIndex];
     }
 
     public static String getInitAppName(RequestImpl request) {
@@ -392,7 +418,7 @@ public class PageBackendService {
             return false;
         }
 
-        return modelManager.getActionNamesShowToList(request.getModelName()).length > 0;
+        return getActionNamesShowToList(appName, request.getModelName()).length > 0;
     }
 
     public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {

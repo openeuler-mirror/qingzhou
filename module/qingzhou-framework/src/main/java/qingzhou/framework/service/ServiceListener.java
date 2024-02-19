@@ -1,4 +1,4 @@
-package qingzhou.framework;
+package qingzhou.framework.service;
 
 public interface ServiceListener {
     void serviceRegistered(Class<?> serviceType);

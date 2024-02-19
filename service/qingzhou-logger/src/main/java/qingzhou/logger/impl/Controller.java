@@ -1,6 +1,6 @@
 package qingzhou.logger.impl;
 
-import qingzhou.framework.ServiceRegister;
+import qingzhou.framework.service.ServiceRegister;
 import qingzhou.framework.api.Logger;
 
 public class Controller extends ServiceRegister<Logger> {

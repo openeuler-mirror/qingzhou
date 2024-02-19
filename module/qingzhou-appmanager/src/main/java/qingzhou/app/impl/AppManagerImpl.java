@@ -1,10 +1,10 @@
 package qingzhou.app.impl;
 
 import qingzhou.app.impl.filter.UniqueFilter;
-import qingzhou.framework.App;
-import qingzhou.framework.AppManager;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.QingZhouSystemApp;
+import qingzhou.framework.app.QingZhouSystemApp;
 import qingzhou.framework.api.Logger;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelManager;
@@ -43,7 +43,7 @@ public class AppManagerImpl implements AppManager {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
         boolean needCommonApp = !FrameworkContext.SYS_APP_MASTER.equals(appName) && !FrameworkContext.SYS_APP_NODE_AGENT.equals(appName);
-        AppImpl app = buildApp(appFile, needCommonApp);
+        AppImpl app = buildApp(appName, appFile, needCommonApp);
         apps.put(appName, app);
 
         QingZhouApp qingZhouApp = app.getQingZhouApp();
@@ -65,7 +65,9 @@ public class AppManagerImpl implements AppManager {
 
             QingZhouApp qingZhouApp = app.getQingZhouApp();
             if (qingZhouApp != null) {
+                File temp = app.getAppContext().getTemp();
                 qingZhouApp.stop();
+                FileUtil.forceDelete(temp);
             }
         }
     }
@@ -80,7 +82,7 @@ public class AppManagerImpl implements AppManager {
         return apps.get(name);
     }
 
-    private AppImpl buildApp(File appDir, boolean needCommonApp) throws Exception {
+    private AppImpl buildApp(String appName, File appDir, boolean needCommonApp) throws Exception {
         File[] appFiles = new File(appDir, "lib").listFiles();
         if (appFiles == null) {
             throw ExceptionUtil.unexpectedException("app lib not found: " + appDir.getName());
@@ -100,6 +102,8 @@ public class AppManagerImpl implements AppManager {
         AppImpl app = new AppImpl();
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
+        appContext.setAppName(appName);
+
         URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLibs, QingZhouApp.class.getClassLoader());
         app.setLoader(loader);
         ConsoleContextImpl consoleContext = new ConsoleContextImpl();

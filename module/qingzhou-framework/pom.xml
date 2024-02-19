@@ -26,7 +26,7 @@
                             </Import-Package>
 
                             <Export-Package>
-                                qingzhou.framework,qingzhou.framework.api,qingzhou.framework.pattern,qingzhou.framework.util
+                                qingzhou.framework,qingzhou.framework.api,qingzhou.framework.pattern,qingzhou.framework.service,qingzhou.framework.app,qingzhou.framework.util
                             </Export-Package>
                         </manifestEntries>
                     </archive>

@@ -3,7 +3,7 @@ package qingzhou.console.impl;
 import qingzhou.console.AppStub;
 import qingzhou.console.AppStubManager;
 import qingzhou.crypto.CryptoService;
-import qingzhou.framework.App;
+import qingzhou.framework.app.App;
 import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Logger;

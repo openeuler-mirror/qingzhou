@@ -1,7 +1,7 @@
 package qingzhou.config.impl;
 
 import qingzhou.framework.ConfigManager;
-import qingzhou.framework.ServiceRegister;
+import qingzhou.framework.service.ServiceRegister;
 
 public class Controller extends ServiceRegister<ConfigManager> {
     @Override

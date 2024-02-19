@@ -29,7 +29,7 @@
                                     <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                                     <Bundle-Activator>qingzhou.ssh.impl.Controller</Bundle-Activator>
 
-                                    <Import-Package>org.osgi.framework,qingzhou.framework</Import-Package>
+                                    <Import-Package>org.osgi.framework,qingzhou.framework,qingzhou.framework.service</Import-Package>
                                     <Export-Package>qingzhou.ssh</Export-Package>
                                 </manifestEntries>
                             </archive>

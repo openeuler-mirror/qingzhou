@@ -1,7 +1,7 @@
 package qingzhou.crypto.impl;
 
 import qingzhou.crypto.CryptoService;
-import qingzhou.framework.ServiceRegister;
+import qingzhou.framework.service.ServiceRegister;
 
 public class Controller extends ServiceRegister<CryptoService> {
     private final CryptoService cryptoService = new CryptoServiceImpl();
