@@ -9,13 +9,21 @@ import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelField;
+import qingzhou.framework.api.Option;
+import qingzhou.framework.api.Options;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.util.FileUtil;
+import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Model(name = FrameworkContext.SYS_MODEL_APP, icon = "cube-alt",
         menuName = "Service", menuOrder = 1,
@@ -69,7 +77,7 @@ public class App extends ModelBase implements AddModel {
 
     @ModelField(
             required = true, type = FieldType.checkbox,
-            refModel = "node", showToList = true,
+            showToList = true,
             nameI18n = {"节点", "en:Node"},
             infoI18n = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
     public String nodes;
@@ -91,6 +99,28 @@ public class App extends ModelBase implements AddModel {
         getAppContext().getConsoleContext().addI18N("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
         getAppContext().getConsoleContext().addI18N("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
         getAppContext().getConsoleContext().addI18N("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
+    }
+
+    @Override
+    public Options options(Request request, String fieldName) {
+        if ("nodes".equals(fieldName)) {
+            String userName = request.getUserName();
+            Map<String, String> user;
+            try {
+                user = getDataStore().getDataById("user", userName);
+            } catch (Exception ignored) {
+                user = Collections.emptyMap();
+            }
+
+            Set<String> nodeSet = new HashSet<>();
+            nodeSet.add(FrameworkContext.SYS_NODE_LOCAL);
+            Arrays.stream(user.getOrDefault("nodes", "").split(","))
+                    .map(String::trim).filter(StringUtil::notBlank).forEach(nodeSet::add);
+
+            return () -> nodeSet.stream().map(Option::of).collect(Collectors.toList());
+        }
+
+        return super.options(request, fieldName);
     }
 
     @Override

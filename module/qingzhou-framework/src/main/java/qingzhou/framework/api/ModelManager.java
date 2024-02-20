@@ -31,5 +31,5 @@ public interface ModelManager {
 
     Map<String, ModelField> getMonitorFieldMap(String modelName);
 
-    Options getOptions(String modelName, String fieldName);
+    Options getOptions(Request request, String modelName, String fieldName);
 }

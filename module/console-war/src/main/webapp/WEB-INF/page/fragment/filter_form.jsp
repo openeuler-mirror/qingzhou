@@ -9,7 +9,7 @@
                 List<Option> modelOptionsEntry = null;
                 if (PageBackendService.isFilterSelect(qzRequest, i)) {
                     try {
-                        Options modelOptions = modelManager.getOptions(qzRequest.getModelName(), fieldName);
+                        Options modelOptions = modelManager.getOptions(qzRequest, qzRequest.getModelName(), fieldName);
                         if (modelOptions != null) {
                             modelOptionsEntry = modelOptions.options();
                         }

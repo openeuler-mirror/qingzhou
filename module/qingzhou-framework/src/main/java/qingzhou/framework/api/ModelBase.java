@@ -41,7 +41,7 @@ public abstract class ModelBase implements ShowModel {
         return null;
     }
 
-    public Options options(String fieldName) {
+    public Options options(Request request, String fieldName) {
         return null;
     }
 }

@@ -13,6 +13,7 @@ import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.Option;
 import qingzhou.framework.api.Options;
+import qingzhou.framework.api.Request;
 import qingzhou.framework.pattern.Visitor;
 import qingzhou.framework.util.StringUtil;
 
@@ -188,9 +189,9 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public Options getOptions(String modelName, String fieldName) {
+    public Options getOptions(Request request, String modelName, String fieldName) {
         Options defaultOptions = getDefaultOptions(modelName, fieldName);
-        Options userOptions = getModelInstance(modelName).options(fieldName);
+        Options userOptions = getModelInstance(modelName).options(request, fieldName);
         if (userOptions == null) {
             return defaultOptions;
         } else {

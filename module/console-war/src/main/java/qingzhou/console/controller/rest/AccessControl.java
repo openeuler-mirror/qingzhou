@@ -3,6 +3,7 @@ package qingzhou.console.controller.rest;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.impl.JsonView;
+import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.pattern.Filter;
@@ -11,40 +12,28 @@ import qingzhou.framework.util.StringUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AccessControl implements Filter<RestContext> {
+    private static final List<String> masterAppModels = Arrays.asList("user", "version", "node");
 
     public static Model[] getLoginUserAppMenuModels(String loginUser, String appName) {
-//        Set<XPermission> userRolePermissions = RoleCache.getUserRolePermissions(loginUser);
-//        if (userRolePermissions == null) {
-//            return new Model[0];
-//        }
-
         ModelManager modelManager = PageBackendService.getModelManager(appName);
         if (modelManager == null) {
             return new Model[0];
         }
 
-//        Set<Model> menuModels = new HashSet<>();
-//        for (XPermission xPermission : userRolePermissions) {
-//            if (xPermission == null) {
-//                continue;
-//            }
-//
-//            Set<String> roleModels = xPermission.getRoleModels(appName);
-//            if (roleModels != null) {
-//                for (String model : roleModels) {
-//                    menuModels.add(modelManager.getModel(model));
-//                }
-//            }
-//        }
-//        return menuModels.toArray(new Model[0]);
-
         List<Model> models = new ArrayList<>();
         for (String modelName : modelManager.getModelNames()) {
             models.add(modelManager.getModel(modelName));
         }
+
+        if (!"qingzhou".equals(loginUser) && FrameworkContext.SYS_APP_MASTER.equals(appName)) {
+            models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
+        }
+
         return models.toArray(new Model[0]);
     }
 
