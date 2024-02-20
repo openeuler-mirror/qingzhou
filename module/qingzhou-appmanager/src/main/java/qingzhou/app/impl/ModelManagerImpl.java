@@ -149,6 +149,9 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         ModelInfo modelInfo = getModelInfo(modelName);
         for (ActionInfo ai : modelInfo.actionInfoMap.values()) {
             if (ai.modelAction.name().equals(actionName)) {
+                if (ai.modelAction.disabled()) {
+                    return null;
+                }
                 return ai.modelAction;
             }
         }
