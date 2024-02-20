@@ -27,4 +27,6 @@ public @interface ModelAction {
     int orderOnList() default 0;
 
     boolean supportBatch() default false;
+
+    boolean disabled() default false;
 }

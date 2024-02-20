@@ -57,8 +57,10 @@ public class ConsoleContextImpl implements ConsoleContext {
 
             for (String actionName : modelManager.getActionNames(modelName)) {
                 ModelAction modelAction = modelManager.getModelAction(modelName, actionName);
-                addI18N("model.action." + modelName + "." + modelAction.name(), modelAction.nameI18n());
-                addI18N("model.action.info." + modelName + "." + modelAction.name(), modelAction.infoI18n());
+                if (modelAction != null) {
+                    addI18N("model.action." + modelName + "." + modelAction.name(), modelAction.nameI18n());
+                    addI18N("model.action.info." + modelName + "." + modelAction.name(), modelAction.infoI18n());
+                }
             }
         }
     }

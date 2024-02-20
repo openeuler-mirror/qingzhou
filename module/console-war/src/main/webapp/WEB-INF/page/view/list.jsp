@@ -7,6 +7,7 @@ if (qzRequest == null || qzResponse == null) {
     return; // for 静态源码漏洞扫描
 }
 
+final boolean hasId = PageBackendService.hasIDField(qzRequest);
 LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
 String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
 for (String fieldName : fieldNames) {
@@ -184,7 +185,7 @@ int pageSize = qzResponse.getPageSize();
                                 if (value == null) {
                                     value = "";
                                 }
-                                if (isFirst && targetAction != null) {
+                                if (isFirst && hasId && targetAction != null) {
                                     isFirst = false;
                                     %>
                                     <td>

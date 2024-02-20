@@ -5,6 +5,7 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Model;
+import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.StringUtil;
@@ -38,6 +39,16 @@ public class AccessControl implements Filter<RestContext> {
     }
 
     public static boolean canAccess(String appName, String modelAction, String user) {
+        String[] ma = modelAction.split("/");
+        String checkModel = ma[0];
+        String checkAction = ma[1];
+        if (ma.length == 2) {
+            ModelManager modelManager = PageBackendService.getModelManager(appName);
+            ModelAction modelAction1 = modelManager.getModelAction(checkModel, checkAction);
+            if (modelAction1 == null) {
+                return false;
+            }
+        }
         return true;
     }
 

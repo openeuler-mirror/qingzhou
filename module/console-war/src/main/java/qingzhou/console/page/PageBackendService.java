@@ -40,12 +40,12 @@ public class PageBackendService {
 
     public static String[] getActionNamesShowToList(String appName, String modelName) {
         ModelManager modelManager = getModelManager(appName);
-        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(ModelAction::showToList).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
+        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelAction::showToList).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
     }
 
     public static String[] getActionNamesShowToListHead(String appName, String modelName) {
         ModelManager modelManager = getModelManager(appName);
-        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(ModelAction::showToListHead).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
+        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelAction::showToListHead).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
     }
 
     public static String getFieldName(String appName, String modelName, int fieldIndex) {
