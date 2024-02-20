@@ -2,6 +2,7 @@
 
 <%
 String contextPath = request.getContextPath();
+request.setAttribute("indexPageFlag", true);
 %>
 <!DOCTYPE html>
 <html lang="zh-CN">
