@@ -1,4 +1,4 @@
-package qingzhou.framework;
+package qingzhou.framework.app;
 
 import qingzhou.framework.api.Response;
 

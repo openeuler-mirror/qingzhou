@@ -3,7 +3,7 @@ package qingzhou.console.impl;
 import qingzhou.console.AppStub;
 import qingzhou.console.AppStubManager;
 import qingzhou.crypto.CryptoService;
-import qingzhou.framework.App;
+import qingzhou.framework.app.App;
 import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Logger;
@@ -42,15 +42,7 @@ public class ConsoleWarHelper {
     }
 
     public static File getCache(String subName) {
-        return fc.getFileManager().getTemp(subName);
-    }
-
-    public static File getDomain() {
-        return fc.getFileManager().getDomain();
-    }
-
-    public static File getHome() {
-        return fc.getFileManager().getHome();
+        return fc.getConfigManager().getTemp(subName);
     }
 
     public static Logger getLogger() {

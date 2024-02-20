@@ -5,6 +5,7 @@
 <%@ page import="java.time.*" %>
 <%@ page import="java.time.format.*" %>
 <%@ page import="qingzhou.framework.*" %>
+<%@ page import="qingzhou.framework.app.*" %>
 <%@ page import="qingzhou.framework.api.*" %>
 <%@ page import="qingzhou.framework.util.*" %>
 <%@ page import="qingzhou.console.*" %>

@@ -9,8 +9,8 @@ import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.RequestImpl;
-import qingzhou.framework.ResponseImpl;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
 import qingzhou.framework.pattern.Filter;
@@ -50,27 +50,6 @@ public class RESTController extends HttpServlet {
             String[] restTemp = uri.split("/");
             for (String r : restTemp) {
                 if (StringUtil.notBlank(r)) {
-                    result.add(r);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    public static List<String> retrieveRestPathInfo(String uri) {
-        List<String> result = new ArrayList<>();
-        String[] restTemp = null;
-        if (uri != null) {
-            if (uri.startsWith("/")) {
-                restTemp = uri.substring(1).split("/");
-            } else {
-                restTemp = uri.split("/");
-            }
-        }
-        if (restTemp != null) {
-            for (String r : restTemp) {
-                if (r != null && !r.isEmpty()) {
                     result.add(r);
                 }
             }

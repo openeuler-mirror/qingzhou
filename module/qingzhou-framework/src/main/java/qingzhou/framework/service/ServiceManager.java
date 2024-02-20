@@ -1,4 +1,4 @@
-package qingzhou.framework;
+package qingzhou.framework.service;
 
 import java.util.Collection;
 

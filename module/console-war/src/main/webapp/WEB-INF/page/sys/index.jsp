@@ -227,7 +227,9 @@ String contextPath = request.getContextPath();
     <script type="text/javascript" src="<%=contextPath%>/static/js/msg.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/lib/layer/layer.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.js"></script>
-    <script src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
+    <script type="text/javascript" src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
+    <script type="text/javascript" src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
+    <script src="<%=contextPath%>/static/lib/muuri/muuri.min.js"></script>
     <%@ include file="../fragment/head.jsp" %>
 </head>
 
@@ -324,7 +326,6 @@ String contextPath = request.getContextPath();
         };
         var searchUrl = '<%=PageBackendService.encodeURL( response, contextPath + "/search")%>';
     </script>
-    <script type="text/javascript" src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/js/main.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/js/index.js"></script>
     <script type="text/javascript">

@@ -1,7 +1,7 @@
 package qingzhou.console;
 
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.I18NStore;
+import qingzhou.framework.app.I18NStore;
 import qingzhou.framework.api.Lang;
 
 import java.util.Map;

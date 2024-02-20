@@ -4,8 +4,8 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.ServiceListener;
 import qingzhou.framework.api.Logger;
+import qingzhou.framework.service.ServiceListener;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -14,14 +14,14 @@ import java.util.Date;
 
 public class Controller implements BundleActivator {
     private ServiceRegistration<FrameworkContext> registration;
-    private FrameworkContextImpl frameworkContext;
+    private FrameworkContext frameworkContext;
     private long startTime;
 
     @Override
     public void start(BundleContext context) throws Exception {
         startTime = System.currentTimeMillis();
 
-        frameworkContext = new FrameworkContextImpl();
+        frameworkContext = FrameworkContextImpl.getInstance();
         registration = context.registerService(FrameworkContext.class, frameworkContext, null);
 
         frameworkContext.getServiceManager().addServiceListener(new ServiceListener() {

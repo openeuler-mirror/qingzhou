@@ -2,7 +2,6 @@ package qingzhou.console.controller.system;
 
 import qingzhou.console.AppStubManager;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ServerXml;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.crypto.CryptoService;
@@ -10,7 +9,6 @@ import qingzhou.crypto.KeyCipher;
 import qingzhou.crypto.KeyPairCipher;
 import qingzhou.framework.ConfigManager;
 import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.util.XmlUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -40,7 +38,6 @@ public class NodeRegister implements Filter<HttpServletContext> {
         CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
         if (arg != null) {
             String privateKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.privateKeyName);
-            ;
             KeyPairCipher keyPairCipher = cryptoService.getKeyPairCipher(null, privateKey);
             arg = keyPairCipher.decryptWithPrivateKey(arg);
             Map<String, String> params = parseArg(arg);
@@ -66,7 +63,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
 //                        channel.write(req);
 //                        return channel.read();
 //                    });
-                    AppStubManager.getInstance().registerAppStub(appToken, null);// todo 序列化过来吗？ unregisterAppStub 何时调用？
+                    AppStubManager.getInstance().registerAppStub(appToken, null);// todo 序列化过来吗？
                 }
             }
         }
@@ -78,9 +75,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
         node.put("nodePort", nodePort);
         node.put("apps", apps);
         node.put("key", keyCipher.encrypt(key)); // todo 是否持久化，考虑每次重新注册后生成新的key
-        XmlUtil xmlUtil = new XmlUtil(ServerXml.getServerXml());
-        xmlUtil.setAttributes("/server/nodes/node", node);
-        xmlUtil.write();
+        ConsoleWarHelper.getConfigManager().updateConfig("/server/nodes/node", node);
 
         System.out.printf("Node Registration Done. ip:%s, port:%s.%n", nodeIp, nodePort);
         return false;

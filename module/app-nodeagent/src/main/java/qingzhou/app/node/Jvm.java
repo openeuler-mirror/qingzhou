@@ -7,7 +7,6 @@ import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.MonitorModel;
 import qingzhou.framework.util.MathUtil;
 
-import java.io.File;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -45,12 +44,6 @@ public class Jvm extends ModelBase implements MonitorModel {
 
     @ModelField(isMonitorField = true, nameI18n = {"启动时间", "en:Start Time"}, infoI18n = {"Java 虚拟机的启动时间。", "en:The Java virtual machine startup time."})
     public String StartTime;
-
-    @ModelField(isMonitorField = true, nameI18n = {"系统类路径", "en:Class Path"}, infoI18n = {"系统类加载器用来搜索类文件的Java类路径。", "en:The Java class path that is used by the system class loader."})
-    public String ClassPath;
-
-    @ModelField(isMonitorField = true, nameI18n = {"启动参数", "en:Input Arguments"}, infoI18n = {"传递给 Java 虚拟机的输入参数。", "en:The input arguments passed to the Java virtual machine."})
-    public String InputArguments;
 
     @ModelField(isMonitorField = true,
             nameI18n = {"最大堆内存（MB）", "en:Heap Memory Max (MB)"},
@@ -135,37 +128,7 @@ public class Jvm extends ModelBase implements MonitorModel {
         String format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(mxBean.getStartTime()));
         data.put("StartTime", format);
 
-        data.put("ClassPath", rectifyPath(mxBean.getClassPath()));
-        StringBuilder args = new StringBuilder();
-        for (String s : mxBean.getInputArguments()) {
-            args.append(s).append(" ");
-        }
-        data.put("InputArguments", rectifyPath(args.toString()));
-
         basicProperties = data;
         return basicProperties;
-    }
-
-    private String rectifyPath(String originPath) {
-        StringBuilder path = new StringBuilder();
-        for (String p : originPath.split(File.pathSeparator)) {
-            try {
-                File file = new File(p);
-                if (file.exists()) {
-                    path.append(file.getCanonicalPath());
-                } else {
-                    path.append(p);
-                }
-            } catch (Exception e) {
-                path.append(p);
-            }
-            path.append(File.pathSeparator);
-        }
-        String result = path.toString();
-        try {
-            result = result.replace(getAppContext().getHome().getCanonicalPath(), "${qingzhou.home}");
-        } catch (Exception ignored) {
-        }
-        return result;
     }
 }

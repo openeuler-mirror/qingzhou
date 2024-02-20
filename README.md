@@ -13,15 +13,15 @@
 
 ### 核心逻辑
 
-![](doc/readme/basic.png)
+![](doc/readme/logic.png)
 
 ### 总体架构
 
 ![](doc/readme/architecture.png)
 
-#### 轻舟App容器
+#### 轻舟应用
 
-![](doc/readme/container.png)
+![](doc/readme/app.png)
 
 ## 安装使用
 
@@ -38,6 +38,7 @@
 
 相关项目：
 
++ Muuri ([https://github.com/haltu/muuri](https://github.com/haltu/muuri))
 + marked ([https://github.com/markedjs/marked](https://github.com/markedjs/marked))
 + Multiple Select ([http://multiple-select.wenzhixin.net.cn](http://multiple-select.wenzhixin.net.cn))
 + Layui layer ([https://gitee.com/layui/layer](https://gitee.com/layui/layer))

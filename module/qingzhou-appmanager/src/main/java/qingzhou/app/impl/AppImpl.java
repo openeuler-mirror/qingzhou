@@ -1,6 +1,6 @@
 package qingzhou.app.impl;
 
-import qingzhou.framework.App;
+import qingzhou.framework.app.App;
 import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ModelBase;

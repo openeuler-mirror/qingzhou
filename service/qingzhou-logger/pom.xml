@@ -31,7 +31,7 @@
                                     <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                                     <Bundle-Activator>qingzhou.logger.impl.Controller</Bundle-Activator>
 
-                                    <Import-Package>org.osgi.framework,qingzhou.framework,qingzhou.framework.api</Import-Package>
+                                    <Import-Package>org.osgi.framework,qingzhou.framework,qingzhou.framework.api,qingzhou.framework.service</Import-Package>
                                 </manifestEntries>
                             </archive>
                         </configuration>

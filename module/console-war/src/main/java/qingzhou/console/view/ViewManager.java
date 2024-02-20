@@ -7,8 +7,8 @@ import qingzhou.console.view.impl.FileView;
 import qingzhou.console.view.impl.HtmlView;
 import qingzhou.console.view.impl.JsonView;
 import qingzhou.console.view.impl.View;
-import qingzhou.framework.RequestImpl;
-import qingzhou.framework.ResponseImpl;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.HashMap;

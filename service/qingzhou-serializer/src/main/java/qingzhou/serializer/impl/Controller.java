@@ -1,6 +1,6 @@
 package qingzhou.serializer.impl;
 
-import qingzhou.framework.ServiceRegister;
+import qingzhou.framework.service.ServiceRegister;
 import qingzhou.serializer.SerializerService;
 import qingzhou.serializer.impl.java.JavaSerializer;
 

@@ -5,7 +5,7 @@
     <div class="row filterForm" style="margin-top: 10px;">
         <%
             for (Integer i : indexToShow) {
-                String fieldName = modelManager.getFieldName(qzRequest.getModelName(), i);
+                String fieldName = PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i);
                 List<Option> modelOptionsEntry = null;
                 if (PageBackendService.isFilterSelect(qzRequest, i)) {
                     try {
@@ -17,7 +17,7 @@
                     }
                 }
         %>
-        <div class='col-lg-1 col-md-2 col-sm-3 col-xs-4 list-page-padding-bottom'>
+        <div class='col-md-2 col-sm-3 col-xs-4 list-page-padding-bottom'>
             <div class="input-control">
                 <%
                     if (modelOptionsEntry != null) {
@@ -42,7 +42,7 @@
         <%
             }
         %>
-        <div class="col-lg-1 col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
+        <div class="col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
                         <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
                             <a class="btn"
                                href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"

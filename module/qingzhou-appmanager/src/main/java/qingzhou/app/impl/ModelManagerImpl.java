@@ -22,7 +22,6 @@ import java.lang.reflect.Field;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -81,14 +80,14 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                             initModelActionInfo(className, annotation),
                             className);
                 } catch (Throwable e) {
-                    e.printStackTrace();
+                    Controller.logger.warn(e.getMessage(), e);
                 }
                 if (modelInfo == null) {
                     return false;
                 }
                 ModelInfo already = tempMap.put(model.name(), modelInfo);
                 if (already != null) {
-                    new IllegalArgumentException("Duplicate model name: " + model.name()).printStackTrace();
+                    Controller.logger.warn("Duplicate model name: " + model.name());
                 }
 
                 return false;
@@ -136,38 +135,10 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public String[] getActionNamesShowToFormBottom(String modelName) {
-        Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
-        return actionInfoMap.values().stream()
-                .filter(actionInfo -> actionInfo.modelAction.showToFormBottom())
-                .map(actionInfo -> actionInfo.modelAction.name())
-                .toArray(String[]::new);
-    }
-
-    @Override
     public String[] getActionNamesSupportBatch(String modelName) {
         Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
         return actionInfoMap.values().stream()
                 .filter(actionInfo -> actionInfo.modelAction.supportBatch())
-                .map(actionInfo -> actionInfo.modelAction.name())
-                .toArray(String[]::new);
-    }
-
-    @Override
-    public String[] getActionNamesShowToList(String modelName) {
-        Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
-        return actionInfoMap.values().stream()
-                .filter(actionInfo -> actionInfo.modelAction.showToList())
-                .sorted(Comparator.comparingInt(o -> o.modelAction.orderOnList()))
-                .map(actionInfo -> actionInfo.modelAction.name())
-                .toArray(String[]::new);
-    }
-
-    @Override
-    public String[] getActionNamesShowToListHead(String modelName) {
-        Map<String, ActionInfo> actionInfoMap = getModelInfo(modelName).actionInfoMap;
-        return actionInfoMap.values().stream()
-                .filter(actionInfo -> actionInfo.modelAction.showToListHead())
                 .map(actionInfo -> actionInfo.modelAction.name())
                 .toArray(String[]::new);
     }
@@ -294,11 +265,6 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public String getFieldName(String modelName, int fieldIndex) {
-        return getFieldNames(modelName)[fieldIndex];
-    }
-
-    @Override
     public String[] getGroupNames(String modelName) {
         List<String> groupNames = new ArrayList<>();
         ModelInfo modelInfo = getModelInfo(modelName);
@@ -317,6 +283,11 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                 }
             }
         }
+
+        if ("OTHERS".equals(groupName)) {
+            return Group.of("OTHERS", new String[]{"其它", "en:OTHERS"});
+        }
+
         return null;
     }
 
@@ -360,7 +331,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                         return;
                     }
                 } catch (NoClassDefFoundError e) {
-                    e.printStackTrace();
+                    Controller.logger.warn(e.getMessage(), e);
                 }
             }
         }

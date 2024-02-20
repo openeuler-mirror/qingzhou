@@ -1,8 +1,8 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.RegistryKey;
-import qingzhou.framework.ServiceListener;
-import qingzhou.framework.ServiceManager;
+import qingzhou.framework.service.RegistryKey;
+import qingzhou.framework.service.ServiceListener;
+import qingzhou.framework.service.ServiceManager;
 
 import java.util.Collection;
 import java.util.HashMap;

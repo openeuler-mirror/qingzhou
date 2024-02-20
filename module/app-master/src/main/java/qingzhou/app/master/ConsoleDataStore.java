@@ -1,30 +1,17 @@
 package qingzhou.app.master;
 
+import qingzhou.framework.ConfigManager;
 import qingzhou.framework.api.DataStore;
 import qingzhou.framework.api.ListModel;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.XmlUtil;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class ConsoleDataStore implements DataStore {
-    private static final String rootPath = "/root/console";
-    private final XmlUtil xmlUtil;
-
-    public ConsoleDataStore(File serverXml) {
-        xmlUtil = new XmlUtil(serverXml);
-    }
-
     @Override
     public List<Map<String, String>> getAllData(String type) {
-        List<Map<String, String>> datas = xmlUtil.getAttributesList("//" + type);
-        if (datas == null) {
-            return new ArrayList<>();
-        }
-        return datas;
+        return Main.getFc().getConfigManager().getConfigList("//" + type);
     }
 
     @Override
@@ -33,11 +20,11 @@ public class ConsoleDataStore implements DataStore {
         if (StringUtil.notBlank(id)) {
             properties.put(ListModel.FIELD_NAME_ID, id);
         }
-        if (!xmlUtil.isNodeExists(tags)) {
-            xmlUtil.addNew(this.rootPath, type + "s", null);
+        ConfigManager configManager = Main.getFc().getConfigManager();
+        if (!configManager.existsConfig(tags)) {
+            configManager.addConfig("/root/console", type + "s", null);
         }
-        xmlUtil.addNew(tags, type, properties);
-        xmlUtil.write();
+        configManager.addConfig(tags, type, properties);
     }
 
     @Override
@@ -48,7 +35,6 @@ public class ConsoleDataStore implements DataStore {
 
     @Override
     public void deleteDataById(String type, String id) {
-        xmlUtil.delete("//" + type + "s/" + type + "[@id='" + id + "']");
-        xmlUtil.write();
+        Main.getFc().getConfigManager().deleteConfig("//" + type + "s/" + type + "[@id='" + id + "']");
     }
 }

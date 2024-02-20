@@ -1,10 +1,11 @@
 package qingzhou.app.impl;
 
 import qingzhou.app.impl.filter.UniqueFilter;
-import qingzhou.framework.App;
-import qingzhou.framework.AppManager;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.QingZhouSystemApp;
+import qingzhou.framework.app.QingZhouSystemApp;
+import qingzhou.framework.api.Logger;
 import qingzhou.framework.api.ModelBase;
 import qingzhou.framework.api.ModelManager;
 import qingzhou.framework.api.QingZhouApp;
@@ -42,7 +43,7 @@ public class AppManagerImpl implements AppManager {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
         boolean needCommonApp = !FrameworkContext.SYS_APP_MASTER.equals(appName) && !FrameworkContext.SYS_APP_NODE_AGENT.equals(appName);
-        AppImpl app = buildApp(appFile, needCommonApp);
+        AppImpl app = buildApp(appName, appFile, needCommonApp);
         apps.put(appName, app);
 
         QingZhouApp qingZhouApp = app.getQingZhouApp();
@@ -58,12 +59,15 @@ public class AppManagerImpl implements AppManager {
             try {
                 app.getLoader().close();
             } catch (IOException e) {
-                e.printStackTrace();
+                Logger logger = frameworkContext.getServiceManager().getService(Logger.class);
+                logger.warn("failed to close loader: " + appName, e);
             }
 
             QingZhouApp qingZhouApp = app.getQingZhouApp();
             if (qingZhouApp != null) {
+                File temp = app.getAppContext().getTemp();
                 qingZhouApp.stop();
+                FileUtil.forceDelete(temp);
             }
         }
     }
@@ -78,14 +82,14 @@ public class AppManagerImpl implements AppManager {
         return apps.get(name);
     }
 
-    private AppImpl buildApp(File appDir, boolean needCommonApp) {
+    private AppImpl buildApp(String appName, File appDir, boolean needCommonApp) throws Exception {
         File[] appFiles = new File(appDir, "lib").listFiles();
         if (appFiles == null) {
             throw ExceptionUtil.unexpectedException("app lib not found: " + appDir.getName());
         }
         File[] appLibs = appFiles;
         if (needCommonApp) {
-            File[] commonFiles = FileUtil.newFile(frameworkContext.getFileManager().getLib(), "sysapp", FrameworkContext.SYS_APP_COMMON, "lib").listFiles();
+            File[] commonFiles = FileUtil.newFile(frameworkContext.getConfigManager().commonApp(), "lib").listFiles();
             if (commonFiles != null) {
                 int appFileLength = appFiles.length;
                 int commonFileLength = commonFiles.length;
@@ -98,6 +102,8 @@ public class AppManagerImpl implements AppManager {
         AppImpl app = new AppImpl();
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
+        appContext.setAppName(appName);
+
         URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLibs, QingZhouApp.class.getClassLoader());
         app.setLoader(loader);
         ConsoleContextImpl consoleContext = new ConsoleContextImpl();
@@ -123,8 +129,6 @@ public class AppManagerImpl implements AppManager {
                     ((QingZhouSystemApp) qingZhouApp).setFrameworkContext(frameworkContext);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         return app;
@@ -148,23 +152,15 @@ public class AppManagerImpl implements AppManager {
                     throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
                 }
 
-                modelInfo.fieldInfoMap.forEach((s, fieldInfo) -> {
-                    try {
-                        Field field = modelClass.getField(fieldInfo.fieldName);
-                        fieldInfo.setField(field);
-                    } catch (NoSuchFieldException | SecurityException e) {
-                        e.printStackTrace();
-                    }
-                });
+                for (FieldInfo fieldInfo : modelInfo.fieldInfoMap.values()) {
+                    Field field = modelClass.getField(fieldInfo.fieldName);
+                    fieldInfo.setField(field);
+                }
 
-                modelInfo.actionInfoMap.forEach((s, actionInfo) -> {
-                    try {
-                        Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
-                        actionInfo.setJavaMethod(method);
-                    } catch (NoSuchMethodException | SecurityException e) {
-                        e.printStackTrace();
-                    }
-                });
+                for (ActionInfo actionInfo : modelInfo.actionInfoMap.values()) {
+                    Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
+                    actionInfo.setJavaMethod(method);
+                }
             }
 
             modelManager.initDefaultProperties();

@@ -1,7 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.console.page.PageBackendService;
-import qingzhou.framework.RequestImpl;
+import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.api.FieldType;
 import qingzhou.framework.api.ModelField;
 import qingzhou.framework.api.ModelManager;

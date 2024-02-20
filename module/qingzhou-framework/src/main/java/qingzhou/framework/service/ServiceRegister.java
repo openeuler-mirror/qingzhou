@@ -1,8 +1,9 @@
-package qingzhou.framework;
+package qingzhou.framework.service;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import qingzhou.framework.FrameworkContext;
 
 public abstract class ServiceRegister<T> implements BundleActivator {
     private ServiceReference<FrameworkContext> serviceReference;

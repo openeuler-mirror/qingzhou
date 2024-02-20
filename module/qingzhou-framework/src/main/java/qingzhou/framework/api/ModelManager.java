@@ -15,13 +15,7 @@ public interface ModelManager {
 
     String[] getActionNames(String modelName);
 
-    String[] getActionNamesShowToFormBottom(String modelName);
-
     String[] getActionNamesSupportBatch(String modelName);
-
-    String[] getActionNamesShowToList(String modelName);
-
-    String[] getActionNamesShowToListHead(String modelName);
 
     ModelAction getModelAction(String modelName, String actionName);
 
@@ -32,8 +26,6 @@ public interface ModelManager {
     String[] getFieldNamesByGroup(String modelName, String groupName);
 
     Group getGroup(String modelName, String groupName);
-
-    String getFieldName(String modelName, int fieldIndex);
 
     ModelField getModelField(String modelName, String fieldName);
 

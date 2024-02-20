@@ -20,7 +20,7 @@
                             <Bundle-Activator>qingzhou.crypto.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,javax.crypto,javax.crypto.spec,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util
+                                org.osgi.framework,javax.crypto,javax.crypto.spec,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.service,qingzhou.framework.util
                             </Import-Package>
                             <Export-Package>qingzhou.crypto</Export-Package>
                         </manifestEntries>
@@ -29,7 +29,6 @@
             </plugin>
         </plugins>
     </build>
-
 
     <dependencies>
         <dependency>

@@ -14,19 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AccessControl implements Filter<RestContext> {
-    public static boolean isOpenedModelAction(String appModelAction) {
-        appModelAction = wrapCheckingPath(appModelAction);
-//        for (String oma : ServerXml.ConsoleRole.openedModelActions) {
-//            if (appModelAction.startsWith(oma)) {
-//                return true;
-//            }
-//        }
-        return false;
-    }
-
-    public static boolean hasAppPermission(String loginUser, String appName) {//todo
-        return true;
-    }
 
     public static Model[] getLoginUserAppMenuModels(String loginUser, String appName) {
 //        Set<XPermission> userRolePermissions = RoleCache.getUserRolePermissions(loginUser);
@@ -101,10 +88,10 @@ public class AccessControl implements Filter<RestContext> {
         String user = LoginManager.getLoginUser(httpServletRequest.getSession(false));
         if (StringUtil.notBlank(user)) {
             List<String> rest = RESTController.retrieveRestPathInfo(httpServletRequest);
-            if (rest.size() >= 4) {
-                String appName = rest.get(1);
-                String model = rest.get(2);
-                String action = rest.get(3);
+            if (rest.size() >= 5) {
+                String appName = rest.get(2);
+                String model = rest.get(3);
+                String action = rest.get(4);
                 String detectRest = model + "/" + action;
                 if (canAccess(appName, detectRest, user)) {
                     return true;
@@ -119,5 +106,4 @@ public class AccessControl implements Filter<RestContext> {
         //        response.sendError(HttpServletResponse.SC_FORBIDDEN);// 会引起上面的消息不传输到客户端或客户端http客户端有异常
         return false;
     }
-
 }

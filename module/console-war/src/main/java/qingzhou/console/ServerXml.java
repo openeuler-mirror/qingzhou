@@ -1,39 +1,15 @@
 package qingzhou.console;
 
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.XmlUtil;
 
-import java.io.File;
 import java.util.Map;
 
 public class ServerXml { // todo 考虑替代：ConfigManager
-    private static File serverXmlFile;
+    private static final ServerXml instance = new ServerXml();
 
     public static ServerXml get() {
-        return ServerXml.get(getServerXml());
-    }
-
-    public static File getServerXml() {
-        if (serverXmlFile == null) {
-            try {
-                serverXmlFile = FileUtil.newFile(ConsoleWarHelper.getDomain(), "conf", "server.xml");
-            } catch (Exception ignored) {
-            }
-        }
-        return serverXmlFile;
-    }
-
-    public static ServerXml get(File xmlFile) {
-        ServerXml xml = new ServerXml();
-        xml.xmlFile = xmlFile;
-        return xml;
-    }
-
-    private File xmlFile;
-
-    private ServerXml() {
+        return instance;
     }
 
     public Map<String, String> server() {
@@ -45,33 +21,16 @@ public class ServerXml { // todo 考虑替代：ConfigManager
     }
 
     private Map<String, String> getAttributes(String path) {
-        XmlUtil xmlUtil = new XmlUtil(this.xmlFile);
-        return xmlUtil.getAttributes("/root/" + path);
+        return ConsoleWarHelper.getConfigManager().getConfig("/root/" + path);
     }
 
     /********************** console ***********************/
     public Map<String, String> getNodeById(String id) {
-        return new XmlUtil(this.xmlFile).getAttributesByKey("/root/console/nodes/node", "id", id);
-    }
-
-    public Map<String, String> getClusterById(String id) {
-        return new XmlUtil(this.xmlFile).getAttributesByKey("/root/console/clusters/cluster", "id", id);
-    }
-
-    public boolean isDisableUpload() {
-        return isEnabled("/root/console", "disableUpload");
-    }
-
-    public boolean isDisableDownload() {
-        return isEnabled("/root/console", "disableDownload");
+        return ConsoleWarHelper.getConfigManager().getConfig(String.format("/root/console/nodes/node[@%s='%s']", "id", id));
     }
 
     public boolean verCodeEnabled() {
-        return isEnabled("/root/console/auth", "verCodeEnabled");
-    }
-
-    private boolean isEnabled(String nodeExpression, String specifiedKey) {
-        return new XmlUtil(this.xmlFile).getBooleanAttribute(nodeExpression, specifiedKey, true);
+        return Boolean.parseBoolean(ConsoleWarHelper.getConfigManager().getConfig("/root/console/auth").get("verCodeEnabled"));
     }
 
     public String trustedIP() {
@@ -91,13 +50,12 @@ public class ServerXml { // todo 考虑替代：ConfigManager
     }
 
     private String consoleAttribute(String specifiedKey) {
-        return new XmlUtil(this.xmlFile).getSpecifiedAttribute("/root/console", specifiedKey);
+        return ConsoleWarHelper.getConfigManager().getConfig("/root/console").get(specifiedKey);
     }
 
     public Map<String, String> user(String loginUser) {
-        String tenant = getTenant(loginUser);
         String userName = getLoginUserName(loginUser);
-        Map<String, String> attributes = getAttributes("console/auth/tenants/tenant[@id='" + tenant + "']/users/user[@id='" + userName + "']");
+        Map<String, String> attributes = getAttributes("console/auth/users/user[@id='" + userName + "']");
 
         if (!Boolean.parseBoolean(attributes.get("active"))) {
             return null;

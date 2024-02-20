@@ -1,16 +1,21 @@
 package qingzhou.framework.impl;
 
-import qingzhou.framework.AppManager;
 import qingzhou.framework.ConfigManager;
-import qingzhou.framework.FileManager;
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.ServiceManager;
+import qingzhou.framework.app.AppManager;
+import qingzhou.framework.service.ServiceManager;
 
 public class FrameworkContextImpl implements FrameworkContext {
-    private static final String qzVerName = "version";
+    private static final FrameworkContext instance = new FrameworkContextImpl();
+
+    public static FrameworkContext getInstance() {
+        return instance;
+    }
+
+    private FrameworkContextImpl() {
+    }
 
     private final ServiceManager serviceManager = new ServiceManagerImpl();
-    private final FileManager fileManager = new FileManagerImpl();
 
     @Override
     public String getName() {
@@ -19,7 +24,7 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public String getVersion() {
-        return fileManager.getLib().getName().substring(qzVerName.length());
+        return getConfigManager().getVersion();
     }
 
     @Override
@@ -30,11 +35,6 @@ public class FrameworkContextImpl implements FrameworkContext {
     @Override
     public ServiceManager getServiceManager() {
         return serviceManager;
-    }
-
-    @Override
-    public FileManager getFileManager() {
-        return fileManager;
     }
 
     @Override

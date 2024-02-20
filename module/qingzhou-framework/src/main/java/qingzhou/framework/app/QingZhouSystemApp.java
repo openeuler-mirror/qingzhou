@@ -1,5 +1,6 @@
-package qingzhou.framework;
+package qingzhou.framework.app;
 
+import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.QingZhouApp;
 
 public abstract class QingZhouSystemApp extends QingZhouApp {

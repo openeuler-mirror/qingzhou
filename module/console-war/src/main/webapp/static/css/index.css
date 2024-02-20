@@ -573,18 +573,50 @@ a.cancelfavorites:active{text-decoration: none;color: black;}
 .search-item .highlight {color: #ff8105;}
 .search-list .active {border-radius: 5px; background: #e0f0ff;}
 
-/*应用网格布局样式*/
-.appCard{width:400px;height:186px;background-color:#fafafa; border-radius: 5px;}
-.appCard .left{width:120px;height:100%;float:left;}
-.appCard .right{width:250px;height:100%;float:right;padding-left:5px;padding-right:10px;}
-.appCard .left .appLogo {margin-top: 39%;width:120px;}
-.appCard .left .appLogo img{display:block; margin:10px 20%; border:1px solid #E3E3E3; padding:2px;}
-.appCard .left .appVersion{display:block; font-size:12px; color:#666; white-space: nowrap;}
-
-.appCard .right .appName {margin-top: 8px; font-size:18px;}
-.appCard .right .appInfo {margin-top: 10px; font-size: 13px;}
-.appCard .right .installUpgrade a {margin-left: 0px; float:left;}
-.appCard .right a{font-size:13px;color:blue;float:right;margin:8px 0 0px 6px;}
-.appCard .right a:hover{color:#06F;text-decoration: none;}
-
 .markedviewText{display: none;}
+
+/*应用网格布局样式*/
+
+/*应用网格布局样式*/
+.apps {
+    position: relative;
+    margin: 0 -10px;
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box;
+    cursor: default;
+}
+.apps .app {
+    position: absolute;
+    width: 300px;
+    height: 280px;
+    line-height: 280px;
+    margin: 10px;
+    z-index: 1;
+}
+.apps .app-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    text-align: center;
+    font-size: 24px;
+    background-color: #fafafa;
+    border: 0px solid;
+    border-radius: 5px;
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    -ms-transition: all 0.2s ease-out;
+    -o-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+}
+
+.app-table {line-height: 20px; margin-top: 10px;}
+.app-table .app-left {width:100px; padding-top: 10px;}
+.app-table .app-left-div {position: absolute; top: 25%; margin: 10px 10px;}
+.app-table .app-name {padding: 10px 5px;}
+.app-table .app-logo {width: 85px; height: 85px; border-radius: 5px;}
+.app-table .app-version {padding-top: 8px; font-size: 13px;}
+.app-table .app-install-upgrade {padding-top: 8px; font-size: 15px;}
+.app-table .app-detail {padding-top: 15px; font-size: 14px; text-align: left;}

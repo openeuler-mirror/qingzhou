@@ -1,8 +1,8 @@
 package qingzhou.app.impl.filter;
 
-import qingzhou.framework.I18NStore;
-import qingzhou.framework.RequestImpl;
-import qingzhou.framework.ResponseImpl;
+import qingzhou.framework.app.I18NStore;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AddModel;
 import qingzhou.framework.api.AppContext;
@@ -29,7 +29,7 @@ public class UniqueFilter implements ActionFilter {
             if (StringUtil.isBlank(requestTemp.getParameter(ListModel.FIELD_NAME_ID))) {
                 requestTemp.setId(modelInstance.resolveId(requestTemp));
             }
-            ResponseImpl responseTemp = new ResponseImpl();
+            Response responseTemp = new ResponseImpl();
             modelInstance.show(requestTemp, responseTemp);
             boolean exists = responseTemp.isSuccess() && !responseTemp.getDataList().isEmpty();
             if (exists) {

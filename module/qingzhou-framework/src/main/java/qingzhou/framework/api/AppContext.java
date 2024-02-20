@@ -4,19 +4,17 @@ import java.io.File;
 import java.util.Collection;
 
 public interface AppContext {
-    File getTemp(String subName);
+    String getAppName();
 
-    File getDomain();
-
-    File getHome();
+    File getTemp();
 
     Collection<Class<?>> getServiceTypes();
 
     <T> T getService(Class<T> serviceType);
 
-    void setDataStore(DataStore dataStore);
+    void setDefaultDataStore(DataStore dataStore);
 
-    DataStore getDataStore();
+    DataStore getDefaultDataStore();
 
     void addActionFilter(ActionFilter actionFilter);
 

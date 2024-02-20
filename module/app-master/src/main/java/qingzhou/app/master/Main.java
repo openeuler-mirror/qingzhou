@@ -1,7 +1,7 @@
 package qingzhou.app.master;
 
 import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.QingZhouSystemApp;
+import qingzhou.framework.app.QingZhouSystemApp;
 import qingzhou.framework.api.ActionFilter;
 import qingzhou.framework.api.AppContext;
 import qingzhou.framework.api.ConsoleContext;
@@ -9,9 +9,6 @@ import qingzhou.framework.api.DeleteModel;
 import qingzhou.framework.api.EditModel;
 import qingzhou.framework.api.Request;
 import qingzhou.framework.api.Response;
-import qingzhou.framework.util.FileUtil;
-
-import java.io.File;
 
 public class Main extends QingZhouSystemApp {
     private static FrameworkContext fc;
@@ -26,8 +23,7 @@ public class Main extends QingZhouSystemApp {
         consoleContext.setMenuInfo("System", new String[]{"系统管理", "en:System"}, "cog", 2);
         consoleContext.setMenuInfo("Guide", new String[]{"用户指引", "en:Guide"}, "hand-up", 3);
 
-        File serverXml = FileUtil.newFile(appContext.getDomain(), "conf", "server.xml");
-        appContext.setDataStore(new ConsoleDataStore(serverXml));
+        appContext.setDefaultDataStore(new ConsoleDataStore());
 
         appContext.addActionFilter(new LocalNodeProtection());// 禁止修改本地节点
     }
