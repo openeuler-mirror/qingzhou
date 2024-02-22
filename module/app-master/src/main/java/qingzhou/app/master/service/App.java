@@ -18,12 +18,13 @@ import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Model(name = FrameworkContext.SYS_MODEL_APP, icon = "cube-alt",
         menuName = "Service", menuOrder = 1,
@@ -105,19 +106,29 @@ public class App extends ModelBase implements AddModel {
     public Options options(Request request, String fieldName) {
         if ("nodes".equals(fieldName)) {
             String userName = request.getUserName();
-            Map<String, String> user;
+            List<Option> nodeList = new ArrayList<>();
+            nodeList.add(Option.of(FrameworkContext.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
+            Set<String> nodeSet = new HashSet<>();
             try {
-                user = getDataStore().getDataById("user", userName);
+                if ("qingzhou".equals(userName)) {
+                    List<Map<String, String>> nodes = getDataStore().getAllData("node");
+                    nodes.stream()
+                            .map(node -> node.get("id"))
+                            .filter(Objects::nonNull)
+                            .forEach(nodeSet::add);
+                } else {
+                    Map<String, String> user = getDataStore().getDataById("user", userName);
+                    Stream.of(user.getOrDefault("nodes", "").split(","))
+                            .map(String::trim)
+                            .filter(StringUtil::notBlank)
+                            .forEach(nodeSet::add);
+                }
+                nodeSet.remove(FrameworkContext.SYS_NODE_LOCAL);
+                nodeSet.stream().map(Option::of).forEach(nodeList::add);
             } catch (Exception ignored) {
-                user = Collections.emptyMap();
             }
 
-            Set<String> nodeSet = new HashSet<>();
-            nodeSet.add(FrameworkContext.SYS_NODE_LOCAL);
-            Arrays.stream(user.getOrDefault("nodes", "").split(","))
-                    .map(String::trim).filter(StringUtil::notBlank).forEach(nodeSet::add);
-
-            return () -> nodeSet.stream().map(Option::of).collect(Collectors.toList());
+            return () -> nodeList;
         }
 
         return super.options(request, fieldName);

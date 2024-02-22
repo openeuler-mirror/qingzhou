@@ -3,10 +3,12 @@ package qingzhou.console.controller.rest;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.impl.JsonView;
+import qingzhou.framework.ConfigManager;
 import qingzhou.framework.FrameworkContext;
 import qingzhou.framework.api.Model;
 import qingzhou.framework.api.ModelAction;
 import qingzhou.framework.api.ModelManager;
+import qingzhou.framework.impl.FrameworkContextImpl;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.StringUtil;
 
@@ -15,6 +17,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AccessControl implements Filter<RestContext> {
@@ -45,11 +49,28 @@ public class AccessControl implements Filter<RestContext> {
         if (ma.length == 2) {
             ModelManager modelManager = PageBackendService.getModelManager(appName);
             ModelAction modelAction1 = modelManager.getModelAction(checkModel, checkAction);
-            if (modelAction1 == null) {
-                return false;
-            }
+            return modelAction1 != null;
         }
-        return true;
+
+        return nodePermission(appName, user);
+    }
+
+    public static boolean nodePermission(String appName, String user) {
+        if ("qingzhou".equals(user)) {
+            return true;
+        }
+
+        ConfigManager configManager = FrameworkContextImpl.getInstance().getConfigManager();
+        Map<String, String> userPro = configManager.getConfig("/user[@id='" + user + "']");
+        String userNodes = userPro.getOrDefault("nodes", "");
+        Set<String> userNodeSet = Arrays.stream(userNodes.split(","))
+                .filter(node -> node != null && !node.trim().isEmpty())
+                .map(String::trim).collect(Collectors.toSet());
+
+        Map<String, String> app = configManager.getConfig("/app[@id='" + appName + "']");
+        String appNodes = app.getOrDefault("nodes", "");
+
+        return Arrays.stream(appNodes.split(",")).map(String::trim).anyMatch(userNodeSet::contains);
     }
 
     public static boolean isNoNeedPermissionUri(HttpServletRequest request) {
