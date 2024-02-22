@@ -81,13 +81,13 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
                                     fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
                                 }
                                 %>
-                                <tr>
+                                <tr row-item="<%=fieldName%>">
                                     <td class="home-field-info" field="<%=fieldName%>">
                                         <label for="<%=fieldName%>"><%=info%>&nbsp;
                                             <%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
                                         </label>
                                     </td>
-                                    <td style="word-break: break-all">
+                                    <td style="word-break: break-all" field-val="<%=fieldValue%>">
                                         <%
                                         if (fieldValue.startsWith("http")) {
                                             %>
@@ -139,6 +139,24 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
             keysBuilder.append("}");
             out.print(keysBuilder.toString());
         }
+        %>
+    </textarea>
+    <textarea name="eventConditionsInfoPage" rows="3" disabled="disabled" style="display:none;">
+        <%
+        // added by yuanwc for: ModelField 注解 effectiveWhen()
+        StringBuilder conditionBuilder = new StringBuilder();
+        conditionBuilder.append("{");
+        Map<String, String> conditions = PageBackendService.modelFieldEffectiveWhenMap(qzRequest);
+        for (Map.Entry<String, String> e : conditions.entrySet()) {
+            //e.getValue().replace(/\&\&/g, '&').replace(/\|\|/g, '|');
+            conditionBuilder.append("'").append(e.getKey()).append("' : '")
+                    .append(e.getValue().replaceAll("\\&\\&", "&").replaceAll("\\|\\|", "|")).append("',");
+        }
+        if (conditionBuilder.indexOf(",") > 0) {
+            conditionBuilder.deleteCharAt(conditionBuilder.lastIndexOf(","));
+        }
+        conditionBuilder.append("}");
+        out.print(conditionBuilder.toString());
         %>
     </textarea>
 </div>
