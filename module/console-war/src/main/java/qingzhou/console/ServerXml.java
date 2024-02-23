@@ -33,6 +33,13 @@ public class ServerXml { // todo 考虑替代：ConfigManager
         return Boolean.parseBoolean(ConsoleWarHelper.getConfigManager().getConfig("/root/console/auth").get("verCodeEnabled"));
     }
 
+    public boolean isJmxEnabled() {
+        return Boolean.parseBoolean(ConsoleWarHelper.getConfigManager().getConfig("//jmx").get("enabled"));
+    }
+
+    public Map<String, String> jmx() {
+        return ConsoleWarHelper.getConfigManager().getConfig("//jmx");
+    }
     public String trustedIP() {
         return consoleAttribute("trustedIP");
     }

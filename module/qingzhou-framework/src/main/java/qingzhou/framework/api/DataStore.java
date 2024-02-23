@@ -1,9 +1,6 @@
 package qingzhou.framework.api;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -53,7 +50,7 @@ public interface DataStore {
 
     default Map<String, String> getDataById(String type, String id) throws Exception {
         for (Map<String, String> data : getAllData(type)) {
-            if (data.get(ListModel.FIELD_NAME_ID).equals(id)) {
+            if (Objects.equals(data.get(ListModel.FIELD_NAME_ID), id)) {
                 return data;
             }
         }

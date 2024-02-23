@@ -18,6 +18,7 @@ import qingzhou.framework.pattern.FilterPattern;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -59,6 +60,7 @@ public class RESTController extends HttpServlet {
     }
 
     public static InvokeAction invokeAction = new InvokeAction();
+    public static RESTController instance;
 
     private final Filter<RestContext>[] filters = new Filter[]{
             new AccessControl(),
@@ -67,6 +69,17 @@ public class RESTController extends HttpServlet {
             invokeAction // 执行具体的业务逻辑
     };
     private final ViewManager viewManager = new ViewManager();
+
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        instance = this;
+    }
+
+    public void invoke(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        doPost(req, resp);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
