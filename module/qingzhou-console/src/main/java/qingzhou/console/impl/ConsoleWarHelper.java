@@ -1,28 +1,24 @@
 package qingzhou.console.impl;
 
+import qingzhou.api.Request;
+import qingzhou.api.Response;
+import qingzhou.app.App;
+import qingzhou.config.ConfigManager;
 import qingzhou.console.AppStub;
 import qingzhou.console.AppStubManager;
 import qingzhou.crypto.CryptoService;
-import qingzhou.framework.app.App;
-import qingzhou.framework.ConfigManager;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.Logger;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.logger.Logger;
 import qingzhou.serializer.Serializer;
-import qingzhou.serializer.SerializerService;
 
 import java.io.File;
 
 public class ConsoleWarHelper {
-    static FrameworkContext fc;
-
     public static ConfigManager getConfigManager() {
-        return fc.getConfigManager();
+        return Controller.configManager;
     }
 
     public static App getLocalApp(String appName) {
-        return fc.getAppManager().getApp(appName);
+        return Controller.appManager.getApp(appName);
     }
 
     public static AppStub getAppStub(String appName) {
@@ -30,23 +26,23 @@ public class ConsoleWarHelper {
     }
 
     public static void invokeLocalApp(String appName, Request request, Response response) throws Exception {
-        fc.getAppManager().getApp(appName).invoke(request, response);
+        Controller.appManager.getApp(appName).invoke(request, response);
     }
 
     public static Serializer getSerializer() {
-        return fc.getServiceManager().getService(SerializerService.class).getSerializer();
+        return Controller.serializer;
     }
 
     public static CryptoService getCryptoService() {
-        return fc.getServiceManager().getService(CryptoService.class);
+        return Controller.cryptoService;
     }
 
     public static File getCache(String subName) {
-        return fc.getConfigManager().getTemp(subName);
+        return Controller.framework.getTemp(subName);
     }
 
     public static Logger getLogger() {
-        return fc.getServiceManager().getService(Logger.class);
+        return Controller.logger;
     }
 
     private ConsoleWarHelper() {

@@ -14,7 +14,7 @@ public class HttpRoute {
         add("PUT");
         add("DELETE");
     }};
-    
+
     public HttpRoute(String url) {
         this.url = url;
     }
@@ -37,7 +37,7 @@ public class HttpRoute {
     public String getUrl() {
         return url;
     }
-    
+
     public HttpRoute match(List<HttpRoute> routes) {
         if (routes == null || routes.isEmpty()) {
             return null;
@@ -52,7 +52,7 @@ public class HttpRoute {
                 }
             }
         }
-        
+
         return find;
     }
 }

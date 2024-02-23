@@ -4,28 +4,28 @@
 <%@ page import="java.io.*" %>
 <%@ page import="java.time.*" %>
 <%@ page import="java.time.format.*" %>
+<%@ page import="qingzhou.api.*" %>
 <%@ page import="qingzhou.framework.*" %>
-<%@ page import="qingzhou.framework.app.*" %>
-<%@ page import="qingzhou.framework.api.*" %>
+<%@ page import="qingzhou.app.*" %>
 <%@ page import="qingzhou.framework.util.*" %>
 <%@ page import="qingzhou.console.*" %>
+<%@ page import="qingzhou.console.impl.*" %>
 <%@ page import="qingzhou.console.controller.rest.*" %>
-<%@ page import="qingzhou.console.controller.system.*" %>
+<%@ page import="qingzhou.console.controller.*" %>
 <%@ page import="qingzhou.console.login.*" %>
 <%@ page import="qingzhou.console.login.vercode.*" %>
 <%@ page import="qingzhou.console.view.*" %>
-<%@ page import="qingzhou.console.view.impl.*" %>
+<%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.sdk.*" %>
 <%@ page import="qingzhou.console.page.PageBackendService" %>
 <%@ page import="qingzhou.console.page.MenuItem" %>
-<%@ page import="qingzhou.console.impl.ConsoleWarHelper" %>
 
 <%
 String currentUser = LoginManager.getLoginUser(session);
 RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
 Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
 String menuAppName = PageBackendService.getInitAppName(qzRequest);
-ModelManager modelManager = PageBackendService.getModelManager(menuAppName);
+ModelManager modelManager = ConsoleWarHelper.getAppStub(menuAppName).getModelManager();
 %>
 
 <script type="text/javascript">

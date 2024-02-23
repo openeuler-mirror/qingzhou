@@ -1,17 +1,7 @@
 package qingzhou.console;
 
+import qingzhou.api.*;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.SafeCheckerUtil;
 import qingzhou.framework.util.StringUtil;
@@ -23,15 +13,7 @@ import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class Validator {

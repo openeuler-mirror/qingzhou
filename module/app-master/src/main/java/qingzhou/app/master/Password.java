@@ -1,6 +1,6 @@
 package qingzhou.app.master;
 
-import qingzhou.framework.api.*;
+import qingzhou.api.*;
 
 @Model(name = "password", icon = "key",
         menuOrder = 99,

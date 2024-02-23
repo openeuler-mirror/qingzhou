@@ -14,7 +14,8 @@
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
+            <artifactId>qingzhou-app</artifactId>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 </project>

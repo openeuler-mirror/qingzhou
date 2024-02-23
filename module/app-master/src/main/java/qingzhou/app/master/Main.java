@@ -1,21 +1,16 @@
 package qingzhou.app.master;
 
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.app.QingZhouSystemApp;
-import qingzhou.framework.api.ActionFilter;
-import qingzhou.framework.api.AppContext;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.DeleteModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.api.*;
+import qingzhou.app.App;
+import qingzhou.app.QingZhouSystemApp;
+import qingzhou.framework.Framework;
 
 public class Main extends QingZhouSystemApp {
-    private static FrameworkContext fc;
+    private static Framework fc;
 
     @Override
     public void start(AppContext appContext) {
-        fc = this.frameworkContext;
+        fc = this.framework;
         appContext.getConsoleContext().addI18N("validator.master.system", new String[]{"为保障系统安全可用，请勿修改此配置", "en:To ensure the security and availability of the system, do not modify this configuration"});
 
         ConsoleContext consoleContext = appContext.getConsoleContext();
@@ -28,7 +23,7 @@ public class Main extends QingZhouSystemApp {
         appContext.addActionFilter(new LocalNodeProtection());// 禁止修改本地节点
     }
 
-    public static FrameworkContext getFc() {
+    public static Framework getFc() {
         return fc;
     }
 
@@ -36,8 +31,8 @@ public class Main extends QingZhouSystemApp {
 
         @Override
         public String doFilter(Request request, Response response, AppContext appContext) {
-            if (FrameworkContext.SYS_MODEL_NODE.equals(request.getModelName())
-                    && FrameworkContext.SYS_NODE_LOCAL.equals(request.getId())) {
+            if (App.SYS_MODEL_NODE.equals(request.getModelName())
+                    && App.SYS_NODE_LOCAL.equals(request.getId())) {
                 if (EditModel.ACTION_NAME_UPDATE.equals(request.getActionName())
                         || DeleteModel.ACTION_NAME_DELETE.equals(request.getActionName())) {
                     return appContext.getConsoleContext().getI18N(request.getI18nLang(), "validator.master.system");

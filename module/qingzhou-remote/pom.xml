@@ -19,7 +19,7 @@
                             <Bundle-Activator>qingzhou.remote.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                org.osgi.framework,qingzhou.framework,qingzhou.framework.api,qingzhou.crypto,qingzhou.serializer
+                                qingzhou.serializer,qingzhou.config,org.osgi.framework
                             </Import-Package>
                         </manifestEntries>
                     </archive>
@@ -30,36 +30,19 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-crypto</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-serializer</artifactId>
             <version>0.1.0</version>
         </dependency>
-
         <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-config</artifactId>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.83</version>
-            <scope>test</scope>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-app</artifactId>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 

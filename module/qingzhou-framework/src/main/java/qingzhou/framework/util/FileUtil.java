@@ -20,12 +20,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
-    public static String getFileMD5(File file) throws Exception {
-        MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-        byte[] fileDigest = getFileDigest(file, messageDigest);
-        return HexUtil.bytesToHex(fileDigest);
-    }
-
     public static byte[] getFileDigest(File file, MessageDigest messageDigest) throws IOException {
         try (FileInputStream in = new FileInputStream(file)) {
             FileChannel ch = in.getChannel();

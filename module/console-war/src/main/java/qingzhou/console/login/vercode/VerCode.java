@@ -1,12 +1,12 @@
 package qingzhou.console.login.vercode;
 
+import qingzhou.console.ConsoleI18n;
 import qingzhou.console.ServerXml;
+import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.login.LockOutRealm;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.page.PageBackendService;
-import qingzhou.console.ConsoleI18n;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
@@ -81,7 +81,7 @@ public class VerCode implements Filter<HttpServletContext> {
      * 校验用户输入的验证码是否正确
      */
     public static boolean validate(HttpServletRequest request) {
-        String clientCode = PageBackendService.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA));
+        String clientCode = AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA));
         if (StringUtil.isBlank(clientCode)) {
             return false;
         }
@@ -103,7 +103,7 @@ public class VerCode implements Filter<HttpServletContext> {
 
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
-        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
+        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
 
         if (checkPath.equals(CAPTCHA_URI)) {
             render(request, response);

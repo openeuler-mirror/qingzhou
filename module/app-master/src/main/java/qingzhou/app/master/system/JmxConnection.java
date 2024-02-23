@@ -1,6 +1,8 @@
 package qingzhou.app.master.system;
 
-import qingzhou.framework.api.*;
+import qingzhou.api.EditModel;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;

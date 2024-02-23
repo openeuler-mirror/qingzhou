@@ -1,17 +1,11 @@
 package qingzhou.app.node;
 
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.api.ShowModel;
+import qingzhou.api.*;
+import qingzhou.app.App;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.JDKUtil;
 
-@Model(name = FrameworkContext.SYS_MODEL_HOME, icon = "home",
+@Model(name = App.SYS_MODEL_HOME, icon = "home",
         entryAction = ShowModel.ACTION_NAME_SHOW,
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"展示当前节点的说明信息。",

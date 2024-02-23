@@ -1,10 +1,6 @@
 package qingzhou.app.master.system;
 
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.Group;
-import qingzhou.framework.api.Groups;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
+import qingzhou.api.*;
 
 @Model(name = "store", icon = "database",
         menuName = "System", menuOrder = 2,

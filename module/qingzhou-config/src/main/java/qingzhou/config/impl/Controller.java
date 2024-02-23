@@ -1,16 +1,33 @@
 package qingzhou.config.impl;
 
-import qingzhou.framework.ConfigManager;
-import qingzhou.framework.service.ServiceRegister;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import qingzhou.config.ConfigManager;
+import qingzhou.crypto.CryptoService;
+import qingzhou.framework.Framework;
 
-public class Controller extends ServiceRegister<ConfigManager> {
+public class Controller implements BundleActivator {
+    private ServiceReference<Framework> frameworkContextReference;
+    private ServiceReference<CryptoService> cryptoServiceReference;
+    private ServiceRegistration<ConfigManager> registration;
+
     @Override
-    protected Class<ConfigManager> serviceType() {
-        return ConfigManager.class;
+    public void start(BundleContext context) {
+        frameworkContextReference = context.getServiceReference(Framework.class);
+        cryptoServiceReference = context.getServiceReference(CryptoService.class);
+
+        registration = context.registerService(ConfigManager.class, new LocalConfigManager(
+                context.getService(frameworkContextReference),
+                context.getService(cryptoServiceReference)
+        ), null);
     }
 
     @Override
-    protected ConfigManager serviceObject() {
-        return new LocalConfigManager(frameworkContext);
+    public void stop(BundleContext context) {
+        registration.unregister();
+        context.ungetService(cryptoServiceReference);
+        context.ungetService(frameworkContextReference);
     }
 }

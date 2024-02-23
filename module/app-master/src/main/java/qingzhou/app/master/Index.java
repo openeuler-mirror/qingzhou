@@ -1,15 +1,9 @@
 package qingzhou.app.master;
 
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.api.ShowModel;
+import qingzhou.api.*;
+import qingzhou.app.App;
 
-@Model(name = FrameworkContext.SYS_MODEL_INDEX, icon = "home",
+@Model(name = App.SYS_MODEL_INDEX, icon = "home",
         entryAction = ShowModel.ACTION_NAME_SHOW,
         nameI18n = {"主页", "en:Home"},
         infoI18n = {"查看轻舟产品的相关信息。", "en:Check out the relevant information of Qingzhou products."})
@@ -37,7 +31,7 @@ public class Index extends ModelBase {
         response.addDataObject(index);
     }
 
-    @ModelAction(name = FrameworkContext.SYS_MODEL_INDEX, // NOTE: 这个方法用作是 Login 成功后 跳过的
+    @ModelAction(name = App.SYS_MODEL_INDEX, // NOTE: 这个方法用作是 Login 成功后 跳过的
             forwardToPage = "sys/index",
             nameI18n = {"主页", "en:Home"},
             infoI18n = {"查看轻舟的产品和授权信息。",

@@ -1,16 +1,9 @@
 package app.common;
 
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.api.ShowModel;
+import qingzhou.api.*;
 import qingzhou.framework.util.JDKUtil;
 
-@Model(name = FrameworkContext.SYS_MODEL_HOME, icon = "home",
+@Model(name = qingzhou.app.App.SYS_MODEL_HOME, icon = "home",
         entryAction = ShowModel.ACTION_NAME_SHOW,
         menuOrder = -1,
         nameI18n = {"应用", "en:App"},

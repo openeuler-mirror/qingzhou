@@ -16,12 +16,7 @@ import javax.xml.xpath.XPathFactory;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -30,15 +25,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 public class Utils {
     private static File home;
@@ -292,7 +279,7 @@ public class Utils {
     }
 
     public static boolean isBlank(String value) {
-        return value == null || "".equals(value.trim());
+        return value == null || value.trim().isEmpty();
     }
 
     public static boolean notBlank(String value) {
@@ -470,40 +457,36 @@ public class Utils {
         }
     }
 
-    public static <S> List<S> loadServices(String serviceType, ClassLoader classLoader) {
+    public static <S> List<S> loadServices(String serviceType, ClassLoader classLoader) throws Exception {
         List<S> services = new ArrayList<>();
 
-        try {
-            ClassLoader loader = null;
-            if (classLoader != null) {
-                loader = classLoader;
-            }
-            if (loader == null) {
-                loader = Thread.currentThread().getContextClassLoader();
-            }
-            if (loader == null) {
-                loader = ClassLoader.getSystemClassLoader();
-            }
-            Objects.requireNonNull(loader);
+        ClassLoader loader = null;
+        if (classLoader != null) {
+            loader = classLoader;
+        }
+        if (loader == null) {
+            loader = Thread.currentThread().getContextClassLoader();
+        }
+        if (loader == null) {
+            loader = ClassLoader.getSystemClassLoader();
+        }
+        Objects.requireNonNull(loader);
 
-            Enumeration<URL> resources = loader.getResources("META-INF/services/" + serviceType);
-            while (resources.hasMoreElements()) {
-                final URL url = resources.nextElement();
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()), 256)) {
-                    ClassLoader finalLoader = loader;
-                    br.lines().filter(s -> s.charAt(0) != '#').map(String::trim).forEach(line -> {
-                        try {
-                            services.add((S) finalLoader.loadClass(line).newInstance());
-                        } catch (Exception e) {
-                            e.printStackTrace();// 不需要抛异常，加了条目没有类打个日志即可
-                        }
-                    });
-                } catch (Throwable e) {
-                    throw new IllegalStateException(e);
-                }
+        Enumeration<URL> resources = loader.getResources("META-INF/services/" + serviceType);
+        while (resources.hasMoreElements()) {
+            final URL url = resources.nextElement();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()), 256)) {
+                ClassLoader finalLoader = loader;
+                br.lines().filter(s -> s.charAt(0) != '#').map(String::trim).forEach(line -> {
+                    try {
+                        services.add((S) finalLoader.loadClass(line).newInstance());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            } catch (Throwable e) {
+                throw new IllegalStateException(e);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         return services;

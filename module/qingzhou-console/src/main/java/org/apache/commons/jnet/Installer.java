@@ -24,17 +24,17 @@ import java.net.URLStreamHandlerFactory;
 /**
  * The installer is a general purpose class to install an own
  * {@link URLStreamHandlerFactory} in any environment.
- *
  */
 public class Installer {
 
     /**
      * Set the url stream handler factory.
+     *
      * @param factory
      * @throws Exception
      */
     public static void setURLStreamHandlerFactory(URLStreamHandlerFactory factory)
-    throws Exception {
+            throws Exception {
         try {
             // if we can set the factory, its the first!
             URL.setURLStreamHandlerFactory(factory);
@@ -43,22 +43,22 @@ public class Installer {
             final Field[] fields = URL.class.getDeclaredFields();
             int index = 0;
             Field factoryField = null;
-            while ( factoryField == null && index < fields.length ) {
+            while (factoryField == null && index < fields.length) {
                 final Field current = fields[index];
-                if ( Modifier.isStatic( current.getModifiers() ) && current.getType().equals( URLStreamHandlerFactory.class ) ) {
+                if (Modifier.isStatic(current.getModifiers()) && current.getType().equals(URLStreamHandlerFactory.class)) {
                     factoryField = current;
                     factoryField.setAccessible(true);
                 } else {
                     index++;
                 }
             }
-            if ( factoryField == null ) {
+            if (factoryField == null) {
                 throw new Exception("Unable to detect static field in the URL class for the URLStreamHandlerFactory. Please report this error together with your exact environment to the Apache Excalibur project.");
             }
             try {
-                URLStreamHandlerFactory oldFactory = (URLStreamHandlerFactory)factoryField.get(null);
-                if ( factory instanceof ParentAwareURLStreamHandlerFactory ) {
-                    ((ParentAwareURLStreamHandlerFactory)factory).setParentFactory(oldFactory);
+                URLStreamHandlerFactory oldFactory = (URLStreamHandlerFactory) factoryField.get(null);
+                if (factory instanceof ParentAwareURLStreamHandlerFactory) {
+                    ((ParentAwareURLStreamHandlerFactory) factory).setParentFactory(oldFactory);
                 }
                 factoryField.set(null, factory);
             } catch (IllegalArgumentException e) {
@@ -71,9 +71,9 @@ public class Installer {
 
     protected static Field getStaticURLStreamHandlerFactoryField() {
         Field[] fields = URL.class.getDeclaredFields();
-        for ( int i = 0; i < fields.length; i++ ) {
-            if ( Modifier.isStatic( fields[i].getModifiers() ) && fields[i].getType().equals( URLStreamHandlerFactory.class ) ) {
-                fields[i].setAccessible( true );
+        for (int i = 0; i < fields.length; i++) {
+            if (Modifier.isStatic(fields[i].getModifiers()) && fields[i].getType().equals(URLStreamHandlerFactory.class)) {
+                fields[i].setAccessible(true);
                 return fields[i];
             }
         }

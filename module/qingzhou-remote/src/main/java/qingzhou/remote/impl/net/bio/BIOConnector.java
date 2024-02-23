@@ -1,8 +1,8 @@
 package qingzhou.remote.impl.net.bio;
 
-import qingzhou.remote.impl.net.Connector;
 import qingzhou.remote.impl.net.Channel;
 import qingzhou.remote.impl.net.Codec;
+import qingzhou.remote.impl.net.Connector;
 import qingzhou.remote.impl.net.Handler;
 
 import java.io.IOException;

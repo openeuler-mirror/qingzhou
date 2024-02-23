@@ -1,19 +1,19 @@
 package qingzhou.console.login;
 
+import qingzhou.api.Lang;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
+import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.I18nFilter;
+import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.controller.system.HttpServletContext;
-import qingzhou.console.controller.system.I18nFilter;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.console.view.impl.HtmlView;
-import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.api.Lang;
+import qingzhou.console.view.type.HtmlView;
+import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
@@ -190,7 +190,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static boolean check2FA(HttpServletRequest request) throws Exception {
-        return check2FA(request.getParameter(LOGIN_USER), PageBackendService.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
+        return check2FA(request.getParameter(LOGIN_USER), AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
     }
 
     public static boolean check2FA(String user, String login2FA) throws Exception {
@@ -216,7 +216,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static String checkPassword(String user, String password) {
         try {
-            password = PageBackendService.decryptWithConsolePrivateKey(password);
+            password = AsymmetricDecryptor.decryptWithConsolePrivateKey(password);
         } catch (Exception ignored) {
         }
 
@@ -271,7 +271,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     public boolean doFilter(HttpServletContext context) throws Exception {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
-        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
+        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
 
         if (checkPath.startsWith("/static/")) {
             for (String suffix : STATIC_RES_SUFFIX) {
@@ -341,7 +341,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 if (I18n.getI18nLang() == Lang.en) { // header里只能英文
                     response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);
                 } else {
-                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
+                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
                 }
                 response.sendRedirect(request.getContextPath() + LOGIN_PATH);
             }

@@ -1,24 +1,8 @@
 package qingzhou.app.master.user;
 
+import qingzhou.api.*;
+import qingzhou.app.App;
 import qingzhou.app.master.MessageDigestImpl;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.DeleteModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Group;
-import qingzhou.framework.api.Groups;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -102,7 +86,7 @@ public class User extends ModelBase implements AddModel {
             refModel = "node", showToList = true,
             nameI18n = {"可用节点", "en:Available Nodes"},
             infoI18n = {"选择用户可使用的节点。", "en:Select the nodes that are available to the user."})
-    public String nodes = FrameworkContext.SYS_NODE_LOCAL;
+    public String nodes = App.SYS_NODE_LOCAL;
 
     @ModelField(
             group = "security",

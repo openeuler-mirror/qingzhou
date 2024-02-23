@@ -3,7 +3,7 @@ package qingzhou.console.remote;
 import javax.net.ssl.X509TrustManager;
 import java.security.cert.X509Certificate;
 
-public class X509TrustManagerInternal implements X509TrustManager {
+class X509TrustManagerInternal implements X509TrustManager {
     //返回受信任的X509证书数组。
     @Override
     public X509Certificate[] getAcceptedIssuers() {

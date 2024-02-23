@@ -3,28 +3,26 @@ package qingzhou.remote.impl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import qingzhou.api.Response;
+import qingzhou.app.App;
+import qingzhou.app.AppManager;
+import qingzhou.app.RequestImpl;
+import qingzhou.app.ResponseImpl;
+import qingzhou.config.ConfigManager;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
 import qingzhou.crypto.KeyPairCipher;
-import qingzhou.framework.*;
-import qingzhou.framework.api.Logger;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.app.App;
-import qingzhou.framework.app.AppManager;
-import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.pattern.Process;
 import qingzhou.framework.pattern.ProcessSequence;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StreamUtil;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.logger.Logger;
 import qingzhou.remote.impl.net.http.HttpRoute;
 import qingzhou.remote.impl.net.http.HttpServer;
 import qingzhou.remote.impl.net.http.HttpServerServiceImpl;
 import qingzhou.serializer.Serializer;
-import qingzhou.serializer.SerializerService;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,9 +31,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class Controller implements BundleActivator {
-    private ServiceReference<FrameworkContext> serviceReference;
-    private FrameworkContext frameworkContext;
+    private ServiceReference<ConfigManager> configManagerReference;
+    private ServiceReference<Logger> loggerReference;
+    private ServiceReference<CryptoService> cryptoServiceReference;
+    private ServiceReference<Serializer> serializerReference;
+    private ServiceReference<AppManager> appManagerReference;
+
+    private ConfigManager configManager;
     private Logger logger;
+    private CryptoService cryptoService;
+    private Serializer serializer;
+    private AppManager appManager;
+
     private ProcessSequence sequence;
     private Map<String, String> remoteConfig;
     private String remoteHost;
@@ -43,13 +50,23 @@ public class Controller implements BundleActivator {
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
-        serviceReference = bundleContext.getServiceReference(FrameworkContext.class);
-        frameworkContext = bundleContext.getService(serviceReference);
+        configManagerReference = bundleContext.getServiceReference(ConfigManager.class);
+        configManager = bundleContext.getService(configManagerReference);
 
-        remoteConfig = frameworkContext.getConfigManager().getConfig("//remote");
+        loggerReference = bundleContext.getServiceReference(Logger.class);
+        logger = bundleContext.getService(loggerReference);
+
+        cryptoServiceReference = bundleContext.getServiceReference(CryptoService.class);
+        cryptoService = bundleContext.getService(cryptoServiceReference);
+
+        serializerReference = bundleContext.getServiceReference(Serializer.class);
+        serializer = bundleContext.getService(serializerReference);
+
+        appManagerReference = bundleContext.getServiceReference(AppManager.class);
+        appManager = bundleContext.getService(appManagerReference);
+
+        remoteConfig = configManager.getConfig("//remote");
         if (!Boolean.parseBoolean(remoteConfig.get("enabled"))) return;
-
-        logger = frameworkContext.getServiceManager().getService(Logger.class);
 
         sequence = new ProcessSequence(
                 new StartServer(),
@@ -60,7 +77,11 @@ public class Controller implements BundleActivator {
 
     @Override
     public void stop(BundleContext bundleContext) {
-        bundleContext.ungetService(serviceReference);
+        bundleContext.ungetService(configManagerReference);
+        bundleContext.ungetService(loggerReference);
+        bundleContext.ungetService(cryptoServiceReference);
+        bundleContext.ungetService(serializerReference);
+        bundleContext.ungetService(appManagerReference);
 
         if (sequence != null) {
             sequence.undo();
@@ -109,18 +130,15 @@ public class Controller implements BundleActivator {
             byte[] requestData = bos.toByteArray();
 
             // 数据解密，附带认证能力
-            CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
-            String remoteKey = frameworkContext.getConfigManager().getKey(ConfigManager.remoteKeyName);
+            String remoteKey = configManager.getKey(ConfigManager.remoteKeyName);
             KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
             byte[] decryptedData = keyCipher.decrypt(requestData);
 
             // 数据转为请求对象
-            Serializer serializer = frameworkContext.getServiceManager().getService(SerializerService.class).getSerializer();
-            Request request = serializer.deserialize(decryptedData, RequestImpl.class);
+            RequestImpl request = serializer.deserialize(decryptedData, RequestImpl.class);
 
             // 处理数据对象，得到返回数据对象
             Response response = new ResponseImpl();
-            AppManager appManager = frameworkContext.getAppManager();
             App app = appManager.getApp(request.getAppName());
             app.invoke(request, response);
 
@@ -152,16 +170,15 @@ public class Controller implements BundleActivator {
         }
 
         private void register() {
-            List<Map<String, String>> masters = frameworkContext.getConfigManager().getConfigList("//master");
+            List<Map<String, String>> masters = configManager.getConfigList("//master");
 
             masters.forEach(master -> {
                 Map<String, String> map = new HashMap<>();
                 map.put("nodeIp", StringUtil.notBlank(remoteHost) ? remoteHost : String.join(",", IPUtil.getLocalIps()));
                 map.put("nodePort", String.valueOf(remotePort));
-                map.put("apps", String.join(",", frameworkContext.getAppManager().getApps()));
+                map.put("apps", String.join(",", appManager.getApps()));
                 try {
                     // 获取master公钥，计算堆成密钥
-                    CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
                     KeyPairCipher keyPairCipher = cryptoService.getKeyPairCipher(master.get("publicKey"), null);
 //                    String key = cryptoService.getKeyManager().getKeyOrElseInit(null, "", null);
 //                    map.put("key", key);

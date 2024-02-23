@@ -1,18 +1,18 @@
 package qingzhou.app.node;
 
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.app.QingZhouSystemApp;
-import qingzhou.framework.api.AppContext;
+import qingzhou.api.AppContext;
+import qingzhou.app.QingZhouSystemApp;
+import qingzhou.framework.Framework;
 
 public class Main extends QingZhouSystemApp {
-    private static FrameworkContext fc;
+    private static Framework fc;
 
     @Override
     public void start(AppContext appContext) {
-        fc = this.frameworkContext;
+        fc = this.framework;
     }
 
-    public static FrameworkContext getFc() {
+    public static Framework getFc() {
         return fc;
     }
 }

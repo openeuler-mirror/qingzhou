@@ -1,8 +1,8 @@
 package qingzhou.console.login;
 
-import qingzhou.console.controller.system.HttpServletContext;
-import qingzhou.console.page.PageBackendService;
-import qingzhou.console.view.impl.JsonView;
+import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.StringUtil;
 
@@ -25,7 +25,7 @@ public class LoginFreeFilter implements Filter<HttpServletContext> {
                 return true;
             }
         }
-        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
+        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
         if (checkPath.startsWith("/static/")) {
             for (String suffix : LoginManager.STATIC_RES_SUFFIX) {
                 if (checkPath.endsWith(suffix)) {

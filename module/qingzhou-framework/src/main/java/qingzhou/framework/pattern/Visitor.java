@@ -6,7 +6,6 @@ public interface Visitor<T> {
      *
      * @param obj 当前访问的对象
      * @return true 表示继续访问，false 表示终止
-     * @throws java.lang.Exception
      */
     boolean visitAndEnd(T obj) throws Exception;
 }

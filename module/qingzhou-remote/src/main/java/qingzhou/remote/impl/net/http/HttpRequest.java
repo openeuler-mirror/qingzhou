@@ -109,28 +109,28 @@ public class HttpRequest {
     public void setBody(byte[] body) {
         this.body = body;
     }
-    
+
     public String getParam(String name) {
         if (!this.paramMap.containsKey(name)) {
             return null;
         }
         return this.paramMap.get(name).length == 0 ? "" : this.paramMap.get(name)[0];
     }
-    
+
     public String getParam(String name, String defaultValue) {
         if (!this.paramMap.containsKey(name) || this.paramMap.get(name).length == 0) {
             return defaultValue;
         }
         return this.paramMap.get(name)[0];
     }
-    
+
     public String[] getParams(String name) {
         if (!this.paramMap.containsKey(name)) {
             return null;
         }
         return this.paramMap.get(name);
     }
-    
+
     public String[] getParams(String name, String[] defaultValues) {
         if (!this.paramMap.containsKey(name) || this.paramMap.get(name).length == 0) {
             return defaultValues;

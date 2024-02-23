@@ -22,13 +22,15 @@ import java.net.URLStreamHandlerFactory;
 /**
  * A dynamic url stream handler factory that stores the current delegate factory
  * in a thread local variable.
- *
+ * <p>
  * This allows to change the url handler factory at runtime dynamically through
  * the {@link #push(URLStreamHandlerFactory)} and {@link #pop()} methods.
  */
 public class DynamicURLStreamHandlerFactory extends ParentAwareURLStreamHandlerFactory {
 
-    /** The thread local holding the current factory. */
+    /**
+     * The thread local holding the current factory.
+     */
     protected static final ThreadLocal FACTORY = new InheritableThreadLocal();
 
     /**
@@ -36,11 +38,11 @@ public class DynamicURLStreamHandlerFactory extends ParentAwareURLStreamHandlerF
      */
     public static void push(URLStreamHandlerFactory factory) {
         // no need to synchronize as we use a thread local
-        if ( !(factory instanceof ParentAwareURLStreamHandlerFactory) ) {
+        if (!(factory instanceof ParentAwareURLStreamHandlerFactory)) {
             factory = new URLStreamHandlerFactoryWrapper(factory);
         }
         URLStreamHandlerFactory old = (URLStreamHandlerFactory) FACTORY.get();
-        ((ParentAwareURLStreamHandlerFactory)factory).setParentFactory(old);
+        ((ParentAwareURLStreamHandlerFactory) factory).setParentFactory(old);
         FACTORY.set(factory);
     }
 
@@ -48,8 +50,8 @@ public class DynamicURLStreamHandlerFactory extends ParentAwareURLStreamHandlerF
      * Pop the lastest url stream handler factory from the stack.
      */
     public static void pop() {
-        ParentAwareURLStreamHandlerFactory factory = (ParentAwareURLStreamHandlerFactory)FACTORY.get();
-        if ( factory != null ) {
+        ParentAwareURLStreamHandlerFactory factory = (ParentAwareURLStreamHandlerFactory) FACTORY.get();
+        if (factory != null) {
             FACTORY.set(factory.getParent());
         }
     }
@@ -58,8 +60,8 @@ public class DynamicURLStreamHandlerFactory extends ParentAwareURLStreamHandlerF
      * @see ParentAwareURLStreamHandlerFactory#create(java.lang.String)
      */
     protected URLStreamHandler create(String protocol) {
-        ParentAwareURLStreamHandlerFactory factory = (ParentAwareURLStreamHandlerFactory)FACTORY.get();
-        if ( factory != null ) {
+        ParentAwareURLStreamHandlerFactory factory = (ParentAwareURLStreamHandlerFactory) FACTORY.get();
+        if (factory != null) {
             return factory.createURLStreamHandler(protocol);
         }
         return null;

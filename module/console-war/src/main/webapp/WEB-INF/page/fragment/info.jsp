@@ -5,10 +5,7 @@ boolean hasId = PageBackendService.hasIDField(qzRequest);
 boolean chartEnabled = !qzResponse.getDataList().isEmpty();
 boolean isMonitor = MonitorModel.ACTION_NAME_MONITOR.equals(qzRequest.getActionName());
 
-String encodedId = qzRequest.getId();
-if (ConsoleSDK.needEncode(encodedId)) {
-    encodedId = ConsoleSDK.encodeId(encodedId);
-}
+String encodedId = PageBackendService.encodeId(qzRequest.getId());
 String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, MonitorModel.ACTION_NAME_MONITOR + (hasId ? "/" + encodedId : ""));
 %>
 

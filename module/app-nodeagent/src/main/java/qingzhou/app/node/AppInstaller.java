@@ -1,25 +1,21 @@
 package qingzhou.app.node;
 
-import qingzhou.framework.app.AppManager;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.api.*;
+import qingzhou.app.App;
+import qingzhou.app.AppManager;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
-@Model(name = FrameworkContext.SYS_MODEL_APP_INSTALLER, icon = "",
+@Model(name = qingzhou.app.App.SYS_MODEL_APP_INSTALLER, icon = "",
         showToMenu = false,
         nameI18n = {"应用安装器", "en:App Installer"},
         infoI18n = {"执行管理节点下发的应用安装、卸载等指令。",
                 "en:Execute the commands issued by the management node to install and uninstall applications."})
 public class AppInstaller extends ModelBase {
 
-    @ModelAction(name = FrameworkContext.SYS_ACTION_INSTALL,
+    @ModelAction(name = App.SYS_ACTION_INSTALL,
             nameI18n = {"安装应用", "en:Install App"},
             infoI18n = {"在该节点上安装应用。", "en:Install the application on the node."})
     public void installApp(Request request, Response response) throws Exception {
@@ -54,19 +50,19 @@ public class AppInstaller extends ModelBase {
             throw ExceptionUtil.unexpectedException("unknown app type");
         }
 
-        AppManager appManager = Main.getFc().getAppManager();
+        AppManager appManager = Main.getFc().getService(AppManager.class);
         appManager.installApp(app);
     }
 
-    @ModelAction(name = FrameworkContext.SYS_ACTION_UNINSTALL,
+    @ModelAction(name = App.SYS_ACTION_UNINSTALL,
             nameI18n = {"卸载应用", "en:UnInstall App"},
             infoI18n = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {
-        Main.getFc().getAppManager().unInstallApp(request.getId());
+        Main.getFc().getService(AppManager.class).unInstallApp(request.getId());
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
 
     private File getAppsDir() {
-        return Main.getFc().getConfigManager().appsDir();
+        return FileUtil.newFile(Main.getFc().getDomain(), "apps");
     }
 }

@@ -1,8 +1,8 @@
 package qingzhou.app.master;
 
-import qingzhou.framework.ConfigManager;
-import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.ListModel;
+import qingzhou.api.DataStore;
+import qingzhou.api.ListModel;
+import qingzhou.config.ConfigManager;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.Map;
 public class ConsoleDataStore implements DataStore {
     @Override
     public List<Map<String, String>> getAllData(String type) {
-        return Main.getFc().getConfigManager().getConfigList("//" + type);
+        return Main.getFc().getService(ConfigManager.class).getConfigList("//" + type);
     }
 
     @Override
@@ -20,7 +20,7 @@ public class ConsoleDataStore implements DataStore {
         if (StringUtil.notBlank(id)) {
             properties.put(ListModel.FIELD_NAME_ID, id);
         }
-        ConfigManager configManager = Main.getFc().getConfigManager();
+        ConfigManager configManager = Main.getFc().getService(ConfigManager.class);
         if (!configManager.existsConfig(tags)) {
             configManager.addConfig("/root/console", type + "s", null);
         }
@@ -35,6 +35,6 @@ public class ConsoleDataStore implements DataStore {
 
     @Override
     public void deleteDataById(String type, String id) {
-        Main.getFc().getConfigManager().deleteConfig("//" + type + "s/" + type + "[@id='" + id + "']");
+        Main.getFc().getService(ConfigManager.class).deleteConfig("//" + type + "s/" + type + "[@id='" + id + "']");
     }
 }

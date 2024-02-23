@@ -1,27 +1,15 @@
 package qingzhou.app.master.service;
 
+import qingzhou.api.*;
+import qingzhou.app.App;
 import qingzhou.app.master.ConsoleDataStore;
 import qingzhou.app.master.Main;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.ModelManager;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.config.ConfigManager;
 import qingzhou.framework.util.StringUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-@Model(name = FrameworkContext.SYS_MODEL_NODE, icon = "node",
+@Model(name = App.SYS_MODEL_NODE, icon = "node",
         menuName = "Service", menuOrder = 2,
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
@@ -60,7 +48,7 @@ public class Node extends ModelBase implements AddModel {
     @Override
     public String validate(Request request, String fieldName) {
         if (fieldName.equals("id")) {
-            if (request.getParameter("id").equals(FrameworkContext.SYS_NODE_LOCAL)) {
+            if (request.getParameter("id").equals(App.SYS_NODE_LOCAL)) {
                 return "node.id.system";
             }
         }
@@ -68,8 +56,8 @@ public class Node extends ModelBase implements AddModel {
         return null;
     }
 
-    @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + FrameworkContext.SYS_ACTION_MANAGE,
+    @ModelAction(name = qingzhou.app.App.SYS_ACTION_MANAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.app.App.SYS_ACTION_MANAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {
@@ -135,9 +123,9 @@ public class Node extends ModelBase implements AddModel {
 
         NodeDataStore() {
             localNode = new HashMap<>();
-            localNode.put("id", FrameworkContext.SYS_NODE_LOCAL);
+            localNode.put("id", App.SYS_NODE_LOCAL);
             localNode.put("ip", "127.0.0.1");
-            localNode.put("port", Main.getFc().getConfigManager().getConfig("//console").get("port"));
+            localNode.put("port", Main.getFc().getService(ConfigManager.class).getConfig("//console").get("port"));
             localNode.put("running", "true");
         }
 

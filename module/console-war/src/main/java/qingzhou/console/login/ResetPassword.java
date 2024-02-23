@@ -1,14 +1,15 @@
 package qingzhou.console.login;
 
-import qingzhou.console.*;
-import qingzhou.console.controller.rest.AccessControl;
+import qingzhou.api.Lang;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.ConsoleI18n;
+import qingzhou.console.I18n;
+import qingzhou.console.ServerXml;
+import qingzhou.console.controller.AccessControl;
+import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.controller.system.HttpServletContext;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.Lang;
+import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.ExceptionUtil;
 
@@ -63,14 +64,14 @@ public class ResetPassword implements Filter<HttpServletContext> {
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
                 httpServletResponse.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
             } else {
-                httpServletResponse.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
+                httpServletResponse.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
             }
 
             httpServletResponse.sendRedirect(PageBackendService.encodeURL(httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + ConsoleConstants.MODEL_NAME_node +
-                    "/" + FrameworkContext.SYS_APP_MASTER +
+                    "/" + qingzhou.app.App.SYS_APP_MASTER +
                     "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +

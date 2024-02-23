@@ -10,13 +10,7 @@ import qingzhou.bootstrap.Utils;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -30,6 +24,7 @@ public class Main {
         configuration.put(Constants.FRAMEWORK_STORAGE, bundleCache.getCanonicalPath());
         configuration.put(Constants.FRAMEWORK_BEGINNING_STARTLEVEL, String.valueOf(moduleLevel.size()));
 
+        // NOTE: 不要弃用 OSGI，否则手动实现的一个jar一个类加载器的简易版OSGI，无法支持网状式委托加载：从不同模块的 jar 里面加载 api，那么就要求公共服务的接口都得归到一个 jar 里面，这耦合性很大
         List<FrameworkFactory> frameworkFactories = Utils.loadServices(FrameworkFactory.class.getName(), Main.class.getClassLoader());
         FrameworkFactory frameworkFactory = frameworkFactories.get(0);
         Framework framework = frameworkFactory.newFramework(configuration);
