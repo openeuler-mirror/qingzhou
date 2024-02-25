@@ -1,6 +1,6 @@
 package qingzhou.config.impl;
 
-import qingzhou.config.ConfigManager;
+import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
 import qingzhou.framework.Framework;
@@ -13,13 +13,13 @@ import qingzhou.framework.util.XmlUtil;
 import java.io.File;
 import java.util.*;
 
-class LocalConfigManager implements ConfigManager {
+class LocalConfig implements Config {
     private final File serverXml;
     private final File secureFile;
 
     private final KeyCipher MASK_CIPHER;
 
-    LocalConfigManager(Framework framework, CryptoService cryptoService) {
+    LocalConfig(Framework framework, CryptoService cryptoService) {
 
         File domain = framework.getDomain();
         serverXml = FileUtil.newFile(domain, "conf", "server.xml");
@@ -47,11 +47,11 @@ class LocalConfigManager implements ConfigManager {
             }
         }
 
-        if (StringUtil.isBlank(getKey(ConfigManager.publicKeyName))
-                || StringUtil.isBlank(getKey(ConfigManager.privateKeyName))) {
+        if (StringUtil.isBlank(getKey(Config.publicKeyName))
+                || StringUtil.isBlank(getKey(Config.privateKeyName))) {
             String[] keyPair = cryptoService.generateKeyPair(DEFAULT_INIT_KEY.run(null));
-            writeKey(ConfigManager.publicKeyName, keyPair[0]);
-            writeKey(ConfigManager.privateKeyName, keyPair[1]);
+            writeKey(Config.publicKeyName, keyPair[0]);
+            writeKey(Config.privateKeyName, keyPair[1]);
         }
     }
 

@@ -10,10 +10,10 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>qingzhou-api</module>
         <module>module</module>
         <module>package</module>
         <module>test</module>
-        <module>qingzhou-api</module>
     </modules>
 
     <properties>

@@ -3,7 +3,7 @@ package qingzhou.console.jmx;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
-import qingzhou.console.controller.system.TrustedIPChecker;
+import qingzhou.console.controller.TrustedIPChecker;
 import qingzhou.console.login.LoginManager;
 import qingzhou.framework.util.StringUtil;
 

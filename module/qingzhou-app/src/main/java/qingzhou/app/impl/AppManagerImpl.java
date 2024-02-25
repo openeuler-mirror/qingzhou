@@ -1,10 +1,10 @@
 package qingzhou.app.impl;
 
+import org.osgi.framework.BundleContext;
 import qingzhou.api.*;
 import qingzhou.app.App;
 import qingzhou.app.AppManager;
 import qingzhou.app.QingZhouSystemApp;
-import qingzhou.app.impl.filter.UniqueFilter;
 import qingzhou.framework.Framework;
 import qingzhou.framework.util.*;
 
@@ -22,9 +22,11 @@ import java.util.Set;
 public class AppManagerImpl implements AppManager {
     private final Map<String, App> apps = new HashMap<>();
     private final Framework framework;
+    private final BundleContext bundleContext;
 
-    public AppManagerImpl(Framework framework) {
+    public AppManagerImpl(Framework framework, BundleContext bundleContext) {
         this.framework = framework;
+        this.bundleContext = bundleContext;
     }
 
     @Override
@@ -73,7 +75,7 @@ public class AppManagerImpl implements AppManager {
     }
 
     private AppImpl buildApp(String appName, File appDir, boolean needCommonApp) throws Exception {
-        File[] appFiles = new File(appDir, "lib").listFiles();
+        File[] appFiles = appDir.listFiles();
         if (appFiles == null) {
             throw ExceptionUtil.unexpectedException("app lib not found: " + appDir.getName());
         }
@@ -116,7 +118,9 @@ public class AppManagerImpl implements AppManager {
                 QingZhouApp qingZhouApp = (QingZhouApp) loader.loadClass(appClass).newInstance();
                 app.setQingZhouApp(qingZhouApp);
                 if (qingZhouApp instanceof QingZhouSystemApp) {
-                    ((QingZhouSystemApp) qingZhouApp).setFrameworkContext(framework);
+                    QingZhouSystemApp qingZhouSystemApp = (QingZhouSystemApp) qingZhouApp;
+                    qingZhouSystemApp.setFrameworkContext(framework);
+                    qingZhouSystemApp.setBundleContext(bundleContext);
                 }
             }
         }

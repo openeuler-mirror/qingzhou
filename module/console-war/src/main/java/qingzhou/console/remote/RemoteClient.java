@@ -1,7 +1,7 @@
 package qingzhou.console.remote;
 
 import qingzhou.app.ResponseImpl;
-import qingzhou.config.ConfigManager;
+import qingzhou.config.Config;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
@@ -31,7 +31,7 @@ public class RemoteClient {
             KeyCipher cipher;
             try {
                 CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
-                String localKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.localKeyName);
+                String localKey = ConsoleWarHelper.getConfig().getKey(Config.localKeyName);
                 cipher = cryptoService.getKeyCipher(cryptoService.getKeyCipher(localKey).decrypt(remoteKey));
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");

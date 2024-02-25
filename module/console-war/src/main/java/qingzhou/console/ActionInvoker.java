@@ -4,7 +4,7 @@ import qingzhou.api.*;
 import qingzhou.app.App;
 import qingzhou.app.RequestImpl;
 import qingzhou.app.ResponseImpl;
-import qingzhou.config.ConfigManager;
+import qingzhou.config.Config;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
@@ -195,7 +195,7 @@ public class ActionInvoker {
                 String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
                 String port = nodeById.get("port");
                 String remoteUrl = String.format("http://%s:%s", ip, port);
-                String remoteKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.remoteKeyName);
+                String remoteKey = ConsoleWarHelper.getConfig().getKey(Config.remoteKeyName);
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
             }
             resultOnNode.put(node, responseOnNode);

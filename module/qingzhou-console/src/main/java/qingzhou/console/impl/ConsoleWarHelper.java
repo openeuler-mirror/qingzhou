@@ -3,7 +3,7 @@ package qingzhou.console.impl;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.app.App;
-import qingzhou.config.ConfigManager;
+import qingzhou.config.Config;
 import qingzhou.console.AppStub;
 import qingzhou.console.AppStubManager;
 import qingzhou.crypto.CryptoService;
@@ -13,8 +13,8 @@ import qingzhou.serializer.Serializer;
 import java.io.File;
 
 public class ConsoleWarHelper {
-    public static ConfigManager getConfigManager() {
-        return Controller.configManager;
+    public static Config getConfig() {
+        return Controller.config;
     }
 
     public static App getLocalApp(String appName) {

@@ -27,7 +27,7 @@ public class Controller implements BundleActivator {
 
         Controller.logger = context.getService(loggerReference);
         Framework framework = context.getService(frameworkContextReference);
-        this.appManager = new AppManagerImpl(framework);
+        this.appManager = new AppManagerImpl(framework, context);
         startAppManager(framework);
         registration = context.registerService(AppManager.class, appManager, null);
     }

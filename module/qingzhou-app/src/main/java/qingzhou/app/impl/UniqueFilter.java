@@ -1,4 +1,4 @@
-package qingzhou.app.impl.filter;
+package qingzhou.app.impl;
 
 import qingzhou.api.*;
 import qingzhou.app.I18NStore;

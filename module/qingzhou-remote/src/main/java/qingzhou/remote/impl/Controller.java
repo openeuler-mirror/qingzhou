@@ -8,7 +8,7 @@ import qingzhou.app.App;
 import qingzhou.app.AppManager;
 import qingzhou.app.RequestImpl;
 import qingzhou.app.ResponseImpl;
-import qingzhou.config.ConfigManager;
+import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
 import qingzhou.crypto.KeyPairCipher;
@@ -31,13 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class Controller implements BundleActivator {
-    private ServiceReference<ConfigManager> configManagerReference;
-    private ServiceReference<Logger> loggerReference;
-    private ServiceReference<CryptoService> cryptoServiceReference;
-    private ServiceReference<Serializer> serializerReference;
-    private ServiceReference<AppManager> appManagerReference;
-
-    private ConfigManager configManager;
+    private Config config;
     private Logger logger;
     private CryptoService cryptoService;
     private Serializer serializer;
@@ -50,22 +44,22 @@ public class Controller implements BundleActivator {
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
-        configManagerReference = bundleContext.getServiceReference(ConfigManager.class);
-        configManager = bundleContext.getService(configManagerReference);
+        ServiceReference<Config> configReference = bundleContext.getServiceReference(Config.class);
+        config = bundleContext.getService(configReference);
 
-        loggerReference = bundleContext.getServiceReference(Logger.class);
+        ServiceReference<Logger> loggerReference = bundleContext.getServiceReference(Logger.class);
         logger = bundleContext.getService(loggerReference);
 
-        cryptoServiceReference = bundleContext.getServiceReference(CryptoService.class);
+        ServiceReference<CryptoService> cryptoServiceReference = bundleContext.getServiceReference(CryptoService.class);
         cryptoService = bundleContext.getService(cryptoServiceReference);
 
-        serializerReference = bundleContext.getServiceReference(Serializer.class);
+        ServiceReference<Serializer> serializerReference = bundleContext.getServiceReference(Serializer.class);
         serializer = bundleContext.getService(serializerReference);
 
-        appManagerReference = bundleContext.getServiceReference(AppManager.class);
+        ServiceReference<AppManager> appManagerReference = bundleContext.getServiceReference(AppManager.class);
         appManager = bundleContext.getService(appManagerReference);
 
-        remoteConfig = configManager.getConfig("//remote");
+        remoteConfig = config.getConfig("//remote");
         if (!Boolean.parseBoolean(remoteConfig.get("enabled"))) return;
 
         sequence = new ProcessSequence(
@@ -77,12 +71,6 @@ public class Controller implements BundleActivator {
 
     @Override
     public void stop(BundleContext bundleContext) {
-        bundleContext.ungetService(configManagerReference);
-        bundleContext.ungetService(loggerReference);
-        bundleContext.ungetService(cryptoServiceReference);
-        bundleContext.ungetService(serializerReference);
-        bundleContext.ungetService(appManagerReference);
-
         if (sequence != null) {
             sequence.undo();
         }
@@ -130,7 +118,7 @@ public class Controller implements BundleActivator {
             byte[] requestData = bos.toByteArray();
 
             // 数据解密，附带认证能力
-            String remoteKey = configManager.getKey(ConfigManager.remoteKeyName);
+            String remoteKey = config.getKey(Config.remoteKeyName);
             KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
             byte[] decryptedData = keyCipher.decrypt(requestData);
 
@@ -170,7 +158,7 @@ public class Controller implements BundleActivator {
         }
 
         private void register() {
-            List<Map<String, String>> masters = configManager.getConfigList("//master");
+            List<Map<String, String>> masters = config.getConfigList("//master");
 
             masters.forEach(master -> {
                 Map<String, String> map = new HashMap<>();

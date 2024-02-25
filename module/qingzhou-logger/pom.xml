@@ -11,37 +11,6 @@
 
     <artifactId>qingzhou-logger</artifactId>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>assembly</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <archive>
-                                <manifestEntries>
-                                    <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                                    <Bundle-Activator>qingzhou.logger.impl.Controller</Bundle-Activator>
-
-                                    <Import-Package>org.osgi.framework</Import-Package>
-                                    <Export-Package>qingzhou.logger</Export-Package>
-                                </manifestEntries>
-                            </archive>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -73,4 +42,34 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>assembly</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <archive>
+                                <manifestEntries>
+                                    <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                                    <Bundle-Activator>qingzhou.logger.impl.Controller</Bundle-Activator>
+
+                                    <Import-Package>org.osgi.framework</Import-Package>
+                                    <Export-Package>qingzhou.logger</Export-Package>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

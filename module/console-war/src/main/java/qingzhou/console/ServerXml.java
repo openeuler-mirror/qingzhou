@@ -21,24 +21,24 @@ public class ServerXml { // todo 考虑替代：ConfigManager
     }
 
     private Map<String, String> getAttributes(String path) {
-        return ConsoleWarHelper.getConfigManager().getConfig("/root/" + path);
+        return ConsoleWarHelper.getConfig().getConfig("/root/" + path);
     }
 
     /********************** console ***********************/
     public Map<String, String> getNodeById(String id) {
-        return ConsoleWarHelper.getConfigManager().getConfig(String.format("/root/console/nodes/node[@%s='%s']", "id", id));
+        return ConsoleWarHelper.getConfig().getConfig(String.format("/root/console/nodes/node[@%s='%s']", "id", id));
     }
 
     public boolean verCodeEnabled() {
-        return Boolean.parseBoolean(ConsoleWarHelper.getConfigManager().getConfig("/root/console/auth").get("verCodeEnabled"));
+        return Boolean.parseBoolean(ConsoleWarHelper.getConfig().getConfig("/root/console/auth").get("verCodeEnabled"));
     }
 
     public boolean isJmxEnabled() {
-        return Boolean.parseBoolean(ConsoleWarHelper.getConfigManager().getConfig("//jmx").get("enabled"));
+        return Boolean.parseBoolean(ConsoleWarHelper.getConfig().getConfig("//jmx").get("enabled"));
     }
 
     public Map<String, String> jmx() {
-        return ConsoleWarHelper.getConfigManager().getConfig("//jmx");
+        return ConsoleWarHelper.getConfig().getConfig("//jmx");
     }
     public String trustedIP() {
         return consoleAttribute("trustedIP");
@@ -57,7 +57,7 @@ public class ServerXml { // todo 考虑替代：ConfigManager
     }
 
     private String consoleAttribute(String specifiedKey) {
-        return ConsoleWarHelper.getConfigManager().getConfig("/root/console").get(specifiedKey);
+        return ConsoleWarHelper.getConfig().getConfig("/root/console").get(specifiedKey);
     }
 
     public Map<String, String> user(String loginUser) {

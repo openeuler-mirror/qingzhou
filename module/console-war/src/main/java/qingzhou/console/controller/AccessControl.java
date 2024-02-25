@@ -3,9 +3,11 @@ package qingzhou.console.controller;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelManager;
+import qingzhou.config.Config;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.StringUtil;
 
@@ -53,14 +55,14 @@ public class AccessControl implements Filter<HttpServletContext> {
             return true;
         }
 
-        ConfigManager configManager = FrameworkContextImpl.getInstance().getConfigManager();
-        Map<String, String> userPro = configManager.getConfig("/user[@id='" + user + "']");
+        Config config = ConsoleWarHelper.getConfig();
+        Map<String, String> userPro = config.getConfig("/user[@id='" + user + "']");
         String userNodes = userPro.getOrDefault("nodes", "");
         Set<String> userNodeSet = Arrays.stream(userNodes.split(","))
                 .filter(node -> node != null && !node.trim().isEmpty())
                 .map(String::trim).collect(Collectors.toSet());
 
-        Map<String, String> app = configManager.getConfig("/app[@id='" + appName + "']");
+        Map<String, String> app = config.getConfig("/app[@id='" + appName + "']");
         String appNodes = app.getOrDefault("nodes", "");
 
         return Arrays.stream(appNodes.split(",")).map(String::trim).anyMatch(userNodeSet::contains);

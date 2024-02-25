@@ -4,9 +4,10 @@ import org.apache.catalina.Manager;
 import org.apache.catalina.Session;
 import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.session.StandardSession;
+import qingzhou.app.App;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ServerXml;
-import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.framework.FrameworkContext;
+import qingzhou.console.page.PageBackendService;
 
 import javax.security.auth.Subject;
 import javax.servlet.*;
@@ -35,7 +36,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
         this.actionName = actionName;
         this.properties = properties;
         String id = properties == null ? null : properties.getProperty("id");
-        this.id = ConsoleSDK.needEncode(id) ? id : ConsoleSDK.encodeId(id);
+        this.id = PageBackendService.encodeId(id);
     }
 
     @Override
@@ -80,7 +81,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getPathInfo() {
-        String uri = "/json/" + FrameworkContext.MANAGE_TYPE_APP + "/" + FrameworkContext.SYS_APP_MASTER + "/" + modelName + "/" + actionName;
+        String uri = "/json/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + modelName + "/" + actionName;
         if (this.id != null) {
             uri = uri + "/" + id;
         }
@@ -136,7 +137,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getRequestURI() {
-        return "/console/jmx/json/" + FrameworkContext.MANAGE_TYPE_APP + "/" + FrameworkContext.SYS_APP_MASTER + "/" + modelName + "/" + actionName;
+        return "/console/jmx/json/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + modelName + "/" + actionName;
     }
 
     @Override

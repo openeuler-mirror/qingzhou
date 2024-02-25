@@ -59,6 +59,7 @@ public class RESTController extends HttpServlet {
         return result;
     }
 
+    private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
             new AsymmetricDecryptor(),// 解密前端的 password 类型的表单域
             // 执行具体的业务逻辑
@@ -71,24 +72,27 @@ public class RESTController extends HttpServlet {
     };
     private final ViewManager viewManager = new ViewManager();
 
-
     @Override
     public void init() throws ServletException {
         super.init();
-        instance = this;
+        thisInstance = this;
     }
 
-    public void invoke(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        doPost(req, resp);
+    public static void invokeReq(HttpServletRequest req, HttpServletResponse resp) {
+        thisInstance.doRest(req, resp);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        doPost(req, resp);
+        doRest(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
+        doRest(req, resp);
+    }
+
+    private void doRest(HttpServletRequest req, HttpServletResponse resp) {
         Map<String, String> fileAttachments = null;
         try {
             fileAttachments = prepareUploadFiles(req);// 必须在最开始处理上传文件！！！一旦调用了 request.getParameter方法就会丢失上传文件内容

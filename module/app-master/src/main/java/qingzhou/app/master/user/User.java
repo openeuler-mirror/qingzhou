@@ -2,7 +2,9 @@ package qingzhou.app.master.user;
 
 import qingzhou.api.*;
 import qingzhou.app.App;
-import qingzhou.app.master.MessageDigestImpl;
+import qingzhou.app.master.Main;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.MessageDigest;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -25,7 +27,6 @@ public class User extends ModelBase implements AddModel {
     public static final int defLimitRepeats = 5;
     public static final String DATA_SEPARATOR = ",";
     public static final String PASSWORD_FLAG = "***************";
-    public static final MessageDigestImpl messageDigest = new MessageDigestImpl();
 
     @Override
     public void init() {
@@ -298,6 +299,7 @@ public class User extends ModelBase implements AddModel {
             String digestAlg = newUser.get("digestAlg");
             String saltLength = newUser.get("saltLength");
             String iterations = newUser.get("iterations");
+            MessageDigest messageDigest = Main.getService(CryptoService.class).getMessageDigest();
             newUser.put(pwdKey, messageDigest.digest(password,
                     digestAlg,
                     Integer.parseInt(saltLength),

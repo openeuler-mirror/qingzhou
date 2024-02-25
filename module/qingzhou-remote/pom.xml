@@ -19,7 +19,7 @@
                             <Bundle-Activator>qingzhou.remote.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                qingzhou.serializer,qingzhou.config,org.osgi.framework
+                                qingzhou.app,qingzhou.serializer,qingzhou.config,org.osgi.framework
                             </Import-Package>
                         </manifestEntries>
                     </archive>

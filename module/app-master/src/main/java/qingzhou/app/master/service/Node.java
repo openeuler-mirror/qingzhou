@@ -4,7 +4,7 @@ import qingzhou.api.*;
 import qingzhou.app.App;
 import qingzhou.app.master.ConsoleDataStore;
 import qingzhou.app.master.Main;
-import qingzhou.config.ConfigManager;
+import qingzhou.config.Config;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.*;
@@ -125,7 +125,7 @@ public class Node extends ModelBase implements AddModel {
             localNode = new HashMap<>();
             localNode.put("id", App.SYS_NODE_LOCAL);
             localNode.put("ip", "127.0.0.1");
-            localNode.put("port", Main.getFc().getService(ConfigManager.class).getConfig("//console").get("port"));
+            localNode.put("port", Main.getService(Config.class).getConfig("//console").get("port"));
             localNode.put("running", "true");
         }
 

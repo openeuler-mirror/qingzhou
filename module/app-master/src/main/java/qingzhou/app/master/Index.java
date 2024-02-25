@@ -26,8 +26,8 @@ public class Index extends ModelBase {
                     "en:View Qingzhou product and licensing information."})
     public void show(Request request, Response response) throws Exception {
         Index index = new Index();
-        index.name = Main.getFc().getName();
-        index.version = Main.getFc().getVersion();
+        index.name = Main.getFramework().getName();
+        index.version = Main.getFramework().getVersion();
         response.addDataObject(index);
     }
 

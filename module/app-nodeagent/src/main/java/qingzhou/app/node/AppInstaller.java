@@ -50,7 +50,7 @@ public class AppInstaller extends ModelBase {
             throw ExceptionUtil.unexpectedException("unknown app type");
         }
 
-        AppManager appManager = Main.getFc().getService(AppManager.class);
+        AppManager appManager = Main.getService(AppManager.class);
         appManager.installApp(app);
     }
 
@@ -58,7 +58,7 @@ public class AppInstaller extends ModelBase {
             nameI18n = {"卸载应用", "en:UnInstall App"},
             infoI18n = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {
-        Main.getFc().getService(AppManager.class).unInstallApp(request.getId());
+        Main.getService(AppManager.class).unInstallApp(request.getId());
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
 

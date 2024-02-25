@@ -4,7 +4,7 @@ package qingzhou.config;
 import java.util.List;
 import java.util.Map;
 
-public interface ConfigManager {
+public interface Config {
     String localKeyName = "localKey";
     String remoteKeyName = "remoteKey";
     String remotePublicKeyName = "remotePublicKey"; // TODO: 节点使用，用于和集中管理通信加密

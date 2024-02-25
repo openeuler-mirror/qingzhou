@@ -4,7 +4,7 @@ import qingzhou.api.FieldType;
 import qingzhou.api.ModelField;
 import qingzhou.api.ModelManager;
 import qingzhou.app.RequestImpl;
-import qingzhou.config.ConfigManager;
+import qingzhou.config.Config;
 import qingzhou.console.RestContext;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.pattern.Filter;
@@ -41,8 +41,8 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
             return input;
         }
         try {
-            String pubKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.publicKeyName);
-            String priKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.privateKeyName);
+            String pubKey = ConsoleWarHelper.getConfig().getKey(Config.publicKeyName);
+            String priKey = ConsoleWarHelper.getConfig().getKey(Config.privateKeyName);
             return ConsoleWarHelper.getCryptoService().getKeyPairCipher(pubKey, priKey).decryptWithPrivateKey(input);
         } catch (Exception e) {
             ConsoleWarHelper.getLogger().warn("Decryption error", e);
@@ -56,6 +56,6 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
     }
 
     public static String getPublicKeyString() throws Exception {
-        return ConsoleWarHelper.getConfigManager().getKey(ConfigManager.publicKeyName);
+        return ConsoleWarHelper.getConfig().getKey(Config.publicKeyName);
     }
 }

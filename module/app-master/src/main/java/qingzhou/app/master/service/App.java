@@ -9,7 +9,7 @@ import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Model(name = qingzhou.app.App.SYS_MODEL_APP, icon = "cube-alt",
         menuName = "Service", menuOrder = 1,
@@ -92,7 +92,7 @@ public class App extends ModelBase implements AddModel {
         if ("nodes".equals(fieldName)) {
             String userName = request.getUserName();
             List<Option> nodeList = new ArrayList<>();
-            nodeList.add(Option.of(FrameworkContext.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
+            nodeList.add(Option.of(qingzhou.app.App.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
             Set<String> nodeSet = new HashSet<>();
             try {
                 if ("qingzhou".equals(userName)) {
@@ -108,7 +108,7 @@ public class App extends ModelBase implements AddModel {
                             .filter(StringUtil::notBlank)
                             .forEach(nodeSet::add);
                 }
-                nodeSet.remove(FrameworkContext.SYS_NODE_LOCAL);
+                nodeSet.remove(qingzhou.app.App.SYS_NODE_LOCAL);
                 nodeSet.stream().map(Option::of).forEach(nodeList::add);
             } catch (Exception ignored) {
             }
@@ -173,7 +173,7 @@ public class App extends ModelBase implements AddModel {
             for (String node : nodes) {
                 try {
                     if (qingzhou.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getFc().getService(AppManager.class).getApp(qingzhou.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
+                        Main.getService(AppManager.class).getApp(qingzhou.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
                     } else {
                         // TODO：调用远端 node 上的app add
                     }
@@ -214,7 +214,7 @@ public class App extends ModelBase implements AddModel {
             for (String node : nodes) {
                 try {
                     if (qingzhou.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getFc().getService(AppManager.class).getApp(qingzhou.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
+                        Main.getService(AppManager.class).getApp(qingzhou.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
                     } else {
                         // TODO：调用远端 node 上的app delete
                     }

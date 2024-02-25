@@ -2,8 +2,8 @@ package qingzhou.console.jmx;
 
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
+import qingzhou.console.controller.I18nFilter;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.controller.system.I18nFilter;
 
 import javax.servlet.http.HttpSession;
 import java.util.Properties;
@@ -22,7 +22,7 @@ public class JmxImpl implements JmxImplMBean {
             JmxHttpServletResponse response = new JmxHttpServletResponse();
             I18nFilter.setI18nLang(request, null);
 
-            RESTController.instance.invoke(request, response);
+            RESTController.invokeReq(request, response);
             return response.getResult();
         } catch (Exception e) {
             e.printStackTrace();

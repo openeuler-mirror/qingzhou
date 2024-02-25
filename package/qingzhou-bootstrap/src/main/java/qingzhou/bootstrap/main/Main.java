@@ -50,30 +50,27 @@ public class Main {
 
         TreeMap<Integer, List<File>> startLevels = new TreeMap<>();
 
-        String[] searchDir = {"module", "service"};
-        for (String dir : searchDir) {
-            File[] modules = new File(Utils.getLibDir(), dir).listFiles();
-            for (File module : Objects.requireNonNull(modules)) {
-                String fileName = module.getName();
-                String suffix = ".jar";
-                int i = fileName.indexOf(suffix);
-                if (i > 0) {
-                    String moduleName = fileName.substring(0, i);
+        File[] modules = new File(Utils.getLibDir(), "module").listFiles();
+        for (File module : Objects.requireNonNull(modules)) {
+            String fileName = module.getName();
+            String suffix = ".jar";
+            int i = fileName.indexOf(suffix);
+            if (i > 0) {
+                String moduleName = fileName.substring(0, i);
 
-                    boolean match = false;
-                    for (Map.Entry<Integer, List<String>> entry : levelProperties.entrySet()) {
-                        if (entry.getValue().contains(moduleName)) {
-                            List<File> files = startLevels.computeIfAbsent(entry.getKey(), integer -> new ArrayList<>());
-                            files.add(module);
-                            match = true;
-                            break;
-                        }
-                    }
-
-                    if (!match) {
-                        List<File> files = startLevels.computeIfAbsent(otherLevel, integer -> new ArrayList<>());
+                boolean match = false;
+                for (Map.Entry<Integer, List<String>> entry : levelProperties.entrySet()) {
+                    if (entry.getValue().contains(moduleName)) {
+                        List<File> files = startLevels.computeIfAbsent(entry.getKey(), integer -> new ArrayList<>());
                         files.add(module);
+                        match = true;
+                        break;
                     }
+                }
+
+                if (!match) {
+                    List<File> files = startLevels.computeIfAbsent(otherLevel, integer -> new ArrayList<>());
+                    files.add(module);
                 }
             }
         }

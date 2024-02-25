@@ -11,27 +11,6 @@
 
     <artifactId>qingzhou-config</artifactId>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-Activator>qingzhou.config.impl.Controller</Bundle-Activator>
-
-                            <Import-Package>
-                                org.osgi.framework,qingzhou.framework,qingzhou.crypto
-                            </Import-Package>
-                            <Export-Package>qingzhou.config</Export-Package>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
@@ -45,4 +24,25 @@
             <version>0.1.0</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                            <Bundle-Activator>qingzhou.config.impl.Controller</Bundle-Activator>
+
+                            <Import-Package>
+                                qingzhou.crypto,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,org.osgi.framework
+                            </Import-Package>
+                            <Export-Package>qingzhou.config</Export-Package>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

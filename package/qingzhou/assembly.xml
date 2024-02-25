@@ -45,26 +45,16 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-logger</include>
-                <include>${project.groupId}:qingzhou-serializer</include>
-                <include>${project.groupId}:qingzhou-crypto</include>
-                <include>${project.groupId}:qingzhou-ssh</include>
-            </includes>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useProjectAttachments>false</useProjectAttachments>
-            <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/service</outputDirectory>
-        </dependencySet>
-
-        <dependencySet>
-            <includes>
                 <include>${project.groupId}:qingzhou-api</include>
                 <include>${project.groupId}:qingzhou-framework</include>
                 <include>${project.groupId}:qingzhou-console</include>
                 <include>${project.groupId}:qingzhou-remote</include>
                 <include>${project.groupId}:qingzhou-app</include>
                 <include>${project.groupId}:qingzhou-config</include>
+                <include>${project.groupId}:qingzhou-logger</include>
+                <include>${project.groupId}:qingzhou-serializer</include>
+                <include>${project.groupId}:qingzhou-crypto</include>
+                <include>${project.groupId}:qingzhou-ssh</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

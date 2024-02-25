@@ -29,7 +29,7 @@ import java.util.Objects;
 
 public class JMXServerHolder implements ServletContextListener {
 
-    String CONSOLE_M_BEAN_NAME = "QingZhou:name=console";
+    String CONSOLE_M_BEAN_NAME = "Qingzhou:name=console";
     private static final JMXServerHolder instance = new JMXServerHolder();
     private JMXConnectorServer server;
     private ObjectName objectName;
