@@ -69,17 +69,18 @@ public class AccessControl implements Filter<HttpServletContext> {
     }
 
     public static boolean isNoNeedPermissionUri(HttpServletRequest request) {
-//        String servletPathAndPathInfo = ConsoleUtil.retrieveServletPathAndPathInfo(request);
-//
-//        // 需要能调用加密接口，才能进行修改密码，故此设定：免权限的接口不需要修改密码即可认证。
-//        String check = wrapCheckingPath(servletPathAndPathInfo);
+        String servletPathAndPathInfo = RESTController.retrieveServletPathAndPathInfo(request);
+
+        // 需要能调用加密接口，才能进行修改密码，故此设定：免权限的接口不需要修改密码即可认证。
+        String check = wrapCheckingPath(servletPathAndPathInfo);
 //        for (String uri : generalUris) {
 //            if (check.startsWith(uri)) {
 //                return true;
 //            }
 //        }
 
-        return false;
+//        return false;
+        return true;// todo
     }
 
     private static String wrapCheckingPath(String uri) {
