@@ -1,12 +1,20 @@
 package qingzhou.app.impl;
 
 import org.osgi.framework.BundleContext;
-import qingzhou.api.*;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelManager;
+import qingzhou.api.QingZhouApp;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.app.App;
 import qingzhou.app.AppManager;
 import qingzhou.app.QingZhouSystemApp;
 import qingzhou.framework.Framework;
-import qingzhou.framework.util.*;
+import qingzhou.framework.util.ClassLoaderUtil;
+import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.util.FileUtil;
+import qingzhou.framework.util.ObjectUtil;
+import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -96,7 +104,7 @@ public class AppManagerImpl implements AppManager {
         AppContextImpl appContext = new AppContextImpl(framework);
         appContext.setAppName(appName);
 
-        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLibs, QingZhouApp.class.getClassLoader());
+        URLClassLoader loader = ClassLoaderUtil.newURLClassLoader(appLibs, needCommonApp ? QingZhouApp.class.getClassLoader() : QingZhouSystemApp.class.getClassLoader());
         app.setLoader(loader);
         ConsoleContextImpl consoleContext = new ConsoleContextImpl();
         ModelManager modelManager = buildModelManager(appLibs, loader);

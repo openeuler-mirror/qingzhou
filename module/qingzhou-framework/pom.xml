@@ -28,7 +28,7 @@
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                             <Bundle-Activator>qingzhou.framework.impl.Controller</Bundle-Activator>
 
-                            <Import-Package>org.osgi.framework</Import-Package>
+                            <Import-Package>org.osgi.framework,javax.xml.parsers,javax.xml.transform,javax.xml.xpath,org.xml.sax,org.w3c.dom</Import-Package>
                             <Export-Package>
                                 qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util
                             </Export-Package>
