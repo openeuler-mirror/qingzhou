@@ -36,7 +36,7 @@
                             <Bundle-Activator>qingzhou.config.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                qingzhou.crypto,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,org.osgi.framework
+                                qingzhou.crypto,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,org.osgi.framework,javax.xml.parsers,javax.xml.transform,javax.xml.xpath,org.xml.sax,org.w3c.dom
                             </Import-Package>
                             <Export-Package>qingzhou.config</Export-Package>
                         </manifestEntries>

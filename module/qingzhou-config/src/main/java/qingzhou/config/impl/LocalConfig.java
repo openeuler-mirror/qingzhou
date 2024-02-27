@@ -8,7 +8,6 @@ import qingzhou.framework.pattern.Callback;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.XmlUtil;
 
 import java.io.File;
 import java.util.*;

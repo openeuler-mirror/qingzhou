@@ -69,7 +69,7 @@
                             <Bundle-Activator>qingzhou.console.impl.Controller</Bundle-Activator>
 
                             <Import-Package>
-                                qingzhou.crypto,qingzhou.logger,qingzhou.serializer,qingzhou.config,qingzhou.app,qingzhou.api,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,org.osgi.framework,org.w3c.dom,org.xml.sax,org.xml.sax.ext,org.xml.sax.helpers,org.ietf.jgss,javax.xml.stream,javax.xml.transform,javax.xml.parsers,javax.net.ssl,javax.management,javax.management.modelmbean,javax.naming,javax.security.auth.login
+                                qingzhou.crypto,qingzhou.logger,qingzhou.serializer,qingzhou.config,qingzhou.app,qingzhou.api,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,org.osgi.framework,javax.net.ssl,javax.management,javax.management.modelmbean,javax.naming,org.ietf.jgss,org.xml.sax.ext,org.xml.sax,javax.xml.parsers,org.xml.sax.helpers,javax.security.auth.login,javax.xml.transform,org.w3c.dom,javax.xml.stream
                             </Import-Package>
                             <Export-Package>qingzhou.console</Export-Package>
                         </manifestEntries>
