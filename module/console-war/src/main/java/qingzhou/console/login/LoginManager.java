@@ -42,6 +42,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static final String ACCEPT_AGREEMENT_MSG_KEY = "page.login.agreement";
     public static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
+    public static final String[] noLoginCheckUris = {LOGIN_PATH, VerCode.CAPTCHA_URI, ConsoleConstants.REGISTER_URI};
     private static final Map<String, LockOutRealm> userLockOutRealms = new LinkedHashMap<String, LockOutRealm>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, LockOutRealm> eldest) {

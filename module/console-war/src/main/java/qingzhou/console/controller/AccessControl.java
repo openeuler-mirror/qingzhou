@@ -13,7 +13,11 @@ import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AccessControl implements Filter<HttpServletContext> {
@@ -71,6 +75,15 @@ public class AccessControl implements Filter<HttpServletContext> {
     public static boolean isNoNeedPermissionUri(HttpServletRequest request) {
         String servletPathAndPathInfo = RESTController.retrieveServletPathAndPathInfo(request);
 
+        for (String uri : LoginManager.noLoginCheckUris) {
+            if (servletPathAndPathInfo.equals(uri)) {
+                return true;
+            }
+        }
+
+        if (isNoLoginCheckUris(servletPathAndPathInfo)) {
+            return true;
+        }
         // 需要能调用加密接口，才能进行修改密码，故此设定：免权限的接口不需要修改密码即可认证。
         String check = wrapCheckingPath(servletPathAndPathInfo);
 //        for (String uri : generalUris) {
@@ -79,8 +92,18 @@ public class AccessControl implements Filter<HttpServletContext> {
 //            }
 //        }
 
-//        return false;
-        return true;// todo
+        return false;
+    }
+
+    public static boolean isNoLoginCheckUris(String path) {
+        if (path.startsWith("/static/")) {
+            for (String suffix : LoginManager.STATIC_RES_SUFFIX) {
+                if (path.endsWith(suffix)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static String wrapCheckingPath(String uri) {
