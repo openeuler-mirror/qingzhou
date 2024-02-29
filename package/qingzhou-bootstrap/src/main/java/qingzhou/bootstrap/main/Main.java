@@ -102,17 +102,11 @@ public class Main {
     }
 
     private static void waitForStop() throws Exception {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                super.run();
-
-                ListIterator<ModuleLoader> iterator = MODULE_LOADER_LIST.listIterator();
-                while (iterator.hasPrevious()) {
-                    iterator.previous().stop(MODULE_CONTEXT);
-                }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            for (int i = MODULE_LOADER_LIST.size() - 1; i >= 0; i--) {
+                MODULE_LOADER_LIST.get(i).stop(MODULE_CONTEXT);
             }
-        });
+        }));
 
         synchronized (Main.class) {
             Main.class.wait();
