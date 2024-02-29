@@ -33,7 +33,6 @@
 + Apache Tomcat ([https://tomcat.apache.org](https://tomcat.apache.org))
 + Apache MINA SSHD ([https://mina.apache.org/sshd-project/](https://mina.apache.org/sshd-project/))
 + tinylog ([https://tinylog.org](https://tinylog.org))
-+ Apache Felix ([https://felix.apache.org](https://felix.apache.org))
 
 ## 参与贡献
 

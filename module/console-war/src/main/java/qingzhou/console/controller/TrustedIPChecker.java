@@ -9,8 +9,8 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
+import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,13 +25,12 @@ public class TrustedIPChecker implements Filter<HttpServletContext> {
             return true;
         }
         String msgKey = "client.trusted.not";// todo 没有定义?
-        String toJson = JsonView.buildErrorResponse(ConsoleI18n.getI18N(I18n.getI18nLang(), msgKey));
+        String toJson = JsonView.responseErrorJson(response, ConsoleI18n.getI18N(I18n.getI18nLang(), msgKey));
         if (I18n.getI18nLang() == Lang.en) { // header里只能英文
             response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
         } else {
             response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
         }
-        response.getWriter().print(toJson);// 如果后面紧接着重定向了，body 里面的消息会丢失，所以这里用了响应头传递信息
         response.sendRedirect(request.getContextPath() + LoginManager.LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + msgKey);
         return false;
     }

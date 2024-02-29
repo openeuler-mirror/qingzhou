@@ -3,24 +3,27 @@ package qingzhou.console.controller;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelManager;
-import qingzhou.config.Config;
+import qingzhou.console.ConsoleI18n;
+import qingzhou.console.I18n;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.app.App;
+import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AccessControl implements Filter<HttpServletContext> {
+    static {
+        ConsoleI18n.addI18N("page.error.permission.deny", new String[]{"对不起，您无权访问该资源", "en:Sorry, you do not have access to this resource"});
+    }
+
     private static final List<String> masterAppModels = Arrays.asList("user", "version", "node");
 
     public static Model[] getLoginUserAppMenuModels(String loginUser, String appName) {
@@ -34,7 +37,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             models.add(modelManager.getModel(modelName));
         }
 
-        if (!"qingzhou".equals(loginUser) && qingzhou.app.App.SYS_APP_MASTER.equals(appName)) {
+        if (!"qingzhou".equals(loginUser) && App.SYS_APP_MASTER.equals(appName)) {
             models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
         }
 
@@ -85,7 +88,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             return true;
         }
         // 需要能调用加密接口，才能进行修改密码，故此设定：免权限的接口不需要修改密码即可认证。
-        String check = wrapCheckingPath(servletPathAndPathInfo);
+//        String check = wrapCheckingPath(servletPathAndPathInfo);
 //        for (String uri : generalUris) {
 //            if (check.startsWith(uri)) {
 //                return true;
@@ -139,11 +142,8 @@ public class AccessControl implements Filter<HttpServletContext> {
             }
         }
 
-//    todo    String msg = I18n.getString(qingzhou.api.Constants.SYS_APP_MASTER, "page.error.permission.deny");
-        String msg = "page.error.permission.deny";
-        httpServletResponse.getWriter().print(JsonView.buildErrorResponse(msg));
-        //        response.setStatus(HttpServletResponse.SC_FORBIDDEN);// 会引起命令行403，拿不到json提示信息
-        //        response.sendError(HttpServletResponse.SC_FORBIDDEN);// 会引起上面的消息不传输到客户端或客户端http客户端有异常
+        String msg = ConsoleI18n.getI18N(I18n.getI18nLang(), "page.error.permission.deny");
+        JsonView.responseErrorJson(httpServletResponse, msg);
         return false;
     }
 }

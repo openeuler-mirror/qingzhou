@@ -2,7 +2,7 @@ package qingzhou.app.master;
 
 import qingzhou.api.DataStore;
 import qingzhou.api.ListModel;
-import qingzhou.config.Config;
+import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.List;

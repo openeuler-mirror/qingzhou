@@ -3,12 +3,12 @@ package qingzhou.console.view.type;
 import qingzhou.api.DownloadModel;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.app.RequestImpl;
-import qingzhou.app.ResponseImpl;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.RestContext;
 import qingzhou.console.util.HexUtil;
 import qingzhou.console.view.View;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.app.ResponseImpl;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;

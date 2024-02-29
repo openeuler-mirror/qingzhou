@@ -5,8 +5,8 @@ import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
-import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.pattern.FilterPattern;
+import qingzhou.framework.util.pattern.Filter;
+import qingzhou.framework.util.pattern.FilterPattern;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;

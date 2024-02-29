@@ -1,9 +1,9 @@
 package qingzhou.app.master.service;
 
 import qingzhou.api.*;
-import qingzhou.app.AppManager;
-import qingzhou.app.RequestImpl;
 import qingzhou.app.master.Main;
+import qingzhou.framework.app.AppManager;
+import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -11,7 +11,7 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Stream;
 
-@Model(name = qingzhou.app.App.SYS_MODEL_APP, icon = "cube-alt",
+@Model(name = qingzhou.framework.app.App.SYS_MODEL_APP, icon = "cube-alt",
         menuName = "Service", menuOrder = 1,
         nameI18n = {"应用", "en:App"},
         infoI18n = {"应用。",
@@ -92,7 +92,7 @@ public class App extends ModelBase implements AddModel {
         if ("nodes".equals(fieldName)) {
             String userName = request.getUserName();
             List<Option> nodeList = new ArrayList<>();
-            nodeList.add(Option.of(qingzhou.app.App.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
+            nodeList.add(Option.of(qingzhou.framework.app.App.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
             Set<String> nodeSet = new HashSet<>();
             try {
                 if ("qingzhou".equals(userName)) {
@@ -108,7 +108,7 @@ public class App extends ModelBase implements AddModel {
                             .filter(StringUtil::notBlank)
                             .forEach(nodeSet::add);
                 }
-                nodeSet.remove(qingzhou.app.App.SYS_NODE_LOCAL);
+                nodeSet.remove(qingzhou.framework.app.App.SYS_NODE_LOCAL);
                 nodeSet.stream().map(Option::of).forEach(nodeList::add);
             } catch (Exception ignored) {
             }
@@ -123,8 +123,8 @@ public class App extends ModelBase implements AddModel {
     public String validate(Request request, String fieldName) {
         if (fieldName.equals(ListModel.FIELD_NAME_ID)) {
             String id = request.getParameter(ListModel.FIELD_NAME_ID);
-            if (qingzhou.app.App.SYS_APP_MASTER.equals(id) ||
-                    qingzhou.app.App.SYS_APP_NODE_AGENT.equals(id)) {
+            if (qingzhou.framework.app.App.SYS_APP_MASTER.equals(id) ||
+                    qingzhou.framework.app.App.SYS_APP_NODE_AGENT.equals(id)) {
                 return "app.id.system";
             }
         }
@@ -167,13 +167,13 @@ public class App extends ModelBase implements AddModel {
         }
 
         String[] nodes = p.get("nodes").split(",");
-        request.setModelName(qingzhou.app.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.app.App.SYS_ACTION_INSTALL);
+        request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_INSTALL);
         try {
             for (String node : nodes) {
                 try {
-                    if (qingzhou.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getService(AppManager.class).getApp(qingzhou.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
+                    if (qingzhou.framework.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                        Main.getService(AppManager.class).getApp(qingzhou.framework.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
                     } else {
                         // TODO：调用远端 node 上的app add
                     }
@@ -184,18 +184,18 @@ public class App extends ModelBase implements AddModel {
                 }
             }
         } finally {
-            request.setModelName(qingzhou.app.App.SYS_MODEL_APP);
+            request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
             request.setActionName(ACTION_NAME_ADD);
         }
 
         if (response.isSuccess()) {
             p.put(ListModel.FIELD_NAME_ID, appName);
-            getDataStore().addData(qingzhou.app.App.SYS_MODEL_APP, appName, p);
+            getDataStore().addData(qingzhou.framework.app.App.SYS_MODEL_APP, appName, p);
         }
     }
 
-    @ModelAction(name = qingzhou.app.App.SYS_ACTION_MANAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.app.App.SYS_ACTION_MANAGE,
+    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
@@ -208,13 +208,13 @@ public class App extends ModelBase implements AddModel {
         Map<String, String> p = getDataStore().getDataById("app", appName);
         String[] nodes = p.get("nodes").split(",");
 
-        request.setModelName(qingzhou.app.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.app.App.SYS_ACTION_UNINSTALL);
+        request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_UNINSTALL);
         try {
             for (String node : nodes) {
                 try {
-                    if (qingzhou.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getService(AppManager.class).getApp(qingzhou.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
+                    if (qingzhou.framework.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                        Main.getService(AppManager.class).getApp(qingzhou.framework.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
                     } else {
                         // TODO：调用远端 node 上的app delete
                     }
@@ -224,7 +224,7 @@ public class App extends ModelBase implements AddModel {
                 }
             }
         } finally {
-            request.setModelName(qingzhou.app.App.SYS_MODEL_APP);
+            request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
             request.setActionName(ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);

@@ -10,39 +10,4 @@
     </parent>
 
     <artifactId>qingzhou-config</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-crypto</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-Activator>qingzhou.config.impl.Controller</Bundle-Activator>
-
-                            <Import-Package>
-                                qingzhou.crypto,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,org.osgi.framework,javax.xml.parsers,javax.xml.transform,javax.xml.xpath,org.xml.sax,org.w3c.dom
-                            </Import-Package>
-                            <Export-Package>qingzhou.config</Export-Package>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

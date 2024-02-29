@@ -6,7 +6,7 @@ import qingzhou.console.I18n;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
-import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.pattern.Filter;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -139,7 +139,6 @@ public class I18nFilter implements Filter<HttpServletContext> {
         ConsoleI18n.addI18N("page.bindfail.2fa", new String[]{"绑定失败", "en:Bind error"});
         ConsoleI18n.addI18N("page.info.2fa", new String[]{"双因子认证密码，选填", "en:Two-factor authentication password, optional"});
         ConsoleI18n.addI18N("page.error.network", new String[]{"服务器连接错误，请确认服务器已启动或检查网络是否通畅", "en:Server connection error, please confirm that the server has been started or check whether the network is smooth"});
-        ConsoleI18n.addI18N("page.error.permission.deny", new String[]{"对不起，您无权访问该资源", "en:Sorry, you do not have access to this resource"});
         ConsoleI18n.addI18N("page.info.add", new String[]{"添加", "en:Add"});
         ConsoleI18n.addI18N("page.info.kv.name", new String[]{"变量名", "en:Name"});
         ConsoleI18n.addI18N("page.info.kv.value", new String[]{"值", "en:Value"});

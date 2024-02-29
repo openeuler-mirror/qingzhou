@@ -1,12 +1,13 @@
 package qingzhou.console.page;
 
 import qingzhou.api.*;
-import qingzhou.app.RequestImpl;
 import qingzhou.console.*;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.util.Base32Util;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.console.util.Base32Util;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -44,10 +45,10 @@ public class PageBackendService {
 
     public static String getInitAppName(RequestImpl request) {
         if (request == null) {
-            return qingzhou.app.App.SYS_APP_MASTER;
+            return App.SYS_APP_MASTER;
         }
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(request.getManageType())) {
-            return qingzhou.app.App.SYS_APP_NODE_AGENT;
+            return App.SYS_APP_NODE_AGENT;
         } else {
             return request.getAppName();
         }
@@ -243,7 +244,7 @@ public class PageBackendService {
         RequestImpl requestImpl = (RequestImpl) request;
         String appName = request.getAppName();
         if (requestImpl.getManageType().equals(ConsoleConstants.MANAGE_TYPE_NODE)) {
-            appName = qingzhou.app.App.SYS_APP_NODE_AGENT;
+            appName = App.SYS_APP_NODE_AGENT;
         }
         ModelManager modelManager = getModelManager(appName);
         if (modelManager == null) {

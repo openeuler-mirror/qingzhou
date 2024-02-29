@@ -1,19 +1,16 @@
 package qingzhou.app.master;
 
-import org.osgi.framework.BundleContext;
 import qingzhou.api.*;
-import qingzhou.app.App;
-import qingzhou.app.QingZhouSystemApp;
-import qingzhou.framework.Framework;
+import qingzhou.bootstrap.main.FrameworkContext;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.QingZhouSystemApp;
 
 public class Main extends QingZhouSystemApp {
-    private static Framework F;
-    private static BundleContext BC;
+    private static FrameworkContext FC;
 
     @Override
     public void start(AppContext appContext) {
-        F = this.framework;
-        BC = this.bundleContext;
+        FC = this.frameworkContext;
 
         appContext.getConsoleContext().addI18N("validator.master.system", new String[]{"为保障系统安全可用，请勿修改此配置", "en:To ensure the security and availability of the system, do not modify this configuration"});
 
@@ -28,11 +25,11 @@ public class Main extends QingZhouSystemApp {
     }
 
     public static <T> T getService(Class<T> type) {
-        return BC.getService(BC.getServiceReference(type));
+        return FC.getServiceManager().getService(type);
     }
 
-    public static Framework getFramework() {
-        return F;
+    public static FrameworkContext getFramework() {
+        return FC;
     }
 
     private static class LocalNodeProtection implements ActionFilter {

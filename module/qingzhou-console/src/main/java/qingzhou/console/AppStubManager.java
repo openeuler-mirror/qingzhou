@@ -4,8 +4,8 @@ import qingzhou.api.ConsoleContext;
 import qingzhou.api.Lang;
 import qingzhou.api.MenuInfo;
 import qingzhou.api.ModelManager;
-import qingzhou.app.App;
 import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.framework.app.App;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,7 +1,7 @@
 package qingzhou.console.controller;
 
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.pattern.Filter;
 import qingzhou.framework.util.FileUtil;
 
 import javax.servlet.ServletOutputStream;

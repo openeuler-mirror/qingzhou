@@ -2,9 +2,6 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.app.App;
-import qingzhou.app.RequestImpl;
-import qingzhou.app.ResponseImpl;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.I18n;
@@ -14,10 +11,13 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.pattern.FilterPattern;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.util.pattern.Filter;
+import qingzhou.framework.util.pattern.FilterPattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -35,7 +35,7 @@ import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + qingzhou.app.App.SYS_APP_MASTER + "/" + App.SYS_MODEL_INDEX + "/" + App.SYS_MODEL_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + App.SYS_MODEL_INDEX + "/" + App.SYS_MODEL_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache("upload");
 
@@ -132,7 +132,7 @@ public class RESTController extends HttpServlet {
         int restDepth = 5;
         if (rest.size() < restDepth) { // must have model & action
             String msg = "Parameters missing, make sure to use the correct REST interface: " + req.getRequestURI();
-            resp.getWriter().print(JsonView.buildErrorResponse(msg));
+            JsonView.responseErrorJson(resp, msg);
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
             return null;
         }
@@ -165,7 +165,7 @@ public class RESTController extends HttpServlet {
 
         if (!actionFound) {
             String msg = "Not Found: " + req.getRequestURI();
-            resp.getWriter().print(JsonView.buildErrorResponse(msg));
+            JsonView.responseErrorJson(resp, msg);
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, msg);
             return null;
         }

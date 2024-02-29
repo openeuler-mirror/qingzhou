@@ -1,13 +1,13 @@
 package qingzhou.console;
 
 import qingzhou.api.*;
-import qingzhou.app.App;
-import qingzhou.app.RequestImpl;
-import qingzhou.app.ResponseImpl;
-import qingzhou.config.Config;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.config.Config;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -177,7 +177,7 @@ public class ActionInvoker {
         String manageType = ((RequestImpl) request).getManageType();
         String appName = request.getAppName();
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
-            if (qingzhou.app.App.SYS_APP_NODE_AGENT.equals(appName)) {
+            if (App.SYS_APP_NODE_AGENT.equals(appName)) {
                 appNodes.add(App.SYS_NODE_LOCAL);
             }
         } else if (ConsoleConstants.MANAGE_TYPE_APP.equals(manageType)) {
@@ -206,18 +206,18 @@ public class ActionInvoker {
 
     private List<String> getAppNodes(String appName) {
         List<String> nodes = new ArrayList<>();
-        if (qingzhou.app.App.SYS_APP_MASTER.equals(appName)) {
+        if (App.SYS_APP_MASTER.equals(appName)) {
             nodes.add(App.SYS_NODE_LOCAL);
         } else {
             Map<String, String> res = null;
             try {
                 RequestImpl request = new RequestImpl();
                 Response response = new ResponseImpl();
-                request.setAppName(qingzhou.app.App.SYS_APP_MASTER);
+                request.setAppName(App.SYS_APP_MASTER);
                 request.setModelName(App.SYS_MODEL_APP);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);
                 request.setId(appName);
-                ConsoleWarHelper.invokeLocalApp(qingzhou.app.App.SYS_APP_MASTER, request, response);
+                ConsoleWarHelper.invokeLocalApp(App.SYS_APP_MASTER, request, response);
                 List<Map<String, String>> dataList = response.getDataList();
                 if (dataList != null && !dataList.isEmpty()) {
                     res = dataList.get(0);

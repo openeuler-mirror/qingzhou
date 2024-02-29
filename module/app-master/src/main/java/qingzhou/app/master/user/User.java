@@ -1,10 +1,10 @@
 package qingzhou.app.master.user;
 
 import qingzhou.api.*;
-import qingzhou.app.App;
 import qingzhou.app.master.Main;
-import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.MessageDigest;
+import qingzhou.framework.app.App;
+import qingzhou.framework.crypto.CryptoService;
+import qingzhou.framework.crypto.MessageDigest;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 

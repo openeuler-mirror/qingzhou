@@ -1,24 +1,23 @@
 package qingzhou.console.impl;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import qingzhou.app.AppManager;
-import qingzhou.config.Config;
+import qingzhou.bootstrap.main.FrameworkContext;
+import qingzhou.bootstrap.main.ModuleLoader;
 import qingzhou.console.servlet.ServletService;
 import qingzhou.console.servlet.impl.ServletServiceImpl;
-import qingzhou.crypto.CryptoService;
-import qingzhou.framework.Framework;
-import qingzhou.framework.pattern.Process;
-import qingzhou.framework.pattern.ProcessSequence;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppManager;
+import qingzhou.framework.config.Config;
+import qingzhou.framework.crypto.CryptoService;
+import qingzhou.framework.logger.Logger;
+import qingzhou.framework.serializer.Serializer;
 import qingzhou.framework.util.FileUtil;
-import qingzhou.logger.Logger;
-import qingzhou.serializer.Serializer;
+import qingzhou.framework.util.pattern.Process;
+import qingzhou.framework.util.pattern.ProcessSequence;
 
 import java.io.File;
 
-public class Controller implements BundleActivator {
-    public static Framework framework;
+public class Controller implements ModuleLoader {
+    public static FrameworkContext framework;
     public static Config config;
     public static Logger logger;
     public static AppManager appManager;
@@ -30,20 +29,13 @@ public class Controller implements BundleActivator {
     private int consolePort;
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        ServiceReference<Framework> frameworkContextReference = context.getServiceReference(Framework.class);
-        ServiceReference<Config> configReference = context.getServiceReference(Config.class);
-        ServiceReference<Logger> loggerReference = context.getServiceReference(Logger.class);
-        ServiceReference<AppManager> appManagerReference = context.getServiceReference(AppManager.class);
-        ServiceReference<Serializer> serializerReference = context.getServiceReference(Serializer.class);
-        ServiceReference<CryptoService> cryptoServiceReference = context.getServiceReference(CryptoService.class);
-
-        framework = context.getService(frameworkContextReference);
-        config = context.getService(configReference);
-        logger = context.getService(loggerReference);
-        appManager = context.getService(appManagerReference);
-        serializer = context.getService(serializerReference);
-        cryptoService = context.getService(cryptoServiceReference);
+    public void start(FrameworkContext context) throws Exception {
+        Controller.framework = context;
+        config = context.getServiceManager().getService(Config.class);
+        logger = context.getServiceManager().getService(Logger.class);
+        appManager = context.getServiceManager().getService(AppManager.class);
+        serializer = context.getServiceManager().getService(Serializer.class);
+        cryptoService = context.getServiceManager().getService(CryptoService.class);
 
         if (!Boolean.parseBoolean(config.getConfig("//console").get("enabled")))
             return;
@@ -57,7 +49,7 @@ public class Controller implements BundleActivator {
     }
 
     @Override
-    public void stop(BundleContext context) {
+    public void stop(FrameworkContext context) {
         if (sequence != null) {
             sequence.undo();
         }
@@ -66,7 +58,7 @@ public class Controller implements BundleActivator {
     private static class InstallMasterApp implements Process {
         @Override
         public void exec() throws Exception {
-            File masterApp = FileUtil.newFile(framework.getLib(), "module", "qingzhou-app", "master");
+            File masterApp = FileUtil.newFile(framework.getLib(), "module", "qingzhou-app", App.SYS_APP_MASTER);
             appManager.installApp(masterApp);
         }
     }

@@ -25,6 +25,13 @@
         <module>qingzhou-serializer</module>
         <module>qingzhou-crypto</module>
         <module>qingzhou-logger</module>
-        <module>qingzhou-framework</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-framework</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+    </dependencies>
 </project>

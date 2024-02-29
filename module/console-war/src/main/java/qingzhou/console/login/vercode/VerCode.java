@@ -7,7 +7,7 @@ import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LockOutRealm;
 import qingzhou.console.login.LoginManager;
-import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.util.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
 

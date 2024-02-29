@@ -1,49 +1,13 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>module</artifactId>
         <version>0.1.0</version>
     </parent>
+
     <artifactId>qingzhou-remote</artifactId>
-
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-Activator>qingzhou.remote.impl.Controller</Bundle-Activator>
-
-                            <Import-Package>
-                                qingzhou.app,qingzhou.serializer,qingzhou.config,qingzhou.logger,qingzhou.crypto,org.osgi.framework
-                            </Import-Package>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-serializer</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-config</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-app</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-    </dependencies>
-
 </project>

@@ -4,11 +4,15 @@ import qingzhou.api.Response;
 import qingzhou.console.RestContext;
 import qingzhou.console.view.View;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
 public class JsonView implements View {
+    public static final String CONTENT_TYPE = "application/json;charset=UTF-8";
+
     @Override
     public void render(RestContext restContext) throws Exception {
         Response response = restContext.response;
@@ -20,12 +24,17 @@ public class JsonView implements View {
 
     @Override
     public String getContentType() {
-        return "application/json;charset=UTF-8";
+        return CONTENT_TYPE;
     }
 
-    public static String buildErrorResponse(String errorMsg) {
+    public static String responseErrorJson(HttpServletResponse response, String msg) throws IOException {
         StringBuilder json = new StringBuilder("{");
-        addStatus(json, false, errorMsg);
+        addStatus(json, false, msg);
+        json.append("}");
+
+        response.setContentType(CONTENT_TYPE);
+        response.getWriter().print(json);
+
         return json.toString();
     }
 

@@ -10,8 +10,9 @@ import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.pattern.Filter;
+import qingzhou.framework.app.App;
 import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -59,8 +60,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
             }
 
             String viewName = "/" + rest.get(0);
-            String toJson = JsonView.buildErrorResponse(LoginManager.retrieveI18nMsg(msgI18nKey));
-            httpServletResponse.getWriter().print(toJson);// 重定向，会丢失body里的消息
+            String toJson = JsonView.responseErrorJson(httpServletResponse, LoginManager.retrieveI18nMsg(msgI18nKey));
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
                 httpServletResponse.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
             } else {
@@ -71,7 +71,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + ConsoleConstants.MODEL_NAME_node +
-                    "/" + qingzhou.app.App.SYS_APP_MASTER +
+                    "/" + App.SYS_APP_MASTER +
                     "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +

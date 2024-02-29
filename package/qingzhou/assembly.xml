@@ -34,7 +34,6 @@
         <dependencySet>
             <includes>
                 <include>${project.groupId}:qingzhou-bootstrap</include>
-                <include>org.apache.felix:org.apache.felix.main</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

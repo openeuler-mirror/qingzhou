@@ -1,13 +1,13 @@
 package qingzhou.console.view;
 
-import qingzhou.app.RequestImpl;
-import qingzhou.app.ResponseImpl;
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
 import qingzhou.console.RestContext;
 import qingzhou.console.view.type.FileView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.HashMap;

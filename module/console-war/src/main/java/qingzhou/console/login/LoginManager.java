@@ -14,9 +14,9 @@ import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.pattern.Filter;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -91,7 +91,7 @@ public class LoginManager implements Filter<HttpServletContext> {
         } else {
             String failedMsgKey = failedMsg.getHeaderMsg();
             String msg = LoginManager.retrieveI18nMsg(failedMsgKey);
-            response.getWriter().print(JsonView.buildErrorResponse(msg));
+            JsonView.responseErrorJson(response, msg);
 
             if (!response.isCommitted()) {
                 String redirectUri = failedMsg.getRedirectUri();
@@ -337,8 +337,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 }
                 // login.jsp 已经在 application.xml 中配置了过滤，
                 // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
-                String toJson = JsonView.buildErrorResponse("Please enter username and password to log in to the system");
-                response.getWriter().print(toJson);
+                String toJson = JsonView.responseErrorJson(response, "Please enter username and password to log in to the system");
                 if (I18n.getI18nLang() == Lang.en) { // header里只能英文
                     response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);
                 } else {

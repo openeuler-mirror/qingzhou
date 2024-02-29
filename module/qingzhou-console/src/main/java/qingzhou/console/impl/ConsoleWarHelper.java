@@ -2,13 +2,13 @@ package qingzhou.console.impl;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.app.App;
-import qingzhou.config.Config;
 import qingzhou.console.AppStub;
 import qingzhou.console.AppStubManager;
-import qingzhou.crypto.CryptoService;
-import qingzhou.logger.Logger;
-import qingzhou.serializer.Serializer;
+import qingzhou.framework.app.App;
+import qingzhou.framework.config.Config;
+import qingzhou.framework.crypto.CryptoService;
+import qingzhou.framework.logger.Logger;
+import qingzhou.framework.serializer.Serializer;
 
 import java.io.File;
 

@@ -1,7 +1,7 @@
 package qingzhou.app.master;
 
 import qingzhou.api.*;
-import qingzhou.app.App;
+import qingzhou.framework.app.App;
 
 @Model(name = App.SYS_MODEL_INDEX, icon = "home",
         entryAction = ShowModel.ACTION_NAME_SHOW,

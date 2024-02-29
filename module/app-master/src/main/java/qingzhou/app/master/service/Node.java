@@ -1,10 +1,10 @@
 package qingzhou.app.master.service;
 
 import qingzhou.api.*;
-import qingzhou.app.App;
 import qingzhou.app.master.ConsoleDataStore;
 import qingzhou.app.master.Main;
-import qingzhou.config.Config;
+import qingzhou.framework.app.App;
+import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.*;
@@ -56,8 +56,8 @@ public class Node extends ModelBase implements AddModel {
         return null;
     }
 
-    @ModelAction(name = qingzhou.app.App.SYS_ACTION_MANAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.app.App.SYS_ACTION_MANAGE,
+    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {
