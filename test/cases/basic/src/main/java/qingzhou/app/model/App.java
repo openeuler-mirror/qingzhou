@@ -1,9 +1,9 @@
 package qingzhou.app.model;
 
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
+import qingzhou.api.AddModel;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
 
 @Model(name = "app", icon = "leaf",
         nameI18n = {"应用测试模块", "en:App Test"},

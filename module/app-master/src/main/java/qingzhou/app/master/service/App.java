@@ -1,23 +1,17 @@
 package qingzhou.app.master.service;
 
+import qingzhou.api.*;
 import qingzhou.app.master.Main;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.framework.app.AppManager;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.util.FileUtil;
+import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Stream;
 
-@Model(name = FrameworkContext.SYS_MODEL_APP, icon = "cube-alt",
+@Model(name = qingzhou.framework.app.App.SYS_MODEL_APP, icon = "cube-alt",
         menuName = "Service", menuOrder = 1,
         nameI18n = {"应用", "en:App"},
         infoI18n = {"应用。",
@@ -69,7 +63,7 @@ public class App extends ModelBase implements AddModel {
 
     @ModelField(
             required = true, type = FieldType.checkbox,
-            refModel = "node", showToList = true,
+            showToList = true,
             nameI18n = {"节点", "en:Node"},
             infoI18n = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
     public String nodes;
@@ -94,11 +88,43 @@ public class App extends ModelBase implements AddModel {
     }
 
     @Override
+    public Options options(Request request, String fieldName) {
+        if ("nodes".equals(fieldName)) {
+            String userName = request.getUserName();
+            List<Option> nodeList = new ArrayList<>();
+            nodeList.add(Option.of(qingzhou.framework.app.App.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
+            Set<String> nodeSet = new HashSet<>();
+            try {
+                if ("qingzhou".equals(userName)) {
+                    List<Map<String, String>> nodes = getDataStore().getAllData("node");
+                    nodes.stream()
+                            .map(node -> node.get("id"))
+                            .filter(Objects::nonNull)
+                            .forEach(nodeSet::add);
+                } else {
+                    Map<String, String> user = getDataStore().getDataById("user", userName);
+                    Stream.of(user.getOrDefault("nodes", "").split(","))
+                            .map(String::trim)
+                            .filter(StringUtil::notBlank)
+                            .forEach(nodeSet::add);
+                }
+                nodeSet.remove(qingzhou.framework.app.App.SYS_NODE_LOCAL);
+                nodeSet.stream().map(Option::of).forEach(nodeList::add);
+            } catch (Exception ignored) {
+            }
+
+            return () -> nodeList;
+        }
+
+        return super.options(request, fieldName);
+    }
+
+    @Override
     public String validate(Request request, String fieldName) {
         if (fieldName.equals(ListModel.FIELD_NAME_ID)) {
             String id = request.getParameter(ListModel.FIELD_NAME_ID);
-            if (FrameworkContext.SYS_APP_MASTER.equals(id) ||
-                    FrameworkContext.SYS_APP_NODE_AGENT.equals(id)) {
+            if (qingzhou.framework.app.App.SYS_APP_MASTER.equals(id) ||
+                    qingzhou.framework.app.App.SYS_APP_NODE_AGENT.equals(id)) {
                 return "app.id.system";
             }
         }
@@ -141,13 +167,13 @@ public class App extends ModelBase implements AddModel {
         }
 
         String[] nodes = p.get("nodes").split(",");
-        request.setModelName(FrameworkContext.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(FrameworkContext.SYS_ACTION_INSTALL);
+        request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_INSTALL);
         try {
             for (String node : nodes) {
                 try {
-                    if (FrameworkContext.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getFc().getAppManager().getApp(FrameworkContext.SYS_APP_NODE_AGENT).invoke(request, response);
+                    if (qingzhou.framework.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                        Main.getService(AppManager.class).getApp(qingzhou.framework.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
                     } else {
                         // TODO：调用远端 node 上的app add
                     }
@@ -158,18 +184,18 @@ public class App extends ModelBase implements AddModel {
                 }
             }
         } finally {
-            request.setModelName(FrameworkContext.SYS_MODEL_APP);
+            request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
             request.setActionName(ACTION_NAME_ADD);
         }
 
         if (response.isSuccess()) {
             p.put(ListModel.FIELD_NAME_ID, appName);
-            getDataStore().addData(FrameworkContext.SYS_MODEL_APP, appName, p);
+            getDataStore().addData(qingzhou.framework.app.App.SYS_MODEL_APP, appName, p);
         }
     }
 
-    @ModelAction(name = FrameworkContext.SYS_ACTION_MANAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + FrameworkContext.SYS_ACTION_MANAGE,
+    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
@@ -182,13 +208,13 @@ public class App extends ModelBase implements AddModel {
         Map<String, String> p = getDataStore().getDataById("app", appName);
         String[] nodes = p.get("nodes").split(",");
 
-        request.setModelName(FrameworkContext.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(FrameworkContext.SYS_ACTION_UNINSTALL);
+        request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_UNINSTALL);
         try {
             for (String node : nodes) {
                 try {
-                    if (FrameworkContext.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getFc().getAppManager().getApp(FrameworkContext.SYS_APP_NODE_AGENT).invoke(request, response);
+                    if (qingzhou.framework.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                        Main.getService(AppManager.class).getApp(qingzhou.framework.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
                     } else {
                         // TODO：调用远端 node 上的app delete
                     }
@@ -198,7 +224,7 @@ public class App extends ModelBase implements AddModel {
                 }
             }
         } finally {
-            request.setModelName(FrameworkContext.SYS_MODEL_APP);
+            request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
             request.setActionName(ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);

@@ -70,7 +70,7 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
 
                     <input type="submit" value='<%=PageBackendService.getMasterAppI18NString( "page.login")%>' class="login_btn">
                     <textarea id="pubkey" rows="3" style="display:none;">
-                        <%=PageBackendService.getPublicKeyString()%>
+                        <%=AsymmetricDecryptor.getPublicKeyString()%>
                     </textarea>
                 </form>
             </section>
@@ -99,7 +99,7 @@ I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
                 }
             });
             $("#loginForm").submit(function (e) {
-                var encrypt = new JSEncrypt({"default_key_size":<%=PageBackendService.getKeySize()%>});
+                var encrypt = new JSEncrypt({"default_key_size":<%=AsymmetricDecryptor.getKeySize()%>});
                 encrypt.setPublicKey($('#pubkey').val());
                 var inputs = $("#loginForm").find("input");
                 for (var i = 0; i < inputs.length; i++) {

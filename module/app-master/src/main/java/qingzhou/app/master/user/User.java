@@ -1,23 +1,10 @@
 package qingzhou.app.master.user;
 
-import qingzhou.app.master.MessageDigestImpl;
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.DeleteModel;
-import qingzhou.framework.api.EditModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Group;
-import qingzhou.framework.api.Groups;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
+import qingzhou.api.*;
+import qingzhou.app.master.Main;
+import qingzhou.framework.app.App;
+import qingzhou.framework.crypto.CryptoService;
+import qingzhou.framework.crypto.MessageDigest;
 import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -40,7 +27,6 @@ public class User extends ModelBase implements AddModel {
     public static final int defLimitRepeats = 5;
     public static final String DATA_SEPARATOR = ",";
     public static final String PASSWORD_FLAG = "***************";
-    public static final MessageDigestImpl messageDigest = new MessageDigestImpl();
 
     @Override
     public void init() {
@@ -97,10 +83,11 @@ public class User extends ModelBase implements AddModel {
 
     @ModelField(
             type = FieldType.checkbox,
+            required = true,
             refModel = "node", showToList = true,
             nameI18n = {"可用节点", "en:Available Nodes"},
             infoI18n = {"选择用户可使用的节点。", "en:Select the nodes that are available to the user."})
-    public String nodes;
+    public String nodes = App.SYS_NODE_LOCAL;
 
     @ModelField(
             group = "security",
@@ -189,7 +176,7 @@ public class User extends ModelBase implements AddModel {
     }
 
     @Override
-    public Options options(String fieldName) {
+    public Options options(Request request, String fieldName) {
         if ("digestAlg".equals(fieldName)) {
             return Options.of(
                     Option.of("SHA-256"),
@@ -197,7 +184,7 @@ public class User extends ModelBase implements AddModel {
                     Option.of("SHA-512"));
         }
 
-        return super.options(fieldName);
+        return super.options(request, fieldName);
     }
 
     @Override
@@ -312,6 +299,7 @@ public class User extends ModelBase implements AddModel {
             String digestAlg = newUser.get("digestAlg");
             String saltLength = newUser.get("saltLength");
             String iterations = newUser.get("iterations");
+            MessageDigest messageDigest = Main.getService(CryptoService.class).getMessageDigest();
             newUser.put(pwdKey, messageDigest.digest(password,
                     digestAlg,
                     Integer.parseInt(saltLength),

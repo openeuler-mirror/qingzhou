@@ -692,6 +692,9 @@ function bindEventForFormPage() {
         forceParse: 0,
         showMeridian: 1
     });
+    (function (json) {
+        effectiveInfoFields(eval("(" + (!json || json === '' ? "{}" : json) + ")"));
+    })($.trim($("textarea[name='eventConditionsInfoPage']", getRestrictedArea()).val()));
 };
 function bindFormEvent() {
     $("form[name='pageForm'][loaded!='true']").each(function () {

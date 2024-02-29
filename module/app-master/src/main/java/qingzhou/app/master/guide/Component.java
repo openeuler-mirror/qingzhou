@@ -1,11 +1,8 @@
 package qingzhou.app.master.guide;
 
+import qingzhou.api.*;
+import qingzhou.app.master.Main;
 import qingzhou.app.master.ReadOnlyDataStore;
-import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +26,7 @@ public class Component extends ModelBase implements ListModel {
     public DataStore getDataStore() {
         return new ReadOnlyDataStore(type -> {
             List<Map<String, String>> data = new ArrayList<>();
-            getAppContext().getServiceTypes().forEach(aClass -> data.add(new HashMap<String, String>() {{
+            Main.getFramework().getServiceManager().getServiceTypes().forEach(aClass -> data.add(new HashMap<String, String>() {{
                 put("id", aClass.getName());
             }}));
             return data;

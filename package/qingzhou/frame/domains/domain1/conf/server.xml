@@ -33,9 +33,8 @@
                 <user active="true" bound2FA="false" changeInitPwd="${ReleaseModeEncrypted}" enable2FA="false"
                       enablePasswordAge="true" info="超级管理员" keyFor2FA="" id="qingzhou"
                       password="E239$2$1CEA50EE641A31AD053B2BCC38A323ECF783DDE35652475495D5B112518C4D29$SHA-256"
-                      passwordMaxAge="90" passwordMinAge="0" roles="root"/>
+                      passwordMaxAge="90" passwordMinAge="0"/>
             </users>
-            <roles/>
         </auth>
     </console>
 

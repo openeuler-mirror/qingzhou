@@ -1,10 +1,10 @@
 package qingzhou.console.login;
 
-import qingzhou.console.controller.system.HttpServletContext;
-import qingzhou.console.page.PageBackendService;
-import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.pattern.Filter;
+import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,7 +25,7 @@ public class LoginFreeFilter implements Filter<HttpServletContext> {
                 return true;
             }
         }
-        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
+        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
         if (checkPath.startsWith("/static/")) {
             for (String suffix : LoginManager.STATIC_RES_SUFFIX) {
                 if (checkPath.endsWith(suffix)) {
@@ -50,8 +50,7 @@ public class LoginFreeFilter implements Filter<HttpServletContext> {
                 } else {
                     String headerMsg = loginFailedMsg.getHeaderMsg();
                     String msg = LoginManager.retrieveI18nMsg(headerMsg);
-                    response.setContentType("text/html;charset=UTF-8");
-                    response.getWriter().print(JsonView.buildErrorResponse(msg));
+                    JsonView.responseErrorJson(response, msg);
                 }
             } catch (Exception e) {
                 if (e instanceof IOException) {

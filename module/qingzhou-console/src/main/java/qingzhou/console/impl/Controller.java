@@ -1,30 +1,44 @@
 package qingzhou.console.impl;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import qingzhou.bootstrap.main.FrameworkContext;
+import qingzhou.bootstrap.main.ModuleLoader;
 import qingzhou.console.servlet.ServletService;
 import qingzhou.console.servlet.impl.ServletServiceImpl;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.Logger;
-import qingzhou.framework.pattern.Process;
-import qingzhou.framework.pattern.ProcessSequence;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppManager;
+import qingzhou.framework.config.Config;
+import qingzhou.framework.crypto.CryptoService;
+import qingzhou.framework.logger.Logger;
+import qingzhou.framework.serializer.Serializer;
+import qingzhou.framework.util.FileUtil;
+import qingzhou.framework.util.pattern.Process;
+import qingzhou.framework.util.pattern.ProcessSequence;
 
 import java.io.File;
 
-public class Controller implements BundleActivator {
+public class Controller implements ModuleLoader {
+    public static FrameworkContext framework;
+    public static Config config;
+    public static Logger logger;
+    public static AppManager appManager;
+    public static Serializer serializer;
+    public static CryptoService cryptoService;
+
     private ProcessSequence sequence;
-    private FrameworkContext frameworkContext;
     private ServletService servletService;
-    private ServiceReference<FrameworkContext> reference;
     private int consolePort;
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        reference = context.getServiceReference(FrameworkContext.class);
-        frameworkContext = context.getService(reference);
+    public void start(FrameworkContext context) throws Exception {
+        Controller.framework = context;
+        config = context.getServiceManager().getService(Config.class);
+        logger = context.getServiceManager().getService(Logger.class);
+        appManager = context.getServiceManager().getService(AppManager.class);
+        serializer = context.getServiceManager().getService(Serializer.class);
+        cryptoService = context.getServiceManager().getService(CryptoService.class);
 
-        if (!Boolean.parseBoolean(frameworkContext.getConfigManager().getConfig("//console").get("enabled"))) return;
+        if (!Boolean.parseBoolean(config.getConfig("//console").get("enabled")))
+            return;
 
         sequence = new ProcessSequence(
                 new InstallMasterApp(),
@@ -35,38 +49,32 @@ public class Controller implements BundleActivator {
     }
 
     @Override
-    public void stop(BundleContext context) {
-        context.ungetService(reference);
-
+    public void stop(FrameworkContext context) {
         if (sequence != null) {
             sequence.undo();
         }
     }
 
-    private class InstallMasterApp implements Process {
+    private static class InstallMasterApp implements Process {
         @Override
         public void exec() throws Exception {
-            File masterApp = frameworkContext.getConfigManager().masterApp();
-            frameworkContext.getAppManager().installApp(masterApp);
+            File masterApp = FileUtil.newFile(framework.getLib(), "module", "qingzhou-app", App.SYS_APP_MASTER);
+            appManager.installApp(masterApp);
         }
     }
 
     private class StartServletContainer implements Process {
         @Override
         public void exec() throws Exception {
-            ConsoleWarHelper.fc = frameworkContext; //给 tonmcat 部署的 war 内部使用
-
             servletService = new ServletServiceImpl();
-            consolePort = Integer.parseInt(frameworkContext.getConfigManager().getConfig("//console").get("port"));
+            consolePort = Integer.parseInt(config.getConfig("//console").get("port"));
             servletService.start(consolePort,
-                    frameworkContext.getConfigManager().getTemp("servlet-container").getAbsolutePath());
+                    framework.getTemp("servlet-container").getAbsolutePath());
         }
 
         @Override
         public void undo() {
             servletService.stop();
-
-            ConsoleWarHelper.fc = null;
         }
     }
 
@@ -75,11 +83,10 @@ public class Controller implements BundleActivator {
 
         @Override
         public void exec() {
-            File consoleApp = frameworkContext.getConfigManager().consoleApp();
+            File consoleApp = FileUtil.newFile(framework.getLib(), "module", "qingzhou-console", "console");
             String docBase = consoleApp.getAbsolutePath();
-            contextPath = frameworkContext.getConfigManager().getConfig("//console").get("contextRoot");
+            contextPath = config.getConfig("//console").get("contextRoot");
             servletService.addWebapp(contextPath, docBase);
-            Logger logger = frameworkContext.getServiceManager().getService(Logger.class);
             logger.info("Open a browser to access the Qingzhou console: http://localhost:" + consolePort + contextPath);
         }
 

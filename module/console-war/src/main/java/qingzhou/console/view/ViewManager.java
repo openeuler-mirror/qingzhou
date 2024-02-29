@@ -2,11 +2,10 @@ package qingzhou.console.view;
 
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
-import qingzhou.console.controller.rest.RestContext;
-import qingzhou.console.view.impl.FileView;
-import qingzhou.console.view.impl.HtmlView;
-import qingzhou.console.view.impl.JsonView;
-import qingzhou.console.view.impl.View;
+import qingzhou.console.RestContext;
+import qingzhou.console.view.type.FileView;
+import qingzhou.console.view.type.HtmlView;
+import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.util.StringUtil;

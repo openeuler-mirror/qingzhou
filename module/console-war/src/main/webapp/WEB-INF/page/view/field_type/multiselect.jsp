@@ -14,7 +14,7 @@ if (fieldValues == null) {
 if (!"".equals(readonly)) {
     readonly = "onfocus='this.defaultIndex=this.selectedIndex;' onchange='this.selectedIndex=this.defaultIndex;' readonly";
 }
-Options multiOptionManager = modelManager.getOptions(qzRequest.getModelName(), fieldName);
+Options multiOptionManager = modelManager.getOptions(qzRequest,qzRequest.getModelName(), fieldName);
 %>
 <select name="<%=fieldName%>" multiple="multiple" <%=readonly%> style="width:100%;">
     <%

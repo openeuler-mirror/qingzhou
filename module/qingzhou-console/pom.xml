@@ -59,47 +59,10 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Bundle-Activator>qingzhou.console.impl.Controller</Bundle-Activator>
-
-                            <Import-Package>
-                                org.osgi.framework,org.w3c.dom,org.xml.sax,org.xml.sax.ext,org.xml.sax.helpers,org.ietf.jgss,javax.xml.stream,javax.xml.transform,javax.xml.parsers,javax.net.ssl,javax.management,javax.management.modelmbean,javax.naming,javax.security.auth.login,qingzhou.framework,qingzhou.framework.pattern,qingzhou.framework.util,qingzhou.framework.api,qingzhou.crypto,qingzhou.framework.app,qingzhou.framework.service
-                            </Import-Package>
-                            <Export-Package>qingzhou.console</Export-Package>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
     <dependencies>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>osgi.core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-serializer</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-crypto</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
@@ -121,7 +84,6 @@
             <version>9.0.37</version>
         </dependency>
         <dependency>
-            <!-- todo：将jsp编译器 ecj 替换为 javac 或者 ant-->
             <groupId>org.eclipse.jdt</groupId>
             <artifactId>ecj</artifactId>
             <version>3.18.0</version>

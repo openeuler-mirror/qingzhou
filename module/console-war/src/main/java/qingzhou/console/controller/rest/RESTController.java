@@ -1,23 +1,25 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.api.Request;
+import qingzhou.api.Response;
+import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.I18n;
+import qingzhou.console.RestContext;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.sdk.ConsoleSDK;
 import qingzhou.console.view.ViewManager;
-import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.FrameworkContext;
+import qingzhou.console.view.type.JsonView;
+import qingzhou.framework.app.App;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.app.ResponseImpl;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
-import qingzhou.framework.pattern.Filter;
-import qingzhou.framework.pattern.FilterPattern;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.util.pattern.Filter;
+import qingzhou.framework.util.pattern.FilterPattern;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,18 +31,17 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + FrameworkContext.MANAGE_TYPE_APP + "/" + FrameworkContext.SYS_APP_MASTER + "/" + FrameworkContext.SYS_MODEL_INDEX + "/" + FrameworkContext.SYS_MODEL_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + App.SYS_MODEL_INDEX + "/" + App.SYS_MODEL_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache("upload");
+
+    public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
+        return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
+    }
 
     public static List<String> retrieveRestPathInfo(HttpServletRequest req) {
         List<String> result = new ArrayList<>();
@@ -58,23 +59,40 @@ public class RESTController extends HttpServlet {
         return result;
     }
 
-    public static InvokeAction invokeAction = new InvokeAction();
-
+    private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
-            new AccessControl(),
-            new SearchFilter(),
-            new AsymmetricFilter(),// 解密前端的 password 类型的表单域
-            invokeAction // 执行具体的业务逻辑
+            new AsymmetricDecryptor(),// 解密前端的 password 类型的表单域
+            // 执行具体的业务逻辑
+            context -> {
+                RestContext restContext = (RestContext) context;
+                Response response = ActionInvoker.getInstance().invokeAction(restContext.request);
+                restContext.response = response;
+                return response.isSuccess(); // 触发后续的响应
+            }
     };
     private final ViewManager viewManager = new ViewManager();
 
     @Override
+    public void init() throws ServletException {
+        super.init();
+        thisInstance = this;
+    }
+
+    public static void invokeReq(HttpServletRequest req, HttpServletResponse resp) {
+        thisInstance.doRest(req, resp);
+    }
+
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        doPost(req, resp);
+        doRest(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
+        doRest(req, resp);
+    }
+
+    private void doRest(HttpServletRequest req, HttpServletResponse resp) {
         Map<String, String> fileAttachments = null;
         try {
             fileAttachments = prepareUploadFiles(req);// 必须在最开始处理上传文件！！！一旦调用了 request.getParameter方法就会丢失上传文件内容
@@ -114,7 +132,7 @@ public class RESTController extends HttpServlet {
         int restDepth = 5;
         if (rest.size() < restDepth) { // must have model & action
             String msg = "Parameters missing, make sure to use the correct REST interface: " + req.getRequestURI();
-            resp.getWriter().print(JsonView.buildErrorResponse(msg));
+            JsonView.responseErrorJson(resp, msg);
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, msg);
             return null;
         }
@@ -134,10 +152,10 @@ public class RESTController extends HttpServlet {
             for (int i = restDepth + 1; i < rest.size(); i++) {
                 id.append("/").append(rest.get(i));// support ds jndi: jdbc/test
             }
-            request.setId(ConsoleSDK.decodeId(id.toString()));
+            request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = PageBackendService.getModelManager(request.getAppName()).getActionNames(request.getModelName());
+        String[] actions = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager().getActionNames(request.getModelName());
         for (String name : actions) {
             if (name.equals(request.getActionName())) {
                 actionFound = true;
@@ -147,7 +165,7 @@ public class RESTController extends HttpServlet {
 
         if (!actionFound) {
             String msg = "Not Found: " + req.getRequestURI();
-            resp.getWriter().print(JsonView.buildErrorResponse(msg));
+            JsonView.responseErrorJson(resp, msg);
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, msg);
             return null;
         }

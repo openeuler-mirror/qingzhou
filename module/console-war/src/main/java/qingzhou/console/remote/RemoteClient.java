@@ -1,13 +1,13 @@
 package qingzhou.console.remote;
 
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyCipher;
-import qingzhou.framework.ConfigManager;
 import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.config.Config;
+import qingzhou.framework.crypto.CryptoService;
+import qingzhou.framework.crypto.KeyCipher;
+import qingzhou.framework.serializer.Serializer;
 import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.serializer.Serializer;
 
 import javax.net.ssl.*;
 import java.io.FileNotFoundException;
@@ -31,7 +31,7 @@ public class RemoteClient {
             KeyCipher cipher;
             try {
                 CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
-                String localKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.localKeyName);
+                String localKey = ConsoleWarHelper.getConfig().getKey(Config.localKeyName);
                 cipher = cryptoService.getKeyCipher(cryptoService.getKeyCipher(localKey).decrypt(remoteKey));
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");

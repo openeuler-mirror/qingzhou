@@ -1,12 +1,6 @@
 package qingzhou.app.master.system;
 
-import qingzhou.framework.api.AddModel;
-import qingzhou.framework.api.FieldType;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Option;
-import qingzhou.framework.api.Options;
+import qingzhou.api.*;
 
 // todo：ConfigManager 提供对应的实现在中心上存取数据，取代 ConfigManagerImpl
 @Model(name = "registry", icon = "cloud-upload",
@@ -64,7 +58,7 @@ public class Registry extends ModelBase implements AddModel {
     public String registryName;
 
     @Override
-    public Options options(String fieldName) {
+    public Options options(Request request, String fieldName) {
         if ("registryServerType".equals(fieldName)) {
             return Options.of(Option.of("etcd"), Option.of("Nacos"));
         }

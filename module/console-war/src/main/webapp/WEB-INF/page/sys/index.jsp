@@ -2,6 +2,7 @@
 
 <%
 String contextPath = request.getContextPath();
+request.setAttribute("indexPageFlag", true);
 %>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -261,8 +262,8 @@ String contextPath = request.getContextPath();
                             <ul class="sidebar-menu" data-widget="tree">
                                 <%
                                 // 菜单
-                                List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, FrameworkContext.SYS_APP_MASTER);
-                                out.print(PageBackendService.buildMenuHtmlBuilder(menuList, request, response, ViewManager.htmlView, FrameworkContext.MANAGE_TYPE_APP, FrameworkContext.SYS_APP_MASTER, qzRequest.getModelName()));
+                                List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, App.SYS_APP_MASTER);
+                                out.print(PageBackendService.buildMenuHtmlBuilder(menuList, request, response, ViewManager.htmlView, ConsoleConstants.MANAGE_TYPE_APP, App.SYS_APP_MASTER, qzRequest.getModelName()));
                                 %>
                             </ul>
                         </div>
@@ -302,14 +303,14 @@ String contextPath = request.getContextPath();
             confirmBtnText: '<%=PageBackendService.getMasterAppI18NString("page.confirm")%>',
             cancelBtnText: '<%=PageBackendService.getMasterAppI18NString("page.cancel")%>',
             notLogin: '<%=PageBackendService.getMasterAppI18NString("page.login.need")%>',
-            encrypt_key_size: '<%=PageBackendService.getKeySize()%>',
+            encrypt_key_size: '<%=AsymmetricDecryptor.getKeySize()%>',
             reloginBtnText: '<%=PageBackendService.getMasterAppI18NString("page.relogin")%>',
             iknowBtnText: '<%=PageBackendService.getMasterAppI18NString("page.gotit")%>',
             switchLang: '<%=PageBackendService.getMasterAppI18NString("page.lang.switch.confirm")%>',
             logout: '<%=PageBackendService.getMasterAppI18NString("page.logout.confirm")%>',
             downloadlistName: '<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>',
             downloadTip: '<%=PageBackendService.getMasterAppI18NString("page.download.log.tip")%>',
-            actionName_target: '<%=FrameworkContext.SYS_ACTION_MANAGE%>',
+            actionName_target: '<%=App.SYS_ACTION_MANAGE%>',
             downloadFileNames: '<%=DownloadModel.PARAMETER_DOWNLOAD_FILE_NAMES%>',
             showAction: '<%=ShowModel.ACTION_NAME_SHOW%>',
             downloadCheckAll: '<%=PageBackendService.getMasterAppI18NString("page.download.checkall")%>',

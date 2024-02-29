@@ -7,8 +7,6 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import qingzhou.console.servlet.ServletService;
-import qingzhou.framework.pattern.Callback;
-import qingzhou.framework.util.ClassLoaderUtil;
 
 import java.nio.charset.StandardCharsets;
 
@@ -17,9 +15,12 @@ public class ServletServiceImpl implements ServletService {
 
     @Override
     public void start(int port, String baseDir) throws Exception {
-        ClassLoaderUtil.runUnderClassLoader((Callback<Void, Void>) args -> {
+        ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(ServletServiceImpl.class.getClassLoader());
+
             tomcat = new Tomcat();
-            if (null != baseDir && !"".equals(baseDir)) {
+            if (null != baseDir && !baseDir.isEmpty()) {
                 tomcat.setBaseDir(baseDir);
             }
             tomcat.setPort(port); // 设置默认连接器端口
@@ -28,8 +29,9 @@ public class ServletServiceImpl implements ServletService {
             // 设置最大文件上传的大小
             connector.setMaxPostSize(104857600);// 100 MB
             tomcat.start(); // 启动服务器
-            return null;
-        }, ServletServiceImpl.class.getClassLoader());
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldLoader);
+        }
     }
 
     @Override

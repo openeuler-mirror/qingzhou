@@ -10,11 +10,4 @@
     </parent>
 
     <artifactId>app-master</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
-        </dependency>
-    </dependencies>
 </project>

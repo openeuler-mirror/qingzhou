@@ -1,42 +1,23 @@
 package qingzhou.bootstrap.main;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
-import org.osgi.framework.launch.Framework;
-import org.osgi.framework.launch.FrameworkFactory;
 import qingzhou.bootstrap.Utils;
+import qingzhou.bootstrap.main.impl.FrameworkContextImpl;
+import qingzhou.bootstrap.main.service.ServiceRegister;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.*;
 
 public class Main {
+    private static final FrameworkContext MODULE_CONTEXT = new FrameworkContextImpl();
+    private static final List<ModuleLoader> MODULE_LOADER_LIST = new ArrayList<>();
+
     public static void main(String[] args) throws Exception {
         TreeMap<Integer, List<File>> moduleLevel = moduleLevel();
-
-        Map<String, String> configuration = new HashMap<>();
-        File bundleCache = Utils.getTemp(Utils.getDomain(), "osgi-bundle");
-        if (bundleCache.isDirectory()) {
-            Utils.cleanDirectory(bundleCache);
-        }
-        configuration.put(Constants.FRAMEWORK_STORAGE, bundleCache.getCanonicalPath());
-        configuration.put(Constants.FRAMEWORK_BEGINNING_STARTLEVEL, String.valueOf(moduleLevel.size()));
-
-        List<FrameworkFactory> frameworkFactories = Utils.loadServices(FrameworkFactory.class.getName(), Main.class.getClassLoader());
-        FrameworkFactory frameworkFactory = frameworkFactories.get(0);
-        Framework framework = frameworkFactory.newFramework(configuration);
-
-        framework.start();
-        installBundle(framework, moduleLevel);
-        waitForStop(framework);
+        installModule(moduleLevel);
+        waitForStop();
     }
 
     private static TreeMap<Integer, List<File>> moduleLevel() throws Exception {
@@ -55,30 +36,27 @@ public class Main {
 
         TreeMap<Integer, List<File>> startLevels = new TreeMap<>();
 
-        String[] searchDir = {"module", "service"};
-        for (String dir : searchDir) {
-            File[] modules = new File(Utils.getLibDir(), dir).listFiles();
-            for (File module : Objects.requireNonNull(modules)) {
-                String fileName = module.getName();
-                String suffix = ".jar";
-                int i = fileName.indexOf(suffix);
-                if (i > 0) {
-                    String moduleName = fileName.substring(0, i);
+        File[] modules = new File(Utils.getLibDir(), "module").listFiles();
+        for (File module : Objects.requireNonNull(modules)) {
+            String fileName = module.getName();
+            String suffix = ".jar";
+            int i = fileName.indexOf(suffix);
+            if (i > 0) {
+                String moduleName = fileName.substring(0, i);
 
-                    boolean match = false;
-                    for (Map.Entry<Integer, List<String>> entry : levelProperties.entrySet()) {
-                        if (entry.getValue().contains(moduleName)) {
-                            List<File> files = startLevels.computeIfAbsent(entry.getKey(), integer -> new ArrayList<>());
-                            files.add(module);
-                            match = true;
-                            break;
-                        }
-                    }
-
-                    if (!match) {
-                        List<File> files = startLevels.computeIfAbsent(otherLevel, integer -> new ArrayList<>());
+                boolean match = false;
+                for (Map.Entry<Integer, List<String>> entry : levelProperties.entrySet()) {
+                    if (entry.getValue().contains(moduleName)) {
+                        List<File> files = startLevels.computeIfAbsent(entry.getKey(), integer -> new ArrayList<>());
                         files.add(module);
+                        match = true;
+                        break;
                     }
+                }
+
+                if (!match) {
+                    List<File> files = startLevels.computeIfAbsent(otherLevel, integer -> new ArrayList<>());
+                    files.add(module);
                 }
             }
         }
@@ -86,35 +64,52 @@ public class Main {
         return startLevels;
     }
 
-    private static void installBundle(Framework framework, TreeMap<Integer, List<File>> moduleLevel) throws BundleException {
+    private static void installModule(TreeMap<Integer, List<File>> moduleLevel) throws Exception {
+        ClassLoader parent = ModuleLoader.class.getClassLoader();
+        ClassLoader frameworkLoader = null;
         for (Map.Entry<Integer, List<File>> entry : moduleLevel.entrySet()) {
             for (File moduleJar : entry.getValue()) {
-                if (moduleJar.exists()) {
-                    installBundleFile(framework, moduleJar);
+                if (!moduleJar.exists()) {
+                    throw new IllegalStateException("module not found: " + moduleJar.getName());
+                }
+
+                // 加载当前模块
+                ClassLoader currentModuleLoader = new URLClassLoader(new URL[]{moduleJar.toURI().toURL()}, parent);
+                List<ModuleLoader> moduleLoaders = Utils.loadServices(ModuleLoader.class.getName(), currentModuleLoader);
+                for (ModuleLoader moduleLoader : moduleLoaders) {
+                    if (moduleLoader instanceof ServiceRegister) {
+                        Class<?> serviceType = ((ServiceRegister<?>) moduleLoader).serviceType();
+                        if (MODULE_LOADER_LIST.stream().anyMatch(moduleLoader1 -> (moduleLoader1 instanceof ServiceRegister) && (((ServiceRegister<?>) moduleLoader1).serviceType() == serviceType))) {
+                            continue;
+                        }
+                    }
+
+                    moduleLoader.start(MODULE_CONTEXT);
+                    MODULE_LOADER_LIST.add(moduleLoader);
+                }
+
+                // 确定下个模块的父加载器
+                if (moduleJar.getName().contains("qingzhou-framework")) {
+                    frameworkLoader = currentModuleLoader;
+                }
+                if (frameworkLoader != null) {
+                    parent = frameworkLoader;
                 } else {
-                    System.err.println("module not found: " + moduleJar.getName());
+                    parent = currentModuleLoader;
                 }
             }
         }
     }
 
-    private static void installBundleFile(Framework framework, File moduleJar) throws BundleException {
-        BundleContext bundleContext = framework.getBundleContext();
-        Bundle bundle = bundleContext.installBundle(moduleJar.toURI().toString());
-        bundle.start();
-    }
-
-    private static void waitForStop(Framework framework) {
-        Runtime.getRuntime().addShutdownHook(new Thread("Felix Shutdown Hook") {
-            @Override
-            public void run() {
-                try {
-                    framework.stop();
-                    framework.waitForStop(0L);
-                } catch (Exception ex) {
-                    System.err.println("Error stopping framework: " + ex);
-                }
+    private static void waitForStop() throws Exception {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            for (int i = MODULE_LOADER_LIST.size() - 1; i >= 0; i--) {
+                MODULE_LOADER_LIST.get(i).stop(MODULE_CONTEXT);
             }
-        });
+        }));
+
+        synchronized (Main.class) {
+            Main.class.wait();
+        }
     }
 }

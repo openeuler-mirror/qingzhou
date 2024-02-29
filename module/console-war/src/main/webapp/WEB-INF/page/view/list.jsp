@@ -7,6 +7,7 @@ if (qzRequest == null || qzResponse == null) {
     return; // for 静态源码漏洞扫描
 }
 
+final boolean hasId = PageBackendService.hasIDField(qzRequest);
 LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
 String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
 for (String fieldName : fieldNames) {
@@ -147,20 +148,16 @@ int pageSize = qzResponse.getPageSize();
                         String modelIcon = modelManager.getModel(qzRequest.getModelName()).icon();
 
                         String originUnEncodedId = modelBase.get(ListModel.FIELD_NAME_ID);
-                        String encodedId = originUnEncodedId;
-                        if (ConsoleSDK.needEncode(originUnEncodedId)) {
-                            encodedId = ConsoleSDK.encodeId(originUnEncodedId);
-                        }
+                        String encodedId = PageBackendService.encodeId(originUnEncodedId);
                         %>
                         <tr>
                             <%
-                            String idValue = modelBase.get(ListModel.FIELD_NAME_ID);
                             if (opsActions.length > 0) {
                                 boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, modelBase).length > 0;
                                 %>
                                 <td class="custom-checkbox">
                                     <input type="checkbox"
-                                           value="<%= ConsoleSDK.needEncode(idValue) ?  ConsoleSDK.encodeId(idValue) : idValue%>"
+                                           value="<%= PageBackendService.encodeId(modelBase.get(ListModel.FIELD_NAME_ID))%>"
                                            name="<%=ListModel.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
                                 </td>
                                 <%
@@ -184,7 +181,7 @@ int pageSize = qzResponse.getPageSize();
                                 if (value == null) {
                                     value = "";
                                 }
-                                if (isFirst && targetAction != null) {
+                                if (isFirst && hasId && targetAction != null) {
                                     isFirst = false;
                                     %>
                                     <td>

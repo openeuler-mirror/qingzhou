@@ -10,11 +10,11 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>qingzhou-api</module>
+        <module>qingzhou-framework</module>
         <module>module</module>
         <module>package</module>
-        <module>module-ext</module>
         <module>test</module>
-        <module>service</module>
     </modules>
 
     <properties>
@@ -95,30 +95,4 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.osgi</groupId>
-                <artifactId>osgi.core</artifactId>
-                <version>6.0.0</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>qingzhou</groupId>
-                <artifactId>qingzhou-framework</artifactId>
-                <version>0.1.0</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.testng</groupId>
-                <artifactId>testng</artifactId>
-                <version>6.10</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
 </project>

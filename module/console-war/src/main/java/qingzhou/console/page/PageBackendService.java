@@ -1,29 +1,19 @@
 package qingzhou.console.page;
 
-import qingzhou.console.AppStub;
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
-import qingzhou.console.Validator;
-import qingzhou.console.controller.rest.AccessControl;
+import qingzhou.api.*;
+import qingzhou.console.*;
+import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.ConfigManager;
-import qingzhou.framework.FrameworkContext;
-import qingzhou.framework.api.*;
+import qingzhou.framework.app.App;
 import qingzhou.framework.app.RequestImpl;
+import qingzhou.console.util.Base32Util;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -40,12 +30,12 @@ public class PageBackendService {
 
     public static String[] getActionNamesShowToList(String appName, String modelName) {
         ModelManager modelManager = getModelManager(appName);
-        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(ModelAction::showToList).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
+        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelAction::showToList).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
     }
 
     public static String[] getActionNamesShowToListHead(String appName, String modelName) {
         ModelManager modelManager = getModelManager(appName);
-        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(ModelAction::showToListHead).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
+        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelAction::showToListHead).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
     }
 
     public static String getFieldName(String appName, String modelName, int fieldIndex) {
@@ -55,10 +45,10 @@ public class PageBackendService {
 
     public static String getInitAppName(RequestImpl request) {
         if (request == null) {
-            return FrameworkContext.SYS_APP_MASTER;
+            return App.SYS_APP_MASTER;
         }
-        if (FrameworkContext.MANAGE_TYPE_NODE.equals(request.getManageType())) {
-            return FrameworkContext.SYS_APP_NODE_AGENT;
+        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(request.getManageType())) {
+            return App.SYS_APP_NODE_AGENT;
         } else {
             return request.getAppName();
         }
@@ -72,7 +62,7 @@ public class PageBackendService {
         return ConsoleI18n.getI18N(I18n.getI18nLang(), key);
     }
 
-    public static ModelManager getModelManager(String appName) {
+    private static ModelManager getModelManager(String appName) { // 应该只能被 jsp 页面调用
         return ConsoleWarHelper.getAppStub(appName).getModelManager();
     }
 
@@ -184,7 +174,7 @@ public class PageBackendService {
         return menus;
     }
 
-    public static String encodeURL(HttpServletResponse response, String url) {// 应该优先考虑使用 非静态 的同名方法，而不是这个
+    public static String encodeURL(HttpServletResponse response, String url) {
         return response.encodeURL(url);
     }
 
@@ -230,29 +220,6 @@ public class PageBackendService {
         return result;
     }
 
-    public static String decryptWithConsolePrivateKey(String input) {
-        if (StringUtil.isBlank(input)) {
-            return input;
-        }
-        try {
-            String pubKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.publicKeyName);
-            String priKey = ConsoleWarHelper.getConfigManager().getKey(ConfigManager.privateKeyName);
-            return ConsoleWarHelper.getCryptoService().getKeyPairCipher(pubKey, priKey).decryptWithPrivateKey(input);
-        } catch (Exception e) {
-            ConsoleWarHelper.getLogger().warn("Decryption error", e);
-            return input;
-        }
-    }
-
-    public static String getPublicKeyString() throws Exception {
-        return ConsoleWarHelper.getConfigManager().getKey(ConfigManager.publicKeyName);
-    }
-
-    // jsp加密： 获取非对称算法密钥长度
-    public static int getKeySize() { // login.jsp 使用
-        return 1024;// 保持一致：PasswordCipherFactory.KeyGenerate
-    }
-
     public static String getSubmitActionName(Request request) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
@@ -276,8 +243,8 @@ public class PageBackendService {
     public static boolean hasIDField(Request request) {
         RequestImpl requestImpl = (RequestImpl) request;
         String appName = request.getAppName();
-        if (requestImpl.getManageType().equals(FrameworkContext.MANAGE_TYPE_NODE)) {
-            appName = FrameworkContext.SYS_APP_NODE_AGENT;
+        if (requestImpl.getManageType().equals(ConsoleConstants.MANAGE_TYPE_NODE)) {
+            appName = App.SYS_APP_NODE_AGENT;
         }
         ModelManager modelManager = getModelManager(appName);
         if (modelManager == null) {
@@ -308,10 +275,6 @@ public class PageBackendService {
             }
         }
         return null;
-    }
-
-    public static void warn(String msg) {
-        ConsoleWarHelper.getLogger().warn(msg);
     }
 
     public static Map<String, String> modelFieldEffectiveWhenMap(Request request) {
@@ -421,14 +384,42 @@ public class PageBackendService {
         return getActionNamesShowToList(appName, request.getModelName()).length > 0;
     }
 
-    public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
-        return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
-    }
-
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, RequestImpl request, String viewName, String actionName) {
         String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getManageType() + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
         return response.encodeURL(url);
     }
 
     /********************* 批量操作 end ************************/
+
+    private static final String encodedFlag = "Encoded:";
+    private static final String[] encodeFlags = {
+            "#", "?", "&",// 一些不能在url中传递的参数
+            ":", "%", "+", " ", "=", ",",
+            "[", "]"
+    };
+
+    // 启动参数(如 -XX:+DisableExplicitGC )有特殊字符，编码后放在url里作参数，因此需要解码
+    public static String decodeId(String encodeId) {
+        try {
+            if (encodeId.startsWith(encodedFlag)) {
+                return new String(Base32Util.decode(encodeId.substring(encodedFlag.length())), StandardCharsets.UTF_8); // for #NC-558 特殊字符可能编码了
+            }
+        } catch (Exception ignored) {
+        }
+        return encodeId; // 出错，表示 rest 接口，没有编码
+    }
+
+    // 启动参数(如 -XX:+DisableExplicitGC )有特殊字符，不能在url里作参数，因此需要编码
+    public static String encodeId(String id) {
+        try {
+            for (String flag : encodeFlags) {
+                if (id.contains(flag)) {
+                    return encodedFlag + Base32Util.encode(id.getBytes(StandardCharsets.UTF_8)); // for #NC-558 特殊字符可能编码了
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        return id; // 出错，表示 rest 接口，没有编码
+    }
 }

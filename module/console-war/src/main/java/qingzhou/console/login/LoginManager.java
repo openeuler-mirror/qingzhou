@@ -1,22 +1,22 @@
 package qingzhou.console.login;
 
+import qingzhou.api.Lang;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
+import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.I18nFilter;
+import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.controller.system.HttpServletContext;
-import qingzhou.console.controller.system.I18nFilter;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.sdk.ConsoleSDK;
-import qingzhou.console.view.impl.HtmlView;
-import qingzhou.console.view.impl.JsonView;
-import qingzhou.framework.api.Lang;
-import qingzhou.framework.pattern.Filter;
+import qingzhou.console.view.type.HtmlView;
+import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,6 +42,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static final String ACCEPT_AGREEMENT_MSG_KEY = "page.login.agreement";
     public static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
+    public static final String[] noLoginCheckUris = {LOGIN_PATH, VerCode.CAPTCHA_URI, ConsoleConstants.REGISTER_URI};
     private static final Map<String, LockOutRealm> userLockOutRealms = new LinkedHashMap<String, LockOutRealm>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, LockOutRealm> eldest) {
@@ -90,7 +91,7 @@ public class LoginManager implements Filter<HttpServletContext> {
         } else {
             String failedMsgKey = failedMsg.getHeaderMsg();
             String msg = LoginManager.retrieveI18nMsg(failedMsgKey);
-            response.getWriter().print(JsonView.buildErrorResponse(msg));
+            JsonView.responseErrorJson(response, msg);
 
             if (!response.isCommitted()) {
                 String redirectUri = failedMsg.getRedirectUri();
@@ -190,7 +191,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static boolean check2FA(HttpServletRequest request) throws Exception {
-        return check2FA(request.getParameter(LOGIN_USER), PageBackendService.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
+        return check2FA(request.getParameter(LOGIN_USER), AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
     }
 
     public static boolean check2FA(String user, String login2FA) throws Exception {
@@ -216,7 +217,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static String checkPassword(String user, String password) {
         try {
-            password = PageBackendService.decryptWithConsolePrivateKey(password);
+            password = AsymmetricDecryptor.decryptWithConsolePrivateKey(password);
         } catch (Exception ignored) {
         }
 
@@ -271,7 +272,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     public boolean doFilter(HttpServletContext context) throws Exception {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
-        String checkPath = PageBackendService.retrieveServletPathAndPathInfo(request);
+        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
 
         if (checkPath.startsWith("/static/")) {
             for (String suffix : STATIC_RES_SUFFIX) {
@@ -336,12 +337,11 @@ public class LoginManager implements Filter<HttpServletContext> {
                 }
                 // login.jsp 已经在 application.xml 中配置了过滤，
                 // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
-                String toJson = JsonView.buildErrorResponse("Please enter username and password to log in to the system");
-                response.getWriter().print(toJson);
+                String toJson = JsonView.responseErrorJson(response, "Please enter username and password to log in to the system");
                 if (I18n.getI18nLang() == Lang.en) { // header里只能英文
                     response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);
                 } else {
-                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, ConsoleSDK.encodeId(toJson));
+                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
                 }
                 response.sendRedirect(request.getContextPath() + LOGIN_PATH);
             }

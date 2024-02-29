@@ -1,6 +1,6 @@
 package qingzhou.app.model;
 
-import qingzhou.framework.api.*;
+import qingzhou.api.*;
 
 import java.util.ArrayList;
 import java.util.List;

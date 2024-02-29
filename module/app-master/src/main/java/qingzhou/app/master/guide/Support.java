@@ -1,15 +1,7 @@
 package qingzhou.app.master.guide;
 
+import qingzhou.api.*;
 import qingzhou.app.master.ReadOnlyDataStore;
-import qingzhou.framework.api.ConsoleContext;
-import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.ListModel;
-import qingzhou.framework.api.Model;
-import qingzhou.framework.api.ModelAction;
-import qingzhou.framework.api.ModelBase;
-import qingzhou.framework.api.ModelField;
-import qingzhou.framework.api.Request;
-import qingzhou.framework.api.Response;
 
 import java.util.ArrayList;
 import java.util.List;

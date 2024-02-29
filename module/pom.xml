@@ -13,14 +13,25 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>qingzhou-framework</module>
-        <module>qingzhou-console</module>
+        <module>qingzhou-remote</module>
         <module>console-war</module>
-        <module>qingzhou-appmanager</module>
+        <module>qingzhou-console</module>
+        <module>app-common</module>
         <module>app-master</module>
         <module>app-nodeagent</module>
-        <module>qingzhou-remote</module>
+        <module>qingzhou-app</module>
         <module>qingzhou-config</module>
-        <module>app-common</module>
+        <module>qingzhou-ssh</module>
+        <module>qingzhou-serializer</module>
+        <module>qingzhou-crypto</module>
+        <module>qingzhou-logger</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-framework</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+    </dependencies>
 </project>

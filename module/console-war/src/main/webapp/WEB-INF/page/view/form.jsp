@@ -13,10 +13,8 @@ ModelField idField = modelManager.getModelField(qzRequest.getModelName(), idFiel
 final boolean hasId = idField != null;
 List<String> passwordFields = new ArrayList();
 String id = qzRequest.getId();
-String encodedId = id;
-if (ConsoleSDK.needEncode(id)) {
-    encodedId = ConsoleSDK.encodeId(id);
-}
+String encodedId = PageBackendService.encodeId(id);
+
 if (encodedId == null) {
     encodedId = "";
 }
@@ -285,7 +283,7 @@ if (encodedId == null) {
 
     <div id="tempZone" style="display:none;"></div>
     <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-        <%=PageBackendService.getPublicKeyString()%>
+        <%=AsymmetricDecryptor.getPublicKeyString()%>
     </textarea>
 
     <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">

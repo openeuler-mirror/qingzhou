@@ -1,7 +1,7 @@
 package qingzhou.console.login;
 
-import qingzhou.framework.util.Base32Util;
-import qingzhou.framework.util.HexUtil;
+import qingzhou.console.util.HexUtil;
+import qingzhou.console.util.Base32Util;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -165,8 +165,7 @@ public class Totp {
         try {
             Mac hmac;
             hmac = Mac.getInstance(crypto);
-            SecretKeySpec macKey =
-                    new SecretKeySpec(keyBytes, "RAW");
+            SecretKeySpec macKey = new SecretKeySpec(keyBytes, "RAW");
             hmac.init(macKey);
             return hmac.doFinal(text);
         } catch (GeneralSecurityException gse) {

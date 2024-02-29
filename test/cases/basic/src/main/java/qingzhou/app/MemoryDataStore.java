@@ -1,7 +1,7 @@
 package qingzhou.app;
 
-import qingzhou.framework.api.DataStore;
-import qingzhou.framework.api.ListModel;
+import qingzhou.api.DataStore;
+import qingzhou.api.ListModel;
 
 import java.util.List;
 import java.util.Map;
