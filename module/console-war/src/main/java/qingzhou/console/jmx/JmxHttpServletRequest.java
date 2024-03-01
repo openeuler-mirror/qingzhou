@@ -24,6 +24,7 @@ import java.util.*;
 
 public class JmxHttpServletRequest implements HttpServletRequest {
 
+    private final String appName;
     private final String modelName;
     private final String actionName;
     private final String id;
@@ -31,7 +32,8 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     private final Hashtable<String, Object> attrs = new Hashtable<>();
     private StandardSession session;
 
-    public JmxHttpServletRequest(String modelName, String actionName, Properties properties) {
+    public JmxHttpServletRequest(String appName, String modelName, String actionName, Properties properties) {
+        this.appName = appName;
         this.modelName = modelName;
         this.actionName = actionName;
         this.properties = properties;
@@ -81,7 +83,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getPathInfo() {
-        String uri = "/json/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + modelName + "/" + actionName;
+        String uri = "/json/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + appName + "/" + modelName + "/" + actionName;
         if (this.id != null) {
             uri = uri + "/" + id;
         }
@@ -137,7 +139,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getRequestURI() {
-        return "/console/jmx/json/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + modelName + "/" + actionName;
+        return "/console/jmx" + getPathInfo();
     }
 
     @Override
