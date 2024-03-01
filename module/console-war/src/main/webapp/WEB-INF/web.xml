@@ -9,6 +9,7 @@
 
     <listener>
         <listener-class>qingzhou.console.controller.SystemController</listener-class>
+        <listener-class>qingzhou.console.jmx.JMXServerHolder</listener-class>
     </listener>
 
     <filter>

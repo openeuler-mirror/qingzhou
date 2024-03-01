@@ -34,7 +34,8 @@ public class ServerXml { // todo 考虑替代：ConfigManager
     }
 
     public boolean isJmxEnabled() {
-        return Boolean.parseBoolean(ConsoleWarHelper.getConfig().getConfig("//jmx").get("enabled"));
+        Map<String, String> config = ConsoleWarHelper.getConfig().getConfig("//jmx");
+        return config != null && Boolean.parseBoolean(config.getOrDefault("enabled", "false"));
     }
 
     public Map<String, String> jmx() {

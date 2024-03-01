@@ -1,5 +1,9 @@
 package qingzhou.console.jmx;
 
+import org.apache.catalina.Manager;
+import org.apache.catalina.core.ApplicationContext;
+import org.apache.catalina.core.ApplicationContextFacade;
+import org.apache.catalina.core.StandardContext;
 import qingzhou.console.ServerXml;
 
 import javax.management.MBeanServer;
@@ -12,6 +16,8 @@ import javax.management.remote.JMXServiceURL;
 import javax.management.remote.rmi.RMIConnection;
 import javax.management.remote.rmi.RMIConnectorServer;
 import javax.management.remote.rmi.RMIServerImpl;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -30,7 +36,8 @@ import java.util.Objects;
 public class JMXServerHolder implements ServletContextListener {
 
     String CONSOLE_M_BEAN_NAME = "Qingzhou:name=console";
-    private static final JMXServerHolder instance = new JMXServerHolder();
+    private static JMXServerHolder instance;
+    public static Manager manager;
     private JMXConnectorServer server;
     private ObjectName objectName;
     private MBeanServer mBeanServer;
@@ -46,16 +53,58 @@ public class JMXServerHolder implements ServletContextListener {
         }
     }
 
-    private JMXServerHolder() {
+    public JMXServerHolder() {
+        instance = this;
     }
 
-    public static JMXServerHolder getInstance() {
-        return instance;
+    public static synchronized JMXServerHolder getInstance() {
+        if (instance == null) {
+            return new JMXServerHolder();
+        } else {
+            return instance;
+        }
     }
 
     public static String makeupJMXServiceUrl(String ip, int registerPort) {
         String ipAndPort = ip + ":" + registerPort;
         return String.format("service:jmx:rmi://%s/jndi/rmi://%s/server", ipAndPort, ipAndPort);
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        try {
+            init();
+            ServletContext servletContext = sce.getServletContext();
+            manager = getManager(servletContext);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Manager getManager(ServletContext servletContext) throws Exception {
+        ApplicationContext context = null;
+        if (servletContext instanceof ApplicationContextFacade) {
+            Field field = servletContext.getClass().getDeclaredField("context");
+            boolean accessible = field.isAccessible();
+            field.setAccessible(true);
+            context = (ApplicationContext) field.get(servletContext);
+            field.setAccessible(accessible);
+        } else if (servletContext instanceof ApplicationContext) {
+            context = (ApplicationContext) servletContext;
+        }
+
+        if (context != null) {
+            Field field = context.getClass().getDeclaredField("context");
+            boolean accessible = field.isAccessible();
+            field.setAccessible(true);
+            StandardContext sc = (StandardContext) field.get(context);
+            field.setAccessible(accessible);
+            if (sc != null) {
+                return sc.getManager();
+            }
+        }
+
+        return null;
     }
 
     public synchronized void init() throws Exception {
@@ -97,11 +146,20 @@ public class JMXServerHolder implements ServletContextListener {
                 JMXConnectionNotification jmxConnectionNotification = (JMXConnectionNotification) notification;
                 String connectionId = jmxConnectionNotification.getConnectionId();
                 String[] s = connectionId.split(" ");
-                HttpSession session = (HttpSession) JmxHttpServletRequest.MANAGER.findSession(s[1]);
+                HttpSession session = (HttpSession) manager.findSession(s[1]);
                 if (session != null) {
                     session.invalidate();
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        try {
+            destroy();
         } catch (Exception e) {
             e.printStackTrace();
         }

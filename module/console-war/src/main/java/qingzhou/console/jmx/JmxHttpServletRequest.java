@@ -23,7 +23,7 @@ import java.security.Principal;
 import java.util.*;
 
 public class JmxHttpServletRequest implements HttpServletRequest {
-    public static final Manager MANAGER = new StandardManager();
+
     private final String modelName;
     private final String actionName;
     private final String id;
@@ -162,7 +162,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
         if (userPrincipal != null) {
             String id = userPrincipal.getName();
             try {
-                session = (StandardSession) MANAGER.findSession(id);
+                session = (StandardSession) JMXServerHolder.manager.findSession(id);
             } catch (IOException ignored) {
             }
         }
@@ -170,7 +170,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
             session = null;
         }
         if (session == null && b) {
-            session = new JmxStandardSession(MANAGER);
+            session = new JmxStandardSession(JMXServerHolder.manager);
             session.addSessionListener(event -> {
                 if (event.getType().equals(Session.SESSION_DESTROYED_EVENT)) {
                     Session session = event.getSession();
