@@ -1,17 +1,22 @@
 package qingzhou.app;
 
+import qingzhou.app.mbean.ServerImpl;
 import qingzhou.bootstrap.main.service.ServiceRegister;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.logger.Logger;
 import qingzhou.framework.util.FileUtil;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 
 public class Controller extends ServiceRegister<AppManager> {
     public static Logger logger;
-    private AppManager appManager;
+    public static AppManager appManager;
+    public static String SERVER_M_BEAN_NAME = "QingZhou:name=server";
 
     @Override
     public Class<AppManager> serviceType() {
@@ -38,6 +43,9 @@ public class Controller extends ServiceRegister<AppManager> {
                 appManager.installApp(file);
             }
         }
+        MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+        ObjectName name = new ObjectName(SERVER_M_BEAN_NAME);
+        mBeanServer.registerMBean(new ServerImpl(), name);
     }
 
     @Override

@@ -11,10 +11,9 @@ import java.util.Properties;
 public class JmxImpl implements JmxImplMBean {
 
     @Override
-    public String callServerMethod(String modelName, String actionName, Properties args) throws Exception {
-
+    public String callServerMethod(String appName, String modelName, String actionName, Properties args) throws Exception {
         try {
-            JmxHttpServletRequest request = new JmxHttpServletRequest(modelName, actionName, args);
+            JmxHttpServletRequest request = new JmxHttpServletRequest(appName, modelName, actionName, args);
             HttpSession session = request.getSession(false);
             if (session == null) {
                 throw new RuntimeException(ConsoleI18n.getI18N(I18n.getI18nLang(), "jmx.authentication.invalid"));
