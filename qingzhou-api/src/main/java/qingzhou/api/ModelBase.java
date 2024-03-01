@@ -1,26 +1,17 @@
 package qingzhou.api;
 
-// 所有 @Model 的实现类都要从此类继承
 public abstract class ModelBase implements ShowModel {
     private AppContext appContext;
-    private final ThreadLocal<Lang> localLang = new ThreadLocal<>();
 
     // 由框架注入
     public void setAppContext(AppContext appContext) {
+        if (this.appContext != null) throw new IllegalStateException(); // 不需重复设置，AppContext 应是不变量
         this.appContext = appContext;
     }
 
     @Override
     public AppContext getAppContext() {
         return appContext;
-    }
-
-    public void setI18nLang(Lang lang) {
-        localLang.set(lang);
-    }
-
-    public Lang getI18nLang() {
-        return localLang.get();
     }
 
     // 添加 i18n 等定制初始化

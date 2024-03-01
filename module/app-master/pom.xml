@@ -10,12 +10,4 @@
     </parent>
 
     <artifactId>app-master</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-remote</artifactId>
-            <version>1.0</version>
-        </dependency>
-    </dependencies>
 </project>

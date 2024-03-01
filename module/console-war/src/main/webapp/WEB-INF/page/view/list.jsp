@@ -90,7 +90,7 @@ int pageSize = qzResponse.getPageSize();
                                 <%
                                 if (isAjaxAction) {
                                     out.print("act-ajax='true' act-confirm='" +
-                                            String.format(PageBackendService.getMasterAppI18NString( "page.operationConfirm"),
+                                            String.format(PageBackendService.getMasterAppI18nString( "page.operationConfirm"),
                                                     I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + actionKey),
                                                     I18n.getString(menuAppName, "model." + qzRequest.getModelName())) + " ?' ");
                                 }
@@ -118,7 +118,7 @@ int pageSize = qzResponse.getPageSize();
                     <%
                 }
                 %>
-                <th class="sequence"><%=PageBackendService.getMasterAppI18NString( "page.list.order")%></th>
+                <th class="sequence"><%=PageBackendService.getMasterAppI18nString( "page.list.order")%></th>
                 <%
                 for (Integer i : indexToShow) {
                     String name = PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i);
@@ -128,7 +128,7 @@ int pageSize = qzResponse.getPageSize();
                     <%
                 }
                 if (needOperationColumn) {
-                    out.print("<th>" + PageBackendService.getMasterAppI18NString( "page.action") + "</th>");
+                    out.print("<th>" + PageBackendService.getMasterAppI18nString( "page.action") + "</th>");
                 }
                 %>
             </tr>
@@ -139,7 +139,7 @@ int pageSize = qzResponse.getPageSize();
                 if (modelDataList.isEmpty()) {
                     String dataEmpty = "<tr><td colspan='" + (indexToShow.size() + (needOperationColumn ? 2 : 1)) + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
-                            + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + PageBackendService.getMasterAppI18NString( "page.none") + "</span></td>";
+                            + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + PageBackendService.getMasterAppI18nString( "page.none") + "</span></td>";
                     out.print(dataEmpty);
                 } else {
                     int listOrder = (pageNum - 1) * pageSize;
@@ -262,7 +262,7 @@ int pageSize = qzResponse.getPageSize();
                                             }
                                             if (isAjaxAction) {
                                                 out.print(" act-ajax='true' act-confirm='"
-                                                    + String.format(PageBackendService.getMasterAppI18NString( "page.operationConfirm"),
+                                                    + String.format(PageBackendService.getMasterAppI18nString( "page.operationConfirm"),
                                                                 I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + actionKey),
                                                                 I18n.getString(menuAppName, "model." + qzRequest.getModelName()))
                                                                  + " " + originUnEncodedId

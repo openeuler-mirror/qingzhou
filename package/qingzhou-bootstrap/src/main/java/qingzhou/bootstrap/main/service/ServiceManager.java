@@ -8,8 +8,6 @@ public interface ServiceManager {
 
     void unregisterService(RegistryKey registryKey);
 
-    void addServiceListener(ServiceListener listener);
-
     Collection<Class<?>> getServiceTypes();
 
     <T> T getService(Class<T> serviceType);

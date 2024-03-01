@@ -164,7 +164,7 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
 <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
     <div class="form-btn">
         <a href="javascript:void(0);" onclick="tw.goback(this);" btn-type="goback" class="btn" pg="info.jsp">
-            <%=PageBackendService.getMasterAppI18NString("page.cancel")%>
+            <%=PageBackendService.getMasterAppI18nString("page.cancel")%>
         </a>
     </div>
 </div>

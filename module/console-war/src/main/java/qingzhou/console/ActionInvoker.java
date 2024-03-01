@@ -19,7 +19,7 @@ import java.util.*;
 
 public class ActionInvoker {
     static {
-        ConsoleI18n.addI18N("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
+        ConsoleI18n.addI18n("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
     }
 
     private static final ActionInvoker instance = new ActionInvoker();
@@ -36,7 +36,7 @@ public class ActionInvoker {
         boolean ok = Validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
         if (!ok) {
             if (StringUtil.isBlank(validationResponse.getMsg())) {
-                validationResponse.setMsg(ConsoleI18n.getI18N(request.getI18nLang(), "validator.fail"));
+                validationResponse.setMsg(ConsoleI18n.getI18n(request.getI18nLang(), "validator.fail"));
             }
             return validationResponse;
         } else {
@@ -95,11 +95,11 @@ public class ActionInvoker {
         String model = I18n.getString(appName, "model." + request.getModelName());
         String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
         if (result.isEmpty()) {
-            String resultMsg = ConsoleI18n.getI18N(I18n.getI18nLang(), "batch.ops.success", model, action, suc);
+            String resultMsg = ConsoleI18n.getI18n(I18n.getI18nLang(), "batch.ops.success", model, action, suc);
             response.setMsg(resultMsg);
         } else {
             response.setSuccess(suc > 0);
-            errbuilder.append(ConsoleI18n.getI18N(I18n.getI18nLang(), "batch.ops.fail", model, action, suc, fail));
+            errbuilder.append(ConsoleI18n.getI18n(I18n.getI18nLang(), "batch.ops.fail", model, action, suc, fail));
             errbuilder.append("<br/>");
             for (Map.Entry<String, String> entry : result.entrySet()) {
                 String key = entry.getKey();

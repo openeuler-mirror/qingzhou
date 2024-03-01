@@ -1,8 +1,13 @@
 package qingzhou.api;
 
 import java.io.File;
+import java.util.Collection;
 
 public interface AppContext {
+    Collection<Class<?>> getServiceTypes();
+
+    <T> T getService(Class<T> serviceType);
+
     String getPlatformName();
 
     String getPlatformVersion();
@@ -15,7 +20,7 @@ public interface AppContext {
 
     DataStore getDefaultDataStore();
 
-    void addI18N(String key, String[] i18n);
+    void addI18n(String key, String[] i18n);
 
     void addMenu(String menuName, String[] menuI18n, String menuIcon, int menuOrder);
 

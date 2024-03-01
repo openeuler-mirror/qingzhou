@@ -16,7 +16,7 @@ if (!qzResponse.getDataList().isEmpty()) {
             <table class="table table-hover">
                 <tr>
                     <td>
-                        <%=PageBackendService.getMasterAppI18NString( "page.status")%>:
+                        <%=PageBackendService.getMasterAppI18nString( "page.status")%>:
                     </td>
                     <td>
                         <%=qzResponse.isSuccess()%>
@@ -24,7 +24,7 @@ if (!qzResponse.getDataList().isEmpty()) {
                 </tr>
                 <tr>
                     <td>
-                        <%=PageBackendService.getMasterAppI18NString( "page.msg")%>:
+                        <%=PageBackendService.getMasterAppI18nString( "page.msg")%>:
                     </td>
                     <td>
                         <%=qzResponse.getMsg()%>
@@ -82,7 +82,7 @@ if (!qzResponse.getDataList().isEmpty()) {
                 <div class="form-btn">
                     <a href="javascript:void(0);" btn-type="goback" onclick="tw.goback(this);" class="btn">
                         <!--<i class="icon icon-undo"></i>-->
-                        <%=PageBackendService.getMasterAppI18NString("page.cancel")%>
+                        <%=PageBackendService.getMasterAppI18nString("page.cancel")%>
                     </a>
                 </div>
             </div>

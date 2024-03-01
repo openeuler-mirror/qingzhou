@@ -58,7 +58,7 @@ public class App extends ModelBase implements AddModel {
             notSupportedCharacters = "#",
             required = true,
             nameI18n = {"上传应用", "en:Upload Application"},
-            infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的轻舟应用文件，否则可能会导致安装失败。",
+            infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
                     "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
     public String fromUpload;
 
@@ -83,9 +83,9 @@ public class App extends ModelBase implements AddModel {
 
     @Override
     public void init() {
-        getAppContext().addI18N("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
-        getAppContext().addI18N("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
-        getAppContext().addI18N("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
+        getAppContext().addI18n("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
+        getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
+        getAppContext().addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
     }
 
     @Override
@@ -96,7 +96,7 @@ public class App extends ModelBase implements AddModel {
             nodeList.add(Option.of(qingzhou.framework.app.App.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
             Set<String> nodeSet = new HashSet<>();
             try {
-                if ("qingzhou".equals(userName)) {
+                if (Constants.DEFAULT_ADMINISTRATOR.equals(userName)) {
                     List<Map<String, String>> nodes = getDataStore().getAllData("node");
                     nodes.stream()
                             .map(node -> node.get("id"))
@@ -150,7 +150,7 @@ public class App extends ModelBase implements AddModel {
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
             response.setSuccess(false);
-            String msg = getAppContext().getMetadata().getI18N(request.getI18nLang(), "app.id.not.exist");
+            String msg = getAppContext().getMetadata().getI18n(request.getI18nLang(), "app.id.not.exist");
             response.setMsg(msg);
             return;
         }
@@ -163,7 +163,7 @@ public class App extends ModelBase implements AddModel {
             appName = srcFileName.substring(0, index);
         } else {
             response.setSuccess(false);
-            String msg = getAppContext().getMetadata().getI18N(request.getI18nLang(), "app.type.unknown");
+            String msg = getAppContext().getMetadata().getI18n(request.getI18nLang(), "app.type.unknown");
             response.setMsg(msg);
             return;
         }

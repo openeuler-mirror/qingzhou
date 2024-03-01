@@ -1,15 +1,15 @@
 package qingzhou.bootstrap.main.impl;
 
 import qingzhou.bootstrap.main.service.RegistryKey;
-import qingzhou.bootstrap.main.service.ServiceListener;
 import qingzhou.bootstrap.main.service.ServiceManager;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ServiceManagerImpl implements ServiceManager {
     private final Map<Class<?>, Object> services = new HashMap<>();
     private final Map<RegistryKey, Class<?>> registry = new HashMap<>();
-    private final Set<ServiceListener> listeners = new HashSet<>();
 
     @Override
     public synchronized <T> RegistryKey registerService(Class<T> clazz, T service) {
@@ -20,7 +20,6 @@ public class ServiceManagerImpl implements ServiceManager {
         RegistryKey registryKey = new RegistryKey() {
         };
         registry.put(registryKey, clazz);
-        listeners.forEach(serviceListener -> serviceListener.serviceRegistered(clazz));
         return registryKey;
     }
 
@@ -28,14 +27,8 @@ public class ServiceManagerImpl implements ServiceManager {
     public synchronized void unregisterService(RegistryKey registryKey) {
         Class<?> removed = registry.remove(registryKey);
         if (removed != null) {
-            Object service = services.remove(removed);
-            listeners.forEach(serviceListener -> serviceListener.serviceUnregistered(removed, service));
+            services.remove(removed);
         }
-    }
-
-    @Override
-    public void addServiceListener(ServiceListener listener) {
-        listeners.add(listener);
     }
 
     @Override

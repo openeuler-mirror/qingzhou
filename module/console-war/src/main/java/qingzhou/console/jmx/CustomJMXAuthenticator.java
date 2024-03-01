@@ -17,11 +17,11 @@ import java.util.Properties;
 public class CustomJMXAuthenticator implements JMXAuthenticator {
 
     static {
-        ConsoleI18n.addI18N("jmx.credentials.miss", new String[]{"请输入身份认证信息", "en:Please enter authentication information"});
-        ConsoleI18n.addI18N("jmx.credentials.type.error", new String[]{"认证信息应为字符串数组类型，检测到不合法数据：%s", "en:Authentication information should be of type string array, invalid data detected: %s"});
-        ConsoleI18n.addI18N("jmx.credentials.element.error", new String[]{"认证信息不完整，即字符串数组个数不足够", "en:The authentication information is incomplete, that is, the number of string arrays is insufficient"});
-        // ConsoleI18n.addI18N("jmx.credentials.element.isNull", new String[]{"用户名或密码不能为空", "en:The user name or password cannot be empty"});
-        ConsoleI18n.addI18N("jmx.authentication.invalid", new String[]{"JMX 认证无效，必需使用 TongWeb 用户登录认证", "en:JMX authentication is invalid, must use TongWeb user login authentication"});
+        ConsoleI18n.addI18n("jmx.credentials.miss", new String[]{"请输入身份认证信息", "en:Please enter authentication information"});
+        ConsoleI18n.addI18n("jmx.credentials.type.error", new String[]{"认证信息应为字符串数组类型，检测到不合法数据：%s", "en:Authentication information should be of type string array, invalid data detected: %s"});
+        ConsoleI18n.addI18n("jmx.credentials.element.error", new String[]{"认证信息不完整，即字符串数组个数不足够", "en:The authentication information is incomplete, that is, the number of string arrays is insufficient"});
+        ConsoleI18n.addI18n("jmx.credentials.element.isNull", new String[]{"用户名或密码不能为空", "en:The user name or password cannot be empty"});
+        ConsoleI18n.addI18n("jmx.authentication.invalid", new String[]{"JMX 认证无效", "en:JMX authentication is invalid"});
     }
 
     private static void authenticationFailure(String message) throws SecurityException {
@@ -33,27 +33,27 @@ public class CustomJMXAuthenticator implements JMXAuthenticator {
         try {
             String clientHost = RemoteServer.getClientHost();
             if (!TrustedIPChecker.trustedIP(clientHost)) {
-                authenticationFailure(ConsoleI18n.getI18N(I18n.getI18nLang(), "client.trusted.not"));
+                authenticationFailure(ConsoleI18n.getI18n(I18n.getI18nLang(), "client.trusted.not"));
             }
         } catch (ServerNotActiveException e) {
             e.printStackTrace();
         }
 
         if (credentials == null) {
-            authenticationFailure(ConsoleI18n.getI18N(I18n.getI18nLang(), "jmx.credentials.miss"));
+            authenticationFailure(ConsoleI18n.getI18n(I18n.getI18nLang(), "jmx.credentials.miss"));
         }
         if (!(credentials instanceof String[])) {
-            authenticationFailure(String.format(ConsoleI18n.getI18N(I18n.getI18nLang(), "jmx.credentials.type.error"), credentials.getClass().getName()));
+            authenticationFailure(String.format(ConsoleI18n.getI18n(I18n.getI18nLang(), "jmx.credentials.type.error"), credentials.getClass().getName()));
         }
 
         String[] aCredentials = (String[]) credentials;
         if (aCredentials.length < 2) {
-            authenticationFailure(ConsoleI18n.getI18N(I18n.getI18nLang(), "jmx.credentials.element.error"));
+            authenticationFailure(ConsoleI18n.getI18n(I18n.getI18nLang(), "jmx.credentials.element.error"));
         }
         String username = aCredentials[0];
         String password = aCredentials[1];
         if (StringUtil.isBlank(username) || StringUtil.isBlank(password)) {
-            authenticationFailure(ConsoleI18n.getI18N(I18n.getI18nLang(), "jmx.credentials.element.isNull"));
+            authenticationFailure(ConsoleI18n.getI18n(I18n.getI18nLang(), "jmx.credentials.element.isNull"));
         }
 
         JmxHttpServletRequest request = null;

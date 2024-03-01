@@ -43,17 +43,17 @@ public class Password extends ModelBase implements EditModel {
     @Override
     public void init() {
         AppContext master = getAppContext();
-        master.addI18N("update2FA.rebind", new String[]{"双因子认证密钥更新成功，请扫描二维码重新绑定双因子认证密钥",
+        master.addI18n("update2FA.rebind", new String[]{"双因子认证密钥更新成功，请扫描二维码重新绑定双因子认证密钥",
                 "en:The two-factor authentication key is updated successfully, please scan the QR code to re-bind the two-factor authentication key"});
-        master.addI18N("password.confirm.failed", new String[]{"确认密码与新密码不一致", "en:Confirm that the password does not match the new password"});
-        master.addI18N("password.original.failed", new String[]{"原始密码错误", "en:The original password is wrong"});
-        master.addI18N("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变", "en:The new password is the same as the original password and has not changed"});
-        master.addI18N("password.min", new String[]{"未达到密码最短使用期限 %s 天，上次修改时间为：%s", "en:The minimum password age of %s days has not been reached, last modified: %s"});
-        master.addI18N("password.doNotUseOldPasswords", new String[]{"出于安全考虑，禁止使用最近 %s 次使用过的旧密码",
+        master.addI18n("password.confirm.failed", new String[]{"确认密码与新密码不一致", "en:Confirm that the password does not match the new password"});
+        master.addI18n("password.original.failed", new String[]{"原始密码错误", "en:The original password is wrong"});
+        master.addI18n("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变", "en:The new password is the same as the original password and has not changed"});
+        master.addI18n("password.min", new String[]{"未达到密码最短使用期限 %s 天，上次修改时间为：%s", "en:The minimum password age of %s days has not been reached, last modified: %s"});
+        master.addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，禁止使用最近 %s 次使用过的旧密码",
                 "en:For security reasons, the use of old passwords that have been used last %s is prohibited"});
 
-        master.addI18N("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少10位", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
-        master.addI18N("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
+        master.addI18n("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少10位", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
+        master.addI18n("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
     }
 
     @Override
@@ -122,7 +122,7 @@ public class Password extends ModelBase implements EditModel {
 //        xmlUtils.write();
 //
 //        if (Boolean.parseBoolean(paramMap.getOrDefault("update2FA", "false"))) {
-//            response.setMsg(getConsoleContext().getI18N("update2FA.rebind"));
+//            response.setMsg(getConsoleContext().getI18n("update2FA.rebind"));
 //        } else {
 //            // 注销在其它机器上忘记注销的会话
 ////            String encodeUser = LoginManager.encodeUser(actionContext.getId());
@@ -146,21 +146,21 @@ public class Password extends ModelBase implements EditModel {
 //            if ("originalPassword".equals(fieldName)) {
 //                newValue = request.getParameter("originalPassword");
 //                if (newValue == null) { // fix #ITAIT-2849
-//                    return getConsoleContext().getI18N("validator.require");
+//                    return getConsoleContext().getI18n("validator.require");
 //                }
 //
 //                String pwd = ServerXml.get().user(loginUser).get(User.pwdKey);
 //
 //                MessageDigest digest = ConsoleWarHelper.getCryptoService().getMessageDigest();
 //                if (!digest.matches(newValue, pwd)) {
-//                    return getConsoleContext().getI18N("password.original.failed");
+//                    return getConsoleContext().getI18n("password.original.failed");
 //                }
 //            }
 //
 //            if ("newPassword".equals(fieldName)) {
 //                newValue = request.getParameter("newPassword");
 //                if (newValue == null) { // fix #ITAIT-2849
-//                    return getConsoleContext().getI18N("validator.require");
+//                    return getConsoleContext().getI18n("validator.require");
 //                }
 //
 //                String msg = User.checkPwd(newValue, loginUser);
@@ -172,7 +172,7 @@ public class Password extends ModelBase implements EditModel {
 //                MessageDigest digest = ConsoleWarHelper.getCryptoService().getMessageDigest();
 //                boolean matches = digest.matches(newValue, pwd);
 //                if (matches) {
-//                    return getConsoleContext().getI18N("password.change.not");
+//                    return getConsoleContext().getI18n("password.change.not");
 //                }
 //
 //                Map<String, String> userP = ServerXml.get().user(loginUser);
@@ -186,7 +186,7 @@ public class Password extends ModelBase implements EditModel {
 //                                if (minAge != null && !minAge.equals("0")) {
 //                                    long min = time + Integer.parseInt(minAge) * ConsoleConstants.DAY_MILLIS_VALUE;
 //                                    if (TimeUtil.getCurrentTime() < min) {
-//                                        return String.format(getConsoleContext().getI18N("password.min"), minAge, passwordLastModifiedTime);
+//                                        return String.format(getConsoleContext().getI18n("password.min"), minAge, passwordLastModifiedTime);
 //                                    }
 //                                }
 //                            }
@@ -205,7 +205,7 @@ public class Password extends ModelBase implements EditModel {
 //                                if (StringUtil.isBlank(limitRepeats)) {
 //                                    limitRepeats = String.valueOf(User.defLimitRepeats);
 //                                }
-//                                return String.format(getConsoleContext().getI18N("password.doNotUseOldPasswords"), limitRepeats);
+//                                return String.format(getConsoleContext().getI18n("password.doNotUseOldPasswords"), limitRepeats);
 //                            }
 //                        }
 //                    }
@@ -215,10 +215,10 @@ public class Password extends ModelBase implements EditModel {
 //            if ("confirmPassword".equals(fieldName)) {
 //                newValue = request.getParameter("confirmPassword");
 //                if (newValue == null) { // fix #ITAIT-2849
-//                    return getConsoleContext().getI18N("validator.require");
+//                    return getConsoleContext().getI18n("validator.require");
 //                }
 //                if (!newValue.equals(request.getParameter("newPassword"))) {
-//                    return getConsoleContext().getI18N("password.confirm.failed");
+//                    return getConsoleContext().getI18n("password.confirm.failed");
 //                }
 //            }
 //        }

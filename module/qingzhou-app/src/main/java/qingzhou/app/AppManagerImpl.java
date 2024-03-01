@@ -101,6 +101,7 @@ public class AppManagerImpl implements AppManager {
         AppImpl app = new AppImpl();
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
+        app.setAppContext(appContext);
         AppMetadataImpl metadata = (AppMetadataImpl) appContext.getMetadata();
         metadata.setAppName(appName);
 
@@ -120,8 +121,6 @@ public class AppManagerImpl implements AppManager {
         consoleContext.setModelManager(modelManager, metadata);
         appContext.setConsoleContext(consoleContext);
         appContext.addActionFilter(new UniqueFilter());
-
-        app.setAppContext(appContext);
 
         for (String modelName : modelManager.getModelNames()) {
             ModelBase modelInstance = app.getModelInstance(modelName);

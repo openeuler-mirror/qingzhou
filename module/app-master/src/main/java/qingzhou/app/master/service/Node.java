@@ -5,9 +5,10 @@ import qingzhou.app.master.ConsoleDataStore;
 import qingzhou.app.master.Main;
 import qingzhou.framework.app.App;
 import qingzhou.framework.config.Config;
-import qingzhou.framework.util.StringUtil;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Model(name = App.SYS_MODEL_NODE, icon = "node",
         menuName = "Service", menuOrder = 2,
@@ -18,7 +19,7 @@ public class Node extends ModelBase implements AddModel {
 
     @Override
     public void init() {
-        getAppContext().addI18N("node.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
+        getAppContext().addI18n("node.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
     }
 
     @ModelField(
@@ -64,61 +65,13 @@ public class Node extends ModelBase implements AddModel {
     }
 
     @Override
-    public void list(Request request, Response response) throws Exception {
-        String modelName = request.getModelName();
-        DataStore dataStore = getDataStore();
-        if (dataStore == null) {
-            return;
-        }
-        int totalSize = dataStore.getTotalSize(modelName);
-        response.setTotalSize(totalSize);
-
-        int pageSize = pageSize();
-        response.setPageSize(pageSize);
-
-        int pageNum = 1;
-        try {
-            pageNum = Integer.parseInt(request.getParameter(PARAMETER_PAGE_NUM));
-        } catch (NumberFormatException ignored) {
-        }
-        response.setPageNum(pageNum);
-
-        String userName = request.getUserName();
-        if (!"qingzhou".equals(userName)) {
-            Map<String, String> user = dataStore.getDataById("user", userName);
-            String nodeNames = user.get("nodes");
-            if (StringUtil.notBlank(nodeNames)) {
-                String[] nodes = nodeNames.split(",");
-                List<String> expressions = new ArrayList<>();
-                for (String node : nodes) {
-                    expressions.add("@id='" + node + "'");
-                }
-                modelName = modelName + "[" + String.join(" or ", expressions) + "]";
-            }
-        }
-
-        String[] dataIdInPage = dataStore.getDataIdInPage(modelName, pageSize, pageNum).toArray(new String[0]);
-        ModelManager manager = getAppContext().getConsoleContext().getModelManager();
-        String finalModelName = modelName;
-        String[] fieldNamesToList = Arrays.stream(manager.getFieldNames(modelName)).filter(s -> manager.getModelField(finalModelName, s).showToList()).toArray(String[]::new);
-        List<Map<String, String>> result = dataStore.getDataFieldByIds(modelName, dataIdInPage, fieldNamesToList);
-        for (Map<String, String> data : result) {
-            response.addData(data);
-        }
-    }
-
-    @Override
     public DataStore getDataStore() {
-        if (dataStore == null) {
-            dataStore = new NodeDataStore();
-        }
-
-        return dataStore;
+        return new NodeDataStore();
     }
 
     private DataStore dataStore;
 
-    private static class NodeDataStore extends ConsoleDataStore {
+    private class NodeDataStore extends ConsoleDataStore {
         private final Map<String, String> localNode;
 
         NodeDataStore() {
@@ -133,6 +86,24 @@ public class Node extends ModelBase implements AddModel {
         public List<Map<String, String>> getAllData(String type) {
             List<Map<String, String>> allData = super.getAllData(type);
             allData.add(0, localNode);
+
+            // todo 在这里实现数据权限？
+//            String userName = request.getUserName();
+//            if (!Constants.DEFAULT_ADMINISTRATOR.equals(userName)) {
+//                Map<String, String> user = dataStore.getDataById("user", userName);
+//                String nodeNames = user.get("nodes");
+//                if (StringUtil.notBlank(nodeNames)) {
+//                    String[] nodes = nodeNames.split(",");
+//                    List<String> expressions = new ArrayList<>();
+//                    for (String node : nodes) {
+//                        expressions.add("@id='" + node + "'");
+//                    }
+//                    modelName = modelName + "[" + String.join(" or ", expressions) + "]";
+//                }
+//            }
+//
+//            String[] dataIdInPage = dataStore.getDataIdInPage(modelName, pageSize, pageNum).toArray(new String[0]);
+
             return allData;
         }
     }

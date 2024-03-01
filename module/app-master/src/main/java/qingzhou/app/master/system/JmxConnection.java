@@ -10,8 +10,8 @@ import java.util.concurrent.TimeUnit;
         menuOrder = 4,
         entryAction = EditModel.ACTION_NAME_EDIT,
         nameI18n = {"JMX 接口", "en:JMX Interface"},
-        infoI18n = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 TongWeb。",
-                "en:After enabling the JMX interface service, the client can manage TongWeb through the java jmx protocol."})
+        infoI18n = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 Qingzhou。",
+                "en:After enabling the JMX interface service, the client can manage Qingzhou through the java jmx protocol."})
 public class JmxConnection extends ModelBase implements EditModel {
     private static final String DEFAULT_ID = "jmx_0";
     private final String tagName = "jmx";
@@ -19,8 +19,8 @@ public class JmxConnection extends ModelBase implements EditModel {
     @ModelField(
             type = FieldType.bool,
             nameI18n = {"启用", "en:Enabled"},
-            infoI18n = {"功能开关，配置是否开启 TongWeb 的 JMX 接口服务。",
-                    "en:Function switch, configure whether to enable TongWeb JMX interface service."})
+            infoI18n = {"功能开关，配置是否开启 Qingzhou 的 JMX 接口服务。",
+                    "en:Function switch, configure whether to enable Qingzhou JMX interface service."})
     public Boolean enabled = false;
 
     @ModelField(
@@ -42,8 +42,8 @@ public class JmxConnection extends ModelBase implements EditModel {
             effectiveWhen = "enabled=true",
             type = FieldType.bool,
             nameI18n = {"支持 JConsole", "en:Support JConsole"},
-            infoI18n = {"支持在关闭双因子认证时，使用 jconsole 等 JMX 客户端工具连接到 TongWeb JVM。注：开启了该功能，表示您已经接受了 TongWeb 产品的“最终用户许可协议”。",
-                    "en:Supports connecting to the TongWeb JVM using JMX client tools such as jconsole when two-factor authentication is turned off. Note: By enabling this feature, you accept the \"End User License Agreement\" for your TongWeb product."}
+            infoI18n = {"支持在关闭双因子认证时，使用 jconsole 等 JMX 客户端工具连接到 Qingzhou JVM。注：开启了该功能，表示您已经接受了 Qingzhou 产品的“最终用户许可协议”。",
+                    "en:Supports connecting to the Qingzhou JVM using JMX client tools such as jconsole when two-factor authentication is turned off. Note: By enabling this feature, you accept the \"End User License Agreement\" for your Qingzhou product."}
     )
     public boolean supportJConsole = false;
 

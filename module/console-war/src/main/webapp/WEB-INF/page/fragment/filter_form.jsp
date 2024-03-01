@@ -47,7 +47,7 @@
                             <a class="btn"
                                href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
                                form="filterForm">
-                                <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18NString("page.filter")%>
+                                <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18nString("page.filter")%>
                             </a>
                         </span>
         </div>

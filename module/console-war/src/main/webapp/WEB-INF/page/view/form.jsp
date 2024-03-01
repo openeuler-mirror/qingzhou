@@ -273,7 +273,7 @@ if (encodedId == null) {
             if (hasId && listPermission) {
                 %>
                 <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>" btn-type="goback" class="btn">
-                    <%=PageBackendService.getMasterAppI18NString( "page.cancel")%>
+                    <%=PageBackendService.getMasterAppI18nString( "page.cancel")%>
                 </a>
                 <%
             }

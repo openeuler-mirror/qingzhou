@@ -1,5 +1,6 @@
 package qingzhou.console.controller;
 
+import qingzhou.api.Constants;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelManager;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 
 public class AccessControl implements Filter<HttpServletContext> {
     static {
-        ConsoleI18n.addI18N("page.error.permission.deny", new String[]{"对不起，您无权访问该资源", "en:Sorry, you do not have access to this resource"});
+        ConsoleI18n.addI18n("page.error.permission.deny", new String[]{"对不起，您无权访问该资源", "en:Sorry, you do not have access to this resource"});
     }
 
     private static final List<String> masterAppModels = Arrays.asList("user", "version", "node");
@@ -39,7 +40,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             models.add(modelManager.getModel(modelName));
         }
 
-        if (!"qingzhou".equals(loginUser) && App.SYS_APP_MASTER.equals(appName)) {
+        if (!Constants.DEFAULT_ADMINISTRATOR.equals(loginUser) && App.SYS_APP_MASTER.equals(appName)) {
             models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
         }
 
@@ -60,7 +61,7 @@ public class AccessControl implements Filter<HttpServletContext> {
     }
 
     public static boolean nodePermission(String appName, String user) {
-        if ("qingzhou".equals(user)) {
+        if (Constants.DEFAULT_ADMINISTRATOR.equals(user)) {
             return true;
         }
 
@@ -144,7 +145,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             }
         }
 
-        String msg = ConsoleI18n.getI18N(I18n.getI18nLang(), "page.error.permission.deny");
+        String msg = ConsoleI18n.getI18n(I18n.getI18nLang(), "page.error.permission.deny");
         JsonView.responseErrorJson(httpServletResponse, msg);
         return false;
     }

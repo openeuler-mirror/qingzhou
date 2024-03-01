@@ -39,8 +39,8 @@ public class AppStubManager {
                 }
 
                 @Override
-                public String getI18N(Lang lang, String key, Object... args) {
-                    return localApp.getAppContext().getMetadata().getI18N(lang, key, args);
+                public String getI18n(Lang lang, String key, Object... args) {
+                    return localApp.getAppContext().getMetadata().getI18n(lang, key, args);
                 }
 
                 @Override

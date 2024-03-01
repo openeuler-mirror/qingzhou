@@ -6,7 +6,7 @@ import qingzhou.api.*;
 @Model(name = "registry", icon = "cloud-upload",
         menuName = "System", menuOrder = 3,
         nameI18n = {"注册中心", "en:Registry Server"},
-        infoI18n = {"注册中心是一种外置的存储系统，用于实现轻舟平台的配置共享和服务发现。",
+        infoI18n = {"注册中心是一种外置的存储系统，用于实现 Qingzhou 平台的配置共享和服务发现。",
                 "en:The registry is an external storage system that is used to realize configuration sharing and service discovery of the Qingzhou platform."})
 public class Registry extends ModelBase implements AddModel {
     @ModelField(

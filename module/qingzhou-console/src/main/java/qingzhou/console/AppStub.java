@@ -7,7 +7,7 @@ import qingzhou.api.ModelManager;
 public interface AppStub {
     ModelManager getModelManager();
 
-    String getI18N(Lang lang, String key, Object... args);
+    String getI18n(Lang lang, String key, Object... args);
 
     Menu getMenu(String menuName);
 }

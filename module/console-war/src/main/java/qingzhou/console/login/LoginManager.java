@@ -6,7 +6,6 @@ import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
-import qingzhou.console.controller.I18nFilter;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
@@ -81,7 +80,7 @@ public class LoginManager implements Filter<HttpServletContext> {
             try {
                 // web 页面，设置默认的中文 i18n
                 // 需要在登录成功后设置，这是为了保证存入到跳转前的 session 里面
-                I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
+                I18n.setI18nLang(request, I18n.DEFAULT_LANG);
 
                 // 进入主页
                 response.sendRedirect(PageBackendService.encodeURL(response, request.getContextPath() + RESTController.INDEX_PATH)); // to welcome page
@@ -264,7 +263,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static String getMsg(String msg) {
-        String i18n = ConsoleI18n.getI18N(I18n.getI18nLang(), msg);
+        String i18n = ConsoleI18n.getI18n(I18n.getI18nLang(), msg);
         return StringUtil.notBlank(i18n) ? i18n : msg;
     }
 
@@ -305,7 +304,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
         if (checkPath.equals(LOGIN_URI)) {
             try {
-                I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG); // 确保登录页面（包括出错信息）都以中文信息展示
+                I18n.setI18nLang(request, I18n.DEFAULT_LANG); // 确保登录页面（包括出错信息）都以中文信息展示
                 webLogin(request, response);
             } catch (Exception e) {
                 if (e instanceof IOException) {
@@ -330,7 +329,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
                     response.setContentType("application/json;charset=UTF-8");
                     try (PrintWriter writer = context.resp.getWriter()) {
-                        writer.write("{\"success\":\"false\",\"msg\":\"" + ConsoleI18n.getI18N(I18n.getI18nLang(), "page.login.need") + "\"}");
+                        writer.write("{\"success\":\"false\",\"msg\":\"" + ConsoleI18n.getI18n(I18n.getI18nLang(), "page.login.need") + "\"}");
                         writer.flush();
                     }
                     return false;

@@ -4,7 +4,7 @@ import qingzhou.api.AppMetadata;
 import qingzhou.api.Lang;
 import qingzhou.api.Menu;
 import qingzhou.api.ModelManager;
-import qingzhou.framework.app.I18NStore;
+import qingzhou.framework.app.I18nTool;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public class AppMetadataImpl implements AppMetadata, Serializable {
-    private final I18NStore i18NStore = new I18NStore();
+    private final I18nTool i18nTool = new I18nTool();
     private final Properties appProperties = new Properties();
     private final ModelManagerImpl modelManager = new ModelManagerImpl();
     private final Map<String, MenuImpl> menus = new HashMap<>();
@@ -29,8 +29,8 @@ public class AppMetadataImpl implements AppMetadata, Serializable {
     }
 
     @Override
-    public String getI18N(Lang lang, String key, Object... args) {
-        return i18NStore.getI18N(lang, key, args);
+    public String getI18n(Lang lang, String key, Object... args) {
+        return i18nTool.getI18n(lang, key, args);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class AppMetadataImpl implements AppMetadata, Serializable {
         this.appName = appName;
     }
 
-    public void addI18N(String key, String[] i18n) {
-        i18NStore.addI18N(key, i18n, true);
+    public void addI18n(String key, String[] i18n) {
+        i18nTool.addI18n(key, i18n, true);
     }
 }

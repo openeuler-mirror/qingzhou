@@ -14,10 +14,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
-    private static final Filter<HttpServletContext>[] processors = new Filter[]{
+    private final Filter<HttpServletContext>[] processors = new Filter[]{
             new TrustedIPChecker(),
             new JspInterceptor(),
-            new I18nFilter(),
+            new SetI18n(),
             new About(),
             new NodeRegister(),
             new VerCode(),
@@ -29,15 +29,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new LastDecision()
     };
 
-    private static final class LastDecision implements Filter<HttpServletContext> {
-
-        @Override
-        public boolean doFilter(HttpServletContext context) throws Exception {
-            context.chain.doFilter(context.req, context.resp); // 这样可以进入 servlet 资源
-            return false;
-        }
-    }
-
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -47,6 +38,15 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             FilterPattern.doFilter(context, processors);
         } catch (Throwable e) {
             ConsoleWarHelper.getLogger().error(e.getMessage(), e);
+        }
+    }
+
+    private static final class LastDecision implements Filter<HttpServletContext> {
+
+        @Override
+        public boolean doFilter(HttpServletContext context) throws Exception {
+            context.chain.doFilter(context.req, context.resp); // 这样可以进入 servlet 资源
+            return false;
         }
     }
 }

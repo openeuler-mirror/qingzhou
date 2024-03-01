@@ -18,7 +18,7 @@ public class Version extends ModelBase implements AddModel {
             disableOnCreate = true,
             disableOnEdit = true,
             nameI18n = {"版本号", "en:ID"},
-            infoI18n = {"此轻舟的版本号。", "en:The version number of this Qingzhou."})
+            infoI18n = {"此 Qingzhou 的版本号。", "en:The version number of this Qingzhou."})
     public String id;
 
     @ModelField(
@@ -51,7 +51,7 @@ public class Version extends ModelBase implements AddModel {
             notSupportedCharacters = "#",
             required = true,
             nameI18n = {"上传版本", "en:Upload Version"},
-            infoI18n = {"上传一个版本文件到服务器，文件须是 *.zip 类型的轻舟版本文件。",
+            infoI18n = {"上传一个版本文件到服务器，文件须是 *.zip 类型的 Qingzhou 版本文件。",
                     "en:Upload an version file to the server, the file must be a *.zip type qingzhou version file."})
     public String fromUpload;
 

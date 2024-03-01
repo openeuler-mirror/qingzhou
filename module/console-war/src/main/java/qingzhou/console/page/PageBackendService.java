@@ -57,12 +57,12 @@ public class PageBackendService {
         }
     }
 
-    public static String getMasterAppI18NString(String key, Lang lang) {
-        return ConsoleI18n.getI18N(lang, key);
+    public static String getMasterAppI18nString(String key, Lang lang) {
+        return ConsoleI18n.getI18n(lang, key);
     }
 
-    public static String getMasterAppI18NString(String key) {
-        return ConsoleI18n.getI18N(I18n.getI18nLang(), key);
+    public static String getMasterAppI18nString(String key) {
+        return ConsoleI18n.getI18n(I18n.getI18nLang(), key);
     }
 
     private static ModelManager getModelManager(String appName) { // 应该只能被 jsp 页面调用
@@ -272,7 +272,7 @@ public class PageBackendService {
             }
             if (!effective) {
                 return String.format(
-                        ConsoleI18n.getI18N(I18n.getI18nLang(), "validator.ActionEffective.notsupported"),
+                        ConsoleI18n.getI18n(I18n.getI18nLang(), "validator.ActionEffective.notsupported"),
                         I18n.getString(request.getAppName(), "model.action." + request.getModelName() + "." + request.getActionName()),// todo
                         effectiveWhen);
             }

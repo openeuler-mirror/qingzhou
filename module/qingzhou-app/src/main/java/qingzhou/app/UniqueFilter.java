@@ -1,13 +1,13 @@
 package qingzhou.app;
 
 import qingzhou.api.*;
-import qingzhou.framework.app.I18NStore;
+import qingzhou.framework.app.I18nTool;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
 
 public class UniqueFilter implements ActionFilter {
-    private final I18NStore i18NStore = new I18NStore();
+    private final I18nTool i18nTool = new I18nTool();
     private volatile boolean i18nDone = false;
 
     @Override
@@ -28,8 +28,8 @@ public class UniqueFilter implements ActionFilter {
             modelInstance.show(requestTemp, responseTemp);
             boolean exists = responseTemp.isSuccess() && !responseTemp.getDataList().isEmpty();
             if (exists) {
-                String modelNameI18n = appContext.getMetadata().getI18N(request.getI18nLang(), "model." + request.getModelName());
-                return i18NStore.getI18N(request.getI18nLang(), "list.id.exists", modelNameI18n);
+                String modelNameI18n = appContext.getMetadata().getI18n(request.getI18nLang(), "model." + request.getModelName());
+                return i18nTool.getI18n(request.getI18nLang(), "list.id.exists", modelNameI18n);
             }
         }
 
@@ -38,11 +38,12 @@ public class UniqueFilter implements ActionFilter {
 
     private void initI18n() {
         if (i18nDone) return;
+
         synchronized (UniqueFilter.class) {
             if (i18nDone) return;
             i18nDone = true;
 
-            i18NStore.addI18N("list.id.exists", new String[]{"%s已存在", "en:%s already exists"}, true);
+            i18nTool.addI18n("list.id.exists", new String[]{"%s已存在", "en:%s already exists"}, true);
         }
     }
 }

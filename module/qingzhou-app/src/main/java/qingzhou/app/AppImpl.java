@@ -1,11 +1,6 @@
 package qingzhou.app;
 
-import qingzhou.api.ActionFilter;
-import qingzhou.api.AppContext;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingZhouApp;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.framework.app.App;
 
 import java.net.URLClassLoader;
@@ -35,8 +30,6 @@ public class AppImpl implements App {
         if (actionInfo == null) return;
 
         ModelBase modelInstance = getModelInstance(modelName);
-        modelInstance.setAppContext(appContext);
-        modelInstance.setI18nLang(request.getI18nLang());
         List<ActionFilter> actionFilters = appContext.getActionFilters();
         if (actionFilters != null) {
             for (ActionFilter actionFilter : actionFilters) {

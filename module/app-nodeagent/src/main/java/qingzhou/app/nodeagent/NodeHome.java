@@ -13,12 +13,12 @@ import qingzhou.framework.util.JDKUtil;
 public class NodeHome extends ModelBase implements ShowModel {
     @ModelField(
             nameI18n = {"Java 版本", "en:Java Version"},
-            infoI18n = {"此轻舟节点所使用的 Java 版本。", "en:The Java version used by this Qingzhou node."})
+            infoI18n = {"此 Qingzhou 节点所使用的 Java 版本。", "en:The Java version used by this Qingzhou node."})
     public String javaVer;
 
     @ModelField(
             nameI18n = {"本地 IP", "en:Local Ip"},
-            infoI18n = {"此轻舟节点的本地 IP 地址列表。", "en:A list of local IP addresses for this Qingzhou node."})
+            infoI18n = {"此 Qingzhou 节点的本地 IP 地址列表。", "en:A list of local IP addresses for this Qingzhou node."})
     public String localIps;
 
     @Override

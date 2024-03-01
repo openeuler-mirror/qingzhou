@@ -26,9 +26,9 @@ public class ResetPassword implements Filter<HttpServletContext> {
     private static final String set2FAMsg = "page.warn.set2fa";
 
     static {
-        ConsoleI18n.addI18N(setPasswordMsg, new String[]{"请先重置默认密码", "en:Please reset your default password first"});
-        ConsoleI18n.addI18N(set2FAMsg, new String[]{"请先扫描二维码绑定双因子认证密钥", "en:Please scan the QR code to bind the two-factor authentication key"});
-        ConsoleI18n.addI18N("password.max", new String[]{"已达到密码最长使用期限 %s 天，上次修改时间为：%s", "en:The maximum password age of %s days has been reached, last modified: %s"});
+        ConsoleI18n.addI18n(setPasswordMsg, new String[]{"请先重置默认密码", "en:Please reset your default password first"});
+        ConsoleI18n.addI18n(set2FAMsg, new String[]{"请先扫描二维码绑定双因子认证密钥", "en:Please scan the QR code to bind the two-factor authentication key"});
+        ConsoleI18n.addI18n("password.max", new String[]{"已达到密码最长使用期限 %s 天，上次修改时间为：%s", "en:The maximum password age of %s days has been reached, last modified: %s"});
     }
 
     @Override
