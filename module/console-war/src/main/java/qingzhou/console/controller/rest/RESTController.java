@@ -1,7 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.Request;
-import qingzhou.api.Response;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.I18n;
@@ -65,7 +63,7 @@ public class RESTController extends HttpServlet {
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
-                Response response = ActionInvoker.getInstance().invokeAction(restContext.request);
+                ResponseImpl response = (ResponseImpl) ActionInvoker.getInstance().invokeAction(restContext.request);
                 restContext.response = response;
                 return response.isSuccess(); // 触发后续的响应
             }
@@ -97,13 +95,12 @@ public class RESTController extends HttpServlet {
         try {
             fileAttachments = prepareUploadFiles(req);// 必须在最开始处理上传文件！！！一旦调用了 request.getParameter方法就会丢失上传文件内容
 
-            Request request = buildRequest(req, resp, fileAttachments);
+            RequestImpl request = buildRequest(req, resp, fileAttachments);
             if (request == null) {
                 return;
             }
 
-            Response response = new ResponseImpl();
-            RestContext context = new RestContext(req, resp, request, response);
+            RestContext context = new RestContext(req, resp, request, new ResponseImpl());
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
             viewManager.render(context); // 最后作出响应
         } catch (Exception e) {
@@ -127,7 +124,7 @@ public class RESTController extends HttpServlet {
         }
     }
 
-    private Request buildRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> fileAttachments) throws IOException {
+    private RequestImpl buildRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> fileAttachments) throws IOException {
         List<String> rest = retrieveRestPathInfo(req);
         int restDepth = 5;
         if (rest.size() < restDepth) { // must have model & action

@@ -31,8 +31,8 @@ public class ActionInvoker {
     private ActionInvoker() {
     }
 
-    public Response invokeAction(Request request) throws Exception {
-        Response validationResponse = new ResponseImpl();
+    public ResponseImpl invokeAction(Request request) throws Exception {
+        ResponseImpl validationResponse = new ResponseImpl();
         boolean ok = Validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
         if (!ok) {
             if (StringUtil.isBlank(validationResponse.getMsg())) {
@@ -61,8 +61,8 @@ public class ActionInvoker {
         return false;
     }
 
-    private Response invokeBatch(Request request) {
-        Response response = new ResponseImpl();
+    private ResponseImpl invokeBatch(Request request) {
+        ResponseImpl response = new qingzhou.framework.app.ResponseImpl();
         int suc = 0;
         int fail = 0;
         StringBuilder errbuilder = new StringBuilder();
@@ -112,16 +112,16 @@ public class ActionInvoker {
         return response;
     }
 
-    private Response invoke(Request request) {
+    private ResponseImpl invoke(Request request) {
         try {
-            Map<String, Response> responseOnNode = processRequest(request);
-            for (Map.Entry<String, Response> entry : responseOnNode.entrySet()) {
+            Map<String, ResponseImpl> responseOnNode = processRequest(request);
+            for (Map.Entry<String, ResponseImpl> entry : responseOnNode.entrySet()) {
                 return entry.getValue(); // TODO 多条结果如何展示？
             }
 
             throw ExceptionUtil.unexpectedException("It should return at least one Response");
         } catch (Exception e) {
-            Response response = new ResponseImpl();
+            ResponseImpl response = new ResponseImpl();
             response.setSuccess(false);
             Set<Throwable> set = new HashSet<>();
             retrieveException(e, set);
@@ -171,8 +171,8 @@ public class ActionInvoker {
         }
     }
 
-    public Map<String, Response> processRequest(Request request) throws Exception {
-        Map<String, Response> resultOnNode = new HashMap<>();
+    public Map<String, ResponseImpl> processRequest(Request request) throws Exception {
+        Map<String, ResponseImpl> resultOnNode = new HashMap<>();
         List<String> appNodes = new ArrayList<>();
         String manageType = ((RequestImpl) request).getManageType();
         String appName = request.getAppName();
@@ -185,9 +185,9 @@ public class ActionInvoker {
         }
 
         for (String node : appNodes) {
-            Response responseOnNode;
+            ResponseImpl responseOnNode;
             if (node.equals(App.SYS_NODE_LOCAL)) {
-                Response response = new ResponseImpl();
+                ResponseImpl response = new ResponseImpl();
                 ConsoleWarHelper.invokeLocalApp(appName, request, response);
                 responseOnNode = response;
             } else {
@@ -212,7 +212,7 @@ public class ActionInvoker {
             Map<String, String> res = null;
             try {
                 RequestImpl request = new RequestImpl();
-                Response response = new ResponseImpl();
+                Response response = new qingzhou.framework.app.ResponseImpl();
                 request.setAppName(App.SYS_APP_MASTER);
                 request.setModelName(App.SYS_MODEL_APP);
                 request.setActionName(ShowModel.ACTION_NAME_SHOW);

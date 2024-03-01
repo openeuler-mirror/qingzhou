@@ -26,7 +26,7 @@ public class ViewManager {
         views.put(fileView, new FileView());
     }
 
-    public boolean render(RestContext restContext) throws Exception {
+    public void render(RestContext restContext) throws Exception {
         RequestImpl request = (RequestImpl) restContext.request;
         ResponseImpl response = (ResponseImpl) restContext.response;
         // 完善响应的 msg
@@ -46,15 +46,8 @@ public class ViewManager {
             throw new IllegalArgumentException("View not found: " + request.getViewName());
         }
 
-        if (StringUtil.isBlank(response.getContentType())) {
-            response.setContentType(view.getContentType());
-            restContext.servletResponse.setContentType(view.getContentType());
-        }
-
-        response.getHeaderNames().forEach(s -> restContext.servletResponse.setHeader(s, response.getHeader(s)));
-
+        restContext.servletResponse.setContentType(view.getContentType());
         view.render(restContext);
 
-        return true;
     }
 }

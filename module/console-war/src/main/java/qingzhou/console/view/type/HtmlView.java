@@ -1,6 +1,5 @@
 package qingzhou.console.view.type;
 
-import qingzhou.api.ModelAction;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.ShowModel;

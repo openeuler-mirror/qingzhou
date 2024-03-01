@@ -3,7 +3,6 @@ package qingzhou.app;
 import qingzhou.api.*;
 import qingzhou.framework.app.I18nTool;
 import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
 
 public class UniqueFilter implements ActionFilter {
@@ -24,7 +23,7 @@ public class UniqueFilter implements ActionFilter {
             if (StringUtil.isBlank(requestTemp.getParameter(ListModel.FIELD_NAME_ID))) {
                 requestTemp.setId(modelInstance.resolveId(requestTemp));
             }
-            Response responseTemp = new ResponseImpl();
+            Response responseTemp = new qingzhou.framework.app.ResponseImpl();
             modelInstance.show(requestTemp, responseTemp);
             boolean exists = responseTemp.isSuccess() && !responseTemp.getDataList().isEmpty();
             if (exists) {

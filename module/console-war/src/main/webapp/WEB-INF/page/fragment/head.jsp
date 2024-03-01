@@ -22,7 +22,7 @@
 <%
     String currentUser = LoginManager.getLoginUser(session);
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
-    Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
+    ResponseImpl qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
     String menuAppName = PageBackendService.getInitAppName(qzRequest);
     ModelManager modelManager = ConsoleWarHelper.getAppStub(menuAppName).getModelManager();
 %>

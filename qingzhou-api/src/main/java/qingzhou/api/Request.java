@@ -11,8 +11,6 @@ public interface Request {
 
     String getId();
 
-    String[] getParameterNames();
-
     String getParameter(String parameterName);
 
     String getUserName();

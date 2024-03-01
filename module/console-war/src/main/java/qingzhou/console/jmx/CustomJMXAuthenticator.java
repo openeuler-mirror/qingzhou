@@ -77,7 +77,7 @@ public class CustomJMXAuthenticator implements JMXAuthenticator {
             //     jmxProperties.setProperty(LoginManager.LOGIN_ACCEPT_AGREEMENT, Boolean.TRUE.toString());// 无法输入，因此开启支持 supportJConsole 功能，即表示“同意”协议
             // }
 
-            request = new JmxHttpServletRequest("", "", jmxProperties);
+            request = new JmxHttpServletRequest("", "", "", jmxProperties);
             loginFailedMsg = LoginManager.login(request);
         } catch (Exception e) {
             e.printStackTrace();

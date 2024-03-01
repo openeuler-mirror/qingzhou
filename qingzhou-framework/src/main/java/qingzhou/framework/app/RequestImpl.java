@@ -42,11 +42,6 @@ public class RequestImpl implements Request, Serializable, Cloneable {
         return id;
     }
 
-    @Override
-    public String[] getParameterNames() {
-        return parameters.keySet().toArray(new String[0]);
-    }
-
     public void setId(String id) {
         this.id = id;
     }

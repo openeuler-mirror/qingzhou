@@ -20,7 +20,7 @@ public class FileView implements View {
     @Override
     public void render(RestContext restContext) throws Exception {
         Request request = restContext.request;
-        ResponseImpl response = (ResponseImpl) restContext.response;
+        qingzhou.framework.app.ResponseImpl response = (qingzhou.framework.app.ResponseImpl) restContext.response;
         String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModelName() + "-" + System.currentTimeMillis()) : request.getId();
         HttpServletResponse servletResponse = restContext.servletResponse;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
@@ -49,7 +49,7 @@ public class FileView implements View {
             data.put(DownloadModel.DOWNLOAD_KEY, key);
             data.put(DownloadModel.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);
-            Response res = ActionInvoker.getInstance().invokeAction(req); // 续传
+            ResponseImpl res = ActionInvoker.getInstance().invokeAction(req); // 续传
             if (res.isSuccess()) {
                 result = res.getDataList().get(0);
                 offset = Long.parseLong(result.get(DownloadModel.DOWNLOAD_OFFSET));

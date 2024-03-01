@@ -5,14 +5,15 @@ import qingzhou.api.Response;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ResponseImpl implements Response, Serializable {
     private boolean success = true;
     private String msg;
-    private String contentType;
     private final List<Map<String, String>> dataList = new ArrayList<>();
-    private final Map<String, String> headers = new HashMap<>();
     private int totalSize = -1;
     private int pageSize = -1;
     private int pageNum = -1;
@@ -32,34 +33,8 @@ public class ResponseImpl implements Response, Serializable {
         this.msg = msg;
     }
 
-    @Override
     public String getMsg() {
         return this.msg;
-    }
-
-    @Override
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
-    @Override
-    public String getContentType() {
-        return contentType;
-    }
-
-    @Override
-    public void setHeader(String name, String value) {
-        headers.put(name, value);
-    }
-
-    @Override
-    public Collection<String> getHeaderNames() {
-        return headers.keySet();
-    }
-
-    @Override
-    public String getHeader(String name) {
-        return headers.get(name);
     }
 
     @Override
@@ -82,7 +57,6 @@ public class ResponseImpl implements Response, Serializable {
         this.pageSize = pageSize;
     }
 
-    @Override
     public int getPageNum() {
         return pageNum;
     }

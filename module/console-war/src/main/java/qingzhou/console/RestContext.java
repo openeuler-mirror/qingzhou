@@ -1,7 +1,7 @@
 package qingzhou.console;
 
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.app.ResponseImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,10 +9,10 @@ import javax.servlet.http.HttpServletResponse;
 public class RestContext {
     public final HttpServletRequest servletRequest;
     public final HttpServletResponse servletResponse;
-    public final Request request;
-    public Response response;
+    public final RequestImpl request;
+    public ResponseImpl response;
 
-    public RestContext(HttpServletRequest servletRequest, HttpServletResponse servletResponse, Request request, Response response) {
+    public RestContext(HttpServletRequest servletRequest, HttpServletResponse servletResponse, RequestImpl request, ResponseImpl response) {
         this.servletRequest = servletRequest;
         this.servletResponse = servletResponse;
         this.request = request;

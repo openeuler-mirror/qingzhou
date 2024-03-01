@@ -1,43 +1,28 @@
 package qingzhou.api;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public interface Response {
     void setSuccess(boolean success);
 
-    boolean isSuccess();
-
     void setMsg(String msg);
 
-    String getMsg();
+    void setTotalSize(int totalSize);
 
-    void setContentType(String contentType);
+    void setPageSize(int pageSize);
 
-    String getContentType();
-
-    void setHeader(String name, String value);
-
-    Collection<String> getHeaderNames();
-
-    String getHeader(String name);
+    void setPageNum(int pageNum);
 
     void addData(Map<String, String> data);
 
     void addDataObject(Object data) throws Exception;
 
-    List<Map<String, String>> getDataList();
+    boolean isSuccess();
 
-    void setTotalSize(int totalSize);
+    List<Map<String, String>> getDataList();
 
     int getTotalSize();
 
-    void setPageSize(int pageSize);
-
     int getPageSize();
-
-    void setPageNum(int pageNum);
-
-    int getPageNum();
 }

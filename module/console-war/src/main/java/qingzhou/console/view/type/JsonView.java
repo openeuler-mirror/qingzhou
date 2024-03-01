@@ -1,6 +1,5 @@
 package qingzhou.console.view.type;
 
-import qingzhou.api.Response;
 import qingzhou.console.RestContext;
 import qingzhou.console.view.View;
 
@@ -15,8 +14,7 @@ public class JsonView implements View {
 
     @Override
     public void render(RestContext restContext) throws Exception {
-        Response response = restContext.response;
-        String json = convertToJson(response);
+        String json = convertToJson(restContext.response);
         PrintWriter writer = restContext.servletResponse.getWriter();
         writer.write(json);
         writer.flush();
@@ -38,7 +36,7 @@ public class JsonView implements View {
         return json.toString();
     }
 
-    private static String convertToJson(Response response) {
+    private static String convertToJson(qingzhou.framework.app.ResponseImpl response) {
         StringBuilder json = new StringBuilder("{");
 
         addStatus(json, response.isSuccess(), response.getMsg());
@@ -55,7 +53,7 @@ public class JsonView implements View {
         addKV(json, "message", message);
     }
 
-    private static void addData(StringBuilder json, Response response) {
+    private static void addData(StringBuilder json, qingzhou.framework.app.ResponseImpl response) {
         json.append("\"").append("data").append("\"");
         json.append(":");
         json.append("[");
