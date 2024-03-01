@@ -1,27 +1,27 @@
 package qingzhou.app;
 
-import qingzhou.api.MenuInfo;
+import qingzhou.api.Menu;
 
 import java.io.Serializable;
 import java.util.Objects;
 
-public class MenuInfoImpl implements MenuInfo, Serializable {
+public class MenuImpl implements Menu, Serializable {
     private final String menuName;
     private String[] menuI18n;
     private String menuIcon;
     private int menuOrder;
 
-    public MenuInfoImpl(String menuName) {
+    public MenuImpl(String menuName) {
         this.menuName = menuName;
     }
 
     @Override
-    public String getMenuName() {
+    public String getName() {
         return menuName;
     }
 
     @Override
-    public String[] getMenuI18n() {
+    public String[] getI18n() {
         return menuI18n;
     }
 
@@ -30,7 +30,7 @@ public class MenuInfoImpl implements MenuInfo, Serializable {
     }
 
     @Override
-    public String getMenuIcon() {
+    public String getIcon() {
         return menuIcon;
     }
 
@@ -39,7 +39,7 @@ public class MenuInfoImpl implements MenuInfo, Serializable {
     }
 
     @Override
-    public int getMenuOrder() {
+    public int getOrder() {
         return menuOrder;
     }
 
@@ -51,8 +51,8 @@ public class MenuInfoImpl implements MenuInfo, Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MenuInfoImpl menuInfo = (MenuInfoImpl) o;
-        return Objects.equals(menuName, menuInfo.menuName);
+        MenuImpl menu = (MenuImpl) o;
+        return Objects.equals(menuName, menu.menuName);
     }
 
     @Override

@@ -4,6 +4,7 @@ import qingzhou.api.*;
 import qingzhou.app.master.Main;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.logger.Logger;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -82,9 +83,9 @@ public class App extends ModelBase implements AddModel {
 
     @Override
     public void init() {
-        getAppContext().getConsoleContext().addI18N("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
-        getAppContext().getConsoleContext().addI18N("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
-        getAppContext().getConsoleContext().addI18N("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
+        getAppContext().addI18N("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
+        getAppContext().addI18N("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
+        getAppContext().addI18N("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
     }
 
     @Override
@@ -110,7 +111,8 @@ public class App extends ModelBase implements AddModel {
                 }
                 nodeSet.remove(qingzhou.framework.app.App.SYS_NODE_LOCAL);
                 nodeSet.stream().map(Option::of).forEach(nodeList::add);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Main.getService(Logger.class).error(e.getMessage(), e);
             }
 
             return () -> nodeList;
@@ -148,7 +150,7 @@ public class App extends ModelBase implements AddModel {
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
             response.setSuccess(false);
-            String msg = getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "app.id.not.exist");
+            String msg = getAppContext().getMetadata().getI18N(request.getI18nLang(), "app.id.not.exist");
             response.setMsg(msg);
             return;
         }
@@ -161,7 +163,7 @@ public class App extends ModelBase implements AddModel {
             appName = srcFileName.substring(0, index);
         } else {
             response.setSuccess(false);
-            String msg = getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "app.type.unknown");
+            String msg = getAppContext().getMetadata().getI18N(request.getI18nLang(), "app.type.unknown");
             response.setMsg(msg);
             return;
         }

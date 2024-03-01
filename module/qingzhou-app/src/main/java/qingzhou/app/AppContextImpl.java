@@ -1,9 +1,6 @@
 package qingzhou.app;
 
-import qingzhou.api.ActionFilter;
-import qingzhou.api.AppContext;
-import qingzhou.api.ConsoleContext;
-import qingzhou.api.DataStore;
+import qingzhou.api.*;
 import qingzhou.bootstrap.main.FrameworkContext;
 
 import java.io.File;
@@ -12,27 +9,19 @@ import java.util.List;
 
 public class AppContextImpl implements AppContext {
     private final FrameworkContext frameworkContext;
+    private final AppMetadataImpl metadata;
     private ConsoleContext consoleContext;
     private DataStore dataStore;
     private List<ActionFilter> actionFilters;
-    private String appName;
 
     public AppContextImpl(FrameworkContext frameworkContext) {
         this.frameworkContext = frameworkContext;
-    }
-
-    @Override
-    public String getAppName() {
-        return appName;
-    }
-
-    public void setAppName(String appName) {
-        this.appName = appName;
+        this.metadata = new AppMetadataImpl();
     }
 
     @Override
     public File getTemp() {
-        return frameworkContext.getTemp(this.appName);
+        return frameworkContext.getTemp(metadata.getName());
     }
 
     @Override
@@ -62,6 +51,21 @@ public class AppContextImpl implements AppContext {
     @Override
     public DataStore getDefaultDataStore() {
         return dataStore;
+    }
+
+    @Override
+    public void addI18N(String key, String[] i18n) {
+        metadata.addI18N(key, i18n);
+    }
+
+    @Override
+    public void addMenu(String menuName, String[] menuI18n, String menuIcon, int menuOrder) {
+        metadata.addMenu(menuName, menuI18n, menuIcon, menuOrder);
+    }
+
+    @Override
+    public AppMetadata getMetadata() {
+        return metadata;
     }
 
     @Override

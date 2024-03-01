@@ -1,7 +1,7 @@
 package qingzhou.console;
 
 import qingzhou.api.Lang;
-import qingzhou.api.MenuInfo;
+import qingzhou.api.Menu;
 import qingzhou.api.ModelManager;
 
 public interface AppStub {
@@ -9,5 +9,5 @@ public interface AppStub {
 
     String getI18N(Lang lang, String key, Object... args);
 
-    MenuInfo getMenuInfo(String menuName);
+    Menu getMenu(String menuName);
 }

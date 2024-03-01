@@ -26,7 +26,7 @@ public class UniqueFilter implements ActionFilter {
             modelInstance.show(requestTemp, responseTemp);
             boolean exists = responseTemp.isSuccess() && !responseTemp.getDataList().isEmpty();
             if (exists) {
-                String modelNameI18n = appContext.getConsoleContext().getI18N(request.getI18nLang(), "model." + request.getModelName());
+                String modelNameI18n = appContext.getMetadata().getI18N(request.getI18nLang(), "model." + request.getModelName());
                 return i18NStore.getI18N(request.getI18nLang(), "list.id.exists", modelNameI18n);
             }
         }

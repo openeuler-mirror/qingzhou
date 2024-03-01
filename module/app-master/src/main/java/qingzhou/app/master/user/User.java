@@ -30,10 +30,10 @@ public class User extends ModelBase implements AddModel {
 
     @Override
     public void init() {
-        ConsoleContext consoleContext = getAppContext().getConsoleContext();
-        consoleContext.addI18N("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
-        consoleContext.addI18N("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
-        consoleContext.addI18N("operate.system.users.not", new String[]{"为安全起见，请勿操作系统内置用户", "en:For security reasons, do not operate the system built-in users"});
+        AppContext appContext = getAppContext();
+        appContext.addI18N("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
+        appContext.addI18N("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
+        appContext.addI18N("operate.system.users.not", new String[]{"为安全起见，请勿操作系统内置用户", "en:For security reasons, do not operate the system built-in users"});
     }
 
     @ModelField(
@@ -227,7 +227,7 @@ public class User extends ModelBase implements AddModel {
             String password = request.getParameter(pwdKey);
             // 恢复 ITAIT-5005 的修改
             if (!Objects.equals(password, newValue)) {
-                return getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "confirmPassword.different");
+                return getAppContext().getMetadata().getI18N(request.getI18nLang(), "confirmPassword.different");
             }
         }
 
@@ -267,13 +267,13 @@ public class User extends ModelBase implements AddModel {
         int minLength = 10;
         int maxLength = 20;
         if (password.length() < minLength || password.length() > maxLength) {
-            return String.format(getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "validator.lengthBetween"), minLength, maxLength);
+            return String.format(getAppContext().getMetadata().getI18N(request.getI18nLang(), "validator.lengthBetween"), minLength, maxLength);
         }
 
         if (infos != null && infos.length > 0) {
             if (infos[0] != null) { // for #ITAIT-5014
                 if (password.contains(infos[0])) { // 包含身份信息
-                    return getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "password.passwordContainsUsername");
+                    return getAppContext().getMetadata().getI18N(request.getI18nLang(), "password.passwordContainsUsername");
                 }
             }
         }
@@ -281,11 +281,11 @@ public class User extends ModelBase implements AddModel {
         //特殊符号包含下划线
         String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";
         if (!Pattern.compile(PASSWORD_REGEX).matcher(password).matches()) {
-            return getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "password.format");
+            return getAppContext().getMetadata().getI18N(request.getI18nLang(), "password.format");
         }
 
         if (StringUtil.isContinuousChar(password)) { // 连续字符校验
-            return getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "password.continuousChars");
+            return getAppContext().getMetadata().getI18N(request.getI18nLang(), "password.continuousChars");
         }
 
         return null;
@@ -361,14 +361,14 @@ public class User extends ModelBase implements AddModel {
                 if (AddModel.ACTION_NAME_ADD.equals(request.getActionName())
                         || DeleteModel.ACTION_NAME_DELETE.equals(request.getActionName())) {
                     response.setSuccess(false);
-                    response.setMsg(getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "operate.system.users.not"));
+                    response.setMsg(getAppContext().getMetadata().getI18N(request.getI18nLang(), "operate.system.users.not"));
                     return;
                 }
 
                 if (EditModel.ACTION_NAME_UPDATE.equals(request.getActionName())) {
                     if (!Boolean.parseBoolean(request.getParameter("active"))) {
                         response.setSuccess(false);
-                        response.setMsg(getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "System.users.keep.active"));
+                        response.setMsg(getAppContext().getMetadata().getI18N(request.getI18nLang(), "System.users.keep.active"));
                     }
                 }
             }

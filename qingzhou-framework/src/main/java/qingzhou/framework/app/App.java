@@ -5,8 +5,6 @@ import qingzhou.api.QingZhouApp;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 
-import java.util.Properties;
-
 public interface App {
     String SYS_NODE_LOCAL = "local";
 
@@ -26,8 +24,6 @@ public interface App {
     QingZhouApp getQingZhouApp();
 
     AppContext getAppContext();
-
-    Properties getAppProperties();
 
     void invoke(Request request, Response response) throws Exception;
 }

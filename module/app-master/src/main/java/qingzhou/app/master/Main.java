@@ -12,12 +12,11 @@ public class Main extends QingZhouSystemApp {
     public void start(AppContext appContext) {
         FC = this.frameworkContext;
 
-        appContext.getConsoleContext().addI18N("validator.master.system", new String[]{"为保障系统安全可用，请勿修改此配置", "en:To ensure the security and availability of the system, do not modify this configuration"});
+        appContext.addI18N("validator.master.system", new String[]{"为保障系统安全可用，请勿修改此配置", "en:To ensure the security and availability of the system, do not modify this configuration"});
 
-        ConsoleContext consoleContext = appContext.getConsoleContext();
-        consoleContext.setMenuInfo("Service", new String[]{"服务管理", "en:Service"}, "server", 1);
-        consoleContext.setMenuInfo("System", new String[]{"系统管理", "en:System"}, "cog", 2);
-        consoleContext.setMenuInfo("Guide", new String[]{"用户指引", "en:Guide"}, "hand-up", 3);
+        appContext.addMenu("Service", new String[]{"服务管理", "en:Service"}, "server", 1);
+        appContext.addMenu("System", new String[]{"系统管理", "en:System"}, "cog", 2);
+        appContext.addMenu("Guide", new String[]{"用户指引", "en:Guide"}, "hand-up", 3);
 
         appContext.setDefaultDataStore(new ConsoleDataStore());
 
@@ -40,7 +39,7 @@ public class Main extends QingZhouSystemApp {
                     && App.SYS_NODE_LOCAL.equals(request.getId())) {
                 if (EditModel.ACTION_NAME_UPDATE.equals(request.getActionName())
                         || DeleteModel.ACTION_NAME_DELETE.equals(request.getActionName())) {
-                    return appContext.getConsoleContext().getI18N(request.getI18nLang(), "validator.master.system");
+                    return appContext.getMetadata().getI18N(request.getI18nLang(), "validator.master.system");
                 }
             }
 

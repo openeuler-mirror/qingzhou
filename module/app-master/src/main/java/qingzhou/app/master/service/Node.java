@@ -18,7 +18,7 @@ public class Node extends ModelBase implements AddModel {
 
     @Override
     public void init() {
-        getAppContext().getConsoleContext().addI18N("node.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
+        getAppContext().addI18N("node.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
     }
 
     @ModelField(

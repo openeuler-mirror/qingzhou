@@ -32,7 +32,7 @@ public class Manual extends ModelBase implements ListModel {
 
     @Override
     public void init() {
-        ConsoleContext context = getAppContext().getConsoleContext();
+        AppContext context = getAppContext();
 
         context.addI18N("manual.name.1", new String[]{"平台概述", "en:Overview of Qingzhou platform"});
         context.addI18N("manual.info.1", new String[]{"# 平台概述\n" +
@@ -63,13 +63,13 @@ public class Manual extends ModelBase implements ListModel {
     @Override
     public DataStore getDataStore() {
         return new ReadOnlyDataStore(type -> {
-            ConsoleContext context = getAppContext().getConsoleContext();
+            AppMetadata appMetadata = getAppContext().getMetadata();
             List<Map<String, String>> data = new ArrayList<>();
             for (int i = 1; i <= 3; i++) { // 需要和 init 里面的 i18n 的序号保持一致
                 Map<String, String> model = new HashMap<>();
                 model.put("id", "manual-" + i);
-                model.put("name", context.getI18N(getI18nLang(), "manual.name." + i));
-                model.put("info", context.getI18N(getI18nLang(), "manual.info." + i));
+                model.put("name", appMetadata.getI18N(getI18nLang(), "manual.name." + i));
+                model.put("info", appMetadata.getI18N(getI18nLang(), "manual.info." + i));
                 data.add(model);
             }
             return data;

@@ -42,7 +42,7 @@ public class Password extends ModelBase implements EditModel {
 
     @Override
     public void init() {
-        ConsoleContext master = getAppContext().getConsoleContext();
+        AppContext master = getAppContext();
         master.addI18N("update2FA.rebind", new String[]{"双因子认证密钥更新成功，请扫描二维码重新绑定双因子认证密钥",
                 "en:The two-factor authentication key is updated successfully, please scan the QR code to re-bind the two-factor authentication key"});
         master.addI18N("password.confirm.failed", new String[]{"确认密码与新密码不一致", "en:Confirm that the password does not match the new password"});
@@ -54,7 +54,6 @@ public class Password extends ModelBase implements EditModel {
 
         master.addI18N("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少10位", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
         master.addI18N("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
-
     }
 
     @Override

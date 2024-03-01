@@ -93,7 +93,8 @@ public class AppManagerImpl implements AppManager {
         AppImpl app = new AppImpl();
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
-        appContext.setAppName(appName);
+        AppMetadataImpl metadata = (AppMetadataImpl) appContext.getMetadata();
+        metadata.setAppName(appName);
 
         URL[] urls = Arrays.stream(appLibs).map(file -> {
             try {
@@ -104,9 +105,10 @@ public class AppManagerImpl implements AppManager {
         }).toArray(URL[]::new);
         URLClassLoader loader = new URLClassLoader(urls, needCommonApp ? QingZhouApp.class.getClassLoader() : QingZhouSystemApp.class.getClassLoader());
         app.setLoader(loader);
+
         ConsoleContextImpl consoleContext = new ConsoleContextImpl();
         ModelManager modelManager = buildModelManager(appLibs, loader);
-        consoleContext.setModelManager(modelManager);
+        consoleContext.setModelManager(modelManager, metadata);
         appContext.setConsoleContext(consoleContext);
         appContext.addActionFilter(new UniqueFilter());
         for (String modelName : modelManager.getModelNames()) {
@@ -114,12 +116,10 @@ public class AppManagerImpl implements AppManager {
             modelInstance.setAppContext(appContext);
             modelInstance.init();
         }
-        app.setAppContext(appContext);
-
-        try (InputStream inputStream = loader.getResourceAsStream("app.properties")) {
+        try (InputStream inputStream = loader.getResourceAsStream(Constants.APP_PROPERTIES_FILE)) {
             Properties properties = ObjectUtil.streamToProperties(inputStream);
-            app.setAppProperties(properties);
-            String appClass = app.getAppProperties().getProperty("qingzhou.app");
+            metadata.getProperties().putAll(properties);
+            String appClass = metadata.getProperties().getProperty(Constants.APP_CLASS_NAME);
             if (StringUtil.notBlank(appClass)) {
                 QingZhouApp qingZhouApp = (QingZhouApp) loader.loadClass(appClass).newInstance();
                 app.setQingZhouApp(qingZhouApp);
@@ -129,6 +129,8 @@ public class AppManagerImpl implements AppManager {
                 }
             }
         }
+
+        app.setAppContext(appContext);
 
         return app;
     }

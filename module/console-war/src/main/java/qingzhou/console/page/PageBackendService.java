@@ -142,13 +142,13 @@ public class PageBackendService {
         AppStub appStub = ConsoleWarHelper.getAppStub(appName);
         Map<String, List<Model>> groupMap = Arrays.stream(allModels).filter(Model::showToMenu).collect(Collectors.groupingBy(Model::menuName));
         groupMap.forEach((menuGroup, models) -> {
-            MenuInfo menuInfo = appStub.getMenuInfo(menuGroup);
+            Menu menu = appStub.getMenu(menuGroup);
             MenuItem parentMenu = new MenuItem();
-            if (menuInfo != null) {
+            if (menu != null) {
                 parentMenu.setMenuName(menuGroup);
-                parentMenu.setMenuIcon(menuInfo.getMenuIcon());
-                parentMenu.setI18ns(menuInfo.getMenuI18n());
-                parentMenu.setOrder(menuInfo.getMenuOrder());
+                parentMenu.setMenuIcon(menu.getIcon());
+                parentMenu.setI18ns(menu.getI18n());
+                parentMenu.setOrder(menu.getOrder());
             }
             models.sort(Comparator.comparingInt(Model::menuOrder));
             models.forEach(i -> {
@@ -158,14 +158,14 @@ public class PageBackendService {
                 subMenu.setI18ns(i.nameI18n());
                 subMenu.setMenuAction(i.entryAction());
                 subMenu.setOrder(i.menuOrder());
-                if (menuInfo == null) {
+                if (menu == null) {
                     menus.add(subMenu);
                 } else {
                     subMenu.setParentMenu(parentMenu.getMenuName());
                     parentMenu.getChildren().add(subMenu);
                 }
             });
-            if (menuInfo != null) {
+            if (menu != null) {
                 menus.add(parentMenu);
             }
         });
