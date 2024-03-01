@@ -1,15 +1,16 @@
 package qingzhou.app;
 
-import qingzhou.api.ModelAction;
+import qingzhou.serialization.ModelActionData;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 
-public class ActionInfo {
-    public final ModelAction modelAction;
+public class ActionInfo implements Serializable {
+    public final ModelActionData modelAction;
     public final String methodName;
-    private Method javaMethod;
+    private transient Method javaMethod;
 
-    public ActionInfo(ModelAction modelAction, String methodName) {
+    public ActionInfo(ModelActionData modelAction, String methodName) {
         this.modelAction = modelAction;
         this.methodName = methodName;
     }

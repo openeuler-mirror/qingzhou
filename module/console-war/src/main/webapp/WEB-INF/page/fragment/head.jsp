@@ -17,6 +17,7 @@
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.page.*" %>
+<%@ page import="qingzhou.serialization.*" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);

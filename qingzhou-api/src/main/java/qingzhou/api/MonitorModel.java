@@ -1,5 +1,7 @@
 package qingzhou.api;
 
+import qingzhou.serialization.ModelFieldData;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,9 +32,9 @@ public interface MonitorModel extends ShowModel {
         List<String> graphicalDynamicFields = new ArrayList<>();
         Map<String, String> monitorData = new HashMap<>();
         Map<String, String> infoData = new HashMap<>();
-        for (Map.Entry<String, ModelField> entry : getAppContext().getConsoleContext().getModelManager().getMonitorFieldMap(request.getModelName()).entrySet()) {
+        for (Map.Entry<String, ModelFieldData> entry : getAppContext().getConsoleContext().getModelManager().getMonitorFieldMap(request.getModelName()).entrySet()) {
             String fieldName = entry.getKey();
-            ModelField monitorField = entry.getValue();
+            ModelFieldData monitorField = entry.getValue();
             if (monitorField.supportGraphicalDynamic()) {
                 graphicalDynamicFields.add(fieldName);
             } else {

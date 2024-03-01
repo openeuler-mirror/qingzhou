@@ -1,6 +1,10 @@
 package qingzhou.app;
 
-import qingzhou.api.*;
+import qingzhou.api.Constants;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingZhouApp;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.AppManager;
@@ -18,7 +22,11 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 public class AppManagerImpl implements AppManager {
     private final Map<String, App> apps = new HashMap<>();
@@ -107,12 +115,16 @@ public class AppManagerImpl implements AppManager {
         app.setLoader(loader);
 
         ConsoleContextImpl consoleContext = new ConsoleContextImpl();
-        ModelManager modelManager = buildModelManager(appLibs, loader);
+        ModelManagerImpl modelManager = (ModelManagerImpl) metadata.getModelManager();
+        initModelManager(modelManager, appLibs, loader);
         consoleContext.setModelManager(modelManager, metadata);
         appContext.setConsoleContext(consoleContext);
         appContext.addActionFilter(new UniqueFilter());
+
+        app.setAppContext(appContext);
+
         for (String modelName : modelManager.getModelNames()) {
-            ModelBase modelInstance = modelManager.getModelInstance(modelName);
+            ModelBase modelInstance = app.getModelInstance(modelName);
             modelInstance.setAppContext(appContext);
             modelInstance.init();
         }
@@ -130,13 +142,10 @@ public class AppManagerImpl implements AppManager {
             }
         }
 
-        app.setAppContext(appContext);
-
         return app;
     }
 
-    private ModelManagerImpl buildModelManager(File[] appLib, URLClassLoader loader) {
-        ModelManagerImpl modelManager = new ModelManagerImpl();
+    private void initModelManager(ModelManagerImpl modelManager, File[] appLib, URLClassLoader loader) {
         try {
             modelManager.init(appLib, loader);
 
@@ -168,6 +177,5 @@ public class AppManagerImpl implements AppManager {
         } catch (Exception e) {
             throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
         }
-        return modelManager;
     }
 }

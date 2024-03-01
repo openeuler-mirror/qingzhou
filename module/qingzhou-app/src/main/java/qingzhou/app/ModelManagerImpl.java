@@ -3,6 +3,10 @@ package qingzhou.app;
 import qingzhou.api.*;
 import qingzhou.app.bytecode.AnnotationReader;
 import qingzhou.app.bytecode.impl.BytecodeImpl;
+import qingzhou.serialization.ModelActionData;
+import qingzhou.serialization.ModelData;
+import qingzhou.serialization.ModelFieldData;
+import qingzhou.serialization.ModelUtil;
 import qingzhou.framework.util.pattern.Visitor;
 import qingzhou.framework.util.StringUtil;
 
@@ -23,7 +27,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     public void initDefaultProperties() throws Exception {
         // 初始化不可变的对象
         for (String modelName : getModelNames()) {
-            ModelBase modelInstance = getModelInstance(modelName);
+            ModelBase modelInstance = this.modelInfoMap.get(modelName).getInstance();
             for (Map.Entry<String, FieldInfo> entry : modelInfoMap.get(modelName).fieldInfoMap.entrySet()) {
                 Field field = entry.getValue().getField();
                 boolean accessible = field.isAccessible();
@@ -57,9 +61,10 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                 if (model == null) {
                     return false;
                 }
+                ModelData modelData = ModelUtil.toModelData(model);
                 ModelInfo modelInfo = null;
                 try {
-                    modelInfo = new ModelInfo(model,
+                    modelInfo = new ModelInfo(modelData,
                             initModelFieldInfo(className, annotation),
                             initModelActionInfo(className, annotation),
                             className);
@@ -82,13 +87,13 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     private List<ActionInfo> initModelActionInfo(String className, AnnotationReader annotation) throws Exception {
         List<ActionInfo> actionInfoList = new ArrayList<>();
-        annotation.getMethodAnnotations(className).forEach((s, action) -> actionInfoList.add(new ActionInfo(action, s)));
+        annotation.getMethodAnnotations(className).forEach((s, action) -> actionInfoList.add(new ActionInfo(ModelUtil.toModelActionData(action), s)));
         return actionInfoList;
     }
 
     private List<FieldInfo> initModelFieldInfo(String className, AnnotationReader annotation) throws Exception {
         List<FieldInfo> fieldInfoList = new ArrayList<>();
-        annotation.getFieldAnnotations(className).forEach((s, field) -> fieldInfoList.add(new FieldInfo(field, s)));
+        annotation.getFieldAnnotations(className).forEach((s, field) -> fieldInfoList.add(new FieldInfo(ModelUtil.toModelFieldData(field), s)));
         return fieldInfoList;
     }
 
@@ -108,7 +113,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public Model getModel(String modelName) {
+    public ModelData getModel(String modelName) {
         return getModelInfo(modelName).model;
     }
 
@@ -128,7 +133,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public ModelAction getModelAction(String modelName, String actionName) {
+    public ModelActionData getModelAction(String modelName, String actionName) {
         ModelInfo modelInfo = getModelInfo(modelName);
         for (ActionInfo ai : modelInfo.actionInfoMap.values()) {
             if (ai.modelAction.name().equals(actionName)) {
@@ -150,18 +155,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public String getModelName(Class<?> modelClass) {
-        for (Map.Entry<String, ModelInfo> entry : modelInfoMap.entrySet()) {
-            if (entry.getValue().getClazz().isAssignableFrom(modelClass)) {
-                return entry.getKey();
-            }
-        }
-
-        return null;
-    }
-
-    @Override
-    public ModelField getModelField(String modelName, String fieldName) {
+    public ModelFieldData getModelField(String modelName, String fieldName) {
         ModelInfo modelInfo = getModelInfo(modelName);
         FieldInfo fieldInfo = modelInfo.fieldInfoMap.get(fieldName);
         if (fieldInfo != null) {
@@ -174,7 +168,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     @Override
     public Options getOptions(Request request, String modelName, String fieldName) {
         Options defaultOptions = getDefaultOptions(modelName, fieldName);
-        Options userOptions = getModelInstance(modelName).options(request, fieldName);
+        Options userOptions = null;//TODO getModelInstance(modelName).options(request, fieldName);
         if (userOptions == null) {
             return defaultOptions;
         } else {
@@ -184,7 +178,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     private Options getDefaultOptions(String modelName, String fieldName) {
         ModelManager manager = this;
-        ModelField modelField = manager.getModelField(modelName, fieldName);
+        ModelFieldData modelField = manager.getModelField(modelName, fieldName);
 
         if (modelField.type() == FieldType.selectCharset) {
             return Options.of(
@@ -223,9 +217,9 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     private Options refModel(String modelName) {
         try {
-            ModelBase modelInstance = getModelInstance(modelName);
+            ModelBase modelInstance = null;//TODO getModelInstance(modelName);
             List<Option> options = new ArrayList<>();
-            List<String> dataIdList = ((ListModel) modelInstance).getAllDataId(modelName);
+            List<String> dataIdList = new ArrayList<>();//((ListModel) modelInstance).getAllDataId(modelName);
             for (String dataId : dataIdList) {
                 options.add(Option.of(dataId, new String[]{dataId, "en:" + dataId}));
             }
@@ -236,11 +230,11 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public Map<String, ModelField> getMonitorFieldMap(String modelName) {
+    public Map<String, ModelFieldData> getMonitorFieldMap(String modelName) {
         ModelInfo modelInfo = getModelInfo(modelName);
-        Map<String, ModelField> map = new LinkedHashMap<>();
+        Map<String, ModelFieldData> map = new LinkedHashMap<>();
         for (Map.Entry<String, FieldInfo> entry : modelInfo.fieldInfoMap.entrySet()) {
-            ModelField modelField = entry.getValue().modelField;
+            ModelFieldData modelField = entry.getValue().modelField;
             if (modelField.isMonitorField()) {
                 map.put(entry.getKey(), modelField);
             }
@@ -258,7 +252,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     @Override
     public Group getGroup(String modelName, String groupName) {
-        ModelBase modelInstance = getModelInstance(modelName);
+        ModelBase modelInstance = null;//TODO getModelInstance(modelName);
         Groups groups = modelInstance.group();
         if (groups != null) {
             for (Group group : groups.groups()) {
@@ -273,11 +267,6 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         }
 
         return null;
-    }
-
-    @Override
-    public ModelBase getModelInstance(String modelName) {
-        return getModelInfo(modelName).getInstance();
     }
 
     @Override

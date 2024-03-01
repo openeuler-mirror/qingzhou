@@ -5,6 +5,7 @@ import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.SafeCheckerUtil;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.serialization.ModelFieldData;
 
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -62,7 +63,7 @@ public class Validator {
         Map<String, String> errorData = new HashMap<>();
         ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
-        ModelBase tempModel = modelManager.getModelInstance(request.getModelName());
+        ModelBase tempModel = ConsoleWarHelper.getLocalApp(request.getAppName()).getModelInstance(request.getModelName());
         Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
         for (String fieldName : allFieldNames) {
             String validate = validate(request, modelManager, dataMap, fieldName, request.getParameter(fieldName));
@@ -83,7 +84,7 @@ public class Validator {
     private static String validate(Request request, ModelManager modelManager, Map<String, String> data, String fieldName, String newValue) throws Exception {
         // 上下文环境
         String modelName = request.getModelName();
-        ModelField modelField = modelManager.getModelField(modelName, fieldName);
+        ModelFieldData modelField = modelManager.getModelField(modelName, fieldName);
         if (modelField == null) {
             return null;
         }
@@ -96,7 +97,7 @@ public class Validator {
             // 如果这里出错，多数数据类型错误，例如本该数字的，却传值为 字符串 等。
         }
 
-        ModelBase tempModel = modelManager.getModelInstance(request.getModelName());
+        ModelBase tempModel = ConsoleWarHelper.getLocalApp(request.getAppName()).getModelInstance(request.getModelName());
         boolean isUpdate = EditModel.ACTION_NAME_UPDATE.equals(request.getActionName());
         if (newValue == null) { // NOTE：不能使用 StringUtil.isBlank 来判断，空串 "" 表示有值，且与 null（无值） 是不同含义
             if (modelField.required()) {
@@ -201,7 +202,7 @@ public class Validator {
 
     static class ValidatorContext {
         final String modelName;
-        final ModelField modelField;
+        final ModelFieldData modelField;
         final String newValue;
         final String fieldName;
         final Request request;
@@ -209,7 +210,7 @@ public class Validator {
         final ModelManager modelManager;
         final AppStub appStub;
 
-        private ValidatorContext(String newValue, ModelField modelField, String fieldName, Request request, ModelManager modelManager, Map<String, String> data) {
+        private ValidatorContext(String newValue, ModelFieldData modelField, String fieldName, Request request, ModelManager modelManager, Map<String, String> data) {
             this.modelName = request.getModelName();
             this.modelField = modelField;
             this.newValue = newValue;

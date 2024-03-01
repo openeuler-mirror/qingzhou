@@ -11,6 +11,7 @@ import qingzhou.console.view.View;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.serialization.ModelActionData;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -30,7 +31,7 @@ public class HtmlView implements View {
 
         String modelName = request.getModelName();
         String actionName = request.getActionName();
-        ModelAction modelAction = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager().getModelAction(modelName, actionName);
+        ModelActionData modelAction = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager().getModelAction(modelName, actionName);
         String pageForward = null;
         if (modelAction != null) {
             pageForward = modelAction.forwardToPage();

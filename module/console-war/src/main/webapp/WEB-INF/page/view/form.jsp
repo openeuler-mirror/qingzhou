@@ -9,7 +9,7 @@ if (qzRequest == null || qzResponse == null || modelManager == null) {
 boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, qzRequest.getActionName());
 String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
 String idFieldName = ListModel.FIELD_NAME_ID;
-ModelField idField = modelManager.getModelField(qzRequest.getModelName(), idFieldName);
+ModelFieldData idField = modelManager.getModelField(qzRequest.getModelName(), idFieldName);
 final boolean hasId = idField != null;
 List<String> passwordFields = new ArrayList();
 String id = qzRequest.getId();
@@ -33,7 +33,7 @@ if (encodedId == null) {
         List<Map<String, String>> models = qzResponse.getDataList();
         if (!models.isEmpty()) {
             model = models.get(0);
-            Map<String, Map<String, ModelField>> fieldMapWithGroup = PageBackendService.getGroupedModelFieldMap(qzRequest);
+            Map<String, Map<String, ModelFieldData>> fieldMapWithGroup = PageBackendService.getGroupedModelFieldMap(qzRequest);
             Set<String> groups = fieldMapWithGroup.keySet();
             long suffixId = System.currentTimeMillis();
             if (groups.size() > 1) {
@@ -66,12 +66,12 @@ if (encodedId == null) {
                      tabGroup="<%=("".equals(group) ? "OTHERS":group)%>">
                 <%
                 isFirstGroup = false;
-                Map<String, ModelField> groupFieldMap = fieldMapWithGroup.get(group);
+                Map<String, ModelFieldData> groupFieldMap = fieldMapWithGroup.get(group);
                 if(groupFieldMap == null){
                     continue;
                 }
-                for (Map.Entry<String, ModelField> e : groupFieldMap.entrySet()) {
-                    ModelField modelField = e.getValue();
+                for (Map.Entry<String, ModelFieldData> e : groupFieldMap.entrySet()) {
+                    ModelFieldData modelField = e.getValue();
                     if (modelField.disableOnCreate() && !isEdit) {
                         continue;
                     }

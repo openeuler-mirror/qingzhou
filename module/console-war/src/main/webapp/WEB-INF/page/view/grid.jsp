@@ -7,16 +7,16 @@ if (qzRequest == null || qzResponse == null) {
     return; // for 静态源码漏洞扫描
 }
 
-LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
+LinkedHashMap<String, ModelFieldData> fieldInfos = new LinkedHashMap<>();
 String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
 for (String fieldName : fieldNames) {
     fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModelName(), fieldName));
 }
 int num = -1;
 List<Integer> indexToShow = new ArrayList<>();
-for (Map.Entry<String, ModelField> e : fieldInfos.entrySet()) {
+for (Map.Entry<String, ModelFieldData> e : fieldInfos.entrySet()) {
     num++;
-    ModelField modelField = e.getValue();
+    ModelFieldData modelField = e.getValue();
     if (!modelField.showToList()) {
         continue;
     }

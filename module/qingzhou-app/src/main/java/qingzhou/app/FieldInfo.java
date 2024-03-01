@@ -1,15 +1,16 @@
 package qingzhou.app;
 
-import qingzhou.api.ModelField;
+import qingzhou.serialization.ModelFieldData;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 
-public class FieldInfo {
-    public final ModelField modelField;
+public class FieldInfo implements Serializable {
+    public final ModelFieldData modelField;
     public final String fieldName;
-    private Field field;
+    private transient Field field;
 
-    public FieldInfo(ModelField modelField, String fieldName) {
+    public FieldInfo(ModelFieldData modelField, String fieldName) {
         this.modelField = modelField;
         this.fieldName = fieldName;
     }

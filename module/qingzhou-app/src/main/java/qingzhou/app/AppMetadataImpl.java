@@ -3,6 +3,7 @@ package qingzhou.app;
 import qingzhou.api.AppMetadata;
 import qingzhou.api.Lang;
 import qingzhou.api.Menu;
+import qingzhou.api.ModelManager;
 import qingzhou.framework.app.I18NStore;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.util.Properties;
 public class AppMetadataImpl implements AppMetadata, Serializable {
     private final I18NStore i18NStore = new I18NStore();
     private final Properties appProperties = new Properties();
+    private final ModelManagerImpl modelManager = new ModelManagerImpl();
     private final Map<String, MenuImpl> menus = new HashMap<>();
     private String appName;
 
@@ -34,6 +36,11 @@ public class AppMetadataImpl implements AppMetadata, Serializable {
     @Override
     public Menu getMenu(String menuName) {
         return menus.get(menuName);
+    }
+
+    @Override
+    public ModelManager getModelManager() {
+        return modelManager;
     }
 
     public void addMenu(String menuName, String[] menuI18n, String menuIcon, int menuOrder) {

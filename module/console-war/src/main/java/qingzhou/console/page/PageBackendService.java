@@ -9,6 +9,9 @@ import qingzhou.framework.app.App;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.console.util.Base32Util;
 import qingzhou.framework.util.StringUtil;
+import qingzhou.serialization.ModelActionData;
+import qingzhou.serialization.ModelData;
+import qingzhou.serialization.ModelFieldData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,12 +33,12 @@ public class PageBackendService {
 
     public static String[] getActionNamesShowToList(String appName, String modelName) {
         ModelManager modelManager = getModelManager(appName);
-        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelAction::showToList).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
+        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelActionData::showToList).sorted(Comparator.comparingInt(ModelActionData::orderOnList)).map(ModelActionData::name).toArray(String[]::new);
     }
 
     public static String[] getActionNamesShowToListHead(String appName, String modelName) {
         ModelManager modelManager = getModelManager(appName);
-        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelAction::showToListHead).sorted(Comparator.comparingInt(ModelAction::orderOnList)).map(ModelAction::name).toArray(String[]::new);
+        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelActionData::showToListHead).sorted(Comparator.comparingInt(ModelActionData::orderOnList)).map(ModelActionData::name).toArray(String[]::new);
     }
 
     public static String getFieldName(String appName, String modelName, int fieldIndex) {
@@ -131,7 +134,7 @@ public class PageBackendService {
             return menus;
         }
 
-        Model[] allModels = AccessControl.getLoginUserAppMenuModels(loginUser, appName);
+        ModelData[] allModels = AccessControl.getLoginUserAppMenuModels(loginUser, appName);
         /**
          *  name -> String,
          *  parentName -> name,
@@ -140,7 +143,7 @@ public class PageBackendService {
          *  children -> Properties
          */
         AppStub appStub = ConsoleWarHelper.getAppStub(appName);
-        Map<String, List<Model>> groupMap = Arrays.stream(allModels).filter(Model::showToMenu).collect(Collectors.groupingBy(Model::menuName));
+        Map<String, List<ModelData>> groupMap = Arrays.stream(allModels).filter(ModelData::showToMenu).collect(Collectors.groupingBy(ModelData::menuName));
         groupMap.forEach((menuGroup, models) -> {
             Menu menu = appStub.getMenu(menuGroup);
             MenuItem parentMenu = new MenuItem();
@@ -150,7 +153,7 @@ public class PageBackendService {
                 parentMenu.setI18ns(menu.getI18n());
                 parentMenu.setOrder(menu.getOrder());
             }
-            models.sort(Comparator.comparingInt(Model::menuOrder));
+            models.sort(Comparator.comparingInt(ModelData::menuOrder));
             models.forEach(i -> {
                 MenuItem subMenu = new MenuItem();
                 subMenu.setMenuName(i.name());
@@ -203,15 +206,15 @@ public class PageBackendService {
         }
     }
 
-    public static Map<String, Map<String, ModelField>> getGroupedModelFieldMap(Request request) {
-        Map<String, Map<String, ModelField>> result = new LinkedHashMap<>();
+    public static Map<String, Map<String, ModelFieldData>> getGroupedModelFieldMap(Request request) {
+        Map<String, Map<String, ModelFieldData>> result = new LinkedHashMap<>();
         ModelManager manager = getModelManager(request.getAppName());
         String modelName = request.getModelName();
         for (String groupName : manager.getGroupNames(modelName)) {
-            Map<String, ModelField> map = new LinkedHashMap<>();
+            Map<String, ModelFieldData> map = new LinkedHashMap<>();
             String[] fieldNamesByGroup = manager.getFieldNamesByGroup(modelName, groupName);
             for (String f : fieldNamesByGroup) {
-                ModelField modelField = manager.getModelField(modelName, f);
+                ModelFieldData modelField = manager.getModelField(modelName, f);
                 map.put(f, modelField);
             }
             result.put(groupName, map);
@@ -250,12 +253,12 @@ public class PageBackendService {
         if (modelManager == null) {
             return false;
         }
-        ModelAction listAction = modelManager.getModelAction(request.getModelName(), ListModel.ACTION_NAME_LIST);
-        ModelField idField = modelManager.getModelField(request.getModelName(), ListModel.FIELD_NAME_ID);
+        ModelActionData listAction = modelManager.getModelAction(request.getModelName(), ListModel.ACTION_NAME_LIST);
+        ModelFieldData idField = modelManager.getModelField(request.getModelName(), ListModel.FIELD_NAME_ID);
         return listAction != null && idField != null;
     }
 
-    public static String isActionEffective(Request request, Map<String, String> obj, ModelAction modelAction) {
+    public static String isActionEffective(Request request, Map<String, String> obj, ModelActionData modelAction) {
         final ModelManager modelManager = getModelManager(request.getAppName());
         if (modelManager == null) {
             return null;
@@ -285,7 +288,7 @@ public class PageBackendService {
         Map<String, String> result = new HashMap<>();
         String modelName = request.getModelName();
         for (String fieldName : modelManager.getFieldNames(modelName)) {
-            ModelField modelField = modelManager.getModelField(modelName, fieldName);
+            ModelFieldData modelField = modelManager.getModelField(modelName, fieldName);
             String condition = modelField.effectiveWhen();
             if (StringUtil.notBlank(condition)) {
                 result.put(fieldName, condition);
@@ -305,7 +308,7 @@ public class PageBackendService {
         }
         String modelName = request.getModelName();
         String[] allFieldNames = modelManager.getFieldNames(modelName);
-        ModelField modelField = modelManager.getModelField(modelName, allFieldNames[i]);
+        ModelFieldData modelField = modelManager.getModelField(modelName, allFieldNames[i]);
         FieldType fieldType = modelField.type();
         return fieldType == FieldType.radio || fieldType == FieldType.bool || fieldType == FieldType.select || fieldType == FieldType.groupedMultiselect || fieldType == FieldType.checkbox || fieldType == FieldType.sortableCheckbox;
     }
@@ -315,7 +318,7 @@ public class PageBackendService {
         if (modelManager == null) {
             return false;
         }
-        ModelField modelField = modelManager.getModelField(request.getModelName(), fieldName);
+        ModelFieldData modelField = modelManager.getModelField(request.getModelName(), fieldName);
         if (modelField.maxLength() < 1) {
             return true;
         }
@@ -329,32 +332,32 @@ public class PageBackendService {
     }
 
     /********************* 批量操作 start ************************/
-    public static ModelAction[] listCommonOps(Request request, Response response) {
-        List<ModelAction> actions = visitActions(request, response.getDataList());
-        actions.sort(Comparator.comparingInt(ModelAction::orderOnList));
+    public static ModelActionData[] listCommonOps(Request request, Response response) {
+        List<ModelActionData> actions = visitActions(request, response.getDataList());
+        actions.sort(Comparator.comparingInt(ModelActionData::orderOnList));
 
-        return actions.toArray(new ModelAction[0]);
+        return actions.toArray(new ModelActionData[0]);
     }
 
-    public static ModelAction[] listModelBaseOps(Request request, Map<String, String> obj) {
-        List<ModelAction> actions = visitActions(request, new ArrayList<Map<String, String>>() {{
+    public static ModelActionData[] listModelBaseOps(Request request, Map<String, String> obj) {
+        List<ModelActionData> actions = visitActions(request, new ArrayList<Map<String, String>>() {{
             add(obj);
         }});
-        actions.sort(Comparator.comparingInt(ModelAction::orderOnList));
+        actions.sort(Comparator.comparingInt(ModelActionData::orderOnList));
 
-        return actions.toArray(new ModelAction[0]);
+        return actions.toArray(new ModelActionData[0]);
     }
 
-    private static List<ModelAction> visitActions(Request request, List<Map<String, String>> dataList) {
+    private static List<ModelActionData> visitActions(Request request, List<Map<String, String>> dataList) {
         final String appName = request.getAppName();
         final ModelManager modelManager = getModelManager(appName);
-        List<ModelAction> actions = new ArrayList<>();
+        List<ModelActionData> actions = new ArrayList<>();
         if (modelManager != null) {
             final String modelName = request.getModelName();
             boolean hasId = hasIDField(request);
             if (hasId && !dataList.isEmpty()) {
                 for (String ac : modelManager.getActionNamesSupportBatch(modelName)) {
-                    ModelAction action = modelManager.getModelAction(modelName, ac);
+                    ModelActionData action = modelManager.getModelAction(modelName, ac);
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
                         final String actionName = action.name();

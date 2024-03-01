@@ -1,6 +1,7 @@
 package qingzhou.framework.app;
 
 import qingzhou.api.AppContext;
+import qingzhou.api.ModelBase;
 import qingzhou.api.QingZhouApp;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
@@ -26,4 +27,6 @@ public interface App {
     AppContext getAppContext();
 
     void invoke(Request request, Response response) throws Exception;
+
+    ModelBase getModelInstance(String modelName);
 }

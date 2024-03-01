@@ -13,6 +13,8 @@ import qingzhou.framework.app.App;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.pattern.Filter;
+import qingzhou.serialization.ModelActionData;
+import qingzhou.serialization.ModelData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,13 +28,13 @@ public class AccessControl implements Filter<HttpServletContext> {
 
     private static final List<String> masterAppModels = Arrays.asList("user", "version", "node");
 
-    public static Model[] getLoginUserAppMenuModels(String loginUser, String appName) {
+    public static ModelData[] getLoginUserAppMenuModels(String loginUser, String appName) {
         ModelManager modelManager = ConsoleWarHelper.getAppStub(appName).getModelManager();
         if (modelManager == null) {
-            return new Model[0];
+            return new ModelData[0];
         }
 
-        List<Model> models = new ArrayList<>();
+        List<ModelData> models = new ArrayList<>();
         for (String modelName : modelManager.getModelNames()) {
             models.add(modelManager.getModel(modelName));
         }
@@ -41,7 +43,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
         }
 
-        return models.toArray(new Model[0]);
+        return models.toArray(new ModelData[0]);
     }
 
     public static boolean canAccess(String appName, String modelAction, String user) {
@@ -50,7 +52,7 @@ public class AccessControl implements Filter<HttpServletContext> {
         String checkAction = ma[1];
         if (ma.length == 2) {
             ModelManager modelManager = ConsoleWarHelper.getAppStub(appName).getModelManager();
-            ModelAction modelAction1 = modelManager.getModelAction(checkModel, checkAction);
+            ModelActionData modelAction1 = modelManager.getModelAction(checkModel, checkAction);
             return modelAction1 != null;
         }
 

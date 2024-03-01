@@ -34,8 +34,8 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
         }
         List<String> infoFieldMap = new ArrayList<>();
         if (isMonitor) {
-            for (Map.Entry<String, ModelField> entry : modelManager.getMonitorFieldMap(qzRequest.getModelName()).entrySet()) {
-                ModelField monitoringField = entry.getValue();
+            for (Map.Entry<String, ModelFieldData> entry : modelManager.getMonitorFieldMap(qzRequest.getModelName()).entrySet()) {
+                ModelFieldData monitoringField = entry.getValue();
                 if (!monitoringField.supportGraphicalDynamic() && !monitoringField.supportGraphical()) {
                     infoFieldMap.add(entry.getKey());
                 }
@@ -71,7 +71,7 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
                                 if (msg != null && !msg.startsWith("model.field.")) {
                                     info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-question-sign' data-tip-arrow=\"right\"></i></span>";
                                 }
-                                ModelField modelField = modelManager.getModelField(qzRequest.getModelName(), fieldName);
+                                ModelFieldData modelField = modelManager.getModelField(qzRequest.getModelName(), fieldName);
                                 String fieldValue = allData.get(fieldName);
                                 fieldValue = fieldValue != null ? fieldValue : "";
                                 if (modelField == null || modelField.type() != FieldType.markdown) {

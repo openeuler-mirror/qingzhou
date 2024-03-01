@@ -3,11 +3,12 @@ package qingzhou.framework.app;
 import qingzhou.api.Lang;
 import qingzhou.framework.util.StringUtil;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class I18NStore {
+public class I18NStore implements Serializable {
     private final Map<String, String[]> langMap = new HashMap<>();
 
     public void addI18N(String key, String[] i18n, boolean checkContainChinese) {

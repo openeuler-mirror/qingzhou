@@ -16,8 +16,10 @@ public class UniqueFilter implements ActionFilter {
 
         if (request.getActionName().equals(AddModel.ACTION_NAME_ADD)) {
             ModelManager modelManager = appContext.getConsoleContext().getModelManager();
-            ModelBase modelInstance = modelManager.getModelInstance(request.getModelName());
-
+            ModelBase modelInstance = null;//TODO modelManager.getModelInstance(request.getModelName());
+            if (modelInstance==null) {
+                return null;
+            }
             RequestImpl requestTemp = ((RequestImpl) request).clone();
             if (StringUtil.isBlank(requestTemp.getParameter(ListModel.FIELD_NAME_ID))) {
                 requestTemp.setId(modelInstance.resolveId(requestTemp));

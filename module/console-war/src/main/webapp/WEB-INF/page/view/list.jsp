@@ -8,16 +8,16 @@ if (qzRequest == null || qzResponse == null) {
 }
 
 final boolean hasId = PageBackendService.hasIDField(qzRequest);
-LinkedHashMap<String, ModelField> fieldInfos = new LinkedHashMap<>();
+LinkedHashMap<String, ModelFieldData> fieldInfos = new LinkedHashMap<>();
 String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
 for (String fieldName : fieldNames) {
     fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModelName(), fieldName));
 }
 List<Integer> indexToShow = new ArrayList<>();
 int num = -1;
-for (Map.Entry<String, ModelField> e : fieldInfos.entrySet()) {
+for (Map.Entry<String, ModelFieldData> e : fieldInfos.entrySet()) {
     num++;
-    ModelField modelField = e.getValue();
+    ModelFieldData modelField = e.getValue();
     if (!modelField.showToList()) {
         continue;
     }
@@ -48,7 +48,7 @@ int pageSize = qzResponse.getPageSize();
             <div class="tools-group">
                 <%
                 for (String action : PageBackendService.getActionNamesShowToListHead(qzRequest.getAppName(), qzRequest.getModelName())) {
-                    ModelAction modelAction = modelManager.getModelAction(qzRequest.getModelName(), action);
+                    ModelActionData modelAction = modelManager.getModelAction(qzRequest.getModelName(), action);
                     if (modelAction != null) {
                         String viewName = ViewManager.htmlView;
                         %>
@@ -68,10 +68,10 @@ int pageSize = qzResponse.getPageSize();
                     }
                 // 用于判断是否需要操作列
                 boolean needOperationColumn = PageBackendService.needOperationColumn(qzRequest);
-                ModelAction[] opsActions = PageBackendService.listCommonOps(qzRequest, qzResponse);
+                ModelActionData[] opsActions = PageBackendService.listCommonOps(qzRequest, qzResponse);
                 if (needOperationColumn) {
                     String modelIcon = modelManager.getModel(qzRequest.getModelName()).icon();
-                    for (ModelAction action : opsActions) {
+                    for (ModelActionData action : opsActions) {
                         String actionKey = action.name();
                         String titleStr = I18n.getString(menuAppName, "model.action.info." + qzRequest.getModelName() + "." + actionKey);
                         if (StringUtil.notBlank(titleStr)) {
@@ -165,7 +165,7 @@ int pageSize = qzResponse.getPageSize();
                             %>
                             <td class="sequence"><%=++listOrder%></td>
                             <%
-                            ModelAction targetAction = null;
+                            ModelActionData targetAction = null;
                             if (AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
                                     && AccessControl.canAccess(qzRequest.getAppName(),  qzRequest.getModelName() + "/" + EditModel.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
                                 targetAction = modelManager.getModelAction(qzRequest.getModelName(), EditModel.ACTION_NAME_EDIT);
@@ -226,7 +226,7 @@ int pageSize = qzResponse.getPageSize();
                                 <%
                                 String[] actions = PageBackendService.getActionNamesShowToList(qzRequest.getAppName(), qzRequest.getModelName());
                                 for (String actionName : actions) {
-                                    ModelAction action = modelManager.getModelAction(qzRequest.getModelName(), actionName);
+                                    ModelActionData action = modelManager.getModelAction(qzRequest.getModelName(), actionName);
                                     if (action == null) {
                                         continue;
                                     }

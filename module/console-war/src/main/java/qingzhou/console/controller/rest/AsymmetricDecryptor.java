@@ -9,6 +9,7 @@ import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.pattern.Filter;
+import qingzhou.serialization.ModelFieldData;
 
 public class AsymmetricDecryptor implements Filter<RestContext> {
     @Override
@@ -16,7 +17,7 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
         RequestImpl request = (RequestImpl) context.request;
         ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         for (String fieldName : modelManager.getFieldNames(request.getModelName())) {
-            ModelField modelField = modelManager.getModelField(request.getModelName(), fieldName);
+            ModelFieldData modelField = modelManager.getModelField(request.getModelName(), fieldName);
             if (modelField.type() == FieldType.password
                     || modelField.clientEncrypt()
             ) {

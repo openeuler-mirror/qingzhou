@@ -1,6 +1,6 @@
 package qingzhou.app;
 
-import qingzhou.api.Model;
+import qingzhou.serialization.ModelData;
 import qingzhou.api.ModelBase;
 
 import java.io.Serializable;
@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 public class ModelInfo implements Serializable {
-    public final Model model;
+    public final ModelData model;
     public final Map<String, FieldInfo> fieldInfoMap;
     public final Map<String, ActionInfo> actionInfoMap;
     public final String className;
-    private Class<?> clazz;
-    private ModelBase instance;
+    private transient Class<?> clazz;
+    private transient ModelBase instance;
 
-    public ModelInfo(Model model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, String className) {
+    public ModelInfo(ModelData model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, String className) {
         this.model = model;
         Map<String, FieldInfo> fieldInfoTemp = new LinkedHashMap<>();
         for (FieldInfo fieldInfo : fieldInfoMap) {

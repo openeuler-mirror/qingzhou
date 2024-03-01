@@ -1,23 +1,23 @@
 package qingzhou.api;
 
+import qingzhou.serialization.ModelActionData;
+import qingzhou.serialization.ModelData;
+import qingzhou.serialization.ModelFieldData;
+
 import java.util.Map;
 
 public interface ModelManager {
     String[] getModelNames();
 
-    String getModelName(Class<?> modelClass);
-
-    ModelBase getModelInstance(String modelName);
-
     Map<String, String> getModelDefaultProperties(String modelName);
 
-    Model getModel(String modelName);
+    ModelData getModel(String modelName);
 
     String[] getActionNames(String modelName);
 
     String[] getActionNamesSupportBatch(String modelName);
 
-    ModelAction getModelAction(String modelName, String actionName);
+    ModelActionData getModelAction(String modelName, String actionName);
 
     String[] getFieldNames(String modelName);
 
@@ -27,9 +27,9 @@ public interface ModelManager {
 
     Group getGroup(String modelName, String groupName);
 
-    ModelField getModelField(String modelName, String fieldName);
+    ModelFieldData getModelField(String modelName, String fieldName);
 
-    Map<String, ModelField> getMonitorFieldMap(String modelName);
+    Map<String, ModelFieldData> getMonitorFieldMap(String modelName);
 
     Options getOptions(Request request, String modelName, String fieldName);
 }

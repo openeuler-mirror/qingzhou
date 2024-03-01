@@ -10,4 +10,6 @@ public interface AppMetadata {
     String getI18N(Lang lang, String key, Object... args);
 
     Menu getMenu(String menuName);
+
+    ModelManager getModelManager();
 }
