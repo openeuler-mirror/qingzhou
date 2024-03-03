@@ -1,14 +1,16 @@
 package qingzhou.app.master;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Editable;
+import qingzhou.api.type.Showable;
 
 @Model(name = "password", icon = "key",
         menuOrder = 99,
         showToMenu = false,
-        entryAction = EditModel.ACTION_NAME_EDIT,
+        entryAction = Editable.ACTION_NAME_EDIT,
         nameI18n = {"修改密码", "en:Change Password"},
         infoI18n = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
-public class Password extends ModelBase implements EditModel {
+public class Password extends ModelBase implements Editable {
     @ModelField(
             effectiveWhen = "update2FA=false",
             required = true, type = FieldType.password,
@@ -58,11 +60,11 @@ public class Password extends ModelBase implements EditModel {
 
     @Override
     public void edit(Request request, Response response) throws Exception {
-        response.addDataObject(new Password());
+        response.addModelData(new Password());
     }
 
     @Override
-    @ModelAction(name = ShowModel.ACTION_NAME_SHOW,
+    @ModelAction(name = Showable.ACTION_NAME_SHOW,
             icon = "info-sign", forwardToPage = "show",
             nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})

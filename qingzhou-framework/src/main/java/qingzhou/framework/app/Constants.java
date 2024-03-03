@@ -1,4 +1,4 @@
-package qingzhou.api;
+package qingzhou.framework.app;
 
 public interface Constants {
     String APP_PROPERTIES_FILE = "qingzhou.properties";

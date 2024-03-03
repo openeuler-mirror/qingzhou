@@ -3,7 +3,6 @@ package qingzhou.app.nodeagent;
 import qingzhou.api.*;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.AppManager;
-import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
@@ -47,7 +46,7 @@ public class AppInstaller extends ModelBase {
             app = FileUtil.newFile(getAppsDir(), appName);
             FileUtil.unZipToDir(srcFile, app);
         } else {
-            throw ExceptionUtil.unexpectedException("unknown app type");
+            throw new IllegalArgumentException("unknown app type");
         }
 
         AppManager appManager = Main.getService(AppManager.class);

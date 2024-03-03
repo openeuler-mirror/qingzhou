@@ -1,15 +1,14 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
-import qingzhou.api.ModelField;
-import qingzhou.api.ModelManager;
+import qingzhou.framework.app.ModelManager;
 import qingzhou.console.RestContext;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.pattern.Filter;
-import qingzhou.serialization.ModelFieldData;
+import qingzhou.framework.app.ModelFieldData;
 
 public class AsymmetricDecryptor implements Filter<RestContext> {
     @Override

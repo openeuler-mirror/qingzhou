@@ -1,7 +1,7 @@
 package qingzhou.app;
 
 import qingzhou.api.DataStore;
-import qingzhou.api.ListModel;
+import qingzhou.api.type.Listable;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +24,7 @@ public class MemoryDataStore implements DataStore {
     @Override
     public void updateDataById(String type, String id, Map<String, String> data) {
         for (Map<String, String> map : dataStore.get(type)) {
-            if (map.get(ListModel.FIELD_NAME_ID).equals(id)) {
+            if (map.get(Listable.FIELD_NAME_ID).equals(id)) {
                 map.putAll(data);
             }
         }
@@ -34,7 +34,7 @@ public class MemoryDataStore implements DataStore {
     public void deleteDataById(String type, String id) {
         List<Map<String, String>> maps = dataStore.get(type);
         for (int i = 0; i < maps.size(); i++) {
-            if (maps.get(i).get(ListModel.FIELD_NAME_ID).equals(id)) {
+            if (maps.get(i).get(Listable.FIELD_NAME_ID).equals(id)) {
                 maps.remove(i);
                 return;
             }

@@ -9,10 +9,6 @@ public class Arg {
     private String supportedJRE;
     private String javaVersion;
 
-    public Arg() {
-        super();
-    }
-
     public Arg(String name) {
         this.name = name;
     }

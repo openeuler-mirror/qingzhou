@@ -50,7 +50,7 @@ public class I18nTool implements Serializable {
         for (String langLine : i18n) {
             Lang lang = null;
             int valueIndex = 0;
-            if (langLine.length() > 2 && langLine.charAt(2) == ':') {
+            if (langLine.length() > 2 && langLine.charAt(2) == Lang.SEPARATOR) {
                 lang = Lang.valueOf(langLine.substring(0, 2));
                 valueIndex = 2 + 1;
             }

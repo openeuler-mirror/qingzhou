@@ -4,7 +4,7 @@ package qingzhou.app.nodeagent;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
-import qingzhou.api.MonitorModel;
+import qingzhou.api.type.Monitorable;
 
 import java.lang.management.*;
 import java.text.DecimalFormat;
@@ -15,11 +15,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(name = "jvm", icon = "coffee",
-        menuOrder = 1, entryAction = MonitorModel.ACTION_NAME_MONITOR,
+        menuOrder = 1, entryAction = Monitorable.ACTION_NAME_MONITOR,
         nameI18n = {"JVM", "en:JVM"},
         infoI18n = {"描述 Java 虚拟机（JVM）的版本、厂商等基本信息，以及Java进程的堆内存、非堆内存等使用情况。",
                 "en:Describes basic information such as the version and manufacturer of the Java Virtual Machine (JVM), as well as the usage of heap memory and non-heap memory of the Java process."})
-public class Jvm extends ModelBase implements MonitorModel {
+public class Jvm extends ModelBase implements Monitorable {
     @ModelField(isMonitorField = true, nameI18n = {"名称", "en:Name"}, infoI18n = {"Java 虚拟机规范名称。", "en:Java virtual machine specification name."})
     public String SpecName;
 
@@ -98,8 +98,8 @@ public class Jvm extends ModelBase implements MonitorModel {
             String name = Arrays.toString(gcBean.getMemoryPoolNames());
             long count = gcBean.getCollectionCount();
             long time = gcBean.getCollectionTime();
-            properties.put("collectionCount" + MONITOR_EXT_SEPARATOR + name, String.valueOf(count));
-            properties.put("collectionTime" + MONITOR_EXT_SEPARATOR + name, String.valueOf(time)); // 最大减去可用就是当前使用中的
+            properties.put("collectionCount" + Monitorable.MONITOR_EXT_SEPARATOR + name, String.valueOf(count));
+            properties.put("collectionTime" + Monitorable.MONITOR_EXT_SEPARATOR + name, String.valueOf(time)); // 最大减去可用就是当前使用中的
         }
 
         return properties;

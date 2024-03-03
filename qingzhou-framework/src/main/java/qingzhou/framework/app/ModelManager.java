@@ -1,8 +1,11 @@
-package qingzhou.api;
+package qingzhou.framework.app;
 
-import qingzhou.serialization.ModelActionData;
-import qingzhou.serialization.ModelData;
-import qingzhou.serialization.ModelFieldData;
+import qingzhou.api.Group;
+import qingzhou.api.Options;
+import qingzhou.api.Request;
+import qingzhou.framework.app.ModelActionData;
+import qingzhou.framework.app.ModelData;
+import qingzhou.framework.app.ModelFieldData;
 
 import java.util.Map;
 

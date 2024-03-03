@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <form name="filterForm" id="filterForm" method="POST"
-      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getAppName() + "/" + qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST)%>">
+      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getAppName() + "/" + qzRequest.getModelName() + "/" + Listable.ACTION_NAME_LIST)%>">
     <div class="row filterForm" style="margin-top: 10px;">
         <%
             for (Integer i : indexToShow) {
@@ -27,7 +27,7 @@
                 } else {
                     String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
                     if (StringUtil.notBlank(showHtml)) {
-                        if (SafeCheckerUtil.checkIsXSS(showHtml)) {
+                        if (Validator.SafeCheckerUtil.checkIsXSS(showHtml)) {
                             showHtml = "";
                         }
                     }
@@ -45,7 +45,7 @@
         <div class="col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
                         <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
                             <a class="btn"
-                               href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,ListModel.ACTION_NAME_LIST)%>"
+                               href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,Listable.ACTION_NAME_LIST)%>"
                                form="filterForm">
                                 <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18nString("page.filter")%>
                             </a>

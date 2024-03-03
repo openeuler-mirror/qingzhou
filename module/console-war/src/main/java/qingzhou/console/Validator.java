@@ -1,11 +1,14 @@
 package qingzhou.console;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
+import qingzhou.api.type.Editable;
+import qingzhou.api.type.Listable;
 import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.framework.app.ModelFieldData;
+import qingzhou.framework.app.ModelManager;
 import qingzhou.framework.util.IPUtil;
-import qingzhou.framework.util.SafeCheckerUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.serialization.ModelFieldData;
 
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -56,7 +59,7 @@ public class Validator {
     }
 
     public static boolean validate(Request request, Response response) throws Exception {
-        if (!AddModel.ACTION_NAME_ADD.equals(request.getActionName()) && !AddModel.ACTION_NAME_UPDATE.equals(request.getActionName())) {
+        if (!Createable.ACTION_NAME_ADD.equals(request.getActionName()) && !Editable.ACTION_NAME_UPDATE.equals(request.getActionName())) {
             return true;
         }
 
@@ -64,7 +67,7 @@ public class Validator {
         ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
         ModelBase tempModel = ConsoleWarHelper.getLocalApp(request.getAppName()).getModelInstance(request.getModelName());
-        Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
+        Map<String, String> dataMap = tempModel.prepareParameters(request);
         for (String fieldName : allFieldNames) {
             String validate = validate(request, modelManager, dataMap, fieldName, request.getParameter(fieldName));
             if (StringUtil.notBlank(validate)) {
@@ -98,7 +101,7 @@ public class Validator {
         }
 
         ModelBase tempModel = ConsoleWarHelper.getLocalApp(request.getAppName()).getModelInstance(request.getModelName());
-        boolean isUpdate = EditModel.ACTION_NAME_UPDATE.equals(request.getActionName());
+        boolean isUpdate = Editable.ACTION_NAME_UPDATE.equals(request.getActionName());
         if (newValue == null) { // NOTE：不能使用 StringUtil.isBlank 来判断，空串 "" 表示有值，且与 null（无值） 是不同含义
             if (modelField.required()) {
                 if (isUpdate && modelField.disableOnEdit()) { // for #NC-1624|创建时必填，编辑时允许为空。
@@ -222,11 +225,11 @@ public class Validator {
         }
 
         boolean isAdd() {
-            return AddModel.ACTION_NAME_ADD.equals(request.getActionName());
+            return Createable.ACTION_NAME_ADD.equals(request.getActionName());
         }
 
         boolean isUpdate() {
-            return EditModel.ACTION_NAME_UPDATE.equals(request.getActionName());
+            return Editable.ACTION_NAME_UPDATE.equals(request.getActionName());
         }
     }
 
@@ -240,7 +243,7 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             // 安全漏洞防护：jndi、lookup等参数不能包含“ldap://” “rmi://” 或者 $ 转义字符等。
             // 安全防护放在 useCustomizedValidator 之前
-            if (vc.fieldName.equals(ListModel.FIELD_NAME_ID)) {
+            if (vc.fieldName.equals(Listable.FIELD_NAME_ID)) {
                 if (vc.isAdd()) {
                     OUT:
                     for (String risk : new String[]{"://", // 阻止 jndi、rmi 注入
@@ -261,7 +264,7 @@ public class Validator {
 
             // id 字段，额外增加校验
             // 放在 useCustomizedValidator 之后，可 允许自定义id的校验
-            if (vc.fieldName.equals(ListModel.FIELD_NAME_ID)) {
+            if (vc.fieldName.equals(Listable.FIELD_NAME_ID)) {
                 // 只能输入英文数字下划线和横线的正则表达式
                 boolean matches = Pattern.compile("^[a-zA-Z0-9#_/.:-]+$").matcher(vc.newValue).find();
                 if (!matches) {
@@ -926,4 +929,78 @@ public class Validator {
     public interface FieldValueRetriever {
         String getFieldValue(String fieldName) throws Exception;
     }
+
+
+    public static class SafeCheckerUtil {
+        private static final String[] CommandInjectionRisk = new String[]{"`", "$", ";", "&", "|", "{", "}", "(", ")", "[", "]", "../", "..\\", "*", "%", "~", "^", "!"};// windows 路径会存在空格
+
+        public static String hasCommandInjectionRiskWithSkip(String arg, String skips) {
+            for (String f : CommandInjectionRisk) { // 命令行执行注入漏洞
+                if (skips != null) {
+                    if (skips.contains(f)) {
+                        continue;
+                    }
+                }
+                if (arg.contains(f)) {
+                    return f;
+                }
+            }
+
+            return null;
+        }
+
+        private static final Pattern SCRIPT_PATTERN = Pattern.compile("vbscript:", Pattern.CASE_INSENSITIVE);
+
+        public static boolean checkIsXSS(String check) {
+            return !checkXssOk(check);
+        }
+
+        // Level1 的检查，可以让大多数的正则（允许使用括号、中括号等）通过
+        public static boolean checkXssLevel1(String check) {
+            if (StringUtil.isBlank(check)) {
+                return true;
+            }
+
+            //判断url是否带有<>
+            String resultUrl = check.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+            if (!resultUrl.equals(check)) {
+                return false;
+            }
+
+            resultUrl = resultUrl.replaceAll("eval\\((.*)\\)", "");
+            if (!resultUrl.equals(check)) {
+                return false;
+            }
+
+            //onmouseover漏洞
+            //List<String> onXXEventPrefixList = new ArrayList<String>();
+            //onXXEventPrefixList.addAll(Arrays.asList("%20", "&nbsp;", "\"", "'", "/", "\\+"));
+            resultUrl = SCRIPT_PATTERN.matcher(resultUrl).replaceAll("");
+            if (!resultUrl.equals(check)) {
+                return false;
+            }
+
+            // 拦截这种攻击方式：payload:'onmousemove         =confirm(1)//
+            return (!resultUrl.contains("'") && !resultUrl.contains("\""))
+                    || resultUrl.indexOf(")") <= resultUrl.indexOf("(");
+        }
+
+        public static boolean checkXssOk(String check) {
+            if (StringUtil.isBlank(check)) return true;
+
+            if (!checkXssLevel1(check)) {
+                return false;
+            }
+
+            String resultUrl = check.replaceAll("\\(", "&#40").replaceAll("\\)", "&#41");
+            if (!resultUrl.equals(check)) {
+                return false;
+            }
+
+
+            resultUrl = resultUrl.replaceAll("\\[", "&#91").replaceAll("\\]", "&#93");
+            return resultUrl.equals(check);
+        }
+    }
+
 }

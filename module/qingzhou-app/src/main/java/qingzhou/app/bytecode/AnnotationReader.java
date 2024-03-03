@@ -7,9 +7,9 @@ import qingzhou.api.ModelField;
 import java.util.Map;
 
 public interface AnnotationReader {
-    Model getClassAnnotations(String classname) throws Exception;
+    Model readModel(Class<?> cls);
 
-    Map<String, ModelField> getFieldAnnotations(String classname) throws Exception;
+    Map<String, ModelField> readModelField(Class<?> cls);
 
-    Map<String, ModelAction> getMethodAnnotations(String classname) throws Exception;
+    Map<String, ModelAction> readModelAction(Class<?> cls);
 }

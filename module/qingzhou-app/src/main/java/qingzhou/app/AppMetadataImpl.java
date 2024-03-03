@@ -1,9 +1,9 @@
 package qingzhou.app;
 
-import qingzhou.api.AppMetadata;
+import qingzhou.framework.app.AppMetadata;
 import qingzhou.api.Lang;
-import qingzhou.api.Menu;
-import qingzhou.api.ModelManager;
+import qingzhou.framework.app.Menu;
+import qingzhou.framework.app.ModelManager;
 import qingzhou.framework.app.I18nTool;
 
 import java.io.Serializable;

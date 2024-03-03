@@ -1,5 +1,7 @@
 package qingzhou.api;
 
+import qingzhou.api.type.Listable;
+
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -22,7 +24,7 @@ public interface DataStore {
 
     default List<String> getAllDataId(String type) throws Exception {
         List<String> ids = new ArrayList<>();
-        getAllData(type).forEach(data -> ids.add(data.get(ListModel.FIELD_NAME_ID)));
+        getAllData(type).forEach(data -> ids.add(data.get(Listable.FIELD_NAME_ID)));
         return ids;
     }
 
@@ -50,7 +52,7 @@ public interface DataStore {
 
     default Map<String, String> getDataById(String type, String id) throws Exception {
         for (Map<String, String> data : getAllData(type)) {
-            if (Objects.equals(data.get(ListModel.FIELD_NAME_ID), id)) {
+            if (Objects.equals(data.get(Listable.FIELD_NAME_ID), id)) {
                 return data;
             }
         }
@@ -60,7 +62,7 @@ public interface DataStore {
     default List<Map<String, String>> getDataByIds(String type, String[] ids) throws Exception {
         return getAllData(type).stream().filter(data -> {
             for (String id : ids) {
-                if (id.equals(data.get(ListModel.FIELD_NAME_ID))) return true;
+                if (id.equals(data.get(Listable.FIELD_NAME_ID))) return true;
             }
             return false;
         }).collect(Collectors.toList());
@@ -80,9 +82,5 @@ public interface DataStore {
                 return true;
             }
         }).collect(Collectors.toList());
-    }
-
-    default List<Map<String, String>> getDataByFieldLike(String type, String field, String likeValue) throws Exception {
-        return getAllData(type).stream().filter(data -> data.get(field).toLowerCase().contains(likeValue.toLowerCase())).collect(Collectors.toList());
     }
 }

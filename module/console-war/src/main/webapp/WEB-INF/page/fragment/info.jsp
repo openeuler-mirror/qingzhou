@@ -1,12 +1,13 @@
+<%@ page import="qingzhou.api.type.Monitorable" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%
 boolean hasId = PageBackendService.hasIDField(qzRequest);
 boolean chartEnabled = !qzResponse.getDataList().isEmpty();
-boolean isMonitor = MonitorModel.ACTION_NAME_MONITOR.equals(qzRequest.getActionName());
+boolean isMonitor = Monitorable.ACTION_NAME_MONITOR.equals(qzRequest.getActionName());
 
 String encodedId = PageBackendService.encodeId(qzRequest.getId());
-String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, MonitorModel.ACTION_NAME_MONITOR + (hasId ? "/" + encodedId : ""));
+String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, Monitorable.ACTION_NAME_MONITOR + (hasId ? "/" + encodedId : ""));
 %>
 
 <div class="infoPage" chartMonitor="<%=isMonitor && chartEnabled%>" data-url="<%=url%>">
@@ -123,7 +124,7 @@ String url = PageBackendService.buildRequestUrl(request, response, qzRequest, Vi
             for (Map.Entry<String, String> e : models.get(0).entrySet()) {
                 String key = e.getKey();
                 String i18n = I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + key);
-                int i = key.indexOf(MonitorModel.MONITOR_EXT_SEPARATOR);
+                int i = key.indexOf(Monitorable.MONITOR_EXT_SEPARATOR);
                 if (i > 0) {
                     i18n = I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + key.substring(0, i));
                     i18n = i18n + ":" + key.substring(i + 1);

@@ -1,10 +1,6 @@
 package qingzhou.framework.app;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingZhouApp;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 
 public interface App {
     String SYS_NODE_LOCAL = "local";

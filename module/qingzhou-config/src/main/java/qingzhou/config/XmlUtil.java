@@ -1,9 +1,12 @@
 package qingzhou.config;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import qingzhou.bootstrap.Utils;
 import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.ObjectUtil;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
@@ -18,7 +21,9 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.*;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class XmlUtil {
     private static final XPath xpath;
@@ -33,10 +38,6 @@ public class XmlUtil {
 
     public XmlUtil(File path, boolean isNew) {
         this(path, null, isNew);
-    }
-
-    public XmlUtil(InputStream xmlInputStream, boolean isNew) {
-        this(null, xmlInputStream, isNew);
     }
 
     public XmlUtil(File f, InputStream xmlInputStream, boolean isNew) {
@@ -64,77 +65,8 @@ public class XmlUtil {
         this(file, false);
     }
 
-    public static Properties getProperties(File file, String nodeExpression) {
-        XmlUtil xmlUtil = new XmlUtil(file);
-        Map<String, String> attributes = xmlUtil.getAttributes(nodeExpression);
-        Properties properties = ObjectUtil.map2Properties(attributes);
-        return properties.isEmpty() ? null : properties;
-    }
-
-    public boolean containsNode(String nodeName, String attrName, String attrValue) {
-        return containsNode(String.format("//%s[@%s='%s']", nodeName, attrName, attrValue));
-    }
-
-    public boolean containsNode(String nodeExpression) {
-        String xpathExpression = String.format("boolean(%s)", nodeExpression);
-        try {
-            return Boolean.parseBoolean(xpath.evaluate(xpathExpression, doc));
-        } catch (XPathExpressionException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public List<String> getAttributeList(String nodeName, String attrName) {
-        return getAttributeList(String.format("//%s/@%s", nodeName, attrName));
-    }
-
-    public List<String> getAttributeList(String nodeExpression) {
-        NodeList nodeList;
-        try {
-            nodeList = (NodeList) xpath.evaluate(nodeExpression, doc, XPathConstants.NODESET);
-        } catch (XPathExpressionException e) {
-            throw new RuntimeException(e);
-        }
-        if (nodeList == null || nodeList.getLength() == 0) {
-            return null;
-        }
-
-        List<String> attributeList = new ArrayList<>();
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            attributeList.add(nodeList.item(i).getNodeValue());
-        }
-
-        return attributeList;
-    }
-
     public List<Map<String, String>> getAttributesList(String nodeExpression) {
-        return getAttributesListWithContentByMatcher(nodeExpression, null, null);
-    }
-
-    public List<Map<String, String>> getAttributesListWithContentByMatcher(String nodeExpression, String textContentKey, PropertiesMatcher matcher) {
-        NodeList nodeList = (NodeList) evaluate(nodeExpression, doc, XPathConstants.NODESET);
-        if (nodeList == null || nodeList.getLength() == 0) {
-            return null;
-        }
-
-        List<Map<String, String>> list = new ArrayList<>();
-        int length = nodeList.getLength();
-        for (int i = 0; i < length; i++) {
-            Node item = nodeList.item(i);
-            Map<String, String> properties = getPropertiesWithContent(item, textContentKey);
-            if (matcher == null) {
-                list.add(properties);
-            } else {
-                if (matcher.matches(properties)) {
-                    list.add(properties);
-                    if (matcher.matchOne()) {
-                        return list;
-                    }
-                }
-            }
-        }
-
-        return list;
+        return Utils.getAttributesList(doc, nodeExpression);
     }
 
     public boolean isNodeExists(String nodeExpression) {
@@ -142,69 +74,13 @@ public class XmlUtil {
         return node != null;
     }
 
-    public boolean getBooleanAttribute(String nodeExpression, String specifiedKey, boolean defaultBoolean) {
-        String val = getSpecifiedAttribute(nodeExpression, specifiedKey);
-        if (val != null) {
-            return Boolean.parseBoolean(val);
-        } else {
-            return defaultBoolean;
-        }
-    }
-
-    public String getSpecifiedAttribute(String nodeExpression, String specifiedKey) {
-        Map<String, String> attributes = getSpecifiedAttributes(nodeExpression, new String[]{specifiedKey});
-        if (attributes == null) return null;
-        return attributes.get(specifiedKey);
-    }
-
-    public Map<String, String> getSpecifiedAttributes(String nodeExpression, String[] specifiedKeys) {
-        Map<String, String> attributes = getAttributes(nodeExpression);
-        if (attributes == null) return null;
-        Map<String, String> properties = new LinkedHashMap<>();
-        for (String s : specifiedKeys) {
-            properties.put(s, attributes.get(s));
-        }
-        return properties;
-    }
-
-    public List<String> getSpecifiedListAttributeByAttr(String tagName, String specifiedKey, String attrKey, String attrValue) {
-        String nodeExpression = "//" + tagName + "/@" + specifiedKey + "[@" + attrKey + "='" + attrValue + "']";
-        return getAttributeList(nodeExpression);
-    }
-
-    public int getTotalSize(String tagName) {
-        NodeList nodes = (NodeList) evaluate("//" + tagName, doc, XPathConstants.NODESET);
-        return nodes.getLength();
-    }
-
-    public Map<String, String> getAttributesByKey(String nodeExpression, String keyName, String keyValue) {
-        return getAttributes(String.format(nodeExpression + "[@%s='%s']", keyName, keyValue));
-    }
-
     public Map<String, String> getAttributes(String nodeExpression) {
-        return getAttributesWithContent(nodeExpression, null);
+        return getAttributesWithContent(nodeExpression);
     }
 
-    public Map<String, String> getAttributesWithContent(String nodeExpression, String textContentKey) {
+    public Map<String, String> getAttributesWithContent(String nodeExpression) {
         Node node = (Node) evaluate(nodeExpression, doc, XPathConstants.NODE);
-        return getPropertiesWithContent(node, textContentKey);
-    }
-
-    public Map<String, String> getAttributesByMatcher(String nodeExpression, PropertiesMatcher matcher) {
-        List<Map<String, String>> list = getAttributesListWithContentByMatcher(nodeExpression, null, new PropertiesMatcher() {
-            @Override
-            public boolean matchOne() {
-                return true;
-            }
-
-            @Override
-            public boolean matches(Map<String, String> check) {
-                return matcher.matches(check);
-            }
-        });
-
-        if (list == null || list.isEmpty()) return null;
-        return list.get(0);
+        return getPropertiesWithContent(node);
     }
 
     public boolean setAttributes(String nodeExpression, Map<String, String> properties) {
@@ -235,73 +111,6 @@ public class XmlUtil {
         }
     }
 
-    public void setAttribute(String nodeExpression, String key, String value) {
-        Element element = (Element) evaluate(nodeExpression, doc, XPathConstants.NODE);
-        if (element != null) {
-            element.setAttribute(key, value);
-        }
-    }
-
-    public void setAttributeForAllNode(String nodeExpression, String key, String value) {
-        NodeList nodeList = (NodeList) evaluate(nodeExpression, doc, XPathConstants.NODE);
-        if (nodeList != null) {
-            int length = nodeList.getLength();
-            for (int i = 0; i < length; i++) {
-                Element element = (Element) nodeList.item(i);
-                element.setAttribute(key, value);
-            }
-        }
-    }
-
-    public void setAttributesByMatcher(String nodeExpression, PropertiesMatcher matcher, String key, String val) {
-        Map<String, String> p = new LinkedHashMap<>();
-        p.put(key, val);
-        setAttributesByMatcher(nodeExpression, matcher, p);
-    }
-
-    public void setAttributesByMatcher(String nodeExpression, PropertiesMatcher matcher, Map<String, String> data) {
-        NodeList nodeList = (NodeList) evaluate(nodeExpression, doc, XPathConstants.NODESET);
-        if (nodeList != null) {
-            int length = nodeList.getLength();
-            for (int i = 0; i < length; i++) {
-                Element item = (Element) nodeList.item(i);
-                Map<String, String> properties = getPropertiesWithContent(item, null);
-                if (matcher.matches(properties)) {
-                    for (Map.Entry<String, String> kv : data.entrySet()) {
-                        item.setAttribute(kv.getKey(), kv.getValue());
-                    }
-                    return;
-                }
-            }
-        }
-    }
-
-    public void deleteByMatcher(String nodeExpression, PropertiesMatcher matcher) {
-        NodeList nodeList = (NodeList) evaluate(nodeExpression, doc, XPathConstants.NODESET);
-        if (nodeList != null) {
-            int length = nodeList.getLength();
-            for (int i = 0; i < length; i++) {
-                Element item = (Element) nodeList.item(i);
-                Map<String, String> properties = getPropertiesWithContent(item, null);
-                if (matcher.matches(properties)) {
-                    deleteNode(item);
-                    return;
-                }
-            }
-        }
-    }
-
-    public void deleteAll(String nodeExpression) {
-        NodeList nodeList = (NodeList) evaluate(nodeExpression, doc, XPathConstants.NODESET);
-        if (nodeList != null) {
-            int length = nodeList.getLength();
-            for (int i = 0; i < length; i++) {
-                Element item = (Element) nodeList.item(i);
-                deleteNode(item);
-            }
-        }
-    }
-
     public void delete(String nodeExpression) {
         Element element = (Element) evaluate(nodeExpression, doc, XPathConstants.NODE);
         deleteNode(element);
@@ -309,15 +118,6 @@ public class XmlUtil {
 
     public void addNew(String parentNodeExpression, String tagName, Map<String, String> properties) {
         addNewWithContent(parentNodeExpression, tagName, properties, null);
-    }
-
-    public void addOrUpdate(String root, String parent, String tagName, Map<String, String> properties) {
-        if (!setAttributes(root + "/" + parent + "/" + tagName, properties)) {
-            if (!this.isNodeExists(root + "/" + parent)) {
-                this.addNew(root, parent, null);
-            }
-            addNew(root + "/" + parent, tagName, properties);
-        }
     }
 
     /****
@@ -398,26 +198,8 @@ public class XmlUtil {
         }
     }
 
-    private Map<String, String> getPropertiesWithContent(Node node, String textContentKey) {
-        if (node == null) {
-            return null;
-        }
-
-        Map<String, String> properties = new LinkedHashMap<>();
-        NamedNodeMap namedNodeMap = node.getAttributes();
-        int length = namedNodeMap.getLength();
-        for (int i = 0; i < length; i++) {
-            Node item = namedNodeMap.item(i);
-            properties.put(item.getNodeName(), item.getNodeValue());
-        }
-        if (textContentKey != null) {
-            String textContent = node.getTextContent();
-            if (textContent != null) {
-                properties.put(textContentKey, textContent.trim());
-            }
-        }
-
-        return properties;
+    private Map<String, String> getPropertiesWithContent(Node node) {
+        return Utils.getAttributes(node);
     }
 
     /**
@@ -459,33 +241,5 @@ public class XmlUtil {
         } catch (XPathExpressionException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public String getNodeTextContent(String nodeExpression) {
-        Node node = (Node) evaluate(nodeExpression, doc, XPathConstants.NODE);
-        if (node == null) return null;
-        return node.getTextContent();
-    }
-
-    public void addOrUpdateNode(String parent, String tagName, Map<String, String> map, boolean isList) {
-        if (isList) {
-            if (!isNodeExists(parent + "/" + tagName + "s")) {
-                addNew(parent, tagName + "s", null);
-            }
-            addNew(parent + "/" + tagName + "s", tagName, map);
-        } else {
-            if (isNodeExists(parent + "/" + tagName)) {
-                setAttributes(parent + "/" + tagName, map);
-            } else {
-                addNew(parent, tagName, map);
-            }
-        }
-    }
-
-
-    public interface PropertiesMatcher {
-        boolean matchOne();
-
-        boolean matches(Map<String, String> check);
     }
 }

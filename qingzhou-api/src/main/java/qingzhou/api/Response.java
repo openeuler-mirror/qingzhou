@@ -1,6 +1,5 @@
 package qingzhou.api;
 
-import java.util.List;
 import java.util.Map;
 
 public interface Response {
@@ -16,13 +15,5 @@ public interface Response {
 
     void addData(Map<String, String> data);
 
-    void addDataObject(Object data) throws Exception;
-
-    boolean isSuccess();
-
-    List<Map<String, String>> getDataList();
-
-    int getTotalSize();
-
-    int getPageSize();
+    void addModelData(ModelBase data) throws Exception;
 }

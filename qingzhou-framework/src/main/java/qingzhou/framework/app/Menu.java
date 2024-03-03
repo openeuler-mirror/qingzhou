@@ -1,4 +1,4 @@
-package qingzhou.api;
+package qingzhou.framework.app;
 
 public interface Menu {
     String getName();

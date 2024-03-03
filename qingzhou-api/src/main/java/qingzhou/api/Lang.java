@@ -5,6 +5,8 @@ public enum Lang {
     en("en", "English"),
     tr("tr", "繁體");
 
+    public static final char SEPARATOR = ':';
+
     public final String flag;
     public final String info;
 

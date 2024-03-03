@@ -12,7 +12,7 @@ import java.util.Map;
         menuName = "Guide", menuOrder = 1,
         nameI18n = {"开发手册", "en:DevManual"},
         infoI18n = {"基于 Qingzhou 进行应用开发的具体操作说明。", "en:Specific operating instructions for application development based on Qingzhou."})
-public class Manual extends ModelBase implements ShowModel {
+public class Manual extends ModelBase {
     @ModelField(nameI18n = {"内容", "en:Content"},
             type = FieldType.markdown,
             infoI18n = {"此手册的内容。", "en:The content of the manual."})

@@ -1,6 +1,6 @@
 package qingzhou.app;
 
-import qingzhou.serialization.ModelActionData;
+import qingzhou.framework.app.ModelActionData;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;

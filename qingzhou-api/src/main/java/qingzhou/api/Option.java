@@ -1,20 +1,22 @@
 package qingzhou.api;
 
+import java.util.Arrays;
+
 public interface Option {
     String value();
 
     String[] i18n();
 
-    static Option of(String i18nValue) {
+    static Option of(String value) {
         return new Option() {
             @Override
             public String value() {
-                return i18nValue;
+                return value;
             }
 
             @Override
             public String[] i18n() {
-                return new String[]{i18nValue, "en:" + i18nValue};
+                return Arrays.stream(Lang.values()).map(lang -> lang.name() + Lang.SEPARATOR + value).toArray(String[]::new);
             }
         };
     }

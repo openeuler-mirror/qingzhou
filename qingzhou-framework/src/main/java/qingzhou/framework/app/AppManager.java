@@ -1,6 +1,6 @@
 package qingzhou.framework.app;
 
-import qingzhou.bootstrap.main.service.InternalService;
+import qingzhou.framework.InternalService;
 
 import java.io.File;
 import java.util.Set;

@@ -1,13 +1,17 @@
 package qingzhou.app.master.system;
 
-import qingzhou.api.*;
+import qingzhou.api.Group;
+import qingzhou.api.Groups;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.type.Editable;
 
 @Model(name = "store", icon = "database",
         menuName = "System", menuOrder = 2,
         nameI18n = {"存储管理", "en:Data Store"},
         infoI18n = {"调整 Qingzhou 数据、文件的存储方式，以适应云原生等使用环境。",
                 "en:Adjust the storage method of Qingzhou's data and files to adapt to the use environment such as cloud native."})
-public class Store extends ModelBase implements EditModel {
+public class Store extends ModelBase implements Editable {
     // TODO 支持云原生，以不同的 group 来显示
 
     public boolean configEnabled = false; // TODO: 配置中心，以更换 ConfigManager 的实现类方式来实现
@@ -18,7 +22,7 @@ public class Store extends ModelBase implements EditModel {
     public boolean ssoEnabled = false; // TODO: 支持云上单点登录统一管理
 
     @Override
-    public Groups group() {
+    public Groups groups() {
         return Groups.of(
                 Group.of("config", new String[]{"配置中心", "en:Config"}),
                 Group.of("log", new String[]{"日志收集", "en:Log"}),

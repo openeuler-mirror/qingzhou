@@ -1,6 +1,7 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
@@ -11,7 +12,7 @@ import java.io.File;
         nameI18n = {"系统版本", "en:System Version"},
         infoI18n = {"展示系统的版本信息，可将系统升级到一个新的版本上。",
                 "en:Displays the version information of the system and can upgrade the system to a new version."})
-public class Version extends ModelBase implements AddModel {
+public class Version extends ModelBase implements Createable {
 
     @ModelField(
             showToList = true,

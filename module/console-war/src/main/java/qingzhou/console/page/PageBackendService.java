@@ -1,17 +1,17 @@
 package qingzhou.console.page;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
+import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Editable;
+import qingzhou.api.type.Listable;
 import qingzhou.console.*;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.app.App;
-import qingzhou.framework.app.RequestImpl;
 import qingzhou.console.util.Base32Util;
+import qingzhou.framework.app.*;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.serialization.ModelActionData;
-import qingzhou.serialization.ModelData;
-import qingzhou.serialization.ModelFieldData;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -228,19 +228,19 @@ public class PageBackendService {
         if (modelManager == null) {
             return null;
         }
-        boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, request.getActionName());
+        boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, request.getActionName());
         for (String actionName : modelManager.getActionNames(request.getModelName())) {
-            if (actionName.equals(EditModel.ACTION_NAME_UPDATE)) {
+            if (actionName.equals(Editable.ACTION_NAME_UPDATE)) {
                 if (isEdit) {
-                    return EditModel.ACTION_NAME_UPDATE;
+                    return Editable.ACTION_NAME_UPDATE;
                 }
-            } else if (actionName.equals(AddModel.ACTION_NAME_ADD)) {
+            } else if (actionName.equals(Createable.ACTION_NAME_ADD)) {
                 if (!isEdit) {
-                    return AddModel.ACTION_NAME_ADD;
+                    return Createable.ACTION_NAME_ADD;
                 }
             }
         }
-        return isEdit ? EditModel.ACTION_NAME_UPDATE : AddModel.ACTION_NAME_ADD;// 兜底
+        return isEdit ? Editable.ACTION_NAME_UPDATE : Createable.ACTION_NAME_ADD;// 兜底
     }
 
     public static boolean hasIDField(Request request) {
@@ -253,8 +253,8 @@ public class PageBackendService {
         if (modelManager == null) {
             return false;
         }
-        ModelActionData listAction = modelManager.getModelAction(request.getModelName(), ListModel.ACTION_NAME_LIST);
-        ModelFieldData idField = modelManager.getModelField(request.getModelName(), ListModel.FIELD_NAME_ID);
+        ModelActionData listAction = modelManager.getModelAction(request.getModelName(), Listable.ACTION_NAME_LIST);
+        ModelFieldData idField = modelManager.getModelField(request.getModelName(), Listable.FIELD_NAME_ID);
         return listAction != null && idField != null;
     }
 
@@ -326,13 +326,13 @@ public class PageBackendService {
     }
 
     public static boolean isAjaxAction(String actionName) {
-        return EditModel.ACTION_NAME_UPDATE.equals(actionName) ||
-                AddModel.ACTION_NAME_ADD.equals(actionName) ||
-                DeleteModel.ACTION_NAME_DELETE.equals(actionName);
+        return Editable.ACTION_NAME_UPDATE.equals(actionName) ||
+                Createable.ACTION_NAME_ADD.equals(actionName) ||
+                Deletable.ACTION_NAME_DELETE.equals(actionName);
     }
 
     /********************* 批量操作 start ************************/
-    public static ModelActionData[] listCommonOps(Request request, Response response) {
+    public static ModelActionData[] listCommonOps(Request request, ResponseImpl response) {
         List<ModelActionData> actions = visitActions(request, response.getDataList());
         actions.sort(Comparator.comparingInt(ModelActionData::orderOnList));
 
@@ -361,7 +361,7 @@ public class PageBackendService {
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
                         final String actionName = action.name();
-                        if (isActionEffective(request, data, action) != null || EditModel.ACTION_NAME_EDIT.equals(actionName) || !action.showToList()) {
+                        if (isActionEffective(request, data, action) != null || Editable.ACTION_NAME_EDIT.equals(actionName) || !action.showToList()) {
                             isShow = false;
                             break;
                         }
@@ -424,5 +424,24 @@ public class PageBackendService {
         }
 
         return id; // 出错，表示 rest 接口，没有编码
+    }
+
+    public static Map<String, String> stringToMap(String str) {
+        Map<String, String> map = new LinkedHashMap<>();
+        if (StringUtil.isBlank(str)) {
+            return map;
+        }
+        String[] envArr = str.split(",");
+        for (String env : envArr) {
+            int i = env.indexOf("=");
+            if (i < 0) {
+                map.put(env, "");
+            } else {
+                String name = env.substring(0, i);
+                String value = env.substring(i + 1);
+                map.put(name, value);
+            }
+        }
+        return map;
     }
 }

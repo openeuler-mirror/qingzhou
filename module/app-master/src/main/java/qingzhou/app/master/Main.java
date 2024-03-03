@@ -1,6 +1,8 @@
 package qingzhou.app.master;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Editable;
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.QingZhouSystemApp;
@@ -37,9 +39,9 @@ public class Main extends QingZhouSystemApp {
         public String doFilter(Request request, Response response, AppContext appContext) {
             if (App.SYS_MODEL_NODE.equals(request.getModelName())
                     && App.SYS_NODE_LOCAL.equals(request.getId())) {
-                if (EditModel.ACTION_NAME_UPDATE.equals(request.getActionName())
-                        || DeleteModel.ACTION_NAME_DELETE.equals(request.getActionName())) {
-                    return appContext.getMetadata().getI18n(request.getI18nLang(), "validator.master.system");
+                if (Editable.ACTION_NAME_UPDATE.equals(request.getActionName())
+                        || Deletable.ACTION_NAME_DELETE.equals(request.getActionName())) {
+                    return appContext.getAppMetadata().getI18n(request.getI18nLang(), "validator.master.system");
                 }
             }
 

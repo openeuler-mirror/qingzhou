@@ -1,8 +1,11 @@
 package qingzhou.app;
 
-import qingzhou.api.*;
+import qingzhou.api.ActionFilter;
+import qingzhou.api.AppContext;
+import qingzhou.api.DataStore;
 import qingzhou.bootstrap.main.FrameworkContext;
-import qingzhou.bootstrap.main.service.InternalService;
+import qingzhou.framework.InternalService;
+import qingzhou.framework.app.AppMetadata;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,24 +15,18 @@ import java.util.stream.Collectors;
 
 public class AppContextImpl implements AppContext {
     private final FrameworkContext frameworkContext;
-    private final AppMetadataImpl metadata;
-    private ConsoleContext consoleContext;
+    private final AppMetadataImpl appMetadata;
     private DataStore dataStore;
     private List<ActionFilter> actionFilters;
 
     public AppContextImpl(FrameworkContext frameworkContext) {
         this.frameworkContext = frameworkContext;
-        this.metadata = new AppMetadataImpl();
+        this.appMetadata = new AppMetadataImpl();
     }
 
     @Override
     public File getTemp() {
-        return frameworkContext.getTemp(metadata.getName());
-    }
-
-    @Override
-    public ConsoleContext getConsoleContext() {
-        return consoleContext;
+        return frameworkContext.getTemp(appMetadata.getName());
     }
 
     @Override
@@ -56,10 +53,6 @@ public class AppContextImpl implements AppContext {
         return frameworkContext.getVersion();
     }
 
-    public void setConsoleContext(ConsoleContext consoleContext) {
-        this.consoleContext = consoleContext;
-    }
-
     @Override
     public void setDefaultDataStore(DataStore dataStore) {
         this.dataStore = dataStore;
@@ -72,17 +65,16 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public void addI18n(String key, String[] i18n) {
-        metadata.addI18n(key, i18n);
+        appMetadata.addI18n(key, i18n);
     }
 
     @Override
     public void addMenu(String menuName, String[] menuI18n, String menuIcon, int menuOrder) {
-        metadata.addMenu(menuName, menuI18n, menuIcon, menuOrder);
+        appMetadata.addMenu(menuName, menuI18n, menuIcon, menuOrder);
     }
 
-    @Override
-    public AppMetadata getMetadata() {
-        return metadata;
+    public AppMetadata getAppMetadata() {
+        return appMetadata;
     }
 
     @Override

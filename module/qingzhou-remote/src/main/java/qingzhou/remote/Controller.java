@@ -12,9 +12,8 @@ import qingzhou.framework.crypto.KeyCipher;
 import qingzhou.framework.crypto.KeyPairCipher;
 import qingzhou.framework.logger.Logger;
 import qingzhou.framework.serializer.Serializer;
-import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.IPUtil;
-import qingzhou.framework.util.StreamUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.pattern.Process;
 import qingzhou.framework.util.pattern.ProcessSequence;
@@ -25,6 +24,7 @@ import qingzhou.remote.net.http.HttpServerServiceImpl;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -83,13 +83,24 @@ public class Controller implements ModuleLoader {
                 try {
                     result = process(new ByteArrayInputStream(response.getContent().getBytes()));
                 } catch (Exception e) {
-                    result = ExceptionUtil.stackTrace(e).getBytes(StandardCharsets.UTF_8);
+                    result = stackTrace(e).getBytes(StandardCharsets.UTF_8);
                 }
                 response.setContent(new String(result, StandardCharsets.UTF_8));
             });
             server.start();
 
             logger.info("The remote service is started on the port: " + remotePort);
+        }
+
+        private String stackTrace(Throwable t) {
+            if (t == null) {
+                return "";
+            }
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            PrintStream stream = new PrintStream(bos);
+            t.printStackTrace(stream);
+            stream.flush();
+            return bos.toString();
         }
 
         @Override
@@ -102,7 +113,7 @@ public class Controller implements ModuleLoader {
 
         private byte[] process(InputStream in) throws Exception {
             ByteArrayOutputStream bos = new ByteArrayOutputStream(in.available());
-            StreamUtil.copyStream(in, bos);
+            FileUtil.copyStream(in, bos);
             // 获得请求的数据
             byte[] requestData = bos.toByteArray();
 

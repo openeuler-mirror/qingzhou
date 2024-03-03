@@ -11,12 +11,10 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.app.App;
-import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +80,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
         return true;
     }
 
-    private String needReset(String user) {
+    private String needReset(String user) throws Exception {
         Map<String, String> userP = ServerXml.get().user(user);
         if (userP == null) {
             return null;
@@ -101,12 +99,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
         if (Boolean.parseBoolean(userP.get("enablePasswordAge"))) {
             String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
             if (passwordLastModifiedTime != null) {
-                long time;
-                try {
-                    time = new SimpleDateFormat(ConsoleConstants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
-                } catch (ParseException e) {
-                    throw ExceptionUtil.unexpectedException(e);
-                }
+                long time = new SimpleDateFormat(ConsoleConstants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
                 String maxAge = userP.get("passwordMaxAge");
                 if (maxAge != null && !maxAge.equals("0")) {
                     long max = time + Integer.parseInt(maxAge) * ConsoleConstants.DAY_MILLIS_VALUE;

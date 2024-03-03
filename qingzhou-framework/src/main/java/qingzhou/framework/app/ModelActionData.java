@@ -1,4 +1,4 @@
-package qingzhou.serialization;
+package qingzhou.framework.app;
 
 import java.io.Serializable;
 

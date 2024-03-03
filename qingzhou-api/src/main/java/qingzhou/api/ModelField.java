@@ -77,7 +77,7 @@ public @interface ModelField { // 注意: 不能支持原数据查询，如 唯�
     boolean showToList() default false;
 
     /**
-     * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.action.fieldname"，根据modelname和action跳转，fieldname为链接携带的参数key
+     * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="model.action.field"，根据model和action跳转，field为链接携带的参数key
      */
     String linkModel() default "";
 

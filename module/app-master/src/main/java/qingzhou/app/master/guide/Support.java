@@ -1,6 +1,7 @@
 package qingzhou.app.master.guide;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Listable;
 import qingzhou.app.master.ReadOnlyDataStore;
 
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import java.util.Map;
         menuName = "Guide", menuOrder = 2,
         nameI18n = {"支持项目", "en:Support Project"},
         infoI18n = {" Qingzhou 可以支持的项目，如系统集成方面等。", "en:Qingzhou can support projects, such as system integration, etc."})
-public class Support extends ModelBase implements ListModel {
+public class Support extends ModelBase implements Listable {
     @ModelField(
             showToList = true,
             nameI18n = {"项目", "en:Project"},
@@ -42,7 +43,6 @@ public class Support extends ModelBase implements ListModel {
     @Override
     public DataStore getDataStore() {
         return new ReadOnlyDataStore(type -> {
-            ConsoleContext context = getAppContext().getConsoleContext();
             List<Map<String, String>> data = new ArrayList<>();
 
             // todo: 这里可以参考： Manual.getDataStore(xxx)

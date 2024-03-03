@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.api.type.Listable" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -76,7 +77,7 @@ if (!qzResponse.getDataList().isEmpty()) {
         </div>
 
         <%
-        if (modelManager.getModelAction(qzRequest.getModelName(), ListModel.ACTION_NAME_LIST) != null) {
+        if (modelManager.getModelAction(qzRequest.getModelName(), Listable.ACTION_NAME_LIST) != null) {
             %>
             <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
                 <div class="form-btn">

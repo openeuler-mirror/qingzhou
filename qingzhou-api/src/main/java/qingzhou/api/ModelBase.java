@@ -1,6 +1,8 @@
 package qingzhou.api;
 
-public abstract class ModelBase implements ShowModel {
+import qingzhou.api.type.Showable;
+
+public abstract class ModelBase implements Showable {
     private AppContext appContext;
 
     // 由框架注入
@@ -9,16 +11,19 @@ public abstract class ModelBase implements ShowModel {
         this.appContext = appContext;
     }
 
-    @Override
     public AppContext getAppContext() {
         return appContext;
+    }
+
+    public DataStore getDataStore() {
+        return getAppContext().getDefaultDataStore();
     }
 
     // 添加 i18n 等定制初始化
     public void init() {
     }
 
-    // 对于创建时候未传入 id 参数的，如 master 的 App，可以通过此方法计算 id，以进行必要的查重校验等操作
+    // 对于创建时候未传入 id 参数的，如 master 的 App，可以通过此方法计算 id，以进行查重等操作
     public String resolveId(Request request) {
         return null;
     }
@@ -28,7 +33,7 @@ public abstract class ModelBase implements ShowModel {
         return null;
     }
 
-    public Groups group() {
+    public Groups groups() {
         return null;
     }
 

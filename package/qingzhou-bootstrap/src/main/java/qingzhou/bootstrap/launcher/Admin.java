@@ -1,6 +1,5 @@
 package qingzhou.bootstrap.launcher;
 
-import qingzhou.bootstrap.Utils;
 import qingzhou.bootstrap.command.CommandLineProcessor;
 
 import java.util.*;
@@ -46,13 +45,16 @@ public class Admin { // 由 Launcher 来调用
         }
     }
 
-    private static List<CommandLineProcessor> listCommandsTemp() throws Exception {
-        List<CommandLineProcessor> processors = Utils.loadServices(CommandLineProcessor.class.getName(), CommandLineProcessor.class.getClassLoader());
+    private static List<CommandLineProcessor> listCommandsTemp() {
+        List<CommandLineProcessor> processors = new ArrayList<>();
+        for (CommandLineProcessor processor : ServiceLoader.load(CommandLineProcessor.class)) {
+            processors.add(processor);
+        }
         processors.sort(Comparator.comparing(CommandLineProcessor::name));
         return processors;
     }
 
-    private static boolean showHelp(String[] args) throws Exception {
+    private static boolean showHelp(String[] args) {
         if (args == null || args.length == 0 || args.length == 1) {
             boolean found = (args == null || args.length == 0);
             if (!found) {

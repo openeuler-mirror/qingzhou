@@ -55,13 +55,13 @@ public class Utils {
         return properties;
     }
 
-    public static boolean isSymlink(File file) throws IOException {
+    public static boolean notSymlink(File file) throws IOException {
         if (file == null) {
             throw new NullPointerException("File must not be null");
         }
         //FilenameUtils.isSystemWindows()
         if (File.separatorChar == '\\') {
-            return false;
+            return true;
         }
         File fileInCanonicalDir;
         if (file.getParent() == null) {
@@ -71,7 +71,7 @@ public class Utils {
             fileInCanonicalDir = new File(canonicalDir, file.getName());
         }
 
-        return !fileInCanonicalDir.getCanonicalFile().equals(fileInCanonicalDir.getAbsoluteFile());
+        return fileInCanonicalDir.getCanonicalFile().equals(fileInCanonicalDir.getAbsoluteFile());
     }
 
     public static boolean isPortOpened(String host, int port) {
@@ -90,7 +90,7 @@ public class Utils {
             return;
         }
 
-        if (!isSymlink(directory)) {
+        if (notSymlink(directory)) {
             cleanDirectory(directory);
         }
 
@@ -499,12 +499,15 @@ public class Utils {
     public static Map<String, String> getAttributes(File file, String xpath) {
         Document doc = getDocument(file);
         Node node = (Node) evaluate(xpath, doc, XPathConstants.NODE);
-        return getPropertiesWithContent(node);
+        return getAttributes(node);
     }
 
     public static List<Map<String, String>> getAttributesList(File file, String xpath) {
         Document doc = getDocument(file);
+        return getAttributesList(doc, xpath);
+    }
 
+    public static List<Map<String, String>> getAttributesList(Document doc, String xpath) {
         NodeList nodeList = (NodeList) evaluate(xpath, doc, XPathConstants.NODESET);
         if (nodeList == null || nodeList.getLength() == 0) {
             return null;
@@ -514,14 +517,14 @@ public class Utils {
         int length = nodeList.getLength();
         for (int i = 0; i < length; i++) {
             Node item = nodeList.item(i);
-            Map<String, String> properties = getPropertiesWithContent(item);
+            Map<String, String> properties = getAttributes(item);
             list.add(properties);
         }
 
         return list;
     }
 
-    private static Map<String, String> getPropertiesWithContent(Node node) {
+    public static Map<String, String> getAttributes(Node node) {
         if (node == null) {
             return null;
         }
@@ -602,7 +605,6 @@ public class Utils {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 if (output != null) {
                     String msg = type + ">" + e.getMessage() + System.lineSeparator();
                     output.collect(msg);

@@ -1,6 +1,6 @@
 package qingzhou.app;
 
-import qingzhou.serialization.ModelFieldData;
+import qingzhou.framework.app.ModelFieldData;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;

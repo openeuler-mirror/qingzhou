@@ -1,8 +1,8 @@
 package qingzhou.console;
 
 import qingzhou.api.Lang;
-import qingzhou.api.Menu;
-import qingzhou.api.ModelManager;
+import qingzhou.framework.app.Menu;
+import qingzhou.framework.app.ModelManager;
 
 public interface AppStub {
     ModelManager getModelManager();

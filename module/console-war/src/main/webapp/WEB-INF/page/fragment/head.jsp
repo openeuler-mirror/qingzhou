@@ -17,7 +17,6 @@
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.page.*" %>
-<%@ page import="qingzhou.serialization.*" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
@@ -44,7 +43,7 @@
     String common_msg = request.getParameter(RESTController.MSG_FLAG);
     common_msg = LoginManager.retrieveI18nMsg(common_msg);
     if (common_msg != null) {
-        if (!SafeCheckerUtil.checkIsXSS(common_msg)) {
+        if (!Validator.SafeCheckerUtil.checkIsXSS(common_msg)) {
 %>
 <script>
     $(document).ready(function () {

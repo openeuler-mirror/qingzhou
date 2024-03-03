@@ -1,6 +1,6 @@
 package qingzhou.app;
 
-import qingzhou.api.Menu;
+import qingzhou.framework.app.Menu;
 
 import java.io.Serializable;
 import java.util.Objects;

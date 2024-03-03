@@ -1,7 +1,7 @@
 package qingzhou.framework.config;
 
 
-import qingzhou.bootstrap.main.service.InternalService;
+import qingzhou.framework.InternalService;
 
 import java.util.List;
 import java.util.Map;
@@ -9,7 +9,6 @@ import java.util.Map;
 public interface Config extends InternalService {
     String localKeyName = "localKey";
     String remoteKeyName = "remoteKey";
-    String remotePublicKeyName = "remotePublicKey"; // TODO: 节点使用，用于和集中管理通信加密
 
     String publicKeyName = "publicKey";
     String privateKeyName = "privateKey";

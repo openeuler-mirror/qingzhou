@@ -1,6 +1,8 @@
 package qingzhou.app;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
+import qingzhou.api.type.Listable;
 import qingzhou.framework.app.I18nTool;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.util.StringUtil;
@@ -13,21 +15,14 @@ public class UniqueFilter implements ActionFilter {
     public String doFilter(Request request, Response response, AppContext appContext) throws Exception {
         initI18n();
 
-        if (request.getActionName().equals(AddModel.ACTION_NAME_ADD)) {
-            ModelManager modelManager = appContext.getConsoleContext().getModelManager();
+        if (request.getActionName().equals(Createable.ACTION_NAME_ADD)) {
             ModelBase modelInstance = null;//TODO modelManager.getModelInstance(request.getModelName());
-            if (modelInstance==null) {
-                return null;
-            }
             RequestImpl requestTemp = ((RequestImpl) request).clone();
-            if (StringUtil.isBlank(requestTemp.getParameter(ListModel.FIELD_NAME_ID))) {
+            if (StringUtil.isBlank(requestTemp.getParameter(Listable.FIELD_NAME_ID))) {
                 requestTemp.setId(modelInstance.resolveId(requestTemp));
             }
-            Response responseTemp = new qingzhou.framework.app.ResponseImpl();
-            modelInstance.show(requestTemp, responseTemp);
-            boolean exists = responseTemp.isSuccess() && !responseTemp.getDataList().isEmpty();
-            if (exists) {
-                String modelNameI18n = appContext.getMetadata().getI18n(request.getI18nLang(), "model." + request.getModelName());
+            if (modelInstance.getDataStore().exists(request.getModelName(), request.getId())) {
+                String modelNameI18n = appContext.getAppMetadata().getI18n(request.getI18nLang(), "model." + request.getModelName());
                 return i18nTool.getI18n(request.getI18nLang(), "list.id.exists", modelNameI18n);
             }
         }

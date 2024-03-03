@@ -27,8 +27,8 @@ public class ViewManager {
     }
 
     public void render(RestContext restContext) throws Exception {
-        RequestImpl request = (RequestImpl) restContext.request;
-        ResponseImpl response = (ResponseImpl) restContext.response;
+        RequestImpl request = restContext.request;
+        ResponseImpl response = restContext.response;
         // 完善响应的 msg
         if (StringUtil.isBlank(response.getMsg())) {
             String appName = request.getAppName();

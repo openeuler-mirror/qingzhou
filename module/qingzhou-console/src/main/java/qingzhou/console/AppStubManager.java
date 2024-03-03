@@ -1,8 +1,8 @@
 package qingzhou.console;
 
 import qingzhou.api.Lang;
-import qingzhou.api.Menu;
-import qingzhou.api.ModelManager;
+import qingzhou.framework.app.Menu;
+import qingzhou.framework.app.ModelManager;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.app.App;
 
@@ -35,17 +35,17 @@ public class AppStubManager {
             return new AppStub() {
                 @Override
                 public ModelManager getModelManager() {
-                    return localApp.getAppContext().getConsoleContext().getModelManager();
+                    return localApp.getAppContext().getAppMetadata().getModelManager();
                 }
 
                 @Override
                 public String getI18n(Lang lang, String key, Object... args) {
-                    return localApp.getAppContext().getMetadata().getI18n(lang, key, args);
+                    return localApp.getAppContext().getAppMetadata().getI18n(lang, key, args);
                 }
 
                 @Override
                 public Menu getMenu(String menuName) {
-                    return localApp.getAppContext().getMetadata().getMenu(menuName);
+                    return localApp.getAppContext().getAppMetadata().getMenu(menuName);
                 }
             };
         });

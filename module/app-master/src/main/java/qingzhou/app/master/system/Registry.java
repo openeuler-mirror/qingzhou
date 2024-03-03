@@ -1,6 +1,7 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
 
 // todo：ConfigManager 提供对应的实现在中心上存取数据，取代 ConfigManagerImpl
 @Model(name = "registry", icon = "cloud-upload",
@@ -8,7 +9,7 @@ import qingzhou.api.*;
         nameI18n = {"注册中心", "en:Registry Server"},
         infoI18n = {"注册中心是一种外置的存储系统，用于实现 Qingzhou 平台的配置共享和服务发现。",
                 "en:The registry is an external storage system that is used to realize configuration sharing and service discovery of the Qingzhou platform."})
-public class Registry extends ModelBase implements AddModel {
+public class Registry extends ModelBase implements Createable {
     @ModelField(
             showToList = true,
             required = true,
@@ -60,7 +61,7 @@ public class Registry extends ModelBase implements AddModel {
     @Override
     public Options options(Request request, String fieldName) {
         if ("registryServerType".equals(fieldName)) {
-            return Options.of(Option.of("etcd"), Option.of("Nacos"));
+            return Options.of("etcd", "Nacos");
         }
         return null;
     }

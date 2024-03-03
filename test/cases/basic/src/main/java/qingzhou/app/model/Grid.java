@@ -1,6 +1,7 @@
 package qingzhou.app.model;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Listable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,10 +10,9 @@ import java.util.List;
         nameI18n = {"Grid模块", "en:Grid Test"},
         infoI18n = {"测试增删改查相关功能", "en:Test the functions related to adding, deleting, modifying, and querying"}
 )
-public class Grid extends ModelBase implements ListModel {
+public class Grid extends ModelBase implements Listable {
 
-    @Override
-    @ModelAction(name = ACTION_NAME_LIST,
+    @ModelAction(name = Listable.ACTION_NAME_LIST,
             icon = "table", forwardToPage = "grid",
             nameI18n = {"网格", "en:grid"},
             infoI18n = {"grid", "en:grid"})
@@ -24,10 +24,10 @@ public class Grid extends ModelBase implements ListModel {
             String version = "1.0.0" + (i % 3 == 0 ? "-beta1" : "");
             list.add(new App(String.valueOf(1000 + i), (i > 11 ? ("随机" + i) : apps[i]), apps[i % 12] + ".svg", version, detail, i % 5 == 0 ? "0.9.8" : (i == 4 ? version : "")));
         }
-        int pageNum = getParamToInt(request, PARAMETER_PAGE_NUM, 1);
+        int pageNum = getParamToInt(request, Listable.PARAMETER_PAGE_NUM, 1);
         List<App> pageList = list.subList(pageSize() * (pageNum - 1), pageSize() * pageNum > (list.size() - 1) ? (list.size() - 1) : pageSize() * pageNum);
         for (int i = 0; i < pageList.size(); i++) {
-            response.addDataObject(pageList.get(i));
+            response.addModelData(pageList.get(i));
         }
         response.setPageNum(pageNum);
         response.setPageSize(pageSize());

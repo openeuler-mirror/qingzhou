@@ -1,6 +1,7 @@
 package qingzhou.app.master.service;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
 import qingzhou.app.master.ConsoleDataStore;
 import qingzhou.app.master.Main;
 import qingzhou.framework.app.App;
@@ -15,7 +16,7 @@ import java.util.Map;
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
                 "en:A node is an abstraction of a physical or virtual computer environment and is the infrastructure that runs instances."})
-public class Node extends ModelBase implements AddModel {
+public class Node extends ModelBase implements Createable {
 
     @Override
     public void init() {

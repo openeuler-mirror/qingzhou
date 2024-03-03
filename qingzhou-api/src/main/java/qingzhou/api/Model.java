@@ -1,9 +1,8 @@
 package qingzhou.api;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import qingzhou.api.type.Listable;
+
+import java.lang.annotation.*;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -16,7 +15,7 @@ public @interface Model {
 
     String[] infoI18n();
 
-    String entryAction() default ListModel.ACTION_NAME_LIST;
+    String entryAction() default Listable.ACTION_NAME_LIST;
 
     boolean showToMenu() default true;
 

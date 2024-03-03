@@ -1,5 +1,6 @@
 package qingzhou.framework.app;
 
+import qingzhou.api.ModelBase;
 import qingzhou.api.Response;
 
 import java.io.Serializable;
@@ -23,7 +24,6 @@ public class ResponseImpl implements Response, Serializable {
         this.success = success;
     }
 
-    @Override
     public boolean isSuccess() {
         return this.success;
     }
@@ -37,7 +37,6 @@ public class ResponseImpl implements Response, Serializable {
         return this.msg;
     }
 
-    @Override
     public int getTotalSize() {
         return totalSize;
     }
@@ -47,7 +46,6 @@ public class ResponseImpl implements Response, Serializable {
         this.totalSize = totalSize;
     }
 
-    @Override
     public int getPageSize() {
         return pageSize;
     }
@@ -66,7 +64,6 @@ public class ResponseImpl implements Response, Serializable {
         this.pageNum = pageNum;
     }
 
-    @Override
     public List<Map<String, String>> getDataList() {
         return dataList;
     }
@@ -78,7 +75,7 @@ public class ResponseImpl implements Response, Serializable {
     }
 
     @Override
-    public void addDataObject(Object data) {
+    public void addModelData(ModelBase data) {
         Map<String, String> map = new HashMap<>();
 
         Field[] fields = data.getClass().getFields();

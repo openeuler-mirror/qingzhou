@@ -4,12 +4,12 @@ import qingzhou.api.Lang;
 import qingzhou.app.Controller;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.app.ResponseImpl;
-import qingzhou.framework.util.ArrayUtil;
 
 import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class ServerImpl implements ServerImplMBean {
     private final String[] supportAction = new String[]{"show", "list", "monitor"};
@@ -18,9 +18,10 @@ public class ServerImpl implements ServerImplMBean {
         if (modelName.contains(".")) {
             throw new IllegalArgumentException("modelName parameter is illegal");
         }
-        if (!ArrayUtil.contains(supportAction, actionName)) {
+        if (!contains(supportAction, actionName)) {
             throw new IllegalArgumentException("actionName only show, list, monitor are supported");
         }
+
         try {
             RequestImpl request = new RequestImpl();
             request.setViewName("json");
@@ -39,6 +40,16 @@ public class ServerImpl implements ServerImplMBean {
         } catch (ClassNotFoundException e) {
             throw new InvalidParameterException("modelName parameter [" + modelName + "] is invalid");
         }
+    }
+
+    public static boolean contains(Object[] arr, Object obj) {
+        Objects.requireNonNull(arr);
+        for (Object o : arr) {
+            if (Objects.equals(o, obj)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

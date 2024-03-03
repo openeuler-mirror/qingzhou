@@ -12,20 +12,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class AnnotationReaderImpl implements AnnotationReader {
-    private final ClassLoader classLoader;
-
-    public AnnotationReaderImpl(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+    @Override
+    public Model readModel(Class<?> cls) {
+        return cls.getDeclaredAnnotation(Model.class);
     }
 
     @Override
-    public Model getClassAnnotations(String classname) throws Exception {
-        return classLoader.loadClass(classname).getDeclaredAnnotation(Model.class);
-    }
-
-    @Override
-    public Map<String, ModelField> getFieldAnnotations(String classname) throws Exception {
-        Class<?> clazz = classLoader.loadClass(classname);
+    public Map<String, ModelField> readModelField(Class<?> clazz) {
         Field[] fields = clazz.getFields();//.getDeclaredFields();
         Map<String, ModelField> map = new LinkedHashMap<>(fields.length);
         for (Field field : fields) {
@@ -42,8 +35,7 @@ public class AnnotationReaderImpl implements AnnotationReader {
     }
 
     @Override
-    public Map<String, ModelAction> getMethodAnnotations(String classname) throws Exception {
-        Class<?> modelClass = classLoader.loadClass(classname);
+    public Map<String, ModelAction> readModelAction(Class<?> modelClass) {
         Method[] methods = modelClass.getMethods();
         Map<String, ModelAction> map = new LinkedHashMap<>(methods.length);
         for (Method method : methods) {

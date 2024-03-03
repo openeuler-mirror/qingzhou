@@ -12,7 +12,7 @@ public class AppImpl implements App {
     private URLClassLoader loader;
 
     @Override
-    public AppContext getAppContext() {
+    public AppContextImpl getAppContext() {
         return appContext;
     }
 
@@ -21,7 +21,7 @@ public class AppImpl implements App {
         String modelName = request.getModelName();
         String actionName = request.getActionName();
 
-        ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getConsoleContext().getModelManager();
+        ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getAppMetadata().getModelManager();
 
         ModelInfo modelInfo = modelManager.getModelInfo(modelName);
         if (modelInfo == null) return;
@@ -47,7 +47,7 @@ public class AppImpl implements App {
 
     @Override
     public ModelBase getModelInstance(String modelName) {
-        return ((ModelManagerImpl) getAppContext().getMetadata().getModelManager()).getModelInfo(modelName).getInstance();
+        return ((ModelManagerImpl) getAppContext().getAppMetadata().getModelManager()).getModelInfo(modelName).getInstance();
     }
 
     public void setAppContext(AppContextImpl appContext) {

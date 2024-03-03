@@ -1,14 +1,17 @@
 package qingzhou.console;
 
-import qingzhou.api.*;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
+import qingzhou.api.type.Listable;
+import qingzhou.api.type.Showable;
 import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.framework.app.App;
+import qingzhou.framework.app.ModelManager;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.config.Config;
-import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
 
 import javax.naming.NameNotFoundException;
@@ -49,7 +52,7 @@ public class ActionInvoker {
     }
 
     private boolean isBatchAction(Request request) {
-        String ids = request.getParameter(ListModel.FIELD_NAME_ID);
+        String ids = request.getParameter(Listable.FIELD_NAME_ID);
         if (StringUtil.isBlank(ids)) return false;
 
         ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
@@ -67,7 +70,7 @@ public class ActionInvoker {
         int fail = 0;
         StringBuilder errbuilder = new StringBuilder();
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
-        String oid = request.getParameter(ListModel.FIELD_NAME_ID);
+        String oid = request.getParameter(Listable.FIELD_NAME_ID);
         for (String id : oid.split(ConsoleConstants.DATA_SEPARATOR)) {
             if (StringUtil.notBlank(id)) {
                 id = PageBackendService.decodeId(id);
@@ -119,7 +122,7 @@ public class ActionInvoker {
                 return entry.getValue(); // TODO 多条结果如何展示？
             }
 
-            throw ExceptionUtil.unexpectedException("It should return at least one Response");
+            throw new IllegalStateException("It should return at least one Response");
         } catch (Exception e) {
             ResponseImpl response = new ResponseImpl();
             response.setSuccess(false);
@@ -204,32 +207,26 @@ public class ActionInvoker {
         return resultOnNode;
     }
 
-    private List<String> getAppNodes(String appName) {
+    private List<String> getAppNodes(String appName) throws Exception {
         List<String> nodes = new ArrayList<>();
         if (App.SYS_APP_MASTER.equals(appName)) {
             nodes.add(App.SYS_NODE_LOCAL);
         } else {
-            Map<String, String> res = null;
-            try {
-                RequestImpl request = new RequestImpl();
-                Response response = new qingzhou.framework.app.ResponseImpl();
-                request.setAppName(App.SYS_APP_MASTER);
-                request.setModelName(App.SYS_MODEL_APP);
-                request.setActionName(ShowModel.ACTION_NAME_SHOW);
-                request.setId(appName);
-                ConsoleWarHelper.invokeLocalApp(App.SYS_APP_MASTER, request, response);
-                List<Map<String, String>> dataList = response.getDataList();
-                if (dataList != null && !dataList.isEmpty()) {
-                    res = dataList.get(0);
-                }
-            } catch (Exception e) {
-                throw ExceptionUtil.unexpectedException(e);
-            }
-            if (res == null || res.isEmpty()) {
-                throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
+            RequestImpl request = new RequestImpl();
+            Response response = new qingzhou.framework.app.ResponseImpl();
+            request.setAppName(App.SYS_APP_MASTER);
+            request.setModelName(App.SYS_MODEL_APP);
+            request.setActionName(Showable.ACTION_NAME_SHOW);
+            request.setId(appName);
+            ConsoleWarHelper.invokeLocalApp(App.SYS_APP_MASTER, request, response);
+            List<Map<String, String>> dataList = response.getDataList();
+            if (dataList != null && !dataList.isEmpty()) {
+                Map<String, String> res = dataList.get(0);
+                nodes.addAll(Arrays.asList(res.get("nodes").split(",")));
+            } else {
+                throw new IllegalArgumentException("App [ " + appName + " ] not found.");
             }
 
-            nodes.addAll(Arrays.asList(res.get("nodes").split(",")));
         }
         return nodes;
     }

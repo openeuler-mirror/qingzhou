@@ -1,8 +1,12 @@
 package qingzhou.app.master.service;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
+import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Listable;
 import qingzhou.app.master.Main;
 import qingzhou.framework.app.AppManager;
+import qingzhou.framework.app.Constants;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.logger.Logger;
 import qingzhou.framework.util.FileUtil;
@@ -17,7 +21,7 @@ import java.util.stream.Stream;
         nameI18n = {"应用", "en:App"},
         infoI18n = {"应用。",
                 "en:App Management."})
-public class App extends ModelBase implements AddModel {
+public class App extends ModelBase implements Createable {
 
     @ModelField(
             showToList = true,
@@ -123,8 +127,8 @@ public class App extends ModelBase implements AddModel {
 
     @Override
     public String validate(Request request, String fieldName) {
-        if (fieldName.equals(ListModel.FIELD_NAME_ID)) {
-            String id = request.getParameter(ListModel.FIELD_NAME_ID);
+        if (fieldName.equals(Listable.FIELD_NAME_ID)) {
+            String id = request.getParameter(Listable.FIELD_NAME_ID);
             if (qingzhou.framework.app.App.SYS_APP_MASTER.equals(id) ||
                     qingzhou.framework.app.App.SYS_APP_NODE_AGENT.equals(id)) {
                 return "app.id.system";
@@ -135,7 +139,7 @@ public class App extends ModelBase implements AddModel {
     }
 
     @Override
-    @ModelAction(name = ACTION_NAME_ADD,
+    @ModelAction(name = Createable.ACTION_NAME_ADD,
             icon = "save",
             nameI18n = {"安装", "en:Install"},
             infoI18n = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
@@ -150,7 +154,7 @@ public class App extends ModelBase implements AddModel {
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
             response.setSuccess(false);
-            String msg = getAppContext().getMetadata().getI18n(request.getI18nLang(), "app.id.not.exist");
+            String msg = getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "app.id.not.exist");
             response.setMsg(msg);
             return;
         }
@@ -163,7 +167,7 @@ public class App extends ModelBase implements AddModel {
             appName = srcFileName.substring(0, index);
         } else {
             response.setSuccess(false);
-            String msg = getAppContext().getMetadata().getI18n(request.getI18nLang(), "app.type.unknown");
+            String msg = getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "app.type.unknown");
             response.setMsg(msg);
             return;
         }
@@ -182,18 +186,16 @@ public class App extends ModelBase implements AddModel {
                 } catch (Exception e) { // todo 部分失败，如何显示到页面？
                     response.setSuccess(false);
                     response.setMsg(e.getMessage());
-                    e.printStackTrace();
+                    return;
                 }
             }
         } finally {
             request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
-            request.setActionName(ACTION_NAME_ADD);
+            request.setActionName(Createable.ACTION_NAME_ADD);
         }
 
-        if (response.isSuccess()) {
-            p.put(ListModel.FIELD_NAME_ID, appName);
-            getDataStore().addData(qingzhou.framework.app.App.SYS_MODEL_APP, appName, p);
-        }
+        p.put(Listable.FIELD_NAME_ID, appName);
+        getDataStore().addData(qingzhou.framework.app.App.SYS_MODEL_APP, appName, p);
     }
 
     @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE,
@@ -222,18 +224,18 @@ public class App extends ModelBase implements AddModel {
                     }
                 } catch (Exception e) { // todo 部分失败，如何显示到页面？
                     response.setSuccess(false);
-                    e.printStackTrace();
+                    response.setMsg(e.getMessage());
                 }
             }
         } finally {
             request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
-            request.setActionName(ACTION_NAME_DELETE);
+            request.setActionName(Deletable.ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);
     }
 
     @Override
-    @ModelAction(name = ACTION_NAME_CREATE,
+    @ModelAction(name = Createable.ACTION_NAME_CREATE,
             showToListHead = true,
             icon = "plus-sign", forwardToPage = "form",
             nameI18n = {"安装", "en:Install"},

@@ -1,7 +1,7 @@
 package qingzhou.framework.app;
 
 import qingzhou.api.Lang;
-import qingzhou.framework.util.ObjectUtil;
+import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.HashMap;
@@ -16,7 +16,7 @@ class CharMap {
 
     static {
         try {
-            Properties props = ObjectUtil.streamToProperties(CharMap.class.getResourceAsStream("/" + CharMap.class.getPackage().getName().replace(".", "/") + "/" + CharMap.class.getSimpleName() + ".txt"));
+            Properties props = FileUtil.streamToProperties(CharMap.class.getResourceAsStream("/" + CharMap.class.getPackage().getName().replace(".", "/") + "/" + CharMap.class.getSimpleName() + ".txt"));
             String zh = props.getProperty("zh");
             String tr = props.getProperty("tr");
             for (int i = 0; i < zh.length(); i++) {

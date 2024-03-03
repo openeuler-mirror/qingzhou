@@ -2,7 +2,7 @@ package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.ShowModel;
+import qingzhou.api.type.Showable;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RestContext;
 import qingzhou.console.impl.ConsoleWarHelper;
@@ -10,7 +10,7 @@ import qingzhou.console.view.View;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.serialization.ModelActionData;
+import qingzhou.framework.app.ModelActionData;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -49,7 +49,7 @@ public class HtmlView implements View {
             }
             request.setAppName(manageAppName);
             request.setModelName(App.SYS_MODEL_HOME);
-            request.setActionName(ShowModel.ACTION_NAME_SHOW);
+            request.setActionName(Showable.ACTION_NAME_SHOW);
             if (App.SYS_NODE_LOCAL.equals(manageAppName)) {
                 manageAppName = App.SYS_APP_NODE_AGENT;
             }

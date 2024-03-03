@@ -1,17 +1,12 @@
 package qingzhou.app;
 
-import qingzhou.api.Constants;
 import qingzhou.api.ModelBase;
 import qingzhou.api.QingZhouApp;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.bootstrap.main.FrameworkContext;
-import qingzhou.framework.app.App;
-import qingzhou.framework.app.AppManager;
-import qingzhou.framework.app.QingZhouSystemApp;
-import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.app.*;
 import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
@@ -22,11 +17,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 public class AppManagerImpl implements AppManager {
     private final Map<String, App> apps = new HashMap<>();
@@ -84,7 +75,7 @@ public class AppManagerImpl implements AppManager {
     private AppImpl buildApp(String appName, File appDir, boolean needCommonApp) throws Exception {
         File[] appFiles = appDir.listFiles();
         if (appFiles == null) {
-            throw ExceptionUtil.unexpectedException("app lib not found: " + appDir.getName());
+            throw new IllegalArgumentException("app lib not found: " + appDir.getName());
         }
         File[] appLibs = appFiles;
         if (needCommonApp) {
@@ -102,7 +93,7 @@ public class AppManagerImpl implements AppManager {
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
         app.setAppContext(appContext);
-        AppMetadataImpl metadata = (AppMetadataImpl) appContext.getMetadata();
+        AppMetadataImpl metadata = (AppMetadataImpl) appContext.getAppMetadata();
         metadata.setAppName(appName);
 
         URL[] urls = Arrays.stream(appLibs).map(file -> {
@@ -115,11 +106,9 @@ public class AppManagerImpl implements AppManager {
         URLClassLoader loader = new URLClassLoader(urls, needCommonApp ? QingZhouApp.class.getClassLoader() : QingZhouSystemApp.class.getClassLoader());
         app.setLoader(loader);
 
-        ConsoleContextImpl consoleContext = new ConsoleContextImpl();
         ModelManagerImpl modelManager = (ModelManagerImpl) metadata.getModelManager();
         initModelManager(modelManager, appLibs, loader);
-        consoleContext.setModelManager(modelManager, metadata);
-        appContext.setConsoleContext(consoleContext);
+        initI18n(modelManager, metadata);
         appContext.addActionFilter(new UniqueFilter());
 
         for (String modelName : modelManager.getModelNames()) {
@@ -128,7 +117,7 @@ public class AppManagerImpl implements AppManager {
             modelInstance.init();
         }
         try (InputStream inputStream = loader.getResourceAsStream(Constants.APP_PROPERTIES_FILE)) {
-            Properties properties = ObjectUtil.streamToProperties(inputStream);
+            Properties properties = FileUtil.streamToProperties(inputStream);
             metadata.getProperties().putAll(properties);
             String appClass = metadata.getProperties().getProperty(Constants.APP_CLASS_NAME);
             if (StringUtil.notBlank(appClass)) {
@@ -142,6 +131,33 @@ public class AppManagerImpl implements AppManager {
         }
 
         return app;
+    }
+
+    private void initI18n(ModelManagerImpl modelManager, AppMetadataImpl metadata) {
+        for (String modelName : modelManager.getModelNames()) {
+            final ModelData model = modelManager.getModel(modelName);
+
+            // for i18n
+            metadata.addI18n("model." + modelName, model.nameI18n());
+            metadata.addI18n("model.info." + modelName, model.infoI18n());
+
+            Arrays.stream(modelManager.getFieldNames(modelName)).forEach(k -> {
+                ModelFieldData v = modelManager.getModelField(modelName, k);
+                metadata.addI18n("model.field." + modelName + "." + k, v.nameI18n());
+                String[] info = v.infoI18n();
+                if (info.length > 0) {
+                    metadata.addI18n("model.field.info." + modelName + "." + k, info);
+                }
+            });
+
+            for (String actionName : modelManager.getActionNames(modelName)) {
+                ModelActionData modelAction = modelManager.getModelAction(modelName, actionName);
+                if (modelAction != null) {// todo  disable 后 有 null 的情况?
+                    metadata.addI18n("model.action." + modelName + "." + modelAction.name(), modelAction.nameI18n());
+                    metadata.addI18n("model.action.info." + modelName + "." + modelAction.name(), modelAction.infoI18n());
+                }
+            }
+        }
     }
 
     private void initModelManager(ModelManagerImpl modelManager, File[] appLib, URLClassLoader loader) {

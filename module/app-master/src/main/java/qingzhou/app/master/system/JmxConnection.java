@@ -1,6 +1,7 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Editable;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -8,11 +9,11 @@ import java.util.concurrent.TimeUnit;
 @Model(name = "jmx", icon = "code",
         menuName = "System",
         menuOrder = 4,
-        entryAction = EditModel.ACTION_NAME_EDIT,
+        entryAction = Editable.ACTION_NAME_EDIT,
         nameI18n = {"JMX 接口", "en:JMX Interface"},
         infoI18n = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 Qingzhou。",
                 "en:After enabling the JMX interface service, the client can manage Qingzhou through the java jmx protocol."})
-public class JmxConnection extends ModelBase implements EditModel {
+public class JmxConnection extends ModelBase implements Editable {
     private static final String DEFAULT_ID = "jmx_0";
     private final String tagName = "jmx";
 
@@ -82,7 +83,7 @@ public class JmxConnection extends ModelBase implements EditModel {
     public void edit(Request request, Response response) throws Exception {
         Map<String, String> data = getDataStore().getDataById(request.getModelName(), DEFAULT_ID);
         if (data == null || data.isEmpty()) {
-            response.addDataObject(new JmxConnection());
+            response.addModelData(new JmxConnection());
         } else {
             response.addData(data);
         }

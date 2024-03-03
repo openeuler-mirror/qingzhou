@@ -1,7 +1,5 @@
 package qingzhou.remote;
 
-import qingzhou.framework.util.pattern.Callback;
-
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.HttpURLConnection;

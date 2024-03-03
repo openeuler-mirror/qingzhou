@@ -1,4 +1,6 @@
-package qingzhou.api;
+package qingzhou.framework.app;
+
+import qingzhou.api.Lang;
 
 import java.util.Properties;
 

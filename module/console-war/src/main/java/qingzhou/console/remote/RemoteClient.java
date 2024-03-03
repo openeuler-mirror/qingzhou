@@ -6,7 +6,6 @@ import qingzhou.framework.config.Config;
 import qingzhou.framework.crypto.CryptoService;
 import qingzhou.framework.crypto.KeyCipher;
 import qingzhou.framework.serializer.Serializer;
-import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.StringUtil;
 
 import javax.net.ssl.*;
@@ -49,7 +48,7 @@ public class RemoteClient {
                 String location = connection.getHeaderField("Location");
                 if (StringUtil.isBlank(location)) {
                     URL tempUrl = connection.getURL();
-                    throw ExceptionUtil.unexpectedException(String.format("Remote server [%s:%s] request error: %s. Please check the logs for details", tempUrl.getHost(), tempUrl.getPort(), "The redirect address is wrong."));
+                    throw new RuntimeException(String.format("Remote server [%s:%s] request error: %s. Please check the logs for details", tempUrl.getHost(), tempUrl.getPort(), "The redirect address is wrong."));
                 }
                 return sendReq(location, object, remoteKey);
             } else {
@@ -71,7 +70,7 @@ public class RemoteClient {
                         byte[] decrypt = cipher.decrypt(deserializeBytes);
                         return serializer.deserialize(decrypt, ResponseImpl.class);
                     } else {
-                        throw ExceptionUtil.unexpectedException("The expected file size was not reached");
+                        throw new RuntimeException("The expected file size was not reached");
                     }
                 }
             }
@@ -84,7 +83,7 @@ public class RemoteClient {
                 throw e;
             } else {
                 URL tempUrl = new URL(url);
-                throw ExceptionUtil.unexpectedException(String.format("Remote server [%s:%s] request error: %s. Please check the logs for details", tempUrl.getHost(), tempUrl.getPort(), e.getMessage()));
+                throw new RuntimeException(String.format("Remote server [%s:%s] request error: %s. Please check the logs for details", tempUrl.getHost(), tempUrl.getPort(), e.getMessage()));
             }
         } finally {
             if (connection != null) {

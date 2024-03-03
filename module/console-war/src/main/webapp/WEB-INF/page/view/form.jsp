@@ -1,3 +1,5 @@
+<%@ page import="qingzhou.api.type.Listable" %>
+<%@ page import="qingzhou.api.type.Editable" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -6,9 +8,9 @@ if (qzRequest == null || qzResponse == null || modelManager == null) {
     return; // for 静态源码漏洞扫描
 }
 
-boolean isEdit = Objects.equals(EditModel.ACTION_NAME_EDIT, qzRequest.getActionName());
+boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, qzRequest.getActionName());
 String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
-String idFieldName = ListModel.FIELD_NAME_ID;
+String idFieldName = Listable.FIELD_NAME_ID;
 ModelFieldData idField = modelManager.getModelField(qzRequest.getModelName(), idFieldName);
 final boolean hasId = idField != null;
 List<String> passwordFields = new ArrayList();
@@ -269,10 +271,10 @@ if (encodedId == null) {
                 <%
             }
 
-            boolean listPermission = AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + ListModel.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
+            boolean listPermission = AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + Listable.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
             if (hasId && listPermission) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST)%>" btn-type="goback" class="btn">
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_NAME_LIST)%>" btn-type="goback" class="btn">
                     <%=PageBackendService.getMasterAppI18nString( "page.cancel")%>
                 </a>
                 <%

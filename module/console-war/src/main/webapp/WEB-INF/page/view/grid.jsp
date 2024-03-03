@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.api.type.Listable" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -96,7 +97,7 @@ int pageSize = qzResponse.getPageSize();
                 <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                     recPerPage="<%=pageSize%>"
                     data-rec-total="<%=totalSize%>"
-                    partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, ListModel.ACTION_NAME_LIST + "?markForAddCsrf")%>&<%=ListModel.PARAMETER_PAGE_NUM%>="
+                    partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_NAME_LIST + "?markForAddCsrf")%>&<%=Listable.PARAMETER_PAGE_NUM%>="
                     style="margin-left:33%;color:black;margin-bottom:6px;">
                 </ul>
             </div>

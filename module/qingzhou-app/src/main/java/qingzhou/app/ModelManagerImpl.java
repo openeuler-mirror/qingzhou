@@ -2,12 +2,8 @@ package qingzhou.app;
 
 import qingzhou.api.*;
 import qingzhou.app.bytecode.AnnotationReader;
-import qingzhou.app.bytecode.impl.BytecodeImpl;
-import qingzhou.serialization.ModelActionData;
-import qingzhou.serialization.ModelData;
-import qingzhou.serialization.ModelFieldData;
-import qingzhou.serialization.ModelUtil;
-import qingzhou.framework.util.pattern.Visitor;
+import qingzhou.app.bytecode.impl.AnnotationReaderImpl;
+import qingzhou.framework.app.*;
 import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
@@ -54,47 +50,41 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     public void init(File[] appLib, URLClassLoader loader) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
-        AnnotationReader annotation = new BytecodeImpl().createAnnotationReader(appLib, loader);
+        AnnotationReader annotation = new AnnotationReaderImpl();
         for (File file : appLib) {
-            visitClassName(file, className -> {
-                Model model = annotation.getClassAnnotations(className);
-                if (model == null) {
-                    return false;
-                }
-                ModelData modelData = ModelUtil.toModelData(model);
-                ModelInfo modelInfo = null;
-                try {
-                    modelInfo = new ModelInfo(modelData,
-                            initModelFieldInfo(className, annotation),
-                            initModelActionInfo(className, annotation),
-                            className);
-                } catch (Throwable e) {
-                    Controller.logger.warn(e.getMessage(), e);
-                }
-                if (modelInfo == null) {
-                    return false;
-                }
-                ModelInfo already = tempMap.put(model.name(), modelInfo);
-                if (already != null) {
-                    Controller.logger.warn("Duplicate model name: " + model.name());
-                }
+            if (!file.getName().endsWith(".jar")) continue;
+            try (JarFile jar = new JarFile(file)) {
+                Enumeration<JarEntry> entries = jar.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry jarEntry = entries.nextElement();
+                    String entryName = jarEntry.getName();
+                    String endsWithFlag = ".class";
+                    if (entryName.contains("$") || !entryName.endsWith(endsWithFlag)) continue;
+                    int i = entryName.indexOf(endsWithFlag);
+                    String className = entryName.substring(0, i).replace("/", ".");
+                    Class<?> cls = loader.loadClass(className);
+                    Model model = annotation.readModel(cls);
+                    if (model != null) {
+                        List<FieldInfo> fieldInfoList = new ArrayList<>();
+                        annotation.readModelField(cls).forEach((s, field) -> fieldInfoList.add(new FieldInfo(ModelUtil.toModelFieldData(field), s)));
 
-                return false;
-            });
+                        List<ActionInfo> actionInfoList = new ArrayList<>();
+                        annotation.readModelAction(cls).forEach((s, action) -> actionInfoList.add(new ActionInfo(ModelUtil.toModelActionData(action), s)));
+
+                        ModelData modelData = ModelUtil.toModelData(model);
+                        ModelInfo modelInfo = new ModelInfo(modelData,
+                                fieldInfoList, actionInfoList,
+                                className);
+
+                        ModelInfo already = tempMap.put(model.name(), modelInfo);
+                        if (already != null) {
+                            throw new IllegalStateException("Duplicate model name: " + model.name());
+                        }
+                    }
+                }
+            }
         }
         modelInfoMap = Collections.unmodifiableMap(tempMap);
-    }
-
-    private List<ActionInfo> initModelActionInfo(String className, AnnotationReader annotation) throws Exception {
-        List<ActionInfo> actionInfoList = new ArrayList<>();
-        annotation.getMethodAnnotations(className).forEach((s, action) -> actionInfoList.add(new ActionInfo(ModelUtil.toModelActionData(action), s)));
-        return actionInfoList;
-    }
-
-    private List<FieldInfo> initModelFieldInfo(String className, AnnotationReader annotation) throws Exception {
-        List<FieldInfo> fieldInfoList = new ArrayList<>();
-        annotation.getFieldAnnotations(className).forEach((s, field) -> fieldInfoList.add(new FieldInfo(ModelUtil.toModelFieldData(field), s)));
-        return fieldInfoList;
     }
 
     public ModelInfo getModelInfo(String modelName) {
@@ -169,11 +159,12 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     public Options getOptions(Request request, String modelName, String fieldName) {
         Options defaultOptions = getDefaultOptions(modelName, fieldName);
         Options userOptions = null;//TODO getModelInstance(modelName).options(request, fieldName);
-        if (userOptions == null) {
-            return defaultOptions;
-        } else {
-            return Options.merge(defaultOptions, userOptions);
-        }
+        if (defaultOptions == null) return userOptions;
+        if (userOptions == null) return defaultOptions;
+
+        List<Option> merge = new ArrayList<>(defaultOptions.options());
+        merge.addAll(userOptions.options());
+        return () -> merge;
     }
 
     private Options getDefaultOptions(String modelName, String fieldName) {
@@ -181,14 +172,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         ModelFieldData modelField = manager.getModelField(modelName, fieldName);
 
         if (modelField.type() == FieldType.selectCharset) {
-            return Options.of(
-                    Option.of("UTF-8"),
-                    Option.of("GBK"),
-                    Option.of("GB18030"),
-                    Option.of("GB2312"),
-                    Option.of("UTF-16"),
-                    Option.of("US-ASCII")
-            );
+            return Options.of("UTF-8", "GBK", "GB18030", "GB2312", "UTF-16", "US-ASCII");
         }
 
         String refModel = modelField.refModel();
@@ -209,7 +193,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         }
 
         if (modelField.type() == FieldType.bool) {
-            return Options.of(Option.of(Boolean.TRUE.toString()), Option.of(Boolean.FALSE.toString()));
+            return Options.of(Boolean.TRUE.toString(), Boolean.FALSE.toString());
         }
 
         return null;
@@ -253,7 +237,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     @Override
     public Group getGroup(String modelName, String groupName) {
         ModelBase modelInstance = null;//TODO getModelInstance(modelName);
-        Groups groups = modelInstance.group();
+        Groups groups = modelInstance.groups();
         if (groups != null) {
             for (Group group : groups.groups()) {
                 if (group.name().equals(groupName)) {
@@ -281,32 +265,5 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         });
 
         return fieldNames.toArray(new String[0]);
-    }
-
-    private static void visitClassName(File jarFile, Visitor<String> visitor) throws Exception {
-        if (jarFile == null || !jarFile.getName().endsWith(".jar")) {
-            return;
-        }
-
-        try (JarFile jar = new JarFile(jarFile)) {
-            Enumeration<JarEntry> entries = jar.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry jarEntry = entries.nextElement();
-                String entryName = jarEntry.getName();
-                String endsWithFlag = ".class";
-                if (entryName.contains("$") || !entryName.endsWith(endsWithFlag)) {
-                    continue;
-                }
-                int i = entryName.indexOf(endsWithFlag);
-                String className = entryName.substring(0, i).replace("/", ".");
-                try {
-                    if (visitor.visitAndEnd(className)) {
-                        return;
-                    }
-                } catch (NoClassDefFoundError e) {
-                    Controller.logger.warn(e.getMessage(), e);
-                }
-            }
-        }
     }
 }

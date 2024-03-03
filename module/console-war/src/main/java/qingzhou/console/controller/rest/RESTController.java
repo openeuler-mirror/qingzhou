@@ -63,7 +63,7 @@ public class RESTController extends HttpServlet {
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
-                ResponseImpl response = (ResponseImpl) ActionInvoker.getInstance().invokeAction(restContext.request);
+                ResponseImpl response = ActionInvoker.getInstance().invokeAction(restContext.request);
                 restContext.response = response;
                 return response.isSuccess(); // 触发后续的响应
             }

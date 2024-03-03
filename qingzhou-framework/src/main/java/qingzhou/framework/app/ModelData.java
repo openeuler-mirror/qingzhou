@@ -1,6 +1,4 @@
-package qingzhou.serialization;
-
-import qingzhou.api.ListModel;
+package qingzhou.framework.app;
 
 import java.io.Serializable;
 
@@ -9,7 +7,7 @@ public class ModelData implements Serializable {
     private String icon;
     private String[] nameI18n;
     private String[] infoI18n;
-    private String entryAction = ListModel.ACTION_NAME_LIST;
+    private String entryAction;
     private boolean showToMenu = true;
     private String menuName = "";
     private int menuOrder = 0;

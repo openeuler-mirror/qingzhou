@@ -1,11 +1,15 @@
 package qingzhou.app.master.user;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
+import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Editable;
+import qingzhou.api.type.Listable;
 import qingzhou.app.master.Main;
 import qingzhou.framework.app.App;
+import qingzhou.framework.app.Constants;
 import qingzhou.framework.crypto.CryptoService;
 import qingzhou.framework.crypto.MessageDigest;
-import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.text.SimpleDateFormat;
@@ -19,7 +23,7 @@ import java.util.regex.Pattern;
         menuName = "System", menuOrder = 1,
         nameI18n = {"用户", "en:User"},
         infoI18n = {"管理登录和操作服务器的用户，用户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
-public class User extends ModelBase implements AddModel {
+public class User extends ModelBase implements Createable {
     public static final String pwdKey = "password";
     public static final String confirmPwdKey = "confirmPassword";
     public static final int defSaltLength = 4;
@@ -171,17 +175,14 @@ public class User extends ModelBase implements AddModel {
     public String oldPasswords;
 
     @Override
-    public Groups group() {
+    public Groups groups() {
         return Groups.of(Group.of("security", new String[]{"安全", "en:Security"}));
     }
 
     @Override
     public Options options(Request request, String fieldName) {
         if ("digestAlg".equals(fieldName)) {
-            return Options.of(
-                    Option.of("SHA-256"),
-                    Option.of("SHA-384"),
-                    Option.of("SHA-512"));
+            return Options.of("SHA-256", "SHA-384", "SHA-512");
         }
 
         return super.options(request, fieldName);
@@ -189,20 +190,19 @@ public class User extends ModelBase implements AddModel {
 
     @Override
     public void add(Request request, Response response) throws Exception {
-        writeForbid(request, response);
-        if (!response.isSuccess()) {
+        if (!checkForbidden(request, response)) {
             return;
         }
         Map<String, String> newUser = prepareParameters(request);
         rectifyParameters(request, newUser, new HashMap<>());
-        getDataStore().addData(request.getModelName(), newUser.get(ListModel.FIELD_NAME_ID), newUser);
+        getDataStore().addData(request.getModelName(), newUser.get(Listable.FIELD_NAME_ID), newUser);
     }
 
     @Override
     public void show(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
         Map<String, String> data = dataStore.getDataById(request.getModelName(), request.getId());
-        if (EditModel.ACTION_NAME_EDIT.equals(request.getActionName())) {
+        if (Editable.ACTION_NAME_EDIT.equals(request.getActionName())) {
             data.put("password", PASSWORD_FLAG);
             data.put("confirmPassword", PASSWORD_FLAG);
         }
@@ -214,7 +214,7 @@ public class User extends ModelBase implements AddModel {
         if (pwdKey.equals(fieldName)) {
             String newValue = request.getParameter(pwdKey);
             if (passwordChanged(newValue)) {
-                String userName = request.getParameter(ListModel.FIELD_NAME_ID);
+                String userName = request.getParameter(Listable.FIELD_NAME_ID);
                 String msg = checkPwd(request, newValue, userName);
                 if (msg != null) {
                     return msg;
@@ -227,7 +227,7 @@ public class User extends ModelBase implements AddModel {
             String password = request.getParameter(pwdKey);
             // 恢复 ITAIT-5005 的修改
             if (!Objects.equals(password, newValue)) {
-                return getAppContext().getMetadata().getI18n(request.getI18nLang(), "confirmPassword.different");
+                return getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "confirmPassword.different");
             }
         }
 
@@ -237,8 +237,7 @@ public class User extends ModelBase implements AddModel {
 
     @Override
     public void update(Request request, Response response) throws Exception {
-        writeForbid(request, response);
-        if (!response.isSuccess()) {
+        if (!checkForbidden(request, response)) {
             return;
         }
 
@@ -253,11 +252,30 @@ public class User extends ModelBase implements AddModel {
         Map<String, String> newPro = dataStore.getDataById(modelName, userId);
 
         // 检查是否要重新登录: 简单设计，只要更新即要求重新登录，这可用于强制踢人
-        if (!ObjectUtil.isSameMap(oldUser, newPro)) {
+        if (!isSameMap(oldUser, newPro)) {
 //            String encodeUser = LoginManager.encodeUser(actionContext.getId());
 //            ActionContext.invalidateAllSessionAsAttribute(actionContext.getHttpServletRequestInternal(),
 //                    LoginManager.LOGIN_USER, encodeUser);
         }
+    }
+
+    public static boolean isSameMap(Map<String, String> oldMap, Map<String, String> newMap) {
+        if (oldMap == null || newMap == null) {
+            return false;
+        }
+
+        if (oldMap.size() != newMap.size()) {
+            return false;
+        }
+
+        for (String k : oldMap.keySet()) {
+            String oldVal = oldMap.get(k);
+            String newVal = newMap.get(k);
+            if (!Objects.equals(oldVal, newVal)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public String checkPwd(Request request, String password, String... infos) {
@@ -267,13 +285,13 @@ public class User extends ModelBase implements AddModel {
         int minLength = 10;
         int maxLength = 20;
         if (password.length() < minLength || password.length() > maxLength) {
-            return String.format(getAppContext().getMetadata().getI18n(request.getI18nLang(), "validator.lengthBetween"), minLength, maxLength);
+            return String.format(getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "validator.lengthBetween"), minLength, maxLength);
         }
 
         if (infos != null && infos.length > 0) {
             if (infos[0] != null) { // for #ITAIT-5014
                 if (password.contains(infos[0])) { // 包含身份信息
-                    return getAppContext().getMetadata().getI18n(request.getI18nLang(), "password.passwordContainsUsername");
+                    return getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "password.passwordContainsUsername");
                 }
             }
         }
@@ -281,14 +299,35 @@ public class User extends ModelBase implements AddModel {
         //特殊符号包含下划线
         String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";
         if (!Pattern.compile(PASSWORD_REGEX).matcher(password).matches()) {
-            return getAppContext().getMetadata().getI18n(request.getI18nLang(), "password.format");
+            return getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "password.format");
         }
 
-        if (StringUtil.isContinuousChar(password)) { // 连续字符校验
-            return getAppContext().getMetadata().getI18n(request.getI18nLang(), "password.continuousChars");
+        if (isContinuousChar(password)) { // 连续字符校验
+            return getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "password.continuousChars");
         }
 
         return null;
+    }
+
+    /**
+     * 是否包含3个及以上相同或字典连续字符
+     */
+    public static boolean isContinuousChar(String password) {
+        char[] chars = password.toCharArray();
+        for (int i = 0; i < chars.length - 2; i++) {
+            int n1 = chars[i];
+            int n2 = chars[i + 1];
+            int n3 = chars[i + 2];
+            // 判断重复字符
+            if (n1 == n2 && n1 == n3) {
+                return true;
+            }
+            // 判断连续字符： 正序 + 倒序
+            if ((n1 + 1 == n2 && n1 + 2 == n3) || (n1 - 1 == n2 && n1 - 2 == n3)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected Map<String, String> rectifyParameters(Request request, Map<String, String> newUser, Map<String, String> oldUser) throws Exception {
@@ -354,38 +393,39 @@ public class User extends ModelBase implements AddModel {
         return oldPasswords;
     }
 
-    private void writeForbid(Request request, Response response) {
+    private boolean checkForbidden(Request request, Response response) {
         String id = request.getId();
         if (StringUtil.notBlank(id)) {
             if (Constants.DEFAULT_ADMINISTRATOR.contains(id)) {
-                if (AddModel.ACTION_NAME_ADD.equals(request.getActionName())
-                        || DeleteModel.ACTION_NAME_DELETE.equals(request.getActionName())) {
+                if (Createable.ACTION_NAME_ADD.equals(request.getActionName())
+                        || Deletable.ACTION_NAME_DELETE.equals(request.getActionName())) {
                     response.setSuccess(false);
-                    response.setMsg(getAppContext().getMetadata().getI18n(request.getI18nLang(), "operate.system.users.not"));
-                    return;
+                    response.setMsg(getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "operate.system.users.not"));
+                    return false;
                 }
 
-                if (EditModel.ACTION_NAME_UPDATE.equals(request.getActionName())) {
+                if (Editable.ACTION_NAME_UPDATE.equals(request.getActionName())) {
                     if (!Boolean.parseBoolean(request.getParameter("active"))) {
                         response.setSuccess(false);
-                        response.setMsg(getAppContext().getMetadata().getI18n(request.getI18nLang(), "System.users.keep.active"));
+                        response.setMsg(getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "System.users.keep.active"));
+                        return false;
                     }
                 }
             }
         }
+        return true;
     }
 
     @Override
     @ModelAction(
-            name = DeleteModel.ACTION_NAME_DELETE,
+            name = Deletable.ACTION_NAME_DELETE,
             effectiveWhen = "id!=qingzhou",
             icon = "trash", showToList = true,
             nameI18n = {"删除", "en:Delete"},
             infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
-        writeForbid(request, response);
-        if (!response.isSuccess()) {
+        if (!checkForbidden(request, response)) {
             return;
         }
 
