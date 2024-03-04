@@ -1,7 +1,8 @@
-package qingzhou.app.mbean;
+package qingzhou.app.mbean.impl;
 
 import qingzhou.api.Lang;
 import qingzhou.app.Controller;
+import qingzhou.app.mbean.ServerJmxMBean;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.app.ResponseImpl;
 
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class ServerImpl implements ServerImplMBean {
+public class ServerJmx implements ServerJmxMBean {
     private final String[] supportAction = new String[]{"show", "list", "monitor"};
 
     private List<Map<String, String>> callServerMethod(String appName, String modelName, String actionName, String name) throws Exception {

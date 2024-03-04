@@ -1,21 +1,21 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-if (readonly == null) {
-    return; // for 静态源码漏洞扫描
-}
+    if (readonly == null) {
+        return; // for 静态源码漏洞扫描
+    }
 
-String tempId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
-String tempEleId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
-if (!"".equals(readonly)) {
-    readonly = " onclick='return false;' readonly";
-}
+    String tempId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
+    String tempEleId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
+    if (!"".equals(readonly)) {
+        readonly = " onclick='return false;' readonly";
+    }
 %>
 <div id="uploader" class="uploader">
     <a href="javascript:;" onclick="$('#<%=tempId%>').click();" class="btn uploader-btn-browse"
        style="width: 108px; height: 32px; border-radius: 1px; background: #FFFFFF;">
         <i class="icon icon-upload-alt"></i>
-        <span style="padding-left: 6px; font-family: PingFangSC-Regular; font-size: 14px; color: #262626; line-height: 20px;"><%=PageBackendService.getMasterAppI18nString( "page.selectfile")%></span>
+        <span style="padding-left: 6px; font-family: PingFangSC-Regular; font-size: 14px; color: #262626; line-height: 20px;"><%=PageBackendService.getMasterAppI18nString("page.selectfile")%></span>
     </a>
     <%--
     <!-- <a href="javascript:;"

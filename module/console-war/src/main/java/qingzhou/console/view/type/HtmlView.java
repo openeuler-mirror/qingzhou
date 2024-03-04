@@ -2,15 +2,15 @@ package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.type.Showable;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RestContext;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.ConsoleWarHelper;
 import qingzhou.console.view.View;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.app.ModelActionData;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -21,7 +21,7 @@ public class HtmlView implements View {
 
     @Override
     public void render(RestContext restContext) throws Exception {
-        RequestImpl request = (RequestImpl) restContext.request;
+        RequestImpl request = restContext.request;
         Response response = restContext.response;
         // 将request,response放入HttpServletRequest，以供 jsp 使用，如果json也要使用，则应该将此处的代码移动到 ViewManager 总入口链里面
         HttpServletRequest req = restContext.servletRequest;

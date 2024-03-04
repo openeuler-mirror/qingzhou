@@ -1,4 +1,4 @@
-package qingzhou.console.impl;
+package qingzhou.console;
 
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.bootstrap.main.ModuleLoader;

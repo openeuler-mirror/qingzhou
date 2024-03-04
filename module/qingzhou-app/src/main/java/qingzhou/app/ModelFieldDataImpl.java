@@ -1,10 +1,11 @@
-package qingzhou.framework.app;
+package qingzhou.app;
 
 import qingzhou.api.FieldType;
+import qingzhou.api.metadata.ModelFieldData;
 
 import java.io.Serializable;
 
-public class ModelFieldData implements Serializable {
+public class ModelFieldDataImpl implements ModelFieldData, Serializable {
     private String group = "";
     private String[] nameI18n;
     private String[] infoI18n;

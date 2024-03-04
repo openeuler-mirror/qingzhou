@@ -1,6 +1,6 @@
 package qingzhou.app;
 
-import qingzhou.app.mbean.ServerImpl;
+import qingzhou.app.mbean.impl.ServerJmx;
 import qingzhou.bootstrap.main.service.ServiceRegister;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.AppManager;
@@ -45,7 +45,7 @@ public class Controller extends ServiceRegister<AppManager> {
         }
         MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
         ObjectName name = new ObjectName(SERVER_M_BEAN_NAME);
-        mBeanServer.registerMBean(new ServerImpl(), name);
+        mBeanServer.registerMBean(new ServerJmx(), name);
     }
 
     @Override

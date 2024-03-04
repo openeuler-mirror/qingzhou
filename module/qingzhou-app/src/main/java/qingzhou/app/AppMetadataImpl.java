@@ -1,21 +1,20 @@
 package qingzhou.app;
 
-import qingzhou.framework.app.AppMetadata;
 import qingzhou.api.Lang;
-import qingzhou.framework.app.Menu;
-import qingzhou.framework.app.ModelManager;
+import qingzhou.api.metadata.AppMetadata;
+import qingzhou.api.metadata.MenuData;
+import qingzhou.api.metadata.ModelManager;
 import qingzhou.framework.app.I18nTool;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 public class AppMetadataImpl implements AppMetadata, Serializable {
     private final I18nTool i18nTool = new I18nTool();
-    private final Properties appProperties = new Properties();
+    private final Map<String, String> appProperties = new HashMap<>();
     private final ModelManagerImpl modelManager = new ModelManagerImpl();
-    private final Map<String, MenuImpl> menus = new HashMap<>();
+    private final Map<String, MenuDataImpl> menus = new HashMap<>();
     private String appName;
 
     @Override
@@ -24,7 +23,7 @@ public class AppMetadataImpl implements AppMetadata, Serializable {
     }
 
     @Override
-    public Properties getProperties() {
+    public Map<String, String> getConfig() {
         return appProperties;
     }
 
@@ -34,7 +33,7 @@ public class AppMetadataImpl implements AppMetadata, Serializable {
     }
 
     @Override
-    public Menu getMenu(String menuName) {
+    public MenuData getMenu(String menuName) {
         return menus.get(menuName);
     }
 
@@ -44,7 +43,7 @@ public class AppMetadataImpl implements AppMetadata, Serializable {
     }
 
     public void addMenu(String menuName, String[] menuI18n, String menuIcon, int menuOrder) {
-        MenuImpl menu = menus.computeIfAbsent(menuName, s -> new MenuImpl(menuName));
+        MenuDataImpl menu = menus.computeIfAbsent(menuName, s -> new MenuDataImpl(menuName));
         menu.setMenuI18n(menuI18n);
         menu.setMenuIcon(menuIcon);
         menu.setMenuOrder(menuOrder);

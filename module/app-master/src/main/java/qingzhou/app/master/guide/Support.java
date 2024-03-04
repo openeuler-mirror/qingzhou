@@ -1,6 +1,9 @@
 package qingzhou.app.master.guide;
 
-import qingzhou.api.*;
+import qingzhou.api.DataStore;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.ReadOnlyDataStore;
 
@@ -29,16 +32,6 @@ public class Support extends ModelBase implements Listable {
             nameI18n = {"使用说明", "en:Usage"},
             infoI18n = {" Qingzhou 支持该项目的具体方式。", "en:The specific ways in which Qingzhou supports the project."})
     public String usage;
-
-    @Override
-    @ModelAction(name = ACTION_NAME_SHOW,
-            showToList = true,
-            icon = "info-sign", forwardToPage = "show",
-            nameI18n = {"查看", "en:Show"},
-            infoI18n = {"查看该组件的相关信息。", "en:View the information of this model."})
-    public void show(Request request, Response response) throws Exception {
-        super.show(request, response);
-    }
 
     @Override
     public DataStore getDataStore() {

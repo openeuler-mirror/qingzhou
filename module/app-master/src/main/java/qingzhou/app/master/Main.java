@@ -1,11 +1,17 @@
 package qingzhou.app.master;
 
-import qingzhou.api.*;
+import qingzhou.api.ActionFilter;
+import qingzhou.api.AppContext;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.QingZhouSystemApp;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main extends QingZhouSystemApp {
     private static FrameworkContext FC;
@@ -31,6 +37,18 @@ public class Main extends QingZhouSystemApp {
 
     public static FrameworkContext getFramework() {
         return FC;
+    }
+
+    public static Map<String, String> prepareParameters(Request request, AppContext appContext) {
+        Map<String, String> properties = new HashMap<>();
+        String[] fieldNames = appContext.getAppMetadata().getModelManager().getFieldNames(request.getModelName());
+        for (String fieldName : fieldNames) {
+            String value = request.getParameter(fieldName);
+            if (value != null) {
+                properties.put(fieldName, value);
+            }
+        }
+        return properties;
     }
 
     private static class LocalNodeProtection implements ActionFilter {

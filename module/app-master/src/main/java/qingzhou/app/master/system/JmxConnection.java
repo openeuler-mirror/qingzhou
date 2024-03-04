@@ -2,6 +2,7 @@ package qingzhou.app.master.system;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
+import qingzhou.app.master.Main;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -48,11 +49,15 @@ public class JmxConnection extends ModelBase implements Editable {
     )
     public boolean supportJConsole = false;
 
-    @Override
+
+    @ModelAction(name = Editable.ACTION_NAME_UPDATE,
+            icon = "save",
+            nameI18n = {"更新", "en:Update"},
+            infoI18n = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
         Map<String, String> oldProperties = getDataStore().getDataById(request.getModelName(), DEFAULT_ID);
 
-        Map<String, String> properties = prepareParameters(request);
+        Map<String, String> properties = Main.prepareParameters(request, getAppContext());
         getDataStore().updateDataById(request.getModelName(), DEFAULT_ID, properties);
 
         // ConsoleXml.getInstance().consoleXmlChanged();

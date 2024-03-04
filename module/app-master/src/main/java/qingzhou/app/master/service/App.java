@@ -5,8 +5,8 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.Main;
+import qingzhou.framework.Constants;
 import qingzhou.framework.app.AppManager;
-import qingzhou.framework.app.Constants;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.logger.Logger;
 import qingzhou.framework.util.FileUtil;
@@ -138,14 +138,13 @@ public class App extends ModelBase implements Createable {
         return null;
     }
 
-    @Override
     @ModelAction(name = Createable.ACTION_NAME_ADD,
             icon = "save",
             nameI18n = {"安装", "en:Install"},
             infoI18n = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
     public void add(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
-        Map<String, String> p = prepareParameters(request);
+        Map<String, String> p = Main.prepareParameters(request, getAppContext());
         File srcFile;
         if (Boolean.parseBoolean(p.remove("appFrom"))) {
             srcFile = FileUtil.newFile(p.remove("fromUpload"));
@@ -205,7 +204,14 @@ public class App extends ModelBase implements Createable {
     public void switchTarget(Request request, Response response) throws Exception {
     }
 
-    @Override
+    @ModelAction(
+            name = Deletable.ACTION_NAME_DELETE,
+            showToList = true, orderOnList = 99,
+            supportBatch = true,
+            icon = "trash",
+            nameI18n = {"删除", "en:Delete"},
+            infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
+                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
         String appName = request.getId();

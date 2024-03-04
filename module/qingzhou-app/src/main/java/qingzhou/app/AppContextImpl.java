@@ -5,7 +5,7 @@ import qingzhou.api.AppContext;
 import qingzhou.api.DataStore;
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.framework.InternalService;
-import qingzhou.framework.app.AppMetadata;
+import qingzhou.api.metadata.AppMetadata;
 
 import java.io.File;
 import java.util.ArrayList;

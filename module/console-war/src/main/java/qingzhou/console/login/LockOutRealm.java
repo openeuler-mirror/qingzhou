@@ -1,7 +1,7 @@
 package qingzhou.console.login;
 
 import qingzhou.console.ServerXml;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.ConsoleWarHelper;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.LinkedHashMap;

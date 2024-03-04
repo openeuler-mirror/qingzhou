@@ -4,7 +4,7 @@ import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.I18n;
 import qingzhou.console.RestContext;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;

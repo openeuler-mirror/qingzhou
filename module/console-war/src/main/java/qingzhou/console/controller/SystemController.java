@@ -1,6 +1,6 @@
 package qingzhou.console.controller;
 
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.ConsoleWarHelper;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;

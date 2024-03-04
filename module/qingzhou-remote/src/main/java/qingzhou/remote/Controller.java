@@ -171,7 +171,7 @@ public class Controller implements ModuleLoader {
 //                    String key = cryptoService.getKeyManager().getKeyOrElseInit(null, "", null);
 //                    map.put("key", key);
                     // todo seqHttp 的参数需要简化
-                    HttpClient.seqHttp(master.get("url"), map, keyPairCipher::encryptWithPublicKey);
+                    HttpClient.seqHttp(master.get("url"), map);
                 } catch (Exception e) {
                     logger.warn("An exception occurred during the registration process", e);
                 }

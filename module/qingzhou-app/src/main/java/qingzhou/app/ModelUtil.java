@@ -1,12 +1,15 @@
-package qingzhou.framework.app;
+package qingzhou.app;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
+import qingzhou.api.metadata.ModelActionData;
+import qingzhou.api.metadata.ModelData;
+import qingzhou.api.metadata.ModelFieldData;
 
 public class ModelUtil {
     public static ModelFieldData toModelFieldData(ModelField modelField) {
-        ModelFieldData modelFieldData = new ModelFieldData();
+        ModelFieldDataImpl modelFieldData = new ModelFieldDataImpl();
         modelFieldData.setGroup(modelField.group());
         modelFieldData.setNameI18n(modelField.nameI18n());
         modelFieldData.setInfoI18n(modelField.infoI18n());
@@ -49,8 +52,9 @@ public class ModelUtil {
 
         return modelFieldData;
     }
+
     public static ModelData toModelData(Model model) {
-        ModelData modelData = new ModelData();
+        ModelDataImpl modelData = new ModelDataImpl();
         modelData.setEntryAction(model.entryAction());
         modelData.setInfoI18n(model.infoI18n());
         modelData.setIcon(model.icon());
@@ -64,7 +68,7 @@ public class ModelUtil {
     }
 
     public static ModelActionData toModelActionData(ModelAction modelAction) {
-        ModelActionData modelActionData = new ModelActionData();
+        ModelActionDataImpl modelActionData = new ModelActionDataImpl();
         modelActionData.setDisabled(modelAction.disabled());
         modelActionData.setEffectiveWhen(modelAction.effectiveWhen());
         modelActionData.setForwardToPage(modelAction.forwardToPage());

@@ -1,9 +1,7 @@
-package qingzhou.console.impl;
+package qingzhou.console;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.console.AppStub;
-import qingzhou.console.AppStubManager;
 import qingzhou.framework.app.App;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.crypto.CryptoService;
@@ -19,10 +17,6 @@ public class ConsoleWarHelper {
 
     public static App getLocalApp(String appName) {
         return Controller.appManager.getApp(appName);
-    }
-
-    public static AppStub getAppStub(String appName) {
-        return AppStubManager.getInstance().getAppStub(appName);
     }
 
     public static void invokeLocalApp(String appName, Request request, Response response) throws Exception {
@@ -43,8 +37,5 @@ public class ConsoleWarHelper {
 
     public static Logger getLogger() {
         return Controller.logger;
-    }
-
-    private ConsoleWarHelper() {
     }
 }

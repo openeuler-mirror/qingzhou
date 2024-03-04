@@ -3,7 +3,7 @@ package qingzhou.console.controller;
 import qingzhou.console.AppStubManager;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.ConsoleWarHelper;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.crypto.CryptoService;
 import qingzhou.framework.crypto.KeyCipher;

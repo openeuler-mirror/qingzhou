@@ -1,5 +1,3 @@
-<%@ page import="qingzhou.api.type.Showable" %>
-<%@ page import="qingzhou.api.type.Downloadable" %>
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
 <%
@@ -263,7 +261,7 @@
                 <%-- 左侧菜单 --%>
                 <aside class="main-sidebar">
                     <div class="sidebar sidebar-scroll">
-                        <ul class="sidebar-menu" data-widget="tree">
+                        <ul class="sidebar-menuData" data-widget="tree">
                             <%
                                 // 菜单
                                 List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, App.SYS_APP_MASTER);
@@ -272,8 +270,8 @@
                         </ul>
                     </div>
 
-                    <div class="menu-toggle-btn">
-                        <a href="javascript:void(0);" data-toggle="push-menu">
+                    <div class="menuData-toggle-btn">
+                        <a href="javascript:void(0);" data-toggle="push-menuData">
                             <i class="icon icon-sliders"></i>
                         </a>
                     </div>
@@ -315,7 +313,7 @@
         filesName: '<%=Downloadable.ACTION_NAME_FILES%>',
         downloadTip: '<%=PageBackendService.getMasterAppI18nString("page.download.log.tip")%>',
         actionName_target: '<%=App.SYS_ACTION_MANAGE%>',
-        downloadFileNames: '<%=Downloadable.PARAMETER_DOWNLOAD_FILE_NAMES%>',
+        downloadFileNames: '<%=ConsoleConstants.PARAMETER_DOWNLOAD_FILE_NAMES%>',
         showAction: '<%=Showable.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18nString("page.download.checkall")%>',
         downloadTaskTip: '<%=PageBackendService.getMasterAppI18nString("page.download.tasktip")%>',

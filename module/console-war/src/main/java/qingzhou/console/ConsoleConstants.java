@@ -14,4 +14,14 @@ public interface ConsoleConstants {
 
     String MANAGE_TYPE_APP = "app";
     String MANAGE_TYPE_NODE = "node";
+
+    // 交互参数
+    String PARAMETER_DOWNLOAD_FILE_NAMES = "downloadFileNames";
+    String DOWNLOAD_FILE_NAME_SEPARATOR = ",";
+    String DOWNLOAD_NAME_SEPARATOR = "/";
+    // 过程入参
+    String DOWNLOAD_KEY = "DOWNLOAD_KEY";
+    String DOWNLOAD_OFFSET = "DOWNLOAD_OFFSET";
+    // 过程出参
+    String DOWNLOAD_BLOCK = "DOWNLOAD_BLOCK";
 }

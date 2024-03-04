@@ -1,14 +1,12 @@
 package qingzhou.console;
 
 import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
-import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.framework.app.App;
-import qingzhou.framework.app.ModelManager;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.config.Config;
@@ -55,7 +53,7 @@ public class ActionInvoker {
         String ids = request.getParameter(Listable.FIELD_NAME_ID);
         if (StringUtil.isBlank(ids)) return false;
 
-        ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
+        ModelManager modelManager = PageBackendService.getModelManager(request.getAppName());
         String[] actionNamesSupportBatch = modelManager.getActionNamesSupportBatch(request.getModelName());
         for (String batch : actionNamesSupportBatch) {
             if (batch.equals(request.getActionName())) return true;
@@ -213,7 +211,7 @@ public class ActionInvoker {
             nodes.add(App.SYS_NODE_LOCAL);
         } else {
             RequestImpl request = new RequestImpl();
-            Response response = new qingzhou.framework.app.ResponseImpl();
+            ResponseImpl response = new qingzhou.framework.app.ResponseImpl();
             request.setAppName(App.SYS_APP_MASTER);
             request.setModelName(App.SYS_MODEL_APP);
             request.setActionName(Showable.ACTION_NAME_SHOW);

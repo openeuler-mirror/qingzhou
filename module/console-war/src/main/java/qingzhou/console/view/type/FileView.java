@@ -1,7 +1,7 @@
 package qingzhou.console.view.type;
 
-import qingzhou.api.type.Downloadable;
 import qingzhou.console.ActionInvoker;
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RestContext;
 import qingzhou.console.util.HexUtil;
 import qingzhou.console.view.View;
@@ -30,10 +30,10 @@ public class FileView implements View {
         }
 
         Map<String, String> result = dataList.get(0);
-        String key = result.get(Downloadable.DOWNLOAD_KEY);
-        long offset = Long.parseLong(result.get(Downloadable.DOWNLOAD_OFFSET));
+        String key = result.get(ConsoleConstants.DOWNLOAD_KEY);
+        long offset = Long.parseLong(result.get(ConsoleConstants.DOWNLOAD_OFFSET));
         while (true) {
-            byte[] content = HexUtil.hexToBytes(result.get(Downloadable.DOWNLOAD_BLOCK));
+            byte[] content = HexUtil.hexToBytes(result.get(ConsoleConstants.DOWNLOAD_BLOCK));
 
             ServletOutputStream outputStream = servletResponse.getOutputStream();
             outputStream.write(content);
@@ -44,14 +44,14 @@ public class FileView implements View {
 
             RequestImpl req = request.clone();
             HashMap<String, String> data = new HashMap<>();
-            data.put(Downloadable.DOWNLOAD_KEY, key);
-            data.put(Downloadable.DOWNLOAD_OFFSET, String.valueOf(offset));
+            data.put(ConsoleConstants.DOWNLOAD_KEY, key);
+            data.put(ConsoleConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);
             ResponseImpl res = ActionInvoker.getInstance().invokeAction(req); // 续传
             if (res.isSuccess()) {
                 result = res.getDataList().get(0);
-                offset = Long.parseLong(result.get(Downloadable.DOWNLOAD_OFFSET));
-                key = result.get(Downloadable.DOWNLOAD_KEY);
+                offset = Long.parseLong(result.get(ConsoleConstants.DOWNLOAD_OFFSET));
+                key = result.get(ConsoleConstants.DOWNLOAD_KEY);
             } else {
                 response.setSuccess(false);
                 response.setMsg(res.getMsg());

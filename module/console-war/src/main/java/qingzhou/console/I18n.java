@@ -2,7 +2,6 @@ package qingzhou.console;
 
 import qingzhou.api.Lang;
 import qingzhou.console.controller.SetI18n;
-import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.app.I18nTool;
 import qingzhou.framework.util.StringUtil;
 

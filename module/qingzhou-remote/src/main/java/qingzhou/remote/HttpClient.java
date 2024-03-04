@@ -9,15 +9,12 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
 import java.util.Map;
 
 public class HttpClient {
     private static final String CONTENT_LENGTH = "Content-Length";
-    public static final String ARGS = "A";
 
-
-    public static String seqHttp(String url, Map<String, String> params, Callback<String, String> callback) throws Exception {
+    public static void seqHttp(String url, Map<String, String> params) throws Exception {
         HttpURLConnection conn = buildConnection(url);
         conn.setRequestMethod("POST");
         conn.setDoInput(true);
@@ -32,15 +29,7 @@ public class HttpClient {
 
         String bodyStr = encodingParams(params, "utf-8");
         if (bodyStr != null) {
-            byte[] b;
-            if (callback != null) {
-                String run = callback.run(bodyStr);
-                Map<String, String> map = new HashMap<>();
-                String param = map.put(ARGS, run);
-                b = param.getBytes();
-            } else {
-                b = bodyStr.getBytes();
-            }
+            byte[] b = bodyStr.getBytes();
             conn.setRequestProperty(CONTENT_LENGTH, String.valueOf(b.length));
             OutputStream outputStream = conn.getOutputStream();
             outputStream.write(b, 0, b.length);
@@ -56,7 +45,6 @@ public class HttpClient {
         if (responseCode != 200) {
             System.out.printf("send request fail, url:%s, message:%s.%n", url, result);
         }
-        return result;
     }
 
     public static String toString(InputStream input, String encoding) throws IOException {

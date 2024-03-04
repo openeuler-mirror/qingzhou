@@ -1,17 +1,17 @@
 package qingzhou.app;
 
-import qingzhou.framework.app.Menu;
+import qingzhou.api.metadata.MenuData;
 
 import java.io.Serializable;
 import java.util.Objects;
 
-public class MenuImpl implements Menu, Serializable {
+public class MenuDataImpl implements MenuData, Serializable {
     private final String menuName;
     private String[] menuI18n;
     private String menuIcon;
     private int menuOrder;
 
-    public MenuImpl(String menuName) {
+    public MenuDataImpl(String menuName) {
         this.menuName = menuName;
     }
 
@@ -51,7 +51,7 @@ public class MenuImpl implements Menu, Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MenuImpl menu = (MenuImpl) o;
+        MenuDataImpl menu = (MenuDataImpl) o;
         return Objects.equals(menuName, menu.menuName);
     }
 

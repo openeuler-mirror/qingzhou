@@ -1,13 +1,10 @@
 package qingzhou.app.master.user;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Createable;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Editable;
-import qingzhou.api.type.Listable;
+import qingzhou.api.type.*;
 import qingzhou.app.master.Main;
+import qingzhou.framework.Constants;
 import qingzhou.framework.app.App;
-import qingzhou.framework.app.Constants;
 import qingzhou.framework.crypto.CryptoService;
 import qingzhou.framework.crypto.MessageDigest;
 import qingzhou.framework.util.StringUtil;
@@ -188,17 +185,25 @@ public class User extends ModelBase implements Createable {
         return super.options(request, fieldName);
     }
 
-    @Override
+
+    @ModelAction(name = Createable.ACTION_NAME_ADD,
+            icon = "save",
+            nameI18n = {"添加", "en:Add"},
+            infoI18n = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
         if (!checkForbidden(request, response)) {
             return;
         }
-        Map<String, String> newUser = prepareParameters(request);
+        Map<String, String> newUser = Main.prepareParameters(request, getAppContext());
         rectifyParameters(request, newUser, new HashMap<>());
         getDataStore().addData(request.getModelName(), newUser.get(Listable.FIELD_NAME_ID), newUser);
     }
 
-    @Override
+
+    @ModelAction(name = Showable.ACTION_NAME_SHOW,
+            icon = "info-sign", forwardToPage = "show",
+            nameI18n = {"查看", "en:Show"},
+            infoI18n = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
         Map<String, String> data = dataStore.getDataById(request.getModelName(), request.getId());
@@ -235,7 +240,10 @@ public class User extends ModelBase implements Createable {
     }
 
 
-    @Override
+    @ModelAction(name = Editable.ACTION_NAME_UPDATE,
+            icon = "save",
+            nameI18n = {"更新", "en:Update"},
+            infoI18n = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
         if (!checkForbidden(request, response)) {
             return;
@@ -245,7 +253,7 @@ public class User extends ModelBase implements Createable {
         String modelName = request.getModelName();
         String userId = request.getId();
         Map<String, String> oldUser = dataStore.getDataById(modelName, userId);
-        Map<String, String> newUser = prepareParameters(request);
+        Map<String, String> newUser = Main.prepareParameters(request, getAppContext());
         rectifyParameters(request, newUser, oldUser);
         dataStore.updateDataById(modelName, userId, newUser);
 
@@ -416,7 +424,6 @@ public class User extends ModelBase implements Createable {
         return true;
     }
 
-    @Override
     @ModelAction(
             name = Deletable.ACTION_NAME_DELETE,
             effectiveWhen = "id!=qingzhou",

@@ -4,8 +4,13 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.QingZhouApp;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.api.metadata.ModelActionData;
+import qingzhou.api.metadata.ModelData;
+import qingzhou.api.metadata.ModelFieldData;
 import qingzhou.bootstrap.main.FrameworkContext;
-import qingzhou.framework.app.*;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppManager;
+import qingzhou.framework.app.QingZhouSystemApp;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -116,10 +121,10 @@ public class AppManagerImpl implements AppManager {
             modelInstance.setAppContext(appContext);
             modelInstance.init();
         }
-        try (InputStream inputStream = loader.getResourceAsStream(Constants.APP_PROPERTIES_FILE)) {
+        try (InputStream inputStream = loader.getResourceAsStream("qingzhou.properties")) {
             Properties properties = FileUtil.streamToProperties(inputStream);
-            metadata.getProperties().putAll(properties);
-            String appClass = metadata.getProperties().getProperty(Constants.APP_CLASS_NAME);
+            properties.forEach((o, o2) -> metadata.getConfig().put((String) o, (String) o2));
+            String appClass = metadata.getConfig().get("qingzhou.app");
             if (StringUtil.notBlank(appClass)) {
                 QingZhouApp qingZhouApp = (QingZhouApp) loader.loadClass(appClass).newInstance();
                 app.setQingZhouApp(qingZhouApp);

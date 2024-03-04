@@ -1,9 +1,9 @@
 package qingzhou.app;
 
 import qingzhou.api.*;
+import qingzhou.api.metadata.ModelFieldData;
+import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.*;
-import qingzhou.framework.app.ModelFieldData;
-import qingzhou.framework.app.ModelManager;
 import qingzhou.framework.app.ResponseImpl;
 
 import java.util.*;
@@ -46,7 +46,7 @@ public class ActionMethod {
         List<String> graphicalDynamicFields = new ArrayList<>();
         Map<String, String> monitorData = new HashMap<>();
         Map<String, String> infoData = new HashMap<>();
-        for (Map.Entry<String, ModelFieldData> entry : ((AppContextImpl) actionContext.getAppContext()).getAppMetadata().getModelManager().getMonitorFieldMap(request.getModelName()).entrySet()) {
+        for (Map.Entry<String, ModelFieldData> entry : actionContext.getAppContext().getAppMetadata().getModelManager().getMonitorFieldMap(request.getModelName()).entrySet()) {
             String fieldName = entry.getKey();
             ModelFieldData monitorField = entry.getValue();
             if (monitorField.supportGraphicalDynamic()) {
@@ -101,7 +101,7 @@ public class ActionMethod {
         response.setPageNum(pageNum);
 
         String[] dataIdInPage = dataStore.getDataIdInPage(modelName, ((ResponseImpl) response).getPageSize(), pageNum).toArray(new String[0]);
-        ModelManager manager = ((AppContextImpl) actionContext.getAppContext()).getAppMetadata().getModelManager();
+        ModelManager manager = actionContext.getAppContext().getAppMetadata().getModelManager();
         String[] fieldNamesToList = Arrays.stream(manager.getFieldNames(modelName)).filter(s -> manager.getModelField(modelName, s).showToList()).toArray(String[]::new);
         List<Map<String, String>> result = dataStore.getDataFieldByIds(modelName, dataIdInPage, fieldNamesToList);
         for (Map<String, String> data : result) {
@@ -129,7 +129,7 @@ public class ActionMethod {
 
     public Map<String, String> prepareParameters(Request request) {
         Map<String, String> properties = new HashMap<>();
-        String[] fieldNames = ((AppContextImpl) actionContext.getAppContext()).getAppMetadata().getModelManager().getFieldNames(request.getModelName());
+        String[] fieldNames = actionContext.getAppContext().getAppMetadata().getModelManager().getFieldNames(request.getModelName());
         for (String fieldName : fieldNames) {
             String value = request.getParameter(fieldName);
             if (value != null) {
@@ -225,6 +225,7 @@ public class ActionMethod {
 //        boolean hasMore = false;
 //        try (RandomAccessFile raf = new RandomAccessFile(downloadFile, "r")) {
 //            raf.seek(offset);
+//    int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));
 //            byte[] block = new byte[DOWNLOAD_BLOCK_SIZE];
 //            int read = raf.read(block);
 //            if (read > 0) { // ==0 表示上次正好读取到结尾
@@ -316,7 +317,7 @@ public class ActionMethod {
             nameI18n = {"创建", "en:Create"},
             infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request, Response response) throws Exception {
-        Map<String, String> properties = ((AppContextImpl) actionContext.getAppContext()).getAppMetadata().getModelManager().getModelDefaultProperties(request.getModelName());
+        Map<String, String> properties = actionContext.getAppContext().getAppMetadata().getModelManager().getModelDefaultProperties(request.getModelName());
         response.addData(properties);
     }
 

@@ -1,6 +1,6 @@
-package qingzhou.framework.app;
+package qingzhou.api.metadata;
 
-public interface Menu {
+public interface MenuData {
     String getName();
 
     String[] getI18n();

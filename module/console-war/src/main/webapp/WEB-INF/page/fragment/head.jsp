@@ -1,17 +1,15 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ page import="java.util.*" %>
-<%@ page import="java.io.*" %>
-<%@ page import="java.time.*" %>
-<%@ page import="java.time.format.*" %>
 <%@ page import="qingzhou.api.*" %>
+<%@ page import="qingzhou.api.type.*" %>
+<%@ page import="qingzhou.api.metadata.*" %>
 <%@ page import="qingzhou.framework.*" %>
 <%@ page import="qingzhou.framework.app.*" %>
-<%@ page import="qingzhou.framework.util.*" %>
 <%@ page import="qingzhou.console.*" %>
 <%@ page import="qingzhou.console.impl.*" %>
-<%@ page import="qingzhou.console.controller.rest.*" %>
 <%@ page import="qingzhou.console.controller.*" %>
+<%@ page import="qingzhou.console.controller.rest.*" %>
 <%@ page import="qingzhou.console.login.*" %>
 <%@ page import="qingzhou.console.login.vercode.*" %>
 <%@ page import="qingzhou.console.view.*" %>
@@ -23,7 +21,7 @@
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     ResponseImpl qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
     String menuAppName = PageBackendService.getInitAppName(qzRequest);
-    ModelManager modelManager = ConsoleWarHelper.getAppStub(menuAppName).getModelManager();
+    ModelManager modelManager = PageBackendService.getModelManager(menuAppName);
 %>
 
 <script type="text/javascript">
@@ -63,7 +61,6 @@
     }
 %>
 
-<%--公用“转发”错误提示：三员密码必需本机修改的提示--%>
 <%
     if (qzResponse != null && !qzResponse.isSuccess()) {
 %>

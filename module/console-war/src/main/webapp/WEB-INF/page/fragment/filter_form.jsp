@@ -25,11 +25,13 @@
                 <%@ include file="../fragment/filter_select.jsp" %>
                 <%
                 } else {
-                    String showHtml = (request.getParameter(fieldName) == null) ? "" : request.getParameter(fieldName);
-                    if (StringUtil.notBlank(showHtml)) {
+                    String showHtml = request.getParameter(fieldName);
+                    if (showHtml != null) {
                         if (Validator.SafeCheckerUtil.checkIsXSS(showHtml)) {
                             showHtml = "";
                         }
+                    } else {
+                        showHtml = "";
                     }
                 %>
                 <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control"

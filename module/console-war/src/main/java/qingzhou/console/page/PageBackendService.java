@@ -1,6 +1,7 @@
 package qingzhou.console.page;
 
 import qingzhou.api.*;
+import qingzhou.api.metadata.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
@@ -8,9 +9,11 @@ import qingzhou.api.type.Listable;
 import qingzhou.console.*;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.ConsoleWarHelper;
 import qingzhou.console.util.Base32Util;
-import qingzhou.framework.app.*;
+import qingzhou.framework.app.App;
+import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -65,7 +68,7 @@ public class PageBackendService {
         return ConsoleI18n.getI18n(I18n.getI18nLang(), key);
     }
 
-    private static ModelManager getModelManager(String appName) { // 应该只能被 jsp 页面调用
+    public static ModelManager getModelManager(String appName) { // 应该只能被 jsp 页面调用
         return ConsoleWarHelper.getAppStub(appName).getModelManager();
     }
 
@@ -145,13 +148,13 @@ public class PageBackendService {
         AppStub appStub = ConsoleWarHelper.getAppStub(appName);
         Map<String, List<ModelData>> groupMap = Arrays.stream(allModels).filter(ModelData::showToMenu).collect(Collectors.groupingBy(ModelData::menuName));
         groupMap.forEach((menuGroup, models) -> {
-            Menu menu = appStub.getMenu(menuGroup);
+            MenuData menuData = appStub.getMenu(menuGroup);
             MenuItem parentMenu = new MenuItem();
-            if (menu != null) {
+            if (menuData != null) {
                 parentMenu.setMenuName(menuGroup);
-                parentMenu.setMenuIcon(menu.getIcon());
-                parentMenu.setI18ns(menu.getI18n());
-                parentMenu.setOrder(menu.getOrder());
+                parentMenu.setMenuIcon(menuData.getIcon());
+                parentMenu.setI18ns(menuData.getI18n());
+                parentMenu.setOrder(menuData.getOrder());
             }
             models.sort(Comparator.comparingInt(ModelData::menuOrder));
             models.forEach(i -> {
@@ -161,14 +164,14 @@ public class PageBackendService {
                 subMenu.setI18ns(i.nameI18n());
                 subMenu.setMenuAction(i.entryAction());
                 subMenu.setOrder(i.menuOrder());
-                if (menu == null) {
+                if (menuData == null) {
                     menus.add(subMenu);
                 } else {
                     subMenu.setParentMenu(parentMenu.getMenuName());
                     parentMenu.getChildren().add(subMenu);
                 }
             });
-            if (menu != null) {
+            if (menuData != null) {
                 menus.add(parentMenu);
             }
         });

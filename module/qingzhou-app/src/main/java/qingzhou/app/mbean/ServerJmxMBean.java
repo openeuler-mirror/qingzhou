@@ -2,9 +2,8 @@ package qingzhou.app.mbean;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
-public interface ServerImplMBean {
+public interface ServerJmxMBean {
 
     List<Map<String, String>> list(String appName, String modelName) throws Exception;
 

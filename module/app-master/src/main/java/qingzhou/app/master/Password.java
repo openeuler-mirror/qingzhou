@@ -58,12 +58,14 @@ public class Password extends ModelBase implements Editable {
         master.addI18n("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
     }
 
-    @Override
+    @ModelAction(name = Editable.ACTION_NAME_EDIT,
+            icon = "edit", forwardToPage = "form",
+            nameI18n = {"编辑", "en:Edit"},
+            infoI18n = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {
         response.addModelData(new Password());
     }
 
-    @Override
     @ModelAction(name = Showable.ACTION_NAME_SHOW,
             icon = "info-sign", forwardToPage = "show",
             nameI18n = {"查看", "en:Show"},

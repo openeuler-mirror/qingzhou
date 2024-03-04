@@ -1,19 +1,19 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
-import qingzhou.framework.app.ModelManager;
+import qingzhou.api.metadata.ModelFieldData;
+import qingzhou.api.metadata.ModelManager;
 import qingzhou.console.RestContext;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.ConsoleWarHelper;
 import qingzhou.framework.app.RequestImpl;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.pattern.Filter;
-import qingzhou.framework.app.ModelFieldData;
 
 public class AsymmetricDecryptor implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
-        RequestImpl request = (RequestImpl) context.request;
+        RequestImpl request = context.request;
         ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
         for (String fieldName : modelManager.getFieldNames(request.getModelName())) {
             ModelFieldData modelField = modelManager.getModelField(request.getModelName(), fieldName);

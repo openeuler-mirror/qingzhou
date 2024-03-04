@@ -1,7 +1,7 @@
 package qingzhou.app;
 
 import qingzhou.api.ModelBase;
-import qingzhou.framework.app.ModelData;
+import qingzhou.api.metadata.ModelData;
 
 import java.io.Serializable;
 import java.util.Collections;

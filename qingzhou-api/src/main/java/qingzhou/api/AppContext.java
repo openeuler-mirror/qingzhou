@@ -1,9 +1,13 @@
 package qingzhou.api;
 
+import qingzhou.api.metadata.AppMetadata;
+
 import java.io.File;
 import java.util.Collection;
 
 public interface AppContext {
+    AppMetadata getAppMetadata();
+
     String getPlatformName();
 
     String getPlatformVersion();

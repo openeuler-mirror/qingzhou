@@ -1,8 +1,10 @@
-package qingzhou.framework.app;
+package qingzhou.app;
+
+import qingzhou.api.metadata.ModelData;
 
 import java.io.Serializable;
 
-public class ModelData implements Serializable {
+public class ModelDataImpl implements ModelData, Serializable {
     private String name;
     private String icon;
     private String[] nameI18n;

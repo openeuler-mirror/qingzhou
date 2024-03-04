@@ -1,7 +1,3 @@
-<%@ page import="qingzhou.api.type.Showable" %>
-<%@ page import="qingzhou.api.type.Listable" %>
-<%@ page import="qingzhou.api.type.Editable" %>
-<%@ page import="qingzhou.api.type.Downloadable" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -78,7 +74,7 @@
                         for (ModelActionData action : opsActions) {
                             String actionKey = action.name();
                             String titleStr = I18n.getString(menuAppName, "model.action.info." + qzRequest.getModelName() + "." + actionKey);
-                            if (StringUtil.notBlank(titleStr)) {
+                            if (titleStr != null) {
                                 titleStr = "data-tip='" + titleStr + "'";
                             } else {
                                 titleStr = "data-tip='" + I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
@@ -205,7 +201,7 @@
                 } else {
                     String fieldName = PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i);
                     String linkField = modelManager.getModelField(qzRequest.getModelName(), fieldName).linkModel();
-                    if (StringUtil.notBlank(linkField)) {
+                    if (linkField != null) {
                         String[] split = linkField.split("\\.");
                         String idFieldValue = modelBase.get(Listable.FIELD_NAME_ID);
                 %>
@@ -251,7 +247,7 @@
                             }
 
                             String titleStr = I18n.getString(menuAppName, "model.action.info." + qzRequest.getModelName() + "." + actionKey);
-                            if (StringUtil.notBlank(titleStr)) {
+                            if (titleStr != null) {
                                 titleStr = "data-tip='" + titleStr + "'";
                             } else {
                                 titleStr = "data-tip='" + I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + actionKey) + "'";
@@ -310,24 +306,24 @@
 <script>
     function difModelActive(omodel, nmodel) {
         if (omodel !== nmodel) {
-            var omenuItemLink = $("ul.sidebar-menu li a[modelName='" + omodel + "']");
-            var nmenuItemLink = $("ul.sidebar-menu li a[modelName='" + nmodel + "']");
+            var omenuItemLink = $("ul.sidebar-menuData li a[modelName='" + omodel + "']");
+            var nmenuItemLink = $("ul.sidebar-menuData li a[modelName='" + nmodel + "']");
             if (omenuItemLink.length > 0) {
                 if ($(omenuItemLink).parent().hasClass("treeview")) {
                     $(omenuItemLink).parents("li.treeview").removeClass("active");
                 } else {
-                    $(omenuItemLink).parents("li.treeview").removeClass("menu-open active");
+                    $(omenuItemLink).parents("li.treeview").removeClass("menuData-open active");
                 }
-                $(omenuItemLink).parents("ul.treeview-menu").hide();
+                $(omenuItemLink).parents("ul.treeview-menuData").hide();
                 $(omenuItemLink).parent().removeClass("active");
             }
             if (nmenuItemLink.length > 0) {
                 if ($(nmenuItemLink).parent().hasClass("treeview")) {
                     $(nmenuItemLink).parents("li.treeview").addClass("active");
                 } else {
-                    $(nmenuItemLink).parents("li.treeview").addClass("menu-open active");
+                    $(nmenuItemLink).parents("li.treeview").addClass("menuData-open active");
                 }
-                $(nmenuItemLink).parents("ul.treeview-menu").show();
+                $(nmenuItemLink).parents("ul.treeview-menuData").show();
                 $(nmenuItemLink).parent().addClass("active");
             }
         }

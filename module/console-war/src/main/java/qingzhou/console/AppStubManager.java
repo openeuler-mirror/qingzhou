@@ -1,9 +1,8 @@
 package qingzhou.console;
 
 import qingzhou.api.Lang;
-import qingzhou.framework.app.Menu;
-import qingzhou.framework.app.ModelManager;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.api.metadata.MenuData;
+import qingzhou.api.metadata.ModelManager;
 import qingzhou.framework.app.App;
 
 import java.util.HashMap;
@@ -27,9 +26,9 @@ public class AppStubManager {
         appStubMap.remove(appToken);
     }
 
-    public AppStub getAppStub(String appToken) {
-        return appStubMap.computeIfAbsent(appToken, s -> {
-            App localApp = ConsoleWarHelper.getLocalApp(appToken);
+    public AppStub getAppStub(String appName) {
+        return appStubMap.computeIfAbsent(appName, s -> {
+            App localApp = ConsoleWarHelper.getLocalApp(appName);
             if (localApp == null) return null;
 
             return new AppStub() {
@@ -44,7 +43,7 @@ public class AppStubManager {
                 }
 
                 @Override
-                public Menu getMenu(String menuName) {
+                public MenuData getMenu(String menuName) {
                     return localApp.getAppContext().getAppMetadata().getMenu(menuName);
                 }
             };

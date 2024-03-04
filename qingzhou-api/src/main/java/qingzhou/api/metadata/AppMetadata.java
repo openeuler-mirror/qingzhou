@@ -1,17 +1,17 @@
-package qingzhou.framework.app;
+package qingzhou.api.metadata;
 
 import qingzhou.api.Lang;
 
-import java.util.Properties;
+import java.util.Map;
 
 public interface AppMetadata {
     String getName();
 
-    Properties getProperties();
+    Map<String, String> getConfig();
 
     String getI18n(Lang lang, String key, Object... args);
 
-    Menu getMenu(String menuName);
+    MenuData getMenu(String menuName);
 
     ModelManager getModelManager();
 }
