@@ -16,10 +16,6 @@ public class ServerXml { // todo 考虑替代：ConfigManager
         return getAttributes("server");
     }
 
-    public Map<String, String> security() {
-        return getAttributes("server/security");
-    }
-
     private Map<String, String> getAttributes(String path) {
         return SystemController.getConfig().getConfig("/root/" + path);
     }
@@ -41,6 +37,7 @@ public class ServerXml { // todo 考虑替代：ConfigManager
     public Map<String, String> jmx() {
         return SystemController.getConfig().getConfig("//jmx");
     }
+
     public String trustedIP() {
         return consoleAttribute("trustedIP");
     }
@@ -51,10 +48,6 @@ public class ServerXml { // todo 考虑替代：ConfigManager
 
     public String failureCount() {
         return consoleAttribute("failureCount");
-    }
-
-    public String contextRoot() {
-        return consoleAttribute("contextRoot");
     }
 
     private String consoleAttribute(String specifiedKey) {
@@ -81,18 +74,6 @@ public class ServerXml { // todo 考虑替代：ConfigManager
             return loginUser;
         } else {
             return loginUser.substring(index + 1);
-        }
-    }
-
-    public static String getTenant(String loginUser) {
-        if (StringUtil.isBlank(loginUser)) {
-            return null;
-        }
-        int index = loginUser.indexOf("/");
-        if (index == -1) {
-            return "default";
-        } else {
-            return loginUser.substring(0, index);
         }
     }
 }

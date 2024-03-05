@@ -1,4 +1,4 @@
-package qingzhou.framework.app;
+package qingzhou.framework.console;
 
 import qingzhou.api.Lang;
 import qingzhou.framework.util.FileUtil;

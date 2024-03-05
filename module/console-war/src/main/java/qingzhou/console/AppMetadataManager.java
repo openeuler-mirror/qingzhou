@@ -13,18 +13,18 @@ public class AppMetadataManager {
         return instance;
     }
 
-    private final Map<String, AppMetadata> appStubMap = new HashMap<>();
+    private final Map<String, AppMetadata> appMetadataMap = new HashMap<>();
 
-    public void registerAppStub(String appToken, AppMetadata appStub) {
-        appStubMap.put(appToken, appStub);
+    public void registerApp(String appName, AppMetadata appMetadata) {
+        appMetadataMap.put(appName, appMetadata);
     }
 
-    // todo: unregisterAppStub 何时调用？
-    public void unregisterAppStub(String appToken) {
-        appStubMap.remove(appToken);
+    // todo: 何时调用？
+    public void unregisterApp(String appName) {
+        appMetadataMap.remove(appName);
     }
 
-    public AppMetadata getAppStub(String appName) {
-        return appStubMap.computeIfAbsent(appName, s -> SystemController.getLocalApp(appName).getAppContext().getAppMetadata());
+    public AppMetadata getAppMetadata(String appName) {
+        return appMetadataMap.computeIfAbsent(appName, s -> SystemController.getLocalApp(appName).getAppContext().getAppMetadata());
     }
 }

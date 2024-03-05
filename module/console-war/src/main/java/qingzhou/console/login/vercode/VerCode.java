@@ -1,6 +1,6 @@
 package qingzhou.console.login.vercode;
 
-import qingzhou.console.ConsoleI18n;
+import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;

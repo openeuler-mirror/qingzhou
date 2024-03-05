@@ -5,8 +5,9 @@ import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.bootstrap.main.ModuleLoader;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.AppManager;
-import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.config.Config;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.crypto.CryptoService;
 import qingzhou.framework.crypto.KeyCipher;
 import qingzhou.framework.crypto.KeyPairCipher;
@@ -128,7 +129,7 @@ public class Controller implements ModuleLoader {
             RequestImpl request = serializer.deserialize(decryptedData, RequestImpl.class);
 
             // 处理数据对象，得到返回数据对象
-            Response response = new qingzhou.framework.app.ResponseImpl();
+            Response response = new ResponseImpl();
             App app = appManager.getApp(request.getAppName());
             app.invoke(request, response);
 

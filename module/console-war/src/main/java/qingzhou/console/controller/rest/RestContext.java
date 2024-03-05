@@ -1,7 +1,7 @@
-package qingzhou.console;
+package qingzhou.console.controller.rest;
 
-import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

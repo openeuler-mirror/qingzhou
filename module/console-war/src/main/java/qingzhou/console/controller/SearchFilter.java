@@ -1,7 +1,7 @@
 package qingzhou.console.controller;
 
 import qingzhou.api.Lang;
-import qingzhou.console.I18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.framework.util.pattern.Filter;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// TODO: 在所有应用 AppStub 内搜索，结果可以显示出 应用名-模块名-属性名/操作名？能否包含 info ?
+// TODO: 在所有注册的应用内搜索？结果可以显示出 应用名-模块名-属性名/操作名？能否包含 info ?
 public class SearchFilter implements Filter<HttpServletContext> {
     public static final String SEARCH_URI = "/search";
     private static final Map<Lang, List<Map<String, String>>> INFOS_FOR_SEARCH = new HashMap<>();

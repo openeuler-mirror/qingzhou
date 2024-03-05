@@ -8,6 +8,8 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -179,8 +181,8 @@ public class Validator {
         }
 
         // 最后进行自定义校验
-        AppMetadata appStub = SystemController.getAppMetadata(request.getAppName());
-        return appStub.getI18n(I18n.getI18nLang(), tempModel.validate(request, fieldName));
+        AppMetadata metadata = SystemController.getAppMetadata(request.getAppName());
+        return metadata.getI18n(I18n.getI18nLang(), tempModel.validate(request, fieldName));
     }
 
     private static String validate(Class<?>[] validatorClass, ValidatorContext vc) throws Exception {

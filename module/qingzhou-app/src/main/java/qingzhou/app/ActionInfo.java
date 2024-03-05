@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 public class ActionInfo implements Serializable {
     public final ModelActionData modelAction;
     public final String methodName;
+
     private transient Method javaMethod;
 
     public ActionInfo(ModelActionData modelAction, String methodName) {

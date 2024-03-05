@@ -1,8 +1,8 @@
 package qingzhou.console.jmx;
 
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.controller.TrustedIPChecker;
 import qingzhou.console.login.LoginManager;
 import qingzhou.framework.util.StringUtil;
@@ -30,13 +30,14 @@ public class CustomJMXAuthenticator implements JMXAuthenticator {
 
     @Override
     public Subject authenticate(Object credentials) {
+        String clientHost;
         try {
-            String clientHost = RemoteServer.getClientHost();
-            if (!TrustedIPChecker.trustedIP(clientHost)) {
-                authenticationFailure(ConsoleI18n.getI18n(I18n.getI18nLang(), "client.trusted.not"));
-            }
+            clientHost = RemoteServer.getClientHost();
         } catch (ServerNotActiveException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        if (!TrustedIPChecker.trustedIP(clientHost)) {
+            authenticationFailure(ConsoleI18n.getI18n(I18n.getI18nLang(), "client.trusted.not"));
         }
 
         if (credentials == null) {
@@ -65,22 +66,10 @@ public class CustomJMXAuthenticator implements JMXAuthenticator {
             if (aCredentials.length >= 3 && StringUtil.notBlank(aCredentials[2])) {
                 jmxProperties.setProperty(ConsoleConstants.LOGIN_2FA, aCredentials[2]);
             }
-            // if (aCredentials.length >= 4 && StringUtil.notBlank(aCredentials[3])) {
-            //     jmxProperties.setProperty(LoginManager.LOGIN_ACCEPT_AGREEMENT, String.valueOf(Boolean.parseBoolean(aCredentials[3])));
-            // } else {
-            //     jmxProperties.setProperty(LoginManager.LOGIN_ACCEPT_AGREEMENT, Boolean.FALSE.toString());
-            // }
-
-            // Map<String, String> jmxProp = ServerXml.get().jmx();
-            // boolean supportJConsole = Boolean.parseBoolean(jmxProp.get("supportJConsole"));
-            // if (supportJConsole) {
-            //     jmxProperties.setProperty(LoginManager.LOGIN_ACCEPT_AGREEMENT, Boolean.TRUE.toString());// 无法输入，因此开启支持 supportJConsole 功能，即表示“同意”协议
-            // }
 
             request = new JmxHttpServletRequest("", "", "", jmxProperties);
             loginFailedMsg = LoginManager.login(request);
         } catch (Exception e) {
-            e.printStackTrace();
             authenticationFailure(e.getMessage());
         }
         if (loginFailedMsg != null) {

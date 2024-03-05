@@ -2,11 +2,11 @@ package qingzhou.console.view.type;
 
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.RestContext;
+import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.util.HexUtil;
 import qingzhou.console.view.View;
-import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -18,7 +18,7 @@ public class FileView implements View {
     @Override
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
-        qingzhou.framework.app.ResponseImpl response = restContext.response;
+        ResponseImpl response = restContext.response;
         String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModelName() + "-" + System.currentTimeMillis()) : request.getId();
         HttpServletResponse servletResponse = restContext.servletResponse;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");

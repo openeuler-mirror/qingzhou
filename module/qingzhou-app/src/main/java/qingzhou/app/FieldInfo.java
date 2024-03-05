@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 public class FieldInfo implements Serializable {
     public final ModelFieldData modelField;
     public final String fieldName;
+
     private transient Field field;
 
     public FieldInfo(ModelFieldData modelField, String fieldName) {

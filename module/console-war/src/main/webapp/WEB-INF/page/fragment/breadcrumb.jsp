@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.console.i18n.I18n" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%-- 面包屑分级导航 --%>

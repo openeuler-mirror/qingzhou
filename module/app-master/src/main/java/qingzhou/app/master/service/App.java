@@ -7,7 +7,7 @@ import qingzhou.api.type.Listable;
 import qingzhou.app.master.Main;
 import qingzhou.framework.Constants;
 import qingzhou.framework.app.AppManager;
-import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.logger.Logger;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;

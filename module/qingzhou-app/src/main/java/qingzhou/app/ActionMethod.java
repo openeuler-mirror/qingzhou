@@ -4,7 +4,7 @@ import qingzhou.api.*;
 import qingzhou.api.metadata.ModelFieldData;
 import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.*;
-import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.console.ResponseImpl;
 
 import java.util.*;
 

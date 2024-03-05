@@ -3,9 +3,9 @@ package qingzhou.app;
 import qingzhou.api.ActionFilter;
 import qingzhou.api.AppContext;
 import qingzhou.api.DataStore;
+import qingzhou.api.metadata.AppMetadata;
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.framework.InternalService;
-import qingzhou.api.metadata.AppMetadata;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 public class AppContextImpl implements AppContext {
     private final FrameworkContext frameworkContext;
     private final AppMetadataImpl appMetadata;
+    private final List<ActionFilter> actionFilters = new ArrayList<>();
     private DataStore dataStore;
-    private List<ActionFilter> actionFilters;
 
     public AppContextImpl(FrameworkContext frameworkContext) {
         this.frameworkContext = frameworkContext;
@@ -79,9 +79,6 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public void addActionFilter(ActionFilter actionFilter) {
-        if (actionFilters == null) {
-            actionFilters = new ArrayList<>();
-        }
         actionFilters.add(actionFilter);
     }
 

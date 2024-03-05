@@ -14,7 +14,7 @@ public class ModelInfo implements Serializable {
     public final Map<String, FieldInfo> fieldInfoMap;
     public final Map<String, ActionInfo> actionInfoMap;
     public final String className;
-    private transient Class<?> clazz;
+
     private transient ModelBase instance;
 
     public ModelInfo(ModelData model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, String className) {
@@ -37,18 +37,9 @@ public class ModelInfo implements Serializable {
         this.className = className;
     }
 
-    public void setModelClass(Class<?> clazz) {
-        if (this.clazz != null) throw new IllegalStateException();
-        this.clazz = clazz;
-    }
-
-    public void setModelInstance(ModelBase instance) {
+    public void setInstance(ModelBase instance) {
         if (this.instance != null) throw new IllegalStateException();
         this.instance = instance;
-    }
-
-    public Class<?> getClazz() {
-        return clazz;
     }
 
     public ModelBase getInstance() {

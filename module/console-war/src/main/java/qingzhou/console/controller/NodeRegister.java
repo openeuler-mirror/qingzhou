@@ -51,7 +51,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
                 if (app != null && !app.trim().isEmpty()) {
                     String appToken = buildAppToken(nodeIp, nodePort, app);
 // TODO 这块需要改成 Service 方式，只依赖接口，不要依赖实现，另外 console 模块不能依赖 remote 模块，否则就形成，因为设计上 remote 是依赖 console 的。
-//                    AppStub appStub = (AppStub) Proxy.newProxyInstance(AppStub.class.getClassLoader(), new Class[]{AppStub.class}, (proxy, method, args) -> {
+//                    AppMetadata appStub = (AppMetadata) Proxy.newProxyInstance(AppMetadata.class.getClassLoader(), new Class[]{AppMetadata.class}, (proxy, method, args) -> {
 //                        InetSocketAddress socketAddress = new InetSocketAddress(nodeIp, Integer.parseInt(nodePort));
 //                        BIOConnector connector = new BIOConnector(socketAddress);
 //                        connector.setCodec(null);
@@ -62,7 +62,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
 //                        channel.write(req);
 //                        return channel.read();
 //                    });
-                    AppMetadataManager.getInstance().registerAppStub(appToken, null);// todo 序列化过来吗？
+                    AppMetadataManager.getInstance().registerApp(appToken, null);// todo 序列化过来吗？
                 }
             }
         }

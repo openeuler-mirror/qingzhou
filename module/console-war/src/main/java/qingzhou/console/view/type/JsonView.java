@@ -1,7 +1,8 @@
 package qingzhou.console.view.type;
 
-import qingzhou.console.RestContext;
+import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
+import qingzhou.framework.console.ResponseImpl;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -36,7 +37,7 @@ public class JsonView implements View {
         return json.toString();
     }
 
-    private static String convertToJson(qingzhou.framework.app.ResponseImpl response) {
+    private static String convertToJson(ResponseImpl response) {
         StringBuilder json = new StringBuilder("{");
 
         addStatus(json, response.isSuccess(), response.getMsg());
@@ -53,7 +54,7 @@ public class JsonView implements View {
         addKV(json, "message", message);
     }
 
-    private static void addData(StringBuilder json, qingzhou.framework.app.ResponseImpl response) {
+    private static void addData(StringBuilder json, ResponseImpl response) {
         json.append("\"").append("data").append("\"");
         json.append(":");
         json.append("[");

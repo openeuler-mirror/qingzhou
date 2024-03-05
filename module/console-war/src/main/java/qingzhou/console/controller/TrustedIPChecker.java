@@ -2,8 +2,8 @@ package qingzhou.console.controller;
 
 import qingzhou.api.Lang;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;

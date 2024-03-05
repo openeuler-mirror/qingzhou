@@ -1,19 +1,20 @@
 package qingzhou.console.jmx;
 
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.controller.rest.RESTController;
 
 import javax.servlet.http.HttpSession;
 import java.util.Properties;
 
-public class JmxImpl implements JmxImplMBean {
+public class ConsoleJmx implements ConsoleJmxMBean {
 
     @Override
-    public String callServerMethod(String appName, String modelName, String actionName, Properties args) throws Exception {
+    public String invoke(String appName, String modelName, String actionName, Properties args) {
+        HttpSession session = null;
         try {
             JmxHttpServletRequest request = new JmxHttpServletRequest(appName, modelName, actionName, args);
-            HttpSession session = request.getSession(false);
+            session = request.getSession(false);
             if (session == null) {
                 throw new RuntimeException(ConsoleI18n.getI18n(I18n.getI18nLang(), "jmx.authentication.invalid"));
             }
@@ -23,10 +24,13 @@ public class JmxImpl implements JmxImplMBean {
             RESTController.invokeReq(request, response);
             return response.getResult();
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         } finally {
             I18n.resetI18nLang();
+
+            if (session != null) {
+                session.invalidate();
+            }
         }
     }
 }

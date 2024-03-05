@@ -2,8 +2,8 @@ package qingzhou.console.login;
 
 import qingzhou.api.Lang;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.SystemController;

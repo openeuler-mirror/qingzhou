@@ -236,16 +236,16 @@ public class Password extends ModelBase implements Editable {
 //            return false;
 //        }
 //
-////        Properties userP = ConsoleXml.getInstance().getUserProperties().get(loginUser);
-////        // 首次修改密码，只能在本机进行，因为默认密码是公开的，防止通过公网抢先修改
-////        if (Utils.isBlank(userP.getProperty("passwordLastModifiedTime"))) { // 不要靠 changeInitPwd 来判定，靠 passwordLastModifiedTime，改过一次之后就不必要限制本机了
-////            if (!ConsoleUtil.trustedIP(request.getClientIp())) {
-////                request.setSuccess(false);
-////                request.setMsg(I18n.getString("client.trusted.not"));
-////                LOGGER.warn("The operation has been forbidden, client is not trusted: " + request.getClientIp());
-////                return true;
-////            }
-////        }
+//        Properties userP = ConsoleXml.getInstance().getUserProperties().get(loginUser);
+//        // 首次修改密码，只能在本机进行，因为默认密码是公开的，防止通过公网抢先修改
+//        if (Utils.isBlank(userP.getProperty("passwordLastModifiedTime"))) { // 不要靠 changeInitPwd 来判定，靠 passwordLastModifiedTime，改过一次之后就不必要限制本机了
+//            if (!ConsoleUtil.trustedIP(request.getClientIp())) {
+//                request.setSuccess(false);
+//                request.setMsg(getAppContext().getAppMetadata().getI18n("client.trusted.not"));
+//                LOGGER.warn("The operation has been forbidden, client is not trusted: " + request.getClientIp());
+//                return true;
+//            }
+//        }
 //
 //        return false;
 //    }

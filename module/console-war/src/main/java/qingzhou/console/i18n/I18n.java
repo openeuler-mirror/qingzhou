@@ -1,10 +1,9 @@
-package qingzhou.console;
+package qingzhou.console.i18n;
 
 import qingzhou.api.Lang;
 import qingzhou.api.metadata.AppMetadata;
-import qingzhou.console.controller.SetI18n;
 import qingzhou.console.controller.SystemController;
-import qingzhou.framework.app.I18nTool;
+import qingzhou.framework.console.I18nTool;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -49,8 +48,8 @@ public class I18n {
     }
 
     public static String getString(String appName, String i18nKey) {
-        AppMetadata appStub = SystemController.getAppMetadata(appName);
-        return appStub.getI18n(I18n.getI18nLang(), i18nKey);
+        AppMetadata metadata = SystemController.getAppMetadata(appName);
+        return metadata.getI18n(I18n.getI18nLang(), i18nKey);
     }
 
     public static String getString(String[] i18n) {

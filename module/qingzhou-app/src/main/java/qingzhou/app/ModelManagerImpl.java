@@ -12,6 +12,7 @@ import qingzhou.framework.util.StringUtil;
 import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URLClassLoader;
 import java.util.*;
 import java.util.jar.JarEntry;
@@ -23,7 +24,19 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     // 以下属性是为性能缓存
     private final Map<String, Map<String, String>> modelDefaultProperties = new HashMap<>();
 
-    public void initDefaultProperties() throws Exception {
+    public void initModelManager(File[] appLib, URLClassLoader loader) {
+        try {
+            parseAnnotation(appLib, loader);
+
+            reflectInstance(loader);
+
+            initDefaultProperties();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
+        }
+    }
+
+    private void initDefaultProperties() throws Exception {
         // 初始化不可变的对象
         for (String modelName : getModelNames()) {
             ModelBase modelInstance = this.modelInfoMap.get(modelName).getInstance();
@@ -51,7 +64,31 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         }
     }
 
-    public void init(File[] appLib, URLClassLoader loader) throws Exception {
+    private void reflectInstance(URLClassLoader loader) throws Exception {
+        for (String modelName : getModelNames()) {
+            ModelInfo modelInfo = getModelInfo(modelName);
+            Class<?> modelClass = loader.loadClass(modelInfo.className);
+
+            try {
+                ModelBase instance = (ModelBase) modelClass.newInstance();
+                modelInfo.setInstance(instance);
+            } catch (InstantiationException e) {
+                throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
+            }
+
+            for (FieldInfo fieldInfo : modelInfo.fieldInfoMap.values()) {
+                Field field = modelClass.getField(fieldInfo.fieldName);
+                fieldInfo.setField(field);
+            }
+
+            for (ActionInfo actionInfo : modelInfo.actionInfoMap.values()) {
+                Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
+                actionInfo.setJavaMethod(method);
+            }
+        }
+    }
+
+    private void parseAnnotation(File[] appLib, URLClassLoader loader) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
         AnnotationReader annotation = new AnnotationReaderImpl();
         for (File file : appLib) {
@@ -68,6 +105,10 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                     Class<?> cls = loader.loadClass(className);
                     Model model = annotation.readModel(cls);
                     if (model != null) {
+                        if (!ModelBase.class.isAssignableFrom(cls)) {
+                            throw new IllegalArgumentException("The class annotated by the @Model ( " + cls.getName() + " ) needs to 'extends ModelBase'.");
+                        }
+
                         List<FieldInfo> fieldInfoList = new ArrayList<>();
                         annotation.readModelField(cls).forEach((s, field) -> fieldInfoList.add(new FieldInfo(ModelUtil.toModelFieldData(field), s)));
 

@@ -4,7 +4,6 @@ import com.sun.jmx.remote.security.MBeanServerAccessController;
 
 import javax.management.ObjectName;
 
-
 public class CustomMBeanServerAccessController extends MBeanServerAccessController {
 
     @Override

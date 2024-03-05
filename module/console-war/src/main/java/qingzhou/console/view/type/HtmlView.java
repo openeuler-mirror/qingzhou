@@ -5,11 +5,11 @@ import qingzhou.api.Response;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.type.Showable;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.RestContext;
+import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.view.View;
 import qingzhou.framework.app.App;
-import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;

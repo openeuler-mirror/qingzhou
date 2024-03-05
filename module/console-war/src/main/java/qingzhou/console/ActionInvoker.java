@@ -5,11 +5,13 @@ import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.framework.app.App;
-import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 
@@ -64,7 +66,7 @@ public class ActionInvoker {
     }
 
     private ResponseImpl invokeBatch(Request request) {
-        ResponseImpl response = new qingzhou.framework.app.ResponseImpl();
+        ResponseImpl response = new ResponseImpl();
         int suc = 0;
         int fail = 0;
         StringBuilder errbuilder = new StringBuilder();
@@ -212,7 +214,7 @@ public class ActionInvoker {
             nodes.add(App.SYS_NODE_LOCAL);
         } else {
             RequestImpl request = new RequestImpl();
-            ResponseImpl response = new qingzhou.framework.app.ResponseImpl();
+            ResponseImpl response = new ResponseImpl();
             request.setAppName(App.SYS_APP_MASTER);
             request.setModelName(App.SYS_MODEL_APP);
             request.setActionName(Showable.ACTION_NAME_SHOW);

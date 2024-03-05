@@ -2,8 +2,6 @@ package qingzhou.app;
 
 import qingzhou.api.ModelBase;
 import qingzhou.api.QingZhouApp;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelFieldData;
@@ -17,8 +15,6 @@ import qingzhou.framework.util.StringUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -111,8 +107,9 @@ public class AppManagerImpl implements AppManager {
         URLClassLoader loader = new URLClassLoader(urls, needCommonApp ? QingZhouApp.class.getClassLoader() : QingZhouSystemApp.class.getClassLoader());
         app.setLoader(loader);
 
-        ModelManagerImpl modelManager = (ModelManagerImpl) metadata.getModelManager();
-        initModelManager(modelManager, appLibs, loader);
+        ModelManagerImpl modelManager = new ModelManagerImpl();
+        modelManager.initModelManager(appLibs, loader);
+        metadata.setModelManager(modelManager);
         initI18n(modelManager, metadata);
         appContext.addActionFilter(new UniqueFilter());
 
@@ -123,7 +120,9 @@ public class AppManagerImpl implements AppManager {
         }
         try (InputStream inputStream = loader.getResourceAsStream("qingzhou.properties")) {
             Properties properties = FileUtil.streamToProperties(inputStream);
-            properties.forEach((o, o2) -> metadata.getConfig().put((String) o, (String) o2));
+            metadata.setConfig(Collections.unmodifiableMap(new HashMap<String, String>() {{
+                properties.forEach((o, o2) -> put((String) o, (String) o2));
+            }}));
             String appClass = metadata.getConfig().get("qingzhou.app");
             if (StringUtil.notBlank(appClass)) {
                 QingZhouApp qingZhouApp = (QingZhouApp) loader.loadClass(appClass).newInstance();
@@ -162,40 +161,6 @@ public class AppManagerImpl implements AppManager {
                     metadata.addI18n("model.action.info." + modelName + "." + modelAction.name(), modelAction.infoI18n());
                 }
             }
-        }
-    }
-
-    private void initModelManager(ModelManagerImpl modelManager, File[] appLib, URLClassLoader loader) {
-        try {
-            modelManager.init(appLib, loader);
-
-            for (String modelName : modelManager.getModelNames()) {
-                ModelInfo modelInfo = modelManager.getModelInfo(modelName);
-                Class<?> modelClass = loader.loadClass(modelInfo.className);
-                if (!ModelBase.class.isAssignableFrom(modelClass)) {
-                    throw new IllegalArgumentException("The class annotated by the @Model ( " + modelClass.getName() + " ) needs to 'extends ModelBase'.");
-                }
-                modelInfo.setModelClass(modelClass);
-                try {
-                    modelInfo.setModelInstance((ModelBase) modelClass.newInstance());
-                } catch (InstantiationException e) {
-                    throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
-                }
-
-                for (FieldInfo fieldInfo : modelInfo.fieldInfoMap.values()) {
-                    Field field = modelClass.getField(fieldInfo.fieldName);
-                    fieldInfo.setField(field);
-                }
-
-                for (ActionInfo actionInfo : modelInfo.actionInfoMap.values()) {
-                    Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
-                    actionInfo.setJavaMethod(method);
-                }
-            }
-
-            modelManager.initDefaultProperties();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
         }
     }
 }

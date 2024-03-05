@@ -3,8 +3,8 @@ package qingzhou.app;
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Listable;
-import qingzhou.framework.app.I18nTool;
-import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.console.I18nTool;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.util.StringUtil;
 
 public class UniqueFilter implements ActionFilter {

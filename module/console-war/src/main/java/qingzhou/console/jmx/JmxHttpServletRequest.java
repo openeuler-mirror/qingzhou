@@ -1,13 +1,11 @@
 package qingzhou.console.jmx;
 
-import org.apache.catalina.Manager;
 import org.apache.catalina.Session;
-import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.session.StandardSession;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ServerXml;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.framework.app.App;
 
 import javax.security.auth.Subject;
 import javax.servlet.*;
@@ -139,7 +137,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getRequestURI() {
-        return "/console/jmx" + getPathInfo();
+        return "/jmx" + getPathInfo();
     }
 
     @Override
@@ -164,7 +162,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
         if (userPrincipal != null) {
             String id = userPrincipal.getName();
             try {
-                session = (StandardSession) JMXServerHolder.manager.findSession(id);
+                session = (StandardSession) SystemController.SESSIONS_MANAGER.findSession(id);
             } catch (IOException ignored) {
             }
         }
@@ -172,7 +170,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
             session = null;
         }
         if (session == null && b) {
-            session = new JmxStandardSession(JMXServerHolder.manager);
+            session = new JmxStandardSession(SystemController.SESSIONS_MANAGER);
             session.addSessionListener(event -> {
                 if (event.getType().equals(Session.SESSION_DESTROYED_EVENT)) {
                     Session session = event.getSession();
@@ -236,12 +234,12 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     }
 
     @Override
-    public Collection<Part> getParts() throws IOException, ServletException {
+    public Collection<Part> getParts() {
         return null;
     }
 
     @Override
-    public Part getPart(String s) throws IOException, ServletException {
+    public Part getPart(String s) {
         return null;
     }
 
@@ -285,7 +283,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     }
 
     @Override
-    public ServletInputStream getInputStream() throws IOException {
+    public ServletInputStream getInputStream() {
         return null;
     }
 
@@ -336,7 +334,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     }
 
     @Override
-    public BufferedReader getReader() throws IOException {
+    public BufferedReader getReader() {
         return null;
     }
 

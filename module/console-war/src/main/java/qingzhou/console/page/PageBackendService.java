@@ -10,10 +10,12 @@ import qingzhou.console.*;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.util.Base32Util;
 import qingzhou.framework.app.App;
-import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -145,10 +147,10 @@ public class PageBackendService {
          *  order -> int
          *  children -> Properties
          */
-        AppMetadata appStub = SystemController.getAppMetadata(appName);
+        AppMetadata metadata = SystemController.getAppMetadata(appName);
         Map<String, List<ModelData>> groupMap = Arrays.stream(allModels).filter(ModelData::showToMenu).collect(Collectors.groupingBy(ModelData::menuName));
         groupMap.forEach((menuGroup, models) -> {
-            MenuData menuData = appStub.getMenu(menuGroup);
+            MenuData menuData = metadata.getMenu(menuGroup);
             MenuItem parentMenu = new MenuItem();
             if (menuData != null) {
                 parentMenu.setMenuName(menuGroup);

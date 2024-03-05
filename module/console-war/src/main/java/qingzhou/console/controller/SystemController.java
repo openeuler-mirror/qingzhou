@@ -1,10 +1,16 @@
 package qingzhou.console.controller;
 
+import org.apache.catalina.Manager;
+import org.apache.catalina.core.ApplicationContext;
+import org.apache.catalina.core.ApplicationContextFacade;
+import org.apache.catalina.core.StandardContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.metadata.AppMetadata;
 import qingzhou.console.AppMetadataManager;
 import qingzhou.console.Controller;
+import qingzhou.console.i18n.SetI18n;
+import qingzhou.console.jmx.JMXServerHolder;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
@@ -23,25 +29,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
-    private final Filter<HttpServletContext>[] processors = new Filter[]{
-            new TrustedIPChecker(),
-            new JspInterceptor(),
-            new SetI18n(),
-            new About(),
-            new NodeRegister(),
-            new VerCode(),
-            new LoginFreeFilter(),
-            new LoginManager(),
-            new ResetPassword(),
-            new AccessControl(),
-            new SearchFilter(),
-            new LastDecision()
-    };
+    public static Manager SESSIONS_MANAGER;
 
     public static AppMetadata getAppMetadata(String appName) {
-        return AppMetadataManager.getInstance().getAppStub(appName);
+        return AppMetadataManager.getInstance().getAppMetadata(appName);
     }
 
     public static Config getConfig() {
@@ -76,6 +70,67 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return Controller.framework.getTemp(subName);
     }
 
+    private final Filter<HttpServletContext>[] processors = new Filter[]{
+            new TrustedIPChecker(),
+            new JspInterceptor(),
+            new SetI18n(),
+            new About(),
+            new NodeRegister(),
+            new VerCode(),
+            new LoginFreeFilter(),
+            new LoginManager(),
+            new ResetPassword(),
+            new AccessControl(),
+            new SearchFilter(),
+            (Filter<HttpServletContext>) context -> {
+                context.chain.doFilter(context.req, context.resp); // 这样可以进入 servlet 资源
+                return false;
+            }
+    };
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        try {
+            boolean jmxStarted = JMXServerHolder.getInstance().init();
+            if (jmxStarted) {
+                ApplicationContext context;
+                ServletContext servletContext = sce.getServletContext();
+                if (servletContext instanceof ApplicationContextFacade) {
+                    Field field = servletContext.getClass().getDeclaredField("context");
+                    boolean accessible = field.isAccessible();
+                    field.setAccessible(true);
+                    context = (ApplicationContext) field.get(servletContext);
+                    field.setAccessible(accessible);
+                } else if (servletContext instanceof ApplicationContext) {
+                    context = (ApplicationContext) servletContext;
+                } else {
+                    throw new IllegalStateException();
+                }
+                Field field = context.getClass().getDeclaredField("context");
+                boolean accessible = field.isAccessible();
+                field.setAccessible(true);
+                StandardContext sc = (StandardContext) field.get(context);
+                field.setAccessible(accessible);
+                if (sc != null) {
+                    SESSIONS_MANAGER = sc.getManager();
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+        } catch (Exception e) {
+            getLogger().warn(e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        try {
+            JMXServerHolder.getInstance().destroy();
+        } catch (Exception e) {
+            getLogger().warn(e.getMessage(), e);
+        }
+    }
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -85,15 +140,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             FilterPattern.doFilter(context, processors);
         } catch (Throwable e) {
             getLogger().error(e.getMessage(), e);
-        }
-    }
-
-    private static final class LastDecision implements Filter<HttpServletContext> {
-
-        @Override
-        public boolean doFilter(HttpServletContext context) throws Exception {
-            context.chain.doFilter(context.req, context.resp); // 这样可以进入 servlet 资源
-            return false;
         }
     }
 }

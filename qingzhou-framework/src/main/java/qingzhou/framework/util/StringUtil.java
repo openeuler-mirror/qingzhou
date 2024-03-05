@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 public class StringUtil {
 
     public static boolean isBlank(String value) {
-        return value == null || "".equals(value.trim());
+        return value == null || value.trim().isEmpty();
     }
 
     public static boolean notBlank(String value) {
