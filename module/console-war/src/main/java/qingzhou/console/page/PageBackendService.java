@@ -8,8 +8,8 @@ import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.console.*;
 import qingzhou.console.controller.AccessControl;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.ConsoleWarHelper;
 import qingzhou.console.util.Base32Util;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.RequestImpl;
@@ -69,7 +69,7 @@ public class PageBackendService {
     }
 
     public static ModelManager getModelManager(String appName) { // 应该只能被 jsp 页面调用
-        return ConsoleWarHelper.getAppStub(appName).getModelManager();
+        return SystemController.getAppMetadata(appName).getModelManager();
     }
 
     static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -145,7 +145,7 @@ public class PageBackendService {
          *  order -> int
          *  children -> Properties
          */
-        AppStub appStub = ConsoleWarHelper.getAppStub(appName);
+        AppMetadata appStub = SystemController.getAppMetadata(appName);
         Map<String, List<ModelData>> groupMap = Arrays.stream(allModels).filter(ModelData::showToMenu).collect(Collectors.groupingBy(ModelData::menuName));
         groupMap.forEach((menuGroup, models) -> {
             MenuData menuData = appStub.getMenu(menuGroup);

@@ -5,9 +5,20 @@ import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.bootstrap.main.service.ServiceManager;
 
 import java.io.File;
+import java.util.Map;
 
 public class FrameworkContextImpl implements FrameworkContext {
     private final ServiceManagerImpl serviceManager = new ServiceManagerImpl();
+    private Boolean masterNode;
+
+    @Override
+    public boolean isMaster() {
+        if (masterNode == null) {
+            Map<String, String> console = Utils.getAttributes(Utils.getServerXml(Utils.getDomain()), "//console");
+            masterNode = Boolean.parseBoolean(console.get("enabled"));
+        }
+        return masterNode;
+    }
 
     @Override
     public String getName() {

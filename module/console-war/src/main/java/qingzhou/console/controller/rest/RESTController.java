@@ -4,7 +4,7 @@ import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.I18n;
 import qingzhou.console.RestContext;
-import qingzhou.console.ConsoleWarHelper;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
@@ -35,7 +35,7 @@ public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
     public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + App.SYS_MODEL_INDEX + "/" + App.SYS_MODEL_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
-    public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache("upload");
+    public static final File TEMP_BASE_PATH = SystemController.getCache("upload");
 
     public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
@@ -152,7 +152,7 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager().getActionNames(request.getModelName());
+        String[] actions = SystemController.getAppMetadata(request.getAppName()).getModelManager().getActionNames(request.getModelName());
         for (String name : actions) {
             if (name.equals(request.getActionName())) {
                 actionFound = true;

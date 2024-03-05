@@ -6,7 +6,6 @@ import qingzhou.api.metadata.ModelManager;
 import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.ConsoleWarHelper;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.Constants;
@@ -28,7 +27,7 @@ public class AccessControl implements Filter<HttpServletContext> {
     private static final List<String> masterAppModels = Arrays.asList("user", "version", "node");
 
     public static ModelData[] getLoginUserAppMenuModels(String loginUser, String appName) {
-        ModelManager modelManager = ConsoleWarHelper.getAppStub(appName).getModelManager();
+        ModelManager modelManager = SystemController.getAppMetadata(appName).getModelManager();
         if (modelManager == null) {
             return new ModelData[0];
         }
@@ -50,7 +49,7 @@ public class AccessControl implements Filter<HttpServletContext> {
         String checkModel = ma[0];
         String checkAction = ma[1];
         if (ma.length == 2) {
-            ModelManager modelManager = ConsoleWarHelper.getAppStub(appName).getModelManager();
+            ModelManager modelManager = SystemController.getAppMetadata(appName).getModelManager();
             ModelActionData modelAction1 = modelManager.getModelAction(checkModel, checkAction);
             return modelAction1 != null;
         }
@@ -63,7 +62,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             return true;
         }
 
-        Config config = ConsoleWarHelper.getConfig();
+        Config config = SystemController.getConfig();
         Map<String, String> userPro = config.getConfig("/user[@id='" + user + "']");
         String userNodes = userPro.getOrDefault("nodes", "");
         Set<String> userNodeSet = Arrays.stream(userNodes.split(","))

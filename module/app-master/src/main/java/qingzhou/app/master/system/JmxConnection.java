@@ -84,7 +84,10 @@ public class JmxConnection extends ModelBase implements Editable {
         }
     }
 
-    @Override
+    @ModelAction(name = Editable.ACTION_NAME_EDIT,
+            icon = "edit", forwardToPage = "form",
+            nameI18n = {"编辑", "en:Edit"},
+            infoI18n = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {
         Map<String, String> data = getDataStore().getDataById(request.getModelName(), DEFAULT_ID);
         if (data == null || data.isEmpty()) {

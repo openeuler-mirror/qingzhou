@@ -4,6 +4,7 @@ import qingzhou.api.Request;
 import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.framework.app.App;
@@ -147,7 +148,7 @@ public class ActionInvoker {
             if (msg == null) {
                 msg = "Server exception, please check log for details.";
                 // 不能抛异常，否则到不了 view 处理
-                ConsoleWarHelper.getLogger().warn(msg, e);
+                SystemController.getLogger().warn(msg, e);
             }
 
             response.setMsg(msg);
@@ -189,14 +190,14 @@ public class ActionInvoker {
             ResponseImpl responseOnNode;
             if (node.equals(App.SYS_NODE_LOCAL)) {
                 ResponseImpl response = new ResponseImpl();
-                ConsoleWarHelper.invokeLocalApp(appName, request, response);
+                SystemController.invokeLocalApp(appName, request, response);
                 responseOnNode = response;
             } else {
                 Map<String, String> nodeById = ServerXml.get().getNodeById(node);
                 String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
                 String port = nodeById.get("port");
                 String remoteUrl = String.format("http://%s:%s", ip, port);
-                String remoteKey = ConsoleWarHelper.getConfig().getKey(Config.remoteKeyName);
+                String remoteKey = SystemController.getConfig().getKey(Config.remoteKeyName);
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
             }
             resultOnNode.put(node, responseOnNode);
@@ -216,7 +217,7 @@ public class ActionInvoker {
             request.setModelName(App.SYS_MODEL_APP);
             request.setActionName(Showable.ACTION_NAME_SHOW);
             request.setId(appName);
-            ConsoleWarHelper.invokeLocalApp(App.SYS_APP_MASTER, request, response);
+            SystemController.invokeLocalApp(App.SYS_APP_MASTER, request, response);
             List<Map<String, String>> dataList = response.getDataList();
             if (dataList != null && !dataList.isEmpty()) {
                 Map<String, String> res = dataList.get(0);

@@ -42,6 +42,8 @@ public class Controller implements ModuleLoader {
 
     @Override
     public void start(FrameworkContext frameworkContext) throws Exception {
+        if (frameworkContext.isMaster()) return;
+
         config = frameworkContext.getServiceManager().getService(Config.class);
         logger = frameworkContext.getServiceManager().getService(Logger.class);
         cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);

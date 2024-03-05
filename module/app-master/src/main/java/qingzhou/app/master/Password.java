@@ -101,7 +101,7 @@ public class Password extends ModelBase implements Editable {
 //            if (StringUtil.isBlank(iterations)) {
 //                iterations = String.valueOf(User.defIterations);
 //            }
-//            MessageDigest digest = ConsoleWarHelper.getCryptoService().getMessageDigest();
+//            MessageDigest digest = SystemController.getAppMetadata.getMessageDigest();
 //            p.put(User.pwdKey,
 //                    digest.digest(
 //                            paramMap.get("newPassword"),
@@ -110,7 +110,7 @@ public class Password extends ModelBase implements Editable {
 //                            Integer.parseInt(iterations)));
 //            p.put("changeInitPwd", "false");
 //
-//            ConsoleWarHelper.getLogger().info(String.format("encrypted password with, digestAlg: %s, saltLength: %s, iterations: %s", digestAlg, saltLength, iterations));
+//            SystemController.getLogger().info(String.format("encrypted password with, digestAlg: %s, saltLength: %s, iterations: %s", digestAlg, saltLength, iterations));
 //
 //            User.insertPasswordModifiedTime(p);
 //
@@ -121,7 +121,7 @@ public class Password extends ModelBase implements Editable {
 //            p.put("oldPasswords", oldPasswords);
 //        }
 //
-//        XmlUtil xmlUtils = new XmlUtil(ConsoleWarHelper.getServerXml());
+//        XmlUtil xmlUtils = new XmlUtil(SystemController.getServerXml());// TODO: 不要直接依赖 server.xml 配置文件，使用 Config 接口来处理？
 //        xmlUtils.setAttributes(ServerXml.getTenantUserNodeExpression(ServerXml.getTenant(loginUser), ServerXml.getLoginUserName(loginUser)), p);
 //        xmlUtils.write();
 //
@@ -155,7 +155,7 @@ public class Password extends ModelBase implements Editable {
 //
 //                String pwd = ServerXml.get().user(loginUser).get(User.pwdKey);
 //
-//                MessageDigest digest = ConsoleWarHelper.getCryptoService().getMessageDigest();
+//                MessageDigest digest = SystemController.getAppMetadata.getMessageDigest();
 //                if (!digest.matches(newValue, pwd)) {
 //                    return getConsoleContext().getI18n("password.original.failed");
 //                }
@@ -173,7 +173,7 @@ public class Password extends ModelBase implements Editable {
 //                }
 //
 //                String pwd = ServerXml.get().user(loginUser).get(User.pwdKey);
-//                MessageDigest digest = ConsoleWarHelper.getCryptoService().getMessageDigest();
+//                MessageDigest digest = SystemController.getAppMetadata.getMessageDigest();
 //                boolean matches = digest.matches(newValue, pwd);
 //                if (matches) {
 //                    return getConsoleContext().getI18n("password.change.not");

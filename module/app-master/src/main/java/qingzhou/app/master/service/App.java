@@ -241,16 +241,6 @@ public class App extends ModelBase implements Createable {
     }
 
     @Override
-    @ModelAction(name = Createable.ACTION_NAME_CREATE,
-            showToListHead = true,
-            icon = "plus-sign", forwardToPage = "form",
-            nameI18n = {"安装", "en:Install"},
-            infoI18n = {"在该节点上安装应用。", "en:Install the application on the node."})
-    public void create(Request request, Response response) throws Exception {
-        AddModel.super.create(request, response);
-    }
-
-    @Override
     public String resolveId(Request request) {
         File appFile;
         if (Boolean.parseBoolean(request.getParameter("appFrom"))) {

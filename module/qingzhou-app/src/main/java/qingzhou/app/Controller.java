@@ -34,6 +34,10 @@ public class Controller extends ServiceRegister<AppManager> {
 
         Controller.logger = frameworkContext.getServiceManager().getService(Logger.class);
         appManager = new AppManagerImpl(frameworkContext);
+
+        File masterApp = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", App.SYS_APP_MASTER);
+        appManager.installApp(masterApp);
+
         File nodeAgentApp = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", App.SYS_APP_NODE_AGENT);
         appManager.installApp(nodeAgentApp);
 

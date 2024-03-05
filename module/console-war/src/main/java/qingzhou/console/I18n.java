@@ -1,7 +1,9 @@
 package qingzhou.console;
 
 import qingzhou.api.Lang;
+import qingzhou.api.metadata.AppMetadata;
 import qingzhou.console.controller.SetI18n;
+import qingzhou.console.controller.SystemController;
 import qingzhou.framework.app.I18nTool;
 import qingzhou.framework.util.StringUtil;
 
@@ -47,7 +49,7 @@ public class I18n {
     }
 
     public static String getString(String appName, String i18nKey) {
-        AppStub appStub = ConsoleWarHelper.getAppStub(appName);
+        AppMetadata appStub = SystemController.getAppMetadata(appName);
         return appStub.getI18n(I18n.getI18nLang(), i18nKey);
     }
 

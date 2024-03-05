@@ -6,9 +6,9 @@ import qingzhou.console.ConsoleI18n;
 import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.ConsoleWarHelper;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.HtmlView;
@@ -222,7 +222,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
         try {
             String userPwd = getUserPassword(user);
-            if (ConsoleWarHelper.getCryptoService().getMessageDigest().matches(password, userPwd)) {
+            if (SystemController.getCryptoService().getMessageDigest().matches(password, userPwd)) {
                 return null;
             } else {
                 return LOGIN_ERROR_MSG_KEY;

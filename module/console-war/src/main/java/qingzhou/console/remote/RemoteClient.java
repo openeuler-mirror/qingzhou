@@ -1,6 +1,6 @@
 package qingzhou.console.remote;
 
-import qingzhou.console.ConsoleWarHelper;
+import qingzhou.console.controller.SystemController;
 import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.crypto.CryptoService;
@@ -29,14 +29,14 @@ public class RemoteClient {
 
             KeyCipher cipher;
             try {
-                CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
-                String localKey = ConsoleWarHelper.getConfig().getKey(Config.localKeyName);
+                CryptoService cryptoService = SystemController.getCryptoService();
+                String localKey = SystemController.getConfig().getKey(Config.localKeyName);
                 cipher = cryptoService.getKeyCipher(cryptoService.getKeyCipher(localKey).decrypt(remoteKey));
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }
 
-            Serializer serializer = ConsoleWarHelper.getSerializer();
+            Serializer serializer = SystemController.getSerializer();
             byte[] serialize = serializer.serialize(object);
             byte[] encrypt = cipher.encrypt(serialize);
             OutputStream outStream = connection.getOutputStream();
@@ -64,7 +64,7 @@ public class RemoteClient {
                     // 再读取一次返回 -1，表示当前块已结束，close时才能将 sun.net.www.protocol.https.HttpsClient放入缓存中，实现复用
                     int last = objectInputStream.read();
                     if (last != -1) {
-                        ConsoleWarHelper.getLogger().warn("The data parsing is abnormal...");
+                        SystemController.getLogger().warn("The data parsing is abnormal...");
                     }
                     if (read == deserializeBytes.length) {
                         byte[] decrypt = cipher.decrypt(deserializeBytes);

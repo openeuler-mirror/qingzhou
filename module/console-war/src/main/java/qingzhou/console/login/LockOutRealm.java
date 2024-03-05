@@ -1,7 +1,7 @@
 package qingzhou.console.login;
 
 import qingzhou.console.ServerXml;
-import qingzhou.console.ConsoleWarHelper;
+import qingzhou.console.controller.SystemController;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.LinkedHashMap;
@@ -89,7 +89,7 @@ public class LockOutRealm {
                             eldest.getValue().getLastFailureTime()) / 1000;
 
                     if (timeInCache < cacheRemovalWarningTime) {
-                        ConsoleWarHelper.getLogger().warn("User [" + eldest.getKey() + "] was removed from the failed users cache after [" + timeInCache + "] seconds to keep the cache size within the limit set");
+                        SystemController.getLogger().warn("User [" + eldest.getKey() + "] was removed from the failed users cache after [" + timeInCache + "] seconds to keep the cache size within the limit set");
                     }
                     return true;
                 }

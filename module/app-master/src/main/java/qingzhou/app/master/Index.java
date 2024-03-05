@@ -19,7 +19,6 @@ public class Index extends ModelBase {
             infoI18n = {"此 Qingzhou 平台的版本。", "en:This version of this Qingzhou platform."})
     public String version;
 
-    @Override
     @ModelAction(name = ACTION_NAME_SHOW,
             forwardToPage = "show",
             nameI18n = {"主页", "en:Home"},
