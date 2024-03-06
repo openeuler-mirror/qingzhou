@@ -201,7 +201,7 @@
                 } else {
                     String fieldName = PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i);
                     String linkField = modelManager.getModelField(qzRequest.getModelName(), fieldName).linkModel();
-                    if (linkField != null) {
+                    if (linkField != null && !linkField.isEmpty()) {
                         String[] split = linkField.split("\\.");
                         String idFieldValue = modelBase.get(Listable.FIELD_NAME_ID);
                 %>

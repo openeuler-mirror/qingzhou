@@ -1,6 +1,17 @@
 package qingzhou.app;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.DataStore;
+import qingzhou.api.FieldType;
+import qingzhou.api.Group;
+import qingzhou.api.Groups;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Option;
+import qingzhou.api.Options;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelFieldData;
@@ -14,7 +25,14 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -24,9 +42,9 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     // 以下属性是为性能缓存
     private final Map<String, Map<String, String>> modelDefaultProperties = new HashMap<>();
 
-    public void initModelManager(File[] appLib, URLClassLoader loader) {
+    public void initModelManager(File[] appLib, URLClassLoader loader, AppContext appContext) {
         try {
-            parseAnnotation(appLib, loader);
+            parseAnnotation(appLib, loader, appContext);
 
             reflectInstance(loader);
 
@@ -82,15 +100,18 @@ public class ModelManagerImpl implements ModelManager, Serializable {
             }
 
             for (ActionInfo actionInfo : modelInfo.actionInfoMap.values()) {
-                Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
-                actionInfo.setJavaMethod(method);
+                if (actionInfo.getJavaMethod() == null) {
+                    Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
+                    actionInfo.setJavaMethod(method);
+                }
             }
         }
     }
 
-    private void parseAnnotation(File[] appLib, URLClassLoader loader) throws Exception {
+    private void parseAnnotation(File[] appLib, URLClassLoader loader, AppContext appContext) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
         AnnotationReader annotation = new AnnotationReaderImpl();
+        Map<String, ModelAction> actionMethodMap = annotation.readModelAction(ActionMethod.class);
         for (File file : appLib) {
             if (!file.getName().endsWith(".jar")) continue;
             try (JarFile jar = new JarFile(file)) {
@@ -108,17 +129,58 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                         if (!ModelBase.class.isAssignableFrom(cls)) {
                             throw new IllegalArgumentException("The class annotated by the @Model ( " + cls.getName() + " ) needs to 'extends ModelBase'.");
                         }
+                        ActionMethod actionMethod = new ActionMethod(new ActionMethod.ActionContext() {
+                            @Override
+                            public AppContext getAppContext() {
+                                return appContext;
+                            }
+
+                            @Override
+                            public DataStore getDataStore() {
+                                return appContext.getDefaultDataStore();
+                            }
+                        });
 
                         List<FieldInfo> fieldInfoList = new ArrayList<>();
                         annotation.readModelField(cls).forEach((s, field) -> fieldInfoList.add(new FieldInfo(ModelUtil.toModelFieldData(field), s)));
 
                         List<ActionInfo> actionInfoList = new ArrayList<>();
-                        annotation.readModelAction(cls).forEach((s, action) -> actionInfoList.add(new ActionInfo(ModelUtil.toModelActionData(action), s)));
+                        Arrays.stream(cls.getInterfaces())
+                                .map(Class::getName)
+                                .filter(ModelUtil.interfaceToActions::containsKey)
+                                .flatMap(interfaceName -> Arrays.stream(ModelUtil.interfaceToActions.get(interfaceName)))
+                                .distinct() // 防止重复添加相同的动作名
+                                .forEach(actionName -> {
+                                    if (actionMethodMap.containsKey(actionName)) {
+                                        ModelAction modelAction = actionMethodMap.get(actionName);
+                                        if (modelAction != null) {
+                                            ActionInfo actionInfo = new ActionInfo(ModelUtil.toModelActionData(modelAction), actionName);
+                                            actionInfoList.add(actionInfo);
+                                            for (Method method : actionMethod.getClass().getMethods()) {
+                                                if (method.getName().equals(actionName)) {
+                                                    actionInfo.setJavaMethod(method);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+                        Map<String, ModelAction> clsActions = annotation.readModelAction(cls);
+                        clsActions.forEach((methodName, action) -> {
+                            if (!actionMethodMap.containsKey(methodName) || actionInfoList.stream().noneMatch(info -> info.methodName.equals(methodName))) {
+                                actionInfoList.add(new ActionInfo(ModelUtil.toModelActionData(action), methodName));
+                            } else {
+                                actionInfoList.replaceAll(info -> {
+                                    if (info.methodName.equals(methodName)) {
+                                        return new ActionInfo(ModelUtil.toModelActionData(action), methodName);
+                                    }
+                                    return info;
+                                });
+                            }
+                        });
 
                         ModelData modelData = ModelUtil.toModelData(model);
-                        ModelInfo modelInfo = new ModelInfo(modelData,
-                                fieldInfoList, actionInfoList,
-                                className);
+                        ModelInfo modelInfo = new ModelInfo(modelData, fieldInfoList, actionInfoList, actionMethod, className);
 
                         ModelInfo already = tempMap.put(model.name(), modelInfo);
                         if (already != null) {

@@ -7,7 +7,34 @@ import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelFieldData;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class ModelUtil {
+    public static final Map<String, String[]> interfaceToActions = new HashMap<>();
+
+    static {
+        interfaceToActions.put("qingzhou.api.type.Createable", new String[]{
+                qingzhou.api.type.Createable.ACTION_NAME_CREATE, qingzhou.api.type.Createable.ACTION_NAME_ADD,
+                qingzhou.api.type.Deletable.ACTION_NAME_DELETE, qingzhou.api.type.Editable.ACTION_NAME_EDIT,
+                qingzhou.api.type.Editable.ACTION_NAME_UPDATE, qingzhou.api.type.Listable.ACTION_NAME_LIST,
+                qingzhou.api.type.Showable.ACTION_NAME_SHOW});
+        interfaceToActions.put("qingzhou.api.type.Deletable", new String[]{
+                qingzhou.api.type.Deletable.ACTION_NAME_DELETE, qingzhou.api.type.Listable.ACTION_NAME_LIST,
+                qingzhou.api.type.Showable.ACTION_NAME_SHOW});
+        interfaceToActions.put("qingzhou.api.type.Editable", new String[]{
+                qingzhou.api.type.Editable.ACTION_NAME_EDIT, qingzhou.api.type.Editable.ACTION_NAME_UPDATE,
+                qingzhou.api.type.Showable.ACTION_NAME_SHOW});
+        interfaceToActions.put("qingzhou.api.type.Listable", new String[]{
+                qingzhou.api.type.Listable.ACTION_NAME_LIST, qingzhou.api.type.Showable.ACTION_NAME_SHOW});
+        interfaceToActions.put("qingzhou.api.type.Showable", new String[]{
+                qingzhou.api.type.Showable.ACTION_NAME_SHOW});
+        interfaceToActions.put("qingzhou.api.type.Downloadable", new String[]{
+                qingzhou.api.type.Downloadable.ACTION_NAME_FILES, qingzhou.api.type.Downloadable.ACTION_NAME_DOWNLOAD});
+        interfaceToActions.put("qingzhou.api.type.Monitorable", new String[]{
+                qingzhou.api.type.Monitorable.ACTION_NAME_MONITOR});
+    }
+
     public static ModelFieldData toModelFieldData(ModelField modelField) {
         ModelFieldDataImpl modelFieldData = new ModelFieldDataImpl();
         modelFieldData.setGroup(modelField.group());

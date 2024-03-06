@@ -307,6 +307,7 @@ public class ActionMethod {
             infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
+
         DataStore dataStore = actionContext.getDataStore();
         dataStore.deleteDataById(request.getModelName(), request.getId());
     }

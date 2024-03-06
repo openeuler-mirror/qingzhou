@@ -1,8 +1,13 @@
 package qingzhou.app;
 
-import qingzhou.api.*;
+import qingzhou.api.ActionFilter;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingZhouApp;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.framework.app.App;
 
+import java.lang.reflect.Method;
 import java.net.URLClassLoader;
 
 public class AppImpl implements App {
@@ -34,9 +39,15 @@ public class AppImpl implements App {
                 return;
             }
         }
-
-        ModelBase modelInstance = getModelInstance(modelName);
-        actionInfo.getJavaMethod().invoke(modelInstance, request, response);
+        boolean isActionMetion = false;
+        for (Method method : ActionMethod.class.getMethods()) {
+            if (method.getName().equals(actionInfo.methodName)) {
+                isActionMetion = true;
+                break;
+            }
+        }
+        Object instance = isActionMetion ? modelInfo.getActionMethod() : modelInfo.getInstance();
+        actionInfo.getJavaMethod().invoke(instance, request, response);
     }
 
     @Override

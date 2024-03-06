@@ -108,7 +108,7 @@ public class AppManagerImpl implements AppManager {
         app.setLoader(loader);
 
         ModelManagerImpl modelManager = new ModelManagerImpl();
-        modelManager.initModelManager(appLibs, loader);
+        modelManager.initModelManager(appLibs, loader, appContext);
         metadata.setModelManager(modelManager);
         initI18n(modelManager, metadata);
         appContext.addActionFilter(new UniqueFilter());

@@ -15,9 +15,11 @@ public class ModelInfo implements Serializable {
     public final Map<String, ActionInfo> actionInfoMap;
     public final String className;
 
+    private transient ActionMethod actionMethod;
+
     private transient ModelBase instance;
 
-    public ModelInfo(ModelData model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, String className) {
+    public ModelInfo(ModelData model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, ActionMethod actionMethod, String className) {
         this.model = model;
         Map<String, FieldInfo> fieldInfoTemp = new LinkedHashMap<>();
         for (FieldInfo fieldInfo : fieldInfoMap) {
@@ -34,6 +36,7 @@ public class ModelInfo implements Serializable {
 
         this.fieldInfoMap = Collections.unmodifiableMap(fieldInfoTemp);
         this.actionInfoMap = Collections.unmodifiableMap(actionInfoTemp);
+        this.actionMethod = actionMethod;
         this.className = className;
     }
 
@@ -44,5 +47,9 @@ public class ModelInfo implements Serializable {
 
     public ModelBase getInstance() {
         return instance;
+    }
+
+    public ActionMethod getActionMethod() {
+        return actionMethod;
     }
 }
