@@ -2,7 +2,6 @@ package qingzhou.app.model;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Listable;
-import qingzhou.app.MemoryDataStore;
 
 @Model(name = "Grid", icon = "table",
         nameI18n = {"Grid模块", "en:Grid Test"},
@@ -15,10 +14,5 @@ public class Grid extends ModelBase implements Listable {
             nameI18n = {"网格", "en:grid"},
             infoI18n = {"grid", "en:grid"})
     public void list(Request request, Response response) {
-    }
-
-    @Override
-    public DataStore getDataStore() {
-        return new MemoryDataStore();
     }
 }

@@ -17,7 +17,7 @@ public class AppContextImpl implements AppContext {
     private final FrameworkContext frameworkContext;
     private final AppMetadataImpl appMetadata;
     private final List<ActionFilter> actionFilters = new ArrayList<>();
-    private DataStore dataStore;
+    private DataStore dataStore = new MemoryDataStore();
 
     public AppContextImpl(FrameworkContext frameworkContext) {
         this.frameworkContext = frameworkContext;
