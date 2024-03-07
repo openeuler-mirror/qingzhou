@@ -63,6 +63,7 @@ public class Registry extends ModelBase implements Createable {
         if ("registryServerType".equals(fieldName)) {
             return Options.of("etcd", "Nacos");
         }
-        return null;
+
+        return super.options(request, fieldName);
     }
 }

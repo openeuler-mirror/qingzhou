@@ -9,16 +9,18 @@ import qingzhou.framework.console.ResponseImpl;
 import java.util.*;
 
 public class ActionMethod {
-    private final ActionContext actionContext;
+    private final ModelBase modelBase;
 
-    public ActionMethod(ActionContext actionContext) {
-        this.actionContext = actionContext;
+    public ActionMethod(ModelBase modelBase) {
+        this.modelBase = modelBase;
     }
 
-    public interface ActionContext {
-        AppContext getAppContext();
+    private AppContext getAppContext() {
+        return modelBase.getAppContext();
+    }
 
-        DataStore getDataStore();
+    private DataStore getDataStore() {
+        return modelBase.getDataStore();
     }
 
     @ModelAction(name = Showable.ACTION_NAME_SHOW,
@@ -26,7 +28,7 @@ public class ActionMethod {
             nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
-        DataStore dataStore = actionContext.getDataStore();
+        DataStore dataStore = getDataStore();
         Map<String, String> data = dataStore.getDataById(request.getModelName(), request.getId());
         response.addData(data);
     }
@@ -46,7 +48,7 @@ public class ActionMethod {
         List<String> graphicalDynamicFields = new ArrayList<>();
         Map<String, String> monitorData = new HashMap<>();
         Map<String, String> infoData = new HashMap<>();
-        for (Map.Entry<String, ModelFieldData> entry : actionContext.getAppContext().getAppMetadata().getModelManager().getMonitorFieldMap(request.getModelName()).entrySet()) {
+        for (Map.Entry<String, ModelFieldData> entry : getAppContext().getAppMetadata().getModelManager().getMonitorFieldMap(request.getModelName()).entrySet()) {
             String fieldName = entry.getKey();
             ModelFieldData monitorField = entry.getValue();
             if (monitorField.supportGraphicalDynamic()) {
@@ -84,7 +86,7 @@ public class ActionMethod {
             infoI18n = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request, Response response) throws Exception {
         String modelName = request.getModelName();
-        DataStore dataStore = actionContext.getDataStore();
+        DataStore dataStore = getDataStore();
         if (dataStore == null) {
             return;
         }
@@ -101,7 +103,7 @@ public class ActionMethod {
         response.setPageNum(pageNum);
 
         String[] dataIdInPage = dataStore.getDataIdInPage(modelName, ((ResponseImpl) response).getPageSize(), pageNum).toArray(new String[0]);
-        ModelManager manager = actionContext.getAppContext().getAppMetadata().getModelManager();
+        ModelManager manager = getAppContext().getAppMetadata().getModelManager();
         String[] fieldNamesToList = Arrays.stream(manager.getFieldNames(modelName)).filter(s -> manager.getModelField(modelName, s).showToList()).toArray(String[]::new);
         List<Map<String, String>> result = dataStore.getDataFieldByIds(modelName, dataIdInPage, fieldNamesToList);
         for (Map<String, String> data : result) {
@@ -122,14 +124,14 @@ public class ActionMethod {
             nameI18n = {"更新", "en:Update"},
             infoI18n = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
-        DataStore dataStore = actionContext.getDataStore();
+        DataStore dataStore = getDataStore();
         Map<String, String> properties = prepareParameters(request);
         dataStore.updateDataById(request.getModelName(), request.getId(), properties);
     }
 
     public Map<String, String> prepareParameters(Request request) {
         Map<String, String> properties = new HashMap<>();
-        String[] fieldNames = actionContext.getAppContext().getAppMetadata().getModelManager().getFieldNames(request.getModelName());
+        String[] fieldNames = getAppContext().getAppMetadata().getModelManager().getFieldNames(request.getModelName());
         for (String fieldName : fieldNames) {
             String value = request.getParameter(fieldName);
             if (value != null) {
@@ -308,7 +310,7 @@ public class ActionMethod {
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
 
-        DataStore dataStore = actionContext.getDataStore();
+        DataStore dataStore = getDataStore();
         dataStore.deleteDataById(request.getModelName(), request.getId());
     }
 
@@ -318,7 +320,7 @@ public class ActionMethod {
             nameI18n = {"创建", "en:Create"},
             infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request, Response response) throws Exception {
-        Map<String, String> properties = actionContext.getAppContext().getAppMetadata().getModelManager().getModelDefaultProperties(request.getModelName());
+        Map<String, String> properties = getAppContext().getAppMetadata().getModelManager().getModelDefaultProperties(request.getModelName());
         response.addData(properties);
     }
 
@@ -329,7 +331,7 @@ public class ActionMethod {
     public void add(Request request, Response response) throws Exception {
         Map<String, String> properties = prepareParameters(request);
         String id = properties.get(Listable.FIELD_NAME_ID);
-        DataStore dataStore = actionContext.getDataStore();
+        DataStore dataStore = getDataStore();
         dataStore.addData(request.getModelName(), id, properties);
     }
 }

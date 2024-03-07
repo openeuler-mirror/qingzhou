@@ -8,8 +8,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Model(name = "jmx", icon = "code",
-        menuName = "System",
-        menuOrder = 4,
+        menuName = "System", menuOrder = 4,
         entryAction = Editable.ACTION_NAME_EDIT,
         nameI18n = {"JMX 接口", "en:JMX Interface"},
         infoI18n = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 Qingzhou。",

@@ -4,27 +4,24 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.metadata.ModelData;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ModelInfo implements Serializable {
     public final ModelData model;
     public final Map<String, FieldInfo> fieldInfoMap;
     public final Map<String, ActionInfo> actionInfoMap;
-    public final String className;
 
-    private transient ActionMethod actionMethod;
+    private final transient ModelBase instance;
 
-    private transient ModelBase instance;
-
-    public ModelInfo(ModelData model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, ActionMethod actionMethod, String className) {
+    public ModelInfo(ModelData model, List<FieldInfo> fieldInfoMap, Collection<ActionInfo> actionInfoMap, ModelBase instance) {
         this.model = model;
+
         Map<String, FieldInfo> fieldInfoTemp = new LinkedHashMap<>();
         for (FieldInfo fieldInfo : fieldInfoMap) {
             fieldInfoTemp.put(fieldInfo.fieldName, fieldInfo);
         }
+        this.fieldInfoMap = Collections.unmodifiableMap(fieldInfoTemp);
+
         Map<String, ActionInfo> actionInfoTemp = new LinkedHashMap<>();
         for (ActionInfo actionInfo : actionInfoMap) {
             String actionName = actionInfo.modelAction.name();
@@ -33,23 +30,12 @@ public class ModelInfo implements Serializable {
                 throw new IllegalArgumentException("Duplicate action name: " + actionName);
             }
         }
-
-        this.fieldInfoMap = Collections.unmodifiableMap(fieldInfoTemp);
         this.actionInfoMap = Collections.unmodifiableMap(actionInfoTemp);
-        this.actionMethod = actionMethod;
-        this.className = className;
-    }
 
-    public void setInstance(ModelBase instance) {
-        if (this.instance != null) throw new IllegalStateException();
         this.instance = instance;
     }
 
     public ModelBase getInstance() {
         return instance;
-    }
-
-    public ActionMethod getActionMethod() {
-        return actionMethod;
     }
 }

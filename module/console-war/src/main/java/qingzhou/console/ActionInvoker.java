@@ -10,9 +10,9 @@ import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.framework.app.App;
+import qingzhou.framework.config.Config;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
-import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 
 import javax.naming.NameNotFoundException;

@@ -1,13 +1,13 @@
-package qingzhou.app.nodeagent;
+package qingzhou.app.common.monitor;
 
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Monitorable;
+import qingzhou.framework.util.StringUtil;
 
 import java.lang.management.*;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(name = "jvm", icon = "coffee",
-        menuOrder = 1, entryAction = Monitorable.ACTION_NAME_MONITOR,
+        menuOrder = 2, entryAction = Monitorable.ACTION_NAME_MONITOR,
         nameI18n = {"JVM", "en:JVM"},
         infoI18n = {"描述 Java 虚拟机（JVM）的版本、厂商等基本信息，以及Java进程的堆内存、非堆内存等使用情况。",
                 "en:Describes basic information such as the version and manufacturer of the Java Virtual Machine (JVM), as well as the usage of heap memory and non-heap memory of the Java process."})
@@ -89,10 +89,10 @@ public class Jvm extends ModelBase implements Monitorable {
         properties.put("deadlockedThreadCount", String.valueOf(deadlockedThreadCount));
 
         MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-        properties.put("heapUsed", maskMBytes(memoryMXBean.getHeapMemoryUsage().getUsed()));
-        properties.put("heapCommitted", maskMBytes(memoryMXBean.getHeapMemoryUsage().getCommitted()));
+        properties.put("heapUsed", StringUtil.convertMBytes(memoryMXBean.getHeapMemoryUsage().getUsed()));
+        properties.put("heapCommitted", StringUtil.convertMBytes(memoryMXBean.getHeapMemoryUsage().getCommitted()));
 
-        properties.put("nonHeapUsed", maskMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
+        properties.put("nonHeapUsed", StringUtil.convertMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
 
         for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
             String name = Arrays.toString(gcBean.getMemoryPoolNames());
@@ -126,11 +126,5 @@ public class Jvm extends ModelBase implements Monitorable {
 
         basicProperties = data;
         return basicProperties;
-    }
-
-    public String maskMBytes(long val) {
-        double v = ((double) val) / 1024 / 1024;
-        DecimalFormat df = new DecimalFormat("##0.0");//这样为保持1位
-        return df.format(v);
     }
 }

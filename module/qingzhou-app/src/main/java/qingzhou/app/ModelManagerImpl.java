@@ -1,21 +1,11 @@
 package qingzhou.app;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Group;
-import qingzhou.api.Groups;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Option;
-import qingzhou.api.Options;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelFieldData;
 import qingzhou.api.metadata.ModelManager;
+import qingzhou.api.type.Showable;
 import qingzhou.app.bytecode.AnnotationReader;
 import qingzhou.app.bytecode.impl.AnnotationReaderImpl;
 import qingzhou.framework.util.StringUtil;
@@ -25,93 +15,19 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 public class ModelManagerImpl implements ModelManager, Serializable {
     private Map<String, ModelInfo> modelInfoMap;
 
-    // 以下属性是为性能缓存
-    private final Map<String, Map<String, String>> modelDefaultProperties = new HashMap<>();
-
-    public void initModelManager(File[] appLib, URLClassLoader loader, AppContext appContext) {
-        try {
-            parseAnnotation(appLib, loader, appContext);
-
-            reflectInstance(loader);
-
-            initDefaultProperties();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
-        }
-    }
-
-    private void initDefaultProperties() throws Exception {
-        // 初始化不可变的对象
-        for (String modelName : getModelNames()) {
-            ModelBase modelInstance = this.modelInfoMap.get(modelName).getInstance();
-            for (Map.Entry<String, FieldInfo> entry : modelInfoMap.get(modelName).fieldInfoMap.entrySet()) {
-                Field field = entry.getValue().getField();
-                boolean accessible = field.isAccessible();
-                try {
-                    if (!accessible) {
-                        field.setAccessible(true);
-                    }
-
-                    String fieldValue = "";
-                    Object fieldValObj = field.get(modelInstance);
-                    if (fieldValObj != null) {
-                        fieldValue = String.valueOf(fieldValObj);
-                    }
-                    Map<String, String> defaultData = modelDefaultProperties.computeIfAbsent(modelName, s -> new HashMap<>());
-                    defaultData.put(entry.getKey(), fieldValue);
-                } finally {
-                    if (!accessible) {
-                        field.setAccessible(false);
-                    }
-                }
-            }
-        }
-    }
-
-    private void reflectInstance(URLClassLoader loader) throws Exception {
-        for (String modelName : getModelNames()) {
-            ModelInfo modelInfo = getModelInfo(modelName);
-            Class<?> modelClass = loader.loadClass(modelInfo.className);
-
-            try {
-                ModelBase instance = (ModelBase) modelClass.newInstance();
-                modelInfo.setInstance(instance);
-            } catch (InstantiationException e) {
-                throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
-            }
-
-            for (FieldInfo fieldInfo : modelInfo.fieldInfoMap.values()) {
-                Field field = modelClass.getField(fieldInfo.fieldName);
-                fieldInfo.setField(field);
-            }
-
-            for (ActionInfo actionInfo : modelInfo.actionInfoMap.values()) {
-                if (actionInfo.getJavaMethod() == null) {
-                    Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
-                    actionInfo.setJavaMethod(method);
-                }
-            }
-        }
-    }
-
-    private void parseAnnotation(File[] appLib, URLClassLoader loader, AppContext appContext) throws Exception {
+    public void initModelManager(File[] appLib, URLClassLoader loader) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
         AnnotationReader annotation = new AnnotationReaderImpl();
-        Map<String, ModelAction> actionMethodMap = annotation.readModelAction(ActionMethod.class);
+        Map<String, ModelAction> presetActions = annotation.readModelAction(ActionMethod.class);
         for (File file : appLib) {
             if (!file.getName().endsWith(".jar")) continue;
             try (JarFile jar = new JarFile(file)) {
@@ -124,63 +40,18 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                     int i = entryName.indexOf(endsWithFlag);
                     String className = entryName.substring(0, i).replace("/", ".");
                     Class<?> cls = loader.loadClass(className);
+
                     Model model = annotation.readModel(cls);
                     if (model != null) {
-                        if (!ModelBase.class.isAssignableFrom(cls)) {
-                            throw new IllegalArgumentException("The class annotated by the @Model ( " + cls.getName() + " ) needs to 'extends ModelBase'.");
-                        }
-                        ActionMethod actionMethod = new ActionMethod(new ActionMethod.ActionContext() {
-                            @Override
-                            public AppContext getAppContext() {
-                                return appContext;
-                            }
+                        ModelBase instance = createModelBase(cls);
 
-                            @Override
-                            public DataStore getDataStore() {
-                                return appContext.getDefaultDataStore();
-                            }
-                        });
-
-                        List<FieldInfo> fieldInfoList = new ArrayList<>();
-                        annotation.readModelField(cls).forEach((s, field) -> fieldInfoList.add(new FieldInfo(ModelUtil.toModelFieldData(field), s)));
-
-                        List<ActionInfo> actionInfoList = new ArrayList<>();
-                        Arrays.stream(cls.getInterfaces())
-                                .map(Class::getName)
-                                .filter(ModelUtil.interfaceToActions::containsKey)
-                                .flatMap(interfaceName -> Arrays.stream(ModelUtil.interfaceToActions.get(interfaceName)))
-                                .distinct() // 防止重复添加相同的动作名
-                                .forEach(actionName -> {
-                                    if (actionMethodMap.containsKey(actionName)) {
-                                        ModelAction modelAction = actionMethodMap.get(actionName);
-                                        if (modelAction != null) {
-                                            ActionInfo actionInfo = new ActionInfo(ModelUtil.toModelActionData(modelAction), actionName);
-                                            actionInfoList.add(actionInfo);
-                                            for (Method method : actionMethod.getClass().getMethods()) {
-                                                if (method.getName().equals(actionName)) {
-                                                    actionInfo.setJavaMethod(method);
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                });
-                        Map<String, ModelAction> clsActions = annotation.readModelAction(cls);
-                        clsActions.forEach((methodName, action) -> {
-                            if (!actionMethodMap.containsKey(methodName) || actionInfoList.stream().noneMatch(info -> info.methodName.equals(methodName))) {
-                                actionInfoList.add(new ActionInfo(ModelUtil.toModelActionData(action), methodName));
-                            } else {
-                                actionInfoList.replaceAll(info -> {
-                                    if (info.methodName.equals(methodName)) {
-                                        return new ActionInfo(ModelUtil.toModelActionData(action), methodName);
-                                    }
-                                    return info;
-                                });
-                            }
-                        });
-
-                        ModelData modelData = ModelUtil.toModelData(model);
-                        ModelInfo modelInfo = new ModelInfo(modelData, fieldInfoList, actionInfoList, actionMethod, className);
+                        // 1. 处理 字段
+                        List<FieldInfo> fieldInfoList = getFieldInfos(annotation, cls, instance);
+                        // 2. 处理 操作
+                        ActionMethod actionMethod = new ActionMethod(instance);
+                        Map<String, ActionInfo> actionInfoMap = getActionInfoMap(annotation, actionMethod, presetActions, cls, instance);
+                        // 3. 组装 Model 数据
+                        ModelInfo modelInfo = new ModelInfo(ModelUtil.toModelData(model), fieldInfoList, actionInfoMap.values(), instance);
 
                         ModelInfo already = tempMap.put(model.name(), modelInfo);
                         if (already != null) {
@@ -191,6 +62,114 @@ public class ModelManagerImpl implements ModelManager, Serializable {
             }
         }
         modelInfoMap = Collections.unmodifiableMap(tempMap);
+    }
+
+    private Map<String, ActionInfo> getActionInfoMap(AnnotationReader annotation, ActionMethod actionMethod, Map<String, ModelAction> presetActions, Class<?> cls, ModelBase instance) {
+        Map<String, ActionInfo> actionInfos = new HashMap<>();
+
+        // 1. 添加预设的 Action
+        Arrays.stream(cls.getInterfaces()).filter(aClass -> aClass.getPackage() == Showable.class.getPackage()).distinct().flatMap((Function<Class<?>, Stream<String>>) aClass -> Arrays.stream(aClass.getFields()).filter(field -> field.getName().startsWith("ACTION_NAME_")).map(field -> {
+            try {
+                return field.get(null).toString();
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        })).forEach(actionName -> {
+            for (Map.Entry<String, ModelAction> entry : presetActions.entrySet()) {
+                ModelAction modelAction = entry.getValue();
+                if (modelAction.name().equals(actionName)) {
+                    ActionInfo actionInfo = new ActionInfo(
+                            ModelUtil.toModelActionData(modelAction),
+                            actionName,
+                            new InvokeMethodImpl(ActionInfo.class, actionMethod, entry.getKey()));
+                    actionInfos.put(actionName, actionInfo);
+                    break;
+                }
+            }
+        });
+
+        // 2. 添加 Mode 自定义的 Action
+        Map<String, ModelAction> clsActions = annotation.readModelAction(cls);
+        for (Map.Entry<String, ModelAction> entry : clsActions.entrySet()) {
+            ModelAction modelAction = entry.getValue();
+            String actionName = modelAction.name();
+
+            ActionInfo.InvokeMethod invokeMethod;
+            ActionInfo actionInfo = actionInfos.get(actionName);
+            if (actionInfo != null) {
+                invokeMethod = actionInfo.invokeMethod;
+            } else {
+                invokeMethod = new InvokeMethodImpl(cls, instance, entry.getKey());
+            }
+
+            ModelActionData modelActionData = ModelUtil.toModelActionData(modelAction);
+            actionInfos.put(actionName, new ActionInfo(modelActionData, actionName, invokeMethod));
+        }
+
+        return actionInfos;
+    }
+
+    private static class InvokeMethodImpl implements ActionInfo.InvokeMethod {
+        private final Class<?> cls;
+        private final Object instance;
+        private final String methodName;
+        private Method method;
+
+        private InvokeMethodImpl(Class<?> cls, Object instance, String methodName) {
+            this.cls = cls;
+            this.instance = instance;
+            this.methodName = methodName;
+        }
+
+        @Override
+        public void invoke() throws Exception {
+            if (method == null) {
+                method = cls.getMethod(methodName);
+            }
+            method.invoke(instance);
+        }
+    }
+
+    private List<FieldInfo> getFieldInfos(AnnotationReader annotation, Class<?> cls, ModelBase instance) throws Exception {
+        List<FieldInfo> fieldInfoList = new ArrayList<>();
+        for (Map.Entry<String, ModelField> modelFieldEntry : annotation.readModelField(cls).entrySet()) {
+            String filedName = modelFieldEntry.getKey();
+            String defaultValue = getDefaultValue(cls, filedName, instance);
+            fieldInfoList.add(new FieldInfo(filedName, ModelUtil.toModelFieldData(modelFieldEntry.getValue()), defaultValue));
+        }
+        return fieldInfoList;
+    }
+
+    private ModelBase createModelBase(Class<?> cls) throws Exception {
+        if (!ModelBase.class.isAssignableFrom(cls)) {
+            throw new IllegalArgumentException("The class annotated by the @Model ( " + cls.getName() + " ) needs to 'extends ModelBase'.");
+        }
+        try {
+            return (ModelBase) cls.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
+        }
+    }
+
+    private String getDefaultValue(Class<?> cls, String fieldName, ModelBase modelBase) throws Exception {
+        Field field = cls.getField(fieldName);
+        boolean accessible = field.isAccessible();
+        try {
+            if (!accessible) {
+                field.setAccessible(true);
+            }
+
+            String fieldValue = "";
+            Object fieldValObj = field.get(modelBase);
+            if (fieldValObj != null) {
+                fieldValue = String.valueOf(fieldValObj);
+            }
+            return fieldValue;
+        } finally {
+            if (!accessible) {
+                field.setAccessible(false);
+            }
+        }
     }
 
     public ModelInfo getModelInfo(String modelName) {
@@ -242,7 +221,11 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     @Override
     public Map<String, String> getModelDefaultProperties(String modelName) {
-        return Collections.unmodifiableMap(modelDefaultProperties.getOrDefault(modelName, new HashMap<>()));
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, FieldInfo> entry : getModelInfo(modelName).fieldInfoMap.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().getDefaultValue());
+        }
+        return result;
     }
 
     @Override

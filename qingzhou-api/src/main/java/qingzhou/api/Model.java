@@ -23,7 +23,7 @@ public @interface Model {
      * 获取模型在UI中显示的图标名称。
      * @return 图标名称字符串
      */
-    String icon();
+    String icon() default "";
 
     /**
      * 获取模型名称的国际化数组，支持多语言版本。

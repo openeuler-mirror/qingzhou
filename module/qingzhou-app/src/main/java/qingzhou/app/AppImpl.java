@@ -1,10 +1,6 @@
 package qingzhou.app;
 
-import qingzhou.api.ActionFilter;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingZhouApp;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.framework.app.App;
 
 import java.lang.reflect.Method;
@@ -39,15 +35,12 @@ public class AppImpl implements App {
                 return;
             }
         }
-        boolean isActionMetion = false;
         for (Method method : ActionMethod.class.getMethods()) {
             if (method.getName().equals(actionInfo.methodName)) {
-                isActionMetion = true;
-                break;
+                actionInfo.invokeMethod.invoke();
+                return;
             }
         }
-        Object instance = isActionMetion ? modelInfo.getActionMethod() : modelInfo.getInstance();
-        actionInfo.getJavaMethod().invoke(instance, request, response);
     }
 
     @Override
