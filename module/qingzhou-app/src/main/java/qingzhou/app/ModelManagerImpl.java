@@ -27,7 +27,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     public void initModelManager(File[] appLib, URLClassLoader loader) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
         AnnotationReader annotation = new AnnotationReaderImpl();
-        Map<String, ModelAction> presetActions = annotation.readModelAction(ActionMethod.class);
+        Map<Method, ModelAction> presetActions = annotation.readModelAction(ActionMethod.class);
         for (File file : appLib) {
             if (!file.getName().endsWith(".jar")) continue;
             try (JarFile jar = new JarFile(file)) {
@@ -64,7 +64,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         modelInfoMap = Collections.unmodifiableMap(tempMap);
     }
 
-    private Map<String, ActionInfo> getActionInfoMap(AnnotationReader annotation, ActionMethod actionMethod, Map<String, ModelAction> presetActions, Class<?> cls, ModelBase instance) {
+    private Map<String, ActionInfo> getActionInfoMap(AnnotationReader annotation, ActionMethod actionMethod, Map<Method, ModelAction> presetActions, Class<?> cls, ModelBase instance) {
         Map<String, ActionInfo> actionInfos = new HashMap<>();
 
         // 1. 添加预设的 Action
@@ -75,13 +75,13 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                 throw new RuntimeException(e);
             }
         })).forEach(actionName -> {
-            for (Map.Entry<String, ModelAction> entry : presetActions.entrySet()) {
+            for (Map.Entry<Method, ModelAction> entry : presetActions.entrySet()) {
                 ModelAction modelAction = entry.getValue();
                 if (modelAction.name().equals(actionName)) {
                     ActionInfo actionInfo = new ActionInfo(
                             ModelUtil.toModelActionData(modelAction),
                             actionName,
-                            new InvokeMethodImpl(ActionInfo.class, actionMethod, entry.getKey()));
+                            new InvokeMethodImpl(actionMethod, entry.getKey()));
                     actionInfos.put(actionName, actionInfo);
                     break;
                 }
@@ -89,8 +89,8 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         });
 
         // 2. 添加 Mode 自定义的 Action
-        Map<String, ModelAction> clsActions = annotation.readModelAction(cls);
-        for (Map.Entry<String, ModelAction> entry : clsActions.entrySet()) {
+        Map<Method, ModelAction> clsActions = annotation.readModelAction(cls);
+        for (Map.Entry<Method, ModelAction> entry : clsActions.entrySet()) {
             ModelAction modelAction = entry.getValue();
             String actionName = modelAction.name();
 
@@ -99,7 +99,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
             if (actionInfo != null) {
                 invokeMethod = actionInfo.invokeMethod;
             } else {
-                invokeMethod = new InvokeMethodImpl(cls, instance, entry.getKey());
+                invokeMethod = new InvokeMethodImpl(instance, entry.getKey());
             }
 
             ModelActionData modelActionData = ModelUtil.toModelActionData(modelAction);
@@ -110,32 +110,25 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     private static class InvokeMethodImpl implements ActionInfo.InvokeMethod {
-        private final Class<?> cls;
         private final Object instance;
-        private final String methodName;
-        private Method method;
+        private final Method method;
 
-        private InvokeMethodImpl(Class<?> cls, Object instance, String methodName) {
-            this.cls = cls;
+        private InvokeMethodImpl(Object instance, Method method) {
             this.instance = instance;
-            this.methodName = methodName;
+            this.method = method;
         }
 
         @Override
-        public void invoke() throws Exception {
-            if (method == null) {
-                method = cls.getMethod(methodName);
-            }
-            method.invoke(instance);
+        public void invoke(Object... args) throws Exception {
+            method.invoke(instance, args);
         }
     }
 
     private List<FieldInfo> getFieldInfos(AnnotationReader annotation, Class<?> cls, ModelBase instance) throws Exception {
         List<FieldInfo> fieldInfoList = new ArrayList<>();
-        for (Map.Entry<String, ModelField> modelFieldEntry : annotation.readModelField(cls).entrySet()) {
-            String filedName = modelFieldEntry.getKey();
-            String defaultValue = getDefaultValue(cls, filedName, instance);
-            fieldInfoList.add(new FieldInfo(filedName, ModelUtil.toModelFieldData(modelFieldEntry.getValue()), defaultValue));
+        for (Map.Entry<Field, ModelField> modelFieldEntry : annotation.readModelField(cls).entrySet()) {
+            String defaultValue = getDefaultValue(modelFieldEntry.getKey(), instance);
+            fieldInfoList.add(new FieldInfo(modelFieldEntry.getKey().getName(), ModelUtil.toModelFieldData(modelFieldEntry.getValue()), defaultValue));
         }
         return fieldInfoList;
     }
@@ -151,8 +144,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         }
     }
 
-    private String getDefaultValue(Class<?> cls, String fieldName, ModelBase modelBase) throws Exception {
-        Field field = cls.getField(fieldName);
+    private String getDefaultValue(Field field, ModelBase modelBase) throws Exception {
         boolean accessible = field.isAccessible();
         try {
             if (!accessible) {

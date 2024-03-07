@@ -1,12 +1,10 @@
 package qingzhou.api;
 
-import qingzhou.api.type.Showable;
-
 /**
  * ModelBase 是一个抽象类，作为模型的基础，提供了应用上下文的管理以及一些常用方法的定义。
  * 它实现了 Showable 接口，但具体展示逻辑需要在子类中实现。
  */
-public abstract class ModelBase implements Showable {
+public abstract class ModelBase {
     // 应用上下文
     private AppContext appContext;
 
@@ -61,7 +59,7 @@ public abstract class ModelBase implements Showable {
     /**
      * 定制验证逻辑，返回 i18n 的 key。
      *
-     * @param request 请求实例。
+     * @param request   请求实例。
      * @param fieldName 验证的字段名。
      * @return 返回验证失败时的 i18n 错误消息 key，如果验证通过则返回 null。
      */
@@ -81,7 +79,7 @@ public abstract class ModelBase implements Showable {
     /**
      * 获取字段选项。
      *
-     * @param request 请求实例。
+     * @param request   请求实例。
      * @param fieldName 相关字段名。
      * @return 返回字段的选项信息，如果无需选项或不存在则返回 null。
      */

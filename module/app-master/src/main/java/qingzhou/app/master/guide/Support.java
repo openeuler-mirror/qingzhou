@@ -5,9 +5,8 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Listable;
-import qingzhou.app.master.ReadOnlyDataStore;
+import qingzhou.framework.app.ReadOnlyDataStore;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,18 +34,11 @@ public class Support extends ModelBase implements Listable {
 
     @Override
     public DataStore getDataStore() {
-        return new ReadOnlyDataStore(type -> {
-            List<Map<String, String>> data = new ArrayList<>();
-
-            // todo: 这里可以参考： Manual.getDataStore(xxx)
-//            for (int i = 1; i <= 3; i++) { // 需要和 init 里面的 I18n 的序号保持一致
-//                Map<String, String> model = new HashMap<>();
-//                model.put("id", "manual-" + i);
-//                model.put("name", context.getI18n(getI18nLang(), "manual.name." + i));
-//                model.put("info", context.getI18n(getI18nLang(), "manual.info." + i));
-//                data.add(model);
-//            }
-            return data;
-        });
+        return new ReadOnlyDataStore() {
+            @Override
+            public List<Map<String, String>> getAllData(String type) {
+                return null;
+            }
+        };
     }
 }

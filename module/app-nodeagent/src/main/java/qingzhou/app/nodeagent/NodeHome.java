@@ -10,7 +10,7 @@ import qingzhou.framework.util.IPUtil;
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"展示当前节点的说明信息。",
                 "en:Displays the description of the current node."})
-public class NodeHome extends ModelBase {
+public class NodeHome extends ModelBase implements Showable {
     @ModelField(
             nameI18n = {"Java 环境", "en:Java Env"},
             infoI18n = {"运行此 Qingzhou 节点的 Java 环境。", "en:The Java environment in which this Qingzhou node is running."})

@@ -5,7 +5,7 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Listable;
-import qingzhou.app.master.ReadOnlyDataStore;
+import qingzhou.framework.app.ReadOnlyDataStore;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,12 +27,15 @@ public class Component extends ModelBase implements Listable {
 
     @Override
     public DataStore getDataStore() {
-        return new ReadOnlyDataStore(type -> {
-            List<Map<String, String>> data = new ArrayList<>();
-            getAppContext().getServiceTypes().forEach(aClass -> data.add(new HashMap<String, String>() {{
-                put(Listable.FIELD_NAME_ID, aClass.getName());
-            }}));
-            return data;
-        });
+        return new ReadOnlyDataStore() {
+            @Override
+            public List<Map<String, String>> getAllData(String type) {
+                List<Map<String, String>> data = new ArrayList<>();
+                getAppContext().getServiceTypes().forEach(aClass -> data.add(new HashMap<String, String>() {{
+                    put(Listable.FIELD_NAME_ID, aClass.getName());
+                }}));
+                return data;
+            }
+        };
     }
 }

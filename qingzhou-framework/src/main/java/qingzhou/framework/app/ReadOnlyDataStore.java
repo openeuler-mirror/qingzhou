@@ -1,22 +1,11 @@
-package qingzhou.app.master;
+package qingzhou.framework.app;
 
 import qingzhou.api.DataStore;
 
 import java.util.List;
 import java.util.Map;
 
-public class ReadOnlyDataStore implements DataStore {
-    private final DataAdapter dataAdapter;
-
-    public ReadOnlyDataStore(DataAdapter dataAdapter) {
-        this.dataAdapter = dataAdapter;
-    }
-
-    @Override
-    public List<Map<String, String>> getAllData(String type) {
-        return dataAdapter.getAllData(type);
-    }
-
+public abstract class ReadOnlyDataStore implements DataStore {
     @Override
     public void addData(String type, String id, Map<String, String> properties) {
         throw new RuntimeException("No Support.");

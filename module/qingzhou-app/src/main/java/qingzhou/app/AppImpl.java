@@ -37,7 +37,7 @@ public class AppImpl implements App {
         }
         for (Method method : ActionMethod.class.getMethods()) {
             if (method.getName().equals(actionInfo.methodName)) {
-                actionInfo.invokeMethod.invoke();
+                actionInfo.invokeMethod.invoke(request, response);
                 return;
             }
         }

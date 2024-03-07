@@ -18,16 +18,16 @@ public class AnnotationReaderImpl implements AnnotationReader {
     }
 
     @Override
-    public Map<String, ModelField> readModelField(Class<?> clazz) {
+    public Map<Field, ModelField> readModelField(Class<?> clazz) {
         Field[] fields = clazz.getFields();//.getDeclaredFields();
-        Map<String, ModelField> map = new LinkedHashMap<>(fields.length);
+        Map<Field, ModelField> map = new LinkedHashMap<>(fields.length);
         for (Field field : fields) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
             ModelField modelField = field.getAnnotation(ModelField.class);
             if (modelField != null) {
-                map.put(field.getName(), modelField);
+                map.put(field, modelField);
             }
         }
 
@@ -35,9 +35,9 @@ public class AnnotationReaderImpl implements AnnotationReader {
     }
 
     @Override
-    public Map<String, ModelAction> readModelAction(Class<?> modelClass) {
+    public Map<Method, ModelAction> readModelAction(Class<?> modelClass) {
         Method[] methods = modelClass.getMethods();
-        Map<String, ModelAction> map = new LinkedHashMap<>(methods.length);
+        Map<Method, ModelAction> map = new LinkedHashMap<>(methods.length);
         for (Method method : methods) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
@@ -49,7 +49,7 @@ public class AnnotationReaderImpl implements AnnotationReader {
             }
 
             if (action != null && !action.disabled()) {
-                map.put(method.getName(), action);
+                map.put(method, action);
             }
         }
 

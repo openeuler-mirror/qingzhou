@@ -38,4 +38,13 @@ public class StringUtil {
         DecimalFormat df = new DecimalFormat("##0.0");//这样为保持1位
         return df.format(v);
     }
+
+    public static String stackTraceString(StackTraceElement[] stackTrace) {
+        StringBuilder msg = new StringBuilder();
+        String sp = System.lineSeparator();
+        for (StackTraceElement element : stackTrace) {
+            msg.append("\t").append(element).append(sp);
+        }
+        return msg.toString();
+    }
 }

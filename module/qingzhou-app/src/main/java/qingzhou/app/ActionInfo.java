@@ -17,6 +17,6 @@ public class ActionInfo implements Serializable {
     }
 
     public interface InvokeMethod {
-        void invoke() throws Exception;
+        void invoke(Object... args) throws Exception;
     }
 }

@@ -31,7 +31,7 @@ public class AppHome extends ModelBase {
             infoI18n = {"运行此应用的 Java 环境。", "en:The Java environment in which the app is running."})
     public String javaHome;
 
-    @ModelAction(name = ACTION_NAME_SHOW,
+    @ModelAction(name = Showable.ACTION_NAME_SHOW,
             icon = "info-sign", forwardToPage = "show",
             nameI18n = {"首页", "en:Home"},
             infoI18n = {"展示应用的首页信息。", "en:Displays the homepage information of the app."})

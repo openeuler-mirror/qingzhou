@@ -8,7 +8,7 @@ import qingzhou.framework.app.App;
         entryAction = Showable.ACTION_NAME_SHOW,
         nameI18n = {"主页", "en:Home"},
         infoI18n = {"查看 Qingzhou 产品的相关信息。", "en:Check out the relevant information of Qingzhou products."})
-public class Index extends ModelBase {
+public class Index extends ModelBase implements Showable {
     @ModelField(
             nameI18n = {"产品名称", "en:Product Name"},
             infoI18n = {"此 Qingzhou 平台的名称。", "en:The name of  this Qingzhou platform."})
@@ -19,7 +19,7 @@ public class Index extends ModelBase {
             infoI18n = {"此 Qingzhou 平台的版本。", "en:This version of this Qingzhou platform."})
     public String version;
 
-    @ModelAction(name = ACTION_NAME_SHOW,
+    @ModelAction(name = Showable.ACTION_NAME_SHOW,
             forwardToPage = "show",
             nameI18n = {"主页", "en:Home"},
             infoI18n = {"查看 Qingzhou 的产品信息。",
