@@ -261,7 +261,7 @@
                 <%-- 左侧菜单 --%>
                 <aside class="main-sidebar">
                     <div class="sidebar sidebar-scroll">
-                        <ul class="sidebar-menuData" data-widget="tree">
+                        <ul class="sidebar-menu" data-widget="tree">
                             <%
                                 // 菜单
                                 List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, App.SYS_APP_MASTER);
@@ -270,8 +270,8 @@
                         </ul>
                     </div>
 
-                    <div class="menuData-toggle-btn">
-                        <a href="javascript:void(0);" data-toggle="push-menuData">
+                    <div class="menu-toggle-btn">
+                        <a href="javascript:void(0);" data-toggle="push-menu">
                             <i class="icon icon-sliders"></i>
                         </a>
                     </div>

@@ -127,7 +127,7 @@ public class PageBackendService {
                 StringBuilder parentBuilder = new StringBuilder();
                 buildMenuHtmlBuilder(children, request, response, viewName, manageType, appName, curModel, childrenBuilder, false);
                 printParentMenu(menu, curModel, parentBuilder, childrenBuilder);
-                builder.append(parentBuilder.toString());
+                builder.append(parentBuilder);
             }
         }
     }

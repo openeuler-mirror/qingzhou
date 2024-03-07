@@ -306,24 +306,24 @@
 <script>
     function difModelActive(omodel, nmodel) {
         if (omodel !== nmodel) {
-            var omenuItemLink = $("ul.sidebar-menuData li a[modelName='" + omodel + "']");
-            var nmenuItemLink = $("ul.sidebar-menuData li a[modelName='" + nmodel + "']");
+            var omenuItemLink = $("ul.sidebar-menu li a[modelName='" + omodel + "']");
+            var nmenuItemLink = $("ul.sidebar-menu li a[modelName='" + nmodel + "']");
             if (omenuItemLink.length > 0) {
                 if ($(omenuItemLink).parent().hasClass("treeview")) {
                     $(omenuItemLink).parents("li.treeview").removeClass("active");
                 } else {
-                    $(omenuItemLink).parents("li.treeview").removeClass("menuData-open active");
+                    $(omenuItemLink).parents("li.treeview").removeClass("menu-open active");
                 }
-                $(omenuItemLink).parents("ul.treeview-menuData").hide();
+                $(omenuItemLink).parents("ul.treeview-menu").hide();
                 $(omenuItemLink).parent().removeClass("active");
             }
             if (nmenuItemLink.length > 0) {
                 if ($(nmenuItemLink).parent().hasClass("treeview")) {
                     $(nmenuItemLink).parents("li.treeview").addClass("active");
                 } else {
-                    $(nmenuItemLink).parents("li.treeview").addClass("menuData-open active");
+                    $(nmenuItemLink).parents("li.treeview").addClass("menu-open active");
                 }
-                $(nmenuItemLink).parents("ul.treeview-menuData").show();
+                $(nmenuItemLink).parents("ul.treeview-menu").show();
                 $(nmenuItemLink).parent().addClass("active");
             }
         }

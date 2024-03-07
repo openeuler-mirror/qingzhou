@@ -7,7 +7,6 @@
 <%@ page import="qingzhou.framework.*" %>
 <%@ page import="qingzhou.framework.app.*" %>
 <%@ page import="qingzhou.console.*" %>
-<%@ page import="qingzhou.console.impl.*" %>
 <%@ page import="qingzhou.console.controller.*" %>
 <%@ page import="qingzhou.console.controller.rest.*" %>
 <%@ page import="qingzhou.console.login.*" %>

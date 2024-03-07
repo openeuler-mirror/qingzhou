@@ -7,11 +7,11 @@
         <div class="navbar-header">
             <a class="navbar-toggle" href="javascript:void(0);" data-toggle="collapse" data-target=".navbar-collapse"><i
                     class="icon icon-th-large"></i></a>
-            <a class="sidebar-toggle" href="javascript:void(0);" data-toggle="push-menuData"><i
+            <a class="sidebar-toggle" href="javascript:void(0);" data-toggle="push-menu"><i
                     class="icon icon-sliders"></i></a>
             <a class="navbar-brand" href="javascript:void(0);">
                 <img src="<%=contextPath%>/static/images/login/top_logo.png" class="logo" alt="">
-                <span class="logo-mini" data-toggle="push-menuData" style="display: none;"><i
+                <span class="logo-mini" data-toggle="push-menu" style="display: none;"><i
                         class="icon icon-sliders"></i></span>
             </a>
         </div>
@@ -43,7 +43,7 @@
                            data-tip='<%=PageBackendService.getMasterAppI18nString( "page.lang.switch")%>'>
                             <span class="circle-bg"><i class="icon icon-language"></i></span>
                         </a>
-                        <ul class="dropdown-menuData dropdown-menuData-reset">
+                        <ul class="dropdown-menu dropdown-menu-reset">
                             <%
                                 for (Lang lang : Lang.values()) {
                                     out.print("<li>");
