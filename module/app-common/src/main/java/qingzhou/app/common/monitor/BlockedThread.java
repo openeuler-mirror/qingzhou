@@ -61,7 +61,7 @@ public class BlockedThread extends ModelBase implements Listable {
 
     @ModelAction(name = Showable.ACTION_NAME_SHOW, nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该阻塞线程的信息，包括其调用的堆栈等。", "en:View the information of the blocking thread, including the stack of its calls."})
-    public void show(Request request, Response response) throws Exception {
+    public void show(Request request, Response response) {
         // show 方法已经在 qingzhou.app.ActionMethod.show 中定义，此处的逻辑会被忽略
     }
 
