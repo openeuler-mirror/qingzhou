@@ -1,11 +1,6 @@
 package qingzhou.framework.app;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.QingZhouApp;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
-
-import java.util.Properties;
+import qingzhou.api.*;
 
 public interface App {
     String SYS_NODE_LOCAL = "local";
@@ -19,15 +14,16 @@ public interface App {
     String SYS_MODEL_APP = "app";
     String SYS_MODEL_NODE = "node";
 
-    String SYS_ACTION_MANAGE = "manage";
-    String SYS_ACTION_INSTALL = "install";
-    String SYS_ACTION_UNINSTALL = "uninstall";
+    String SYS_ACTION_MANAGE_PAGE = "manage";
+    String SYS_ACTION_INSTALL_APP = "install";
+    String SYS_ACTION_UNINSTALL_APP = "uninstall";
+    String SYS_ACTION_ENTRY_HOME = "show";
 
     QingZhouApp getQingZhouApp();
 
     AppContext getAppContext();
 
-    Properties getAppProperties();
-
     void invoke(Request request, Response response) throws Exception;
+
+    ModelBase getModelInstance(String modelName);
 }

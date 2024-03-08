@@ -1,9 +1,16 @@
 package qingzhou.console;
 
 import qingzhou.api.*;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.api.metadata.AppMetadata;
+import qingzhou.api.metadata.ModelFieldData;
+import qingzhou.api.metadata.ModelManager;
+import qingzhou.api.type.Createable;
+import qingzhou.api.type.Editable;
+import qingzhou.api.type.Listable;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.framework.util.IPUtil;
-import qingzhou.framework.util.SafeCheckerUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.math.BigDecimal;
@@ -18,54 +25,52 @@ import java.util.regex.Pattern;
 
 public class Validator {
     static {
-        ConsoleI18n.addI18N("validator.cannotWrite", new String[]{"不支持写入", "en:Cannot write"});
-        ConsoleI18n.addI18N("validator.cannotCreate", new String[]{"不支持创建", "en:Cannot be created"});
-        ConsoleI18n.addI18N("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
-        ConsoleI18n.addI18N("validator.dataInvalid", new String[]{"数据不合法，如不支持包含 %s 等特殊字符", "en:Data is invalid, for example, it cannot contain special characters such as %s"});
-        ConsoleI18n.addI18N("validator.idField", new String[]{"须以英文字母开头，支持英文字母、数字、下划线、中划线、冒号、.、#号、左斜杠",
+        ConsoleI18n.addI18n("validator.cannotWrite", new String[]{"不支持写入", "en:Cannot write"});
+        ConsoleI18n.addI18n("validator.cannotCreate", new String[]{"不支持创建", "en:Cannot be created"});
+        ConsoleI18n.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
+        ConsoleI18n.addI18n("validator.dataInvalid", new String[]{"数据不合法，如不支持包含 %s 等特殊字符", "en:Data is invalid, for example, it cannot contain special characters such as %s"});
+        ConsoleI18n.addI18n("validator.idField", new String[]{"须以英文字母开头，支持英文字母、数字、下划线、中划线、冒号、.、#号、左斜杠",
                 "en:Must start with an English letter, support English letters, numbers, underscores, underscores, colons, ., #, left slash"});
-        ConsoleI18n.addI18N("validator.optionRange", new String[]{"取值必须在%s中", "en:Value taken must be in %s"});
-        ConsoleI18n.addI18N("validator.valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
-        ConsoleI18n.addI18N("validator.length.only", new String[]{"长度须是%s", "en:Length must be %s"});
-        ConsoleI18n.addI18N("validator.lengthBetween", new String[]{"长度必须介于%s - %s之间", "en:Length must be between %s and %s"});
-        ConsoleI18n.addI18N("validator.number", new String[]{"须是数字类型", "en:Must be a numeric type"});
-        ConsoleI18n.addI18N("validator.decimal", new String[]{"须是数字（含浮点）类型", "en:Must be a decimal (float included) type"});
-        ConsoleI18n.addI18N("validator.ip.illegal", new String[]{"非法的IP地址或域名", "en:Illegal IP address or host name"});
-        ConsoleI18n.addI18N("validator.larger.cannot", new String[]{"不支持大于%s", "en:Cannot be larger than %s"});
-        ConsoleI18n.addI18N("validator.date.larger.cannot", new String[]{"不能晚于%s", "en:No later than %s"});
-        ConsoleI18n.addI18N("validator.larger.minusOne.cannot", new String[]{"不支持大于 %s - 1", "en:Cannot be larger than %s - 1"});
-        ConsoleI18n.addI18N("validator.less.cannot", new String[]{"不支持小于%s", "en:Cannot be less than %s"});
-        ConsoleI18n.addI18N("validator.date.less.cannot", new String[]{"不能早于%s", "en:No earlier than %s"});
-        ConsoleI18n.addI18N("validator.less.current", new String[]{"不能早于当前时间", "en:Cannot be earlier than the current time"});
-        ConsoleI18n.addI18N("user.create.cannot.chinese", new String[]{"不支持包含中文字符", "en:Cannot contain Chinese characters"});
-        ConsoleI18n.addI18N("app.threadpool.canot.eq", new String[]{"和 %s 不支持配置为同一个", "en:Cannot be configured as the same as %s"});
-        ConsoleI18n.addI18N("validator.notSupportedCharacters", new String[]{"不支持包含字符：\"%s\"", "en:Cannot contain the characters: \"%s\""});
-        ConsoleI18n.addI18N("validator.pattern.not", new String[]{"须是一个合法的正则表达式", "en:Must be a valid regular expression"});
-        ConsoleI18n.addI18N("validator.UnsupportedCharset", new String[]{"不支持此编码", "en:Unsupported charset"});
-        ConsoleI18n.addI18N("validator.notfound", new String[]{"不存在", "en:Not found"});
-        ConsoleI18n.addI18N("validator.kv.require", new String[]{"变量名不支持为空", "en:Variable names cannot be empty"});
-        ConsoleI18n.addI18N("validator.kv.name.duplicate", new String[]{"变量名不能重复", "en:Variable names cannot be duplicated"});
-        ConsoleI18n.addI18N("validator.date-time.format", new String[]{"须使用 " + ConsoleConstants.DATE_FORMAT + " 的时间格式", "en:Must use the time format " + ConsoleConstants.DATE_FORMAT});
-        ConsoleI18n.addI18N("validator.xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
-        ConsoleI18n.addI18N("validation.error.centralizedConsoleUrl", new String[]{"不支持的URL协议或内容格式", "en:Unsupported URL protocol or content format"});
+        ConsoleI18n.addI18n("validator.optionRange", new String[]{"取值必须在%s中", "en:Value taken must be in %s"});
+        ConsoleI18n.addI18n("validator.valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
+        ConsoleI18n.addI18n("validator.length.only", new String[]{"长度须是%s", "en:Length must be %s"});
+        ConsoleI18n.addI18n("validator.lengthBetween", new String[]{"长度必须介于%s - %s之间", "en:Length must be between %s and %s"});
+        ConsoleI18n.addI18n("validator.number", new String[]{"须是数字类型", "en:Must be a numeric type"});
+        ConsoleI18n.addI18n("validator.decimal", new String[]{"须是数字（含浮点）类型", "en:Must be a decimal (float included) type"});
+        ConsoleI18n.addI18n("validator.ip.illegal", new String[]{"非法的IP地址或域名", "en:Illegal IP address or host name"});
+        ConsoleI18n.addI18n("validator.larger.cannot", new String[]{"不支持大于%s", "en:Cannot be larger than %s"});
+        ConsoleI18n.addI18n("validator.date.larger.cannot", new String[]{"不能晚于%s", "en:No later than %s"});
+        ConsoleI18n.addI18n("validator.larger.minusOne.cannot", new String[]{"不支持大于 %s - 1", "en:Cannot be larger than %s - 1"});
+        ConsoleI18n.addI18n("validator.less.cannot", new String[]{"不支持小于%s", "en:Cannot be less than %s"});
+        ConsoleI18n.addI18n("validator.date.less.cannot", new String[]{"不能早于%s", "en:No earlier than %s"});
+        ConsoleI18n.addI18n("validator.less.current", new String[]{"不能早于当前时间", "en:Cannot be earlier than the current time"});
+        ConsoleI18n.addI18n("user.create.cannot.chinese", new String[]{"不支持包含中文字符", "en:Cannot contain Chinese characters"});
+        ConsoleI18n.addI18n("app.threadpool.canot.eq", new String[]{"和 %s 不支持配置为同一个", "en:Cannot be configured as the same as %s"});
+        ConsoleI18n.addI18n("validator.notSupportedCharacters", new String[]{"不支持包含字符：\"%s\"", "en:Cannot contain the characters: \"%s\""});
+        ConsoleI18n.addI18n("validator.pattern.not", new String[]{"须是一个合法的正则表达式", "en:Must be a valid regular expression"});
+        ConsoleI18n.addI18n("validator.UnsupportedCharset", new String[]{"不支持此编码", "en:Unsupported charset"});
+        ConsoleI18n.addI18n("validator.notfound", new String[]{"不存在", "en:Not found"});
+        ConsoleI18n.addI18n("validator.kv.require", new String[]{"变量名不支持为空", "en:Variable names cannot be empty"});
+        ConsoleI18n.addI18n("validator.kv.name.duplicate", new String[]{"变量名不能重复", "en:Variable names cannot be duplicated"});
+        ConsoleI18n.addI18n("validator.date-time.format", new String[]{"须使用 " + ConsoleConstants.DATE_FORMAT + " 的时间格式", "en:Must use the time format " + ConsoleConstants.DATE_FORMAT});
+        ConsoleI18n.addI18n("validator.xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
+        ConsoleI18n.addI18n("validation.error.centralizedConsoleUrl", new String[]{"不支持的URL协议或内容格式", "en:Unsupported URL protocol or content format"});
     }
 
     private static String getConsoleI18n(String key, Object... args) {
-        return ConsoleI18n.getI18N(I18n.getI18nLang(), key, args);
+        return ConsoleI18n.getI18n(I18n.getI18nLang(), key, args);
     }
 
     public static boolean validate(Request request, Response response) throws Exception {
-        if (!AddModel.ACTION_NAME_ADD.equals(request.getActionName()) && !AddModel.ACTION_NAME_UPDATE.equals(request.getActionName())) {
+        if (!Createable.ACTION_NAME_ADD.equals(request.getActionName()) && !Editable.ACTION_NAME_UPDATE.equals(request.getActionName())) {
             return true;
         }
 
         Map<String, String> errorData = new HashMap<>();
-        ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
+        ModelManager modelManager = SystemController.getAppMetadata(request).getModelManager();
         String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
-        ModelBase tempModel = modelManager.getModelInstance(request.getModelName());
-        Map<String, String> dataMap = ((EditModel) tempModel).prepareParameters(request);
         for (String fieldName : allFieldNames) {
-            String validate = validate(request, modelManager, dataMap, fieldName, request.getParameter(fieldName));
+            String validate = validate(request, modelManager, request::getParameter, fieldName, request.getParameter(fieldName));
             if (StringUtil.notBlank(validate)) {
                 errorData.put(fieldName, validate);
             }
@@ -80,24 +85,28 @@ public class Validator {
         return true;
     }
 
-    private static String validate(Request request, ModelManager modelManager, Map<String, String> data, String fieldName, String newValue) throws Exception {
+    private interface RequestParameter {
+        String getParameter(String name);
+    }
+
+    private static String validate(Request request, ModelManager modelManager, RequestParameter requestParameter, String fieldName, String newValue) throws Exception {
         // 上下文环境
         String modelName = request.getModelName();
-        ModelField modelField = modelManager.getModelField(modelName, fieldName);
+        ModelFieldData modelField = modelManager.getModelField(modelName, fieldName);
         if (modelField == null) {
             return null;
         }
 
         try {
-            if (!isEffective(fieldName0 -> String.valueOf(data.get(fieldName0)), modelField.effectiveWhen().trim())) {// TODO: 不显示的属性不需要校验
+            if (!isEffective(fieldName0 -> String.valueOf(requestParameter.getParameter(fieldName0)), modelField.effectiveWhen().trim())) {// TODO: 不显示的属性不需要校验
                 return null;
             }
         } catch (Exception e) {
             // 如果这里出错，多数数据类型错误，例如本该数字的，却传值为 字符串 等。
         }
 
-        ModelBase tempModel = modelManager.getModelInstance(request.getModelName());
-        boolean isUpdate = EditModel.ACTION_NAME_UPDATE.equals(request.getActionName());
+        ModelBase tempModel = SystemController.getLocalApp(request.getAppName()).getModelInstance(request.getModelName());
+        boolean isUpdate = Editable.ACTION_NAME_UPDATE.equals(request.getActionName());
         if (newValue == null) { // NOTE：不能使用 StringUtil.isBlank 来判断，空串 "" 表示有值，且与 null（无值） 是不同含义
             if (modelField.required()) {
                 if (isUpdate && modelField.disableOnEdit()) { // for #NC-1624|创建时必填，编辑时允许为空。
@@ -121,7 +130,7 @@ public class Validator {
                     }
                 }
             }
-            ValidatorContext vc = new ValidatorContext(newValue, modelField, fieldName, request, modelManager, data);
+            ValidatorContext vc = new ValidatorContext(newValue, modelField, fieldName, request, modelManager, requestParameter);
 
             Class<?>[] preValidatorClass = { // 有顺序要求
                     disableOnCreate.class,
@@ -138,7 +147,7 @@ public class Validator {
                     return null;
                 } else {
                     // sessionHa  tdg  密码字段有时候为空，有时候不为空，需要走自定义校验
-                    return vc.appStub.getI18N(I18n.getI18nLang(), tempModel.validate(request, fieldName));
+                    return vc.appMetadata.getI18n(I18n.getI18nLang(), tempModel.validate(request, fieldName));
                 }
             }
 
@@ -172,8 +181,8 @@ public class Validator {
         }
 
         // 最后进行自定义校验
-        AppStub appStub = ConsoleWarHelper.getAppStub(request.getAppName());
-        return appStub.getI18N(I18n.getI18nLang(), tempModel.validate(request, fieldName));
+        AppMetadata metadata = SystemController.getAppMetadata(request);
+        return metadata.getI18n(I18n.getI18nLang(), tempModel.validate(request, fieldName));
     }
 
     private static String validate(Class<?>[] validatorClass, ValidatorContext vc) throws Exception {
@@ -201,31 +210,31 @@ public class Validator {
 
     static class ValidatorContext {
         final String modelName;
-        final ModelField modelField;
+        final ModelFieldData modelField;
         final String newValue;
         final String fieldName;
         final Request request;
-        final Map<String, String> data;
+        final RequestParameter requestParameter;
         final ModelManager modelManager;
-        final AppStub appStub;
+        final AppMetadata appMetadata;
 
-        private ValidatorContext(String newValue, ModelField modelField, String fieldName, Request request, ModelManager modelManager, Map<String, String> data) {
+        private ValidatorContext(String newValue, ModelFieldData modelField, String fieldName, Request request, ModelManager modelManager, RequestParameter requestParameter) {
             this.modelName = request.getModelName();
             this.modelField = modelField;
             this.newValue = newValue;
             this.fieldName = fieldName;
             this.request = request;
             this.modelManager = modelManager;
-            this.data = data;
-            this.appStub = ConsoleWarHelper.getAppStub(request.getAppName());
+            this.requestParameter = requestParameter;
+            this.appMetadata = SystemController.getAppMetadata(request);
         }
 
         boolean isAdd() {
-            return AddModel.ACTION_NAME_ADD.equals(request.getActionName());
+            return Createable.ACTION_NAME_ADD.equals(request.getActionName());
         }
 
         boolean isUpdate() {
-            return EditModel.ACTION_NAME_UPDATE.equals(request.getActionName());
+            return Editable.ACTION_NAME_UPDATE.equals(request.getActionName());
         }
     }
 
@@ -239,7 +248,7 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             // 安全漏洞防护：jndi、lookup等参数不能包含“ldap://” “rmi://” 或者 $ 转义字符等。
             // 安全防护放在 useCustomizedValidator 之前
-            if (vc.fieldName.equals(ListModel.FIELD_NAME_ID)) {
+            if (vc.fieldName.equals(Listable.FIELD_NAME_ID)) {
                 if (vc.isAdd()) {
                     OUT:
                     for (String risk : new String[]{"://", // 阻止 jndi、rmi 注入
@@ -260,7 +269,7 @@ public class Validator {
 
             // id 字段，额外增加校验
             // 放在 useCustomizedValidator 之后，可 允许自定义id的校验
-            if (vc.fieldName.equals(ListModel.FIELD_NAME_ID)) {
+            if (vc.fieldName.equals(Listable.FIELD_NAME_ID)) {
                 // 只能输入英文数字下划线和横线的正则表达式
                 boolean matches = Pattern.compile("^[a-zA-Z0-9#_/.:-]+$").matcher(vc.newValue).find();
                 if (!matches) {
@@ -492,11 +501,11 @@ public class Validator {
                     String noGreaterThan = vc.modelField.noGreaterOrEqualThanDate().trim();
                     if (!noGreaterThan.isEmpty()) {
                         try {
-                            String thanObj = vc.data.get(noGreaterThan);
+                            String thanObj = vc.requestParameter.getParameter(noGreaterThan);
                             Date otherDateTime = dateFormat.parse(thanObj);
                             if (!thisDateTime.before(otherDateTime)) {
                                 String msg = getConsoleI18n("validator.date.larger.cannot");
-                                return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + modelName + "." + noGreaterThan));
+                                return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + modelName + "." + noGreaterThan));
                             }
                         } catch (Exception ignored) {
                         }
@@ -505,12 +514,12 @@ public class Validator {
                     String noLessThan = vc.modelField.noLessOrEqualThanDate().trim();
                     if (!noLessThan.isEmpty()) {
                         try {
-                            String thanObj = vc.data.get(noGreaterThan);
+                            String thanObj = vc.requestParameter.getParameter(noGreaterThan);
                             if (StringUtil.notBlank(thanObj)) {
                                 Date otherDateTime = dateFormat.parse(thanObj);
                                 if (!thisDateTime.after(otherDateTime)) {
                                     String msg = getConsoleI18n("validator.date.less.cannot");
-                                    return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + modelName + "." + noLessThan));
+                                    return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + modelName + "." + noLessThan));
                                 }
                             }
                         } catch (Exception ignored) {
@@ -651,12 +660,12 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             String noGreaterThan = vc.modelField.noGreaterThan().trim();
             if (!noGreaterThan.isEmpty()) {
-                String value = vc.data.get(noGreaterThan);
+                String value = vc.requestParameter.getParameter(noGreaterThan);
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue()) {
                         String msg = getConsoleI18n("validator.larger.cannot");
-                        return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThan));
+                        return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThan));
                     }
                 }
             }
@@ -670,12 +679,12 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             String noGreaterThanMinusOne = vc.modelField.noGreaterThanMinusOne().trim();
             if (!noGreaterThanMinusOne.isEmpty()) {
-                String value = vc.data.get(noGreaterThanMinusOne);
+                String value = vc.requestParameter.getParameter(noGreaterThanMinusOne);
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue() - 1) {
                         String msg = getConsoleI18n("validator.larger.minusOne.cannot");
-                        return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThanMinusOne));
+                        return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThanMinusOne));
                     }
                 }
             }
@@ -689,12 +698,12 @@ public class Validator {
         public String validate(ValidatorContext vc) throws Exception {
             String noLessThan = vc.modelField.noLessThan().trim();
             if (!noLessThan.isEmpty()) {
-                String value = vc.data.get(noLessThan);
+                String value = vc.requestParameter.getParameter(noLessThan);
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) { // 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) < arg.longValue()) {
                         String msg = getConsoleI18n("validator.less.cannot");
-                        return String.format(msg, vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noLessThan));
+                        return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noLessThan));
                     }
                 }
             }
@@ -712,10 +721,10 @@ public class Validator {
                 for (String field : cannotBeTheSameAs.split(ConsoleConstants.DATA_SEPARATOR)) {
                     String fieldValue = vc.request.getParameter(field);
                     if (fieldValue == null && vc.isUpdate()) {
-                        fieldValue = vc.data.get(field);
+                        fieldValue = vc.requestParameter.getParameter(field);
                     }
                     if (Objects.equals(fieldValue, vc.newValue)) {
-                        String p1 = vc.appStub.getI18N(I18n.getI18nLang(), "model.field." + vc.modelName + "." + field);
+                        String p1 = vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + vc.modelName + "." + field);
                         return String.format(getConsoleI18n("app.threadpool.canot.eq"), p1);
                     }
                 }
@@ -925,4 +934,78 @@ public class Validator {
     public interface FieldValueRetriever {
         String getFieldValue(String fieldName) throws Exception;
     }
+
+
+    public static class SafeCheckerUtil {
+        private static final String[] CommandInjectionRisk = new String[]{"`", "$", ";", "&", "|", "{", "}", "(", ")", "[", "]", "../", "..\\", "*", "%", "~", "^", "!"};// windows 路径会存在空格
+
+        public static String hasCommandInjectionRiskWithSkip(String arg, String skips) {
+            for (String f : CommandInjectionRisk) { // 命令行执行注入漏洞
+                if (skips != null) {
+                    if (skips.contains(f)) {
+                        continue;
+                    }
+                }
+                if (arg.contains(f)) {
+                    return f;
+                }
+            }
+
+            return null;
+        }
+
+        private static final Pattern SCRIPT_PATTERN = Pattern.compile("vbscript:", Pattern.CASE_INSENSITIVE);
+
+        public static boolean checkIsXSS(String check) {
+            return !checkXssOk(check);
+        }
+
+        // Level1 的检查，可以让大多数的正则（允许使用括号、中括号等）通过
+        public static boolean checkXssLevel1(String check) {
+            if (StringUtil.isBlank(check)) {
+                return true;
+            }
+
+            //判断url是否带有<>
+            String resultUrl = check.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+            if (!resultUrl.equals(check)) {
+                return false;
+            }
+
+            resultUrl = resultUrl.replaceAll("eval\\((.*)\\)", "");
+            if (!resultUrl.equals(check)) {
+                return false;
+            }
+
+            //onmouseover漏洞
+            //List<String> onXXEventPrefixList = new ArrayList<String>();
+            //onXXEventPrefixList.addAll(Arrays.asList("%20", "&nbsp;", "\"", "'", "/", "\\+"));
+            resultUrl = SCRIPT_PATTERN.matcher(resultUrl).replaceAll("");
+            if (!resultUrl.equals(check)) {
+                return false;
+            }
+
+            // 拦截这种攻击方式：payload:'onmousemove         =confirm(1)//
+            return (!resultUrl.contains("'") && !resultUrl.contains("\""))
+                    || resultUrl.indexOf(")") <= resultUrl.indexOf("(");
+        }
+
+        public static boolean checkXssOk(String check) {
+            if (StringUtil.isBlank(check)) return true;
+
+            if (!checkXssLevel1(check)) {
+                return false;
+            }
+
+            String resultUrl = check.replaceAll("\\(", "&#40").replaceAll("\\)", "&#41");
+            if (!resultUrl.equals(check)) {
+                return false;
+            }
+
+
+            resultUrl = resultUrl.replaceAll("\\[", "&#91").replaceAll("\\]", "&#93");
+            return resultUrl.equals(check);
+        }
+    }
+
 }

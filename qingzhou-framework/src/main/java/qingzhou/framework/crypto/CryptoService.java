@@ -1,6 +1,8 @@
 package qingzhou.framework.crypto;
 
 public interface CryptoService {
+    String generateKey();
+
     KeyCipher getKeyCipher(String keySeed);
 
     String[] generateKeyPair(String seedKey);

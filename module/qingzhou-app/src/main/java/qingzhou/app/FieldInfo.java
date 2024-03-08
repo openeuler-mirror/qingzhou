@@ -1,25 +1,22 @@
 package qingzhou.app;
 
-import qingzhou.api.ModelField;
 
-import java.lang.reflect.Field;
+import qingzhou.api.metadata.ModelFieldData;
 
-public class FieldInfo {
-    public final ModelField modelField;
+import java.io.Serializable;
+
+public class FieldInfo implements Serializable {
     public final String fieldName;
-    private Field field;
+    public final ModelFieldData modelField;
+    private final String defaultValue;
 
-    public FieldInfo(ModelField modelField, String fieldName) {
-        this.modelField = modelField;
+    public FieldInfo(String fieldName, ModelFieldData modelField, String defaultValue) {
         this.fieldName = fieldName;
+        this.modelField = modelField;
+        this.defaultValue = defaultValue;
     }
 
-    public Field getField() {
-        return field;
-    }
-
-    public void setField(Field field) {
-        if (this.field != null) throw new IllegalStateException();
-        this.field = field;
+    public String getDefaultValue() {
+        return defaultValue;
     }
 }

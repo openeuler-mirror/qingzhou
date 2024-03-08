@@ -8,7 +8,6 @@ import java.io.IOException;
 
 public class JmxStandardSession extends StandardSession {
 
-
     public JmxStandardSession(Manager manager) {
         super(manager);
         setNew(true);

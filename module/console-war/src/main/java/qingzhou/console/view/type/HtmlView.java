@@ -1,15 +1,14 @@
 package qingzhou.console.view.type;
 
-import qingzhou.api.ModelAction;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.ShowModel;
+import qingzhou.api.metadata.ModelActionData;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.RestContext;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.framework.app.App;
-import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,16 +20,15 @@ public class HtmlView implements View {
 
     @Override
     public void render(RestContext restContext) throws Exception {
-        RequestImpl request = (RequestImpl) restContext.request;
+        RequestImpl request = restContext.request;
         Response response = restContext.response;
-        // 将request,response放入HttpServletRequest，以供 jsp 使用，如果json也要使用，则应该将此处的代码移动到 ViewManager 总入口链里面
         HttpServletRequest req = restContext.servletRequest;
         req.setAttribute(QZ_REQUEST_KEY, request);
         req.setAttribute(QZ_RESPONSE_KEY, response);
 
         String modelName = request.getModelName();
         String actionName = request.getActionName();
-        ModelAction modelAction = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager().getModelAction(modelName, actionName);
+        ModelActionData modelAction = SystemController.getAppMetadata(request).getModelManager().getModelAction(modelName, actionName);
         String pageForward = null;
         if (modelAction != null) {
             pageForward = modelAction.forwardToPage();
@@ -40,20 +38,18 @@ public class HtmlView implements View {
         }
 
         if (isManageAction(request)) {
-            String manageAppName = request.getId();
+            String manageAppName = null;
             if (App.SYS_MODEL_APP.equals(modelName)) {
                 request.setManageType(ConsoleConstants.MANAGE_TYPE_APP);
-            } else if (ConsoleConstants.MODEL_NAME_node.equals(modelName)) {
+                manageAppName = request.getId();
+            } else if (App.SYS_MODEL_NODE.equals(modelName)) {
                 request.setManageType(ConsoleConstants.MANAGE_TYPE_NODE);
                 manageAppName = App.SYS_NODE_LOCAL;
             }
             request.setAppName(manageAppName);
             request.setModelName(App.SYS_MODEL_HOME);
-            request.setActionName(ShowModel.ACTION_NAME_SHOW);
-            if (App.SYS_NODE_LOCAL.equals(manageAppName)) {
-                manageAppName = App.SYS_APP_NODE_AGENT;
-            }
-            ConsoleWarHelper.invokeLocalApp(manageAppName, request, response);// todo 对于远程的，这里数据不对?
+            request.setActionName(App.SYS_ACTION_ENTRY_HOME);
+            SystemController.invokeLocalApp(request, response);// todo：到 html render 这里已经执行过一次 invoke app 了，这里是重复执行可以优化?
         }
 
         String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
@@ -61,7 +57,7 @@ public class HtmlView implements View {
     }
 
     private boolean isManageAction(Request request) {
-        if (!App.SYS_ACTION_MANAGE.equals(request.getActionName())) return false;
+        if (!App.SYS_ACTION_MANAGE_PAGE.equals(request.getActionName())) return false;
 
         if (!App.SYS_APP_MASTER.equals(request.getAppName())) return false;
 

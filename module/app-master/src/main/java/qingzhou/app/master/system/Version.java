@@ -1,24 +1,25 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
 
 // todo 升级所有的节点版本，支持各版本切换，除正在使用的版本外皆可删除，切换后尚未重启的版本页可以删除
 @Model(name = "version", icon = "upload-alt",
-        menuName = "System", menuOrder = 1,
+        menuName = "System", menuOrder = 2,
         nameI18n = {"系统版本", "en:System Version"},
         infoI18n = {"展示系统的版本信息，可将系统升级到一个新的版本上。",
                 "en:Displays the version information of the system and can upgrade the system to a new version."})
-public class Version extends ModelBase implements AddModel {
+public class Version extends ModelBase implements Createable {
 
     @ModelField(
             showToList = true,
             disableOnCreate = true,
             disableOnEdit = true,
             nameI18n = {"版本号", "en:ID"},
-            infoI18n = {"此轻舟的版本号。", "en:The version number of this Qingzhou."})
+            infoI18n = {"此 Qingzhou 的版本号。", "en:The version number of this Qingzhou."})
     public String id;
 
     @ModelField(
@@ -51,7 +52,7 @@ public class Version extends ModelBase implements AddModel {
             notSupportedCharacters = "#",
             required = true,
             nameI18n = {"上传版本", "en:Upload Version"},
-            infoI18n = {"上传一个版本文件到服务器，文件须是 *.zip 类型的轻舟版本文件。",
+            infoI18n = {"上传一个版本文件到服务器，文件须是 *.zip 类型的 Qingzhou 版本文件。",
                     "en:Upload an version file to the server, the file must be a *.zip type qingzhou version file."})
     public String fromUpload;
 

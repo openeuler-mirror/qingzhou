@@ -2,42 +2,45 @@ package qingzhou.app;
 
 import qingzhou.api.ActionFilter;
 import qingzhou.api.AppContext;
-import qingzhou.api.ConsoleContext;
 import qingzhou.api.DataStore;
+import qingzhou.api.metadata.AppMetadata;
 import qingzhou.bootstrap.main.FrameworkContext;
+import qingzhou.framework.InternalService;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AppContextImpl implements AppContext {
     private final FrameworkContext frameworkContext;
-    private ConsoleContext consoleContext;
-    private DataStore dataStore;
-    private List<ActionFilter> actionFilters;
-    private String appName;
+    private final AppMetadataImpl appMetadata;
+    private final List<ActionFilter> actionFilters = new ArrayList<>();
+    private DataStore dataStore = new MemoryDataStore();
 
     public AppContextImpl(FrameworkContext frameworkContext) {
         this.frameworkContext = frameworkContext;
-    }
-
-    @Override
-    public String getAppName() {
-        return appName;
-    }
-
-    public void setAppName(String appName) {
-        this.appName = appName;
+        this.appMetadata = new AppMetadataImpl();
     }
 
     @Override
     public File getTemp() {
-        return frameworkContext.getTemp(this.appName);
+        return frameworkContext.getTemp(appMetadata.getName());
     }
 
     @Override
-    public ConsoleContext getConsoleContext() {
-        return consoleContext;
+    public Collection<Class<?>> getServiceTypes() {
+        return frameworkContext.getServiceManager().getServiceTypes().stream().filter(aClass -> !InternalService.class.isAssignableFrom(aClass)).collect(Collectors.toList());
+    }
+
+    @Override
+    public <T> T getService(Class<T> serviceType) {
+        T service = frameworkContext.getServiceManager().getService(serviceType);
+        if (service instanceof InternalService) {
+            return null;
+        }
+        return service;
     }
 
     @Override
@@ -48,10 +51,6 @@ public class AppContextImpl implements AppContext {
     @Override
     public String getPlatformVersion() {
         return frameworkContext.getVersion();
-    }
-
-    public void setConsoleContext(ConsoleContext consoleContext) {
-        this.consoleContext = consoleContext;
     }
 
     @Override
@@ -65,10 +64,21 @@ public class AppContextImpl implements AppContext {
     }
 
     @Override
+    public void addI18n(String key, String[] i18n) {
+        appMetadata.addI18n(key, i18n);
+    }
+
+    @Override
+    public void addMenu(String menuName, String[] menuI18n, String menuIcon, int menuOrder) {
+        appMetadata.addMenu(menuName, menuI18n, menuIcon, menuOrder);
+    }
+
+    public AppMetadata getAppMetadata() {
+        return appMetadata;
+    }
+
+    @Override
     public void addActionFilter(ActionFilter actionFilter) {
-        if (actionFilters == null) {
-            actionFilters = new ArrayList<>();
-        }
         actionFilters.add(actionFilter);
     }
 

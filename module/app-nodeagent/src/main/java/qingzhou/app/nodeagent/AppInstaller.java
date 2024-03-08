@@ -3,7 +3,6 @@ package qingzhou.app.nodeagent;
 import qingzhou.api.*;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.AppManager;
-import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 
 import java.io.File;
@@ -15,7 +14,7 @@ import java.io.File;
                 "en:Execute the commands issued by the management node to install and uninstall applications."})
 public class AppInstaller extends ModelBase {
 
-    @ModelAction(name = App.SYS_ACTION_INSTALL,
+    @ModelAction(name = App.SYS_ACTION_INSTALL_APP,
             nameI18n = {"安装应用", "en:Install App"},
             infoI18n = {"在该节点上安装应用。", "en:Install the application on the node."})
     public void installApp(Request request, Response response) throws Exception {
@@ -47,14 +46,14 @@ public class AppInstaller extends ModelBase {
             app = FileUtil.newFile(getAppsDir(), appName);
             FileUtil.unZipToDir(srcFile, app);
         } else {
-            throw ExceptionUtil.unexpectedException("unknown app type");
+            throw new IllegalArgumentException("unknown app type");
         }
 
         AppManager appManager = Main.getService(AppManager.class);
         appManager.installApp(app);
     }
 
-    @ModelAction(name = App.SYS_ACTION_UNINSTALL,
+    @ModelAction(name = App.SYS_ACTION_UNINSTALL_APP,
             nameI18n = {"卸载应用", "en:UnInstall App"},
             infoI18n = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {

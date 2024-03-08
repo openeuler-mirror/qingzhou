@@ -1,7 +1,7 @@
 package qingzhou.app.master;
 
 import qingzhou.api.DataStore;
-import qingzhou.api.ListModel;
+import qingzhou.api.type.Listable;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 
@@ -18,7 +18,7 @@ public class ConsoleDataStore implements DataStore {
     public void addData(String type, String id, Map<String, String> properties) {
         String tags = "//" + type + "s";
         if (StringUtil.notBlank(id)) {
-            properties.put(ListModel.FIELD_NAME_ID, id);
+            properties.put(Listable.FIELD_NAME_ID, id);
         }
         Config config = Main.getService(Config.class);
         if (!config.existsConfig(tags)) {

@@ -1,6 +1,6 @@
 package qingzhou.console;
 
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.controller.SystemController;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.Map;
@@ -16,30 +16,28 @@ public class ServerXml { // todo 考虑替代：ConfigManager
         return getAttributes("server");
     }
 
-    public Map<String, String> security() {
-        return getAttributes("server/security");
-    }
-
     private Map<String, String> getAttributes(String path) {
-        return ConsoleWarHelper.getConfig().getConfig("/root/" + path);
+        return SystemController.getConfig().getConfig("/root/" + path);
     }
 
     /********************** console ***********************/
     public Map<String, String> getNodeById(String id) {
-        return ConsoleWarHelper.getConfig().getConfig(String.format("/root/console/nodes/node[@%s='%s']", "id", id));
+        return SystemController.getConfig().getConfig(String.format("/root/console/nodes/node[@%s='%s']", "id", id));
     }
 
     public boolean verCodeEnabled() {
-        return Boolean.parseBoolean(ConsoleWarHelper.getConfig().getConfig("/root/console/auth").get("verCodeEnabled"));
+        return Boolean.parseBoolean(SystemController.getConfig().getConfig("/root/console/auth").get("verCodeEnabled"));
     }
 
     public boolean isJmxEnabled() {
-        return Boolean.parseBoolean(ConsoleWarHelper.getConfig().getConfig("//jmx").get("enabled"));
+        Map<String, String> config = SystemController.getConfig().getConfig("//jmx");
+        return config != null && Boolean.parseBoolean(config.getOrDefault("enabled", "false"));
     }
 
     public Map<String, String> jmx() {
-        return ConsoleWarHelper.getConfig().getConfig("//jmx");
+        return SystemController.getConfig().getConfig("//jmx");
     }
+
     public String trustedIP() {
         return consoleAttribute("trustedIP");
     }
@@ -52,12 +50,8 @@ public class ServerXml { // todo 考虑替代：ConfigManager
         return consoleAttribute("failureCount");
     }
 
-    public String contextRoot() {
-        return consoleAttribute("contextRoot");
-    }
-
     private String consoleAttribute(String specifiedKey) {
-        return ConsoleWarHelper.getConfig().getConfig("/root/console").get(specifiedKey);
+        return SystemController.getConfig().getConfig("/root/console").get(specifiedKey);
     }
 
     public Map<String, String> user(String loginUser) {
@@ -80,18 +74,6 @@ public class ServerXml { // todo 考虑替代：ConfigManager
             return loginUser;
         } else {
             return loginUser.substring(index + 1);
-        }
-    }
-
-    public static String getTenant(String loginUser) {
-        if (StringUtil.isBlank(loginUser)) {
-            return null;
-        }
-        int index = loginUser.indexOf("/");
-        if (index == -1) {
-            return "default";
-        } else {
-            return loginUser.substring(0, index);
         }
     }
 }

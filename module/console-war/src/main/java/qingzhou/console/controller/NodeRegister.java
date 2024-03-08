@@ -1,9 +1,8 @@
 package qingzhou.console.controller;
 
-import qingzhou.console.AppStubManager;
+import qingzhou.console.AppMetadataManager;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.impl.ConsoleWarHelper;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.crypto.CryptoService;
 import qingzhou.framework.crypto.KeyCipher;
@@ -35,9 +34,9 @@ public class NodeRegister implements Filter<HttpServletContext> {
             map.put(name, value);
         }
         String arg = map.get("A");
-        CryptoService cryptoService = ConsoleWarHelper.getCryptoService();
+        CryptoService cryptoService = SystemController.getCryptoService();
         if (arg != null) {
-            String privateKey = ConsoleWarHelper.getConfig().getKey(Config.privateKeyName);
+            String privateKey = SystemController.getConfig().getKey(Config.privateKeyName);
             KeyPairCipher keyPairCipher = cryptoService.getKeyPairCipher(null, privateKey);
             arg = keyPairCipher.decryptWithPrivateKey(arg);
             Map<String, String> params = parseArg(arg);
@@ -52,7 +51,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
                 if (app != null && !app.trim().isEmpty()) {
                     String appToken = buildAppToken(nodeIp, nodePort, app);
 // TODO 这块需要改成 Service 方式，只依赖接口，不要依赖实现，另外 console 模块不能依赖 remote 模块，否则就形成，因为设计上 remote 是依赖 console 的。
-//                    AppStub appStub = (AppStub) Proxy.newProxyInstance(AppStub.class.getClassLoader(), new Class[]{AppStub.class}, (proxy, method, args) -> {
+//                    AppMetadata appStub = (AppMetadata) Proxy.newProxyInstance(AppMetadata.class.getClassLoader(), new Class[]{AppMetadata.class}, (proxy, method, args) -> {
 //                        InetSocketAddress socketAddress = new InetSocketAddress(nodeIp, Integer.parseInt(nodePort));
 //                        BIOConnector connector = new BIOConnector(socketAddress);
 //                        connector.setCodec(null);
@@ -63,11 +62,11 @@ public class NodeRegister implements Filter<HttpServletContext> {
 //                        channel.write(req);
 //                        return channel.read();
 //                    });
-                    AppStubManager.getInstance().registerAppStub(appToken, null);// todo 序列化过来吗？
+                    AppMetadataManager.getInstance().registerApp(appToken, null);// todo 序列化过来吗？
                 }
             }
         }
-        String localKey = ConsoleWarHelper.getConfig().getKey(Config.localKeyName);
+        String localKey = SystemController.getConfig().getKey(Config.localKeyName);
         KeyCipher keyCipher = cryptoService.getKeyCipher(localKey);
         Map<String, String> node = new HashMap<>();
         node.put("id", nodeIp + ":" + nodePort);
@@ -75,7 +74,7 @@ public class NodeRegister implements Filter<HttpServletContext> {
         node.put("nodePort", nodePort);
         node.put("apps", apps);
         node.put("key", keyCipher.encrypt(key)); // todo 是否持久化，考虑每次重新注册后生成新的key
-        ConsoleWarHelper.getConfig().updateConfig("/server/nodes/node", node);
+        SystemController.getConfig().updateConfig("/server/nodes/node", node);
 
         System.out.printf("Node Registration Done. ip:%s, port:%s.%n", nodeIp, nodePort);
         return false;

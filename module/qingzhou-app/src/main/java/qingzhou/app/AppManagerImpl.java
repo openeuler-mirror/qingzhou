@@ -1,20 +1,20 @@
 package qingzhou.app;
 
-import qingzhou.api.*;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingZhouApp;
+import qingzhou.api.metadata.ModelActionData;
+import qingzhou.api.metadata.ModelData;
+import qingzhou.api.metadata.ModelFieldData;
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.app.QingZhouSystemApp;
-import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.ObjectUtil;
 import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -76,7 +76,7 @@ public class AppManagerImpl implements AppManager {
     private AppImpl buildApp(String appName, File appDir, boolean needCommonApp) throws Exception {
         File[] appFiles = appDir.listFiles();
         if (appFiles == null) {
-            throw ExceptionUtil.unexpectedException("app lib not found: " + appDir.getName());
+            throw new IllegalArgumentException("app lib not found: " + appDir.getName());
         }
         File[] appLibs = appFiles;
         if (needCommonApp) {
@@ -93,7 +93,9 @@ public class AppManagerImpl implements AppManager {
         AppImpl app = new AppImpl();
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
-        appContext.setAppName(appName);
+        app.setAppContext(appContext);
+        AppMetadataImpl metadata = (AppMetadataImpl) appContext.getAppMetadata();
+        metadata.setAppName(appName);
 
         URL[] urls = Arrays.stream(appLibs).map(file -> {
             try {
@@ -104,22 +106,24 @@ public class AppManagerImpl implements AppManager {
         }).toArray(URL[]::new);
         URLClassLoader loader = new URLClassLoader(urls, needCommonApp ? QingZhouApp.class.getClassLoader() : QingZhouSystemApp.class.getClassLoader());
         app.setLoader(loader);
-        ConsoleContextImpl consoleContext = new ConsoleContextImpl();
-        ModelManager modelManager = buildModelManager(appLibs, loader);
-        consoleContext.setModelManager(modelManager);
-        appContext.setConsoleContext(consoleContext);
+
+        ModelManagerImpl modelManager = new ModelManagerImpl();
+        modelManager.initModelManager(appLibs, loader);
+        metadata.setModelManager(modelManager);
+        initI18n(modelManager, metadata);
         appContext.addActionFilter(new UniqueFilter());
+
         for (String modelName : modelManager.getModelNames()) {
-            ModelBase modelInstance = modelManager.getModelInstance(modelName);
+            ModelBase modelInstance = app.getModelInstance(modelName);
             modelInstance.setAppContext(appContext);
             modelInstance.init();
         }
-        app.setAppContext(appContext);
-
-        try (InputStream inputStream = loader.getResourceAsStream("app.properties")) {
-            Properties properties = ObjectUtil.streamToProperties(inputStream);
-            app.setAppProperties(properties);
-            String appClass = app.getAppProperties().getProperty("qingzhou.app");
+        try (InputStream inputStream = loader.getResourceAsStream("qingzhou.properties")) {
+            Properties properties = FileUtil.streamToProperties(inputStream);
+            metadata.setConfig(Collections.unmodifiableMap(new HashMap<String, String>() {{
+                properties.forEach((o, o2) -> put((String) o, (String) o2));
+            }}));
+            String appClass = metadata.getConfig().get("qingzhou.app");
             if (StringUtil.notBlank(appClass)) {
                 QingZhouApp qingZhouApp = (QingZhouApp) loader.loadClass(appClass).newInstance();
                 app.setQingZhouApp(qingZhouApp);
@@ -133,39 +137,30 @@ public class AppManagerImpl implements AppManager {
         return app;
     }
 
-    private ModelManagerImpl buildModelManager(File[] appLib, URLClassLoader loader) {
-        ModelManagerImpl modelManager = new ModelManagerImpl();
-        try {
-            modelManager.init(appLib, loader);
+    private void initI18n(ModelManagerImpl modelManager, AppMetadataImpl metadata) {
+        for (String modelName : modelManager.getModelNames()) {
+            final ModelData model = modelManager.getModel(modelName);
 
-            for (String modelName : modelManager.getModelNames()) {
-                ModelInfo modelInfo = modelManager.getModelInfo(modelName);
-                Class<?> modelClass = loader.loadClass(modelInfo.className);
-                if (!ModelBase.class.isAssignableFrom(modelClass)) {
-                    throw new IllegalArgumentException("The class annotated by the @Model ( " + modelClass.getName() + " ) needs to 'extends ModelBase'.");
-                }
-                modelInfo.setModelClass(modelClass);
-                try {
-                    modelInfo.setModelInstance((ModelBase) modelClass.newInstance());
-                } catch (InstantiationException e) {
-                    throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
-                }
+            // for i18n
+            metadata.addI18n("model." + modelName, model.nameI18n());
+            metadata.addI18n("model.info." + modelName, model.infoI18n());
 
-                for (FieldInfo fieldInfo : modelInfo.fieldInfoMap.values()) {
-                    Field field = modelClass.getField(fieldInfo.fieldName);
-                    fieldInfo.setField(field);
+            Arrays.stream(modelManager.getFieldNames(modelName)).forEach(k -> {
+                ModelFieldData v = modelManager.getModelField(modelName, k);
+                metadata.addI18n("model.field." + modelName + "." + k, v.nameI18n());
+                String[] info = v.infoI18n();
+                if (info.length > 0) {
+                    metadata.addI18n("model.field.info." + modelName + "." + k, info);
                 }
+            });
 
-                for (ActionInfo actionInfo : modelInfo.actionInfoMap.values()) {
-                    Method method = modelClass.getMethod(actionInfo.methodName, Request.class, Response.class);
-                    actionInfo.setJavaMethod(method);
+            for (String actionName : modelManager.getActionNames(modelName)) {
+                ModelActionData modelAction = modelManager.getModelAction(modelName, actionName);
+                if (modelAction != null) {// todo  disable 后 有 null 的情况?
+                    metadata.addI18n("model.action." + modelName + "." + modelAction.name(), modelAction.nameI18n());
+                    metadata.addI18n("model.action.info." + modelName + "." + modelAction.name(), modelAction.infoI18n());
                 }
             }
-
-            modelManager.initDefaultProperties();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
         }
-        return modelManager;
     }
 }

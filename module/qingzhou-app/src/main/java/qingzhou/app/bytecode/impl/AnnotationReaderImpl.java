@@ -12,29 +12,22 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class AnnotationReaderImpl implements AnnotationReader {
-    private final ClassLoader classLoader;
-
-    public AnnotationReaderImpl(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+    @Override
+    public Model readModel(Class<?> cls) {
+        return cls.getDeclaredAnnotation(Model.class);
     }
 
     @Override
-    public Model getClassAnnotations(String classname) throws Exception {
-        return classLoader.loadClass(classname).getDeclaredAnnotation(Model.class);
-    }
-
-    @Override
-    public Map<String, ModelField> getFieldAnnotations(String classname) throws Exception {
-        Class<?> clazz = classLoader.loadClass(classname);
+    public Map<Field, ModelField> readModelField(Class<?> clazz) {
         Field[] fields = clazz.getFields();//.getDeclaredFields();
-        Map<String, ModelField> map = new LinkedHashMap<>(fields.length);
+        Map<Field, ModelField> map = new LinkedHashMap<>(fields.length);
         for (Field field : fields) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
             ModelField modelField = field.getAnnotation(ModelField.class);
             if (modelField != null) {
-                map.put(field.getName(), modelField);
+                map.put(field, modelField);
             }
         }
 
@@ -42,10 +35,9 @@ public class AnnotationReaderImpl implements AnnotationReader {
     }
 
     @Override
-    public Map<String, ModelAction> getMethodAnnotations(String classname) throws Exception {
-        Class<?> modelClass = classLoader.loadClass(classname);
+    public Map<Method, ModelAction> readModelAction(Class<?> modelClass) {
         Method[] methods = modelClass.getMethods();
-        Map<String, ModelAction> map = new LinkedHashMap<>(methods.length);
+        Map<Method, ModelAction> map = new LinkedHashMap<>(methods.length);
         for (Method method : methods) {
             if (Modifier.isStatic(method.getModifiers())) {
                 continue;
@@ -57,7 +49,7 @@ public class AnnotationReaderImpl implements AnnotationReader {
             }
 
             if (action != null && !action.disabled()) {
-                map.put(method.getName(), action);
+                map.put(method, action);
             }
         }
 

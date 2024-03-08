@@ -3,55 +3,45 @@ package qingzhou.app;
 import qingzhou.api.*;
 import qingzhou.framework.app.App;
 
+import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.List;
-import java.util.Properties;
 
 public class AppImpl implements App {
     private QingZhouApp qingZhouApp;
     private AppContextImpl appContext;
     private URLClassLoader loader;
-    private Properties appProperties;
 
     @Override
-    public Properties getAppProperties() {
-        return appProperties;
-    }
-
-    @Override
-    public AppContext getAppContext() {
+    public AppContextImpl getAppContext() {
         return appContext;
     }
 
     @Override
     public void invoke(Request request, Response response) throws Exception {
         String modelName = request.getModelName();
-        String actionName = request.getActionName();
-
-        ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getConsoleContext().getModelManager();
-
+        ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getAppMetadata().getModelManager();
         ModelInfo modelInfo = modelManager.getModelInfo(modelName);
         if (modelInfo == null) return;
 
+        String actionName = request.getActionName();
         ActionInfo actionInfo = modelInfo.actionInfoMap.get(actionName);
         if (actionInfo == null) return;
 
-        ModelBase modelInstance = modelManager.getModelInstance(modelName);
-        modelInstance.setAppContext(appContext);
-        modelInstance.setI18nLang(request.getI18nLang());
-        List<ActionFilter> actionFilters = appContext.getActionFilters();
-        if (actionFilters != null) {
-            for (ActionFilter actionFilter : actionFilters) {
-                String msg = actionFilter.doFilter(request, response, appContext);
-                if (msg != null) {
-                    response.setMsg(msg);
-                    response.setSuccess(false);
-                    return;
-                }
+        for (ActionFilter actionFilter : appContext.getActionFilters()) {
+            String msg = actionFilter.doFilter(request, response, appContext);
+            if (msg != null) {
+                response.setSuccess(false);
+                response.setMsg(msg);
+                return;
             }
         }
 
-        actionInfo.getJavaMethod().invoke(modelInstance, request, response);
+        actionInfo.invokeMethod.invoke(request, response);
+    }
+
+    @Override
+    public ModelBase getModelInstance(String modelName) {
+        return ((ModelManagerImpl) appContext.getAppMetadata().getModelManager()).getModelInfo(modelName).getInstance();
     }
 
     public void setAppContext(AppContextImpl appContext) {
@@ -73,9 +63,5 @@ public class AppImpl implements App {
 
     public void setLoader(URLClassLoader loader) {
         this.loader = loader;
-    }
-
-    public void setAppProperties(Properties appProperties) {
-        this.appProperties = appProperties;
     }
 }

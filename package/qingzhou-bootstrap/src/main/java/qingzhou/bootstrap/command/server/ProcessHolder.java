@@ -29,13 +29,13 @@ class ProcessHolder {
     }
 
     private final File serverXml;
-    private final List<String> cmds;
+    private final List<String> cmd;
     private ProcessBuilder processBuilder;
     private Process process;
 
-    ProcessHolder(File serverXml, List<String> cmds) {
+    ProcessHolder(File serverXml, List<String> cmd) {
         this.serverXml = serverXml;
-        this.cmds = cmds;
+        this.cmd = cmd;
     }
 
     ProcessBuilder buildProcess() throws Exception {
@@ -70,7 +70,7 @@ class ProcessHolder {
         builder.environment().putAll(javaConfig.environment());
         builder.command(javaCmd);
         builder.command().addAll(javaConfig.command());
-        for (String cmd : cmds) {
+        for (String cmd : cmd) {
             builder.command().add(cmd);
         }
         processBuilder = builder;

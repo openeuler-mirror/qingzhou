@@ -1,13 +1,14 @@
 package qingzhou.console.view;
 
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
-import qingzhou.console.RestContext;
+import qingzhou.console.controller.rest.RestContext;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.FileView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.HashMap;
@@ -26,14 +27,14 @@ public class ViewManager {
         views.put(fileView, new FileView());
     }
 
-    public boolean render(RestContext restContext) throws Exception {
-        RequestImpl request = (RequestImpl) restContext.request;
-        ResponseImpl response = (ResponseImpl) restContext.response;
+    public void render(RestContext restContext) throws Exception {
+        RequestImpl request = restContext.request;
+        ResponseImpl response = restContext.response;
         // 完善响应的 msg
         if (StringUtil.isBlank(response.getMsg())) {
-            String appName = request.getAppName();
+            String appName = PageBackendService.getAppName(request);
             String SP = I18n.isZH() ? "" : " ";
-            String msg = response.isSuccess() ? ConsoleI18n.getI18N(I18n.getI18nLang(), "msg.success") : I18n.getString(appName, "msg.fail");
+            String msg = response.isSuccess() ? ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.success") : I18n.getString(appName, "msg.fail");
             String model = I18n.getString(appName, "model." + request.getModelName());
             String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
             String operation = Objects.equals(model, action) ? model : model + SP + action;
@@ -46,15 +47,8 @@ public class ViewManager {
             throw new IllegalArgumentException("View not found: " + request.getViewName());
         }
 
-        if (StringUtil.isBlank(response.getContentType())) {
-            response.setContentType(view.getContentType());
-            restContext.servletResponse.setContentType(view.getContentType());
-        }
-
-        response.getHeaderNames().forEach(s -> restContext.servletResponse.setHeader(s, response.getHeader(s)));
-
+        restContext.servletResponse.setContentType(view.getContentType());
         view.render(restContext);
 
-        return true;
     }
 }

@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 public class Controller extends ServiceRegister<AppManager> {
     public static Logger logger;
-    private AppManager appManager;
+    public static AppManager appManager;
 
     @Override
     public Class<AppManager> serviceType() {
@@ -29,6 +29,12 @@ public class Controller extends ServiceRegister<AppManager> {
 
         Controller.logger = frameworkContext.getServiceManager().getService(Logger.class);
         appManager = new AppManagerImpl(frameworkContext);
+
+        if (frameworkContext.isMaster()) {
+            File masterApp = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", App.SYS_APP_MASTER);
+            appManager.installApp(masterApp);
+        }
+
         File nodeAgentApp = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", App.SYS_APP_NODE_AGENT);
         appManager.installApp(nodeAgentApp);
 

@@ -1,13 +1,11 @@
 package qingzhou.console.jmx;
 
-import org.apache.catalina.Manager;
 import org.apache.catalina.Session;
-import org.apache.catalina.session.StandardManager;
 import org.apache.catalina.session.StandardSession;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.ServerXml;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.framework.app.App;
 
 import javax.security.auth.Subject;
 import javax.servlet.*;
@@ -23,7 +21,8 @@ import java.security.Principal;
 import java.util.*;
 
 public class JmxHttpServletRequest implements HttpServletRequest {
-    public static final Manager MANAGER = new StandardManager();
+
+    private final String appName;
     private final String modelName;
     private final String actionName;
     private final String id;
@@ -31,7 +30,8 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     private final Hashtable<String, Object> attrs = new Hashtable<>();
     private StandardSession session;
 
-    public JmxHttpServletRequest(String modelName, String actionName, Properties properties) {
+    public JmxHttpServletRequest(String appName, String modelName, String actionName, Properties properties) {
+        this.appName = appName;
         this.modelName = modelName;
         this.actionName = actionName;
         this.properties = properties;
@@ -81,7 +81,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getPathInfo() {
-        String uri = "/json/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + modelName + "/" + actionName;
+        String uri = "/json/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + appName + "/" + modelName + "/" + actionName;
         if (this.id != null) {
             uri = uri + "/" + id;
         }
@@ -137,7 +137,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getRequestURI() {
-        return "/console/jmx/json/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + modelName + "/" + actionName;
+        return "/jmx" + getPathInfo();
     }
 
     @Override
@@ -162,7 +162,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
         if (userPrincipal != null) {
             String id = userPrincipal.getName();
             try {
-                session = (StandardSession) MANAGER.findSession(id);
+                session = (StandardSession) SystemController.SESSIONS_MANAGER.findSession(id);
             } catch (IOException ignored) {
             }
         }
@@ -170,7 +170,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
             session = null;
         }
         if (session == null && b) {
-            session = new JmxStandardSession(MANAGER);
+            session = new JmxStandardSession(SystemController.SESSIONS_MANAGER);
             session.addSessionListener(event -> {
                 if (event.getType().equals(Session.SESSION_DESTROYED_EVENT)) {
                     Session session = event.getSession();
@@ -234,12 +234,12 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     }
 
     @Override
-    public Collection<Part> getParts() throws IOException, ServletException {
+    public Collection<Part> getParts() {
         return null;
     }
 
     @Override
-    public Part getPart(String s) throws IOException, ServletException {
+    public Part getPart(String s) {
         return null;
     }
 
@@ -283,7 +283,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     }
 
     @Override
-    public ServletInputStream getInputStream() throws IOException {
+    public ServletInputStream getInputStream() {
         return null;
     }
 
@@ -334,7 +334,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     }
 
     @Override
-    public BufferedReader getReader() throws IOException {
+    public BufferedReader getReader() {
         return null;
     }
 

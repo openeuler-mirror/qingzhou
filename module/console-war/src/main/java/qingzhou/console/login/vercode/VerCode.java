@@ -1,6 +1,6 @@
 package qingzhou.console.login.vercode;
 
-import qingzhou.console.ConsoleI18n;
+import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;
@@ -37,7 +37,7 @@ public class VerCode implements Filter<HttpServletContext> {
     };
 
     static {
-        ConsoleI18n.addI18N(captchaError, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
+        ConsoleI18n.addI18n(captchaError, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
     }
 
     private final String verCodeFormat = "jpeg";

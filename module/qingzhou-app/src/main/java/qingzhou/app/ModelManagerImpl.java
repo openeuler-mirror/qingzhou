@@ -1,95 +1,167 @@
 package qingzhou.app;
 
 import qingzhou.api.*;
+import qingzhou.api.metadata.ModelActionData;
+import qingzhou.api.metadata.ModelData;
+import qingzhou.api.metadata.ModelFieldData;
+import qingzhou.api.metadata.ModelManager;
+import qingzhou.api.type.Showable;
 import qingzhou.app.bytecode.AnnotationReader;
-import qingzhou.app.bytecode.impl.BytecodeImpl;
-import qingzhou.framework.util.pattern.Visitor;
+import qingzhou.app.bytecode.impl.AnnotationReaderImpl;
 import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 public class ModelManagerImpl implements ModelManager, Serializable {
     private Map<String, ModelInfo> modelInfoMap;
 
-    // 以下属性是为性能缓存
-    private final Map<String, Map<String, String>> modelDefaultProperties = new HashMap<>();
+    public void initModelManager(File[] appLib, URLClassLoader loader) throws Exception {
+        Map<String, ModelInfo> tempMap = new HashMap<>();
+        AnnotationReader annotation = new AnnotationReaderImpl();
+        Map<Method, ModelAction> presetActions = annotation.readModelAction(ActionMethod.class);
+        for (File file : appLib) {
+            if (!file.getName().endsWith(".jar")) continue;
+            try (JarFile jar = new JarFile(file)) {
+                Enumeration<JarEntry> entries = jar.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry jarEntry = entries.nextElement();
+                    String entryName = jarEntry.getName();
+                    String endsWithFlag = ".class";
+                    if (entryName.contains("$") || !entryName.endsWith(endsWithFlag)) continue;
+                    int i = entryName.indexOf(endsWithFlag);
+                    String className = entryName.substring(0, i).replace("/", ".");
+                    Class<?> cls = loader.loadClass(className);
 
-    public void initDefaultProperties() throws Exception {
-        // 初始化不可变的对象
-        for (String modelName : getModelNames()) {
-            ModelBase modelInstance = getModelInstance(modelName);
-            for (Map.Entry<String, FieldInfo> entry : modelInfoMap.get(modelName).fieldInfoMap.entrySet()) {
-                Field field = entry.getValue().getField();
-                boolean accessible = field.isAccessible();
-                try {
-                    if (!accessible) {
-                        field.setAccessible(true);
-                    }
+                    Model model = annotation.readModel(cls);
+                    if (model != null) {
+                        ModelBase instance = createModelBase(cls);
 
-                    String fieldValue = "";
-                    Object fieldValObj = field.get(modelInstance);
-                    if (fieldValObj != null) {
-                        fieldValue = String.valueOf(fieldValObj);
-                    }
-                    Map<String, String> defaultData = modelDefaultProperties.computeIfAbsent(modelName, s -> new HashMap<>());
-                    defaultData.put(entry.getKey(), fieldValue);
-                } finally {
-                    if (!accessible) {
-                        field.setAccessible(false);
+                        // 1. 处理 字段
+                        List<FieldInfo> fieldInfoList = getFieldInfos(annotation, cls, instance);
+                        // 2. 处理 操作
+                        ActionMethod actionMethod = new ActionMethod(instance);
+                        Map<String, ActionInfo> actionInfoMap = getActionInfoMap(annotation, actionMethod, presetActions, cls, instance);
+                        // 3. 组装 Model 数据
+                        ModelInfo modelInfo = new ModelInfo(ModelUtil.toModelData(model), fieldInfoList, actionInfoMap.values(), instance);
+
+                        ModelInfo already = tempMap.put(model.name(), modelInfo);
+                        if (already != null) {
+                            throw new IllegalStateException("Duplicate model name: " + model.name());
+                        }
                     }
                 }
             }
         }
-    }
-
-    public void init(File[] appLib, URLClassLoader loader) throws Exception {
-        Map<String, ModelInfo> tempMap = new HashMap<>();
-        AnnotationReader annotation = new BytecodeImpl().createAnnotationReader(appLib, loader);
-        for (File file : appLib) {
-            visitClassName(file, className -> {
-                Model model = annotation.getClassAnnotations(className);
-                if (model == null) {
-                    return false;
-                }
-                ModelInfo modelInfo = null;
-                try {
-                    modelInfo = new ModelInfo(model,
-                            initModelFieldInfo(className, annotation),
-                            initModelActionInfo(className, annotation),
-                            className);
-                } catch (Throwable e) {
-                    Controller.logger.warn(e.getMessage(), e);
-                }
-                if (modelInfo == null) {
-                    return false;
-                }
-                ModelInfo already = tempMap.put(model.name(), modelInfo);
-                if (already != null) {
-                    Controller.logger.warn("Duplicate model name: " + model.name());
-                }
-
-                return false;
-            });
-        }
         modelInfoMap = Collections.unmodifiableMap(tempMap);
     }
 
-    private List<ActionInfo> initModelActionInfo(String className, AnnotationReader annotation) throws Exception {
-        List<ActionInfo> actionInfoList = new ArrayList<>();
-        annotation.getMethodAnnotations(className).forEach((s, action) -> actionInfoList.add(new ActionInfo(action, s)));
-        return actionInfoList;
+    private Map<String, ActionInfo> getActionInfoMap(AnnotationReader annotation, ActionMethod actionMethod, Map<Method, ModelAction> presetActions, Class<?> cls, ModelBase instance) {
+        Map<String, ActionInfo> actionInfos = new HashMap<>();
+
+        // 1. 添加预设的 Action
+        Arrays.stream(cls.getInterfaces()).filter(aClass -> aClass.getPackage() == Showable.class.getPackage()).distinct().flatMap((Function<Class<?>, Stream<String>>) aClass -> Arrays.stream(aClass.getFields()).filter(field -> field.getName().startsWith("ACTION_NAME_")).map(field -> {
+            try {
+                return field.get(null).toString();
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        })).forEach(actionName -> {
+            for (Map.Entry<Method, ModelAction> entry : presetActions.entrySet()) {
+                ModelAction modelAction = entry.getValue();
+                if (modelAction.name().equals(actionName)) {
+                    ActionInfo actionInfo = new ActionInfo(
+                            ModelUtil.toModelActionData(modelAction),
+                            actionName,
+                            new InvokeMethodImpl(actionMethod, entry.getKey()));
+                    actionInfos.put(actionName, actionInfo);
+                    break;
+                }
+            }
+        });
+
+        // 2. 添加 Mode 自定义的 Action
+        Map<Method, ModelAction> clsActions = annotation.readModelAction(cls);
+        for (Map.Entry<Method, ModelAction> entry : clsActions.entrySet()) {
+            ModelAction modelAction = entry.getValue();
+            String actionName = modelAction.name();
+
+            ActionInfo.InvokeMethod invokeMethod;
+            ActionInfo actionInfo = actionInfos.get(actionName);
+            if (actionInfo != null) {
+                invokeMethod = actionInfo.invokeMethod;
+            } else {
+                invokeMethod = new InvokeMethodImpl(instance, entry.getKey());
+            }
+
+            ModelActionData modelActionData = ModelUtil.toModelActionData(modelAction);
+            actionInfos.put(actionName, new ActionInfo(modelActionData, actionName, invokeMethod));
+        }
+
+        return actionInfos;
     }
 
-    private List<FieldInfo> initModelFieldInfo(String className, AnnotationReader annotation) throws Exception {
+    private static class InvokeMethodImpl implements ActionInfo.InvokeMethod {
+        private final Object instance;
+        private final Method method;
+
+        private InvokeMethodImpl(Object instance, Method method) {
+            this.instance = instance;
+            this.method = method;
+        }
+
+        @Override
+        public void invoke(Object... args) throws Exception {
+            method.invoke(instance, args);
+        }
+    }
+
+    private List<FieldInfo> getFieldInfos(AnnotationReader annotation, Class<?> cls, ModelBase instance) throws Exception {
         List<FieldInfo> fieldInfoList = new ArrayList<>();
-        annotation.getFieldAnnotations(className).forEach((s, field) -> fieldInfoList.add(new FieldInfo(field, s)));
+        for (Map.Entry<Field, ModelField> modelFieldEntry : annotation.readModelField(cls).entrySet()) {
+            String defaultValue = getDefaultValue(modelFieldEntry.getKey(), instance);
+            fieldInfoList.add(new FieldInfo(modelFieldEntry.getKey().getName(), ModelUtil.toModelFieldData(modelFieldEntry.getValue()), defaultValue));
+        }
         return fieldInfoList;
+    }
+
+    private ModelBase createModelBase(Class<?> cls) throws Exception {
+        if (!ModelBase.class.isAssignableFrom(cls)) {
+            throw new IllegalArgumentException("The class annotated by the @Model ( " + cls.getName() + " ) needs to 'extends ModelBase'.");
+        }
+        try {
+            return (ModelBase) cls.newInstance();
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
+        }
+    }
+
+    private String getDefaultValue(Field field, ModelBase modelBase) throws Exception {
+        boolean accessible = field.isAccessible();
+        try {
+            if (!accessible) {
+                field.setAccessible(true);
+            }
+
+            String fieldValue = "";
+            Object fieldValObj = field.get(modelBase);
+            if (fieldValObj != null) {
+                fieldValue = String.valueOf(fieldValObj);
+            }
+            return fieldValue;
+        } finally {
+            if (!accessible) {
+                field.setAccessible(false);
+            }
+        }
     }
 
     public ModelInfo getModelInfo(String modelName) {
@@ -108,7 +180,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public Model getModel(String modelName) {
+    public ModelData getModel(String modelName) {
         return getModelInfo(modelName).model;
     }
 
@@ -128,7 +200,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public ModelAction getModelAction(String modelName, String actionName) {
+    public ModelActionData getModelAction(String modelName, String actionName) {
         ModelInfo modelInfo = getModelInfo(modelName);
         for (ActionInfo ai : modelInfo.actionInfoMap.values()) {
             if (ai.modelAction.name().equals(actionName)) {
@@ -141,7 +213,11 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     @Override
     public Map<String, String> getModelDefaultProperties(String modelName) {
-        return Collections.unmodifiableMap(modelDefaultProperties.getOrDefault(modelName, new HashMap<>()));
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, FieldInfo> entry : getModelInfo(modelName).fieldInfoMap.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().getDefaultValue());
+        }
+        return result;
     }
 
     @Override
@@ -150,18 +226,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public String getModelName(Class<?> modelClass) {
-        for (Map.Entry<String, ModelInfo> entry : modelInfoMap.entrySet()) {
-            if (entry.getValue().getClazz().isAssignableFrom(modelClass)) {
-                return entry.getKey();
-            }
-        }
-
-        return null;
-    }
-
-    @Override
-    public ModelField getModelField(String modelName, String fieldName) {
+    public ModelFieldData getModelField(String modelName, String fieldName) {
         ModelInfo modelInfo = getModelInfo(modelName);
         FieldInfo fieldInfo = modelInfo.fieldInfoMap.get(fieldName);
         if (fieldInfo != null) {
@@ -174,27 +239,21 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     @Override
     public Options getOptions(Request request, String modelName, String fieldName) {
         Options defaultOptions = getDefaultOptions(modelName, fieldName);
-        Options userOptions = getModelInstance(modelName).options(request, fieldName);
-        if (userOptions == null) {
-            return defaultOptions;
-        } else {
-            return Options.merge(defaultOptions, userOptions);
-        }
+        Options userOptions = null;//TODO getModelInstance(modelName).options(request, fieldName);
+        if (defaultOptions == null) return userOptions;
+        if (userOptions == null) return defaultOptions;
+
+        List<Option> merge = new ArrayList<>(defaultOptions.options());
+        merge.addAll(userOptions.options());
+        return () -> merge;
     }
 
     private Options getDefaultOptions(String modelName, String fieldName) {
         ModelManager manager = this;
-        ModelField modelField = manager.getModelField(modelName, fieldName);
+        ModelFieldData modelField = manager.getModelField(modelName, fieldName);
 
         if (modelField.type() == FieldType.selectCharset) {
-            return Options.of(
-                    Option.of("UTF-8"),
-                    Option.of("GBK"),
-                    Option.of("GB18030"),
-                    Option.of("GB2312"),
-                    Option.of("UTF-16"),
-                    Option.of("US-ASCII")
-            );
+            return Options.of("UTF-8", "GBK", "GB18030", "GB2312", "UTF-16", "US-ASCII");
         }
 
         String refModel = modelField.refModel();
@@ -215,7 +274,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         }
 
         if (modelField.type() == FieldType.bool) {
-            return Options.of(Option.of(Boolean.TRUE.toString()), Option.of(Boolean.FALSE.toString()));
+            return Options.of(Boolean.TRUE.toString(), Boolean.FALSE.toString());
         }
 
         return null;
@@ -223,9 +282,9 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     private Options refModel(String modelName) {
         try {
-            ModelBase modelInstance = getModelInstance(modelName);
+            ModelBase modelInstance = null;//TODO getModelInstance(modelName);
             List<Option> options = new ArrayList<>();
-            List<String> dataIdList = ((ListModel) modelInstance).getAllDataId(modelName);
+            List<String> dataIdList = new ArrayList<>();//((ListModel) modelInstance).getAllDataId(modelName);
             for (String dataId : dataIdList) {
                 options.add(Option.of(dataId, new String[]{dataId, "en:" + dataId}));
             }
@@ -236,11 +295,11 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public Map<String, ModelField> getMonitorFieldMap(String modelName) {
+    public Map<String, ModelFieldData> getMonitorFieldMap(String modelName) {
         ModelInfo modelInfo = getModelInfo(modelName);
-        Map<String, ModelField> map = new LinkedHashMap<>();
+        Map<String, ModelFieldData> map = new LinkedHashMap<>();
         for (Map.Entry<String, FieldInfo> entry : modelInfo.fieldInfoMap.entrySet()) {
-            ModelField modelField = entry.getValue().modelField;
+            ModelFieldData modelField = entry.getValue().modelField;
             if (modelField.isMonitorField()) {
                 map.put(entry.getKey(), modelField);
             }
@@ -258,8 +317,8 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     @Override
     public Group getGroup(String modelName, String groupName) {
-        ModelBase modelInstance = getModelInstance(modelName);
-        Groups groups = modelInstance.group();
+        ModelBase modelInstance = null;//TODO getModelInstance(modelName);
+        Groups groups = modelInstance.groups();
         if (groups != null) {
             for (Group group : groups.groups()) {
                 if (group.name().equals(groupName)) {
@@ -276,11 +335,6 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     }
 
     @Override
-    public ModelBase getModelInstance(String modelName) {
-        return getModelInfo(modelName).getInstance();
-    }
-
-    @Override
     public String[] getFieldNamesByGroup(String modelName, String groupName) {
         List<String> fieldNames = new ArrayList<>();
 
@@ -292,32 +346,5 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         });
 
         return fieldNames.toArray(new String[0]);
-    }
-
-    private static void visitClassName(File jarFile, Visitor<String> visitor) throws Exception {
-        if (jarFile == null || !jarFile.getName().endsWith(".jar")) {
-            return;
-        }
-
-        try (JarFile jar = new JarFile(jarFile)) {
-            Enumeration<JarEntry> entries = jar.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry jarEntry = entries.nextElement();
-                String entryName = jarEntry.getName();
-                String endsWithFlag = ".class";
-                if (entryName.contains("$") || !entryName.endsWith(endsWithFlag)) {
-                    continue;
-                }
-                int i = entryName.indexOf(endsWithFlag);
-                String className = entryName.substring(0, i).replace("/", ".");
-                try {
-                    if (visitor.visitAndEnd(className)) {
-                        return;
-                    }
-                } catch (NoClassDefFoundError e) {
-                    Controller.logger.warn(e.getMessage(), e);
-                }
-            }
-        }
     }
 }

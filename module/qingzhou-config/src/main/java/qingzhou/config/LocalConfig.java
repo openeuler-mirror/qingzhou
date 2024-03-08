@@ -4,10 +4,8 @@ import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.crypto.CryptoService;
 import qingzhou.framework.crypto.KeyCipher;
-import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.pattern.Callback;
 
 import java.io.File;
 import java.util.*;
@@ -32,23 +30,21 @@ class LocalConfig implements Config {
             MASK_CIPHER = cryptoService.getKeyCipher("-==DONOTCHANGETHISMASK==-");
             initKeys(cryptoService);
         } catch (Exception e) {
-            throw ExceptionUtil.unexpectedException(e);
+            throw new IllegalStateException(e);
         }
     }
 
     private void initKeys(CryptoService cryptoService) throws Exception {
-        Callback<Void, String> DEFAULT_INIT_KEY = args -> UUID.randomUUID().toString().replace("-", "");
-
         String[] keys = {localKeyName, remoteKeyName};
         for (String key : keys) {
             if (StringUtil.isBlank(getKey(key))) {
-                writeKey(key, DEFAULT_INIT_KEY.run(null));
+                writeKey(key, UUID.randomUUID().toString().replace("-", ""));
             }
         }
 
         if (StringUtil.isBlank(getKey(Config.publicKeyName))
                 || StringUtil.isBlank(getKey(Config.privateKeyName))) {
-            String[] keyPair = cryptoService.generateKeyPair(DEFAULT_INIT_KEY.run(null));
+            String[] keyPair = cryptoService.generateKeyPair(UUID.randomUUID().toString().replace("-", ""));
             writeKey(Config.publicKeyName, keyPair[0]);
             writeKey(Config.privateKeyName, keyPair[1]);
         }
@@ -113,6 +109,18 @@ class LocalConfig implements Config {
         Properties keyProperties = FileUtil.fileToProperties(secureFile);
         keyVal = MASK_CIPHER.encrypt(keyVal);
         keyProperties.put(keyName, keyVal);
-        FileUtil.writeFile(secureFile, StringUtil.propertiesToString(keyProperties));
+        FileUtil.writeFile(secureFile, propertiesToString(keyProperties));
+    }
+
+    public static String propertiesToString(Properties properties) {
+        if (properties == null) {
+            return "";
+        }
+        final Set<Map.Entry<Object, Object>> entries = properties.entrySet();
+        List<String> list = new ArrayList<>(entries.size());
+        for (Map.Entry<Object, Object> entry : entries) {
+            list.add(entry.getKey() + "=" + entry.getValue());
+        }
+        return String.join(System.lineSeparator(), list);
     }
 }

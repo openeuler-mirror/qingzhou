@@ -1,16 +1,16 @@
 package qingzhou.app.common;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Showable;
 import qingzhou.framework.app.App;
-import qingzhou.framework.util.JDKUtil;
 
 @Model(name = App.SYS_MODEL_HOME, icon = "home",
-        entryAction = ShowModel.ACTION_NAME_SHOW,
+        entryAction = App.SYS_ACTION_ENTRY_HOME,
         menuOrder = -1,
         nameI18n = {"应用", "en:App"},
         infoI18n = {"展示当前应用的说明信息。",
                 "en:Displays the description of the current app."})
-public class AppHome extends ModelBase implements ShowModel {
+public class AppHome extends ModelBase {
     @ModelField(
             nameI18n = {"应用名称", "en:App Name"},
             infoI18n = {"当前应用的名称。", "en:The name of the current app."})
@@ -31,8 +31,7 @@ public class AppHome extends ModelBase implements ShowModel {
             infoI18n = {"运行此应用的 Java 环境。", "en:The Java environment in which the app is running."})
     public String javaHome;
 
-    @Override
-    @ModelAction(name = ACTION_NAME_SHOW,
+    @ModelAction(name = Showable.ACTION_NAME_SHOW,
             icon = "info-sign", forwardToPage = "show",
             nameI18n = {"首页", "en:Home"},
             infoI18n = {"展示应用的首页信息。", "en:Displays the homepage information of the app."})
@@ -41,7 +40,7 @@ public class AppHome extends ModelBase implements ShowModel {
         home.appName = request.getAppName();
         home.platform = getAppContext().getPlatformName();
         home.version = getAppContext().getPlatformVersion();
-        home.javaHome = JDKUtil.getJavaHome();
-        response.addDataObject(home);
+        home.javaHome = System.getProperty("java.home");
+        response.addModelData(home);
     }
 }

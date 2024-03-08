@@ -1,25 +1,22 @@
 package qingzhou.app;
 
-import qingzhou.api.ModelAction;
+import qingzhou.api.metadata.ModelActionData;
 
-import java.lang.reflect.Method;
+import java.io.Serializable;
 
-public class ActionInfo {
-    public final ModelAction modelAction;
+public class ActionInfo implements Serializable {
     public final String methodName;
-    private Method javaMethod;
+    public final ModelActionData modelAction;
 
-    public ActionInfo(ModelAction modelAction, String methodName) {
-        this.modelAction = modelAction;
+    public final transient InvokeMethod invokeMethod;
+
+    public ActionInfo(ModelActionData modelAction, String methodName, InvokeMethod invokeMethod) {
         this.methodName = methodName;
+        this.modelAction = modelAction;
+        this.invokeMethod = invokeMethod;
     }
 
-    public Method getJavaMethod() {
-        return javaMethod;
-    }
-
-    public void setJavaMethod(Method javaMethod) {
-        if (this.javaMethod != null) throw new IllegalStateException();
-        this.javaMethod = javaMethod;
+    public interface InvokeMethod {
+        void invoke(Object... args) throws Exception;
     }
 }

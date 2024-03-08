@@ -1,16 +1,24 @@
 package qingzhou.bootstrap.main.impl;
 
+import qingzhou.bootstrap.Utils;
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.bootstrap.main.service.ServiceManager;
 
 import java.io.File;
+import java.util.Map;
 
 public class FrameworkContextImpl implements FrameworkContext {
     private final ServiceManagerImpl serviceManager = new ServiceManagerImpl();
-    private final String versionFlag = "version";
-    private File home;
-    private File lib;
-    private File domain;
+    private Boolean masterNode;
+
+    @Override
+    public boolean isMaster() {
+        if (masterNode == null) {
+            Map<String, String> console = Utils.getAttributes(Utils.getServerXml(Utils.getDomain()), "//console");
+            masterNode = Boolean.parseBoolean(console.get("enabled"));
+        }
+        return masterNode;
+    }
 
     @Override
     public String getName() {
@@ -19,6 +27,7 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public String getVersion() {
+        String versionFlag = "version";
         return getLib().getName().substring(versionFlag.length());
     }
 
@@ -44,37 +53,16 @@ public class FrameworkContextImpl implements FrameworkContext {
 
     @Override
     public File getDomain() {
-        if (domain == null) {
-            String domainName = System.getProperty("qingzhou.domain");
-            if (domainName == null || domainName.trim().isEmpty()) {
-                throw new NullPointerException("qingzhou.domain");
-            }
-            domain = new File(domainName).getAbsoluteFile();
-        }
-        return domain;
+        return Utils.getDomain();
     }
 
     @Override
     public File getLib() {
-        if (lib == null) {
-            String jarPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-            String flag = "/" + versionFlag;
-            int i = jarPath.lastIndexOf(flag);
-            int j = jarPath.indexOf("/", i + flag.length());
-            lib = new File(new File(getHome(), "lib"), jarPath.substring(i + 1, j));
-        }
-        return lib;
+        return Utils.getLibDir();
     }
 
     @Override
     public ServiceManager getServiceManager() {
         return serviceManager;
-    }
-
-    private File getHome() {
-        if (home == null) {
-            home = new File(System.getProperty("qingzhou.home"));
-        }
-        return home;
     }
 }

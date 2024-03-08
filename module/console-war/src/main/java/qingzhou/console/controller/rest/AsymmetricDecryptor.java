@@ -1,11 +1,11 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
-import qingzhou.api.ModelField;
-import qingzhou.api.ModelManager;
-import qingzhou.console.RestContext;
-import qingzhou.console.impl.ConsoleWarHelper;
-import qingzhou.framework.app.RequestImpl;
+import qingzhou.api.metadata.ModelFieldData;
+import qingzhou.api.metadata.ModelManager;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.page.PageBackendService;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.pattern.Filter;
@@ -13,10 +13,10 @@ import qingzhou.framework.util.pattern.Filter;
 public class AsymmetricDecryptor implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
-        RequestImpl request = (RequestImpl) context.request;
-        ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
+        RequestImpl request = context.request;
+        ModelManager modelManager = SystemController.getAppMetadata(request).getModelManager();
         for (String fieldName : modelManager.getFieldNames(request.getModelName())) {
-            ModelField modelField = modelManager.getModelField(request.getModelName(), fieldName);
+            ModelFieldData modelField = modelManager.getModelField(request.getModelName(), fieldName);
             if (modelField.type() == FieldType.password
                     || modelField.clientEncrypt()
             ) {
@@ -41,11 +41,11 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
             return input;
         }
         try {
-            String pubKey = ConsoleWarHelper.getConfig().getKey(Config.publicKeyName);
-            String priKey = ConsoleWarHelper.getConfig().getKey(Config.privateKeyName);
-            return ConsoleWarHelper.getCryptoService().getKeyPairCipher(pubKey, priKey).decryptWithPrivateKey(input);
+            String pubKey = SystemController.getConfig().getKey(Config.publicKeyName);
+            String priKey = SystemController.getConfig().getKey(Config.privateKeyName);
+            return SystemController.getCryptoService().getKeyPairCipher(pubKey, priKey).decryptWithPrivateKey(input);
         } catch (Exception e) {
-            ConsoleWarHelper.getLogger().warn("Decryption error", e);
+            SystemController.getLogger().warn("Decryption error", e);
             return input;
         }
     }
@@ -56,6 +56,6 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
     }
 
     public static String getPublicKeyString() throws Exception {
-        return ConsoleWarHelper.getConfig().getKey(Config.publicKeyName);
+        return SystemController.getConfig().getKey(Config.publicKeyName);
     }
 }

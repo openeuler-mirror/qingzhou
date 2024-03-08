@@ -1149,7 +1149,7 @@ function bindEventForListPage() {
     });
 
     // 列表页及form页面下载(日志、快照等)
-    $("table a[action-name='" + getSetting("downloadlistName") + "'], a[btn-type='" + getSetting("downloadlistName") + "']").unbind("click").bind("click", function (e) {
+    $("table a[action-name='" + getSetting("filesName") + "'], a[btn-type='" + getSetting("filesName") + "']").unbind("click").bind("click", function (e) {
         e.preventDefault();
         if($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0){
             downloadFiles($(this).attr("href"), $(this).attr("downloadfile"));

@@ -1,9 +1,14 @@
 package qingzhou.app.master.service;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Createable;
+import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Listable;
 import qingzhou.app.master.Main;
+import qingzhou.framework.Constants;
 import qingzhou.framework.app.AppManager;
-import qingzhou.framework.app.RequestImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.logger.Logger;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -16,7 +21,7 @@ import java.util.stream.Stream;
         nameI18n = {"应用", "en:App"},
         infoI18n = {"应用。",
                 "en:App Management."})
-public class App extends ModelBase implements AddModel {
+public class App extends ModelBase implements Createable {
 
     @ModelField(
             showToList = true,
@@ -57,7 +62,7 @@ public class App extends ModelBase implements AddModel {
             notSupportedCharacters = "#",
             required = true,
             nameI18n = {"上传应用", "en:Upload Application"},
-            infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的轻舟应用文件，否则可能会导致安装失败。",
+            infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
                     "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
     public String fromUpload;
 
@@ -82,9 +87,9 @@ public class App extends ModelBase implements AddModel {
 
     @Override
     public void init() {
-        getAppContext().getConsoleContext().addI18N("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
-        getAppContext().getConsoleContext().addI18N("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
-        getAppContext().getConsoleContext().addI18N("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
+        getAppContext().addI18n("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
+        getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
+        getAppContext().addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
     }
 
     @Override
@@ -95,7 +100,7 @@ public class App extends ModelBase implements AddModel {
             nodeList.add(Option.of(qingzhou.framework.app.App.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
             Set<String> nodeSet = new HashSet<>();
             try {
-                if ("qingzhou".equals(userName)) {
+                if (Constants.DEFAULT_ADMINISTRATOR.equals(userName)) {
                     List<Map<String, String>> nodes = getDataStore().getAllData("node");
                     nodes.stream()
                             .map(node -> node.get("id"))
@@ -110,7 +115,8 @@ public class App extends ModelBase implements AddModel {
                 }
                 nodeSet.remove(qingzhou.framework.app.App.SYS_NODE_LOCAL);
                 nodeSet.stream().map(Option::of).forEach(nodeList::add);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Main.getService(Logger.class).error(e.getMessage(), e);
             }
 
             return () -> nodeList;
@@ -121,8 +127,8 @@ public class App extends ModelBase implements AddModel {
 
     @Override
     public String validate(Request request, String fieldName) {
-        if (fieldName.equals(ListModel.FIELD_NAME_ID)) {
-            String id = request.getParameter(ListModel.FIELD_NAME_ID);
+        if (fieldName.equals(Listable.FIELD_NAME_ID)) {
+            String id = request.getParameter(Listable.FIELD_NAME_ID);
             if (qingzhou.framework.app.App.SYS_APP_MASTER.equals(id) ||
                     qingzhou.framework.app.App.SYS_APP_NODE_AGENT.equals(id)) {
                 return "app.id.system";
@@ -132,14 +138,13 @@ public class App extends ModelBase implements AddModel {
         return null;
     }
 
-    @Override
-    @ModelAction(name = ACTION_NAME_ADD,
+    @ModelAction(name = Createable.ACTION_NAME_ADD,
             icon = "save",
             nameI18n = {"安装", "en:Install"},
             infoI18n = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
     public void add(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
-        Map<String, String> p = prepareParameters(request);
+        Map<String, String> p = Main.prepareParameters(request, getAppContext());
         File srcFile;
         if (Boolean.parseBoolean(p.remove("appFrom"))) {
             srcFile = FileUtil.newFile(p.remove("fromUpload"));
@@ -148,7 +153,7 @@ public class App extends ModelBase implements AddModel {
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
             response.setSuccess(false);
-            String msg = getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "app.id.not.exist");
+            String msg = getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "app.id.not.exist");
             response.setMsg(msg);
             return;
         }
@@ -161,14 +166,14 @@ public class App extends ModelBase implements AddModel {
             appName = srcFileName.substring(0, index);
         } else {
             response.setSuccess(false);
-            String msg = getAppContext().getConsoleContext().getI18N(request.getI18nLang(), "app.type.unknown");
+            String msg = getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "app.type.unknown");
             response.setMsg(msg);
             return;
         }
 
         String[] nodes = p.get("nodes").split(",");
         request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_INSTALL);
+        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_INSTALL_APP);
         try {
             for (String node : nodes) {
                 try {
@@ -180,28 +185,33 @@ public class App extends ModelBase implements AddModel {
                 } catch (Exception e) { // todo 部分失败，如何显示到页面？
                     response.setSuccess(false);
                     response.setMsg(e.getMessage());
-                    e.printStackTrace();
+                    return;
                 }
             }
         } finally {
             request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
-            request.setActionName(ACTION_NAME_ADD);
+            request.setActionName(Createable.ACTION_NAME_ADD);
         }
 
-        if (response.isSuccess()) {
-            p.put(ListModel.FIELD_NAME_ID, appName);
-            getDataStore().addData(qingzhou.framework.app.App.SYS_MODEL_APP, appName, p);
-        }
+        p.put(Listable.FIELD_NAME_ID, appName);
+        getDataStore().addData(qingzhou.framework.app.App.SYS_MODEL_APP, appName, p);
     }
 
-    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE,
+    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
     }
 
-    @Override
+    @ModelAction(
+            name = Deletable.ACTION_NAME_DELETE,
+            showToList = true, orderOnList = 99,
+            supportBatch = true,
+            icon = "trash",
+            nameI18n = {"删除", "en:Delete"},
+            infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
+                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
         String appName = request.getId();
@@ -209,7 +219,7 @@ public class App extends ModelBase implements AddModel {
         String[] nodes = p.get("nodes").split(",");
 
         request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_UNINSTALL);
+        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_UNINSTALL_APP);
         try {
             for (String node : nodes) {
                 try {
@@ -220,24 +230,14 @@ public class App extends ModelBase implements AddModel {
                     }
                 } catch (Exception e) { // todo 部分失败，如何显示到页面？
                     response.setSuccess(false);
-                    e.printStackTrace();
+                    response.setMsg(e.getMessage());
                 }
             }
         } finally {
             request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
-            request.setActionName(ACTION_NAME_DELETE);
+            request.setActionName(Deletable.ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);
-    }
-
-    @Override
-    @ModelAction(name = ACTION_NAME_CREATE,
-            showToListHead = true,
-            icon = "plus-sign", forwardToPage = "form",
-            nameI18n = {"安装", "en:Install"},
-            infoI18n = {"在该节点上安装应用。", "en:Install the application on the node."})
-    public void create(Request request, Response response) throws Exception {
-        AddModel.super.create(request, response);
     }
 
     @Override

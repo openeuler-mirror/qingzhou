@@ -1,19 +1,16 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.Request;
-import qingzhou.api.Response;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.I18n;
-import qingzhou.console.RestContext;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.app.App;
-import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.FileUtil;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.pattern.Filter;
@@ -37,7 +34,7 @@ public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
     public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + App.SYS_MODEL_INDEX + "/" + App.SYS_MODEL_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
-    public static final File TEMP_BASE_PATH = ConsoleWarHelper.getCache("upload");
+    public static final File TEMP_BASE_PATH = SystemController.getCache("upload");
 
     public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
@@ -65,7 +62,7 @@ public class RESTController extends HttpServlet {
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
-                Response response = ActionInvoker.getInstance().invokeAction(restContext.request);
+                ResponseImpl response = ActionInvoker.getInstance().invokeAction(restContext.request);
                 restContext.response = response;
                 return response.isSuccess(); // 触发后续的响应
             }
@@ -97,13 +94,12 @@ public class RESTController extends HttpServlet {
         try {
             fileAttachments = prepareUploadFiles(req);// 必须在最开始处理上传文件！！！一旦调用了 request.getParameter方法就会丢失上传文件内容
 
-            Request request = buildRequest(req, resp, fileAttachments);
+            RequestImpl request = buildRequest(req, resp, fileAttachments);
             if (request == null) {
                 return;
             }
 
-            Response response = new ResponseImpl();
-            RestContext context = new RestContext(req, resp, request, response);
+            RestContext context = new RestContext(req, resp, request, new ResponseImpl());
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
             viewManager.render(context); // 最后作出响应
         } catch (Exception e) {
@@ -127,7 +123,7 @@ public class RESTController extends HttpServlet {
         }
     }
 
-    private Request buildRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> fileAttachments) throws IOException {
+    private RequestImpl buildRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> fileAttachments) throws IOException {
         List<String> rest = retrieveRestPathInfo(req);
         int restDepth = 5;
         if (rest.size() < restDepth) { // must have model & action
@@ -155,7 +151,7 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager().getActionNames(request.getModelName());
+        String[] actions = SystemController.getAppMetadata(request).getModelManager().getActionNames(request.getModelName());
         for (String name : actions) {
             if (name.equals(request.getActionName())) {
                 actionFound = true;

@@ -1,15 +1,15 @@
 package qingzhou.app.model;
 
-import qingzhou.api.AddModel;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
+import qingzhou.api.type.Createable;
 
 @Model(name = "test", icon = "leaf",
         nameI18n = {"Add测试模块", "en:Add Test"},
         infoI18n = {"测试增删改查相关功能", "en:Test the functions related to adding, deleting, modifying, and querying"}
 )
-public class Add extends ModelBase implements AddModel {
+public class Add extends ModelBase implements Createable {
 
     @ModelField(
             required = true,

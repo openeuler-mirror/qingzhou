@@ -5,7 +5,6 @@ import javax.servlet.WriteListener;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,8 +15,7 @@ public class JmxHttpServletResponse implements HttpServletResponse {
 
     private ByteArrayServletOutputStream outputStream = new ByteArrayServletOutputStream();
     private int status;
-    private String message;
-    private Map<String, String> header = new HashMap<>();
+    private final Map<String, String> header = new HashMap<>();
     private boolean committed = false;
 
     private PrintWriter writer;
@@ -52,22 +50,21 @@ public class JmxHttpServletResponse implements HttpServletResponse {
     }
 
     @Override
-    public void sendError(int i, String s) throws IOException {
+    public void sendError(int i, String s) {
         if (isCommitted()) {
             throw new IllegalStateException("Cannot call sendError() after the response has been committed");
         }
         this.committed = true;
         this.status = i;
-        this.message = s;
     }
 
     @Override
-    public void sendError(int i) throws IOException {
+    public void sendError(int i) {
         sendError(i, null);
     }
 
     @Override
-    public void sendRedirect(String s) throws IOException {
+    public void sendRedirect(String s) {
         if (isCommitted()) {
             throw new IllegalStateException("Cannot call sendRedirect() after the response has been committed");
         }
@@ -106,7 +103,6 @@ public class JmxHttpServletResponse implements HttpServletResponse {
             return;
         }
         this.status = i;
-        this.message = s;
         this.committed = true;
     }
 
@@ -226,7 +222,7 @@ public class JmxHttpServletResponse implements HttpServletResponse {
         return new String(outputStream.toByteArray());
     }
 
-    static class ByteArrayServletOutputStream extends ServletOutputStream {
+    private static class ByteArrayServletOutputStream extends ServletOutputStream {
 
         protected final ByteArrayOutputStream buf;
 
@@ -245,7 +241,7 @@ public class JmxHttpServletResponse implements HttpServletResponse {
         }
 
         @Override
-        public void write(int b) throws IOException {
+        public void write(int b) {
             buf.write(b);
         }
 

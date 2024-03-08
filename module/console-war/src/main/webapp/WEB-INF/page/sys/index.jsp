@@ -1,8 +1,8 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
 <%
-String contextPath = request.getContextPath();
-request.setAttribute("indexPageFlag", true);
+    String contextPath = request.getContextPath();
+    request.setAttribute("indexPageFlag", true);
 %>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -228,109 +228,110 @@ request.setAttribute("indexPageFlag", true);
     <script type="text/javascript" src="<%=contextPath%>/static/js/msg.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/lib/layer/layer.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
+    <script type="text/javascript"
+            src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
     <script type="text/javascript" src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
     <script src="<%=contextPath%>/static/lib/muuri/muuri.min.js"></script>
     <%@ include file="../fragment/head.jsp" %>
 </head>
 
 <body style="overflow:hidden;">
-    <!--[if lt IE 8]>
-    <div class="alert alert-danger"><%=PageBackendService.getMasterAppI18NString( "page.browser.outdated")%></div>
+<!--[if lt IE 8]>
+    <div class="alert alert-danger"><%=PageBackendService.getMasterAppI18nString( "page.browser.outdated")%></div>
     <![endif]-->
 
-    <%@ include file="../fragment/navbar.jsp" %>
+<%@ include file="../fragment/navbar.jsp" %>
 
-    <main>
-        <section class="tab-box">
-            <ul>
-                <li class="active" central="true">
-                    <a href="javascript:void(0);">
-                        <i class="icon icon-resize"></i>
-                        <label><%=PageBackendService.getMasterAppI18NString( "page.index.centralized")%></label>
-                    </a>
-                </li>
-            </ul>
-        </section>
+<main>
+    <section class="tab-box">
+        <ul>
+            <li class="active" central="true">
+                <a href="javascript:void(0);">
+                    <i class="icon icon-resize"></i>
+                    <label><%=PageBackendService.getMasterAppI18nString("page.index.centralized")%>
+                    </label>
+                </a>
+            </li>
+        </ul>
+    </section>
 
-        <section class="content-box">
-            <ul>
-                <li class="active" central="true">
-                    <%-- 左侧菜单 --%>
-                    <aside class="main-sidebar">
-                        <div class="sidebar sidebar-scroll">
-                            <ul class="sidebar-menu" data-widget="tree">
-                                <%
+    <section class="content-box">
+        <ul>
+            <li class="active" central="true">
+                <%-- 左侧菜单 --%>
+                <aside class="main-sidebar">
+                    <div class="sidebar sidebar-scroll">
+                        <ul class="sidebar-menu" data-widget="tree">
+                            <%
                                 // 菜单
-                                List<MenuItem> menuList = PageBackendService.getAppMenuList(currentUser, App.SYS_APP_MASTER);
-                                out.print(PageBackendService.buildMenuHtmlBuilder(menuList, request, response, ViewManager.htmlView, ConsoleConstants.MANAGE_TYPE_APP, App.SYS_APP_MASTER, qzRequest.getModelName()));
-                                %>
-                            </ul>
-                        </div>
+                                out.print(PageBackendService.buildMenuHtmlBuilder(request, response, qzRequest));
+                            %>
+                        </ul>
+                    </div>
 
-                        <div class="menu-toggle-btn">
-                            <a href="javascript:void(0);" data-toggle="push-menu">
-                                <i class="icon icon-sliders"></i>
-                            </a>
-                        </div>
-                    </aside>
+                    <div class="menu-toggle-btn">
+                        <a href="javascript:void(0);" data-toggle="push-menu">
+                            <i class="icon icon-sliders"></i>
+                        </a>
+                    </div>
+                </aside>
 
-                    <section class="main-body">
-                        <%-- 面包屑分级导航 --%>
-                        <%@ include file="../fragment/breadcrumb.jsp" %>
+                <section class="main-body">
+                    <%-- 面包屑分级导航 --%>
+                    <%@ include file="../fragment/breadcrumb.jsp" %>
 
-                        <%-- 首页面主体部分 --%>
-                        <%@ include file="../fragment/info.jsp" %>
-                    </section>
-                </li>
-            </ul>
-        </section>
-    </main>
-    
-    <div id="mask-loading" class="mask-loading">
-        <div class="loading"></div>
-    </div>
+                    <%-- 首页面主体部分 --%>
+                    <%@ include file="../fragment/info.jsp" %>
+                </section>
+            </li>
+        </ul>
+    </section>
+</main>
 
-    <script type="text/javascript">
-        var global_setting = {
-            check2FA: '<%=ConsoleConstants.LOGIN_2FA%>',
-            separa: '<%=ConsoleConstants.DATA_SEPARATOR%>',
-            downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
-            locale: '<%=(I18n.isZH() ? "zh-CN":"en-US")%>',
-            pageLang: '<%=(I18n.isZH() ? "zh_cn":"en")%>',
-            pageErrorMsg: '<%=PageBackendService.getMasterAppI18NString("page.error")%>',
-            pageConfirmTitle: '<%=PageBackendService.getMasterAppI18NString("page.confirm.title")%>',
-            confirmBtnText: '<%=PageBackendService.getMasterAppI18NString("page.confirm")%>',
-            cancelBtnText: '<%=PageBackendService.getMasterAppI18NString("page.cancel")%>',
-            notLogin: '<%=PageBackendService.getMasterAppI18NString("page.login.need")%>',
-            encrypt_key_size: '<%=AsymmetricDecryptor.getKeySize()%>',
-            reloginBtnText: '<%=PageBackendService.getMasterAppI18NString("page.relogin")%>',
-            iknowBtnText: '<%=PageBackendService.getMasterAppI18NString("page.gotit")%>',
-            switchLang: '<%=PageBackendService.getMasterAppI18NString("page.lang.switch.confirm")%>',
-            logout: '<%=PageBackendService.getMasterAppI18NString("page.logout.confirm")%>',
-            downloadlistName: '<%=DownloadModel.ACTION_NAME_DOWNLOADLIST%>',
-            downloadTip: '<%=PageBackendService.getMasterAppI18NString("page.download.log.tip")%>',
-            actionName_target: '<%=App.SYS_ACTION_MANAGE%>',
-            downloadFileNames: '<%=DownloadModel.PARAMETER_DOWNLOAD_FILE_NAMES%>',
-            showAction: '<%=ShowModel.ACTION_NAME_SHOW%>',
-            downloadCheckAll: '<%=PageBackendService.getMasterAppI18NString("page.download.checkall")%>',
-            downloadTaskTip: '<%=PageBackendService.getMasterAppI18NString("page.download.tasktip")%>',
-            layerTitle2FA: '<%=PageBackendService.getMasterAppI18NString("page.layertitle.2fa")%>',
-            networkError: '<%=PageBackendService.getMasterAppI18NString("page.error.network")%>',
-            placeholder2FA: '<%=PageBackendService.getMasterAppI18NString("page.placeholder.2fa")%>',
-            bindSuccess2FA: '<%=PageBackendService.getMasterAppI18NString("page.bindsuccess.2fa")%>',
-            bindFail2FA: '<%=PageBackendService.getMasterAppI18NString("page.bindfail.2fa")%>',
-            passwordChangedMsg: '<%=PageBackendService.getMasterAppI18NString("page.password.changed")%>',
-            resetPasswordUrl: '<%="/password/update"%>',
-            searchHiddenTip: '<%=PageBackendService.getMasterAppI18NString("page.search.hidden")%>',
-            passwordConfirmFailed: '<%=PageBackendService.getMasterAppI18NString("password.confirm.notequal")%>'
-        };
-        var searchUrl = '<%=PageBackendService.encodeURL( response, contextPath + "/search")%>';
-    </script>
-    <script type="text/javascript" src="<%=contextPath%>/static/js/main.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/js/index.js"></script>
-    <script type="text/javascript">
-        tooltip(".tooltips", {transition: true, time: 200});
-    </script>
+<div id="mask-loading" class="mask-loading">
+    <div class="loading"></div>
+</div>
+
+<script type="text/javascript">
+    var global_setting = {
+        check2FA: '<%=ConsoleConstants.LOGIN_2FA%>',
+        separa: '<%=ConsoleConstants.DATA_SEPARATOR%>',
+        downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
+        locale: '<%=(I18n.isZH() ? "zh-CN":"en-US")%>',
+        pageLang: '<%=(I18n.isZH() ? "zh_cn":"en")%>',
+        pageErrorMsg: '<%=PageBackendService.getMasterAppI18nString("page.error")%>',
+        pageConfirmTitle: '<%=PageBackendService.getMasterAppI18nString("page.confirm.title")%>',
+        confirmBtnText: '<%=PageBackendService.getMasterAppI18nString("page.confirm")%>',
+        cancelBtnText: '<%=PageBackendService.getMasterAppI18nString("page.cancel")%>',
+        notLogin: '<%=PageBackendService.getMasterAppI18nString("page.login.need")%>',
+        encrypt_key_size: '<%=AsymmetricDecryptor.getKeySize()%>',
+        reloginBtnText: '<%=PageBackendService.getMasterAppI18nString("page.relogin")%>',
+        iknowBtnText: '<%=PageBackendService.getMasterAppI18nString("page.gotit")%>',
+        switchLang: '<%=PageBackendService.getMasterAppI18nString("page.lang.switch.confirm")%>',
+        logout: '<%=PageBackendService.getMasterAppI18nString("page.logout.confirm")%>',
+        filesName: '<%=Downloadable.ACTION_NAME_FILES%>',
+        downloadTip: '<%=PageBackendService.getMasterAppI18nString("page.download.log.tip")%>',
+        actionName_target: '<%=App.SYS_ACTION_MANAGE_PAGE%>',
+        downloadFileNames: '<%=ConsoleConstants.PARAMETER_DOWNLOAD_FILE_NAMES%>',
+        showAction: '<%=Showable.ACTION_NAME_SHOW%>',
+        downloadCheckAll: '<%=PageBackendService.getMasterAppI18nString("page.download.checkall")%>',
+        downloadTaskTip: '<%=PageBackendService.getMasterAppI18nString("page.download.tasktip")%>',
+        layerTitle2FA: '<%=PageBackendService.getMasterAppI18nString("page.layertitle.2fa")%>',
+        networkError: '<%=PageBackendService.getMasterAppI18nString("page.error.network")%>',
+        placeholder2FA: '<%=PageBackendService.getMasterAppI18nString("page.placeholder.2fa")%>',
+        bindSuccess2FA: '<%=PageBackendService.getMasterAppI18nString("page.bindsuccess.2fa")%>',
+        bindFail2FA: '<%=PageBackendService.getMasterAppI18nString("page.bindfail.2fa")%>',
+        passwordChangedMsg: '<%=PageBackendService.getMasterAppI18nString("page.password.changed")%>',
+        resetPasswordUrl: '<%="/password/update"%>',
+        searchHiddenTip: '<%=PageBackendService.getMasterAppI18nString("page.search.hidden")%>',
+        passwordConfirmFailed: '<%=PageBackendService.getMasterAppI18nString("password.confirm.notequal")%>'
+    };
+    var searchUrl = '<%=PageBackendService.encodeURL( response, contextPath + "/search")%>';
+</script>
+<script type="text/javascript" src="<%=contextPath%>/static/js/main.js"></script>
+<script type="text/javascript" src="<%=contextPath%>/static/js/index.js"></script>
+<script type="text/javascript">
+    tooltip(".tooltips", {transition: true, time: 200});
+</script>
 </body>
 </html>

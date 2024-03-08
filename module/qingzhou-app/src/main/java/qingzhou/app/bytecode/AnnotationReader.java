@@ -4,12 +4,14 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 public interface AnnotationReader {
-    Model getClassAnnotations(String classname) throws Exception;
+    Model readModel(Class<?> cls);
 
-    Map<String, ModelField> getFieldAnnotations(String classname) throws Exception;
+    Map<Field, ModelField> readModelField(Class<?> cls);
 
-    Map<String, ModelAction> getMethodAnnotations(String classname) throws Exception;
+    Map<Method, ModelAction> readModelAction(Class<?> cls);
 }

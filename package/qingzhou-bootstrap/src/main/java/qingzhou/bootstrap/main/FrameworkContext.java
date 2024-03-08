@@ -5,7 +5,9 @@ import qingzhou.bootstrap.main.service.ServiceManager;
 import java.io.File;
 
 public interface FrameworkContext {
-    // 轻舟产品名词
+    boolean isMaster();
+
+    //  Qingzhou 产品名词
     String getName();
 
     // 产品版本信息

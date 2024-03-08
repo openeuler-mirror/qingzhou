@@ -1,14 +1,15 @@
 package qingzhou.console.controller;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelManager;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
+import qingzhou.api.metadata.ModelActionData;
+import qingzhou.api.metadata.ModelData;
+import qingzhou.api.metadata.ModelManager;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.framework.Constants;
 import qingzhou.framework.app.App;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
@@ -16,32 +17,36 @@ import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AccessControl implements Filter<HttpServletContext> {
     static {
-        ConsoleI18n.addI18N("page.error.permission.deny", new String[]{"对不起，您无权访问该资源", "en:Sorry, you do not have access to this resource"});
+        ConsoleI18n.addI18n("page.error.permission.deny", new String[]{"对不起，您无权访问该资源", "en:Sorry, you do not have access to this resource"});
     }
 
     private static final List<String> masterAppModels = Arrays.asList("user", "version", "node");
 
-    public static Model[] getLoginUserAppMenuModels(String loginUser, String appName) {
-        ModelManager modelManager = ConsoleWarHelper.getAppStub(appName).getModelManager();
+    public static ModelData[] getLoginUserAppMenuModels(String loginUser, String appName) {
+        ModelManager modelManager = SystemController.getAppMetadata(appName).getModelManager();
         if (modelManager == null) {
-            return new Model[0];
+            return new ModelData[0];
         }
 
-        List<Model> models = new ArrayList<>();
+        List<ModelData> models = new ArrayList<>();
         for (String modelName : modelManager.getModelNames()) {
             models.add(modelManager.getModel(modelName));
         }
 
-        if (!"qingzhou".equals(loginUser) && App.SYS_APP_MASTER.equals(appName)) {
+        if (!Constants.DEFAULT_ADMINISTRATOR.equals(loginUser) && App.SYS_APP_MASTER.equals(appName)) {
             models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
         }
 
-        return models.toArray(new Model[0]);
+        return models.toArray(new ModelData[0]);
     }
 
     public static boolean canAccess(String appName, String modelAction, String user) {
@@ -49,8 +54,8 @@ public class AccessControl implements Filter<HttpServletContext> {
         String checkModel = ma[0];
         String checkAction = ma[1];
         if (ma.length == 2) {
-            ModelManager modelManager = ConsoleWarHelper.getAppStub(appName).getModelManager();
-            ModelAction modelAction1 = modelManager.getModelAction(checkModel, checkAction);
+            ModelManager modelManager = SystemController.getAppMetadata(appName).getModelManager();
+            ModelActionData modelAction1 = modelManager.getModelAction(checkModel, checkAction);
             return modelAction1 != null;
         }
 
@@ -58,11 +63,11 @@ public class AccessControl implements Filter<HttpServletContext> {
     }
 
     public static boolean nodePermission(String appName, String user) {
-        if ("qingzhou".equals(user)) {
+        if (Constants.DEFAULT_ADMINISTRATOR.equals(user)) {
             return true;
         }
 
-        Config config = ConsoleWarHelper.getConfig();
+        Config config = SystemController.getConfig();
         Map<String, String> userPro = config.getConfig("/user[@id='" + user + "']");
         String userNodes = userPro.getOrDefault("nodes", "");
         Set<String> userNodeSet = Arrays.stream(userNodes.split(","))
@@ -132,7 +137,7 @@ public class AccessControl implements Filter<HttpServletContext> {
         if (StringUtil.notBlank(user)) {
             List<String> rest = RESTController.retrieveRestPathInfo(httpServletRequest);
             if (rest.size() >= 5) {
-                String appName = rest.get(2);
+                String appName = PageBackendService.getAppName(rest.get(1), rest.get(2));
                 String model = rest.get(3);
                 String action = rest.get(4);
                 String detectRest = model + "/" + action;
@@ -142,7 +147,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             }
         }
 
-        String msg = ConsoleI18n.getI18N(I18n.getI18nLang(), "page.error.permission.deny");
+        String msg = ConsoleI18n.getI18n(I18n.getI18nLang(), "page.error.permission.deny");
         JsonView.responseErrorJson(httpServletResponse, msg);
         return false;
     }

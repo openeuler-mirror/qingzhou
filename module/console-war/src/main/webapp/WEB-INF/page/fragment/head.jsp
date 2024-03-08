@@ -1,29 +1,30 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ page import="java.util.*" %>
-<%@ page import="java.io.*" %>
-<%@ page import="java.time.*" %>
-<%@ page import="java.time.format.*" %>
 <%@ page import="qingzhou.api.*" %>
+<%@ page import="qingzhou.api.type.*" %>
+<%@ page import="qingzhou.api.metadata.*" %>
 <%@ page import="qingzhou.framework.*" %>
 <%@ page import="qingzhou.framework.app.*" %>
-<%@ page import="qingzhou.framework.util.*" %>
 <%@ page import="qingzhou.console.*" %>
-<%@ page import="qingzhou.console.impl.*" %>
-<%@ page import="qingzhou.console.controller.rest.*" %>
 <%@ page import="qingzhou.console.controller.*" %>
+<%@ page import="qingzhou.console.controller.rest.*" %>
 <%@ page import="qingzhou.console.login.*" %>
 <%@ page import="qingzhou.console.login.vercode.*" %>
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.page.*" %>
+<%@ page import="qingzhou.framework.console.RequestImpl" %>
+<%@ page import="qingzhou.framework.console.ResponseImpl" %>
+<%@ page import="qingzhou.framework.util.StringUtil" %>
+
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
-    Response qzResponse = (Response) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
-    String menuAppName = PageBackendService.getInitAppName(qzRequest);
-    ModelManager modelManager = ConsoleWarHelper.getAppStub(menuAppName).getModelManager();
+    ResponseImpl qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
+    String menuAppName = PageBackendService.getAppName(qzRequest);
+    ModelManager modelManager = PageBackendService.getModelManager(qzRequest);
 %>
 
 <script type="text/javascript">
@@ -43,7 +44,7 @@
     String common_msg = request.getParameter(RESTController.MSG_FLAG);
     common_msg = LoginManager.retrieveI18nMsg(common_msg);
     if (common_msg != null) {
-        if (!SafeCheckerUtil.checkIsXSS(common_msg)) {
+        if (!Validator.SafeCheckerUtil.checkIsXSS(common_msg)) {
 %>
 <script>
     $(document).ready(function () {
@@ -63,7 +64,6 @@
     }
 %>
 
-<%--公用“转发”错误提示：三员密码必需本机修改的提示--%>
 <%
     if (qzResponse != null && !qzResponse.isSuccess()) {
 %>

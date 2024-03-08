@@ -1,14 +1,18 @@
 package qingzhou.console;
 
-import qingzhou.api.*;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.api.Request;
+import qingzhou.api.metadata.ModelManager;
+import qingzhou.api.type.Listable;
+import qingzhou.api.type.Showable;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.framework.app.App;
-import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
 import qingzhou.framework.config.Config;
-import qingzhou.framework.util.ExceptionUtil;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
 
 import javax.naming.NameNotFoundException;
@@ -19,7 +23,7 @@ import java.util.*;
 
 public class ActionInvoker {
     static {
-        ConsoleI18n.addI18N("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
+        ConsoleI18n.addI18n("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
     }
 
     private static final ActionInvoker instance = new ActionInvoker();
@@ -31,12 +35,12 @@ public class ActionInvoker {
     private ActionInvoker() {
     }
 
-    public Response invokeAction(Request request) throws Exception {
-        Response validationResponse = new ResponseImpl();
+    public ResponseImpl invokeAction(Request request) throws Exception {
+        ResponseImpl validationResponse = new ResponseImpl();
         boolean ok = Validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
         if (!ok) {
             if (StringUtil.isBlank(validationResponse.getMsg())) {
-                validationResponse.setMsg(ConsoleI18n.getI18N(request.getI18nLang(), "validator.fail"));
+                validationResponse.setMsg(ConsoleI18n.getI18n(request.getI18nLang(), "validator.fail"));
             }
             return validationResponse;
         } else {
@@ -49,10 +53,10 @@ public class ActionInvoker {
     }
 
     private boolean isBatchAction(Request request) {
-        String ids = request.getParameter(ListModel.FIELD_NAME_ID);
+        String ids = request.getParameter(Listable.FIELD_NAME_ID);
         if (StringUtil.isBlank(ids)) return false;
 
-        ModelManager modelManager = ConsoleWarHelper.getAppStub(request.getAppName()).getModelManager();
+        ModelManager modelManager = PageBackendService.getModelManager(request);
         String[] actionNamesSupportBatch = modelManager.getActionNamesSupportBatch(request.getModelName());
         for (String batch : actionNamesSupportBatch) {
             if (batch.equals(request.getActionName())) return true;
@@ -61,13 +65,13 @@ public class ActionInvoker {
         return false;
     }
 
-    private Response invokeBatch(Request request) {
-        Response response = new ResponseImpl();
+    private ResponseImpl invokeBatch(Request request) {
+        ResponseImpl response = new ResponseImpl();
         int suc = 0;
         int fail = 0;
         StringBuilder errbuilder = new StringBuilder();
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
-        String oid = request.getParameter(ListModel.FIELD_NAME_ID);
+        String oid = request.getParameter(Listable.FIELD_NAME_ID);
         for (String id : oid.split(ConsoleConstants.DATA_SEPARATOR)) {
             if (StringUtil.notBlank(id)) {
                 id = PageBackendService.decodeId(id);
@@ -91,15 +95,15 @@ public class ActionInvoker {
             }
         }
         ((RequestImpl) request).setId(oid);
-        String appName = request.getAppName();
+        String appName = PageBackendService.getAppName(request);
         String model = I18n.getString(appName, "model." + request.getModelName());
         String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
         if (result.isEmpty()) {
-            String resultMsg = ConsoleI18n.getI18N(I18n.getI18nLang(), "batch.ops.success", model, action, suc);
+            String resultMsg = ConsoleI18n.getI18n(I18n.getI18nLang(), "batch.ops.success", model, action, suc);
             response.setMsg(resultMsg);
         } else {
             response.setSuccess(suc > 0);
-            errbuilder.append(ConsoleI18n.getI18N(I18n.getI18nLang(), "batch.ops.fail", model, action, suc, fail));
+            errbuilder.append(ConsoleI18n.getI18n(I18n.getI18nLang(), "batch.ops.fail", model, action, suc, fail));
             errbuilder.append("<br/>");
             for (Map.Entry<String, String> entry : result.entrySet()) {
                 String key = entry.getKey();
@@ -112,16 +116,16 @@ public class ActionInvoker {
         return response;
     }
 
-    private Response invoke(Request request) {
+    private ResponseImpl invoke(Request request) {
         try {
-            Map<String, Response> responseOnNode = processRequest(request);
-            for (Map.Entry<String, Response> entry : responseOnNode.entrySet()) {
+            Map<String, ResponseImpl> responseOnNode = processRequest(request);
+            for (Map.Entry<String, ResponseImpl> entry : responseOnNode.entrySet()) {
                 return entry.getValue(); // TODO 多条结果如何展示？
             }
 
-            throw ExceptionUtil.unexpectedException("It should return at least one Response");
+            throw new IllegalStateException("It should return at least one Response");
         } catch (Exception e) {
-            Response response = new ResponseImpl();
+            ResponseImpl response = new ResponseImpl();
             response.setSuccess(false);
             Set<Throwable> set = new HashSet<>();
             retrieveException(e, set);
@@ -146,7 +150,7 @@ public class ActionInvoker {
             if (msg == null) {
                 msg = "Server exception, please check log for details.";
                 // 不能抛异常，否则到不了 view 处理
-                ConsoleWarHelper.getLogger().warn(msg, e);
+                SystemController.getLogger().warn(msg, e);
             }
 
             response.setMsg(msg);
@@ -171,31 +175,29 @@ public class ActionInvoker {
         }
     }
 
-    public Map<String, Response> processRequest(Request request) throws Exception {
-        Map<String, Response> resultOnNode = new HashMap<>();
+    public Map<String, ResponseImpl> processRequest(Request request) throws Exception {
+        Map<String, ResponseImpl> resultOnNode = new HashMap<>();
         List<String> appNodes = new ArrayList<>();
         String manageType = ((RequestImpl) request).getManageType();
         String appName = request.getAppName();
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
-            if (App.SYS_APP_NODE_AGENT.equals(appName)) {
-                appNodes.add(App.SYS_NODE_LOCAL);
-            }
+            appNodes.add(appName);
         } else if (ConsoleConstants.MANAGE_TYPE_APP.equals(manageType)) {
             appNodes = getAppNodes(appName);
         }
 
         for (String node : appNodes) {
-            Response responseOnNode;
+            ResponseImpl responseOnNode;
             if (node.equals(App.SYS_NODE_LOCAL)) {
-                Response response = new ResponseImpl();
-                ConsoleWarHelper.invokeLocalApp(appName, request, response);
+                ResponseImpl response = new ResponseImpl();
+                SystemController.invokeLocalApp(request, response);
                 responseOnNode = response;
             } else {
                 Map<String, String> nodeById = ServerXml.get().getNodeById(node);
                 String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
                 String port = nodeById.get("port");
                 String remoteUrl = String.format("http://%s:%s", ip, port);
-                String remoteKey = ConsoleWarHelper.getConfig().getKey(Config.remoteKeyName);
+                String remoteKey = SystemController.getConfig().getKey(Config.remoteKeyName);
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
             }
             resultOnNode.put(node, responseOnNode);
@@ -204,32 +206,26 @@ public class ActionInvoker {
         return resultOnNode;
     }
 
-    private List<String> getAppNodes(String appName) {
+    private List<String> getAppNodes(String appName) throws Exception {
         List<String> nodes = new ArrayList<>();
         if (App.SYS_APP_MASTER.equals(appName)) {
             nodes.add(App.SYS_NODE_LOCAL);
         } else {
-            Map<String, String> res = null;
-            try {
-                RequestImpl request = new RequestImpl();
-                Response response = new ResponseImpl();
-                request.setAppName(App.SYS_APP_MASTER);
-                request.setModelName(App.SYS_MODEL_APP);
-                request.setActionName(ShowModel.ACTION_NAME_SHOW);
-                request.setId(appName);
-                ConsoleWarHelper.invokeLocalApp(App.SYS_APP_MASTER, request, response);
-                List<Map<String, String>> dataList = response.getDataList();
-                if (dataList != null && !dataList.isEmpty()) {
-                    res = dataList.get(0);
-                }
-            } catch (Exception e) {
-                throw ExceptionUtil.unexpectedException(e);
-            }
-            if (res == null || res.isEmpty()) {
-                throw ExceptionUtil.unexpectedException("App [ " + appName + " ] not found.");
+            RequestImpl request = new RequestImpl();
+            ResponseImpl response = new ResponseImpl();
+            request.setAppName(App.SYS_APP_MASTER);
+            request.setModelName(App.SYS_MODEL_APP);
+            request.setActionName(Showable.ACTION_NAME_SHOW);
+            request.setId(appName);
+            SystemController.invokeLocalApp(request, response);
+            List<Map<String, String>> dataList = response.getDataList();
+            if (dataList != null && !dataList.isEmpty()) {
+                Map<String, String> res = dataList.get(0);
+                nodes.addAll(Arrays.asList(res.get("nodes").split(",")));
+            } else {
+                throw new IllegalArgumentException("App [ " + appName + " ] not found.");
             }
 
-            nodes.addAll(Arrays.asList(res.get("nodes").split(",")));
         }
         return nodes;
     }

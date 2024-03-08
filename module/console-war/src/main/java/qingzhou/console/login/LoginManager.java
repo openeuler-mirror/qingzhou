@@ -2,14 +2,13 @@ package qingzhou.console.login;
 
 import qingzhou.api.Lang;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
-import qingzhou.console.controller.I18nFilter;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.impl.ConsoleWarHelper;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.HtmlView;
@@ -40,7 +39,6 @@ public class LoginManager implements Filter<HttpServletContext> {
     public static final String LOCKED_MSG_KEY = "page.login.locked";
     public static final String TWO_FA_MSG_KEY = "page.login.2fa";
 
-    public static final String ACCEPT_AGREEMENT_MSG_KEY = "page.login.agreement";
     public static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
     public static final String[] noLoginCheckUris = {LOGIN_PATH, VerCode.CAPTCHA_URI, ConsoleConstants.REGISTER_URI};
     private static final Map<String, LockOutRealm> userLockOutRealms = new LinkedHashMap<String, LockOutRealm>() {
@@ -81,7 +79,7 @@ public class LoginManager implements Filter<HttpServletContext> {
             try {
                 // web 页面，设置默认的中文 i18n
                 // 需要在登录成功后设置，这是为了保证存入到跳转前的 session 里面
-                I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG);
+                I18n.setI18nLang(request, I18n.DEFAULT_LANG);
 
                 // 进入主页
                 response.sendRedirect(PageBackendService.encodeURL(response, request.getContextPath() + RESTController.INDEX_PATH)); // to welcome page
@@ -223,7 +221,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
         try {
             String userPwd = getUserPassword(user);
-            if (ConsoleWarHelper.getCryptoService().getMessageDigest().matches(password, userPwd)) {
+            if (SystemController.getCryptoService().getMessageDigest().matches(password, userPwd)) {
                 return null;
             } else {
                 return LOGIN_ERROR_MSG_KEY;
@@ -264,7 +262,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static String getMsg(String msg) {
-        String i18n = ConsoleI18n.getI18N(I18n.getI18nLang(), msg);
+        String i18n = ConsoleI18n.getI18n(I18n.getI18nLang(), msg);
         return StringUtil.notBlank(i18n) ? i18n : msg;
     }
 
@@ -305,7 +303,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
         if (checkPath.equals(LOGIN_URI)) {
             try {
-                I18nFilter.setI18nLang(request, I18n.DEFAULT_LANG); // 确保登录页面（包括出错信息）都以中文信息展示
+                I18n.setI18nLang(request, I18n.DEFAULT_LANG); // 确保登录页面（包括出错信息）都以中文信息展示
                 webLogin(request, response);
             } catch (Exception e) {
                 if (e instanceof IOException) {
@@ -330,7 +328,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
                     response.setContentType("application/json;charset=UTF-8");
                     try (PrintWriter writer = context.resp.getWriter()) {
-                        writer.write("{\"success\":\"false\",\"msg\":\"" + ConsoleI18n.getI18N(I18n.getI18nLang(), "page.login.need") + "\"}");
+                        writer.write("{\"success\":\"false\",\"msg\":\"" + ConsoleI18n.getI18n(I18n.getI18nLang(), "page.login.need") + "\"}");
                         writer.flush();
                     }
                     return false;

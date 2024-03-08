@@ -1,14 +1,12 @@
 package qingzhou.console.view.type;
 
-import qingzhou.api.DownloadModel;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
 import qingzhou.console.ActionInvoker;
-import qingzhou.console.RestContext;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.util.HexUtil;
 import qingzhou.console.view.View;
-import qingzhou.framework.app.RequestImpl;
-import qingzhou.framework.app.ResponseImpl;
+import qingzhou.framework.console.RequestImpl;
+import qingzhou.framework.console.ResponseImpl;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -19,8 +17,8 @@ import java.util.Map;
 public class FileView implements View {
     @Override
     public void render(RestContext restContext) throws Exception {
-        Request request = restContext.request;
-        ResponseImpl response = (ResponseImpl) restContext.response;
+        RequestImpl request = restContext.request;
+        ResponseImpl response = restContext.response;
         String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModelName() + "-" + System.currentTimeMillis()) : request.getId();
         HttpServletResponse servletResponse = restContext.servletResponse;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
@@ -32,10 +30,10 @@ public class FileView implements View {
         }
 
         Map<String, String> result = dataList.get(0);
-        String key = result.get(DownloadModel.DOWNLOAD_KEY);
-        long offset = Long.parseLong(result.get(DownloadModel.DOWNLOAD_OFFSET));
+        String key = result.get(ConsoleConstants.DOWNLOAD_KEY);
+        long offset = Long.parseLong(result.get(ConsoleConstants.DOWNLOAD_OFFSET));
         while (true) {
-            byte[] content = HexUtil.hexToBytes(result.get(DownloadModel.DOWNLOAD_BLOCK));
+            byte[] content = HexUtil.hexToBytes(result.get(ConsoleConstants.DOWNLOAD_BLOCK));
 
             ServletOutputStream outputStream = servletResponse.getOutputStream();
             outputStream.write(content);
@@ -44,16 +42,16 @@ public class FileView implements View {
                 break;
             }
 
-            RequestImpl req = ((RequestImpl) request).clone();
+            RequestImpl req = request.clone();
             HashMap<String, String> data = new HashMap<>();
-            data.put(DownloadModel.DOWNLOAD_KEY, key);
-            data.put(DownloadModel.DOWNLOAD_OFFSET, String.valueOf(offset));
+            data.put(ConsoleConstants.DOWNLOAD_KEY, key);
+            data.put(ConsoleConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);
-            Response res = ActionInvoker.getInstance().invokeAction(req); // 续传
+            ResponseImpl res = ActionInvoker.getInstance().invokeAction(req); // 续传
             if (res.isSuccess()) {
                 result = res.getDataList().get(0);
-                offset = Long.parseLong(result.get(DownloadModel.DOWNLOAD_OFFSET));
-                key = result.get(DownloadModel.DOWNLOAD_KEY);
+                offset = Long.parseLong(result.get(ConsoleConstants.DOWNLOAD_OFFSET));
+                key = result.get(ConsoleConstants.DOWNLOAD_KEY);
             } else {
                 response.setSuccess(false);
                 response.setMsg(res.getMsg());

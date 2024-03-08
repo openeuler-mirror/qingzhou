@@ -1,28 +1,27 @@
 package qingzhou.app;
 
-import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
+import qingzhou.api.metadata.ModelData;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ModelInfo implements Serializable {
-    public final Model model;
+    public final ModelData model;
     public final Map<String, FieldInfo> fieldInfoMap;
     public final Map<String, ActionInfo> actionInfoMap;
-    public final String className;
-    private Class<?> clazz;
-    private ModelBase instance;
 
-    public ModelInfo(Model model, List<FieldInfo> fieldInfoMap, List<ActionInfo> actionInfoMap, String className) {
+    private final transient ModelBase instance;
+
+    public ModelInfo(ModelData model, List<FieldInfo> fieldInfoMap, Collection<ActionInfo> actionInfoMap, ModelBase instance) {
         this.model = model;
+
         Map<String, FieldInfo> fieldInfoTemp = new LinkedHashMap<>();
         for (FieldInfo fieldInfo : fieldInfoMap) {
             fieldInfoTemp.put(fieldInfo.fieldName, fieldInfo);
         }
+        this.fieldInfoMap = Collections.unmodifiableMap(fieldInfoTemp);
+
         Map<String, ActionInfo> actionInfoTemp = new LinkedHashMap<>();
         for (ActionInfo actionInfo : actionInfoMap) {
             String actionName = actionInfo.modelAction.name();
@@ -31,24 +30,9 @@ public class ModelInfo implements Serializable {
                 throw new IllegalArgumentException("Duplicate action name: " + actionName);
             }
         }
-
-        this.fieldInfoMap = Collections.unmodifiableMap(fieldInfoTemp);
         this.actionInfoMap = Collections.unmodifiableMap(actionInfoTemp);
-        this.className = className;
-    }
 
-    public void setModelClass(Class<?> clazz) {
-        if (this.clazz != null) throw new IllegalStateException();
-        this.clazz = clazz;
-    }
-
-    public void setModelInstance(ModelBase instance) {
-        if (this.instance != null) throw new IllegalStateException();
         this.instance = instance;
-    }
-
-    public Class<?> getClazz() {
-        return clazz;
     }
 
     public ModelBase getInstance() {

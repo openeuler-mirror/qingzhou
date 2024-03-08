@@ -2,8 +2,8 @@ package qingzhou.console.login;
 
 import qingzhou.api.Lang;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ConsoleI18n;
-import qingzhou.console.I18n;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.HttpServletContext;
@@ -11,12 +11,10 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.app.App;
-import qingzhou.framework.util.ExceptionUtil;
 import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +24,9 @@ public class ResetPassword implements Filter<HttpServletContext> {
     private static final String set2FAMsg = "page.warn.set2fa";
 
     static {
-        ConsoleI18n.addI18N(setPasswordMsg, new String[]{"请先重置默认密码", "en:Please reset your default password first"});
-        ConsoleI18n.addI18N(set2FAMsg, new String[]{"请先扫描二维码绑定双因子认证密钥", "en:Please scan the QR code to bind the two-factor authentication key"});
-        ConsoleI18n.addI18N("password.max", new String[]{"已达到密码最长使用期限 %s 天，上次修改时间为：%s", "en:The maximum password age of %s days has been reached, last modified: %s"});
+        ConsoleI18n.addI18n(setPasswordMsg, new String[]{"请先重置默认密码", "en:Please reset your default password first"});
+        ConsoleI18n.addI18n(set2FAMsg, new String[]{"请先扫描二维码绑定双因子认证密钥", "en:Please scan the QR code to bind the two-factor authentication key"});
+        ConsoleI18n.addI18n("password.max", new String[]{"已达到密码最长使用期限 %s 天，上次修改时间为：%s", "en:The maximum password age of %s days has been reached, last modified: %s"});
     }
 
     @Override
@@ -82,7 +80,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
         return true;
     }
 
-    private String needReset(String user) {
+    private String needReset(String user) throws Exception {
         Map<String, String> userP = ServerXml.get().user(user);
         if (userP == null) {
             return null;
@@ -101,12 +99,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
         if (Boolean.parseBoolean(userP.get("enablePasswordAge"))) {
             String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
             if (passwordLastModifiedTime != null) {
-                long time;
-                try {
-                    time = new SimpleDateFormat(ConsoleConstants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
-                } catch (ParseException e) {
-                    throw ExceptionUtil.unexpectedException(e);
-                }
+                long time = new SimpleDateFormat(ConsoleConstants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
                 String maxAge = userP.get("passwordMaxAge");
                 if (maxAge != null && !maxAge.equals("0")) {
                     long max = time + Integer.parseInt(maxAge) * ConsoleConstants.DAY_MILLIS_VALUE;
