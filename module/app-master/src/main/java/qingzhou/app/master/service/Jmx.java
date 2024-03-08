@@ -1,4 +1,4 @@
-package qingzhou.app.master.system;
+package qingzhou.app.master.service;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
@@ -8,12 +8,12 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Model(name = "jmx", icon = "code",
-        menuName = "System", menuOrder = 4,
+        menuName = "Service", menuOrder = 3,
         entryAction = Editable.ACTION_NAME_EDIT,
-        nameI18n = {"JMX 接口", "en:JMX Interface"},
+        nameI18n = {"JMX", "en:JMX"},
         infoI18n = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 Qingzhou。",
                 "en:After enabling the JMX interface service, the client can manage Qingzhou through the java jmx protocol."})
-public class JmxConnection extends ModelBase implements Editable {
+public class Jmx extends ModelBase implements Editable {
     private static final String DEFAULT_ID = "jmx_0";
     private final String tagName = "jmx";
 
@@ -38,16 +38,6 @@ public class JmxConnection extends ModelBase implements Editable {
             infoI18n = {"指定 JMX 监听服务绑定的端口。", "en:Specifies the port to which the JMX listening service is bound."},
             isPort = true)
     public Integer port = 7200;
-
-    @ModelField(
-            effectiveWhen = "enabled=true",
-            type = FieldType.bool,
-            nameI18n = {"支持 JConsole", "en:Support JConsole"},
-            infoI18n = {"支持在关闭双因子认证时，使用 jconsole 等 JMX 客户端工具连接到 Qingzhou JVM。注：开启了该功能，表示您已经接受了 Qingzhou 产品的“最终用户许可协议”。",
-                    "en:Supports connecting to the Qingzhou JVM using JMX client tools such as jconsole when two-factor authentication is turned off. Note: By enabling this feature, you accept the \"End User License Agreement\" for your Qingzhou product."}
-    )
-    public boolean supportJConsole = false;
-
 
     @ModelAction(name = Editable.ACTION_NAME_UPDATE,
             icon = "save",
@@ -90,7 +80,7 @@ public class JmxConnection extends ModelBase implements Editable {
     public void edit(Request request, Response response) throws Exception {
         Map<String, String> data = getDataStore().getDataById(request.getModelName(), DEFAULT_ID);
         if (data == null || data.isEmpty()) {
-            response.addModelData(new JmxConnection());
+            response.addModelData(new Jmx());
         } else {
             response.addData(data);
         }

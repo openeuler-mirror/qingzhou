@@ -1,4 +1,4 @@
-package qingzhou.app.nodeagent.config;
+package qingzhou.app.nodeagent;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;

@@ -8,7 +8,7 @@ import java.io.File;
 
 // todo 升级所有的节点版本，支持各版本切换，除正在使用的版本外皆可删除，切换后尚未重启的版本页可以删除
 @Model(name = "version", icon = "upload-alt",
-        menuName = "System", menuOrder = 1,
+        menuName = "System", menuOrder = 2,
         nameI18n = {"系统版本", "en:System Version"},
         infoI18n = {"展示系统的版本信息，可将系统升级到一个新的版本上。",
                 "en:Displays the version information of the system and can upgrade the system to a new version."})

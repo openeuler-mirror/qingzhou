@@ -2,13 +2,13 @@ package qingzhou.console.login;
 
 import qingzhou.api.Lang;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.HtmlView;
@@ -39,7 +39,6 @@ public class LoginManager implements Filter<HttpServletContext> {
     public static final String LOCKED_MSG_KEY = "page.login.locked";
     public static final String TWO_FA_MSG_KEY = "page.login.2fa";
 
-    public static final String ACCEPT_AGREEMENT_MSG_KEY = "page.login.agreement";
     public static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
     public static final String[] noLoginCheckUris = {LOGIN_PATH, VerCode.CAPTCHA_URI, ConsoleConstants.REGISTER_URI};
     private static final Map<String, LockOutRealm> userLockOutRealms = new LinkedHashMap<String, LockOutRealm>() {

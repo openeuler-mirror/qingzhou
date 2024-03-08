@@ -83,7 +83,6 @@ public class SetI18n implements Filter<HttpServletContext> {
         ConsoleI18n.addI18n(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
         ConsoleI18n.addI18n(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
         ConsoleI18n.addI18n(TWO_FA_MSG_KEY, new String[]{"双因子认证认证失败：动态密码错误", "en:Two-factor authentication authentication failed: dynamic password error"});
-        ConsoleI18n.addI18n(ACCEPT_AGREEMENT_MSG_KEY, new String[]{"请确保您已阅读并同意本产品的《许可协议》", "en:Please ensure that you have read and agree to the <License Agreement> for this product"});
         ConsoleI18n.addI18n("jmx.credentials.element.isNull", new String[]{"用户名或密码不能为空", "en:The user name or password cannot be empty"});
 
         ConsoleI18n.addI18n("page.index", new String[]{" Qingzhou 平台", "en:Qingzhou Platform"});
