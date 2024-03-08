@@ -5,7 +5,7 @@
     <div class="row filterForm" style="margin-top: 10px;">
         <%
             for (Integer i : indexToShow) {
-                String fieldName = PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i);
+                String fieldName = PageBackendService.getFieldName(qzRequest, i);
                 List<Option> modelOptionsEntry = null;
                 if (PageBackendService.isFilterSelect(qzRequest, i)) {
                     try {

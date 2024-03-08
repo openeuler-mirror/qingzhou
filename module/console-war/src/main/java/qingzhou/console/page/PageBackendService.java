@@ -1,18 +1,29 @@
 package qingzhou.console.page;
 
-import qingzhou.api.*;
-import qingzhou.api.metadata.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Lang;
+import qingzhou.api.Option;
+import qingzhou.api.Options;
+import qingzhou.api.Request;
+import qingzhou.api.metadata.AppMetadata;
+import qingzhou.api.metadata.MenuData;
+import qingzhou.api.metadata.ModelActionData;
+import qingzhou.api.metadata.ModelData;
+import qingzhou.api.metadata.ModelFieldData;
+import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
-import qingzhou.console.*;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.Validator;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.util.Base32Util;
+import qingzhou.console.view.ViewManager;
 import qingzhou.framework.app.App;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
@@ -21,7 +32,14 @@ import qingzhou.framework.util.StringUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -36,30 +54,44 @@ public class PageBackendService {
     private PageBackendService() {
     }
 
-    public static String[] getActionNamesShowToList(String appName, String modelName) {
-        ModelManager modelManager = getModelManager(appName);
+    public static String[] getActionNamesShowToList(Request request) {
+        ModelManager modelManager = getModelManager(request);
+        if (modelManager == null) {
+            return new String[0];
+        }
+        String modelName = request.getModelName();
         return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelActionData::showToList).sorted(Comparator.comparingInt(ModelActionData::orderOnList)).map(ModelActionData::name).toArray(String[]::new);
     }
 
-    public static String[] getActionNamesShowToListHead(String appName, String modelName) {
-        ModelManager modelManager = getModelManager(appName);
+    public static String[] getActionNamesShowToListHead(Request request) {
+        ModelManager modelManager = getModelManager(request);
+        String modelName = request.getModelName();
         return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelActionData::showToListHead).sorted(Comparator.comparingInt(ModelActionData::orderOnList)).map(ModelActionData::name).toArray(String[]::new);
     }
 
-    public static String getFieldName(String appName, String modelName, int fieldIndex) {
-        ModelManager modelManager = getModelManager(appName);
-        return modelManager.getFieldNames(modelName)[fieldIndex];
+    public static String getFieldName(Request request, int fieldIndex) {
+        ModelManager modelManager = getModelManager(request);
+        return modelManager.getFieldNames(request.getModelName())[fieldIndex];
     }
 
-    public static String getInitAppName(RequestImpl request) {
+    public static String getAppName(RequestImpl request) {
         if (request == null) {
             return App.SYS_APP_MASTER;
         }
+
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(request.getManageType())) {
             return App.SYS_APP_NODE_AGENT;
-        } else {
-            return request.getAppName();
         }
+
+        return request.getAppName();
+    }
+
+    public static String getAppName(String manageType, String appName) {
+        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
+            return App.SYS_APP_NODE_AGENT;
+        }
+
+        return appName;
     }
 
     public static String getMasterAppI18nString(String key, Lang lang) {
@@ -72,6 +104,14 @@ public class PageBackendService {
 
     public static ModelManager getModelManager(String appName) { // 应该只能被 jsp 页面调用
         return SystemController.getAppMetadata(appName).getModelManager();
+    }
+
+    public static ModelManager getModelManager(Request request) { // 应该只能被 jsp 页面调用
+        return getModelManager((RequestImpl) request);
+    }
+
+    public static ModelManager getModelManager(RequestImpl request) { // 应该只能被 jsp 页面调用
+        return getModelManager(getAppName(request));
     }
 
     static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -92,27 +132,28 @@ public class PageBackendService {
         menuBuilder.append("</li>");
     }
 
-    static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, String manageType, String appName, String curModel, StringBuilder menuBuilder) {
+    static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, RequestImpl qzRequest, StringBuilder menuBuilder) {
         String model = menu.getMenuName();
         String action = menu.getMenuAction();
-        menuBuilder.append("<li class=\"treeview ").append((model.equals(curModel) ? " active" : "")).append("\">");
+        menuBuilder.append("<li class=\"treeview ").append((model.equals(qzRequest.getModelName()) ? " active" : "")).append("\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + manageType + "/" + appName + "/" + model + "/" + action;
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + qzRequest.getManageType() + "/" + qzRequest.getAppName() + "/" + model + "/" + action;
         menuBuilder.append("<a href='").append(encodeURL(response, url)).append("' modelName='").append(model).append("'>");
         menuBuilder.append("<i class='icon icon-").append(menu.getMenuIcon()).append("'></i>");
-        menuBuilder.append("<span>").append(I18n.getString(appName, "model." + model)).append("</span>");
+        menuBuilder.append("<span>").append(I18n.getString(getAppName(qzRequest), "model." + model)).append("</span>");
         menuBuilder.append("</a>");
         menuBuilder.append("</li>");
     }
 
-    public static String buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, String manageType, String appName, String curModel) {
+    public static String buildMenuHtmlBuilder(HttpServletRequest request, HttpServletResponse response, RequestImpl qzRequest) {
         StringBuilder builder = new StringBuilder();
-        buildMenuHtmlBuilder(models, request, response, viewName, manageType, appName, curModel, builder, true);
+        List<MenuItem> models = PageBackendService.getAppMenuList(qzRequest);
+        buildMenuHtmlBuilder(models, request, response, ViewManager.htmlView, qzRequest, builder, true);
         String menus = builder.toString();
         return String.format(menus, " ");
     }
 
-    private static void buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, String manageType, String appName, String curModel, StringBuilder builder, boolean needFavoritesMenu) {
+    private static void buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, RequestImpl qzRequest, StringBuilder builder, boolean needFavoritesMenu) {
         for (int i = 0; i < models.size(); i++) {
             if (needFavoritesMenu && i == 1) {
                 builder.append("%s");
@@ -121,25 +162,25 @@ public class PageBackendService {
             StringBuilder childrenBuilder = new StringBuilder();
             List<MenuItem> children = menu.getChildren();
             if (children.isEmpty()) {
-                printChildrenMenu(menu, request, response, viewName, manageType, appName, curModel, childrenBuilder);
+                printChildrenMenu(menu, request, response, viewName, qzRequest, childrenBuilder);
                 builder.append(childrenBuilder);
             } else {
                 StringBuilder parentBuilder = new StringBuilder();
-                buildMenuHtmlBuilder(children, request, response, viewName, manageType, appName, curModel, childrenBuilder, false);
-                printParentMenu(menu, curModel, parentBuilder, childrenBuilder);
+                buildMenuHtmlBuilder(children, request, response, viewName, qzRequest, childrenBuilder, false);
+                printParentMenu(menu, qzRequest.getModelName(), parentBuilder, childrenBuilder);
                 builder.append(parentBuilder);
             }
         }
     }
 
-    public static List<MenuItem> getAppMenuList(String loginUser, String appName) {
+    public static List<MenuItem> getAppMenuList(RequestImpl request) {
         List<MenuItem> menus = new ArrayList<>();
-        ModelManager modelManager = getModelManager(appName);
+        ModelManager modelManager = getModelManager(request);
         if (modelManager == null) {
             return menus;
         }
-
-        ModelData[] allModels = AccessControl.getLoginUserAppMenuModels(loginUser, appName);
+        String appName = getAppName(request);
+        ModelData[] allModels = AccessControl.getLoginUserAppMenuModels(request.getUserName(), appName);
         /**
          *  name -> String,
          *  parentName -> name,
@@ -213,7 +254,7 @@ public class PageBackendService {
 
     public static Map<String, Map<String, ModelFieldData>> getGroupedModelFieldMap(Request request) {
         Map<String, Map<String, ModelFieldData>> result = new LinkedHashMap<>();
-        ModelManager manager = getModelManager(request.getAppName());
+        ModelManager manager = getModelManager(request);
         String modelName = request.getModelName();
         for (String groupName : manager.getGroupNames(modelName)) {
             Map<String, ModelFieldData> map = new LinkedHashMap<>();
@@ -229,7 +270,7 @@ public class PageBackendService {
     }
 
     public static String getSubmitActionName(Request request) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
+        final ModelManager modelManager = getModelManager(request);
         if (modelManager == null) {
             return null;
         }
@@ -249,12 +290,7 @@ public class PageBackendService {
     }
 
     public static boolean hasIDField(Request request) {
-        RequestImpl requestImpl = (RequestImpl) request;
-        String appName = request.getAppName();
-        if (requestImpl.getManageType().equals(ConsoleConstants.MANAGE_TYPE_NODE)) {
-            appName = App.SYS_APP_NODE_AGENT;
-        }
-        ModelManager modelManager = getModelManager(appName);
+        ModelManager modelManager = getModelManager(request);
         if (modelManager == null) {
             return false;
         }
@@ -264,7 +300,7 @@ public class PageBackendService {
     }
 
     public static String isActionEffective(Request request, Map<String, String> obj, ModelActionData modelAction) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
+        final ModelManager modelManager = getModelManager(request);
         if (modelManager == null) {
             return null;
         }
@@ -286,7 +322,7 @@ public class PageBackendService {
     }
 
     public static Map<String, String> modelFieldEffectiveWhenMap(Request request) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
+        final ModelManager modelManager = getModelManager(request);
         if (modelManager == null) {
             return new HashMap<>();
         }
@@ -307,7 +343,7 @@ public class PageBackendService {
      * list.jsp 在使用
      */
     public static boolean isFilterSelect(Request request, int i) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
+        final ModelManager modelManager = getModelManager(request);
         if (modelManager == null) {
             return false;
         }
@@ -319,7 +355,7 @@ public class PageBackendService {
     }
 
     public static boolean isFieldReadOnly(Request request, String fieldName) {
-        final ModelManager modelManager = getModelManager(request.getAppName());
+        final ModelManager modelManager = getModelManager(request);
         if (modelManager == null) {
             return false;
         }
@@ -354,8 +390,7 @@ public class PageBackendService {
     }
 
     private static List<ModelActionData> visitActions(Request request, List<Map<String, String>> dataList) {
-        final String appName = request.getAppName();
-        final ModelManager modelManager = getModelManager(appName);
+        final ModelManager modelManager = getModelManager(request);
         List<ModelActionData> actions = new ArrayList<>();
         if (modelManager != null) {
             final String modelName = request.getModelName();
@@ -383,13 +418,7 @@ public class PageBackendService {
 
     //公共操作列表
     public static boolean needOperationColumn(Request request) {
-        final String appName = request.getAppName();
-        final ModelManager modelManager = getModelManager(appName);
-        if (modelManager == null) {
-            return false;
-        }
-
-        return getActionNamesShowToList(appName, request.getModelName()).length > 0;
+        return getActionNamesShowToList(request).length > 0;
     }
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, RequestImpl request, String viewName, String actionName) {

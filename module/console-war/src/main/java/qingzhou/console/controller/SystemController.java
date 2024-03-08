@@ -15,16 +15,24 @@ import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.config.Config;
+import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.crypto.CryptoService;
 import qingzhou.framework.logger.Logger;
 import qingzhou.framework.serializer.Serializer;
 import qingzhou.framework.util.pattern.Filter;
 import qingzhou.framework.util.pattern.FilterPattern;
 
-import javax.servlet.*;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -36,6 +44,10 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
     public static AppMetadata getAppMetadata(String appName) {
         return AppMetadataManager.getInstance().getAppMetadata(appName);
+    }
+
+    public static AppMetadata getAppMetadata(Request request) {
+        return getAppMetadata(PageBackendService.getAppName(((RequestImpl) request).getManageType(), request.getAppName()));
     }
 
     public static Config getConfig() {
@@ -50,8 +62,8 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return getAppManager().getApp(appName);
     }
 
-    public static void invokeLocalApp(String appName, Request request, Response response) throws Exception {
-        getAppManager().getApp(appName).invoke(request, response);
+    public static void invokeLocalApp(Request request, Response response) throws Exception {
+        getAppManager().getApp(PageBackendService.getAppName((RequestImpl) request)).invoke(request, response);
     }
 
     public static Serializer getSerializer() {

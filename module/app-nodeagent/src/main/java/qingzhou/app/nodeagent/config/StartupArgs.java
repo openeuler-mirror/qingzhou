@@ -1,13 +1,19 @@
 package qingzhou.app.nodeagent.config;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Options;
+import qingzhou.api.Request;
 import qingzhou.api.type.Editable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Model(name = "startupargs", icon = "file-code", nameI18n = {"启动参数", "en:Startup Args"}, infoI18n = {"管理TongWeb的启动参数。", "en:Manage TongWeb start-up arguments."})
+@Model(name = "startupargs", icon = "file-code", entryAction = Editable.ACTION_NAME_EDIT, nameI18n = {"启动参数", "en:Startup Args"}, infoI18n = {"管理TongWeb的启动参数。", "en:Manage TongWeb start-up arguments."})
 public class StartupArgs extends ModelBase implements Editable {
     private static final String[] mustStartsWithFlags = {"-X", "-D", "-agentlib", "-server", "-client", "-javaagent", "-verbose"}; // 如果直接增加参数 aaa 没有前缀，会重启启动不了
     private static final String SUPPORTED_JRE_KEY = "supportedJRE";
@@ -35,7 +41,7 @@ public class StartupArgs extends ModelBase implements Editable {
             checkXssLevel1 = true,
             skipCharacterCheck = STARTUP_ARGS_SKIP_CHARACTER_CHECK,
             showToList = true, showToEdit = false, maxLength = 1024, nameI18n = {"参数", "en:Argument"}, infoI18n = {"该参数将用于 JVM 启动时的进程入参。", "en:This argument will be used for the process entry when the JVM is started."})
-    private String id;
+    public String id;
 
     @ModelField(
             skipCharacterCheck = STARTUP_ARGS_SKIP_CHARACTER_CHECK,
@@ -44,22 +50,22 @@ public class StartupArgs extends ModelBase implements Editable {
     public String changeToArg;
 
     @ModelField(type = FieldType.bool, showToList = true, nameI18n = {"启用", "en:Enabled"}, infoI18n = {"只有启用的参数才会传给 JVM 加载，未启用的则不会。", "en:Only arguments that are enabled are passed to the JVM for loading, those that are not are not."})
-    private Boolean enabled = true;
+    public Boolean enabled = true;
 
     @ModelField(type = FieldType.bool, showToList = true, nameI18n = {"仅 Linux 有效", "en:Only For Linux"}, infoI18n = {"开启后，该参数仅会在 linux 操作系统上启用。", "en:When turned on, this parameter is only enabled on linux operating systems."})
-    private Boolean onlyForLinux = false;
+    public Boolean onlyForLinux = false;
 
     /**
      * 支持JRE版本
      */
     @ModelField(type = FieldType.select, showToList = true, nameI18n = {"限定 JRE 版本", "en:Limited JRE"}, infoI18n = {"限定该参数支持的 JRE 的版本，限定后，只有限定的 JRE 可以加载到该参数；其它 JRE 则不会，为空表示不限制。", "en:Limit the version of JRE supported by this parameter. After the limitation, only the limited JRE can be loaded into this parameter, and other JREs will not. If it is empty, it means no limitation."})
-    private String supportedJRE;
+    public String supportedJRE;
 
     /**
      * 兼容方向
      */
     @ModelField(type = FieldType.radio, showToList = true, effectiveWhen = SUPPORTED_JRE_KEY + "!=", nameI18n = {"限定区间", "en:Limited Range"}, infoI18n = {"限定支持的 JRE 版本区间，大于、等于或者小于指定的 JRE 版本号。 + 表示大于等于，= 表示等于，- 表示小于等于。", "en:Limit the supported JRE version interval to greater than, equal to or less than the specified JRE version number."})
-    private String range;
+    public String range;
 
     /**
      * 参数

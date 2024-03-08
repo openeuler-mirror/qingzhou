@@ -67,7 +67,7 @@ public class Validator {
         }
 
         Map<String, String> errorData = new HashMap<>();
-        ModelManager modelManager = SystemController.getAppMetadata(request.getAppName()).getModelManager();
+        ModelManager modelManager = SystemController.getAppMetadata(request).getModelManager();
         String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
         for (String fieldName : allFieldNames) {
             String validate = validate(request, modelManager, request::getParameter, fieldName, request.getParameter(fieldName));
@@ -181,7 +181,7 @@ public class Validator {
         }
 
         // 最后进行自定义校验
-        AppMetadata metadata = SystemController.getAppMetadata(request.getAppName());
+        AppMetadata metadata = SystemController.getAppMetadata(request);
         return metadata.getI18n(I18n.getI18nLang(), tempModel.validate(request, fieldName));
     }
 
@@ -226,7 +226,7 @@ public class Validator {
             this.request = request;
             this.modelManager = modelManager;
             this.requestParameter = requestParameter;
-            this.appMetadata = SystemController.getAppMetadata(request.getAppName());
+            this.appMetadata = SystemController.getAppMetadata(request);
         }
 
         boolean isAdd() {

@@ -47,7 +47,7 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    for (String action : PageBackendService.getActionNamesShowToListHead(qzRequest.getAppName(), qzRequest.getModelName())) {
+                    for (String action : PageBackendService.getActionNamesShowToListHead(qzRequest)) {
                         ModelActionData modelAction = modelManager.getModelAction(qzRequest.getModelName(), action);
                         if (modelAction != null) {
                             String viewName = ViewManager.htmlView;
@@ -123,7 +123,7 @@
                 </th>
                 <%
                     for (Integer i : indexToShow) {
-                        String name = PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i);
+                        String name = PageBackendService.getFieldName(qzRequest, i);
                 %>
                 <th><%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + name)%>
                 </th>
@@ -169,18 +169,18 @@
                 </td>
                 <%
                     ModelActionData targetAction = null;
-                    if (AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + Editable.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + Editable.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
+                    if (AccessControl.canAccess(menuAppName, qzRequest.getModelName() + "/" + Editable.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
+                            && AccessControl.canAccess(menuAppName, qzRequest.getModelName() + "/" + Editable.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
                         targetAction = modelManager.getModelAction(qzRequest.getModelName(), Editable.ACTION_NAME_EDIT);
                     }
                     if (targetAction == null) {
-                        if (AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + Showable.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
+                        if (AccessControl.canAccess(menuAppName, qzRequest.getModelName() + "/" + Showable.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
                             targetAction = modelManager.getModelAction(qzRequest.getModelName(), Showable.ACTION_NAME_SHOW);
                         }
                     }
                     boolean isFirst = true;
                     for (Integer i : indexToShow) {
-                        String value = modelBase.get(PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i));
+                        String value = modelBase.get(PageBackendService.getFieldName(qzRequest, i));
                         if (value == null) {
                             value = "";
                         }
@@ -199,7 +199,7 @@
                 </td>
                 <%
                 } else {
-                    String fieldName = PageBackendService.getFieldName(qzRequest.getAppName(), qzRequest.getModelName(), i);
+                    String fieldName = PageBackendService.getFieldName(qzRequest, i);
                     String linkField = modelManager.getModelField(qzRequest.getModelName(), fieldName).linkModel();
                     if (linkField != null && !linkField.isEmpty()) {
                         String[] split = linkField.split("\\.");
@@ -228,7 +228,7 @@
                 %>
                 <td>
                     <%
-                        String[] actions = PageBackendService.getActionNamesShowToList(qzRequest.getAppName(), qzRequest.getModelName());
+                        String[] actions = PageBackendService.getActionNamesShowToList(qzRequest);
                         for (String actionName : actions) {
                             ModelActionData action = modelManager.getModelAction(qzRequest.getModelName(), actionName);
                             if (action == null) {
@@ -242,7 +242,7 @@
                                 continue;
                             }
 
-                            if (!AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + actionKey, LoginManager.getLoginUser(session))) {
+                            if (!AccessControl.canAccess(menuAppName, qzRequest.getModelName() + "/" + actionKey, LoginManager.getLoginUser(session))) {
                                 continue;
                             }
 

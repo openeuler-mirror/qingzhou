@@ -23,8 +23,8 @@
     String currentUser = LoginManager.getLoginUser(session);
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     ResponseImpl qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
-    String menuAppName = PageBackendService.getInitAppName(qzRequest);
-    ModelManager modelManager = PageBackendService.getModelManager(menuAppName);
+    String menuAppName = PageBackendService.getAppName(qzRequest);
+    ModelManager modelManager = PageBackendService.getModelManager(qzRequest);
 %>
 
 <script type="text/javascript">

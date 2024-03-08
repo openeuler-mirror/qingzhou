@@ -3,10 +3,11 @@ package qingzhou.console.controller;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelManager;
+import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
-import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.Constants;
 import qingzhou.framework.app.App;
@@ -16,7 +17,11 @@ import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AccessControl implements Filter<HttpServletContext> {
@@ -132,7 +137,7 @@ public class AccessControl implements Filter<HttpServletContext> {
         if (StringUtil.notBlank(user)) {
             List<String> rest = RESTController.retrieveRestPathInfo(httpServletRequest);
             if (rest.size() >= 5) {
-                String appName = rest.get(2);
+                String appName = PageBackendService.getAppName(rest.get(1), rest.get(2));
                 String model = rest.get(3);
                 String action = rest.get(4);
                 String detectRest = model + "/" + action;

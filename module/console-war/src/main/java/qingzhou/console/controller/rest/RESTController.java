@@ -151,7 +151,7 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = SystemController.getAppMetadata(request.getAppName()).getModelManager().getActionNames(request.getModelName());
+        String[] actions = SystemController.getAppMetadata(request).getModelManager().getActionNames(request.getModelName());
         for (String name : actions) {
             if (name.equals(request.getActionName())) {
                 actionFound = true;

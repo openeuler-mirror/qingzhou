@@ -16,12 +16,12 @@ public class UniqueFilter implements ActionFilter {
         initI18n();
 
         if (request.getActionName().equals(Createable.ACTION_NAME_ADD)) {
-            ModelBase modelInstance = null;//TODO modelManager.getModelInstance(request.getModelName());
+            /*ModelBase modelInstance = null;//TODO modelManager.getModelInstance();
             RequestImpl requestTemp = ((RequestImpl) request).clone();
             if (StringUtil.isBlank(requestTemp.getParameter(Listable.FIELD_NAME_ID))) {
                 requestTemp.setId(modelInstance.resolveId(requestTemp));
-            }
-            if (modelInstance.getDataStore().exists(request.getModelName(), request.getId())) {
+            }*/
+            if (appContext.getDefaultDataStore().exists(request.getModelName(), request.getId())) {
                 String modelNameI18n = appContext.getAppMetadata().getI18n(request.getI18nLang(), "model." + request.getModelName());
                 return i18nTool.getI18n(request.getI18nLang(), "list.id.exists", modelNameI18n);
             }

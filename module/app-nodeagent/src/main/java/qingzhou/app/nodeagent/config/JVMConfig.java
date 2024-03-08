@@ -1,13 +1,22 @@
 package qingzhou.app.nodeagent.config;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.FieldType;
+import qingzhou.api.Group;
+import qingzhou.api.Groups;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Option;
+import qingzhou.api.Options;
+import qingzhou.api.Request;
 import qingzhou.api.type.Editable;
 import qingzhou.framework.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.List;
 
-@Model(name = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", nameI18n = {"JVM 配置", "en:JVM Configuration"}, infoI18n = {"配置运行 TongWeb 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running TongWeb applications."})
+@Model(name = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entryAction = Editable.ACTION_NAME_EDIT, nameI18n = {"JVM 配置", "en:JVM Configuration"}, infoI18n = {"配置运行 TongWeb 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running TongWeb applications."})
 public class JVMConfig extends ModelBase implements Editable {
     public static final String MODEL_NAME_jvmconfig = "jvmconfig";
     public static final String DATA_SEPARATOR = ",";
@@ -42,90 +51,90 @@ public class JVMConfig extends ModelBase implements Editable {
     }
 
     @ModelField(group = group_memory, nameI18n = {"初始堆内存", "en:Initial Heap Size"}, infoI18n = {"设置初始堆内存大小 (-Xms)。", "en:Set the initial heap size (-Xms)."})
-    private String Xms;
+    public String Xms;
 
     @ModelField(group = group_memory, nameI18n = {"最大堆内存", "en:Max Heap Size"}, infoI18n = {"设置最大堆内存大小 (-Xmx)。", "en:Set the max heap size (-Xmx)."})
-    private String Xmx;
+    public String Xmx;
 
     @ModelField(group = group_memory, nameI18n = {"新生代大小", "en:Xmn Size"}, infoI18n = {"设置新生代大小 (-Xmn)。", "en:Set the new generation size (-Xmn)."})
-    private String Xmn;
+    public String Xmn;
 
     @ModelField(group = group_memory, effectiveWhen = "Xmn=", min = 1, max = 100, type = FieldType.number, nameI18n = {"老年代比率", "en:New Ratio"}, infoI18n = {"设置新生代和老年代的大小比率，通俗地讲即老年代比新生代的倍数 (-XX:NewRatio)。", "en:Set the size ratio of the new generation and the old era, which is colloquially speaking, that is, the multiple of the old era to the new generation (-XX:NewRatio)."})
-    private Integer NewRatio;
+    public Integer NewRatio;
 
     @ModelField(group = group_memory, min = 1, max = 100, type = FieldType.number, nameI18n = {"Eden 区比率", "en:Survivor Ratio"}, infoI18n = {"设置新生代中 Eden 区域和 Survivor 区域（From 幸存区或 To 幸存区）的比率 (-XX:SurvivorRatio)。", "en:Sets the ratio of the Eden zone to the Survivor zone (From Survivor Zone or To Survivor Zone) in the new generation (-XX:SurvivorRatio)."})
-    private Integer SurvivorRatio;
+    public Integer SurvivorRatio;
 
     @ModelField(group = group_memory, nameI18n = {"初始元空间", "en:MetaspaceSize"}, infoI18n = {"设置初始元空间的大小 (-XX:MetaspaceSize)。", "en:Set the initial Metaspace size (-XX:MetaspaceSize)."})
-    private String MetaspaceSize;
+    public String MetaspaceSize;
 
     @ModelField(group = group_memory, nameI18n = {"最大元空间", "en:MaxMetaspaceSize"}, infoI18n = {"设置最大元空间的大小 (-XX:MaxMetaspaceSize)。", "en:Set the max metaspace size (-XX:MaxMetaspaceSize)."})
-    private String MaxMetaspaceSize;
+    public String MaxMetaspaceSize;
 
     @ModelField(group = group_memory, nameI18n = {"线程栈大小", "en:Stack Size"}, infoI18n = {"设置线程栈大小的最大值 (-Xss)。", "en:Set the max thread stack size (-Xss)."})
-    private String Xss;
+    public String Xss;
 
     @ModelField(group = group_memory, nameI18n = {"堆外内存", "en:MaxDirectMemorySize"}, infoI18n = {"设置最大堆外内存，当 Direct ByteBuffer 分配的堆外内存达到该大小后，即触发 Full GC (-XX:MaxDirectMemorySize)。", "en:Set the maximum out-of-heap memory. When the out-of-heap memory allocated by Direct ByteBuffer reaches this size, Full GC is triggered (-XX:MaxDirectMemorySize)."})
-    private String MaxDirectMemorySize;
+    public String MaxDirectMemorySize;
 
     @ModelField(group = group_gc, type = FieldType.radio, nameI18n = {"垃圾回收器", "en:GarbageCollector"}, infoI18n = {"设置 JVM 回收内存使用的垃圾回收器。", "en:Set up the garbage collector used by the JVM to reclaim memory."})
-    private String useGC;
+    public String useGC;
 
     @ModelField(group = group_gc, effectiveWhen = "useGC=UseParallelGC|useGC=UseConcMarkSweepGC", min = 1, max = 100, type = FieldType.number, nameI18n = {"并行收集线程数", "en:ParallelGCThreads"}, infoI18n = {"设置并行收集器收集时使用的CPU数，即并行收集线程数 (-XX:ParallelGCThreads)。", "en:Set the number of CPUs used by the parallel collector collection, that is, the number of parallel collection threads (-XX:ParallelGCThreads)."})
-    private Integer ParallelGCThreads;
+    public Integer ParallelGCThreads;
     @ModelField(group = group_gc, effectiveWhen = "useGC=UseParallelGC", min = 1, max = 100, type = FieldType.number, nameI18n = {"最大暂停时间", "en:MaxGCPauseMillis"}, infoI18n = {"每次 GC 最大的停顿毫秒数，VM 将调整 Java 堆大小和其他与 GC 相关的参数，以使 GC 引起的暂停时间短于该毫秒，尽可能地保证内存回收花费时间不超过设定值（-XX:MaxGCPauseMillis）。", "en:For each GC maximum pause milliseconds, the VM will adjust the Java heap size and other GC-related parameters so that the pause caused by GC is shorter than that millisecond, ensuring that memory reclamation takes no longer than the set value as much as possible (-XX:MaxGCPauseMillis)."})
-    private Integer MaxGCPauseMillis;
+    public Integer MaxGCPauseMillis;
     @ModelField(group = group_gc, effectiveWhen = "useGC=UseParallelGC", min = 1, max = 100, type = FieldType.number, nameI18n = {"回收时间占比", "en:GCTimeRatio"}, infoI18n = {"设置垃圾回收时间占程序运行时间的百分比 (-XX:GCTimeRatio)。", "en:Sets the garbage collection time as a percentage of the program running time (-XX:GCTimeRatio)."})
-    private Integer GCTimeRatio;
+    public Integer GCTimeRatio;
 
     @ModelField(group = group_gc, type = FieldType.bool, nameI18n = {"记录 GC 日志", "en:Print GC "}, infoI18n = {"设置是否记录 JVM 的 GC 日志。", "en:Sets whether to record GC logs for the JVM."})
-    private boolean gcLogEnabled;
+    public boolean gcLogEnabled;
     @ModelField(group = group_gc, effectiveWhen = "gcLogEnabled=true", type = FieldType.bool, nameI18n = {"记录细节", "en:GC Details"}, infoI18n = {"设置是否记录 GC 的详细信息 (-XX:+PrintGCDetails)。", "en:Set whether GC details are logged (-XX:+PrintGCDetails)."})
-    private boolean PrintGCDetails;
+    public boolean PrintGCDetails;
     @ModelField(group = group_gc, effectiveWhen = "gcLogEnabled=true", type = FieldType.bool, nameI18n = {"记录系统停顿时间", "en:Application StoppedTime"}, infoI18n = {"是否在 GC 日志中记录系统停顿时间。仅适用于 java8 (-XX:+PrintGCApplicationStoppedTime)。", "en:Whether application StoppedTime are recorded in GC logs, only available for java8 (-XX:+PrintGCApplicationStoppedTime)."})
-    private boolean PrintGCApplicationStoppedTime;
+    public boolean PrintGCApplicationStoppedTime;
     @ModelField(group = group_gc, effectiveWhen = "gcLogEnabled=true", type = FieldType.bool, nameI18n = {"记录系统执行时间", "en:Application ConcurrentTime"}, infoI18n = {"是否在 GC 日志中记录系统执行时间。仅适用于 java8 (-XX:+PrintGCApplicationConcurrentTime)。", "en:Whether application ConcurrentTime are recorded in GC logs, only available for java8 (-XX:+PrintGCApplicationConcurrentTime)."})
-    private boolean PrintGCApplicationConcurrentTime;
+    public boolean PrintGCApplicationConcurrentTime;
     @ModelField(group = group_gc, effectiveWhen = "gcLogEnabled=true", type = FieldType.bool, nameI18n = {"记录堆信息", "en:Print Heap"}, infoI18n = {"是否在 GC 日志中记录堆信息，仅适用于java8 (-XX:+PrintHeapAtGC)。", "en:Whether heap information is recorded in the GC log, only available for java8 (-XX:+PrintHeapAtGC)."})
-    private boolean PrintHeapAtGC;
+    public boolean PrintHeapAtGC;
     @ModelField(group = group_gc, effectiveWhen = "gcLogEnabled=true", required = true, nameI18n = {"GC 日志文件", "en:GC Log Path"},
             skipCharacterCheck = "${}",
             infoI18n = {"设置 GC 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 TongWeb 域目录的相对路径，同时可使用 ${TW_TimeStamp} 变量添加 TongWeb 启动时间戳 (-Xlog)。",
                     "en:Set the storage location for GC logs. Note: The path can be absolute or relative to the TongWeb domain directory, and the TongWeb startup timestamp can be added using the ${TW_TimeStamp} variable (-Xlog)."})
-    private String gcLog = "logs/gc/gc.log";
+    public String gcLog = "logs/gc/gc.log";
 
     @ModelField(group = group_heapDump, type = FieldType.bool, nameI18n = {"开启堆转储", "en:Heap Dump"}, infoI18n = {"当 JVM 发生 OOM 时，自动生成 DUMP 文件，文件位置由【堆转储文件】选项指定 (-XX:+HeapDumpOnOutOfMemoryError)。", "en:When OOM occurs in JVM, a dump file is automatically generated, and the file location is specified by the [Heap Dump Path] option (-XX:+HeapDumpOnOutOfMemoryError)."})
-    private boolean HeapDumpOnOutOfMemoryError;
+    public boolean HeapDumpOnOutOfMemoryError;
     @ModelField(group = group_heapDump, effectiveWhen = "HeapDumpOnOutOfMemoryError=true", required = true,
             skipCharacterCheck = "${}",
             nameI18n = {"堆转储文件", "en:Heap Dump Path"}, infoI18n = {"设置 JVM 发生 OOM 时，自动生成 DUMP 文件的路径。注：路径可以是绝对路径，也可以是相对于 TongWeb 域目录的相对路径，同时可使用 ${TW_TimeStamp} 变量添加 TongWeb 启动时间戳 (-XX:HeapDumpPath)。",
             "en:Set the path to the JVM to automatically generate a dump file when OOM occurs. Note: The path can be absolute or relative to the TongWeb domain directory, and the TongWeb startup timestamp can be added using the ${TW_TimeStamp} variable (-XX:HeapDumpPath)."})
-    private String HeapDumpPath = "logs/heap_${TW_TimeStamp}.hprof";
+    public String HeapDumpPath = "logs/heap_${TW_TimeStamp}.hprof";
 
     @ModelField(group = group_jvmLog, type = FieldType.bool, nameI18n = {"记录 JVM 日志", "en:Log VM Output"}, infoI18n = {"设置是否记录 JVM 日志 (-XX:+LogVMOutput)。", "en:Set whether to log JVM logs (-XX:+LogVMOutput)."})
-    private boolean LogVMOutput;
+    public boolean LogVMOutput;
     @ModelField(group = group_jvmLog, effectiveWhen = "LogVMOutput=true", required = true,
             nameI18n = {"JVM 日志文件", "en:JVM Log Path"},
             skipCharacterCheck = "${}",
             infoI18n = {"设置 JVM 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 TongWeb 域目录的相对路径，同时可使用 ${TW_TimeStamp} 变量添加 TongWeb 启动时间戳 (-XX:LogFile)。",
                     "en:Set the location where JVM logs are stored. Note: The path can be absolute or relative to the TongWeb domain directory, and the TongWeb startup timestamp can be added using the ${TW_TimeStamp} variable (-XX:LogFile)."})
-    private String LogFile = "logs/jvm/jvm.log";
+    public String LogFile = "logs/jvm/jvm.log";
 
     @ModelField(group = group_environment,
             nameI18n = {"Java 路径", "en:Java Home"},
             infoI18n = {"设置运行 TongWeb 所需要的 Java 路径。", "en:Set the Java path required to run TongWeb."})
-    private String JAVA_HOME;
+    public String JAVA_HOME;
     @ModelField(group = group_environment, type = FieldType.kv, nameI18n = {"环境变量", "en:Environments"},
             skipCharacterCheck = "%",
             infoI18n = {"设置应用程序所需要的环境变量。", "en:Set the environment variables required by the application."})
-    private String envs;
+    public String envs;
 
     @ModelField(group = group_IP, type = FieldType.bool,
             nameI18n = {"首选 IPv4", "en:Prefer IPv4"},
             infoI18n = {"在支持 IPv4 映射地址的 IPv6 网络协议栈中，首选使用 IPv4 协议栈 (-Djava.net.preferIPv4Stack)。",
                     "en:Among IPv6 network stacks that support IPv4 mapped addresses, the IPv4 stack is preferred (-Djava.net.preferIPv4Stack)."}
     )
-    private boolean preferIPv4Stack = false;
+    public boolean preferIPv4Stack = false;
 
     @Override
     public Groups groups() {

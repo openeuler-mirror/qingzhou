@@ -5,8 +5,8 @@ import qingzhou.api.Response;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.type.Showable;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.framework.app.App;
 import qingzhou.framework.console.RequestImpl;
@@ -30,7 +30,7 @@ public class HtmlView implements View {
 
         String modelName = request.getModelName();
         String actionName = request.getActionName();
-        ModelActionData modelAction = SystemController.getAppMetadata(request.getAppName()).getModelManager().getModelAction(modelName, actionName);
+        ModelActionData modelAction = SystemController.getAppMetadata(request).getModelManager().getModelAction(modelName, actionName);
         String pageForward = null;
         if (modelAction != null) {
             pageForward = modelAction.forwardToPage();
@@ -50,10 +50,7 @@ public class HtmlView implements View {
             request.setAppName(manageAppName);
             request.setModelName(App.SYS_MODEL_HOME);
             request.setActionName(Showable.ACTION_NAME_SHOW);
-            if (App.SYS_NODE_LOCAL.equals(manageAppName)) {
-                manageAppName = App.SYS_APP_NODE_AGENT;
-            }
-            SystemController.invokeLocalApp(manageAppName, request, response);// todo 对于远程的，这里数据不对?
+            SystemController.invokeLocalApp(request, response);// todo 对于远程的，这里数据不对?
         }
 
         String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));

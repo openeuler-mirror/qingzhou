@@ -1,11 +1,16 @@
 package qingzhou.app.nodeagent;
 
-import qingzhou.api.*;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Showable;
 import qingzhou.framework.app.App;
 import qingzhou.framework.util.IPUtil;
 
-@Model(name = App.SYS_MODEL_HOME, icon = "home",
+@Model(name = App.SYS_MODEL_HOME, icon = "home", menuOrder = -1,
         entryAction = Showable.ACTION_NAME_SHOW,
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"展示当前节点的说明信息。",

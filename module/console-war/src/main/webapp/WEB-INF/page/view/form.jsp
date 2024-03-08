@@ -264,7 +264,7 @@
         <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
             <div class="form-btn">
                 <%
-                    boolean submitPermission = AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + submitActionName, LoginManager.getLoginUser(session));
+                    boolean submitPermission = AccessControl.canAccess(menuAppName, qzRequest.getModelName() + "/" + submitActionName, LoginManager.getLoginUser(session));
                     if (submitPermission) {
                 %>
                 <input type="submit" class="btn"
@@ -272,7 +272,7 @@
                 <%
                     }
 
-                    boolean listPermission = AccessControl.canAccess(qzRequest.getAppName(), qzRequest.getModelName() + "/" + Listable.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
+                    boolean listPermission = AccessControl.canAccess(menuAppName, qzRequest.getModelName() + "/" + Listable.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
                     if (hasId && listPermission) {
                 %>
                 <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_NAME_LIST)%>"

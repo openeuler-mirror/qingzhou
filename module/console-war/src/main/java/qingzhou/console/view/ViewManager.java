@@ -3,6 +3,7 @@ package qingzhou.console.view;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.controller.rest.RestContext;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.FileView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
@@ -31,7 +32,7 @@ public class ViewManager {
         ResponseImpl response = restContext.response;
         // 完善响应的 msg
         if (StringUtil.isBlank(response.getMsg())) {
-            String appName = request.getAppName();
+            String appName = PageBackendService.getAppName(request);
             String SP = I18n.isZH() ? "" : " ";
             String msg = response.isSuccess() ? ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.success") : I18n.getString(appName, "msg.fail");
             String model = I18n.getString(appName, "model." + request.getModelName());
