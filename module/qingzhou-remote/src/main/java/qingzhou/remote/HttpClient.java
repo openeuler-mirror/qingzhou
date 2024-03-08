@@ -11,10 +11,10 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 
-public class HttpClient {
+class HttpClient {
     private static final String CONTENT_LENGTH = "Content-Length";
 
-    public static void seqHttp(String url, Map<String, String> params) throws Exception {
+    static void seqHttp(String url, Map<String, String> params) throws Exception {
         HttpURLConnection conn = buildConnection(url);
         conn.setRequestMethod("POST");
         conn.setDoInput(true);
@@ -27,7 +27,7 @@ public class HttpClient {
         conn.setRequestProperty("accept", "*/*");
         conn.setInstanceFollowRedirects(false);
 
-        String bodyStr = encodingParams(params, "utf-8");
+        String bodyStr = encodingParams(params);
         if (bodyStr != null) {
             byte[] b = bodyStr.getBytes();
             conn.setRequestProperty(CONTENT_LENGTH, String.valueOf(b.length));
@@ -41,13 +41,13 @@ public class HttpClient {
         int responseCode = conn.getResponseCode();
         InputStream errorStream = conn.getErrorStream();
         InputStream responseStream = errorStream == null ? conn.getInputStream() : errorStream;
-        String result = toString(responseStream, "utf-8");
+        String result = toString(responseStream);
         if (responseCode != 200) {
             System.out.printf("send request fail, url:%s, message:%s.%n", url, result);
         }
     }
 
-    public static String toString(InputStream input, String encoding) throws IOException {
+    private static String toString(InputStream input) throws IOException {
         if (input == null) {
             return "";
         }
@@ -57,10 +57,10 @@ public class HttpClient {
         while ((len = input.read(bytes)) != -1) {
             os.write(bytes, 0, len);
         }
-        return os.toString(encoding == null ? "utf-8" : encoding);
+        return os.toString("utf-8");
     }
 
-    public static String encodingParams(Map<String, String> params, String encoding)
+    private static String encodingParams(Map<String, String> params)
             throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder();
         if (null == params || params.isEmpty()) {
@@ -72,7 +72,7 @@ public class HttpClient {
                 continue;
             }
             sb.append(entry.getKey()).append('=');
-            sb.append(URLEncoder.encode(value, encoding));
+            sb.append(URLEncoder.encode(value, "utf-8"));
             sb.append('&');
         }
 

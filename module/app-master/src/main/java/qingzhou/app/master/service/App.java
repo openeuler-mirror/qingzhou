@@ -173,7 +173,7 @@ public class App extends ModelBase implements Createable {
 
         String[] nodes = p.get("nodes").split(",");
         request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_INSTALL);
+        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_INSTALL_APP);
         try {
             for (String node : nodes) {
                 try {
@@ -197,8 +197,8 @@ public class App extends ModelBase implements Createable {
         getDataStore().addData(qingzhou.framework.app.App.SYS_MODEL_APP, appName, p);
     }
 
-    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE,
+    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
@@ -219,7 +219,7 @@ public class App extends ModelBase implements Createable {
         String[] nodes = p.get("nodes").split(",");
 
         request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_UNINSTALL);
+        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_UNINSTALL_APP);
         try {
             for (String node : nodes) {
                 try {

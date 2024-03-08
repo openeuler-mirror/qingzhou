@@ -7,9 +7,17 @@ import qingzhou.framework.crypto.MessageDigest;
 
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.util.UUID;
 
 public class CryptoServiceImpl implements CryptoService {
     private final MessageDigest messageDigest = new MessageDigestImpl();
+
+    @Override
+    public String generateKey() {
+        String random = UUID.randomUUID().toString();
+        byte[] bytes = KeyCipherImpl.build3desData(random.getBytes());
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
 
     @Override
     public KeyCipher getKeyCipher(String keySeed) {

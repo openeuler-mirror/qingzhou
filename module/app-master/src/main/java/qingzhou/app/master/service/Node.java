@@ -58,8 +58,8 @@ public class Node extends ModelBase implements Createable {
         return null;
     }
 
-    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE,
+    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {
@@ -72,7 +72,7 @@ public class Node extends ModelBase implements Createable {
 
     private DataStore dataStore;
 
-    private class NodeDataStore extends ConsoleDataStore {
+    private static class NodeDataStore extends ConsoleDataStore {
         private final Map<String, String> localNode;
 
         NodeDataStore() {
@@ -108,5 +108,4 @@ public class Node extends ModelBase implements Createable {
             return allData;
         }
     }
-
 }

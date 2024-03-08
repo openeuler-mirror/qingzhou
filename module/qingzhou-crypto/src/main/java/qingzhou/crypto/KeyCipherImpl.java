@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 public class KeyCipherImpl implements KeyCipher {
     private final String transformation = "DESede"; // Triple-DES encryption algorithm
 
-    private byte[] build3desData(byte[] keySeed) {
+    static byte[] build3desData(byte[] keySeed) {
         // 初始化对称密钥
         byte[] keys = new byte[24];
         if (keySeed.length < keys.length) {

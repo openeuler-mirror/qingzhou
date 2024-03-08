@@ -19,14 +19,7 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ActionInvoker {
     static {
@@ -102,7 +95,7 @@ public class ActionInvoker {
             }
         }
         ((RequestImpl) request).setId(oid);
-        String appName = PageBackendService.getAppName(((RequestImpl) request).getManageType(), request.getAppName());
+        String appName = PageBackendService.getAppName(request);
         String model = I18n.getString(appName, "model." + request.getModelName());
         String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
         if (result.isEmpty()) {

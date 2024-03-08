@@ -14,9 +14,10 @@ public interface App {
     String SYS_MODEL_APP = "app";
     String SYS_MODEL_NODE = "node";
 
-    String SYS_ACTION_MANAGE = "manage";
-    String SYS_ACTION_INSTALL = "install";
-    String SYS_ACTION_UNINSTALL = "uninstall";
+    String SYS_ACTION_MANAGE_PAGE = "manage";
+    String SYS_ACTION_INSTALL_APP = "install";
+    String SYS_ACTION_UNINSTALL_APP = "uninstall";
+    String SYS_ACTION_ENTRY_HOME = "show";
 
     QingZhouApp getQingZhouApp();
 

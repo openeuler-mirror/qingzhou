@@ -39,8 +39,8 @@ public class ActionMethod {
             nameI18n = {"监视", "en:Monitor"},
             infoI18n = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
-    public void monitor(Request request, Response response, Monitorable monitorable) {
-        Map<String, String> p = monitorable.monitorData();
+    public void monitor(Request request, Response response) {
+        Map<String, String> p = ((Monitorable) modelBase).monitorData();
 
         if (p == null || p.isEmpty()) {
             return;

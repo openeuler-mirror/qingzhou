@@ -39,7 +39,7 @@ public class StringUtil {
         return df.format(v);
     }
 
-    public static String stackTraceString(StackTraceElement[] stackTrace) {
+    public static String convertStackTrace(StackTraceElement[] stackTrace) {
         StringBuilder msg = new StringBuilder();
         String sp = System.lineSeparator();
         for (StackTraceElement element : stackTrace) {

@@ -114,7 +114,7 @@ class BlockedThreadTool {
                 continue;
             }
 
-            String stackTrace = StringUtil.stackTraceString(threadInfo.getStackTrace());
+            String stackTrace = StringUtil.convertStackTrace(threadInfo.getStackTrace());
             if (StringUtil.isBlank(stackTrace)) continue;
 
             Info infos = map.computeIfAbsent(stackTrace, s -> new Info(threadInfo));

@@ -1,4 +1,4 @@
-# Qingzhou Web管理软件开发平台
+# Qingzhou（轻舟）Web管理软件开发平台
 
 ## 平台简介
 

@@ -9,6 +9,7 @@ import java.util.Map;
 public interface Config extends InternalService {
     String localKeyName = "localKey";
     String remoteKeyName = "remoteKey";
+    String remotePublicKeyName = "remotePublicKey";
 
     String publicKeyName = "publicKey";
     String privateKeyName = "privateKey";

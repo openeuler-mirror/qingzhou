@@ -42,7 +42,7 @@ public class DeadlockedThreadTool {
             // ITAIT-4119
             StackTraceElement[] stackTraceElement = threadInfo.getStackTrace();
             if (stackTraceElement != null) {
-                properties.put("deadlockedStack", StringUtil.stackTraceString(stackTraceElement));
+                properties.put("deadlockedStack", StringUtil.convertStackTrace(stackTraceElement));
             }
             return properties;
         } else {

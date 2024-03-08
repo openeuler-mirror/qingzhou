@@ -2,8 +2,8 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.i18n.I18n;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;

@@ -1,16 +1,7 @@
 package qingzhou.console.page;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Lang;
-import qingzhou.api.Option;
-import qingzhou.api.Options;
-import qingzhou.api.Request;
-import qingzhou.api.metadata.AppMetadata;
-import qingzhou.api.metadata.MenuData;
-import qingzhou.api.metadata.ModelActionData;
-import qingzhou.api.metadata.ModelData;
-import qingzhou.api.metadata.ModelFieldData;
-import qingzhou.api.metadata.ModelManager;
+import qingzhou.api.*;
+import qingzhou.api.metadata.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
@@ -32,14 +23,7 @@ import qingzhou.framework.util.StringUtil;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -74,12 +58,12 @@ public class PageBackendService {
         return modelManager.getFieldNames(request.getModelName())[fieldIndex];
     }
 
-    public static String getAppName(RequestImpl request) {
+    public static String getAppName(Request request) {
         if (request == null) {
             return App.SYS_APP_MASTER;
         }
 
-        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(request.getManageType())) {
+        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(((RequestImpl) request).getManageType())) {
             return App.SYS_APP_NODE_AGENT;
         }
 
