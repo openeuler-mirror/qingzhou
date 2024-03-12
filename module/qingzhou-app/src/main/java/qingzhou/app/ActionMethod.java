@@ -28,9 +28,21 @@ public class ActionMethod {
             nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
-        DataStore dataStore = getDataStore();
-        Map<String, String> data = dataStore.getDataById(request.getModelName(), request.getId());
-        response.addData(data);
+        Showable model = (Showable) modelBase;
+        Map<String, String> data = model.showData(request.getId());
+        if (data != null) {
+            response.addData(data);
+        }
+        ModelBase modelData = model.showModelData(request.getId());
+        if (modelData != null) {
+            response.addModelData(modelData);
+        }
+
+        if (data == null && modelData == null) {
+            DataStore dataStore = getDataStore();
+            data = dataStore.getDataById(request.getModelName(), request.getId());
+            response.addData(data);
+        }
     }
 
     @ModelAction(name = Monitorable.ACTION_NAME_MONITOR,
