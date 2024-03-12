@@ -190,13 +190,13 @@ public class User extends ModelBase implements Createable {
             icon = "save",
             nameI18n = {"添加", "en:Add"},
             infoI18n = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    public void add(Request request, Response response) throws Exception {
+    public Map<String, String> add(Request request, Response response) throws Exception {
         if (!checkForbidden(request, response)) {
-            return;
+            return null;
         }
         Map<String, String> newUser = Main.prepareParameters(request, getAppContext());
         rectifyParameters(request, newUser, new HashMap<>());
-        getDataStore().addData(request.getModelName(), newUser.get(Listable.FIELD_NAME_ID), newUser);
+        return newUser;
     }
 
 

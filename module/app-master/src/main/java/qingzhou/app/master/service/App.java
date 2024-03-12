@@ -138,11 +138,12 @@ public class App extends ModelBase implements Createable {
         return null;
     }
 
+    @Override
     @ModelAction(name = Createable.ACTION_NAME_ADD,
             icon = "save",
             nameI18n = {"安装", "en:Install"},
             infoI18n = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
-    public void add(Request req, Response response) throws Exception {
+    public Map<String, String> add(Request req, Response response) {
         RequestImpl request = (RequestImpl) req;
         Map<String, String> p = Main.prepareParameters(request, getAppContext());
         File srcFile;
@@ -155,7 +156,7 @@ public class App extends ModelBase implements Createable {
             response.setSuccess(false);
             String msg = getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "app.id.not.exist");
             response.setMsg(msg);
-            return;
+            return null;
         }
         String srcFileName = srcFile.getName();
         String appName;
@@ -168,7 +169,7 @@ public class App extends ModelBase implements Createable {
             response.setSuccess(false);
             String msg = getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "app.type.unknown");
             response.setMsg(msg);
-            return;
+            return null;
         }
 
         String[] nodes = p.get("nodes").split(",");
@@ -185,7 +186,7 @@ public class App extends ModelBase implements Createable {
                 } catch (Exception e) { // todo 部分失败，如何显示到页面？
                     response.setSuccess(false);
                     response.setMsg(e.getMessage());
-                    return;
+                    return null;
                 }
             }
         } finally {
@@ -194,7 +195,7 @@ public class App extends ModelBase implements Createable {
         }
 
         p.put(Listable.FIELD_NAME_ID, appName);
-        getDataStore().addData(qingzhou.framework.app.App.SYS_MODEL_APP, appName, p);
+        return p;
     }
 
     @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,

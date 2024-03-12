@@ -319,7 +319,7 @@ public class ActionMethod {
             icon = "plus-sign", forwardToPage = "form",
             nameI18n = {"创建", "en:Create"},
             infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
-    public void create(Request request, Response response) throws Exception {
+    public void create(Request request, Response response) {
         Map<String, String> properties = getAppContext().getAppMetadata().getModelManager().getModelDefaultProperties(request.getModelName());
         response.addData(properties);
     }
@@ -329,7 +329,9 @@ public class ActionMethod {
             nameI18n = {"添加", "en:Add"},
             infoI18n = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
-        Map<String, String> properties = prepareParameters(request);
+        Map<String, String> properties = ((Createable) modelBase).add(request, response);
+        if (properties == null || properties.isEmpty()) return;
+
         String id = properties.get(Listable.FIELD_NAME_ID);
         DataStore dataStore = getDataStore();
         dataStore.addData(request.getModelName(), id, properties);
