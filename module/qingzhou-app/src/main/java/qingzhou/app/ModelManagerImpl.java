@@ -94,14 +94,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
             ModelAction modelAction = entry.getValue();
             String actionName = modelAction.name();
 
-            ActionInfo.InvokeMethod invokeMethod;
-            ActionInfo actionInfo = actionInfos.get(actionName);
-            if (actionInfo != null) {
-                invokeMethod = actionInfo.invokeMethod;
-            } else {
-                invokeMethod = new InvokeMethodImpl(instance, entry.getKey());
-            }
-
+            ActionInfo.InvokeMethod invokeMethod = new InvokeMethodImpl(instance, entry.getKey());
             ModelActionData modelActionData = ModelUtil.toModelActionData(modelAction);
             actionInfos.put(actionName, new ActionInfo(modelActionData, actionName, invokeMethod));
         }

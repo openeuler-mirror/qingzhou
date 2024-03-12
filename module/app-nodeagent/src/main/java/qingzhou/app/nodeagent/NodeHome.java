@@ -1,8 +1,6 @@
 package qingzhou.app.nodeagent;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
+import qingzhou.api.*;
 import qingzhou.api.type.Showable;
 import qingzhou.framework.app.App;
 import qingzhou.framework.util.IPUtil;
@@ -23,11 +21,14 @@ public class NodeHome extends ModelBase implements Showable {
             infoI18n = {"此 Qingzhou 节点的本地 IP 地址列表。", "en:A list of local IP addresses for this Qingzhou node."})
     public String localIps;
 
-    @Override
-    public ModelBase showModelData(String id) {
+    @ModelAction(name = ACTION_NAME_SHOW,
+            icon = "info-sign", forwardToPage = "show",
+            nameI18n = {"首页", "en:Home"},
+            infoI18n = {"展示节点的首页信息。", "en:Displays the homepage information of the node."})
+    public void show(Request request, Response response) throws Exception {
         NodeHome home = new NodeHome();
         home.javaHome = System.getProperty("java.home");
         home.localIps = String.join(",", IPUtil.getLocalIps());
-        return home;
+        response.addModelData(home);
     }
 }

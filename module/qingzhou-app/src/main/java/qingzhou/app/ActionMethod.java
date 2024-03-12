@@ -28,21 +28,9 @@ public class ActionMethod {
             nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
-        Showable model = (Showable) modelBase;
-        Map<String, String> data = model.showData(request.getId());
-        if (data != null) {
-            response.addData(data);
-        }
-        ModelBase modelData = model.showModelData(request.getId());
-        if (modelData != null) {
-            response.addModelData(modelData);
-        }
-
-        if (data == null && modelData == null) {
-            DataStore dataStore = getDataStore();
-            data = dataStore.getDataById(request.getModelName(), request.getId());
-            response.addData(data);
-        }
+        DataStore dataStore = getDataStore();
+        Map<String, String> data = dataStore.getDataById(request.getModelName(), request.getId());
+        response.addData(data);
     }
 
     @ModelAction(name = Monitorable.ACTION_NAME_MONITOR,
@@ -331,7 +319,7 @@ public class ActionMethod {
             icon = "plus-sign", forwardToPage = "form",
             nameI18n = {"创建", "en:Create"},
             infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
-    public void create(Request request, Response response) {
+    public void create(Request request, Response response) throws Exception {
         Map<String, String> properties = getAppContext().getAppMetadata().getModelManager().getModelDefaultProperties(request.getModelName());
         response.addData(properties);
     }
@@ -341,9 +329,7 @@ public class ActionMethod {
             nameI18n = {"添加", "en:Add"},
             infoI18n = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
-        Map<String, String> properties = ((Createable) modelBase).add(request, response);
-        if (properties == null || properties.isEmpty()) return;
-
+        Map<String, String> properties = prepareParameters(request);
         String id = properties.get(Listable.FIELD_NAME_ID);
         DataStore dataStore = getDataStore();
         dataStore.addData(request.getModelName(), id, properties);
