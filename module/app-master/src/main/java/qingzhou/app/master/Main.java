@@ -56,8 +56,7 @@ public class Main extends QingZhouSystemApp {
 
         @Override
         public String doFilter(Request request, Response response, AppContext appContext) {
-            if (App.SYS_MODEL_NODE.equals(request.getModelName())
-                    && App.SYS_NODE_LOCAL.equals(request.getId())) {
+            if (App.SYS_MODEL_NODE.equals(request.getModelName()) && App.SYS_NODE_LOCAL.equals(request.getId())) {
                 if (Editable.ACTION_NAME_UPDATE.equals(request.getActionName())
                         || Deletable.ACTION_NAME_DELETE.equals(request.getActionName())) {
                     return appContext.getAppMetadata().getI18n(request.getI18nLang(), "validator.master.system");

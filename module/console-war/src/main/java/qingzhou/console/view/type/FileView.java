@@ -43,7 +43,7 @@ public class FileView implements View {
             }
 
             RequestImpl req = request.clone();
-            HashMap<String, String> data = new HashMap<>();
+            Map<String, String> data = new HashMap<>();
             data.put(ConsoleConstants.DOWNLOAD_KEY, key);
             data.put(ConsoleConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);
