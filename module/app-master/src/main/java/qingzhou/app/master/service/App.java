@@ -69,6 +69,7 @@ public class App extends ModelBase implements Createable {
     @ModelField(
             required = true, type = FieldType.checkbox,
             showToList = true,
+            refModel = "node",
             nameI18n = {"节点", "en:Node"},
             infoI18n = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
     public String nodes;
@@ -108,10 +109,12 @@ public class App extends ModelBase implements Createable {
                             .forEach(nodeSet::add);
                 } else {
                     Map<String, String> user = getDataStore().getDataById("user", userName);
-                    Stream.of(user.getOrDefault("nodes", "").split(","))
-                            .map(String::trim)
-                            .filter(StringUtil::notBlank)
-                            .forEach(nodeSet::add);
+                    if (user != null) {
+                        Stream.of(user.getOrDefault("nodes", "").split(","))
+                                .map(String::trim)
+                                .filter(StringUtil::notBlank)
+                                .forEach(nodeSet::add);
+                    }
                 }
                 nodeSet.remove(qingzhou.framework.app.App.SYS_NODE_LOCAL);
                 nodeSet.stream().map(Option::of).forEach(nodeList::add);

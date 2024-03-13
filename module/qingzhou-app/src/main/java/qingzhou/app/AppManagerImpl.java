@@ -1,10 +1,13 @@
 package qingzhou.app;
 
 import qingzhou.api.ModelBase;
+import qingzhou.api.QingZhou;
 import qingzhou.api.QingZhouApp;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelFieldData;
+import qingzhou.app.bytecode.AnnotationReader;
+import qingzhou.app.bytecode.impl.AnnotationReaderImpl;
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.framework.app.App;
 import qingzhou.framework.app.AppManager;
@@ -18,7 +21,17 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class AppManagerImpl implements AppManager {
     private final Map<String, App> apps = new HashMap<>();
@@ -80,7 +93,7 @@ public class AppManagerImpl implements AppManager {
         }
         File[] appLibs = appFiles;
         if (needCommonApp) {
-            File[] commonFiles = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", "common").listFiles();
+            File[] commonFiles = getCommonJars();
             if (commonFiles != null) {
                 int appFileLength = appFiles.length;
                 int commonFileLength = commonFiles.length;
@@ -118,24 +131,80 @@ public class AppManagerImpl implements AppManager {
             modelInstance.setAppContext(appContext);
             modelInstance.init();
         }
-        try (InputStream inputStream = loader.getResourceAsStream("qingzhou.properties")) {
-            Properties properties = FileUtil.streamToProperties(inputStream);
-            metadata.setConfig(Collections.unmodifiableMap(new HashMap<String, String>() {{
-                properties.forEach((o, o2) -> put((String) o, (String) o2));
-            }}));
-            String appClass = metadata.getConfig().get("qingzhou.app");
-            if (StringUtil.notBlank(appClass)) {
-                QingZhouApp qingZhouApp = (QingZhouApp) loader.loadClass(appClass).newInstance();
-                app.setQingZhouApp(qingZhouApp);
-                if (qingZhouApp instanceof QingZhouSystemApp) {
-                    QingZhouSystemApp qingZhouSystemApp = (QingZhouSystemApp) qingZhouApp;
-                    qingZhouSystemApp.setModuleContext(frameworkContext);
-                }
+
+        loadConfig(appLibs, metadata, loader);
+        String appClass = metadata.getConfig().get("qingzhou.app");
+        if (StringUtil.notBlank(appClass)) {
+            QingZhouApp qingZhouApp = (QingZhouApp) loader.loadClass(appClass).newInstance();
+            app.setQingZhouApp(qingZhouApp);
+            if (qingZhouApp instanceof QingZhouSystemApp) {
+                QingZhouSystemApp qingZhouSystemApp = (QingZhouSystemApp) qingZhouApp;
+                qingZhouSystemApp.setModuleContext(frameworkContext);
             }
         }
 
         return app;
     }
+
+    private File[] getCommonJars() {
+        List<File> files = new ArrayList<>();
+        files.add(FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-framework.jar"));
+        files.addAll(Arrays.asList(FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", "common").listFiles()));
+        return files.toArray(new File[0]);
+    }
+
+    private void loadConfig(File[] appLibs, AppMetadataImpl metadata, URLClassLoader loader) {
+        // 148 149 顺序不能颠倒配置文件指定优先级高于@QingZhou
+        Properties properties = loaderAppClass(appLibs, loader);
+        properties.putAll(loadProperties(loader));
+        metadata.setConfig(Collections.unmodifiableMap(new HashMap<String, String>() {{
+            properties.forEach((o, o2) -> put((String) o, (String) o2));
+        }}));
+    }
+
+    private Properties loadProperties(URLClassLoader loader) {
+        Properties properties = new Properties();
+        try (InputStream inputStream = loader.getResourceAsStream("qingzhou.properties")) {
+            properties.putAll(FileUtil.streamToProperties(inputStream));
+        } catch (Throwable throwable) {
+            if (Controller.logger.isDebugEnabled()) {
+                Controller.logger.debug("Qingzhou. Propetis file does not exist.", throwable);
+            }
+        }
+        return properties;
+    }
+
+    private Properties loaderAppClass(File[] appLibs, URLClassLoader loader) {
+        Properties properties = new Properties();
+        AnnotationReader annotation = AnnotationReaderImpl.getAnnotationReader();
+        for (File file : appLibs) {
+            if (!file.getName().endsWith(".jar")) continue;
+            try (JarFile jar = new JarFile(file)) {
+                Enumeration<JarEntry> entries = jar.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry jarEntry = entries.nextElement();
+                    String entryName = jarEntry.getName();
+                    String endsWithFlag = ".class";
+                    if (entryName.contains("$") || !entryName.endsWith(endsWithFlag)) continue;
+                    int i = entryName.indexOf(endsWithFlag);
+                    String className = entryName.substring(0, i).replace("/", ".");
+                    Class<?> cls = loader.loadClass(className);
+                    QingZhou qingZhou = annotation.readOnClassAnnotation(cls, QingZhou.class);
+                    if (qingZhou != null) {
+                        properties.put("qingzhou.app", className);
+                        return properties;
+                    }
+                }
+            } catch (Throwable throwable) {
+                if (Controller.logger.isDebugEnabled()) {
+                    Controller.logger.debug("loaderAppClass  failed.", throwable);
+                }
+            }
+        }
+        return properties;
+
+    }
+
 
     private void initI18n(ModelManagerImpl modelManager, AppMetadataImpl metadata) {
         for (String modelName : modelManager.getModelNames()) {

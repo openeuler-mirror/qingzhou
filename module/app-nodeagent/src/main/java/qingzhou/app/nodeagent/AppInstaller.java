@@ -39,7 +39,7 @@ public class AppInstaller extends ModelBase {
             int index = srcFileName.lastIndexOf(".");
             String appName = srcFileName.substring(0, index);
             app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, "lib", srcFileName));
+            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, srcFileName));
         } else if (srcFileName.endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             String appName = srcFileName.substring(0, index);
