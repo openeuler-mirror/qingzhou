@@ -10,7 +10,7 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.framework.Constants;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
 import qingzhou.framework.util.pattern.Filter;
@@ -42,7 +42,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             models.add(modelManager.getModel(modelName));
         }
 
-        if (!Constants.DEFAULT_ADMINISTRATOR.equals(loginUser) && App.SYS_APP_MASTER.equals(appName)) {
+        if (!Constants.DEFAULT_ADMINISTRATOR.equals(loginUser) && AppInfo.SYS_APP_MASTER.equals(appName)) {
             models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
         }
 

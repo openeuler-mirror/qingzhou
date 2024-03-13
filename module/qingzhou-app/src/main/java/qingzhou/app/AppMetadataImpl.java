@@ -15,20 +15,10 @@ public class AppMetadataImpl implements AppMetadata, Serializable {
     private final Map<String, MenuDataImpl> menus = new HashMap<>();
     private String appName;
     private ModelManager modelManager;
-    private Map<String, String> config;
 
     @Override
     public String getName() {
         return appName;
-    }
-
-    @Override
-    public Map<String, String> getConfig() {
-        return config;
-    }
-
-    public void setConfig(Map<String, String> config) {
-        this.config = config;
     }
 
     @Override

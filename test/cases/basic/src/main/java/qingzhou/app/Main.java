@@ -1,9 +1,11 @@
 package qingzhou.app;
 
+import qingzhou.api.App;
 import qingzhou.api.AppContext;
-import qingzhou.api.QingZhouApp;
+import qingzhou.api.QingzhouApp;
 
-public class Main extends QingZhouApp {
+@App
+public class Main extends QingzhouApp {
     @Override
     public void start(AppContext appContext) {
     }

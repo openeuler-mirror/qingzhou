@@ -42,7 +42,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                     String className = entryName.substring(0, i).replace("/", ".");
                     Class<?> cls = loader.loadClass(className);
 
-                    Model model = annotation.readOnClassAnnotation(cls, Model.class);
+                    Model model = annotation.readClassAnnotation(cls, Model.class);
                     if (model != null) {
                         ModelBase instance = createModelBase(cls);
 

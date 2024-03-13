@@ -3,7 +3,7 @@ package qingzhou.remote;
 import qingzhou.api.Response;
 import qingzhou.bootstrap.main.FrameworkContext;
 import qingzhou.bootstrap.main.ModuleLoader;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.console.RequestImpl;
@@ -127,8 +127,8 @@ public class Controller implements ModuleLoader {
             RequestImpl request = serializer.deserialize(decryptedData, RequestImpl.class);
             Response response = new ResponseImpl();
             AppManager appManager = frameworkContext.getServiceManager().getService(AppManager.class);
-            App app = appManager.getApp(request.getAppName());
-            app.invoke(request, response);
+            AppInfo appInfo = appManager.getApp(request.getAppName());
+            appInfo.invoke(request, response);
 
             // 4. 响应数据
             byte[] responseData = serializer.serialize(response);

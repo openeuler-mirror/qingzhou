@@ -4,8 +4,10 @@ import qingzhou.api.Lang;
 import qingzhou.api.Request;
 
 import java.io.Serializable;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RequestImpl implements Request, Serializable, Cloneable {
     private String manageType;
@@ -16,7 +18,11 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     private String id;
     private String userName;
     private Lang lang;
-    private Map<String, String[]> parameters;
+
+    /**
+     * The request parameters for this request.
+     */
+    protected Map<String, String[]> parameters = new HashMap<>();
 
     @Override
     public String getAppName() {
@@ -43,19 +49,32 @@ public class RequestImpl implements Request, Serializable, Cloneable {
         return id;
     }
 
+    @Override
+    public String getParameter(String name) {
+        String[] value = parameters.get(name);
+        if (value == null) {
+            return null;
+        }
+        return value[0];
+    }
+
+    @Override
+    public Map<String, String[]> getParameterMap() {
+        return parameters;
+    }
+
+    @Override
+    public Enumeration<String> getParameterNames() {
+        return Collections.enumeration(parameters.keySet());
+    }
+
+    @Override
+    public String[] getParameterValues(String name) {
+        return parameters.get(name);
+    }
+
     public void setId(String id) {
         this.id = id;
-    }
-
-    @Override
-    public String getParameter(String parameterName) {
-        String[] values = this.parameters.getOrDefault(parameterName, new String[0]);
-        return values.length == 0 ? null : values[0];
-    }
-
-    @Override
-    public Map<String, String[]> getParameters() {
-        return this.parameters;
     }
 
     @Override
@@ -92,16 +111,14 @@ public class RequestImpl implements Request, Serializable, Cloneable {
         this.lang = lang;
     }
 
-    public void updateParameter(String parameterName, String parameterValue) {
-        parameters.put(parameterName, new String[]{ parameterValue });
+    public void setParameter(String parameterName, String parameterValue) {
+        parameters.put(parameterName, new String[]{parameterValue});
     }
 
     public void setParameters(Map<String, String> parameters) {
-        Map<String, String[]> temp = new HashMap<>(32);
-        if (parameters != null) {
-            parameters.forEach((k, v) -> temp.put(k, new String[]{v}));
-        }
-        this.parameters = temp;
+        if (parameters == null) return;
+
+        parameters.forEach((s, s2) -> RequestImpl.this.parameters.put(s, new String[]{s2}));
     }
 
     public String getManageType() {
@@ -115,7 +132,7 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     @Override
     public RequestImpl clone() throws CloneNotSupportedException {
         RequestImpl clone = (RequestImpl) super.clone();
-        clone.parameters = this.parameters.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+        clone.parameters.putAll(this.parameters);
         return clone;
     }
 }

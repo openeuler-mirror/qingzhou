@@ -30,7 +30,7 @@ public class AnnotationReaderImpl implements AnnotationReader {
     }
 
     @Override
-    public <A extends Annotation> A readOnClassAnnotation(Class<?> cls, Class<A> annotationClass) {
+    public <A extends Annotation> A readClassAnnotation(Class<?> cls, Class<A> annotationClass) {
         return cls.getDeclaredAnnotation(annotationClass);
     }
 

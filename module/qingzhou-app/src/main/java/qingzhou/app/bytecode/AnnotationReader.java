@@ -1,6 +1,5 @@
 package qingzhou.app.bytecode;
 
-import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
 
@@ -10,7 +9,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 public interface AnnotationReader {
-    <A extends Annotation> A readOnClassAnnotation(Class<?> cls, Class<A> annotationClass);
+    <T extends Annotation> T readClassAnnotation(Class<?> cls, Class<T> annotationClass);
 
     Map<Field, ModelField> readModelField(Class<?> cls);
 

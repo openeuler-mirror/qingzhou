@@ -9,7 +9,7 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
@@ -188,7 +188,7 @@ public class ActionInvoker {
 
         for (String node : appNodes) {
             ResponseImpl responseOnNode;
-            if (node.equals(App.SYS_NODE_LOCAL)) {
+            if (node.equals(AppInfo.SYS_NODE_LOCAL)) {
                 ResponseImpl response = new ResponseImpl();
                 SystemController.invokeLocalApp(request, response);
                 responseOnNode = response;
@@ -208,13 +208,13 @@ public class ActionInvoker {
 
     private List<String> getAppNodes(String appName) throws Exception {
         List<String> nodes = new ArrayList<>();
-        if (App.SYS_APP_MASTER.equals(appName)) {
-            nodes.add(App.SYS_NODE_LOCAL);
+        if (AppInfo.SYS_APP_MASTER.equals(appName)) {
+            nodes.add(AppInfo.SYS_NODE_LOCAL);
         } else {
             RequestImpl request = new RequestImpl();
             ResponseImpl response = new ResponseImpl();
-            request.setAppName(App.SYS_APP_MASTER);
-            request.setModelName(App.SYS_MODEL_APP);
+            request.setAppName(AppInfo.SYS_APP_MASTER);
+            request.setModelName(AppInfo.SYS_MODEL_APP);
             request.setActionName(Showable.ACTION_NAME_SHOW);
             request.setId(appName);
             SystemController.invokeLocalApp(request, response);

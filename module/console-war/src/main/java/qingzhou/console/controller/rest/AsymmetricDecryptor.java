@@ -4,7 +4,6 @@ import qingzhou.api.FieldType;
 import qingzhou.api.metadata.ModelFieldData;
 import qingzhou.api.metadata.ModelManager;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.page.PageBackendService;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.util.StringUtil;
@@ -25,7 +24,7 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
                     try {
                         String result = decryptWithConsolePrivateKey(val);
                         if (StringUtil.notBlank(result)) {
-                            request.updateParameter(fieldName, result);
+                            request.setParameter(fieldName, result);
                         }
                     } catch (Exception ignored) {
                     }

@@ -2,7 +2,6 @@ package qingzhou.framework.app;
 
 import qingzhou.api.DataStore;
 
-import java.util.List;
 import java.util.Map;
 
 public abstract class ReadOnlyDataStore implements DataStore {
@@ -19,9 +18,5 @@ public abstract class ReadOnlyDataStore implements DataStore {
     @Override
     public final void deleteDataById(String type, String id) {
         throw new RuntimeException("No Support.");
-    }
-
-    public interface DataAdapter {
-        List<Map<String, String>> getAllData(String type);
     }
 }

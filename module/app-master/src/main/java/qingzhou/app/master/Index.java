@@ -2,9 +2,9 @@ package qingzhou.app.master;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 
-@Model(name = App.SYS_MODEL_INDEX, icon = "home",
+@Model(name = AppInfo.SYS_MODEL_INDEX, icon = "home",
         entryAction = Showable.ACTION_NAME_SHOW,
         nameI18n = {"主页", "en:Home"},
         infoI18n = {"查看 Qingzhou 产品的相关信息。", "en:Check out the relevant information of Qingzhou products."})
@@ -31,7 +31,7 @@ public class Index extends ModelBase implements Showable {
         response.addModelData(index);
     }
 
-    @ModelAction(name = App.SYS_MODEL_INDEX, // NOTE: 这个方法用作是 Login 成功后 跳过的
+    @ModelAction(name = AppInfo.SYS_MODEL_INDEX, // NOTE: 这个方法用作是 Login 成功后 跳过的
             forwardToPage = "sys/index",
             nameI18n = {"主页", "en:Home"},
             infoI18n = {"查看 Qingzhou 的产品信息。",

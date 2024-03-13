@@ -1,13 +1,12 @@
 package qingzhou.app;
 
 import qingzhou.api.*;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 
-import java.lang.reflect.Method;
 import java.net.URLClassLoader;
 
-public class AppImpl implements App {
-    private QingZhouApp qingZhouApp;
+public class AppInfoImpl implements AppInfo {
+    private QingzhouApp qingzhouApp;
     private AppContextImpl appContext;
     private URLClassLoader loader;
 
@@ -49,12 +48,12 @@ public class AppImpl implements App {
     }
 
     @Override
-    public QingZhouApp getQingZhouApp() {
-        return qingZhouApp;
+    public QingzhouApp getQingzhouApp() {
+        return qingzhouApp;
     }
 
-    public void setQingZhouApp(QingZhouApp qingZhouApp) {
-        this.qingZhouApp = qingZhouApp;
+    public void setQingzhouApp(QingzhouApp qingzhouApp) {
+        this.qingzhouApp = qingzhouApp;
     }
 
     public URLClassLoader getLoader() {

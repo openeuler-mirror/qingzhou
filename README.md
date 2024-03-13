@@ -63,12 +63,12 @@ Qingzhou 的愿景是对各种开源软件和业务系统进行统一的、集�
 1. 在 IDE 中建立一个 Java 项目工程。
 2. 在工程里引入 Qingzhou 的依赖 `qingzhou-api` ，并在资源文件夹（如 java 工程的源码目录，或 Maven 工程的 resources
    目录）里创建一个 `qingzhou.properties` 配置文件。
-3. 创建一个应用的入口类，并使其继承自 `qingzhou.api.QingZhouApp`（该类在 `qingzhou-api` 内，后文将提到的 Qingzhou
+3. 创建一个应用的入口类，并使其继承自 `qingzhou.api.QingzhouApp`（该类在 `qingzhou-api` 内，后文将提到的 Qingzhou
    的类也都在其内），实现 `start`
    方法以定制应用的启动逻辑。`start` 方法会接收一个 `qingzhou.api.AppContext`
    的实例对象，通过该对象，应用可使用平台提供的各种服务。关于服务使用的具体接口可查看对应的
    Javadoc。
-4. 将入口类写入 `qingzhou.properties` ，格式如：`qingzhou.app=org.example.MyApp`，其中 `org.example.MyApp` 是应用的入口类的全路径名。
+4. 给入口类添加 `@App` 注解。
 5. 创建应用的模块类，并使其继承自 `qingzhou.api.ModelBase` ，对该类添加 `@Model` 注解以设置模块的名称、图标、菜单、国际化等信息。在该类内部创建
    public 的属性（自动对应到页面上的表单元素），并对其添加 `@ModelField`
    注解以设置属性的相关信息。在该类内部创建方法（自动对应到页面上的按钮或链接），并对其添加 `@ModelAction`

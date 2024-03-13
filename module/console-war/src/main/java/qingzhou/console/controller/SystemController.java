@@ -16,7 +16,7 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.crypto.CryptoService;
@@ -51,7 +51,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return Controller.framework.getServiceManager().getService(AppManager.class);
     }
 
-    public static App getLocalApp(String appName) {
+    public static AppInfo getLocalApp(String appName) {
         return getAppManager().getApp(appName);
     }
 

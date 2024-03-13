@@ -2,10 +2,10 @@ package qingzhou.app.common;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 
-@Model(name = App.SYS_MODEL_HOME, icon = "home",
-        entryAction = App.SYS_ACTION_ENTRY_HOME,
+@Model(name = AppInfo.SYS_MODEL_HOME, icon = "home",
+        entryAction = AppInfo.SYS_ACTION_ENTRY_HOME,
         menuOrder = -1,
         nameI18n = {"应用", "en:App"},
         infoI18n = {"展示当前应用的说明信息。",

@@ -4,14 +4,14 @@ import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.app.master.ConsoleDataStore;
 import qingzhou.app.master.Main;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.config.Config;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Model(name = App.SYS_MODEL_NODE, icon = "node",
+@Model(name = AppInfo.SYS_MODEL_NODE, icon = "node",
         menuName = "Service", menuOrder = 2,
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
@@ -50,7 +50,7 @@ public class Node extends ModelBase implements Createable {
     @Override
     public String validate(Request request, String fieldName) {
         if (fieldName.equals("id")) {
-            if (request.getParameter("id").equals(App.SYS_NODE_LOCAL)) {
+            if (request.getParameter("id").equals(AppInfo.SYS_NODE_LOCAL)) {
                 return "node.id.system";
             }
         }
@@ -58,8 +58,8 @@ public class Node extends ModelBase implements Createable {
         return null;
     }
 
-    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
+    @ModelAction(name = AppInfo.SYS_ACTION_MANAGE_PAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + AppInfo.SYS_ACTION_MANAGE_PAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {
@@ -77,7 +77,7 @@ public class Node extends ModelBase implements Createable {
 
         NodeDataStore() {
             localNode = new HashMap<>();
-            localNode.put("id", App.SYS_NODE_LOCAL);
+            localNode.put("id", AppInfo.SYS_NODE_LOCAL);
             localNode.put("ip", "127.0.0.1");
             localNode.put("port", Main.getService(Config.class).getConfig("//console").get("port"));
             localNode.put("running", "true");

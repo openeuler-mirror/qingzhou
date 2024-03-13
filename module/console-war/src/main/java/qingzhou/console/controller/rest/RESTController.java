@@ -8,7 +8,7 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.FileUtil;
@@ -32,7 +32,7 @@ import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + App.SYS_MODEL_INDEX + "/" + App.SYS_MODEL_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + AppInfo.SYS_APP_MASTER + "/" + AppInfo.SYS_MODEL_INDEX + "/" + AppInfo.SYS_MODEL_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = SystemController.getCache("upload");
 
