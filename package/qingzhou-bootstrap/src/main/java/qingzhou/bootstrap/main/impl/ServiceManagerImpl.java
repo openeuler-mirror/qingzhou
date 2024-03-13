@@ -8,36 +8,35 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceManagerImpl implements ServiceManager {
-    private final Map<Class<?>, Object> services = new HashMap<>();
-    private final Map<RegistryKey, Class<?>> registry = new HashMap<>();
+    private final Map<Class<?>, Object> SERVICES = new HashMap<>();
+    private final Map<RegistryKey, Class<?>> REGISTRY = new HashMap<>();
 
     @Override
     public synchronized <T> RegistryKey registerService(Class<T> clazz, T service) {
-        if (services.containsKey(clazz)) {
+        if (SERVICES.containsKey(clazz)) {
             throw new IllegalArgumentException();
         }
-        services.put(clazz, service);
-        RegistryKey registryKey = new RegistryKey() {
-        };
-        registry.put(registryKey, clazz);
+        SERVICES.put(clazz, service);
+        RegistryKey registryKey = new RegistryKey() {};
+        REGISTRY.put(registryKey, clazz);
         return registryKey;
     }
 
     @Override
     public synchronized void unregisterService(RegistryKey registryKey) {
-        Class<?> removed = registry.remove(registryKey);
+        Class<?> removed = REGISTRY.remove(registryKey);
         if (removed != null) {
-            services.remove(removed);
+            SERVICES.remove(removed);
         }
     }
 
     @Override
     public <T> T getService(Class<T> serviceType) {
-        return (T) services.get(serviceType);
+        return (T) SERVICES.get(serviceType);
     }
 
     @Override
     public Collection<Class<?>> getServiceTypes() {
-        return services.keySet();
+        return SERVICES.keySet();
     }
 }

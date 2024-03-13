@@ -1,5 +1,7 @@
 package qingzhou.api;
 
+import java.util.Map;
+
 /**
  * 请求接口定义了获取请求相关信息的方法。
  */
@@ -41,6 +43,12 @@ public interface Request {
      * @return 返回参数的值，如果不存在，则返回null。
      */
     String getParameter(String parameterName);
+
+    /**
+     * 获取所有参数名和值
+     * @return 
+     */
+    Map<String, String[]> getParameters();
 
     /**
      * 获取用户名。

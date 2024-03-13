@@ -4,7 +4,8 @@ import qingzhou.api.Lang;
 import qingzhou.api.Request;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class RequestImpl implements Request, Serializable, Cloneable {
     private String manageType;
@@ -15,7 +16,7 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     private String id;
     private String userName;
     private Lang lang;
-    private HashMap<String, String> parameters;
+    private Map<String, String[]> parameters;
 
     @Override
     public String getAppName() {
@@ -48,7 +49,13 @@ public class RequestImpl implements Request, Serializable, Cloneable {
 
     @Override
     public String getParameter(String parameterName) {
-        return parameters.get(parameterName);
+        String[] values = this.parameters.getOrDefault(parameterName, new String[0]);
+        return values.length == 0 ? null : values[0];
+    }
+
+    @Override
+    public Map<String, String[]> getParameters() {
+        return this.parameters;
     }
 
     @Override
@@ -86,11 +93,15 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     }
 
     public void updateParameter(String parameterName, String parameterValue) {
-        parameters.put(parameterName, parameterValue);
+        parameters.put(parameterName, new String[]{ parameterValue });
     }
 
-    public void setParameters(HashMap<String, String> parameters) {
-        this.parameters = parameters;
+    public void setParameters(Map<String, String> parameters) {
+        Map<String, String[]> temp = new HashMap<>(32);
+        if (parameters != null) {
+            parameters.forEach((k, v) -> temp.put(k, new String[]{v}));
+        }
+        this.parameters = temp;
     }
 
     public String getManageType() {
@@ -104,7 +115,7 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     @Override
     public RequestImpl clone() throws CloneNotSupportedException {
         RequestImpl clone = (RequestImpl) super.clone();
-        clone.parameters = (HashMap<String, String>) this.parameters.clone();
+        clone.parameters = this.parameters.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
         return clone;
     }
 }

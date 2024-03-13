@@ -164,7 +164,7 @@ public class App extends ModelBase implements Createable {
         String appName;
         if (srcFile.isDirectory()) {
             appName = srcFileName;
-        } else if (srcFileName.endsWith(".jar") || srcFileName.endsWith(".zip")) {
+        } else if (srcFileName.toLowerCase().endsWith(".jar") || srcFileName.toLowerCase().endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             appName = srcFileName.substring(0, index);
         } else {
@@ -174,7 +174,7 @@ public class App extends ModelBase implements Createable {
             return;
         }
 
-        String[] nodes = p.get("nodes").split(",");
+        String[] nodes = p.get("nodes") == null ? new String[0] : p.get("nodes").split(",");
         request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
         request.setActionName(qingzhou.framework.app.App.SYS_ACTION_INSTALL_APP);
         try {
