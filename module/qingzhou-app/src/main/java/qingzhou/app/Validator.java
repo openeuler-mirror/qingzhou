@@ -1,15 +1,12 @@
-package qingzhou.console;
+package qingzhou.app;
 
 import qingzhou.api.*;
-import qingzhou.api.metadata.AppMetadata;
 import qingzhou.api.metadata.ModelFieldData;
 import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
-import qingzhou.console.controller.SystemController;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
+import qingzhou.framework.Constants;
 import qingzhou.framework.util.IPUtil;
 import qingzhou.framework.util.StringUtil;
 
@@ -24,50 +21,57 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class Validator {
-    static {
-        ConsoleI18n.addI18n("validator.cannotWrite", new String[]{"不支持写入", "en:Cannot write"});
-        ConsoleI18n.addI18n("validator.cannotCreate", new String[]{"不支持创建", "en:Cannot be created"});
-        ConsoleI18n.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
-        ConsoleI18n.addI18n("validator.dataInvalid", new String[]{"数据不合法，如不支持包含 %s 等特殊字符", "en:Data is invalid, for example, it cannot contain special characters such as %s"});
-        ConsoleI18n.addI18n("validator.idField", new String[]{"须以英文字母开头，支持英文字母、数字、下划线、中划线、冒号、.、#号、左斜杠",
+    private final AppContext appContext;
+
+    public Validator(AppContext appContext) {
+        this.appContext = appContext;
+        initI18n();
+    }
+
+    private void initI18n() {
+        this.appContext.addI18n("validator.cannotWrite", new String[]{"不支持写入", "en:Cannot write"});
+        this.appContext.addI18n("validator.cannotCreate", new String[]{"不支持创建", "en:Cannot be created"});
+        this.appContext.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
+        this.appContext.addI18n("validator.dataInvalid", new String[]{"数据不合法，如不支持包含 %s 等特殊字符", "en:Data is invalid, for example, it cannot contain special characters such as %s"});
+        this.appContext.addI18n("validator.idField", new String[]{"须以英文字母开头，支持英文字母、数字、下划线、中划线、冒号、.、#号、左斜杠",
                 "en:Must start with an English letter, support English letters, numbers, underscores, underscores, colons, ., #, left slash"});
-        ConsoleI18n.addI18n("validator.optionRange", new String[]{"取值必须在%s中", "en:Value taken must be in %s"});
-        ConsoleI18n.addI18n("validator.valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
-        ConsoleI18n.addI18n("validator.length.only", new String[]{"长度须是%s", "en:Length must be %s"});
-        ConsoleI18n.addI18n("validator.lengthBetween", new String[]{"长度必须介于%s - %s之间", "en:Length must be between %s and %s"});
-        ConsoleI18n.addI18n("validator.number", new String[]{"须是数字类型", "en:Must be a numeric type"});
-        ConsoleI18n.addI18n("validator.decimal", new String[]{"须是数字（含浮点）类型", "en:Must be a decimal (float included) type"});
-        ConsoleI18n.addI18n("validator.ip.illegal", new String[]{"非法的IP地址或域名", "en:Illegal IP address or host name"});
-        ConsoleI18n.addI18n("validator.larger.cannot", new String[]{"不支持大于%s", "en:Cannot be larger than %s"});
-        ConsoleI18n.addI18n("validator.date.larger.cannot", new String[]{"不能晚于%s", "en:No later than %s"});
-        ConsoleI18n.addI18n("validator.larger.minusOne.cannot", new String[]{"不支持大于 %s - 1", "en:Cannot be larger than %s - 1"});
-        ConsoleI18n.addI18n("validator.less.cannot", new String[]{"不支持小于%s", "en:Cannot be less than %s"});
-        ConsoleI18n.addI18n("validator.date.less.cannot", new String[]{"不能早于%s", "en:No earlier than %s"});
-        ConsoleI18n.addI18n("validator.less.current", new String[]{"不能早于当前时间", "en:Cannot be earlier than the current time"});
-        ConsoleI18n.addI18n("user.create.cannot.chinese", new String[]{"不支持包含中文字符", "en:Cannot contain Chinese characters"});
-        ConsoleI18n.addI18n("app.threadpool.canot.eq", new String[]{"和 %s 不支持配置为同一个", "en:Cannot be configured as the same as %s"});
-        ConsoleI18n.addI18n("validator.notSupportedCharacters", new String[]{"不支持包含字符：\"%s\"", "en:Cannot contain the characters: \"%s\""});
-        ConsoleI18n.addI18n("validator.pattern.not", new String[]{"须是一个合法的正则表达式", "en:Must be a valid regular expression"});
-        ConsoleI18n.addI18n("validator.UnsupportedCharset", new String[]{"不支持此编码", "en:Unsupported charset"});
-        ConsoleI18n.addI18n("validator.notfound", new String[]{"不存在", "en:Not found"});
-        ConsoleI18n.addI18n("validator.kv.require", new String[]{"变量名不支持为空", "en:Variable names cannot be empty"});
-        ConsoleI18n.addI18n("validator.kv.name.duplicate", new String[]{"变量名不能重复", "en:Variable names cannot be duplicated"});
-        ConsoleI18n.addI18n("validator.date-time.format", new String[]{"须使用 " + ConsoleConstants.DATE_FORMAT + " 的时间格式", "en:Must use the time format " + ConsoleConstants.DATE_FORMAT});
-        ConsoleI18n.addI18n("validator.xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
-        ConsoleI18n.addI18n("validation.error.centralizedConsoleUrl", new String[]{"不支持的URL协议或内容格式", "en:Unsupported URL protocol or content format"});
+        this.appContext.addI18n("validator.optionRange", new String[]{"取值必须在%s中", "en:Value taken must be in %s"});
+        this.appContext.addI18n("validator.valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
+        this.appContext.addI18n("validator.length.only", new String[]{"长度须是%s", "en:Length must be %s"});
+        this.appContext.addI18n("validator.lengthBetween", new String[]{"长度必须介于%s - %s之间", "en:Length must be between %s and %s"});
+        this.appContext.addI18n("validator.number", new String[]{"须是数字类型", "en:Must be a numeric type"});
+        this.appContext.addI18n("validator.decimal", new String[]{"须是数字（含浮点）类型", "en:Must be a decimal (float included) type"});
+        this.appContext.addI18n("validator.ip.illegal", new String[]{"非法的IP地址或域名", "en:Illegal IP address or host name"});
+        this.appContext.addI18n("validator.larger.cannot", new String[]{"不支持大于%s", "en:Cannot be larger than %s"});
+        this.appContext.addI18n("validator.date.larger.cannot", new String[]{"不能晚于%s", "en:No later than %s"});
+        this.appContext.addI18n("validator.larger.minusOne.cannot", new String[]{"不支持大于 %s - 1", "en:Cannot be larger than %s - 1"});
+        this.appContext.addI18n("validator.less.cannot", new String[]{"不支持小于%s", "en:Cannot be less than %s"});
+        this.appContext.addI18n("validator.date.less.cannot", new String[]{"不能早于%s", "en:No earlier than %s"});
+        this.appContext.addI18n("validator.less.current", new String[]{"不能早于当前时间", "en:Cannot be earlier than the current time"});
+        this.appContext.addI18n("user.create.cannot.chinese", new String[]{"不支持包含中文字符", "en:Cannot contain Chinese characters"});
+        this.appContext.addI18n("app.threadpool.canot.eq", new String[]{"和 %s 不支持配置为同一个", "en:Cannot be configured as the same as %s"});
+        this.appContext.addI18n("validator.notSupportedCharacters", new String[]{"不支持包含字符：\"%s\"", "en:Cannot contain the characters: \"%s\""});
+        this.appContext.addI18n("validator.pattern.not", new String[]{"须是一个合法的正则表达式", "en:Must be a valid regular expression"});
+        this.appContext.addI18n("validator.UnsupportedCharset", new String[]{"不支持此编码", "en:Unsupported charset"});
+        this.appContext.addI18n("validator.notfound", new String[]{"不存在", "en:Not found"});
+        this.appContext.addI18n("validator.kv.require", new String[]{"变量名不支持为空", "en:Variable names cannot be empty"});
+        this.appContext.addI18n("validator.kv.name.duplicate", new String[]{"变量名不能重复", "en:Variable names cannot be duplicated"});
+        this.appContext.addI18n("validator.date-time.format", new String[]{"须使用 " + Constants.DATE_FORMAT + " 的时间格式", "en:Must use the time format " + Constants.DATE_FORMAT});
+        this.appContext.addI18n("validator.xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
+        this.appContext.addI18n("validation.error.centralizedConsoleUrl", new String[]{"不支持的URL协议或内容格式", "en:Unsupported URL protocol or content format"});
     }
 
-    private static String getConsoleI18n(String key, Object... args) {
-        return ConsoleI18n.getI18n(I18n.getI18nLang(), key, args);
+    private String getI18n(Request request, String key, Object... args) {
+        return this.appContext.getAppMetadata().getI18n(request.getI18nLang(), key, args);
     }
 
-    public static boolean validate(Request request, Response response) throws Exception {
+    public boolean validate(Request request, Response response) throws Exception {
         if (!Createable.ACTION_NAME_ADD.equals(request.getActionName()) && !Editable.ACTION_NAME_UPDATE.equals(request.getActionName())) {
             return true;
         }
 
         Map<String, String> errorData = new HashMap<>();
-        ModelManager modelManager = SystemController.getAppMetadata(request).getModelManager();
+        ModelManager modelManager = appContext.getAppMetadata().getModelManager();
         String[] allFieldNames = modelManager.getFieldNames(request.getModelName());
         for (String fieldName : allFieldNames) {
             String validate = validate(request, modelManager, request::getParameter, fieldName, request.getParameter(fieldName));
@@ -89,7 +93,7 @@ public class Validator {
         String getParameter(String name);
     }
 
-    private static String validate(Request request, ModelManager modelManager, RequestParameter requestParameter, String fieldName, String newValue) throws Exception {
+    private String validate(Request request, ModelManager modelManager, RequestParameter requestParameter, String fieldName, String newValue) throws Exception {
         // 上下文环境
         String modelName = request.getModelName();
         ModelFieldData modelField = modelManager.getModelField(modelName, fieldName);
@@ -105,7 +109,7 @@ public class Validator {
             // 如果这里出错，多数数据类型错误，例如本该数字的，却传值为 字符串 等。
         }
 
-        ModelBase tempModel = SystemController.getLocalApp(request.getAppName()).getModelInstance(request.getModelName());
+        ModelBase tempModel = Controller.appManager.getApp(request.getAppName()).getModelInstance(request.getModelName());
         boolean isUpdate = Editable.ACTION_NAME_UPDATE.equals(request.getActionName());
         if (newValue == null) { // NOTE：不能使用 StringUtil.isBlank 来判断，空串 "" 表示有值，且与 null（无值） 是不同含义
             if (modelField.required()) {
@@ -117,7 +121,7 @@ public class Validator {
                     // 例如 Connector：证书路径虽然给了默认值，但如果用户清空输入框再提交就会报错，未拦截说必填项（根因在于 空串和null的判别），所以此处需要再次核验
                     String defaultValue = "";//getModelManager().getFieldValue(tempModel, fieldName); todo 获取默认值
                     if (StringUtil.isBlank(defaultValue)) {
-                        return getConsoleI18n("validator.require");
+                        return getI18n(request, "validator.require");
                     }
                 }
             }
@@ -126,7 +130,7 @@ public class Validator {
                 if (modelField.required()) { // 必填项，但页面的输入框为空的情况！！！例如安全域用户的用户名
                     boolean isUpdatingFile = isUpdate && modelField.type() == FieldType.file; // 上传应用，编辑时候
                     if (!isUpdatingFile) {
-                        return getConsoleI18n("validator.require");
+                        return getI18n(request, "validator.require");
                     }
                 }
             }
@@ -147,7 +151,7 @@ public class Validator {
                     return null;
                 } else {
                     // sessionHa  tdg  密码字段有时候为空，有时候不为空，需要走自定义校验
-                    return vc.appMetadata.getI18n(I18n.getI18nLang(), tempModel.validate(request, fieldName));
+                    return getI18n(request, tempModel.validate(request, fieldName));
                 }
             }
 
@@ -181,8 +185,7 @@ public class Validator {
         }
 
         // 最后进行自定义校验
-        AppMetadata metadata = SystemController.getAppMetadata(request);
-        return metadata.getI18n(I18n.getI18nLang(), tempModel.validate(request, fieldName));
+        return getI18n(request, tempModel.validate(request, fieldName));
     }
 
     private static String validate(Class<?>[] validatorClass, ValidatorContext vc) throws Exception {
@@ -200,15 +203,15 @@ public class Validator {
         return fieldType == FieldType.checkbox || fieldType == FieldType.sortableCheckbox || fieldType == FieldType.groupedMultiselect || fieldType == FieldType.multiselect;
     }
 
-    public static String dataInvalidMsg(char c) {
-        return dataInvalidMsg(String.valueOf(c));
+    public String dataInvalidMsg(Request request, char c) {
+        return dataInvalidMsg(request, String.valueOf(c));
     }
 
-    public static String dataInvalidMsg(String s) {
-        return String.format(getConsoleI18n("validator.dataInvalid"), "\"" + s + "\"");
+    public String dataInvalidMsg(Request request, String s) {
+        return String.format(getI18n(request, "validator.dataInvalid"), "\"" + s + "\"");
     }
 
-    static class ValidatorContext {
+    class ValidatorContext {
         final String modelName;
         final ModelFieldData modelField;
         final String newValue;
@@ -216,7 +219,6 @@ public class Validator {
         final Request request;
         final RequestParameter requestParameter;
         final ModelManager modelManager;
-        final AppMetadata appMetadata;
 
         private ValidatorContext(String newValue, ModelFieldData modelField, String fieldName, Request request, ModelManager modelManager, RequestParameter requestParameter) {
             this.modelName = request.getModelName();
@@ -226,7 +228,6 @@ public class Validator {
             this.request = request;
             this.modelManager = modelManager;
             this.requestParameter = requestParameter;
-            this.appMetadata = SystemController.getAppMetadata(request);
         }
 
         boolean isAdd() {
@@ -242,7 +243,7 @@ public class Validator {
         String validate(ValidatorContext vc) throws Exception;
     }
 
-    static class isIdField implements InternalValidator {
+    class isIdField implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -261,7 +262,7 @@ public class Validator {
                             }
                         }
                         if (vc.newValue.contains(risk)) {
-                            return dataInvalidMsg(risk);
+                            return dataInvalidMsg(vc.request, risk);
                         }
                     }
                 }
@@ -273,7 +274,7 @@ public class Validator {
                 // 只能输入英文数字下划线和横线的正则表达式
                 boolean matches = Pattern.compile("^[a-zA-Z0-9#_/.:-]+$").matcher(vc.newValue).find();
                 if (!matches) {
-                    return getConsoleI18n("validator.idField");
+                    return getI18n(vc.request, "validator.idField");
                 }
             }
 
@@ -281,21 +282,21 @@ public class Validator {
         }
     }
 
-    static class disableOnCreate implements InternalValidator {
+    class disableOnCreate implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             // 字段不可创建
             if (vc.modelField.disableOnCreate() && vc.isAdd()) {
                 if (StringUtil.notBlank(vc.newValue)) {
-                    return getConsoleI18n("validator.cannotCreate");
+                    return getI18n(vc.request, "validator.cannotCreate");
                 }
             }
             return null;
         }
     }
 
-    static class options implements InternalValidator {
+    class options implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -316,16 +317,16 @@ public class Validator {
                     if (StringUtil.notBlank(checkValue) && !keyList.contains(checkValue)) {
                         if (keyList.isEmpty()) {
                             if (StringUtil.isBlank(checkValue)) {
-                                return getConsoleI18n("validator.require");
+                                return getI18n(vc.request, "validator.require");
                             } else {
-                                return getConsoleI18n("validator.notfound");
+                                return getI18n(vc.request, "validator.notfound");
                             }
                         } else {
-                            return String.format(getConsoleI18n("validator.optionRange"), Arrays.toString(keyList.toArray()));
+                            return String.format(getI18n(vc.request, "validator.optionRange"), Arrays.toString(keyList.toArray()));
                         }
                     }
                 } else {
-                    for (String data : checkValue.split(ConsoleConstants.DATA_SEPARATOR)) { //  例如：角色的权限，经过 ActionContext的getRequestParameter转换后包含逗号
+                    for (String data : checkValue.split(Constants.DATA_SEPARATOR)) { //  例如：角色的权限，经过 ActionContext的getRequestParameter转换后包含逗号
                         boolean multiselect = vc.modelField.type() == FieldType.groupedMultiselect;
                         boolean containsSP = data.contains("/") && !data.startsWith("/") && !data.endsWith("/");
                         boolean isMultiselect = (multiselect && !containsSP);
@@ -335,16 +336,16 @@ public class Validator {
                             if (!hasNotSelect) {
                                 if (keyList.isEmpty()) {
                                     // 解决提示信息不友好：取值必须在[]中.
-                                    return getConsoleI18n("validator.notfound");
+                                    return getI18n(vc.request, "validator.notfound");
                                 } else {
                                     if (multiselect) {
                                         keyList.removeIf(s -> !s.contains("/"));// 去掉 父类 的全选引用，这个只对浏览器有用
                                     }
                                     if (!keyList.contains(data)) {
                                         if (keyList.size() <= 10) {
-                                            return String.format(getConsoleI18n("validator.optionRange"), Arrays.toString(keyList.toArray()));
+                                            return String.format(getI18n(vc.request, "validator.optionRange"), Arrays.toString(keyList.toArray()));
                                         } else {
-                                            return String.format(getConsoleI18n("validator.optionRange"), keyList.get(0) + "," + keyList.get(1) + "," + keyList.get(2) + ",...");
+                                            return String.format(getI18n(vc.request, "validator.optionRange"), keyList.get(0) + "," + keyList.get(1) + "," + keyList.get(2) + ",...");
                                         }
                                     }
                                 }
@@ -358,14 +359,14 @@ public class Validator {
         }
     }
 
-    static class chineseCharacterSupported implements InternalValidator {
+    class chineseCharacterSupported implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             // 是否支持中文字符
             if (vc.modelField.noSupportZHChar()) {
                 if (StringUtil.containsZHChar(vc.newValue)) {
-                    return getConsoleI18n("user.create.cannot.chinese");
+                    return getI18n(vc.request, "user.create.cannot.chinese");
                 }
             }
 
@@ -373,16 +374,16 @@ public class Validator {
         }
     }
 
-    static class notSupportedStrings implements InternalValidator {
+    class notSupportedStrings implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             if (vc.modelField.notSupportedStrings().length > 0) {
-                String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(ConsoleConstants.DATA_SEPARATOR) : new String[]{vc.newValue};
+                String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(Constants.DATA_SEPARATOR) : new String[]{vc.newValue};
                 for (String e : vc.modelField.notSupportedStrings()) {
                     for (String valueStr : valueStrs) {
                         if (valueStr.toLowerCase().contains(e.toLowerCase())) {
-                            return String.format(getConsoleI18n("validator.notSupportedCharacters"), e);
+                            return String.format(getI18n(vc.request, "validator.notSupportedCharacters"), e);
                         }
                     }
                 }
@@ -392,16 +393,16 @@ public class Validator {
         }
     }
 
-    static class notSupportedCharacters implements InternalValidator {
+    class notSupportedCharacters implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             if (!vc.modelField.notSupportedCharacters().isEmpty()) { // 不能用 isBlank，因为可能只是配置了一个 空白 符
-                String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(ConsoleConstants.DATA_SEPARATOR) : new String[]{vc.newValue};
+                String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(Constants.DATA_SEPARATOR) : new String[]{vc.newValue};
                 for (char e : vc.modelField.notSupportedCharacters().toCharArray()) {
                     for (String valueStr : valueStrs) {
                         if (valueStr.indexOf(e) > -1) {
-                            return String.format(getConsoleI18n("validator.notSupportedCharacters"), e);
+                            return String.format(getI18n(vc.request, "validator.notSupportedCharacters"), e);
                         }
                     }
                 }
@@ -410,7 +411,7 @@ public class Validator {
         }
     }
 
-    static class number implements InternalValidator {
+    class number implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -419,10 +420,10 @@ public class Validator {
                 try {
                     long guessNumber = Long.parseLong(vc.newValue);
                     if (guessNumber < vc.modelField.min() || guessNumber > vc.modelField.max()) {
-                        return String.format(getConsoleI18n("validator.valueBetween"), vc.modelField.min(), vc.modelField.max());
+                        return String.format(getI18n(vc.request, "validator.valueBetween"), vc.modelField.min(), vc.modelField.max());
                     }
                 } catch (NumberFormatException e) {
-                    return getConsoleI18n("validator.number");
+                    return getI18n(vc.request, "validator.number");
                 }
             }
 
@@ -430,7 +431,7 @@ public class Validator {
         }
     }
 
-    static class decimal implements InternalValidator {
+    class decimal implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -439,10 +440,10 @@ public class Validator {
                 try {
                     BigDecimal decimalValue = new BigDecimal(vc.newValue);
                     if (decimalValue.doubleValue() < vc.modelField.min() || decimalValue.doubleValue() > vc.modelField.max()) {
-                        return String.format(getConsoleI18n("validator.valueBetween"), vc.modelField.min(), vc.modelField.max());
+                        return String.format(getI18n(vc.request, "validator.valueBetween"), vc.modelField.min(), vc.modelField.max());
                     }
                 } catch (Exception e) {
-                    return getConsoleI18n("validator.decimal");
+                    return getI18n(vc.request, "validator.decimal");
                 }
             }
 
@@ -450,14 +451,14 @@ public class Validator {
         }
     }
 
-    static class kv implements InternalValidator {
+    class kv implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             // 校验key-value键值对的一般格式
             if (vc.modelField.type() == FieldType.kv) {
                 if (StringUtil.notBlank(vc.newValue)) {
-                    String[] arr = vc.newValue.split(ConsoleConstants.DATA_SEPARATOR);
+                    String[] arr = vc.newValue.split(Constants.DATA_SEPARATOR);
                     Set<String> keys = new HashSet<>();
                     for (String s : arr) {
                         int i = s.indexOf("=");
@@ -466,13 +467,13 @@ public class Validator {
                         } else {
                             String k = s.substring(0, i);
                             if (StringUtil.isBlank(k)) {
-                                return getConsoleI18n("validator.kv.require");
+                                return getI18n(vc.request, "validator.kv.require");
                             }
                             keys.add(k);
                         }
                     }
                     if (keys.size() < arr.length) {
-                        return getConsoleI18n("validator.kv.name.duplicate");
+                        return getI18n(vc.request, "validator.kv.name.duplicate");
                     }
                 }
             }
@@ -481,7 +482,7 @@ public class Validator {
         }
     }
 
-    static class datetime implements InternalValidator {
+    class datetime implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -492,10 +493,10 @@ public class Validator {
                     DateFormat dateFormat;
                     Date thisDateTime;
                     try {
-                        dateFormat = new SimpleDateFormat(ConsoleConstants.DATE_FORMAT);
+                        dateFormat = new SimpleDateFormat(Constants.DATE_FORMAT);
                         thisDateTime = dateFormat.parse(vc.newValue);
                     } catch (ParseException e) {
-                        return getConsoleI18n("validator.date-time.format");
+                        return getI18n(vc.request, "validator.date-time.format");
                     }
 
                     String noGreaterThan = vc.modelField.noGreaterOrEqualThanDate().trim();
@@ -504,8 +505,8 @@ public class Validator {
                             String thanObj = vc.requestParameter.getParameter(noGreaterThan);
                             Date otherDateTime = dateFormat.parse(thanObj);
                             if (!thisDateTime.before(otherDateTime)) {
-                                String msg = getConsoleI18n("validator.date.larger.cannot");
-                                return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + modelName + "." + noGreaterThan));
+                                String msg = getI18n(vc.request, "validator.date.larger.cannot");
+                                return String.format(msg, getI18n(vc.request, "model.field." + modelName + "." + noGreaterThan));
                             }
                         } catch (Exception ignored) {
                         }
@@ -518,8 +519,8 @@ public class Validator {
                             if (StringUtil.notBlank(thanObj)) {
                                 Date otherDateTime = dateFormat.parse(thanObj);
                                 if (!thisDateTime.after(otherDateTime)) {
-                                    String msg = getConsoleI18n("validator.date.less.cannot");
-                                    return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + modelName + "." + noLessThan));
+                                    String msg = getI18n(vc.request, "validator.date.less.cannot");
+                                    return String.format(msg, getI18n(vc.request, "model.field." + modelName + "." + noLessThan));
                                 }
                             }
                         } catch (Exception ignored) {
@@ -531,7 +532,7 @@ public class Validator {
                     ) {
                         if (vc.modelField.noLessThanCurrentTime()) {
                             if (!thisDateTime.after(new Date())) {
-                                return getConsoleI18n("validator.less.current");
+                                return getI18n(vc.request, "validator.less.current");
                             }
                         }
                     }
@@ -543,25 +544,25 @@ public class Validator {
         }
     }
 
-    static class length implements InternalValidator {
+    class length implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             // 字符串长度校验 1
             if (vc.modelField.maxLength() < 1) {
                 if (StringUtil.notBlank(vc.newValue)) {
-                    return getConsoleI18n("validator.cannotWrite");
+                    return getI18n(vc.request, "validator.cannotWrite");
                 }
             }
 
             // 字符串长度校验 2
-            String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(ConsoleConstants.DATA_SEPARATOR) : new String[]{vc.newValue};
+            String[] valueStrs = isMultiVal(vc.modelField.type()) ? vc.newValue.split(Constants.DATA_SEPARATOR) : new String[]{vc.newValue};
             for (String v : valueStrs) {
                 if (v.length() < vc.modelField.minLength() || v.length() > vc.modelField.maxLength()) {
                     if (vc.modelField.minLength() == vc.modelField.maxLength()) {
-                        return String.format(getConsoleI18n("validator.length.only"), vc.modelField.minLength(), vc.modelField.maxLength());
+                        return String.format(getI18n(vc.request, "validator.length.only"), vc.modelField.minLength(), vc.modelField.maxLength());
                     } else {
-                        return String.format(getConsoleI18n("validator.lengthBetween"), vc.modelField.minLength(), vc.modelField.maxLength());
+                        return String.format(getI18n(vc.request, "validator.lengthBetween"), vc.modelField.minLength(), vc.modelField.maxLength());
                     }
                 }
             }
@@ -570,7 +571,7 @@ public class Validator {
         }
     }
 
-    static class isPattern implements InternalValidator {
+    class isPattern implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -579,7 +580,7 @@ public class Validator {
                     try {
                         Pattern.compile(vc.newValue);// for #ITAIT-4107，不能按 Constans.Data_Separator 拆分
                     } catch (Exception ex) {
-                        return getConsoleI18n("validator.pattern.not");
+                        return getI18n(vc.request, "validator.pattern.not");
                     }
                 }
             }
@@ -587,7 +588,7 @@ public class Validator {
         }
     }
 
-    static class isPort implements InternalValidator {
+    class isPort implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -597,17 +598,17 @@ public class Validator {
                     int min = 1;
                     int max = 65535;
                     if (guessNumber < min || guessNumber > max) {
-                        return String.format(getConsoleI18n("validator.valueBetween"), min, max);
+                        return String.format(getI18n(vc.request, "validator.valueBetween"), min, max);
                     }
                 } catch (NumberFormatException e) {
-                    return getConsoleI18n("validator.number");
+                    return getI18n(vc.request, "validator.number");
                 }
             }
             return null;
         }
     }
 
-    static class isWildcardIp implements InternalValidator {
+    class isWildcardIp implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -616,7 +617,7 @@ public class Validator {
                     try {
                         Pattern.compile(vc.newValue);// for #ITAIT-4107，不能按 Constans.Data_Separator 拆分
                     } catch (Exception ex) {
-                        return getConsoleI18n("validator.pattern.not");
+                        return getI18n(vc.request, "validator.pattern.not");
                     }
                 }
             }
@@ -624,20 +625,20 @@ public class Validator {
         }
     }
 
-    static class isIpOrHostname implements InternalValidator {
+    class isIpOrHostname implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             if (vc.modelField.isIpOrHostname()) {
                 if (!IPUtil.isIpOrHost(vc.newValue)) {
-                    return getConsoleI18n("validator.ip.illegal");
+                    return getI18n(vc.request, "validator.ip.illegal");
                 }
             }
             return null;
         }
     }
 
-    static class selectCharset implements InternalValidator {
+    class selectCharset implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -646,7 +647,7 @@ public class Validator {
                     try {
                         Charset.forName(vc.newValue);
                     } catch (Exception ignored) {
-                        return getConsoleI18n("validator.UnsupportedCharset");
+                        return getI18n(vc.request, "validator.UnsupportedCharset");
                     }
                 }
             }
@@ -654,7 +655,7 @@ public class Validator {
         }
     }
 
-    static class noGreaterThan implements InternalValidator {
+    class noGreaterThan implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -664,8 +665,8 @@ public class Validator {
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue()) {
-                        String msg = getConsoleI18n("validator.larger.cannot");
-                        return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThan));
+                        String msg = getI18n(vc.request, "validator.larger.cannot");
+                        return String.format(msg, getI18n(vc.request, "model.field." + vc.modelName + "." + noGreaterThan));
                     }
                 }
             }
@@ -673,7 +674,7 @@ public class Validator {
         }
     }
 
-    static class noGreaterThanMinusOne implements InternalValidator {
+    class noGreaterThanMinusOne implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -683,8 +684,8 @@ public class Validator {
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) {// 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) > arg.longValue() - 1) {
-                        String msg = getConsoleI18n("validator.larger.minusOne.cannot");
-                        return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noGreaterThanMinusOne));
+                        String msg = getI18n(vc.request, "validator.larger.minusOne.cannot");
+                        return String.format(msg, getI18n(vc.request, "model.field." + vc.modelName + "." + noGreaterThanMinusOne));
                     }
                 }
             }
@@ -692,7 +693,7 @@ public class Validator {
         }
     }
 
-    static class noLessThan implements InternalValidator {
+    class noLessThan implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -702,8 +703,8 @@ public class Validator {
                 Number arg = Long.valueOf(value);
                 if (Long.parseLong(vc.newValue) > 0 && arg.longValue() > 0) { // 0 有特殊含义（如禁用此功能、永远生效等），不参与比较
                     if (Long.parseLong(vc.newValue) < arg.longValue()) {
-                        String msg = getConsoleI18n("validator.less.cannot");
-                        return String.format(msg, vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + vc.modelName + "." + noLessThan));
+                        String msg = getI18n(vc.request, "validator.less.cannot");
+                        return String.format(msg, getI18n(vc.request, "model.field." + vc.modelName + "." + noLessThan));
                     }
                 }
             }
@@ -712,20 +713,20 @@ public class Validator {
         }
     }
 
-    static class cannotBeTheSameAs implements InternalValidator {
+    class cannotBeTheSameAs implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
             String cannotBeTheSameAs = vc.modelField.cannotBeTheSameAs();
             if (StringUtil.notBlank(cannotBeTheSameAs) && StringUtil.notBlank(vc.newValue)) {
-                for (String field : cannotBeTheSameAs.split(ConsoleConstants.DATA_SEPARATOR)) {
+                for (String field : cannotBeTheSameAs.split(Constants.DATA_SEPARATOR)) {
                     String fieldValue = vc.request.getParameter(field);
                     if (fieldValue == null && vc.isUpdate()) {
                         fieldValue = vc.requestParameter.getParameter(field);
                     }
                     if (Objects.equals(fieldValue, vc.newValue)) {
-                        String p1 = vc.appMetadata.getI18n(I18n.getI18nLang(), "model.field." + vc.modelName + "." + field);
-                        return String.format(getConsoleI18n("app.threadpool.canot.eq"), p1);
+                        String p1 = getI18n(vc.request, "model.field." + vc.modelName + "." + field);
+                        return String.format(getI18n(vc.request, "app.threadpool.canot.eq"), p1);
                     }
                 }
             }
@@ -734,7 +735,7 @@ public class Validator {
         }
     }
 
-    static class isURL implements InternalValidator {
+    class isURL implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -746,7 +747,7 @@ public class Validator {
             if (vc.newValue.contains("://")) {
                 useDefaultProtocol = null;
                 if (!vc.newValue.startsWith("http://") && !vc.newValue.startsWith("https://")) {
-                    return getConsoleI18n("validation.error.centralizedConsoleUrl");
+                    return getI18n(vc.request, "validation.error.centralizedConsoleUrl");
                 }
             }
 
@@ -756,13 +757,13 @@ public class Validator {
                 new URL(url);
                 return null;
             } catch (MalformedURLException e) {
-                return getConsoleI18n("validation.error.centralizedConsoleUrl");
+                return getI18n(vc.request, "validation.error.centralizedConsoleUrl");
             }
 
         }
     }
 
-    static class safeCheck implements InternalValidator {
+    class safeCheck implements InternalValidator {
 
         @Override
         public String validate(ValidatorContext vc) throws Exception {
@@ -793,8 +794,8 @@ public class Validator {
                     || vc.modelField.isPattern();
             if (!skipInjectionRiskCheck) {
                 String risk;
-                if (StringUtil.notBlank(risk = SafeCheckerUtil.hasCommandInjectionRiskWithSkip(vc.newValue, vc.modelField.skipCharacterCheck()))) {
-                    return dataInvalidMsg(risk);
+                if (StringUtil.notBlank(risk = new SafeCheckerUtil().hasCommandInjectionRiskWithSkip(vc.newValue, vc.modelField.skipCharacterCheck()))) {
+                    return dataInvalidMsg(vc.request, risk);
                 }
             }
 
@@ -809,7 +810,7 @@ public class Validator {
                 }
                 for (char c : vc.newValue.toCharArray()) {
                     if (f == c) {
-                        return dataInvalidMsg(f);
+                        return dataInvalidMsg(vc.request, f);
                     }
                 }
             }
@@ -820,13 +821,13 @@ public class Validator {
                     || vc.modelField.isIpOrHostname()
             ) { // 正则会被匹配 xss，有自己的规则，所以不必走 xss 校验
                 // xss 漏洞
-                if (!SafeCheckerUtil.checkXssLevel1(vc.newValue)) {
-                    return getConsoleI18n("validator.xss");
+                if (!new SafeCheckerUtil().checkXssLevel1(vc.newValue)) {
+                    return getI18n(vc.request, "validator.xss");
                 }
             } else {
                 // xss 漏洞
-                if (SafeCheckerUtil.checkIsXSS(vc.newValue)) {
-                    return getConsoleI18n("validator.xss");
+                if (new SafeCheckerUtil().checkIsXSS(vc.newValue)) {
+                    return getI18n(vc.request, "validator.xss");
                 }
             }
 
@@ -936,10 +937,10 @@ public class Validator {
     }
 
 
-    public static class SafeCheckerUtil {
-        private static final String[] CommandInjectionRisk = new String[]{"`", "$", ";", "&", "|", "{", "}", "(", ")", "[", "]", "../", "..\\", "*", "%", "~", "^", "!"};// windows 路径会存在空格
+    public class SafeCheckerUtil {
+        private final String[] CommandInjectionRisk = new String[]{"`", "$", ";", "&", "|", "{", "}", "(", ")", "[", "]", "../", "..\\", "*", "%", "~", "^", "!"};// windows 路径会存在空格
 
-        public static String hasCommandInjectionRiskWithSkip(String arg, String skips) {
+        public String hasCommandInjectionRiskWithSkip(String arg, String skips) {
             for (String f : CommandInjectionRisk) { // 命令行执行注入漏洞
                 if (skips != null) {
                     if (skips.contains(f)) {
@@ -954,14 +955,14 @@ public class Validator {
             return null;
         }
 
-        private static final Pattern SCRIPT_PATTERN = Pattern.compile("vbscript:", Pattern.CASE_INSENSITIVE);
+        private final Pattern SCRIPT_PATTERN = Pattern.compile("vbscript:", Pattern.CASE_INSENSITIVE);
 
-        public static boolean checkIsXSS(String check) {
+        public boolean checkIsXSS(String check) {
             return !checkXssOk(check);
         }
 
         // Level1 的检查，可以让大多数的正则（允许使用括号、中括号等）通过
-        public static boolean checkXssLevel1(String check) {
+        public boolean checkXssLevel1(String check) {
             if (StringUtil.isBlank(check)) {
                 return true;
             }
@@ -990,7 +991,7 @@ public class Validator {
                     || resultUrl.indexOf(")") <= resultUrl.indexOf("(");
         }
 
-        public static boolean checkXssOk(String check) {
+        public boolean checkXssOk(String check) {
             if (StringUtil.isBlank(check)) return true;
 
             if (!checkXssLevel1(check)) {

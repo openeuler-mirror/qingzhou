@@ -46,17 +46,6 @@ public abstract class ModelBase {
     }
 
     /**
-     * 解析请求的 ID。
-     * 对于在创建时未传入 ID 参数的，如 master 的 App，可以通过此方法计算 ID，用于查重等操作。
-     *
-     * @param request 请求实例。
-     * @return 返回计算得到的 ID，如果不需要或无法计算则返回 null。
-     */
-    public String resolveId(Request request) {
-        return null;
-    }
-
-    /**
      * 定制验证逻辑，返回 i18n 的 key。
      *
      * @param request   请求实例。

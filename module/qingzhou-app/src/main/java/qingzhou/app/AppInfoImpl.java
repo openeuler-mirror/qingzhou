@@ -2,6 +2,8 @@ package qingzhou.app;
 
 import qingzhou.api.*;
 import qingzhou.framework.app.AppInfo;
+import qingzhou.framework.console.ResponseImpl;
+import qingzhou.framework.util.StringUtil;
 
 import java.net.URLClassLoader;
 
@@ -9,6 +11,7 @@ public class AppInfoImpl implements AppInfo {
     private QingzhouApp qingzhouApp;
     private AppContextImpl appContext;
     private URLClassLoader loader;
+    private Validator validator;
 
     @Override
     public AppContextImpl getAppContext() {
@@ -26,6 +29,18 @@ public class AppInfoImpl implements AppInfo {
         ActionInfo actionInfo = modelInfo.actionInfoMap.get(actionName);
         if (actionInfo == null) return;
 
+        ResponseImpl validationResponse = new ResponseImpl();
+        if (validator == null) {
+            validator = new Validator(appContext);
+        }
+        boolean ok = validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
+        if (!ok) {
+            if (StringUtil.isBlank(validationResponse.getMsg())) {
+                validationResponse.setMsg(appContext.getAppMetadata().getI18n(request.getI18nLang(), "validator.fail"));
+            }
+            return;
+        }
+
         for (ActionFilter actionFilter : appContext.getActionFilters()) {
             String msg = actionFilter.doFilter(request, response, appContext);
             if (msg != null) {
@@ -35,12 +50,19 @@ public class AppInfoImpl implements AppInfo {
             }
         }
 
-        actionInfo.invokeMethod.invoke(request, response);
+        invokeDirectly(request, response);
+    }
+
+    @Override
+    public void invokeDirectly(Request request, Response response) throws Exception {
+        ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getAppMetadata().getModelManager();
+        ActionInfo.InvokeMethod invokeMethod = modelManager.getModelInfo(request.getModelName()).actionInfoMap.get(request.getActionName()).invokeMethod;
+        invokeMethod.invokeMethod(request, response);
     }
 
     @Override
     public ModelBase getModelInstance(String modelName) {
-        return ((ModelManagerImpl) appContext.getAppMetadata().getModelManager()).getModelInfo(modelName).getInstance();
+        return ((ModelManagerImpl) appContext.getAppMetadata().getModelManager()).getModelInfo(modelName).instance;
     }
 
     public void setAppContext(AppContextImpl appContext) {

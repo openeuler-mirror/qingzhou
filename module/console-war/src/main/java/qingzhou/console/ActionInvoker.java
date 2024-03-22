@@ -9,6 +9,7 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
+import qingzhou.framework.Constants;
 import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.config.Config;
 import qingzhou.framework.console.RequestImpl;
@@ -22,10 +23,6 @@ import java.sql.SQLException;
 import java.util.*;
 
 public class ActionInvoker {
-    static {
-        ConsoleI18n.addI18n("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
-    }
-
     private static final ActionInvoker instance = new ActionInvoker();
 
     public static ActionInvoker getInstance() {
@@ -35,20 +32,11 @@ public class ActionInvoker {
     private ActionInvoker() {
     }
 
-    public ResponseImpl invokeAction(Request request) throws Exception {
-        ResponseImpl validationResponse = new ResponseImpl();
-        boolean ok = Validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
-        if (!ok) {
-            if (StringUtil.isBlank(validationResponse.getMsg())) {
-                validationResponse.setMsg(ConsoleI18n.getI18n(request.getI18nLang(), "validator.fail"));
-            }
-            return validationResponse;
+    public ResponseImpl invokeAction(Request request) {
+        if (isBatchAction(request)) {
+            return invokeBatch(request);
         } else {
-            if (isBatchAction(request)) {
-                return invokeBatch(request);
-            } else {
-                return invoke(request);
-            }
+            return invoke(request);
         }
     }
 
@@ -72,7 +60,7 @@ public class ActionInvoker {
         StringBuilder errbuilder = new StringBuilder();
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
         String oid = request.getParameter(Listable.FIELD_NAME_ID);
-        for (String id : oid.split(ConsoleConstants.DATA_SEPARATOR)) {
+        for (String id : oid.split(Constants.DATA_SEPARATOR)) {
             if (StringUtil.notBlank(id)) {
                 id = PageBackendService.decodeId(id);
                 ((RequestImpl) request).setId(id);
@@ -83,7 +71,7 @@ public class ActionInvoker {
                     String actionContextMsg = response.getMsg();
                     if (result.containsKey(actionContextMsg)) {
                         errbuilder.append(result.get(actionContextMsg));
-                        errbuilder.append(ConsoleConstants.DATA_SEPARATOR);
+                        errbuilder.append(Constants.DATA_SEPARATOR);
                         errbuilder.append(id);
                         result.put(actionContextMsg, errbuilder.toString());
                         errbuilder.setLength(0);
@@ -175,7 +163,7 @@ public class ActionInvoker {
         }
     }
 
-    public Map<String, ResponseImpl> processRequest(Request request) throws Exception {
+    private Map<String, ResponseImpl> processRequest(Request request) throws Exception {
         Map<String, ResponseImpl> resultOnNode = new HashMap<>();
         List<String> appNodes = new ArrayList<>();
         String manageType = ((RequestImpl) request).getManageType();
@@ -190,7 +178,7 @@ public class ActionInvoker {
             ResponseImpl responseOnNode;
             if (node.equals(AppInfo.SYS_NODE_LOCAL)) {
                 ResponseImpl response = new ResponseImpl();
-                SystemController.invokeLocalApp(request, response);
+                SystemController.getAppManager().getApp(PageBackendService.getAppName(request)).invoke(request, response);
                 responseOnNode = response;
             } else {
                 Map<String, String> nodeById = ServerXml.get().getNodeById(node);

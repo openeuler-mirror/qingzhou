@@ -8,6 +8,7 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.framework.Constants;
 import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
@@ -172,7 +173,7 @@ public class RESTController extends HttpServlet {
             String k = parameterNames.nextElement();
             String[] v = req.getParameterValues(k);
             if (v != null) {
-                data.put(k, String.join(ConsoleConstants.DATA_SEPARATOR, v));
+                data.put(k, String.join(Constants.DATA_SEPARATOR, v));
             }
         }
 

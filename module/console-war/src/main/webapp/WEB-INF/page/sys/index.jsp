@@ -295,7 +295,7 @@
 <script type="text/javascript">
     var global_setting = {
         check2FA: '<%=ConsoleConstants.LOGIN_2FA%>',
-        separa: '<%=ConsoleConstants.DATA_SEPARATOR%>',
+        separa: '<%=Constants.DATA_SEPARATOR%>',
         downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
         locale: '<%=(I18n.isZH() ? "zh-CN":"en-US")%>',
         pageLang: '<%=(I18n.isZH() ? "zh_cn":"en")%>',

@@ -150,7 +150,7 @@ public class Password extends ModelBase implements Editable {
 //            if ("originalPassword".equals(fieldName)) {
 //                newValue = request.getParameter("originalPassword");
 //                if (newValue == null) { // fix #ITAIT-2849
-//                    return getConsoleContext().getI18n("validator.require");
+//                    return getI18n("validator.require");
 //                }
 //
 //                String pwd = ServerXml.get().user(loginUser).get(User.pwdKey);
@@ -164,7 +164,7 @@ public class Password extends ModelBase implements Editable {
 //            if ("newPassword".equals(fieldName)) {
 //                newValue = request.getParameter("newPassword");
 //                if (newValue == null) { // fix #ITAIT-2849
-//                    return getConsoleContext().getI18n("validator.require");
+//                    return getI18n("validator.require");
 //                }
 //
 //                String msg = User.checkPwd(newValue, loginUser);
@@ -219,7 +219,7 @@ public class Password extends ModelBase implements Editable {
 //            if ("confirmPassword".equals(fieldName)) {
 //                newValue = request.getParameter("confirmPassword");
 //                if (newValue == null) { // fix #ITAIT-2849
-//                    return getConsoleContext().getI18n("validator.require");
+//                    return getI18n("validator.require");
 //                }
 //                if (!newValue.equals(request.getParameter("newPassword"))) {
 //                    return getConsoleContext().getI18n("password.confirm.failed");

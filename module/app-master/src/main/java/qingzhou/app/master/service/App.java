@@ -182,7 +182,7 @@ public class App extends ModelBase implements Createable {
             for (String node : nodes) {
                 try {
                     if (AppInfo.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getService(AppManager.class).getApp(AppInfo.SYS_APP_NODE_AGENT).invoke(request, response);
+                        Main.getService(AppManager.class).getApp(AppInfo.SYS_APP_NODE_AGENT).invokeDirectly(request, response);
                     } else {
                         // TODO：调用远端 node 上的app add
                     }
@@ -228,7 +228,7 @@ public class App extends ModelBase implements Createable {
             for (String node : nodes) {
                 try {
                     if (AppInfo.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getService(AppManager.class).getApp(AppInfo.SYS_APP_NODE_AGENT).invoke(request, response);
+                        Main.getService(AppManager.class).getApp(AppInfo.SYS_APP_NODE_AGENT).invokeDirectly(request, response);
                     } else {
                         // TODO：调用远端 node 上的app delete
                     }
@@ -242,20 +242,5 @@ public class App extends ModelBase implements Createable {
             request.setActionName(Deletable.ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);
-    }
-
-    @Override
-    public String resolveId(Request request) {
-        File appFile;
-        if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
-            appFile = FileUtil.newFile(request.getParameter("fromUpload"));
-        } else {
-            appFile = new File(request.getParameter("filename"));
-        }
-
-        String appFileName = appFile.getName();
-        int i = appFileName.lastIndexOf(".");
-        if (i == -1) return appFileName;
-        return appFileName.substring(0, i);
     }
 }

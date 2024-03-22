@@ -56,7 +56,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     public static void invokeLocalApp(Request request, Response response) throws Exception {
-        getAppManager().getApp(PageBackendService.getAppName(request)).invoke(request, response);
+        getAppManager().getApp(PageBackendService.getAppName(request)).invokeDirectly(request, response);
     }
 
     public static Serializer getSerializer() {

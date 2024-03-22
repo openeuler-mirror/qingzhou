@@ -25,5 +25,7 @@ public interface AppInfo {
 
     void invoke(Request request, Response response) throws Exception;
 
+    void invokeDirectly(Request request, Response response) throws Exception;
+
     ModelBase getModelInstance(String modelName);
 }

@@ -13,7 +13,7 @@
     <input type="hidden" name="<%=fieldName%>" value='<%=fieldValue%>'>
     <ul class="sortable">
         <%
-            String[] vals = (fieldValue == null ? "" : fieldValue).split(ConsoleConstants.DATA_SEPARATOR);
+            String[] vals = (fieldValue == null ? "" : fieldValue).split(Constants.DATA_SEPARATOR);
             for (int ii = 0; ii < vals.length; ii++) {
         %>
         <li class="droptarget" draggable="true">

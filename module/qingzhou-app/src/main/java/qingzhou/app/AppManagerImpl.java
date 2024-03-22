@@ -96,6 +96,7 @@ public class AppManagerImpl implements AppManager {
         AppInfoImpl app = new AppInfoImpl();
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
+        appContext.addI18n("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
         app.setAppContext(appContext);
         AppMetadataImpl metadata = (AppMetadataImpl) appContext.getAppMetadata();
         metadata.setAppName(appName);
