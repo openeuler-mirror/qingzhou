@@ -13,11 +13,11 @@ class BlockedThreadTool {
 
     private static final Set<String> HIDDEN_THREAD = new HashSet<>();
     private static final String[] IGNORED_THREADS_PREFIX = {
-            "WebSocketConnectReadThread", "WebSocketWriteThread" // license server 连接线程
+            "WebSocketConnectReadThread", "WebSocketWriteThread" // license server连接线程
     };
 
     private static final String[] JAVA_STACKS = {"com.sun.", "sun.", "java.", "jdk.", "javax.", "jakarta.", "com.mysql"};
-    private static final int MAX_DETECTED_STACK = 20;// 滤掉一些小线程，如 nio2 的异步等待 线程等，通道的默认等待线程探测深度，RMI TCP Connection(2)-* 线程（栈深）
+    private static final int MAX_DETECTED_STACK = 20;// 滤掉一些小线程，如nio2的异步等待线程等，通道的默认等待线程探测深度，RMI TCP Connection(2)-* 线程（栈深）
 
     static {
         HIDDEN_THREAD.add("main");
@@ -105,7 +105,7 @@ class BlockedThreadTool {
                 }
             }
 
-            // 运行中 的 native 比较慢，应该被认定为阻塞 线程，运行中且非 native 的是 非阻塞 线程
+            // 运行中的native比较慢，应该被认定为阻塞线程，运行中且非native的是非阻塞线程
             if (threadInfo.getThreadState() == Thread.State.RUNNABLE && !threadInfo.isInNative()) {
                 continue;
             }
@@ -141,7 +141,7 @@ class BlockedThreadTool {
 
         OUT:
         for (int i = 0; i < stackTrace.length; i++) {
-            if (i >= MAX_DETECTED_STACK) break; // 最多探测的的 栈深 为 8，多数场景可以覆盖到了
+            if (i >= MAX_DETECTED_STACK) break; // 最多探测的的栈深为8，多数场景可以覆盖到了
 
             String className = stackTrace[i].getClassName();
 
