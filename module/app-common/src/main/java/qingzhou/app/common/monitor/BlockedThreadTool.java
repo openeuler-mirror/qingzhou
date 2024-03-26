@@ -141,7 +141,7 @@ class BlockedThreadTool {
 
         OUT:
         for (int i = 0; i < stackTrace.length; i++) {
-            if (i >= MAX_DETECTED_STACK) break; // 最多探测的的栈深为8，多数场景可以覆盖到了
+            if (i >= MAX_DETECTED_STACK) break; // 最多探测的栈深为8，多数场景可以覆盖到了
 
             String className = stackTrace[i].getClassName();
 
