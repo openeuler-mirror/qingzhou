@@ -1,27 +1,30 @@
 package qingzhou.app;
 
+import qingzhou.api.App;
 import qingzhou.api.ModelBase;
-import qingzhou.api.QingZhouApp;
+import qingzhou.api.QingzhouApp;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelFieldData;
+import qingzhou.app.bytecode.AnnotationReader;
+import qingzhou.app.bytecode.impl.AnnotationReaderImpl;
 import qingzhou.bootstrap.main.FrameworkContext;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.app.AppManager;
-import qingzhou.framework.app.QingZhouSystemApp;
+import qingzhou.framework.app.QingzhouSystemApp;
 import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class AppManagerImpl implements AppManager {
-    private final Map<String, App> apps = new HashMap<>();
+    private final Map<String, AppInfo> apps = new HashMap<>();
     private final FrameworkContext frameworkContext;
 
     public AppManagerImpl(FrameworkContext frameworkContext) {
@@ -34,19 +37,19 @@ public class AppManagerImpl implements AppManager {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-        boolean needCommonApp = !App.SYS_APP_MASTER.equals(appName) && !App.SYS_APP_NODE_AGENT.equals(appName);
-        AppImpl app = buildApp(appName, appFile, needCommonApp);
+        boolean needCommonModel = !AppInfo.SYS_APP_MASTER.equals(appName) && !AppInfo.SYS_APP_NODE_AGENT.equals(appName);
+        AppInfoImpl app = buildApp(appName, appFile, needCommonModel);
         apps.put(appName, app);
 
-        QingZhouApp qingZhouApp = app.getQingZhouApp();
-        if (qingZhouApp != null) {
-            qingZhouApp.start(app.getAppContext());
+        QingzhouApp qingzhouApp = app.getQingzhouApp();
+        if (qingzhouApp != null) {
+            qingzhouApp.start(app.getAppContext());
         }
     }
 
     @Override
     public void unInstallApp(String appName) throws Exception {
-        AppImpl app = (AppImpl) apps.remove(appName);
+        AppInfoImpl app = (AppInfoImpl) apps.remove(appName);
         if (app != null) {
             try {
                 app.getLoader().close();
@@ -54,10 +57,10 @@ public class AppManagerImpl implements AppManager {
                 Controller.logger.warn("failed to close loader: " + appName, e);
             }
 
-            QingZhouApp qingZhouApp = app.getQingZhouApp();
-            if (qingZhouApp != null) {
+            QingzhouApp qingzhouApp = app.getQingzhouApp();
+            if (qingzhouApp != null) {
                 File temp = app.getAppContext().getTemp();
-                qingZhouApp.stop();
+                qingzhouApp.stop();
                 FileUtil.forceDelete(temp);
             }
         }
@@ -69,17 +72,17 @@ public class AppManagerImpl implements AppManager {
     }
 
     @Override
-    public App getApp(String name) {
+    public AppInfo getApp(String name) {
         return apps.get(name);
     }
 
-    private AppImpl buildApp(String appName, File appDir, boolean needCommonApp) throws Exception {
+    private AppInfoImpl buildApp(String appName, File appDir, boolean needCommonModel) throws Exception {
         File[] appFiles = appDir.listFiles();
         if (appFiles == null) {
             throw new IllegalArgumentException("app lib not found: " + appDir.getName());
         }
         File[] appLibs = appFiles;
-        if (needCommonApp) {
+        if (needCommonModel) {
             File[] commonFiles = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", "common").listFiles();
             if (commonFiles != null) {
                 int appFileLength = appFiles.length;
@@ -90,9 +93,10 @@ public class AppManagerImpl implements AppManager {
             }
         }
 
-        AppImpl app = new AppImpl();
+        AppInfoImpl app = new AppInfoImpl();
 
         AppContextImpl appContext = new AppContextImpl(frameworkContext);
+        appContext.addI18n("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
         app.setAppContext(appContext);
         AppMetadataImpl metadata = (AppMetadataImpl) appContext.getAppMetadata();
         metadata.setAppName(appName);
@@ -104,7 +108,7 @@ public class AppManagerImpl implements AppManager {
                 throw new RuntimeException(e);
             }
         }).toArray(URL[]::new);
-        URLClassLoader loader = new URLClassLoader(urls, needCommonApp ? QingZhouApp.class.getClassLoader() : QingZhouSystemApp.class.getClassLoader());
+        URLClassLoader loader = new URLClassLoader(urls, QingzhouSystemApp.class.getClassLoader());
         app.setLoader(loader);
 
         ModelManagerImpl modelManager = new ModelManagerImpl();
@@ -118,24 +122,41 @@ public class AppManagerImpl implements AppManager {
             modelInstance.setAppContext(appContext);
             modelInstance.init();
         }
-        try (InputStream inputStream = loader.getResourceAsStream("qingzhou.properties")) {
-            Properties properties = FileUtil.streamToProperties(inputStream);
-            metadata.setConfig(Collections.unmodifiableMap(new HashMap<String, String>() {{
-                properties.forEach((o, o2) -> put((String) o, (String) o2));
-            }}));
-            String appClass = metadata.getConfig().get("qingzhou.app");
-            if (StringUtil.notBlank(appClass)) {
-                QingZhouApp qingZhouApp = (QingZhouApp) loader.loadClass(appClass).newInstance();
-                app.setQingZhouApp(qingZhouApp);
-                if (qingZhouApp instanceof QingZhouSystemApp) {
-                    QingZhouSystemApp qingZhouSystemApp = (QingZhouSystemApp) qingZhouApp;
-                    qingZhouSystemApp.setModuleContext(frameworkContext);
-                }
-            }
+
+        Class<?> appClass = loadAppClass(appLibs, loader);
+        QingzhouApp qingzhouApp = (QingzhouApp) appClass.newInstance();
+        app.setQingzhouApp(qingzhouApp);
+        if (qingzhouApp instanceof QingzhouSystemApp) {
+            QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
+            qingzhouSystemApp.setModuleContext(frameworkContext);
         }
 
         return app;
     }
+
+    private Class<?> loadAppClass(File[] appLibs, URLClassLoader loader) throws Exception {
+        AnnotationReader annotation = AnnotationReaderImpl.getAnnotationReader();
+        for (File file : appLibs) {
+            if (!file.getName().endsWith(".jar")) continue;
+            try (JarFile jar = new JarFile(file)) {
+                Enumeration<JarEntry> entries = jar.entries();
+                while (entries.hasMoreElements()) {
+                    String entryName = entries.nextElement().getName();
+                    if (entryName.contains("$") || !entryName.endsWith(".class")) continue;
+                    int i = entryName.indexOf(".class");
+                    String className = entryName.substring(0, i).replace("/", ".");
+                    Class<?> cls = loader.loadClass(className);
+                    App app = annotation.readClassAnnotation(cls, App.class);
+                    if (app != null) {
+                        return cls;
+                    }
+                }
+            }
+        }
+
+        throw new IllegalStateException("The main class of the app is missing");
+    }
+
 
     private void initI18n(ModelManagerImpl modelManager, AppMetadataImpl metadata) {
         for (String modelName : modelManager.getModelNames()) {

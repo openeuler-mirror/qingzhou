@@ -4,7 +4,10 @@ import qingzhou.api.Lang;
 import qingzhou.api.Request;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Map;
 
 public class RequestImpl implements Request, Serializable, Cloneable {
     private String manageType;
@@ -15,7 +18,11 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     private String id;
     private String userName;
     private Lang lang;
-    private HashMap<String, String> parameters;
+
+    /**
+     * The request parameters for this request.
+     */
+    protected Map<String, String[]> parameters = new HashMap<>();
 
     @Override
     public String getAppName() {
@@ -42,13 +49,32 @@ public class RequestImpl implements Request, Serializable, Cloneable {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    @Override
+    public String getParameter(String name) {
+        String[] value = parameters.get(name);
+        if (value == null) {
+            return null;
+        }
+        return value[0];
     }
 
     @Override
-    public String getParameter(String parameterName) {
-        return parameters.get(parameterName);
+    public Map<String, String[]> getParameterMap() {
+        return parameters;
+    }
+
+    @Override
+    public Enumeration<String> getParameterNames() {
+        return Collections.enumeration(parameters.keySet());
+    }
+
+    @Override
+    public String[] getParameterValues(String name) {
+        return parameters.get(name);
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     @Override
@@ -85,12 +111,14 @@ public class RequestImpl implements Request, Serializable, Cloneable {
         this.lang = lang;
     }
 
-    public void updateParameter(String parameterName, String parameterValue) {
-        parameters.put(parameterName, parameterValue);
+    public void setParameter(String parameterName, String parameterValue) {
+        parameters.put(parameterName, new String[]{parameterValue});
     }
 
-    public void setParameters(HashMap<String, String> parameters) {
-        this.parameters = parameters;
+    public void setParameters(Map<String, String> parameters) {
+        if (parameters == null) return;
+
+        parameters.forEach((s, s2) -> RequestImpl.this.parameters.put(s, new String[]{s2}));
     }
 
     public String getManageType() {
@@ -104,7 +132,7 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     @Override
     public RequestImpl clone() throws CloneNotSupportedException {
         RequestImpl clone = (RequestImpl) super.clone();
-        clone.parameters = (HashMap<String, String>) this.parameters.clone();
+        clone.parameters.putAll(this.parameters);
         return clone;
     }
 }

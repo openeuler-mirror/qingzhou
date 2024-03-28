@@ -79,7 +79,7 @@ public class Jmx extends ModelBase implements Editable {
             infoI18n = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {
         Map<String, String> data = getDataStore().getDataById(request.getModelName(), DEFAULT_ID);
-        if (data == null || data.isEmpty()) {
+        if (data == null) {
             response.addModelData(new Jmx());
         } else {
             response.addData(data);

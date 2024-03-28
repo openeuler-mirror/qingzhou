@@ -15,7 +15,7 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.util.Base32Util;
 import qingzhou.console.view.ViewManager;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.console.ResponseImpl;
 import qingzhou.framework.util.StringUtil;
@@ -60,11 +60,11 @@ public class PageBackendService {
 
     public static String getAppName(Request request) {
         if (request == null) {
-            return App.SYS_APP_MASTER;
+            return AppInfo.SYS_APP_MASTER;
         }
 
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(((RequestImpl) request).getManageType())) {
-            return App.SYS_APP_NODE_AGENT;
+            return AppInfo.SYS_APP_NODE_AGENT;
         }
 
         return request.getAppName();
@@ -72,7 +72,7 @@ public class PageBackendService {
 
     public static String getAppName(String manageType, String appName) {
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
-            return App.SYS_APP_NODE_AGENT;
+            return AppInfo.SYS_APP_NODE_AGENT;
         }
 
         return appName;

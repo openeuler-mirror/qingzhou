@@ -39,7 +39,7 @@ public class Controller extends ServiceRegister<Logger> {
         startTime = System.currentTimeMillis();
 
         String[] banner = {"",
-                " Qing Zhou       |~",
+                " Qingzhou       |~",
                 "             |/  w",
                 "             / ((| \\",
                 "            /((/ |)|\\",

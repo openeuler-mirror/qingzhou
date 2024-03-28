@@ -1,7 +1,7 @@
 package qingzhou.app;
 
 import qingzhou.bootstrap.main.service.ServiceRegister;
-import qingzhou.framework.app.App;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.logger.Logger;
 import qingzhou.framework.util.FileUtil;
@@ -31,11 +31,11 @@ public class Controller extends ServiceRegister<AppManager> {
         appManager = new AppManagerImpl(frameworkContext);
 
         if (frameworkContext.isMaster()) {
-            File masterApp = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", App.SYS_APP_MASTER);
+            File masterApp = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", AppInfo.SYS_APP_MASTER);
             appManager.installApp(masterApp);
         }
 
-        File nodeAgentApp = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", App.SYS_APP_NODE_AGENT);
+        File nodeAgentApp = FileUtil.newFile(frameworkContext.getLib(), "module", "qingzhou-app", AppInfo.SYS_APP_NODE_AGENT);
         appManager.installApp(nodeAgentApp);
 
         File[] files = FileUtil.newFile(frameworkContext.getDomain(), "apps").listFiles();

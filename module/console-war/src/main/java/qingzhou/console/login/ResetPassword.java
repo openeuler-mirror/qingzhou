@@ -10,7 +10,8 @@ import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.app.App;
+import qingzhou.framework.Constants;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -69,7 +70,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + ConsoleConstants.MODEL_NAME_node +
-                    "/" + App.SYS_APP_MASTER +
+                    "/" + AppInfo.SYS_APP_MASTER +
                     "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +
@@ -99,7 +100,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
         if (Boolean.parseBoolean(userP.get("enablePasswordAge"))) {
             String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
             if (passwordLastModifiedTime != null) {
-                long time = new SimpleDateFormat(ConsoleConstants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
+                long time = new SimpleDateFormat(Constants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
                 String maxAge = userP.get("passwordMaxAge");
                 if (maxAge != null && !maxAge.equals("0")) {
                     long max = time + Integer.parseInt(maxAge) * ConsoleConstants.DAY_MILLIS_VALUE;

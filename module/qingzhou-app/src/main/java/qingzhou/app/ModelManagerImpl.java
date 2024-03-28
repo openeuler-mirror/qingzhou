@@ -8,7 +8,6 @@ import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Showable;
 import qingzhou.app.bytecode.AnnotationReader;
 import qingzhou.app.bytecode.impl.AnnotationReaderImpl;
-import qingzhou.framework.util.StringUtil;
 
 import java.io.File;
 import java.io.Serializable;
@@ -26,7 +25,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     public void initModelManager(File[] appLib, URLClassLoader loader) throws Exception {
         Map<String, ModelInfo> tempMap = new HashMap<>();
-        AnnotationReader annotation = new AnnotationReaderImpl();
+        AnnotationReader annotation = AnnotationReaderImpl.getAnnotationReader();
         Map<Method, ModelAction> presetActions = annotation.readModelAction(ActionMethod.class);
         for (File file : appLib) {
             if (!file.getName().endsWith(".jar")) continue;
@@ -41,7 +40,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                     String className = entryName.substring(0, i).replace("/", ".");
                     Class<?> cls = loader.loadClass(className);
 
-                    Model model = annotation.readModel(cls);
+                    Model model = annotation.readClassAnnotation(cls, Model.class);
                     if (model != null) {
                         ModelBase instance = createModelBase(cls);
 
@@ -51,7 +50,8 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                         ActionMethod actionMethod = new ActionMethod(instance);
                         Map<String, ActionInfo> actionInfoMap = getActionInfoMap(annotation, actionMethod, presetActions, cls, instance);
                         // 3. 组装 Model 数据
-                        ModelInfo modelInfo = new ModelInfo(ModelUtil.toModelData(model), fieldInfoList, actionInfoMap.values(), instance);
+                        GroupsImpl groups = new GroupsImpl();
+                        ModelInfo modelInfo = new ModelInfo(ModelUtil.toModelData(model), fieldInfoList, actionInfoMap.values(), groups,instance);
 
                         ModelInfo already = tempMap.put(model.name(), modelInfo);
                         if (already != null) {
@@ -93,15 +93,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         for (Map.Entry<Method, ModelAction> entry : clsActions.entrySet()) {
             ModelAction modelAction = entry.getValue();
             String actionName = modelAction.name();
-
-            ActionInfo.InvokeMethod invokeMethod;
-            ActionInfo actionInfo = actionInfos.get(actionName);
-            if (actionInfo != null) {
-                invokeMethod = actionInfo.invokeMethod;
-            } else {
-                invokeMethod = new InvokeMethodImpl(instance, entry.getKey());
-            }
-
+            ActionInfo.InvokeMethod invokeMethod = new InvokeMethodImpl(instance, entry.getKey());
             ModelActionData modelActionData = ModelUtil.toModelActionData(modelAction);
             actionInfos.put(actionName, new ActionInfo(modelActionData, actionName, invokeMethod));
         }
@@ -119,7 +111,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         }
 
         @Override
-        public void invoke(Object... args) throws Exception {
+        public void invokeMethod(Object... args) throws Exception {
             method.invoke(instance, args);
         }
     }
@@ -215,7 +207,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
     public Map<String, String> getModelDefaultProperties(String modelName) {
         Map<String, String> result = new HashMap<>();
         for (Map.Entry<String, FieldInfo> entry : getModelInfo(modelName).fieldInfoMap.entrySet()) {
-            result.put(entry.getKey(), entry.getValue().getDefaultValue());
+            result.put(entry.getKey(), entry.getValue().defaultValue);
         }
         return result;
     }
@@ -238,39 +230,22 @@ public class ModelManagerImpl implements ModelManager, Serializable {
 
     @Override
     public Options getOptions(Request request, String modelName, String fieldName) {
-        Options defaultOptions = getDefaultOptions(modelName, fieldName);
-        Options userOptions = null;//TODO getModelInstance(modelName).options(request, fieldName);
-        if (defaultOptions == null) return userOptions;
-        if (userOptions == null) return defaultOptions;
+        Options userOptions = modelInfoMap.get(modelName).instance.options(request, fieldName);
+        if (userOptions != null) return userOptions;
 
+        Options defaultOptions = getDefaultOptions(modelName, fieldName);
+        if (defaultOptions != null) {
+        }
         List<Option> merge = new ArrayList<>(defaultOptions.options());
         merge.addAll(userOptions.options());
         return () -> merge;
     }
 
     private Options getDefaultOptions(String modelName, String fieldName) {
-        ModelManager manager = this;
-        ModelFieldData modelField = manager.getModelField(modelName, fieldName);
+        ModelFieldData modelField = getModelField(modelName, fieldName);
 
         if (modelField.type() == FieldType.selectCharset) {
             return Options.of("UTF-8", "GBK", "GB18030", "GB2312", "UTF-16", "US-ASCII");
-        }
-
-        String refModel = modelField.refModel();
-        if (StringUtil.notBlank(refModel)) {
-            if (modelField.required()) {
-                return refModel(refModel);
-            } else {
-                if (modelField.type() == FieldType.checkbox
-                        || modelField.type() == FieldType.sortableCheckbox
-                        || modelField.type() == FieldType.multiselect) { // 复选框，不选表示为空，不需要有空白项在页面上。
-                    return refModel(refModel);
-                }
-
-                Options options = refModel(refModel);
-                options.options().add(0, Option.of("", new String[0]));
-                return options;
-            }
         }
 
         if (modelField.type() == FieldType.bool) {
@@ -278,20 +253,6 @@ public class ModelManagerImpl implements ModelManager, Serializable {
         }
 
         return null;
-    }
-
-    private Options refModel(String modelName) {
-        try {
-            ModelBase modelInstance = null;//TODO getModelInstance(modelName);
-            List<Option> options = new ArrayList<>();
-            List<String> dataIdList = new ArrayList<>();//((ListModel) modelInstance).getAllDataId(modelName);
-            for (String dataId : dataIdList) {
-                options.add(Option.of(dataId, new String[]{dataId, "en:" + dataId}));
-            }
-            return () -> options;
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     @Override

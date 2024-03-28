@@ -6,6 +6,7 @@ import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.Main;
 import qingzhou.framework.Constants;
+import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.console.RequestImpl;
 import qingzhou.framework.logger.Logger;
@@ -16,7 +17,7 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Stream;
 
-@Model(name = qingzhou.framework.app.App.SYS_MODEL_APP, icon = "cube-alt",
+@Model(name = AppInfo.SYS_MODEL_APP, icon = "cube-alt",
         menuName = "Service", menuOrder = 1,
         nameI18n = {"应用", "en:App"},
         infoI18n = {"应用。",
@@ -69,6 +70,7 @@ public class App extends ModelBase implements Createable {
     @ModelField(
             required = true, type = FieldType.checkbox,
             showToList = true,
+            refModel = "node",
             nameI18n = {"节点", "en:Node"},
             infoI18n = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
     public String nodes;
@@ -97,7 +99,7 @@ public class App extends ModelBase implements Createable {
         if ("nodes".equals(fieldName)) {
             String userName = request.getUserName();
             List<Option> nodeList = new ArrayList<>();
-            nodeList.add(Option.of(qingzhou.framework.app.App.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
+            nodeList.add(Option.of(AppInfo.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
             Set<String> nodeSet = new HashSet<>();
             try {
                 if (Constants.DEFAULT_ADMINISTRATOR.equals(userName)) {
@@ -108,12 +110,14 @@ public class App extends ModelBase implements Createable {
                             .forEach(nodeSet::add);
                 } else {
                     Map<String, String> user = getDataStore().getDataById("user", userName);
-                    Stream.of(user.getOrDefault("nodes", "").split(","))
-                            .map(String::trim)
-                            .filter(StringUtil::notBlank)
-                            .forEach(nodeSet::add);
+                    if (user != null) {
+                        Stream.of(user.getOrDefault("nodes", "").split(","))
+                                .map(String::trim)
+                                .filter(StringUtil::notBlank)
+                                .forEach(nodeSet::add);
+                    }
                 }
-                nodeSet.remove(qingzhou.framework.app.App.SYS_NODE_LOCAL);
+                nodeSet.remove(AppInfo.SYS_NODE_LOCAL);
                 nodeSet.stream().map(Option::of).forEach(nodeList::add);
             } catch (Exception e) {
                 Main.getService(Logger.class).error(e.getMessage(), e);
@@ -129,8 +133,8 @@ public class App extends ModelBase implements Createable {
     public String validate(Request request, String fieldName) {
         if (fieldName.equals(Listable.FIELD_NAME_ID)) {
             String id = request.getParameter(Listable.FIELD_NAME_ID);
-            if (qingzhou.framework.app.App.SYS_APP_MASTER.equals(id) ||
-                    qingzhou.framework.app.App.SYS_APP_NODE_AGENT.equals(id)) {
+            if (AppInfo.SYS_APP_MASTER.equals(id) ||
+                    AppInfo.SYS_APP_NODE_AGENT.equals(id)) {
                 return "app.id.system";
             }
         }
@@ -161,7 +165,7 @@ public class App extends ModelBase implements Createable {
         String appName;
         if (srcFile.isDirectory()) {
             appName = srcFileName;
-        } else if (srcFileName.endsWith(".jar") || srcFileName.endsWith(".zip")) {
+        } else if (srcFileName.toLowerCase().endsWith(".jar") || srcFileName.toLowerCase().endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             appName = srcFileName.substring(0, index);
         } else {
@@ -171,14 +175,14 @@ public class App extends ModelBase implements Createable {
             return;
         }
 
-        String[] nodes = p.get("nodes").split(",");
-        request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_INSTALL_APP);
+        String[] nodes = p.get("nodes") == null ? new String[0] : p.get("nodes").split(",");
+        request.setModelName(AppInfo.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(AppInfo.SYS_ACTION_INSTALL_APP);
         try {
             for (String node : nodes) {
                 try {
-                    if (qingzhou.framework.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getService(AppManager.class).getApp(qingzhou.framework.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
+                    if (AppInfo.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                        Main.getService(AppManager.class).getApp(AppInfo.SYS_APP_NODE_AGENT).invokeDirectly(request, response);
                     } else {
                         // TODO：调用远端 node 上的app add
                     }
@@ -189,16 +193,16 @@ public class App extends ModelBase implements Createable {
                 }
             }
         } finally {
-            request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
+            request.setModelName(AppInfo.SYS_MODEL_APP);
             request.setActionName(Createable.ACTION_NAME_ADD);
         }
 
         p.put(Listable.FIELD_NAME_ID, appName);
-        getDataStore().addData(qingzhou.framework.app.App.SYS_MODEL_APP, appName, p);
+        getDataStore().addData(AppInfo.SYS_MODEL_APP, appName, p);
     }
 
-    @ModelAction(name = qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + qingzhou.framework.app.App.SYS_ACTION_MANAGE_PAGE,
+    @ModelAction(name = AppInfo.SYS_ACTION_MANAGE_PAGE,
+            icon = "location-arrow", forwardToPage = "sys/" + AppInfo.SYS_ACTION_MANAGE_PAGE,
             nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
@@ -218,13 +222,13 @@ public class App extends ModelBase implements Createable {
         Map<String, String> p = getDataStore().getDataById("app", appName);
         String[] nodes = p.get("nodes").split(",");
 
-        request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.framework.app.App.SYS_ACTION_UNINSTALL_APP);
+        request.setModelName(AppInfo.SYS_MODEL_APP_INSTALLER);
+        request.setActionName(AppInfo.SYS_ACTION_UNINSTALL_APP);
         try {
             for (String node : nodes) {
                 try {
-                    if (qingzhou.framework.app.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        Main.getService(AppManager.class).getApp(qingzhou.framework.app.App.SYS_APP_NODE_AGENT).invoke(request, response);
+                    if (AppInfo.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
+                        Main.getService(AppManager.class).getApp(AppInfo.SYS_APP_NODE_AGENT).invokeDirectly(request, response);
                     } else {
                         // TODO：调用远端 node 上的app delete
                     }
@@ -234,24 +238,9 @@ public class App extends ModelBase implements Createable {
                 }
             }
         } finally {
-            request.setModelName(qingzhou.framework.app.App.SYS_MODEL_APP);
+            request.setModelName(AppInfo.SYS_MODEL_APP);
             request.setActionName(Deletable.ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);
-    }
-
-    @Override
-    public String resolveId(Request request) {
-        File appFile;
-        if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
-            appFile = FileUtil.newFile(request.getParameter("fromUpload"));
-        } else {
-            appFile = new File(request.getParameter("filename"));
-        }
-
-        String appFileName = appFile.getName();
-        int i = appFileName.lastIndexOf(".");
-        if (i == -1) return appFileName;
-        return appFileName.substring(0, i);
     }
 }

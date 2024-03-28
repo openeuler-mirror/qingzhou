@@ -295,7 +295,7 @@
 <script type="text/javascript">
     var global_setting = {
         check2FA: '<%=ConsoleConstants.LOGIN_2FA%>',
-        separa: '<%=ConsoleConstants.DATA_SEPARATOR%>',
+        separa: '<%=Constants.DATA_SEPARATOR%>',
         downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
         locale: '<%=(I18n.isZH() ? "zh-CN":"en-US")%>',
         pageLang: '<%=(I18n.isZH() ? "zh_cn":"en")%>',
@@ -311,7 +311,7 @@
         logout: '<%=PageBackendService.getMasterAppI18nString("page.logout.confirm")%>',
         filesName: '<%=Downloadable.ACTION_NAME_FILES%>',
         downloadTip: '<%=PageBackendService.getMasterAppI18nString("page.download.log.tip")%>',
-        actionName_target: '<%=App.SYS_ACTION_MANAGE_PAGE%>',
+        actionName_target: '<%=AppInfo.SYS_ACTION_MANAGE_PAGE%>',
         downloadFileNames: '<%=ConsoleConstants.PARAMETER_DOWNLOAD_FILE_NAMES%>',
         showAction: '<%=Showable.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18nString("page.download.checkall")%>',

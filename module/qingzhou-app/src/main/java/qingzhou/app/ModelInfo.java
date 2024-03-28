@@ -10,10 +10,11 @@ public class ModelInfo implements Serializable {
     public final ModelData model;
     public final Map<String, FieldInfo> fieldInfoMap;
     public final Map<String, ActionInfo> actionInfoMap;
+    public final Map<String, GroupsImpl> groupsMap;
 
-    private final transient ModelBase instance;
+    public final transient ModelBase instance;// 对于远程管理的应用，这里是 null
 
-    public ModelInfo(ModelData model, List<FieldInfo> fieldInfoMap, Collection<ActionInfo> actionInfoMap, ModelBase instance) {
+    public ModelInfo(ModelData model, List<FieldInfo> fieldInfoMap, Collection<ActionInfo> actionInfoMap, Map<String, GroupsImpl> groupsMap, ModelBase instance) {
         this.model = model;
 
         Map<String, FieldInfo> fieldInfoTemp = new LinkedHashMap<>();
@@ -32,10 +33,8 @@ public class ModelInfo implements Serializable {
         }
         this.actionInfoMap = Collections.unmodifiableMap(actionInfoTemp);
 
-        this.instance = instance;
-    }
+        this.groupsMap = groupsMap;
 
-    public ModelBase getInstance() {
-        return instance;
+        this.instance = instance;
     }
 }

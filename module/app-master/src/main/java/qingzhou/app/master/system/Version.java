@@ -1,10 +1,10 @@
 package qingzhou.app.master.system;
 
-import qingzhou.api.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
 import qingzhou.api.type.Createable;
-import qingzhou.framework.util.FileUtil;
-
-import java.io.File;
 
 // todo 升级所有的节点版本，支持各版本切换，除正在使用的版本外皆可删除，切换后尚未重启的版本页可以删除
 @Model(name = "version", icon = "upload-alt",
@@ -55,22 +55,4 @@ public class Version extends ModelBase implements Createable {
             infoI18n = {"上传一个版本文件到服务器，文件须是 *.zip 类型的 Qingzhou 版本文件。",
                     "en:Upload an version file to the server, the file must be a *.zip type qingzhou version file."})
     public String fromUpload;
-
-    @Override
-    public String resolveId(Request request) {
-        File file;
-        if (Boolean.parseBoolean(request.getParameter("fileFrom"))) {
-            file = FileUtil.newFile(request.getParameter("fromUpload"));
-        } else {
-            file = new File(request.getParameter("filename"));
-        }
-
-        String fileName = file.getName();
-        String suffix = ".zip";
-        if (fileName.endsWith(suffix)) {
-            return fileName.substring(0, fileName.length() - suffix.length());
-        } else {
-            return fileName;
-        }
-    }
 }

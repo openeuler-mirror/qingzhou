@@ -2,7 +2,7 @@ package qingzhou.framework.app;
 
 import qingzhou.api.*;
 
-public interface App {
+public interface AppInfo {
     String SYS_NODE_LOCAL = "local";
 
     String SYS_APP_MASTER = "master";
@@ -19,11 +19,13 @@ public interface App {
     String SYS_ACTION_UNINSTALL_APP = "uninstall";
     String SYS_ACTION_ENTRY_HOME = "show";
 
-    QingZhouApp getQingZhouApp();
+    QingzhouApp getQingzhouApp();
 
     AppContext getAppContext();
 
     void invoke(Request request, Response response) throws Exception;
+
+    void invokeDirectly(Request request, Response response) throws Exception;
 
     ModelBase getModelInstance(String modelName);
 }

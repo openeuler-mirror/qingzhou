@@ -2,8 +2,6 @@ package qingzhou.api.metadata;
 
 import qingzhou.api.Lang;
 
-import java.util.Map;
-
 /**
  * 应用元数据接口，定义了应用的基本信息获取方法。
  */
@@ -16,17 +14,10 @@ public interface AppMetadata {
     String getName();
 
     /**
-     * 获取应用的配置信息。
-     *
-     * @return 返回一个Map对象，包含应用的配置信息。
-     */
-    Map<String, String> getConfig();
-
-    /**
      * 根据语言和键值获取国际化信息。
      *
      * @param lang 语言对象，指定获取哪种语言的国际化信息。
-     * @param key 需要获取的国际化信息的键。
+     * @param key  需要获取的国际化信息的键。
      * @param args 如果国际化信息中包含占位符，这里可以传入替换的参数。
      * @return 返回对应语言和键值的国际化信息字符串。
      */

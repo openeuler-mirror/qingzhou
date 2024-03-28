@@ -10,5 +10,4 @@ public interface Createable extends Deletable, Editable {
 
     // 定义添加操作的常量名称
     String ACTION_NAME_ADD = "add";
-
 }

@@ -5,6 +5,7 @@ import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
 import qingzhou.app.bytecode.AnnotationReader;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -12,9 +13,25 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class AnnotationReaderImpl implements AnnotationReader {
+    public static volatile AnnotationReader annotationReader;
+
+    private AnnotationReaderImpl() {
+    }
+
+    public static AnnotationReader getAnnotationReader() {
+        if (annotationReader == null) {
+            synchronized (AnnotationReaderImpl.class) {
+                if (annotationReader == null) {
+                    annotationReader = new AnnotationReaderImpl();
+                }
+            }
+        }
+        return annotationReader;
+    }
+
     @Override
-    public Model readModel(Class<?> cls) {
-        return cls.getDeclaredAnnotation(Model.class);
+    public <A extends Annotation> A readClassAnnotation(Class<?> cls, Class<A> annotationClass) {
+        return cls.getDeclaredAnnotation(annotationClass);
     }
 
     @Override

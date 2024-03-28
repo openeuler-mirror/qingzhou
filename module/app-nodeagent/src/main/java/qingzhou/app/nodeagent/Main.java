@@ -1,10 +1,12 @@
 package qingzhou.app.nodeagent;
 
+import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.bootstrap.main.FrameworkContext;
-import qingzhou.framework.app.QingZhouSystemApp;
+import qingzhou.framework.app.QingzhouSystemApp;
 
-public class Main extends QingZhouSystemApp {
+@App
+public class Main extends QingzhouSystemApp {
     private static FrameworkContext fc;
 
     @Override

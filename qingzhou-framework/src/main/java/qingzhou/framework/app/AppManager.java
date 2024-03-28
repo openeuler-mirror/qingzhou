@@ -12,5 +12,5 @@ public interface AppManager extends InternalService {
 
     Set<String> getApps();
 
-    App getApp(String name);
+    AppInfo getApp(String name);
 }

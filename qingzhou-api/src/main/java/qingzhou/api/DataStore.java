@@ -22,8 +22,8 @@ public interface DataStore {
     /**
      * 添加指定类型的数据。
      *
-     * @param type 数据类型标识
-     * @param id 数据的唯一标识
+     * @param type       数据类型标识
+     * @param id         数据的唯一标识
      * @param properties 数据的属性，以键值对形式表示
      * @throws Exception 添加失败时抛出的异常
      */
@@ -33,7 +33,7 @@ public interface DataStore {
      * 根据 ID 更新指定类型的数据。
      *
      * @param type 数据类型标识
-     * @param id 数据的唯一标识
+     * @param id   数据的唯一标识
      * @param data 要更新的数据，以键值对形式表示
      * @throws Exception 更新失败时抛出的异常
      */
@@ -43,7 +43,7 @@ public interface DataStore {
      * 根据 ID 删除指定类型的数据。
      *
      * @param type 数据类型标识
-     * @param id 数据的唯一标识
+     * @param id   数据的唯一标识
      * @throws Exception 删除失败时抛出的异常
      */
     void deleteDataById(String type, String id) throws Exception;
@@ -65,7 +65,7 @@ public interface DataStore {
      * 检查指定类型下是否存在指定 ID 的数据。
      *
      * @param type 数据类型标识
-     * @param id 数据的唯一标识
+     * @param id   数据的唯一标识
      * @return 存在返回 true，否则返回 false
      * @throws Exception 操作失败时抛出的异常
      */
@@ -87,9 +87,9 @@ public interface DataStore {
     /**
      * 根据页码和页面大小获取指定类型的数据 ID 列表。
      *
-     * @param type 数据类型标识
+     * @param type     数据类型标识
      * @param pageSize 每页的数据数量
-     * @param pageNum 页码
+     * @param pageNum  页码
      * @return 该页的数据 ID 列表
      * @throws Exception 操作失败时抛出的异常
      */
@@ -111,12 +111,18 @@ public interface DataStore {
      * 根据 ID 获取指定类型的数据。
      *
      * @param type 数据类型标识
-     * @param id 数据的唯一标识
+     * @param id   数据的唯一标识
      * @return 对应的数据，如果不存在则返回 null
      * @throws Exception 操作失败时抛出的异常
      */
     default Map<String, String> getDataById(String type, String id) throws Exception {
-        for (Map<String, String> data : getAllData(type)) {
+        List<Map<String, String>> allData = getAllData(type);
+        if (allData.size() == 1 && id == null) {
+            if (!allData.get(0).containsKey(Listable.FIELD_NAME_ID)) {
+                return allData.get(0);
+            }
+        }
+        for (Map<String, String> data : allData) {
             if (Objects.equals(data.get(Listable.FIELD_NAME_ID), id)) {
                 return data;
             }
@@ -128,7 +134,7 @@ public interface DataStore {
      * 根据一组 ID 获取指定类型的数据。
      *
      * @param type 数据类型标识
-     * @param ids 数据的唯一标识数组
+     * @param ids  数据的唯一标识数组
      * @return 包含指定 ID 数据的列表，每条数据以 Map 格式表示
      * @throws Exception 操作失败时抛出的异常
      */
@@ -144,8 +150,8 @@ public interface DataStore {
     /**
      * 根据一组 ID 和字段名获取指定类型的数据，仅包含指定的字段。
      *
-     * @param type 数据类型标识
-     * @param ids 数据的唯一标识数组
+     * @param type   数据类型标识
+     * @param ids    数据的唯一标识数组
      * @param fields 需要获取的字段名数组
      * @return 包含指定 ID 数据的列表，每条数据以 Map 格式表示，仅包含指定的字段
      * @throws Exception 操作失败时抛出的异常
