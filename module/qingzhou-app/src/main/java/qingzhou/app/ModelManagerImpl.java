@@ -50,7 +50,7 @@ public class ModelManagerImpl implements ModelManager, Serializable {
                         ActionMethod actionMethod = new ActionMethod(instance);
                         Map<String, ActionInfo> actionInfoMap = getActionInfoMap(annotation, actionMethod, presetActions, cls, instance);
                         // 3. 组装 Model 数据
-                        GroupsImpl groups = new GroupsImpl();
+                        GroupsImpl groups = new GroupsImpl();// todo: 架构调整，预计 4.2 号完成
                         ModelInfo modelInfo = new ModelInfo(ModelUtil.toModelData(model), fieldInfoList, actionInfoMap.values(), groups,instance);
 
                         ModelInfo already = tempMap.put(model.name(), modelInfo);
