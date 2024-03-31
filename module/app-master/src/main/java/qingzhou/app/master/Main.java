@@ -1,6 +1,9 @@
 package qingzhou.app.master;
 
-import qingzhou.api.*;
+import qingzhou.api.ActionFilter;
+import qingzhou.api.AppContext;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.bootstrap.main.FrameworkContext;
@@ -10,7 +13,6 @@ import qingzhou.framework.app.QingzhouSystemApp;
 import java.util.HashMap;
 import java.util.Map;
 
-@App
 public class Main extends QingzhouSystemApp {
     private static FrameworkContext FC;
 

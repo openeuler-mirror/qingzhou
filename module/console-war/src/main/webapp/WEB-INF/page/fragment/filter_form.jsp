@@ -26,11 +26,7 @@
                 <%
                 } else {
                     String showHtml = request.getParameter(fieldName);
-                    if (showHtml != null) {
-                        if (Validator.SafeCheckerUtil.checkIsXSS(showHtml)) {
-                            showHtml = "";
-                        }
-                    } else {
+                    if (showHtml == null) {
                         showHtml = "";
                     }
                 %>

@@ -7,6 +7,7 @@ import qingzhou.api.ModelField;
 import qingzhou.api.type.Listable;
 import qingzhou.framework.app.ReadOnlyDataStore;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ public class Support extends ModelBase implements Listable {
         return new ReadOnlyDataStore() {
             @Override
             public List<Map<String, String>> getAllData(String type) {
-                return null;
+                return new ArrayList<>();
             }
         };
     }
