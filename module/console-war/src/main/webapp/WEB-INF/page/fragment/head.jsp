@@ -44,23 +44,21 @@
     String common_msg = request.getParameter(RESTController.MSG_FLAG);
     common_msg = LoginManager.retrieveI18nMsg(common_msg);
     if (common_msg != null) {
-        if (!Validator.SafeCheckerUtil.checkIsXSS(common_msg)) {
 %>
 <script>
     $(document).ready(function () {
         window.setTimeout(function () {
             var common_msgIndex = showError("<%=common_msg%>");
-            // 记录最后一次通知弹窗
-            try {
-                $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
-            } catch (e) {
-                // login.jsp
-            }
-        }, 350);
-    });
+                            // 记录最后一次通知弹窗
+                            try {
+                                $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
+                            } catch (e) {
+                                // login.jsp
+                            }
+                        }, 350);
+                    });
 </script>
 <%
-        }
     }
 %>
 

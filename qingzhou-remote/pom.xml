@@ -9,19 +9,7 @@
         <version>0.1.0</version>
     </parent>
 
-    <artifactId>module</artifactId>
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>console-war</module>
-        <module>app-common</module>
-        <module>app-master</module>
-        <module>app-nodeagent</module>
-        <module>qingzhou-ssh</module>
-        <module>qingzhou-serializer</module>
-        <module>qingzhou-crypto</module>
-        <module>qingzhou-logger</module>
-    </modules>
+    <artifactId>qingzhou-remote</artifactId>
 
     <dependencies>
         <dependency>

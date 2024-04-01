@@ -7,7 +7,7 @@ import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.Validator;
+import qingzhou.app.Validator;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
