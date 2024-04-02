@@ -2,7 +2,7 @@ package qingzhou.remote;
 
 import qingzhou.api.Response;
 import qingzhou.bootstrap.main.FrameworkContext;
-import qingzhou.bootstrap.main.ModuleLoader;
+import qingzhou.bootstrap.main.Module;
 import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.config.Config;
@@ -28,7 +28,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class Controller implements ModuleLoader {
+public class Controller implements Module {
     private ProcessSequence sequence;
 
     private Map<String, String> remoteConfig;
@@ -43,7 +43,7 @@ public class Controller implements ModuleLoader {
 
         this.frameworkContext = frameworkContext;
 
-        config = frameworkContext.getServiceManager().getService(Config.class);
+        config = frameworkContext.getService(Config.class);
         remoteConfig = config.getConfig("//remote");
         if (!Boolean.parseBoolean(remoteConfig.get("enabled"))) return;
 
@@ -55,7 +55,7 @@ public class Controller implements ModuleLoader {
     }
 
     @Override
-    public void stop(FrameworkContext frameworkContext) {
+    public void stop() {
         if (sequence != null) {
             sequence.undo();
         }
@@ -97,7 +97,7 @@ public class Controller implements ModuleLoader {
             });
 
             String serverUrl = "http://" + remoteHost + ":" + remotePort + path + context.getPath();
-            frameworkContext.getServiceManager().getService(Logger.class).info("The remote service is started: " + serverUrl);
+            frameworkContext.getService(Logger.class).info("The remote service is started: " + serverUrl);
         }
 
         @Override
@@ -116,17 +116,17 @@ public class Controller implements ModuleLoader {
             byte[] requestData = bos.toByteArray();
 
             String remoteKey = config.getKey(Config.remoteKeyName);
-            CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
+            CryptoService cryptoService = frameworkContext.getService(CryptoService.class);
             KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
 
             // 2. 数据解密，附带认证能力
             byte[] decryptedData = keyCipher.decrypt(requestData);
 
             // 3. 处理请求
-            Serializer serializer = frameworkContext.getServiceManager().getService(Serializer.class);
+            Serializer serializer = frameworkContext.getService(Serializer.class);
             RequestImpl request = serializer.deserialize(decryptedData, RequestImpl.class);
             Response response = new ResponseImpl();
-            AppManager appManager = frameworkContext.getServiceManager().getService(AppManager.class);
+            AppManager appManager = frameworkContext.getService(AppManager.class);
             AppInfo appInfo = appManager.getApp(request.getAppName());
             appInfo.invoke(request, response);
 
@@ -165,9 +165,9 @@ public class Controller implements ModuleLoader {
                     Map<String, String> map = new HashMap<>();
                     map.put("nodeIp", StringUtil.notBlank(remoteHost) ? remoteHost : String.join(",", IPUtil.getLocalIps()));
                     map.put("nodePort", String.valueOf(remotePort));
-                    map.put("apps", String.join(",", frameworkContext.getServiceManager().getService(AppManager.class).getApps()));
+                    map.put("apps", String.join(",", frameworkContext.getService(AppManager.class).getApps()));
                     // 获取master公钥，计算堆成密钥
-                    CryptoService cryptoService = frameworkContext.getServiceManager().getService(CryptoService.class);
+                    CryptoService cryptoService = frameworkContext.getService(CryptoService.class);
                     String remoteKey = config.getKey(Config.remoteKeyName);
                     if (StringUtil.isBlank(remoteKey)) {
                         remoteKey = cryptoService.generateKey();
@@ -178,7 +178,7 @@ public class Controller implements ModuleLoader {
 
                     HttpClient.seqHttp(master.get("url"), map);
                 } catch (Throwable e) {
-                    frameworkContext.getServiceManager().getService(Logger.class).warn("An exception occurred during the registration process", e);
+                    frameworkContext.getService(Logger.class).warn("An exception occurred during the registration process", e);
                 }
             });
         }

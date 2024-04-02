@@ -121,5 +121,10 @@
             <artifactId>app-common</artifactId>
             <version>0.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-command</artifactId>
+            <version>0.1.0</version>
+        </dependency>
     </dependencies>
 </project>

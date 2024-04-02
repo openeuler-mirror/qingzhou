@@ -15,7 +15,7 @@ public class Launcher {
         File libDir = vu.getLibDir();
 
         try (URLClassLoader cmdMainLoader = buildClassLoader(libDir)) {
-            Class<?> cmdMainClass = cmdMainLoader.loadClass("qingzhou.bootstrap.launcher.Admin");
+            Class<?> cmdMainClass = cmdMainLoader.loadClass("qingzhou.command.Admin");
             Method cmdMainMethod = cmdMainClass.getMethod("main", String[].class);
             cmdMainMethod.invoke(null, new Object[]{args});
         }
@@ -23,7 +23,7 @@ public class Launcher {
 
     private static URLClassLoader buildClassLoader(File libDir) throws Exception {
         List<URL> urls = new ArrayList<>();
-        File[] files = new File(libDir, "boot").listFiles();
+        File[] files = new File(libDir, "command").listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.getName().toLowerCase().endsWith(".jar")) {
@@ -31,7 +31,8 @@ public class Launcher {
                 }
             }
         }
-        return new URLClassLoader(urls.toArray(new URL[0]), null); // null：不要依赖 Launcher 的 jar
+        return new URLClassLoader(urls.toArray(new URL[0]),
+                null); // 不应该能依赖到 Launcher 的 jar
     }
 
     static void log(String msg) {
