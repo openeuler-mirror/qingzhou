@@ -1,8 +1,7 @@
 package qingzhou.bootstrap.main;
 
-import qingzhou.bootstrap.main.service.ServiceManager;
-
 import java.io.File;
+import java.util.Collection;
 
 public interface FrameworkContext {
     boolean isMaster();
@@ -19,5 +18,12 @@ public interface FrameworkContext {
 
     File getLib();
 
-    ServiceManager getServiceManager();
+    // 注意：此处注册的服务，会通过 AppContext 开放给所有应用，须确保服务是无状态的
+    <T> RegistryKey registerService(Class<T> clazz, T service);
+
+    void unregisterService(RegistryKey registryKey);
+
+    Collection<Class<?>> getServiceTypes();
+
+    <T> T getService(Class<T> serviceType);
 }

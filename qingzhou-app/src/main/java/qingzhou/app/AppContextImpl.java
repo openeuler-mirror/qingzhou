@@ -31,12 +31,12 @@ public class AppContextImpl implements AppContext {
 
     @Override
     public Collection<Class<?>> getServiceTypes() {
-        return frameworkContext.getServiceManager().getServiceTypes().stream().filter(aClass -> !InternalService.class.isAssignableFrom(aClass)).collect(Collectors.toList());
+        return frameworkContext.getServiceTypes().stream().filter(aClass -> !InternalService.class.isAssignableFrom(aClass)).collect(Collectors.toList());
     }
 
     @Override
     public <T> T getService(Class<T> serviceType) {
-        T service = frameworkContext.getServiceManager().getService(serviceType);
+        T service = frameworkContext.getService(serviceType);
         if (service instanceof InternalService) {
             return null;
         }

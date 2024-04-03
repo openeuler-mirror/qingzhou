@@ -33,19 +33,50 @@
 
         <dependencySet>
             <includes>
+                <include>${project.groupId}:qingzhou-command</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version${project.version}/command</outputDirectory>
+        </dependencySet>
+
+        <dependencySet>
+            <includes>
                 <include>${project.groupId}:qingzhou-bootstrap</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/boot</outputDirectory>
+            <outputDirectory>lib/version${project.version}/bootstrap</outputDirectory>
         </dependencySet>
 
         <dependencySet>
             <includes>
                 <include>${project.groupId}:qingzhou-api</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version${project.version}/api</outputDirectory>
+        </dependencySet>
+
+        <dependencySet>
+            <includes>
                 <include>${project.groupId}:qingzhou-framework</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version${project.version}/framework</outputDirectory>
+        </dependencySet>
+
+        <dependencySet>
+            <includes>
                 <include>${project.groupId}:qingzhou-console</include>
                 <include>${project.groupId}:qingzhou-remote</include>
                 <include>${project.groupId}:qingzhou-app</include>

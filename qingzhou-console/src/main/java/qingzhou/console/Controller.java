@@ -1,7 +1,7 @@
 package qingzhou.console;
 
 import qingzhou.bootstrap.main.FrameworkContext;
-import qingzhou.bootstrap.main.ModuleLoader;
+import qingzhou.bootstrap.main.Module;
 import qingzhou.console.servlet.ServletService;
 import qingzhou.console.servlet.impl.ServletServiceImpl;
 import qingzhou.framework.config.Config;
@@ -12,7 +12,7 @@ import qingzhou.framework.util.pattern.ProcessSequence;
 
 import java.io.File;
 
-public class Controller implements ModuleLoader {
+public class Controller implements Module {
     public static FrameworkContext framework;
     public static Logger logger;
     private static Config config;
@@ -28,8 +28,8 @@ public class Controller implements ModuleLoader {
         if (!framework.isMaster()) {
             return;
         }
-        logger = context.getServiceManager().getService(Logger.class);
-        config = context.getServiceManager().getService(Config.class);
+        logger = context.getService(Logger.class);
+        config = context.getService(Config.class);
 
         sequence = new ProcessSequence(
                 new StartServletContainer(),
@@ -39,7 +39,7 @@ public class Controller implements ModuleLoader {
     }
 
     @Override
-    public void stop(FrameworkContext context) {
+    public void stop() {
         if (sequence != null) {
             sequence.undo();
         }
@@ -69,7 +69,7 @@ public class Controller implements ModuleLoader {
             String docBase = consoleApp.getAbsolutePath();
             contextPath = config.getConfig("//console").get("contextRoot");
             servletService.addWebapp(contextPath, docBase);
-            framework.getServiceManager().getService(Logger.class).info("Open a browser to access the Qingzhou console: http://localhost:" + consolePort + contextPath);
+            framework.getService(Logger.class).info("Open a browser to access the Qingzhou console: http://localhost:" + consolePort + contextPath);
         }
 
         @Override

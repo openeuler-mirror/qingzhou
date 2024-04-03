@@ -2,9 +2,10 @@ package qingzhou.bootstrap.main.impl;
 
 import qingzhou.bootstrap.Utils;
 import qingzhou.bootstrap.main.FrameworkContext;
-import qingzhou.bootstrap.main.service.ServiceManager;
+import qingzhou.bootstrap.main.RegistryKey;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Map;
 
 public class FrameworkContextImpl implements FrameworkContext {
@@ -62,7 +63,22 @@ public class FrameworkContextImpl implements FrameworkContext {
     }
 
     @Override
-    public ServiceManager getServiceManager() {
-        return serviceManager;
+    public <T> RegistryKey registerService(Class<T> clazz, T service) {
+        return serviceManager.registerService(clazz, service);
+    }
+
+    @Override
+    public void unregisterService(RegistryKey registryKey) {
+        serviceManager.unregisterService(registryKey);
+    }
+
+    @Override
+    public Collection<Class<?>> getServiceTypes() {
+        return serviceManager.getServiceTypes();
+    }
+
+    @Override
+    public <T> T getService(Class<T> serviceType) {
+        return serviceManager.getService(serviceType);
     }
 }

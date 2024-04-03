@@ -1,6 +1,6 @@
 package qingzhou.app;
 
-import qingzhou.bootstrap.main.service.ServiceRegister;
+import qingzhou.bootstrap.main.ServiceRegister;
 import qingzhou.framework.app.AppInfo;
 import qingzhou.framework.app.AppManager;
 import qingzhou.framework.logger.Logger;
@@ -27,7 +27,7 @@ public class Controller extends ServiceRegister<AppManager> {
     protected void startService() throws Exception {
         super.startService();
 
-        Controller.logger = frameworkContext.getServiceManager().getService(Logger.class);
+        Controller.logger = frameworkContext.getService(Logger.class);
         appManager = new AppManagerImpl(frameworkContext);
 
         if (frameworkContext.isMaster()) {
