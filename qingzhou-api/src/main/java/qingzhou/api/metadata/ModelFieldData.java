@@ -21,9 +21,6 @@ public interface ModelFieldData {
     // 获取字段类型
     FieldType type();
 
-    // 获取引用的模型名称
-    String refModel();
-
     // 获取字段值的最小整数值
     long min();
 

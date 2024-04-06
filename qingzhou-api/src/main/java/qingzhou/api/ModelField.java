@@ -51,13 +51,6 @@ public @interface ModelField {
     FieldType type() default FieldType.text;
 
     /**
-     * 定义引用的模型。
-     *
-     * @return 返回引用的模型名称，默认为空字符串。
-     */
-    String refModel() default "";
-
-    /**
      * 最小值。
      *
      * @return 返回最小值的长整型，默认为-1，代表无特定最小值限制。

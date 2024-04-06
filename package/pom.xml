@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-bootstrap</artifactId>
+            <artifactId>qingzhou-engine</artifactId>
             <version>0.1.0</version>
         </dependency>
         <dependency>

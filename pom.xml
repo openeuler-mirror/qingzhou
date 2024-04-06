@@ -10,18 +10,10 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>qingzhou-launcher</module>
-        <module>qingzhou-command</module>
-        <module>qingzhou-bootstrap</module>
         <module>qingzhou-api</module>
-        <module>qingzhou-framework</module>
-        <module>service</module>
-        <module>qingzhou-config</module>
-        <module>qingzhou-app</module>
-        <module>qingzhou-remote</module>
-        <module>qingzhou-console</module>
-        <module>manager</module>
         <module>package</module>
+        <module>boot</module>
+        <module>runtime</module>
     </modules>
 
     <properties>

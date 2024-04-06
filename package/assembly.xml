@@ -44,13 +44,13 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-bootstrap</include>
+                <include>${project.groupId}:qingzhou-engine</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/bootstrap</outputDirectory>
+            <outputDirectory>lib/version${project.version}/engine</outputDirectory>
         </dependencySet>
 
         <dependencySet>
