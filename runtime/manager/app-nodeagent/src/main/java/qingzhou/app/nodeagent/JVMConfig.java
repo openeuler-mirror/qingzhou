@@ -2,7 +2,7 @@ package qingzhou.app.nodeagent;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
-import qingzhou.framework.util.StringUtil;
+import qingzhou.engine.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,10 +50,10 @@ public class JVMConfig extends ModelBase implements Editable {
     @ModelField(group = group_memory, nameI18n = {"新生代大小", "en:Xmn Size"}, infoI18n = {"设置新生代大小 (-Xmn)。", "en:Set the new generation size (-Xmn)."})
     public String Xmn;
 
-    @ModelField(group = group_memory, effectiveWhen = "Xmn=", min = 1, max = 100, type = FieldType.number, nameI18n = {"老年代比率", "en:New Ratio"}, infoI18n = {"设置新生代和老年代的大小比率，通俗地讲即老年代比新生代的倍数 (-XX:NewRatio)。", "en:Set the size ratio of the new generation and the old era, which is colloquially speaking, that is, the multiple of the old era to the new generation (-XX:NewRatio)."})
+    @ModelField(group = group_memory, effectiveWhen = "Xmn=", numberMin = 1, numberMax = 100, type = FieldType.number, nameI18n = {"老年代比率", "en:New Ratio"}, infoI18n = {"设置新生代和老年代的大小比率，通俗地讲即老年代比新生代的倍数 (-XX:NewRatio)。", "en:Set the size ratio of the new generation and the old era, which is colloquially speaking, that is, the multiple of the old era to the new generation (-XX:NewRatio)."})
     public Integer NewRatio;
 
-    @ModelField(group = group_memory, min = 1, max = 100, type = FieldType.number, nameI18n = {"Eden 区比率", "en:Survivor Ratio"}, infoI18n = {"设置新生代中 Eden 区域和 Survivor 区域（From 幸存区或 To 幸存区）的比率 (-XX:SurvivorRatio)。", "en:Sets the ratio of the Eden zone to the Survivor zone (From Survivor Zone or To Survivor Zone) in the new generation (-XX:SurvivorRatio)."})
+    @ModelField(group = group_memory, numberMin = 1, numberMax = 100, type = FieldType.number, nameI18n = {"Eden 区比率", "en:Survivor Ratio"}, infoI18n = {"设置新生代中 Eden 区域和 Survivor 区域（From 幸存区或 To 幸存区）的比率 (-XX:SurvivorRatio)。", "en:Sets the ratio of the Eden zone to the Survivor zone (From Survivor Zone or To Survivor Zone) in the new generation (-XX:SurvivorRatio)."})
     public Integer SurvivorRatio;
 
     @ModelField(group = group_memory, nameI18n = {"初始元空间", "en:MetaspaceSize"}, infoI18n = {"设置初始元空间的大小 (-XX:MetaspaceSize)。", "en:Set the initial Metaspace size (-XX:MetaspaceSize)."})
@@ -71,11 +71,11 @@ public class JVMConfig extends ModelBase implements Editable {
     @ModelField(group = group_gc, type = FieldType.radio, nameI18n = {"垃圾回收器", "en:GarbageCollector"}, infoI18n = {"设置 JVM 回收内存使用的垃圾回收器。", "en:Set up the garbage collector used by the JVM to reclaim memory."})
     public String useGC;
 
-    @ModelField(group = group_gc, effectiveWhen = "useGC=UseParallelGC|useGC=UseConcMarkSweepGC", min = 1, max = 100, type = FieldType.number, nameI18n = {"并行收集线程数", "en:ParallelGCThreads"}, infoI18n = {"设置并行收集器收集时使用的CPU数，即并行收集线程数 (-XX:ParallelGCThreads)。", "en:Set the number of CPUs used by the parallel collector collection, that is, the number of parallel collection threads (-XX:ParallelGCThreads)."})
+    @ModelField(group = group_gc, effectiveWhen = "useGC=UseParallelGC|useGC=UseConcMarkSweepGC", numberMin = 1, numberMax = 100, type = FieldType.number, nameI18n = {"并行收集线程数", "en:ParallelGCThreads"}, infoI18n = {"设置并行收集器收集时使用的CPU数，即并行收集线程数 (-XX:ParallelGCThreads)。", "en:Set the number of CPUs used by the parallel collector collection, that is, the number of parallel collection threads (-XX:ParallelGCThreads)."})
     public Integer ParallelGCThreads;
-    @ModelField(group = group_gc, effectiveWhen = "useGC=UseParallelGC", min = 1, max = 100, type = FieldType.number, nameI18n = {"最大暂停时间", "en:MaxGCPauseMillis"}, infoI18n = {"每次 GC 最大的停顿毫秒数，VM 将调整 Java 堆大小和其他与 GC 相关的参数，以使 GC 引起的暂停时间短于该毫秒，尽可能地保证内存回收花费时间不超过设定值（-XX:MaxGCPauseMillis）。", "en:For each GC maximum pause milliseconds, the VM will adjust the Java heap size and other GC-related parameters so that the pause caused by GC is shorter than that millisecond, ensuring that memory reclamation takes no longer than the set value as much as possible (-XX:MaxGCPauseMillis)."})
+    @ModelField(group = group_gc, effectiveWhen = "useGC=UseParallelGC", numberMin = 1, numberMax = 100, type = FieldType.number, nameI18n = {"最大暂停时间", "en:MaxGCPauseMillis"}, infoI18n = {"每次 GC 最大的停顿毫秒数，VM 将调整 Java 堆大小和其他与 GC 相关的参数，以使 GC 引起的暂停时间短于该毫秒，尽可能地保证内存回收花费时间不超过设定值（-XX:MaxGCPauseMillis）。", "en:For each GC maximum pause milliseconds, the VM will adjust the Java heap size and other GC-related parameters so that the pause caused by GC is shorter than that millisecond, ensuring that memory reclamation takes no longer than the set value as much as possible (-XX:MaxGCPauseMillis)."})
     public Integer MaxGCPauseMillis;
-    @ModelField(group = group_gc, effectiveWhen = "useGC=UseParallelGC", min = 1, max = 100, type = FieldType.number, nameI18n = {"回收时间占比", "en:GCTimeRatio"}, infoI18n = {"设置垃圾回收时间占程序运行时间的百分比 (-XX:GCTimeRatio)。", "en:Sets the garbage collection time as a percentage of the program running time (-XX:GCTimeRatio)."})
+    @ModelField(group = group_gc, effectiveWhen = "useGC=UseParallelGC", numberMin = 1, numberMax = 100, type = FieldType.number, nameI18n = {"回收时间占比", "en:GCTimeRatio"}, infoI18n = {"设置垃圾回收时间占程序运行时间的百分比 (-XX:GCTimeRatio)。", "en:Sets the garbage collection time as a percentage of the program running time (-XX:GCTimeRatio)."})
     public Integer GCTimeRatio;
 
     @ModelField(group = group_gc, type = FieldType.bool, nameI18n = {"记录 GC 日志", "en:Print GC "}, infoI18n = {"设置是否记录 JVM 的 GC 日志。", "en:Sets whether to record GC logs for the JVM."})

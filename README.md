@@ -61,6 +61,7 @@
 + Layui layer ([https://gitee.com/layui/layer](https://gitee.com/layui/layer))
 + ZUI ([https://openzui.com](https://openzui.com))
 + jQuery ([https://jquery.com](https://jquery.com))
++ Gson ([https://github.com/google/gson](https://github.com/google/gson))
 + Apache MINA SSHD ([https://mina.apache.org/sshd-project/](https://mina.apache.org/sshd-project/))
 + tinylog ([https://tinylog.org](https://tinylog.org))
 + Apache Tomcat ([https://tomcat.apache.org](https://tomcat.apache.org))

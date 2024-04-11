@@ -4,7 +4,7 @@ package qingzhou.app.common.monitor;
 import qingzhou.api.*;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
-import qingzhou.framework.app.ReadOnlyDataStore;
+import qingzhou.app.ReadOnlyDataStore;
 
 import java.util.List;
 import java.util.Map;
@@ -20,18 +20,18 @@ import java.util.Map;
 public class BlockedThread extends ModelBase implements Listable {
 
     @ModelField(nameI18n = {"线程ID", "en:Thread Id"},
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"阻塞线程的ID。", "en:The ID of the blocked thread."})
     private String id;
 
     @ModelField(nameI18n = {"线程名", "en:Thread Name"},
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"阻塞线程的名称。", "en:The name of the blocked thread."})
     private String threadName;
 
     @ModelField(nameI18n = {"线程状态", "en:Thread State"},
             type = FieldType.select,
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"阻塞线程的当前状态。", "en:The current state of the blocked thread."})
     private String threadState;
 
@@ -40,12 +40,12 @@ public class BlockedThread extends ModelBase implements Listable {
     private String blockedStack;
 
     @ModelField(nameI18n = {"阻塞方法", "en:Blocked Method"},
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"线程阻塞的类方法。", "en:Thread blocking class method."})
     private String blockedMethod;
 
     @ModelField(nameI18n = {"相同阻塞线程数", "en:Same Blocked Thread Count"},
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"阻塞的线程栈相同的线程数量。", "en:Blocked thread stacks are equal to the number of threads."})
     private Integer sameStackThreadCount;
 

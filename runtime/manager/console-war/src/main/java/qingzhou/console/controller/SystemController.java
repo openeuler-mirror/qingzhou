@@ -7,23 +7,22 @@ import org.apache.catalina.core.StandardContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.metadata.AppMetadata;
+import qingzhou.app.AppInfo;
+import qingzhou.app.AppManager;
 import qingzhou.console.AppMetadataManager;
-import qingzhou.console.Controller;
 import qingzhou.console.i18n.SetI18n;
+import qingzhou.console.impl.Controller;
 import qingzhou.console.jmx.JMXServerHolder;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.app.AppManager;
-import qingzhou.framework.config.Config;
-import qingzhou.framework.crypto.CryptoService;
-import qingzhou.framework.logger.Logger;
-import qingzhou.framework.serializer.Serializer;
-import qingzhou.framework.util.pattern.Filter;
-import qingzhou.framework.util.pattern.FilterPattern;
+import qingzhou.crypto.CryptoService;
+import qingzhou.engine.util.pattern.Filter;
+import qingzhou.engine.util.pattern.FilterPattern;
+import qingzhou.logger.Logger;
+import qingzhou.json.Json;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -59,8 +58,8 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         getAppManager().getApp(PageBackendService.getAppName(request)).invokeDirectly(request, response);
     }
 
-    public static Serializer getSerializer() {
-        return Controller.moduleContext.getService(Serializer.class);
+    public static Json getSerializer() {
+        return Controller.moduleContext.getService(Json.class);
     }
 
     public static CryptoService getCryptoService() {

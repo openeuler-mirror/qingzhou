@@ -2,13 +2,11 @@ package qingzhou.console.i18n;
 
 import qingzhou.api.Lang;
 import qingzhou.console.controller.HttpServletContext;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
-import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.pattern.Filter;
+import qingzhou.engine.util.StringUtil;
+import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -130,16 +128,5 @@ public class SetI18n implements Filter<HttpServletContext> {
         ConsoleI18n.addI18n("page.info.kv.value", new String[]{"值", "en:Value"});
         ConsoleI18n.addI18n("page.password.changed", new String[]{"密码修改成功，请重新登录", "en:Password changed successfully, please login again"});
         ConsoleI18n.addI18n("page.lang.switch", new String[]{"切换语言", "en:Switch The Language"});
-
-        ConsoleI18n.addI18n("page.guide", new String[]{"新手引导", "en:Beginner Guide"});
-        ConsoleI18n.addI18n("page.guide.previous", new String[]{"上一步", "en:Previous"});
-        ConsoleI18n.addI18n("page.guide.next", new String[]{"下一步", "en:Next"});
-        ConsoleI18n.addI18n("page.guide.skip", new String[]{"跳过", "en:Skip"});
-        ConsoleI18n.addI18n("page.guide.finish", new String[]{"完成", "en:Finish"});
-
-        ConsoleI18n.addI18n("page.guide.pwd", new String[]{"首次登录，请修改初始密码", "en:To log in for the first time, please change the initial password"});
-        ConsoleI18n.addI18n("page.guide.help", new String[]{"查看用户手册，帮助您详细了解如何使用产品", "en:View the user manual to help you learn more about how to use products"});
-        ConsoleI18n.addI18n("page.guide.home", new String[]{"点击“首页”，可查看产品的名称、版本号、命名空间、运行模式及授权等信息", "en:Click \"Home\" to view the name, version number, namespace, operating mode and authorization of the product"});
-        ConsoleI18n.addI18n("page.guide.res", new String[]{"展开“资源管理”，可创建应用所需要使用的数据库、会话服务器、应用类库等资源", "en:Expand Resource Management to create resources such as databases, session servers, and application class libraries that your application needs to use"});
     }
 }

@@ -4,17 +4,14 @@ import qingzhou.api.Request;
 import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
+import qingzhou.app.impl.Validator;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
-import qingzhou.framework.Constants;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.config.Config;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.console.ResponseImpl;
-import qingzhou.framework.util.StringUtil;
+import qingzhou.app.AppInfo;
+import qingzhou.engine.util.StringUtil;
 
 import javax.naming.NameNotFoundException;
 import java.net.SocketException;
@@ -60,7 +57,7 @@ public class ActionInvoker {
         StringBuilder errbuilder = new StringBuilder();
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
         String oid = request.getParameter(Listable.FIELD_NAME_ID);
-        for (String id : oid.split(Constants.DATA_SEPARATOR)) {
+        for (String id : oid.split(Validator.DATA_SEPARATOR)) {
             if (StringUtil.notBlank(id)) {
                 id = PageBackendService.decodeId(id);
                 ((RequestImpl) request).setId(id);
@@ -71,7 +68,7 @@ public class ActionInvoker {
                     String actionContextMsg = response.getMsg();
                     if (result.containsKey(actionContextMsg)) {
                         errbuilder.append(result.get(actionContextMsg));
-                        errbuilder.append(Constants.DATA_SEPARATOR);
+                        errbuilder.append(Validator.DATA_SEPARATOR);
                         errbuilder.append(id);
                         result.put(actionContextMsg, errbuilder.toString());
                         errbuilder.setLength(0);

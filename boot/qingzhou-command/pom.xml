@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>boot</artifactId>
-        <version>0.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>qingzhou-command</artifactId>

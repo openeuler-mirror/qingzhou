@@ -3,25 +3,19 @@ package qingzhou.console.controller;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelManager;
+import qingzhou.app.AppInfo;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.Constants;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.config.Config;
-import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.pattern.Filter;
+import qingzhou.engine.util.StringUtil;
+import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AccessControl implements Filter<HttpServletContext> {
@@ -42,14 +36,14 @@ public class AccessControl implements Filter<HttpServletContext> {
             models.add(modelManager.getModel(modelName));
         }
 
-        if (!Constants.DEFAULT_ADMINISTRATOR.equals(loginUser) && AppInfo.SYS_APP_MASTER.equals(appName)) {
+        if (!"qingzhou".equals(loginUser) && AppInfo.SYS_APP_MASTER.equals(appName)) {
             models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
         }
 
         return models.toArray(new ModelData[0]);
     }
 
-    public static boolean canAccess(String appName, String modelAction, String user) {
+    public static boolean canAccess(String appName, String modelAction, String user) throws Exception {
         String[] ma = modelAction.split("/");
         String checkModel = ma[0];
         String checkAction = ma[1];
@@ -62,19 +56,19 @@ public class AccessControl implements Filter<HttpServletContext> {
         return nodePermission(appName, user);
     }
 
-    public static boolean nodePermission(String appName, String user) {
-        if (Constants.DEFAULT_ADMINISTRATOR.equals(user)) {
+    public static boolean nodePermission(String appName, String user) throws Exception {
+        if ("qingzhou".equals(user)) {
             return true;
         }
 
         Config config = SystemController.getConfig();
-        Map<String, String> userPro = config.getConfig("/user[@id='" + user + "']");
+        Map<String, String> userPro = config.getDataById("user", user);
         String userNodes = userPro.getOrDefault("nodes", "");
         Set<String> userNodeSet = Arrays.stream(userNodes.split(","))
                 .filter(node -> node != null && !node.trim().isEmpty())
                 .map(String::trim).collect(Collectors.toSet());
 
-        Map<String, String> app = config.getConfig("/app[@id='" + appName + "']");
+        Map<String, String> app = config.getDataById("app", appName);
         String appNodes = app.getOrDefault("nodes", "");
 
         return Arrays.stream(appNodes.split(",")).map(String::trim).anyMatch(userNodeSet::contains);

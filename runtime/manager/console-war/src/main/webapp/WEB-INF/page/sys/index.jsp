@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.app.impl.Validator" %>
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
 <%
@@ -295,7 +296,7 @@
 <script type="text/javascript">
     var global_setting = {
         check2FA: '<%=ConsoleConstants.LOGIN_2FA%>',
-        separa: '<%=Constants.DATA_SEPARATOR%>',
+        separa: '<%=Validator.DATA_SEPARATOR%>',
         downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
         locale: '<%=(I18n.isZH() ? "zh-CN":"en-US")%>',
         pageLang: '<%=(I18n.isZH() ? "zh_cn":"en")%>',

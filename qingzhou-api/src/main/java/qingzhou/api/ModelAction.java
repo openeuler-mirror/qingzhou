@@ -56,28 +56,19 @@ public @interface ModelAction {
      *
      * @return 转发的目标页面路径
      */
-    String forwardToPage() default "";
+    String forwardTo() default "";
 
     /**
      * 标识是否应在列表头部显示此操作，默认为 {@code false}。
      *
      * @return 是否显示在列表头部
      */
-    boolean showToListHead() default false;
+    int shownOnListHead() default 0;
 
     /**
-     * 标识是否应在列表项中显示此操作，默认为 {@code false}。
-     *
-     * @return 是否显示在列表中
+     * 显示在列表中的次序，小于 1 则不显示
      */
-    boolean showToList() default false;
-
-    /**
-     * 在列表中展示操作时的排序顺序，默认为0，数值越小排序越靠前。
-     *
-     * @return 列表中的显示顺序
-     */
-    int orderOnList() default 0;
+    int shownOnList() default 0;
 
     /**
      * 标识该操作是否支持批量处理，默认为 {@code false}。
@@ -87,9 +78,7 @@ public @interface ModelAction {
     boolean supportBatch() default false;
 
     /**
-     * 标识该操作是否默认禁用（不可用），默认为 {@code false}。
-     *
-     * @return 是否禁用该操作
+     * 可用于禁用继承的 action
      */
     boolean disabled() default false;
 }

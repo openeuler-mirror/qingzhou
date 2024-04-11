@@ -2,7 +2,7 @@ package qingzhou.console.login;
 
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.SystemController;
-import qingzhou.framework.util.StringUtil;
+import qingzhou.engine.util.StringUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

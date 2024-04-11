@@ -6,12 +6,18 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>manager</artifactId>
-        <version>0.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>qingzhou-console</artifactId>
 
     <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-config</artifactId>
+            <version>x</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>

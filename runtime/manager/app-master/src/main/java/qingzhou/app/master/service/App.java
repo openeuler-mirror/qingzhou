@@ -4,14 +4,13 @@ import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
+import qingzhou.app.AppInfo;
+import qingzhou.app.AppManager;
 import qingzhou.app.master.MasterApp;
-import qingzhou.framework.Constants;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.app.AppManager;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.logger.Logger;
-import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.StringUtil;
+import qingzhou.console.RequestImpl;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.StringUtil;
+import qingzhou.logger.Logger;
 
 import java.io.File;
 import java.util.*;
@@ -25,17 +24,16 @@ import java.util.stream.Stream;
 public class App extends ModelBase implements Createable {
 
     @ModelField(
-            showToList = true,
-            disableOnCreate = true,
-            disableOnEdit = true,
+            shownOnList = true,
+            cannotAdd = true,
+            cannotUpdate = true,
             nameI18n = {"名称", "en:Name"},
             infoI18n = {"应用名称。", "en:App Name"})
     public String id;
 
     @ModelField(
             required = true,
-            disableOnEdit = true,
-            showToEdit = false,
+            cannotUpdate = true,
             type = FieldType.bool,
             nameI18n = {"使用上传", "en:Enable Upload"},
             infoI18n = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。",
@@ -43,13 +41,12 @@ public class App extends ModelBase implements Createable {
     public boolean appFrom = false;
 
     @ModelField(
-            showToList = true,
+            shownOnList = true,
             effectiveWhen = "appFrom=false",
-            disableOnEdit = true,
-            showToEdit = false,
+            cannotUpdate = true,
             required = true,
-            notSupportedCharacters = "#",
-            maxLength = 255,// for #NC-1418 及其它文件目录操作的，文件长度不能大于 255
+            unsupportedCharacters = "#",
+            lengthMax = 255,// for #NC-1418 及其它文件目录操作的，文件长度不能大于 255
             nameI18n = {"应用位置", "en:Application File"},
             infoI18n = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar 类型的文件。",
                     "en:The location of the application on the server, usually the app package, Note: Must be a *.jar file."})
@@ -58,9 +55,8 @@ public class App extends ModelBase implements Createable {
     @ModelField(
             type = FieldType.file,
             effectiveWhen = "appFrom=true",
-            disableOnEdit = true,
-            showToEdit = false,
-            notSupportedCharacters = "#",
+            cannotUpdate = true,
+            unsupportedCharacters = "#",
             required = true,
             nameI18n = {"上传应用", "en:Upload Application"},
             infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
@@ -69,19 +65,19 @@ public class App extends ModelBase implements Createable {
 
     @ModelField(
             required = true, type = FieldType.checkbox,
-            showToList = true,
+            shownOnList = true,
             nameI18n = {"节点", "en:Node"},
             infoI18n = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
     public String nodes;
 
     @ModelField(
-            showToList = true,
+            shownOnList = true,
             nameI18n = {"应用版本", "en:Instance Version"},
             infoI18n = {"此应用的版本。", "en:The version of this app."})
     public String version;
 
     @ModelField(
-            showToList = true,
+            shownOnList = true,
             nameI18n = {"类型", "en:Type"},
             infoI18n = {"此应用的类型。", "en:The type of this app."})
     public String type;
@@ -101,7 +97,7 @@ public class App extends ModelBase implements Createable {
             nodeList.add(Option.of(AppInfo.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
             Set<String> nodeSet = new HashSet<>();
             try {
-                if (Constants.DEFAULT_ADMINISTRATOR.equals(userName)) {
+                if ("qingzhou".equals(userName)) {
                     List<Map<String, String>> nodes = getDataStore().getAllData("node");
                     nodes.stream()
                             .map(node -> node.get("id"))
@@ -201,15 +197,15 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(name = AppInfo.SYS_ACTION_MANAGE_PAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + AppInfo.SYS_ACTION_MANAGE_PAGE,
-            nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
+            icon = "location-arrow", forwardTo = "sys/" + AppInfo.SYS_ACTION_MANAGE_PAGE,
+            nameI18n = {"管理", "en:Manage"}, shownOnList = 1,
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
     }
 
     @ModelAction(
             name = Deletable.ACTION_NAME_DELETE,
-            showToList = true, orderOnList = 99,
+            shownOnList = 9,
             supportBatch = true,
             icon = "trash",
             nameI18n = {"删除", "en:Delete"},

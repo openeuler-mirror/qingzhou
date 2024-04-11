@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>runtime</artifactId>
-        <version>0.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>qingzhou-config</artifactId>
@@ -14,8 +14,13 @@
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
-            <version>0.1.0</version>
+            <artifactId>qingzhou-engine</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-json</artifactId>
+            <version>x</version>
         </dependency>
     </dependencies>
 </project>

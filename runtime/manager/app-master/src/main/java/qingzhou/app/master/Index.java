@@ -2,7 +2,7 @@ package qingzhou.app.master;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.framework.app.AppInfo;
+import qingzhou.app.AppInfo;
 
 @Model(name = AppInfo.SYS_MODEL_INDEX, icon = "home",
         entryAction = Showable.ACTION_NAME_SHOW,
@@ -20,19 +20,21 @@ public class Index extends ModelBase implements Showable {
     public String version;
 
     @ModelAction(name = Showable.ACTION_NAME_SHOW,
-            forwardToPage = "show",
+            forwardTo = "show",
             nameI18n = {"主页", "en:Home"},
             infoI18n = {"查看 Qingzhou 的产品信息。",
                     "en:View Qingzhou product information."})
     public void show(Request request, Response response) throws Exception {
         Index index = new Index();
-        index.name = MasterApp.getFramework().getName();
-        index.version = MasterApp.getFramework().getVersion();
+        index.name = "Qingzhou（轻舟）";
+        String versionFlag = "version";
+        MasterApp.getFramework().getName().substring(versionFlag.length());
+        index.version = M.getVersion();
         response.addModelData(index);
     }
 
     @ModelAction(name = AppInfo.SYS_MODEL_INDEX, // NOTE: 这个方法用作是 Login 成功后 跳过的
-            forwardToPage = "sys/index",
+            forwardTo = "sys/index",
             nameI18n = {"主页", "en:Home"},
             infoI18n = {"查看 Qingzhou 的产品信息。",
                     "en:View Qingzhou product information."})

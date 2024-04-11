@@ -6,8 +6,16 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>manager</artifactId>
-        <version>0.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>app-common</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-app</artifactId>
+            <version>x</version>
+        </dependency>
+    </dependencies>
+
 </project>

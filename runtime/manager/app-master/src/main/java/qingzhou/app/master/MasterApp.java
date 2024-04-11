@@ -3,9 +3,9 @@ package qingzhou.app.master;
 import qingzhou.api.*;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
+import qingzhou.app.AppInfo;
+import qingzhou.app.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.app.QingzhouSystemApp;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +23,6 @@ public class MasterApp extends QingzhouSystemApp {
 
         appContext.addMenu("Service", new String[]{"服务管理", "en:Service"}, "server", 1);
         appContext.addMenu("System", new String[]{"系统管理", "en:System"}, "cog", 2);
-        appContext.addMenu("Guide", new String[]{"用户指引", "en:Guide"}, "hand-up", 3);
 
         appContext.setDefaultDataStore(new ConsoleDataStore());
 

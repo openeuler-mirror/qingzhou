@@ -1,12 +1,11 @@
 package qingzhou.console.remote;
 
 import qingzhou.console.controller.SystemController;
-import qingzhou.framework.console.ResponseImpl;
-import qingzhou.framework.config.Config;
-import qingzhou.framework.crypto.CryptoService;
-import qingzhou.framework.crypto.KeyCipher;
-import qingzhou.framework.serializer.Serializer;
-import qingzhou.framework.util.StringUtil;
+import qingzhou.console.ResponseImpl;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.KeyCipher;
+import qingzhou.engine.util.StringUtil;
+import qingzhou.json.Json;
 
 import javax.net.ssl.*;
 import java.io.FileNotFoundException;
@@ -36,8 +35,8 @@ public class RemoteClient {
                 throw new RuntimeException("remoteKey error");
             }
 
-            Serializer serializer = SystemController.getSerializer();
-            byte[] serialize = serializer.serialize(object);
+            Json json = SystemController.getSerializer();
+            byte[] serialize = json.serialize(object);
             byte[] encrypt = cipher.encrypt(serialize);
             OutputStream outStream = connection.getOutputStream();
             outStream.write(encrypt);
@@ -68,7 +67,7 @@ public class RemoteClient {
                     }
                     if (read == deserializeBytes.length) {
                         byte[] decrypt = cipher.decrypt(deserializeBytes);
-                        return serializer.deserialize(decrypt, ResponseImpl.class);
+                        return json.deserialize(decrypt, ResponseImpl.class);
                     } else {
                         throw new RuntimeException("The expected file size was not reached");
                     }

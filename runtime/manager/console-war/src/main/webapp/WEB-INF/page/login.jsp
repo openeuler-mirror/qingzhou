@@ -45,7 +45,7 @@
               action="<%=PageBackendService.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>"
               class="form-group" autocomplete="off">
             <div class="input-control has-icon-left">
-                <input value="<%=Constants.DEFAULT_ADMINISTRATOR%>" type="text" id="<%=LoginManager.LOGIN_USER%>"
+                <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>"
                        name="<%=LoginManager.LOGIN_USER%>" class="form-control"
                        placeholder="name<%=PageBackendService.getMasterAppI18nString( "model.field.user.name")%>"
                        autofocus required>

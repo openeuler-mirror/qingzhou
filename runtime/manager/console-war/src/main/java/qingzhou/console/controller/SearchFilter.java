@@ -4,7 +4,7 @@ import qingzhou.api.Lang;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
-import qingzhou.framework.util.pattern.Filter;
+import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

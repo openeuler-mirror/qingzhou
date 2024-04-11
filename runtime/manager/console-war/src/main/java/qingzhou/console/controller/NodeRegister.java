@@ -3,11 +3,10 @@ package qingzhou.console.controller;
 import qingzhou.console.AppMetadataManager;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.framework.config.Config;
-import qingzhou.framework.crypto.CryptoService;
-import qingzhou.framework.crypto.KeyCipher;
-import qingzhou.framework.crypto.KeyPairCipher;
-import qingzhou.framework.util.pattern.Filter;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.KeyCipher;
+import qingzhou.crypto.KeyPairCipher;
+import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -69,12 +68,13 @@ public class NodeRegister implements Filter<HttpServletContext> {
         String localKey = SystemController.getConfig().getKey(Config.localKeyName);
         KeyCipher keyCipher = cryptoService.getKeyCipher(localKey);
         Map<String, String> node = new HashMap<>();
-        node.put("id", nodeIp + ":" + nodePort);
+        String id = nodeIp + ":" + nodePort;
+        node.put("id", id);
         node.put("nodeIp", nodeIp);
         node.put("nodePort", nodePort);
         node.put("apps", apps);
         node.put("key", keyCipher.encrypt(key)); // todo 是否持久化，考虑每次重新注册后生成新的key
-        SystemController.getConfig().updateConfig("/server/nodes/node", node);
+        SystemController.getConfig().updateDataById("node", id, node);
 
         System.out.printf("Node Registration Done. ip:%s, port:%s.%n", nodeIp, nodePort);
         return false;

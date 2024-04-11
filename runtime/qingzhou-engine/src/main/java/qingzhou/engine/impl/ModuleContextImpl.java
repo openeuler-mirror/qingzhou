@@ -1,29 +1,16 @@
 package qingzhou.engine.impl;
 
-import qingzhou.engine.Main;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.RegistryKey;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.UUID;
 
-public class ModuleContextImpl implements ModuleContext {
+class ModuleContextImpl implements ModuleContext {
     private final ServiceManagerImpl serviceManager = new ServiceManagerImpl();
     private File libDir;
     private File instanceDir;
-
-    @Override
-    public String getName() {
-        return "Qingzhou（轻舟）";
-    }
-
-    @Override
-    public String getVersion() {
-        String versionFlag = "version";
-        return getLibDir().getName().substring(versionFlag.length());
-    }
 
     @Override
     public File getLibDir() {
@@ -45,11 +32,6 @@ public class ModuleContextImpl implements ModuleContext {
     @Override
     public void unregisterService(RegistryKey registryKey) {
         serviceManager.unregisterService(registryKey);
-    }
-
-    @Override
-    public Collection<Class<?>> getServiceTypes() {
-        return serviceManager.getServiceTypes();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.app.impl.Validator;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.SystemController;
@@ -8,14 +9,13 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.Constants;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.console.ResponseImpl;
-import qingzhou.framework.util.FileUtil;
-import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.pattern.Filter;
-import qingzhou.framework.util.pattern.FilterPattern;
+import qingzhou.app.AppInfo;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.StringUtil;
+import qingzhou.engine.util.pattern.Filter;
+import qingzhou.engine.util.pattern.FilterPattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -173,7 +173,7 @@ public class RESTController extends HttpServlet {
             String k = parameterNames.nextElement();
             String[] v = req.getParameterValues(k);
             if (v != null) {
-                data.put(k, String.join(Constants.DATA_SEPARATOR, v));
+                data.put(k, String.join(Validator.DATA_SEPARATOR, v));
             }
         }
 

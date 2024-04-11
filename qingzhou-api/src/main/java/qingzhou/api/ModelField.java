@@ -55,167 +55,63 @@ public @interface ModelField {
      *
      * @return 返回最小值的长整型，默认为-1，代表无特定最小值限制。
      */
-    long min() default -1;
+    long numberMin() default -1;
 
     /**
      * 最大值。
      *
      * @return 返回最大值的长整型，默认为10亿，用以表示较大的上限值。
      */
-    long max() default 1000000000;
+    long numberMax() default 1000000000;
 
     /**
      * 最小长度。
      *
      * @return 返回最小长度的整型，默认为0，代表无特定长度限制。
      */
-    int minLength() default 0;
+    int lengthMin() default 0;
 
     /**
      * 最大长度。
      *
      * @return 返回最大长度的整型，默认为1000，代表允许的最大长度。
      */
-    int maxLength() default 1000;
+    int lengthMax() default 1000;
 
     /**
      * 是否为IP地址或主机名。
      *
      * @return 返回一个布尔值，标识是否是IP地址或主机名，默认为false。
      */
-    boolean isIpOrHostname() default false;
-
-    /**
-     * 是否为通配符IP地址。
-     *
-     * @return 返回一个布尔值，标识是否是通配符IP地址，默认为false。
-     */
-    boolean isWildcardIp() default false;
+    boolean asHostname() default false;
 
     /**
      * 是否为端口号。
      *
      * @return 返回一个布尔值，标识是否是端口号，默认为false。
      */
-    boolean isPort() default false;
-
-    /**
-     * 是否支持模式匹配。
-     *
-     * @return 返回一个布尔值，标识是否支持模式匹配，默认为false。
-     */
-    boolean isPattern() default false;
+    boolean asPort() default false;
 
     /**
      * 是否为URL。
      *
      * @return 返回一个布尔值，标识是否是URL，默认为false。
      */
-    boolean isURL() default false;
-
-    /**
-     * 字段值不为负数。如果没有指定此注解，则默认值为空字符串。
-     *
-     * @return 返回一个字符串，表示校验失败时的错误信息。
-     */
-    String noGreaterThanMinusOne() default "";
-
-    /**
-     * 字段值不能大于给定的值。如果没有指定此注解，则默认值为空字符串。
-     *
-     * @return 返回一个字符串，表示校验失败时的错误信息。
-     */
-    String noGreaterThan() default "";
-
-    /**
-     * 字段值不能大于等于给定的日期。如果没有指定此注解，则默认值为空字符串。
-     *
-     * @return 返回一个字符串，表示校验失败时的错误信息。
-     */
-    String noGreaterOrEqualThanDate() default "";
-
-    /**
-     * 字段值不能小于给定的值。如果没有指定此注解，则默认值为空字符串。
-     *
-     * @return 返回一个字符串，表示校验失败时的错误信息。
-     */
-    String noLessThan() default "";
-
-    /**
-     * 字段值不能小于等于给定的日期。如果没有指定此注解，则默认值为空字符串。
-     *
-     * @return 返回一个字符串，表示校验失败时的错误信息。
-     */
-    String noLessOrEqualThanDate() default "";
-
-    /**
-     * 字段值不能小于当前时间。默认为不进行此校验（false）。如果设置为true，则进行校验。
-     *
-     * @return 返回一个布尔值，表示是否进行字段值小于当前时间的校验。
-     */
-    boolean noLessThanCurrentTime() default false;
+    boolean asURL() default false;
 
     /**
      * 字段值不能包含不支持的字符。如果没有指定此注解，则默认值为空字符串。
      *
      * @return 返回一个字符串，表示校验失败时的错误信息。
      */
-    String notSupportedCharacters() default "";
+    String unsupportedCharacters() default "";
 
     /**
      * 字段值不能为数组中任意一个不支持的字符串。如果没有指定此注解，则默认为空数组。
      *
      * @return 返回一个字符串数组，包含不支持的字符串。
      */
-    String[] notSupportedStrings() default {};
-
-    /**
-     * 检查是否不支持中文字符。
-     * 默认值为false，表示支持中文字符。
-     *
-     * @return 返回true表示不支持中文字符，false则表示支持。
-     */
-    boolean noSupportZHChar() default false;
-
-    /**
-     * 字段值不能与某个值相同。
-     * 默认为空字符串，表示无特定限制。
-     *
-     * @return 返回一个字符串，指定不能与之相同的值。
-     */
-    String cannotBeTheSameAs() default "";
-
-    /**
-     * 是否跳过安全检查。
-     * 默认为false，表示不跳过。
-     *
-     * @return 返回true表示跳过安全检查，false则进行安全检查。
-     */
-    boolean skipSafeCheck() default false;
-
-    /**
-     * 指定跳过字符检查的条件。
-     * 默认为空字符串，表示无特定条件。
-     *
-     * @return 返回一个字符串，指定跳过字符检查的条件。
-     */
-    String skipCharacterCheck() default "";
-
-    /**
-     * 是否开启XSS Level 1检查。
-     * 默认为false，表示不开启。
-     *
-     * @return 返回true表示开启XSS Level 1检查，false则表示不开启。
-     */
-    boolean checkXssLevel1() default false;
-
-    /**
-     * 是否启用客户端加密。
-     * 默认为false，表示不启用。
-     *
-     * @return 返回true表示启用客户端加密，false则表示不启用。
-     */
-    boolean clientEncrypt() default false;
+    String[] unsupportedStrings() default {};
 
     /**
      * 指定生效条件。
@@ -231,7 +127,7 @@ public @interface ModelField {
      *
      * @return 返回true表示在创建时禁用，false则表示不禁用。
      */
-    boolean disableOnCreate() default false;
+    boolean cannotAdd() default false;
 
     /**
      * 编辑时是否禁用。
@@ -239,15 +135,7 @@ public @interface ModelField {
      *
      * @return 返回true表示在编辑时禁用，false则表示不禁用。
      */
-    boolean disableOnEdit() default false;
-
-    /**
-     * 编辑是否显示。
-     * 默认为true，表示编辑时显示。
-     *
-     * @return 返回true表示编辑时显示，false则表示不可见。
-     */
-    boolean showToEdit() default true;
+    boolean cannotUpdate() default false;
 
     /**
      * 是否显示在列表中。
@@ -255,20 +143,7 @@ public @interface ModelField {
      *
      * @return 返回true表示在列表中显示，false则表示不显示。
      */
-    boolean showToList() default false;
-
-    /**
-     * linkModel方法用于标注需要跳转到其他页面的链接字段。
-     * 该字段的格式为 linkModel="model.action.field"，其中model和action定义了跳转逻辑，field为链接携带的参数key。
-     * 该方法默认返回一个空字符串，表示没有链接字段需要标注。
-     */
-    String linkModel() default "";
-
-    /**
-     * valueFrom方法用于指定字段的值来源。
-     * 该方法默认返回一个空字符串，表示字段的值不需要从其他地方获取。
-     */
-    String valueFrom() default "";
+    boolean shownOnList() default false;
 
     /**
      * isMonitorField方法用于标记字段是否需要被监控。

@@ -2,10 +2,9 @@ package qingzhou.app.master.service;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
+import qingzhou.app.AppInfo;
 import qingzhou.app.master.ConsoleDataStore;
 import qingzhou.app.master.MasterApp;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.config.Config;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,25 +23,25 @@ public class Node extends ModelBase implements Createable {
     }
 
     @ModelField(
-            required = true, showToList = true,
+            required = true, shownOnList = true,
             nameI18n = {"名称", "en:Name"},
             infoI18n = {"唯一标识。", "en:Unique identifier."})
     public String id;
 
-    @ModelField(required = true, showToList = true,
-            isIpOrHostname = true, disableOnEdit = true,
+    @ModelField(required = true, shownOnList = true,
+            asHostname = true, cannotUpdate = true,
             nameI18n = {"IP", "en:IP"},
             infoI18n = {"连接节点的 IP 地址。", "en:The IP address of the connected node."})
     public String ip;
 
-    @ModelField(showToList = true, type = FieldType.number,
+    @ModelField(shownOnList = true, type = FieldType.number,
             required = true,
-            isPort = true,
+            asPort = true,
             nameI18n = {"管理端口", "en:Management Port"},
             infoI18n = {"节点的管理端口。", "en:The management port of the node."})
     public int port = 7000;
 
-    @ModelField(showToList = true, disableOnCreate = true, disableOnEdit = true,
+    @ModelField(shownOnList = true, cannotAdd = true, cannotUpdate = true,
             type = FieldType.bool,
             nameI18n = {"运行中", "en:Running"}, infoI18n = {"了解该组件的运行状态。", "en:Know the operational status of the component."})
     public boolean running;
@@ -59,8 +58,8 @@ public class Node extends ModelBase implements Createable {
     }
 
     @ModelAction(name = AppInfo.SYS_ACTION_MANAGE_PAGE,
-            icon = "location-arrow", forwardToPage = "sys/" + AppInfo.SYS_ACTION_MANAGE_PAGE,
-            nameI18n = {"管理", "en:Manage"}, showToList = true, orderOnList = -1,
+            icon = "location-arrow", forwardTo = "sys/" + AppInfo.SYS_ACTION_MANAGE_PAGE,
+            nameI18n = {"管理", "en:Manage"}, shownOnList = 1,
             infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {
     }

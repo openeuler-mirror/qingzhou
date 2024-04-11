@@ -1,6 +1,6 @@
 package qingzhou.app.common.monitor;
 
-import qingzhou.framework.util.StringUtil;
+import qingzhou.engine.util.StringUtil;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;

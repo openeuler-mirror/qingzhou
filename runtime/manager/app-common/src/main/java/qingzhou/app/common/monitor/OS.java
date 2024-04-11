@@ -5,7 +5,7 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Monitorable;
-import qingzhou.framework.util.StringUtil;
+import qingzhou.engine.util.StringUtil;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;

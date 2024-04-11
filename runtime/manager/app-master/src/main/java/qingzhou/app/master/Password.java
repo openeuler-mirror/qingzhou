@@ -59,7 +59,7 @@ public class Password extends ModelBase implements Editable {
     }
 
     @ModelAction(name = Editable.ACTION_NAME_EDIT,
-            icon = "edit", forwardToPage = "form",
+            icon = "edit", forwardTo = "form",
             nameI18n = {"编辑", "en:Edit"},
             infoI18n = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {
@@ -67,7 +67,7 @@ public class Password extends ModelBase implements Editable {
     }
 
     @ModelAction(name = Showable.ACTION_NAME_SHOW,
-            icon = "info-sign", forwardToPage = "show",
+            icon = "info-sign", forwardTo = "show",
             nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
     public void show(Request request, Response response) {

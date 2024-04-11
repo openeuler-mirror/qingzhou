@@ -36,14 +36,8 @@ public interface ModelFieldData {
     // 判断字段值是否为IP地址或主机名
     boolean isIpOrHostname();
 
-    // 判断字段值是否为通配符IP地址
-    boolean isWildcardIp();
-
     // 判断字段值是否为端口号
     boolean isPort();
-
-    // 判断字段值是否为模式匹配
-    boolean isPattern();
 
     // 判断字段值是否为URL
     boolean isURL();

@@ -5,8 +5,8 @@ import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.util.HexUtil;
 import qingzhou.console.view.View;
-import qingzhou.framework.console.RequestImpl;
-import qingzhou.framework.console.ResponseImpl;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;

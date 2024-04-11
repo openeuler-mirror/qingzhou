@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>runtime</artifactId>
-        <version>0.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>manager</artifactId>
@@ -18,14 +18,18 @@
         <module>app-common</module>
         <module>app-master</module>
         <module>app-nodeagent</module>
-        <module>qingzhou-remote</module>
     </modules>
 
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
-            <version>0.1.0</version>
+            <artifactId>qingzhou-logger</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-api</artifactId>
+            <version>x</version>
         </dependency>
     </dependencies>
 </project>

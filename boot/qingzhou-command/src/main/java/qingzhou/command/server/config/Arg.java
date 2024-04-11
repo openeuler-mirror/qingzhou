@@ -1,67 +1,25 @@
 package qingzhou.command.server.config;
 
 
-import qingzhou.command.CommandUtil;
-
 public class Arg {
+    private boolean enabled = true;
     private String name;
-    private boolean onlyForLinux = false;
-    private String supportedJRE;
-    private String javaVersion;
+    private String desc;
+    private boolean forLinux = false;
+
+    public Arg() {
+    }
 
     public Arg(String name) {
         this.name = name;
     }
 
-    public Arg(String name, boolean onlyForLinux, String supportedJRE) {
-        this.name = name;
-        this.onlyForLinux = onlyForLinux;
-        this.supportedJRE = supportedJRE;
+    public boolean isEnabled() {
+        return enabled;
     }
 
-    public void prepare(String javaVersion) {
-        this.javaVersion = javaVersion;
-    }
-
-    public boolean available() {
-        if (isOnlyForLinux()) {
-            if (CommandUtil.isWindows()) {
-                return false;
-            }
-        }
-
-        if (CommandUtil.notBlank(supportedJRE)) {
-            int jreVer;
-            boolean minus = supportedJRE.endsWith("-");
-            boolean plus = supportedJRE.endsWith("+");
-            if (minus || plus) {
-                jreVer = Integer.parseInt(supportedJRE.substring(0, supportedJRE.length() - 1));
-            } else {
-                jreVer = Integer.parseInt(supportedJRE);
-            }
-
-            String ver = System.getProperty("java.specification.version");
-            if (this.javaVersion != null) {
-                ver = this.javaVersion;
-            }
-            if (ver != null) {
-                int currentJreVer = CommandUtil.parseJavaVersion(ver);
-                if (minus) {
-                    if (currentJreVer > jreVer) {
-                        return false;
-                    }
-                }
-                if (plus) {
-                    if (currentJreVer < jreVer) {
-                        return false;
-                    }
-                }
-                if (!minus && !plus) {
-                    return currentJreVer == jreVer;
-                }
-            }
-        }
-        return true;
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public String getName() {
@@ -72,7 +30,19 @@ public class Arg {
         this.name = name;
     }
 
-    public boolean isOnlyForLinux() {
-        return onlyForLinux;
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public boolean isForLinux() {
+        return forLinux;
+    }
+
+    public void setForLinux(boolean forLinux) {
+        this.forLinux = forLinux;
     }
 }

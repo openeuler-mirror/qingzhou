@@ -13,9 +13,9 @@ import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.util.IPUtil;
-import qingzhou.framework.util.StringUtil;
-import qingzhou.framework.util.pattern.Filter;
+import qingzhou.engine.util.IPUtil;
+import qingzhou.engine.util.StringUtil;
+import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -60,7 +60,7 @@ public class LoginManager implements Filter<HttpServletContext> {
         return userLockOutRealms.computeIfAbsent(clientIp, s -> new LockOutRealm());
     }
 
-    public static String getUserPassword(String user) {
+    public static String getUserPassword(String user) throws Exception {
         Map<String, String> userP = ServerXml.get().user(user);
         if (userP == null) {
             return null;

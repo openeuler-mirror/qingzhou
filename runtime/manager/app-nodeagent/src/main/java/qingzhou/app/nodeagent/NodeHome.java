@@ -2,8 +2,8 @@ package qingzhou.app.nodeagent;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.util.IPUtil;
+import qingzhou.app.AppInfo;
+import qingzhou.engine.util.IPUtil;
 
 @Model(name = AppInfo.SYS_MODEL_HOME, icon = "home", menuOrder = -1,
         entryAction = AppInfo.SYS_ACTION_ENTRY_HOME,
@@ -22,7 +22,7 @@ public class NodeHome extends ModelBase implements Showable {
     public String localIps;
 
     @ModelAction(name = ACTION_NAME_SHOW,
-            icon = "info-sign", forwardToPage = "show",
+            icon = "info-sign", forwardTo = "show",
             nameI18n = {"首页", "en:Home"},
             infoI18n = {"展示节点的首页信息。", "en:Displays the homepage information of the node."})
     public void show(Request request, Response response) throws Exception {

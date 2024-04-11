@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>manager</artifactId>
-        <version>0.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>console-war</artifactId>
@@ -27,7 +27,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="${project.basedir}/../../README.md"
+                                <copy file="${project.basedir}/../../../README.md"
                                       tofile="${project.build.directory}/${project.build.finalName}/static/readme/README.md"
                                       overwrite="true"/>
                                 <!--<copy todir="${project.build.directory}/${project.build.finalName}/static/readme/"-->
@@ -46,13 +46,19 @@
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-console</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-app</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-json</artifactId>
+            <version>x</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

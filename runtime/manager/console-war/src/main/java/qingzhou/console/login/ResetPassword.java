@@ -1,6 +1,7 @@
 package qingzhou.console.login;
 
 import qingzhou.api.Lang;
+import qingzhou.app.impl.Validator;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
@@ -10,9 +11,8 @@ import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.framework.Constants;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.util.pattern.Filter;
+import qingzhou.app.AppInfo;
+import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -100,7 +100,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
         if (Boolean.parseBoolean(userP.get("enablePasswordAge"))) {
             String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
             if (passwordLastModifiedTime != null) {
-                long time = new SimpleDateFormat(Constants.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
+                long time = new SimpleDateFormat(Validator.DATE_FORMAT).parse(passwordLastModifiedTime).getTime();
                 String maxAge = userP.get("passwordMaxAge");
                 if (maxAge != null && !maxAge.equals("0")) {
                     long max = time + Integer.parseInt(maxAge) * ConsoleConstants.DAY_MILLIS_VALUE;

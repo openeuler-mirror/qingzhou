@@ -1,12 +1,10 @@
 package qingzhou.engine.impl;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 
 /**
@@ -43,7 +41,7 @@ import java.util.*;
  * @author J&ouml;rg Schaible
  * @since 1.0.3
  */
-public class CompositeClassLoader extends URLClassLoader {
+class CompositeClassLoader extends ClassLoader {
     static {
         // see http://www.cs.duke.edu/csed/java/jdk1.7/technotes/guides/lang/cl-mt.html
         registerAsParallelCapable();
@@ -52,14 +50,14 @@ public class CompositeClassLoader extends URLClassLoader {
     private final ReferenceQueue<ClassLoader> queue = new ReferenceQueue<>();
     private final List<WeakReference<ClassLoader>> classLoaders = new ArrayList<>();
 
-    public CompositeClassLoader(ClassLoader parent) {
-        super(new URL[0], parent);
+    CompositeClassLoader(ClassLoader parent) {
+        super(parent);
     }
 
     /**
      * Add a loader to the n
      */
-    public synchronized void add(final ClassLoader classLoader) {
+    synchronized void add(final ClassLoader classLoader) {
         cleanup();
         if (classLoader != null) {
             addInternal(classLoader);
@@ -128,30 +126,6 @@ public class CompositeClassLoader extends URLClassLoader {
         Reference<? extends ClassLoader> ref;
         while ((ref = queue.poll()) != null) {
             classLoaders.remove(ref);
-        }
-    }
-
-    @Override
-    public URL[] getURLs() { // for com.tongweb.server.loader.WebappLoader.buildClassPath
-        List<URL> result = new ArrayList<>();
-        for (WeakReference<ClassLoader> classLoader : classLoaders) {
-            ClassLoader loader = classLoader.get();
-            if (loader instanceof URLClassLoader) {
-                result.addAll(Arrays.asList(((URLClassLoader) loader).getURLs()));
-            }
-        }
-
-        return result.toArray(new URL[0]);
-    }
-
-    @Override
-    public void close() throws IOException {
-        super.close();
-        for (WeakReference<ClassLoader> classLoader : classLoaders) {
-            ClassLoader loader = classLoader.get();
-            if (loader instanceof Closeable) {
-                ((Closeable) loader).close();
-            }
         }
     }
 }

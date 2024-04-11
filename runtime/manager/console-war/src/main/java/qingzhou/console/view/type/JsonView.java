@@ -2,7 +2,7 @@ package qingzhou.console.view.type;
 
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
-import qingzhou.framework.console.ResponseImpl;
+import qingzhou.console.ResponseImpl;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;

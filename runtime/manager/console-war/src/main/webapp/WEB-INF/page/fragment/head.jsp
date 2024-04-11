@@ -4,8 +4,6 @@
 <%@ page import="qingzhou.api.*" %>
 <%@ page import="qingzhou.api.type.*" %>
 <%@ page import="qingzhou.api.metadata.*" %>
-<%@ page import="qingzhou.framework.*" %>
-<%@ page import="qingzhou.framework.app.*" %>
 <%@ page import="qingzhou.console.*" %>
 <%@ page import="qingzhou.console.controller.*" %>
 <%@ page import="qingzhou.console.controller.rest.*" %>
@@ -14,9 +12,9 @@
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.page.*" %>
-<%@ page import="qingzhou.framework.console.RequestImpl" %>
-<%@ page import="qingzhou.framework.console.ResponseImpl" %>
-<%@ page import="qingzhou.framework.util.StringUtil" %>
+<%@ page import="qingzhou.console.RequestImpl" %>
+<%@ page import="qingzhou.console.ResponseImpl" %>
+<%@ page import="qingzhou.engine.util.StringUtil" %>
 
 
 <%

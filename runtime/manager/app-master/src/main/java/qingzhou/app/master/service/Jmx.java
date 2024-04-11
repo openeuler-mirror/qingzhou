@@ -26,7 +26,7 @@ public class Jmx extends ModelBase implements Editable {
 
     @ModelField(
             effectiveWhen = "enabled=true",
-            isIpOrHostname = true,
+            asHostname = true,
             nameI18n = {"服务 IP", "en:Service IP"},
             infoI18n = {"指定 JMX 监听服务绑定的 IP 地址。此配置将覆盖默认实例中“安全策略” > “序列化安全”下的 RMI 服务主机名。", "en:This configuration will override the RMI Server Hostname under Security Policy > Serialization Safety in the default instance."})
     public String ip = "127.0.0.1";
@@ -36,7 +36,7 @@ public class Jmx extends ModelBase implements Editable {
             type = FieldType.number,
             nameI18n = {"端口", "en:Port"},
             infoI18n = {"指定 JMX 监听服务绑定的端口。", "en:Specifies the port to which the JMX listening service is bound."},
-            isPort = true)
+            asPort = true)
     public Integer port = 7200;
 
     @ModelAction(name = Editable.ACTION_NAME_UPDATE,
@@ -74,7 +74,7 @@ public class Jmx extends ModelBase implements Editable {
     }
 
     @ModelAction(name = Editable.ACTION_NAME_EDIT,
-            icon = "edit", forwardToPage = "form",
+            icon = "edit", forwardTo = "form",
             nameI18n = {"编辑", "en:Edit"},
             infoI18n = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {

@@ -1,9 +1,9 @@
 package qingzhou.app.nodeagent;
 
 import qingzhou.api.*;
-import qingzhou.framework.app.AppInfo;
-import qingzhou.framework.app.AppManager;
-import qingzhou.framework.util.FileUtil;
+import qingzhou.app.AppInfo;
+import qingzhou.app.AppManager;
+import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 

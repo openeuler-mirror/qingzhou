@@ -3,7 +3,7 @@ package qingzhou.app.common.monitor;
 import qingzhou.api.*;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
-import qingzhou.framework.app.ReadOnlyDataStore;
+import qingzhou.app.ReadOnlyDataStore;
 
 import java.util.List;
 import java.util.Map;
@@ -14,35 +14,35 @@ import java.util.Map;
                 "en:To summarize the deadlocked threads, you can view the thread stacks of the deadlock waiting object monitor or synchronizer."})
 public class DeadlockedThread extends ModelBase implements Listable {
     @ModelField(nameI18n = {"线程ID", "en:Thread Id"},
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"死锁线程的ID。", "en:The ID of the deadlocked thread."})
     private String name;
 
     @ModelField(nameI18n = {"线程名", "en:Thread Name"},
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"死锁线程的名称。", "en:The name of the deadlocked thread."})
     private String threadName;
 
     @ModelField(nameI18n = {"线程状态", "en:Thread State"},
             type = FieldType.select,
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"死锁线程的当前状态。", "en:The current state of the deadlocked thread."})
     private String threadState;
 
     @ModelField(nameI18n = {"等待的锁", "en:Lock Name"},
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"该死锁线程正在等待的锁名称。",
                     "en:An object for which the thread is blocked waiting."})
     private String lockName;
 
     @ModelField(nameI18n = {"锁占有线程ID", "en:Lock Owner Id"},
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"该死锁线程等待的锁正在被其它线程占有，此处给出占有线程的ID。-1 表示该死锁线程没有在等待锁，或锁没有被其它线程占有。",
                     "en:The ID of the thread which owns the object for which the thread associated with this thread is blocked waiting. This will be -1 if this thread is not blocked waiting for any object or if the object is not owned by any thread."})
     private long lockOwnerId;
 
     @ModelField(nameI18n = {"锁占有线程名", "en:Lock Owner Name"},
-            showToList = true,
+            shownOnList = true,
             infoI18n = {"该死锁线程等待的锁正在被其它线程占有，此处给出占有线程的名称。空表示该死锁线程没有在等待锁，或锁没有被其它线程占有。",
                     "en:The name of the thread which owns the object for which the thread associated with this thread is blocked waiting. This will be empty if this thread is not blocked waiting for any object or if the object is not owned by any thread."})
     private String lockOwnerName;

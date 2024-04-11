@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>qingzhou-project</artifactId>
-        <version>0.1.0</version>
+        <version>x</version>
     </parent>
 
     <artifactId>package</artifactId>
@@ -16,6 +16,7 @@
         <finalName>qingzhou</finalName>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
@@ -41,90 +42,96 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-launcher</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-engine</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-framework</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-logger</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
             <classifier>jar-with-dependencies</classifier>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-ssh</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
             <classifier>jar-with-dependencies</classifier>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>console-war</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
             <type>war</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-console</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-api</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-serializer</artifactId>
-            <version>0.1.0</version>
+            <artifactId>qingzhou-json</artifactId>
+            <version>x</version>
+            <classifier>jar-with-dependencies</classifier>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-config</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-heartbeat</artifactId>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-crypto</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-remote</artifactId>
-            <version>0.1.0</version>
+            <artifactId>qingzhou-http</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-agent</artifactId>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-app</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>app-master</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>app-nodeagent</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>app-common</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-command</artifactId>
-            <version>0.1.0</version>
+            <version>x</version>
         </dependency>
     </dependencies>
 </project>

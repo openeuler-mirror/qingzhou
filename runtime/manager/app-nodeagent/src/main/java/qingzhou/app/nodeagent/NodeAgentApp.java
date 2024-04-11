@@ -2,8 +2,8 @@ package qingzhou.app.nodeagent;
 
 import qingzhou.api.App;
 import qingzhou.api.AppContext;
+import qingzhou.app.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
-import qingzhou.framework.app.QingzhouSystemApp;
 
 @App
 public class NodeAgentApp extends QingzhouSystemApp {
