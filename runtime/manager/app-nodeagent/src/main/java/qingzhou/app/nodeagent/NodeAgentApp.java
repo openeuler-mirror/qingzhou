@@ -2,7 +2,7 @@ package qingzhou.app.nodeagent;
 
 import qingzhou.api.App;
 import qingzhou.api.AppContext;
-import qingzhou.app.QingzhouSystemApp;
+import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 
 @App

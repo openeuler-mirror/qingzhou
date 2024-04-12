@@ -2,11 +2,11 @@ package qingzhou.app.nodeagent;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.app.AppInfo;
+import qingzhou.deployer.App;
 import qingzhou.engine.util.IPUtil;
 
-@Model(name = AppInfo.SYS_MODEL_HOME, icon = "home", menuOrder = -1,
-        entryAction = AppInfo.SYS_ACTION_ENTRY_HOME,
+@Model(name = App.SYS_MODEL_HOME, icon = "home", menuOrder = -1,
+        entryAction = App.SYS_ACTION_ENTRY_HOME,
         nameI18n = {"节点", "en:Node"},
         infoI18n = {"展示当前节点的说明信息。",
                 "en:Displays the description of the current node."})

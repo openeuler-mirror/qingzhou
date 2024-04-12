@@ -1,8 +1,8 @@
-qingzhou-console,qingzhou-agent,qingzhou-heartbeat
-qingzhou-app
-qingzhou-http
+qingzhou-console
+qingzhou-agent,qingzhou-heartbeat
+qingzhou-deployer
 qingzhou-registry
-qingzhou-crypto,qingzhou-ssh
+qingzhou-crypto,qingzhou-http,qingzhou-ssh
 qingzhou-logger
 qingzhou-config
 qingzhou-json

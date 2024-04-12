@@ -1,7 +1,7 @@
 package qingzhou.console.login;
 
 import qingzhou.api.Lang;
-import qingzhou.app.impl.Validator;
+import qingzhou.deployer.impl.Validator;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
@@ -11,7 +11,7 @@ import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.app.AppInfo;
+import qingzhou.deployer.App;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -70,7 +70,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                     RESTController.REST_PREFIX +
                     viewName +
                     "/" + ConsoleConstants.MODEL_NAME_node +
-                    "/" + AppInfo.SYS_APP_MASTER +
+                    "/" + App.SYS_APP_MASTER +
                     "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +

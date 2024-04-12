@@ -7,8 +7,8 @@ import org.apache.catalina.core.StandardContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.metadata.AppMetadata;
-import qingzhou.app.AppInfo;
-import qingzhou.app.AppManager;
+import qingzhou.deployer.App;
+import qingzhou.deployer.Deployer;
 import qingzhou.console.AppMetadataManager;
 import qingzhou.console.i18n.SetI18n;
 import qingzhou.console.impl.Controller;
@@ -46,11 +46,11 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return Controller.moduleContext.getService(Config.class);
     }
 
-    public static AppManager getAppManager() {
-        return Controller.moduleContext.getService(AppManager.class);
+    public static Deployer getAppManager() {
+        return Controller.moduleContext.getService(Deployer.class);
     }
 
-    public static AppInfo getLocalApp(String appName) {
+    public static App getLocalApp(String appName) {
         return getAppManager().getApp(appName);
     }
 

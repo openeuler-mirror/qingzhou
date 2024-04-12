@@ -6,8 +6,8 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
-import qingzhou.app.AppInfo;
-import qingzhou.app.impl.Validator;
+import qingzhou.deployer.App;
+import qingzhou.deployer.impl.Validator;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
@@ -60,11 +60,11 @@ public class PageBackendService {
 
     public static String getAppName(Request request) {
         if (request == null) {
-            return AppInfo.SYS_APP_MASTER;
+            return App.SYS_APP_MASTER;
         }
 
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(((RequestImpl) request).getManageType())) {
-            return AppInfo.SYS_APP_NODE_AGENT;
+            return App.SYS_APP_NODE_AGENT;
         }
 
         return request.getAppName();
@@ -72,7 +72,7 @@ public class PageBackendService {
 
     public static String getAppName(String manageType, String appName) {
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
-            return AppInfo.SYS_APP_NODE_AGENT;
+            return App.SYS_APP_NODE_AGENT;
         }
 
         return appName;

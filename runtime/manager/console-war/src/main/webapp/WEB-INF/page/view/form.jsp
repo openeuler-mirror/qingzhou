@@ -1,4 +1,4 @@
-<%@ page import="qingzhou.app.impl.Validator" %>
+<%@ page import="qingzhou.deployer.impl.Validator" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 

@@ -5,7 +5,7 @@ public class Remote {
     private String name;
     private String host;
     private int port;
-    private Master[] master;
+    private Master master;
 
     public boolean isEnabled() {
         return enabled;
@@ -39,11 +39,11 @@ public class Remote {
         this.port = port;
     }
 
-    public Master[] getMaster() {
+    public Master getMaster() {
         return master;
     }
 
-    public void setMaster(Master[] master) {
+    public void setMaster(Master master) {
         this.master = master;
     }
 }

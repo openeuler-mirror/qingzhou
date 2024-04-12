@@ -16,7 +16,7 @@
         <module>qingzhou-engine</module>
         <module>qingzhou-heartbeat</module>
         <module>qingzhou-registry</module>
-        <module>qingzhou-app</module>
+        <module>qingzhou-deployer</module>
         <module>qingzhou-config</module>
         <module>component</module>
         <module>manager</module>

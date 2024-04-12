@@ -4,7 +4,7 @@ package qingzhou.app.common.monitor;
 import qingzhou.api.*;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
-import qingzhou.app.ReadOnlyDataStore;
+import qingzhou.deployer.ReadOnlyDataStore;
 
 import java.util.List;
 import java.util.Map;

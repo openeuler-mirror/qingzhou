@@ -1,43 +1,35 @@
 package qingzhou.registry.impl;
 
-import qingzhou.registry.AppInfo;
+import qingzhou.json.Json;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 public class RegistryImpl implements Registry {
-    private final Map<String, InstanceInfo> instanceInfoMap = new HashMap<>();
-    private final Map<String, AppInfo> appInfoMap = new HashMap<>();
+    private final Json json;
+    private final Map<String, InstanceInfo> instanceInfos = new HashMap<>();
 
-    @Override
-    public void register(InstanceInfo instanceInfo) {
-        instanceInfoMap.put(instanceInfo.id, instanceInfo);
+    public RegistryImpl(Json json) {
+        this.json = json;
     }
 
     @Override
-    public void register(AppInfo appInfo) {
-        appInfoMap.put(appInfo.name, appInfo);
+    public void register(String registrationData) {
+        InstanceInfo instanceInfo = json.fromJson(registrationData, InstanceInfo.class);
+        instanceInfos.put(instanceInfo.id, instanceInfo);
     }
 
     @Override
-    public String[] getAllInstanceIds() {
-        return instanceInfoMap.keySet().toArray(new String[0]);
+    public Collection<String> getAllInstanceId() {
+        return instanceInfos.keySet();
     }
 
     @Override
     public InstanceInfo getInstanceInfo(String id) {
-        return instanceInfoMap.get(id);
-    }
-
-    @Override
-    public String[] getAllAppIds() {
-        return appInfoMap.keySet().toArray(new String[0]);
-    }
-
-    @Override
-    public AppInfo getAppInfo(String id) {
-        return appInfoMap.get(id);
+        InstanceInfo instanceInfo = instanceInfos.get(id);
+        return json.fromJson(json.toJson(instanceInfo), InstanceInfo.class);// 复制一份，防止元数据被篡改
     }
 }

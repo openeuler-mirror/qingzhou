@@ -1,15 +1,11 @@
 package qingzhou.registry;
 
+import java.util.Collection;
+
 public interface Registry {
-    void register(InstanceInfo instanceInfo);
+    void register(String registrationData);
 
-    void register(AppInfo instanceInfo);
-
-    String[] getAllInstanceIds();
+    Collection<String> getAllInstanceId();
 
     InstanceInfo getInstanceInfo(String id);
-
-    String[] getAllAppIds();
-
-    AppInfo getAppInfo(String id);
 }

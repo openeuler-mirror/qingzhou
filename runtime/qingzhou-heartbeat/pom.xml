@@ -37,6 +37,11 @@
             <artifactId>qingzhou-registry</artifactId>
             <version>x</version>
         </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-http</artifactId>
+            <version>x</version>
+        </dependency>
     </dependencies>
 
 </project>

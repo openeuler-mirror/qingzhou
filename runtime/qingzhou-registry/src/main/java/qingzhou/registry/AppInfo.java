@@ -1,15 +1,22 @@
 package qingzhou.registry;
 
-import java.util.Collection;
-
 public class AppInfo {
-    public final String name;
-    public final String instanceId;
-    public final Collection<ModelInfo> modelInfos;
+    public String name;
+    public ModelInfo[] modelInfos;
 
-    public AppInfo(String name, String instanceId, Collection<ModelInfo> modelInfos) {
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
         this.name = name;
-        this.instanceId = instanceId;
+    }
+
+    public ModelInfo[] getModelInfos() {
+        return modelInfos;
+    }
+
+    public void setModelInfos(ModelInfo[] modelInfos) {
         this.modelInfos = modelInfos;
     }
 }

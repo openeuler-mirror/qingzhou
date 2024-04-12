@@ -2,7 +2,7 @@ package qingzhou.app.master.system;
 
 import qingzhou.api.*;
 import qingzhou.api.type.*;
-import qingzhou.app.AppInfo;
+import qingzhou.deployer.App;
 import qingzhou.app.master.MasterApp;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
@@ -87,7 +87,7 @@ public class User extends ModelBase implements Createable {
             shownOnList = true,
             nameI18n = {"可用节点", "en:Available Nodes"},
             infoI18n = {"选择用户可使用的节点。", "en:Select the nodes that are available to the user."})
-    public String nodes = AppInfo.SYS_NODE_LOCAL;
+    public String nodes = App.SYS_NODE_LOCAL;
 
     @ModelField(
             group = "security",

@@ -3,14 +3,14 @@ package qingzhou.app.master;
 import qingzhou.api.*;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
-import qingzhou.app.AppInfo;
-import qingzhou.app.QingzhouSystemApp;
+import qingzhou.deployer.App;
+import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@App
+@qingzhou.api.App
 public class MasterApp extends QingzhouSystemApp {
     private static ModuleContext FC;
 
@@ -53,7 +53,7 @@ public class MasterApp extends QingzhouSystemApp {
 
         @Override
         public String doFilter(Request request, Response response, AppContext appContext) {
-            if (AppInfo.SYS_MODEL_NODE.equals(request.getModelName()) && AppInfo.SYS_NODE_LOCAL.equals(request.getId())) {
+            if (App.SYS_MODEL_NODE.equals(request.getModelName()) && App.SYS_NODE_LOCAL.equals(request.getId())) {
                 if (Editable.ACTION_NAME_UPDATE.equals(request.getActionName())
                         || Deletable.ACTION_NAME_DELETE.equals(request.getActionName())) {
                     return appContext.getAppMetadata().getI18n(request.getI18nLang(), "validator.master.system");

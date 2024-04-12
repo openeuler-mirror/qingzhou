@@ -1,8 +1,5 @@
 package qingzhou.console;
 
-import qingzhou.api.Lang;
-import qingzhou.api.Request;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Enumeration;

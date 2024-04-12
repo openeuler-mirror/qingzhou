@@ -68,7 +68,7 @@
             <includes>
                 <include>${project.groupId}:qingzhou-console</include>
                 <include>${project.groupId}:qingzhou-agent</include>
-                <include>${project.groupId}:qingzhou-app</include>
+                <include>${project.groupId}:qingzhou-deployer</include>
                 <include>${project.groupId}:qingzhou-config</include>
                 <include>${project.groupId}:qingzhou-heartbeat</include>
                 <include>${project.groupId}:qingzhou-logger</include>
@@ -108,7 +108,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-app/master</outputDirectory>
+            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/master</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -119,7 +119,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-app/nodeagent</outputDirectory>
+            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/nodeagent</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -130,7 +130,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-app/common</outputDirectory>
+            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/common</outputDirectory>
         </dependencySet>
 
     </dependencySets>

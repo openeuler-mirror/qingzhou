@@ -1,19 +1,58 @@
 package qingzhou.registry;
 
 public class ModelActionInfo {
-    public final String name;
-    public final String[] nameI18n;
-    public final String[] infoI18n;
-    public final String effectiveWhen;
-    public final boolean supportBatch;
-    public final ActionPageInfo actionPageInfo;
+    public String name;
+    public String[] nameI18n;
+    public String[] infoI18n;
+    public String effectiveWhen;
+    public boolean supportBatch;
+    public ActionPageInfo actionPageInfo;
 
-    public ModelActionInfo(String name, String[] nameI18n, String[] infoI18n, String effectiveWhen, boolean supportBatch, ActionPageInfo actionPageInfo) {
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
         this.name = name;
+    }
+
+    public String[] getNameI18n() {
+        return nameI18n;
+    }
+
+    public void setNameI18n(String[] nameI18n) {
         this.nameI18n = nameI18n;
+    }
+
+    public String[] getInfoI18n() {
+        return infoI18n;
+    }
+
+    public void setInfoI18n(String[] infoI18n) {
         this.infoI18n = infoI18n;
+    }
+
+    public String getEffectiveWhen() {
+        return effectiveWhen;
+    }
+
+    public void setEffectiveWhen(String effectiveWhen) {
         this.effectiveWhen = effectiveWhen;
+    }
+
+    public boolean isSupportBatch() {
+        return supportBatch;
+    }
+
+    public void setSupportBatch(boolean supportBatch) {
         this.supportBatch = supportBatch;
+    }
+
+    public ActionPageInfo getActionPageInfo() {
+        return actionPageInfo;
+    }
+
+    public void setActionPageInfo(ActionPageInfo actionPageInfo) {
         this.actionPageInfo = actionPageInfo;
     }
 }

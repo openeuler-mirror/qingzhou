@@ -7,7 +7,7 @@ import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
-import qingzhou.app.AppInfo;
+import qingzhou.deployer.App;
 import qingzhou.console.RequestImpl;
 import qingzhou.engine.util.StringUtil;
 
@@ -39,16 +39,16 @@ public class HtmlView implements View {
 
         if (isManageAction(request)) {
             String manageAppName = null;
-            if (AppInfo.SYS_MODEL_APP.equals(modelName)) {
+            if (App.SYS_MODEL_APP.equals(modelName)) {
                 request.setManageType(ConsoleConstants.MANAGE_TYPE_APP);
                 manageAppName = request.getId();
-            } else if (AppInfo.SYS_MODEL_NODE.equals(modelName)) {
+            } else if (App.SYS_MODEL_NODE.equals(modelName)) {
                 request.setManageType(ConsoleConstants.MANAGE_TYPE_NODE);
-                manageAppName = AppInfo.SYS_NODE_LOCAL;
+                manageAppName = App.SYS_NODE_LOCAL;
             }
             request.setAppName(manageAppName);
-            request.setModelName(AppInfo.SYS_MODEL_HOME);
-            request.setActionName(AppInfo.SYS_ACTION_ENTRY_HOME);
+            request.setModelName(App.SYS_MODEL_HOME);
+            request.setActionName(App.SYS_ACTION_ENTRY_HOME);
             SystemController.invokeLocalApp(request, response);// todo：到 html render 这里已经执行过一次 invoke app 了，这里是重复执行可以优化?
         }
 
@@ -57,12 +57,12 @@ public class HtmlView implements View {
     }
 
     private boolean isManageAction(Request request) {
-        if (!AppInfo.SYS_ACTION_MANAGE_PAGE.equals(request.getActionName())) return false;
+        if (!App.SYS_ACTION_MANAGE_PAGE.equals(request.getActionName())) return false;
 
-        if (!AppInfo.SYS_APP_MASTER.equals(request.getAppName())) return false;
+        if (!App.SYS_APP_MASTER.equals(request.getAppName())) return false;
 
-        return AppInfo.SYS_MODEL_APP.equals(request.getModelName())
-                || AppInfo.SYS_MODEL_NODE.equals(request.getModelName());
+        return App.SYS_MODEL_APP.equals(request.getModelName())
+                || App.SYS_MODEL_NODE.equals(request.getModelName());
     }
 
     @Override

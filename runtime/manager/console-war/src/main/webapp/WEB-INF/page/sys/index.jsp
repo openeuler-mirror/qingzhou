@@ -1,4 +1,4 @@
-<%@ page import="qingzhou.app.impl.Validator" %>
+<%@ page import="qingzhou.deployer.impl.Validator" %>
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
 <%
@@ -312,7 +312,7 @@
         logout: '<%=PageBackendService.getMasterAppI18nString("page.logout.confirm")%>',
         filesName: '<%=Downloadable.ACTION_NAME_FILES%>',
         downloadTip: '<%=PageBackendService.getMasterAppI18nString("page.download.log.tip")%>',
-        actionName_target: '<%=AppInfo.SYS_ACTION_MANAGE_PAGE%>',
+        actionName_target: '<%=App.SYS_ACTION_MANAGE_PAGE%>',
         downloadFileNames: '<%=ConsoleConstants.PARAMETER_DOWNLOAD_FILE_NAMES%>',
         showAction: '<%=Showable.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18nString("page.download.checkall")%>',

@@ -3,7 +3,7 @@ package qingzhou.console.controller;
 import qingzhou.api.metadata.ModelActionData;
 import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelManager;
-import qingzhou.app.AppInfo;
+import qingzhou.deployer.App;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
@@ -36,7 +36,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             models.add(modelManager.getModel(modelName));
         }
 
-        if (!"qingzhou".equals(loginUser) && AppInfo.SYS_APP_MASTER.equals(appName)) {
+        if (!"qingzhou".equals(loginUser) && App.SYS_APP_MASTER.equals(appName)) {
             models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
         }
 

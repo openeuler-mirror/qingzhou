@@ -1,6 +1,6 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.app.impl.Validator;
+import qingzhou.deployer.impl.Validator;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.SystemController;
@@ -9,7 +9,7 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.app.AppInfo;
+import qingzhou.deployer.App;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
@@ -33,7 +33,7 @@ import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + AppInfo.SYS_APP_MASTER + "/" + AppInfo.SYS_MODEL_INDEX + "/" + AppInfo.SYS_MODEL_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + App.SYS_MODEL_INDEX + "/" + App.SYS_MODEL_INDEX;
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = SystemController.getCache();
 

@@ -4,13 +4,13 @@ import qingzhou.api.Request;
 import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
-import qingzhou.app.impl.Validator;
+import qingzhou.deployer.impl.Validator;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
-import qingzhou.app.AppInfo;
+import qingzhou.deployer.App;
 import qingzhou.engine.util.StringUtil;
 
 import javax.naming.NameNotFoundException;
@@ -173,7 +173,7 @@ public class ActionInvoker {
 
         for (String node : appNodes) {
             ResponseImpl responseOnNode;
-            if (node.equals(AppInfo.SYS_NODE_LOCAL)) {
+            if (node.equals(App.SYS_NODE_LOCAL)) {
                 ResponseImpl response = new ResponseImpl();
                 SystemController.getAppManager().getApp(PageBackendService.getAppName(request)).invoke(request, response);
                 responseOnNode = response;
@@ -193,13 +193,13 @@ public class ActionInvoker {
 
     private List<String> getAppNodes(String appName) throws Exception {
         List<String> nodes = new ArrayList<>();
-        if (AppInfo.SYS_APP_MASTER.equals(appName)) {
-            nodes.add(AppInfo.SYS_NODE_LOCAL);
+        if (App.SYS_APP_MASTER.equals(appName)) {
+            nodes.add(App.SYS_NODE_LOCAL);
         } else {
             RequestImpl request = new RequestImpl();
             ResponseImpl response = new ResponseImpl();
-            request.setAppName(AppInfo.SYS_APP_MASTER);
-            request.setModelName(AppInfo.SYS_MODEL_APP);
+            request.setAppName(App.SYS_APP_MASTER);
+            request.setModelName(App.SYS_MODEL_APP);
             request.setActionName(Showable.ACTION_NAME_SHOW);
             request.setId(appName);
             SystemController.invokeLocalApp(request, response);

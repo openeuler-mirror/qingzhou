@@ -13,7 +13,7 @@
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-app</artifactId>
+            <artifactId>qingzhou-deployer</artifactId>
             <version>x</version>
         </dependency>
     </dependencies>
