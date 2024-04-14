@@ -6,9 +6,8 @@ public class FieldValidationInfo {
     public long numberMax;
     public int lengthMin;
     public int lengthMax;
-    public boolean asHostname;
-    public boolean asPort;
-    public boolean asURL;
+    public boolean hostname;
+    public boolean port;
     public String unsupportedCharacters;
     public String[] unsupportedStrings;
     public boolean cannotAdd;
@@ -55,28 +54,20 @@ public class FieldValidationInfo {
         this.lengthMax = lengthMax;
     }
 
-    public boolean isAsHostname() {
-        return asHostname;
+    public boolean isHostname() {
+        return hostname;
     }
 
-    public void setAsHostname(boolean asHostname) {
-        this.asHostname = asHostname;
+    public void setHostname(boolean hostname) {
+        this.hostname = hostname;
     }
 
-    public boolean isAsPort() {
-        return asPort;
+    public boolean isPort() {
+        return port;
     }
 
-    public void setAsPort(boolean asPort) {
-        this.asPort = asPort;
-    }
-
-    public boolean isAsURL() {
-        return asURL;
-    }
-
-    public void setAsURL(boolean asURL) {
-        this.asURL = asURL;
+    public void setPort(boolean port) {
+        this.port = port;
     }
 
     public String getUnsupportedCharacters() {

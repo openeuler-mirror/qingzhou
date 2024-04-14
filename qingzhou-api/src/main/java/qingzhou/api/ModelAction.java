@@ -24,13 +24,6 @@ public @interface ModelAction {
     String name();
 
     /**
-     * 指定与该模型操作关联的图标名称。
-     *
-     * @return 图标名称
-     */
-    String icon() default "";
-
-    /**
      * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作名称。
      *
      * @return 国际化资源键数组
@@ -50,25 +43,6 @@ public @interface ModelAction {
      * @return 操作生效的条件表达式
      */
     String effectiveWhen() default "";
-
-    /**
-     * 指定执行该操作后应跳转到的目标页面，默认为空字符串表示无页面转发。
-     *
-     * @return 转发的目标页面路径
-     */
-    String forwardTo() default "";
-
-    /**
-     * 标识是否应在列表头部显示此操作，默认为 {@code false}。
-     *
-     * @return 是否显示在列表头部
-     */
-    int shownOnListHead() default 0;
-
-    /**
-     * 显示在列表中的次序，小于 1 则不显示
-     */
-    int shownOnList() default 0;
 
     /**
      * 标识该操作是否支持批量处理，默认为 {@code false}。

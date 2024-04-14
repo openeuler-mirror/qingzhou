@@ -20,10 +20,10 @@ public class Index extends ModelBase implements Showable {
     public String version;
 
     @ModelAction(name = Showable.ACTION_NAME_SHOW,
-            forwardTo = "show",
             nameI18n = {"主页", "en:Home"},
             infoI18n = {"查看 Qingzhou 的产品信息。",
                     "en:View Qingzhou product information."})
+    @ActionView(forwardTo = "show")
     public void show(Request request, Response response) throws Exception {
         Index index = new Index();
         index.name = "Qingzhou（轻舟）";
@@ -34,10 +34,10 @@ public class Index extends ModelBase implements Showable {
     }
 
     @ModelAction(name = App.SYS_MODEL_INDEX, // NOTE: 这个方法用作是 Login 成功后 跳过的
-            forwardTo = "sys/index",
             nameI18n = {"主页", "en:Home"},
             infoI18n = {"查看 Qingzhou 的产品信息。",
                     "en:View Qingzhou product information."})
+    @ActionView(forwardTo = "sys/index")
     public void index(Request request, Response response) throws Exception {
         show(request, response);
     }

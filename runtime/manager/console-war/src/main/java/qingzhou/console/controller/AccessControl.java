@@ -1,7 +1,6 @@
 package qingzhou.console.controller;
 
 import qingzhou.api.metadata.ModelActionData;
-import qingzhou.api.metadata.ModelData;
 import qingzhou.api.metadata.ModelManager;
 import qingzhou.deployer.App;
 import qingzhou.console.controller.rest.RESTController;

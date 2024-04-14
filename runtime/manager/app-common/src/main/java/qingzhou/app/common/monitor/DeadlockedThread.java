@@ -24,9 +24,9 @@ public class DeadlockedThread extends ModelBase implements Listable {
     private String threadName;
 
     @ModelField(nameI18n = {"线程状态", "en:Thread State"},
-            type = FieldType.select,
             shownOnList = true,
             infoI18n = {"死锁线程的当前状态。", "en:The current state of the deadlocked thread."})
+    @FieldView(type = FieldType.select)
     private String threadState;
 
     @ModelField(nameI18n = {"等待的锁", "en:Lock Name"},

@@ -12,8 +12,8 @@
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.page.*" %>
-<%@ page import="qingzhou.console.RequestImpl" %>
-<%@ page import="qingzhou.console.ResponseImpl" %>
+<%@ page import="qingzhou.deployer.RequestImpl" %>
+<%@ page import="qingzhou.deployer.ResponseImpl" %>
 <%@ page import="qingzhou.engine.util.StringUtil" %>
 
 

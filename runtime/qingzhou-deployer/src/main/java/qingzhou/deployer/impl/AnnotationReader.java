@@ -1,40 +1,23 @@
-package qingzhou.deployer.impl.bytecode.impl;
+package qingzhou.deployer.impl;
 
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
-import qingzhou.deployer.impl.bytecode.AnnotationReader;
+import qingzhou.api.MonitorField;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class AnnotationReaderImpl implements AnnotationReader {
-    public static volatile AnnotationReader annotationReader;
+class AnnotationReader {
+    private final Class<?> clazz;
 
-    private AnnotationReaderImpl() {
+    AnnotationReader(Class<?> clazz) {
+        this.clazz = clazz;
     }
 
-    public static AnnotationReader getAnnotationReader() {
-        if (annotationReader == null) {
-            synchronized (AnnotationReaderImpl.class) {
-                if (annotationReader == null) {
-                    annotationReader = new AnnotationReaderImpl();
-                }
-            }
-        }
-        return annotationReader;
-    }
-
-    @Override
-    public <A extends Annotation> A readClassAnnotation(Class<?> cls, Class<A> annotationClass) {
-        return cls.getDeclaredAnnotation(annotationClass);
-    }
-
-    @Override
-    public Map<Field, ModelField> readModelField(Class<?> clazz) {
+    Map<Field, ModelField> readModelField() {
         Field[] fields = clazz.getFields();//.getDeclaredFields();
         Map<Field, ModelField> map = new LinkedHashMap<>(fields.length);
         for (Field field : fields) {
@@ -50,9 +33,24 @@ public class AnnotationReaderImpl implements AnnotationReader {
         return map;
     }
 
-    @Override
-    public Map<Method, ModelAction> readModelAction(Class<?> modelClass) {
-        Method[] methods = modelClass.getMethods();
+    Map<Field, MonitorField> readMonitorField() {
+        Field[] fields = clazz.getFields();//.getDeclaredFields();
+        Map<Field, MonitorField> map = new LinkedHashMap<>(fields.length);
+        for (Field field : fields) {
+            if (Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            MonitorField monitorField = field.getAnnotation(MonitorField.class);
+            if (monitorField != null) {
+                map.put(field, monitorField);
+            }
+        }
+
+        return map;
+    }
+
+    Map<Method, ModelAction> readModelAction() {
+        Method[] methods = clazz.getMethods();
         Map<Method, ModelAction> map = new LinkedHashMap<>(methods.length);
         for (Method method : methods) {
             if (Modifier.isStatic(method.getModifiers())) {
@@ -61,7 +59,7 @@ public class AnnotationReaderImpl implements AnnotationReader {
 
             ModelAction action = method.getAnnotation(ModelAction.class);
             if (action == null) {
-                action = searchActionFromParent(modelClass, method);
+                action = searchActionFromParent(clazz, method);
             }
 
             if (action != null && !action.disabled()) {
@@ -72,12 +70,12 @@ public class AnnotationReaderImpl implements AnnotationReader {
         return map;
     }
 
-    private ModelAction searchActionFromParent(Class<?> thisClass, Method targetMethod) {
-        if (thisClass == null) {
+    private ModelAction searchActionFromParent(Class<?> aClass, Method targetMethod) {
+        if (aClass == null) {
             return null;
         }
 
-        for (Method m : thisClass.getDeclaredMethods()) {
+        for (Method m : clazz.getDeclaredMethods()) {
             if (Modifier.isStatic(m.getModifiers())) {
                 continue;
             }
@@ -92,7 +90,7 @@ public class AnnotationReaderImpl implements AnnotationReader {
             }
         }
 
-        Class<?> superclass = thisClass.getSuperclass();
+        Class<?> superclass = clazz.getSuperclass();
         if (superclass != null) {
             ModelAction action = searchActionFromParent(superclass, targetMethod);
             if (action != null) {
@@ -100,7 +98,7 @@ public class AnnotationReaderImpl implements AnnotationReader {
             }
         }
 
-        for (Class<?> check : thisClass.getInterfaces()) {
+        for (Class<?> check : clazz.getInterfaces()) {
             ModelAction action = searchActionFromParent(check, targetMethod);
             if (action != null) {
                 return action;

@@ -1,8 +1,10 @@
 package qingzhou.registry;
 
-public class FieldPageInfo {
+import qingzhou.api.FieldType;
+
+public class FieldViewInfo {
     public String group;
-    public String type;
+    public FieldType type;
 
     public String getGroup() {
         return group;
@@ -12,11 +14,11 @@ public class FieldPageInfo {
         this.group = group;
     }
 
-    public String getType() {
+    public FieldType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(FieldType type) {
         this.type = type;
     }
 }

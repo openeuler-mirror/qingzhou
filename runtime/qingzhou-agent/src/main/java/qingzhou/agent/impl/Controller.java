@@ -1,13 +1,21 @@
 package qingzhou.agent.impl;
 
+import qingzhou.api.Response;
 import qingzhou.config.Config;
+import qingzhou.config.ConfigService;
 import qingzhou.config.Remote;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
+import qingzhou.deployer.App;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.StringUtil;
+import qingzhou.heartbeat.Heartbeat;
+import qingzhou.http.Http;
 import qingzhou.http.HttpContext;
 import qingzhou.http.HttpServer;
 import qingzhou.json.Json;
@@ -21,19 +29,28 @@ import java.nio.charset.StandardCharsets;
 public class Controller implements Module {
     private String path;
     private HttpServer server;
+    private CryptoService cryptoService;
+    private Heartbeat heartbeat;
+    private Json json;
+    private Deployer deployer;
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        Config config = moduleContext.getService(Config.class);
+        Config config = moduleContext.getService(ConfigService.class).getConfig();
         Remote remote = config.getRemote();
         if (!remote.isEnabled()) return;
+
+        cryptoService = moduleContext.getService(CryptoService.class);
+        heartbeat = moduleContext.getService(Heartbeat.class);
+        json = moduleContext.getService(Json.class);
+        deployer = moduleContext.getService(Deployer.class);
 
         path = "/";
         String remoteHost = remote.getHost();
         if (remoteHost == null || remoteHost.isEmpty()) {
             remoteHost = "0.0.0.0";
         }
-        server = moduleContext.getService(HttpServer.class);
+        server = moduleContext.getService(Http.class).buildHttpServer();
         server.start(remoteHost, remote.getPort(), 200);
         HttpContext context = server.createContext(path);
         context.setHandler(exchange -> {
@@ -76,23 +93,19 @@ public class Controller implements Module {
         // 1. 获得请求的数据
         byte[] requestData = bos.toByteArray();
 
-        String remoteKey = config.getKey(Config.remoteKeyName);
-        CryptoService cryptoService = moduleContext.getService(CryptoService.class);
+        // 2. 数据解密，带认证
+        String remoteKey = heartbeat.getInstanceKey();
         KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
-
-        // 2. 数据解密，附带认证能力
         byte[] decryptedData = keyCipher.decrypt(requestData);
 
         // 3. 处理请求
-        Json json = moduleContext.getService(Json.class);
-        RequestImpl request = json.deserialize(decryptedData, RequestImpl.class);
+        RequestImpl request = json.fromJson(new String(decryptedData, StandardCharsets.UTF_8), RequestImpl.class);
         Response response = new ResponseImpl();
-        AppManager appManager = moduleContext.getService(AppManager.class);
-        AppInfo appInfo = appManager.getApp(request.getAppName());
-        appInfo.invoke(request, response);
+        App app = deployer.getApp(request.getAppName());
+        app.invoke(request, response);
 
         // 4. 响应数据
-        byte[] responseData = json.serialize(response);
+        byte[] responseData = json.toJson(response).getBytes(StandardCharsets.UTF_8);
 
         // 5. 数据加密，返回到客户端
         return keyCipher.encrypt(responseData);

@@ -3,6 +3,7 @@ package qingzhou.engine.impl;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.ServiceRegister;
+import qingzhou.engine.util.FileUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -64,8 +65,8 @@ public class Main {
     private List<List<File>> startLevel() throws Exception {
         List<List<File>> startLevels = new ArrayList<>();
 
-        try (InputStream inputStream = Main.class.getResourceAsStream("/start-level.txt")) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(inputStream), StandardCharsets.UTF_8));
+        try (InputStream inputStream = Main.class.getResourceAsStream("/start-level.properties")) {
+            Properties properties = FileUtil.streamToProperties(inputStream);
             File moduleDir = new File(moduleContext.getLibDir(), "module");
             for (String line; (line = reader.readLine()) != null; ) {
                 line = line.trim();

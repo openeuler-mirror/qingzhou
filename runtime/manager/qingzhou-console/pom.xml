@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-config</artifactId>
+            <artifactId>qingzhou-api</artifactId>
             <version>x</version>
         </dependency>
 

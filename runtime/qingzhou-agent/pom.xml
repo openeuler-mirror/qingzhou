@@ -34,5 +34,15 @@
             <artifactId>qingzhou-crypto</artifactId>
             <version>x</version>
         </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-heartbeat</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-deployer</artifactId>
+            <version>x</version>
+        </dependency>
     </dependencies>
 </project>

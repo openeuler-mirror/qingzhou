@@ -4,9 +4,9 @@ import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
-import qingzhou.deployer.Deployer;
 import qingzhou.app.master.MasterApp;
-import qingzhou.console.RequestImpl;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.Deployer;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.StringUtil;
 import qingzhou.logger.Logger;
@@ -24,49 +24,42 @@ public class App extends ModelBase implements Createable {
 
     @ModelField(
             shownOnList = true,
-            cannotAdd = true,
-            cannotUpdate = true,
             nameI18n = {"名称", "en:Name"},
             infoI18n = {"应用名称。", "en:App Name"})
+    @FieldValidation(cannotAdd = true, cannotUpdate = true,
+            unsupportedStrings = {qingzhou.deployer.App.SYS_APP_MASTER, qingzhou.deployer.App.SYS_APP_NODE_AGENT})
     public String id;
 
     @ModelField(
-            required = true,
-            cannotUpdate = true,
-            type = FieldType.bool,
             nameI18n = {"使用上传", "en:Enable Upload"},
             infoI18n = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。",
                     "en:The installed app can be uploaded from the client or read from a location specified on the server side."})
+    @FieldValidation(required = true, cannotUpdate = true)
+    @FieldView(type = FieldType.bool)
     public boolean appFrom = false;
 
     @ModelField(
             shownOnList = true,
-            effectiveWhen = "appFrom=false",
-            cannotUpdate = true,
-            required = true,
-            unsupportedCharacters = "#",
-            lengthMax = 255,// for #NC-1418 及其它文件目录操作的，文件长度不能大于 255
             nameI18n = {"应用位置", "en:Application File"},
             infoI18n = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar 类型的文件。",
                     "en:The location of the application on the server, usually the app package, Note: Must be a *.jar file."})
+    @FieldValidation(required = true, lengthMax = 255, unsupportedCharacters = "#", effectiveWhen = "appFrom=false", cannotUpdate = true)
     public String filename;
 
     @ModelField(
-            type = FieldType.file,
-            effectiveWhen = "appFrom=true",
-            cannotUpdate = true,
-            unsupportedCharacters = "#",
-            required = true,
             nameI18n = {"上传应用", "en:Upload Application"},
             infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
                     "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
+    @FieldValidation(required = true, unsupportedCharacters = "#", effectiveWhen = "appFrom=true", cannotUpdate = true)
+    @FieldView(type = FieldType.file)
     public String fromUpload;
 
     @ModelField(
-            required = true, type = FieldType.checkbox,
             shownOnList = true,
             nameI18n = {"节点", "en:Node"},
             infoI18n = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
+    @FieldValidation(required = true)
+    @FieldView(type = FieldType.checkbox)
     public String nodes;
 
     @ModelField(
@@ -83,7 +76,6 @@ public class App extends ModelBase implements Createable {
 
     @Override
     public void init() {
-        getAppContext().addI18n("app.id.system", new String[]{"该名称已被系统占用，请更换为其它名称", "en:This name is already occupied by the system, please replace it with another name"});
         getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
         getAppContext().addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
     }
@@ -123,23 +115,10 @@ public class App extends ModelBase implements Createable {
         return super.options(request, fieldName);
     }
 
-    @Override
-    public String validate(Request request, String fieldName) {
-        if (fieldName.equals(Listable.FIELD_NAME_ID)) {
-            String id = request.getParameter(Listable.FIELD_NAME_ID);
-            if (qingzhou.deployer.App.SYS_APP_MASTER.equals(id) ||
-                    qingzhou.deployer.App.SYS_APP_NODE_AGENT.equals(id)) {
-                return "app.id.system";
-            }
-        }
-
-        return null;
-    }
-
     @ModelAction(name = Createable.ACTION_NAME_ADD,
-            icon = "save",
             nameI18n = {"安装", "en:Install"},
             infoI18n = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
+    @ActionView(icon = "save")
     public void add(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
         Map<String, String> p = MasterApp.prepareParameters(request, getAppContext());
@@ -196,20 +175,19 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(name = qingzhou.deployer.App.SYS_ACTION_MANAGE_PAGE,
-            icon = "location-arrow", forwardTo = "sys/" + qingzhou.deployer.App.SYS_ACTION_MANAGE_PAGE,
-            nameI18n = {"管理", "en:Manage"}, shownOnList = 1,
+            nameI18n = {"管理", "en:Manage"},
             infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
+    @ActionView(icon = "location-arrow", forwardTo = "sys/" + qingzhou.deployer.App.SYS_ACTION_MANAGE_PAGE, shownOnList = 1)
     public void switchTarget(Request request, Response response) throws Exception {
     }
 
     @ModelAction(
             name = Deletable.ACTION_NAME_DELETE,
-            shownOnList = 9,
             supportBatch = true,
-            icon = "trash",
             nameI18n = {"删除", "en:Delete"},
             infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
+    @ActionView(icon = "trash", shownOnList = 9)
     public void delete(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
         String appName = request.getId();

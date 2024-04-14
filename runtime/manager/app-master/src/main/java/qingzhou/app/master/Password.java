@@ -12,34 +12,32 @@ import qingzhou.api.type.Showable;
         infoI18n = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
 public class Password extends ModelBase implements Editable {
     @ModelField(
-            effectiveWhen = "update2FA=false",
-            required = true, type = FieldType.password,
             nameI18n = {"原始密码", "en:Original Password"},
             infoI18n = {"登录系统的原始密码。", "en:The original password to log in to the system."})
+    @FieldView(type = FieldType.password)
+    @FieldValidation(required = true, effectiveWhen = "update2FA=false")
     public String originalPassword;
 
     @ModelField(
-            effectiveWhen = "update2FA=false",
-            required = true,
-            type = FieldType.password,
             nameI18n = {"新密码", "en:Password"},
             infoI18n = {"用于登录系统的新密码。", "en:The new password used to log in to the system."})
+    @FieldValidation(required = true, effectiveWhen = "update2FA=false")
+    @FieldView(type = FieldType.password)
     public String newPassword;
 
     @ModelField(
-            effectiveWhen = "update2FA=false",
-            required = true,
-            type = FieldType.password,
             nameI18n = {"确认密码", "en:Confirm Password"},
             infoI18n = {"确认用于登录系统的新密码。", "en:Confirm the new password used to log in to the system."})
+    @FieldView(type = FieldType.password)
+    @FieldValidation(required = true, effectiveWhen = "update2FA=false")
     public String confirmPassword;
 
     @ModelField(
-            type = FieldType.bool,
             nameI18n = {"更新双因子认证密钥", "en:Update Two-factor Authentication Key"},
             infoI18n = {"安全起见，建议定期刷新双因子认证密钥。刷新后，需要重新在用户终端的双因子认证客户端设备进行绑定。",
                     "en:For security reasons, it is recommended to periodically refresh the two-factor authentication key. After refreshing, you need to re-bind it on the two-factor authentication client device of the user terminal."}
     )
+    @FieldView(type = FieldType.bool)
     public boolean update2FA = false;
 
     @Override
@@ -53,23 +51,20 @@ public class Password extends ModelBase implements Editable {
         master.addI18n("password.min", new String[]{"未达到密码最短使用期限 %s 天，上次修改时间为：%s", "en:The minimum password age of %s days has not been reached, last modified: %s"});
         master.addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，禁止使用最近 %s 次使用过的旧密码",
                 "en:For security reasons, the use of old passwords that have been used last %s is prohibited"});
-
-        master.addI18n("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少10位", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
-        master.addI18n("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
     }
 
     @ModelAction(name = Editable.ACTION_NAME_EDIT,
-            icon = "edit", forwardTo = "form",
             nameI18n = {"编辑", "en:Edit"},
             infoI18n = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
+    @ActionView(icon = "edit", forwardTo = "form")
     public void edit(Request request, Response response) throws Exception {
         response.addModelData(new Password());
     }
 
     @ModelAction(name = Showable.ACTION_NAME_SHOW,
-            icon = "info-sign", forwardTo = "show",
             nameI18n = {"查看", "en:Show"},
             infoI18n = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
+    @ActionView(icon = "info-sign", forwardTo = "show")
     public void show(Request request, Response response) {
     }
 //

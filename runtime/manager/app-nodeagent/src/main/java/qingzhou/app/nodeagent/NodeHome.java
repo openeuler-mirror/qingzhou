@@ -22,9 +22,9 @@ public class NodeHome extends ModelBase implements Showable {
     public String localIps;
 
     @ModelAction(name = ACTION_NAME_SHOW,
-            icon = "info-sign", forwardTo = "show",
             nameI18n = {"首页", "en:Home"},
             infoI18n = {"展示节点的首页信息。", "en:Displays the homepage information of the node."})
+    @ActionView(icon = "info-sign", forwardTo = "show")
     public void show(Request request, Response response) throws Exception {
         NodeHome home = new NodeHome();
         home.javaHome = System.getProperty("java.home");

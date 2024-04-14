@@ -6,7 +6,7 @@ public class ModelActionInfo {
     public String[] infoI18n;
     public String effectiveWhen;
     public boolean supportBatch;
-    public ActionPageInfo actionPageInfo;
+    public ActionViewInfo actionViewInfo;
 
     public String getName() {
         return name;
@@ -48,11 +48,11 @@ public class ModelActionInfo {
         this.supportBatch = supportBatch;
     }
 
-    public ActionPageInfo getActionPageInfo() {
-        return actionPageInfo;
+    public ActionViewInfo getActionViewInfo() {
+        return actionViewInfo;
     }
 
-    public void setActionPageInfo(ActionPageInfo actionPageInfo) {
-        this.actionPageInfo = actionPageInfo;
+    public void setActionViewInfo(ActionViewInfo actionViewInfo) {
+        this.actionViewInfo = actionViewInfo;
     }
 }

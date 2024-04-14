@@ -1,6 +1,6 @@
 package qingzhou.registry;
 
-public class ActionPageInfo {
+public class ActionViewInfo {
     public String icon;
     public String forwardTo;
     public int shownOnList;

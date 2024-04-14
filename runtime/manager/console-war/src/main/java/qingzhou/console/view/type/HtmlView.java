@@ -8,7 +8,7 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.deployer.App;
-import qingzhou.console.RequestImpl;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;

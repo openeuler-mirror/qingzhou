@@ -1,12 +1,12 @@
-package qingzhou.console;
+package qingzhou.deployer;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Enumeration;
+import qingzhou.api.Lang;
+import qingzhou.api.Request;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class RequestImpl implements Request, Serializable, Cloneable {
+public class RequestImpl implements Request, Cloneable {
     private String manageType;
     private String appName;
     private String modelName;
@@ -58,16 +58,6 @@ public class RequestImpl implements Request, Serializable, Cloneable {
     @Override
     public Map<String, String[]> getParameterMap() {
         return parameters;
-    }
-
-    @Override
-    public Enumeration<String> getParameterNames() {
-        return Collections.enumeration(parameters.keySet());
-    }
-
-    @Override
-    public String[] getParameterValues(String name) {
-        return parameters.get(name);
     }
 
     public void setId(String id) {

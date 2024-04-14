@@ -1,27 +1,32 @@
-package qingzhou.deployer.impl;
+package qingzhou.registry;
 
-import qingzhou.api.metadata.MenuData;
-
-import java.io.Serializable;
 import java.util.Objects;
 
-public class MenuDataImpl implements MenuData, Serializable {
-    private final String menuName;
+public class MenuInfo {
+    private String menuName;
     private String[] menuI18n;
     private String menuIcon;
     private int menuOrder;
 
-    public MenuDataImpl(String menuName) {
-        this.menuName = menuName;
+    public MenuInfo() {
     }
 
-    @Override
-    public String getName() {
+    public MenuInfo(String menuName, String[] menuI18n, String menuIcon, int menuOrder) {
+        this.menuName = menuName;
+        this.menuI18n = menuI18n;
+        this.menuIcon = menuIcon;
+        this.menuOrder = menuOrder;
+    }
+
+    public String getMenuName() {
         return menuName;
     }
 
-    @Override
-    public String[] getI18n() {
+    public void setMenuName(String menuName) {
+        this.menuName = menuName;
+    }
+
+    public String[] getMenuI18n() {
         return menuI18n;
     }
 
@@ -29,8 +34,7 @@ public class MenuDataImpl implements MenuData, Serializable {
         this.menuI18n = menuI18n;
     }
 
-    @Override
-    public String getIcon() {
+    public String getMenuIcon() {
         return menuIcon;
     }
 
@@ -38,8 +42,7 @@ public class MenuDataImpl implements MenuData, Serializable {
         this.menuIcon = menuIcon;
     }
 
-    @Override
-    public int getOrder() {
+    public int getMenuOrder() {
         return menuOrder;
     }
 
@@ -51,8 +54,8 @@ public class MenuDataImpl implements MenuData, Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MenuDataImpl menu = (MenuDataImpl) o;
-        return Objects.equals(menuName, menu.menuName);
+        MenuInfo menuInfo = (MenuInfo) o;
+        return Objects.equals(menuName, menuInfo.menuName);
     }
 
     @Override

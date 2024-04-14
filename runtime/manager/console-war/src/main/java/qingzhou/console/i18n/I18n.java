@@ -1,9 +1,8 @@
 package qingzhou.console.i18n;
 
 import qingzhou.api.Lang;
-import qingzhou.api.metadata.AppMetadata;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.I18nTool;
+import qingzhou.deployer.impl.I18nTool;
 import qingzhou.engine.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;

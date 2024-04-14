@@ -4,7 +4,8 @@ import qingzhou.http.HttpClient;
 import qingzhou.http.HttpResponse;
 
 import javax.net.ssl.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -16,7 +17,7 @@ import java.util.Map;
 
 public class HttpClientImpl implements HttpClient {
     @Override
-    public HttpResponse send(String url, Map<String, String> params) throws Exception {
+    public HttpResponse send(String url, String body) throws Exception {
         HttpURLConnection conn = buildConnection(url);
         conn.setRequestMethod("POST");
         conn.setDoInput(true);
@@ -29,9 +30,8 @@ public class HttpClientImpl implements HttpClient {
         conn.setRequestProperty("accept", "*/*");
         conn.setInstanceFollowRedirects(false);
 
-        String bodyStr = encodingParams(params);
-        if (bodyStr != null) {
-            byte[] b = bodyStr.getBytes();
+        if (body != null) {
+            byte[] b = body.getBytes("UTF-8");
             conn.setRequestProperty("Content-Length", String.valueOf(b.length));
             OutputStream outputStream = conn.getOutputStream();
             outputStream.write(b, 0, b.length);
@@ -43,22 +43,22 @@ public class HttpClientImpl implements HttpClient {
         return new HttpResponseImpl(conn);
     }
 
-    private String encodingParams(Map<String, String> params) throws UnsupportedEncodingException {
-        StringBuilder sb = new StringBuilder();
-        if (null == params || params.isEmpty()) {
-            return null;
-        }
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            String value = entry.getValue();
-            if (value == null) {
-                continue;
-            }
-            sb.append(entry.getKey()).append('=');
-            sb.append(URLEncoder.encode(value, "UTF-8"));
-            sb.append('&');
-        }
+    @Override
+    public HttpResponse send(String url, Map<String, String> params) throws Exception {
+        StringBuilder bodyStr = new StringBuilder();
+        if (params != null) {
+            boolean isFirst = true;
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                String value = entry.getValue();
+                if (value == null) continue;
+                if (!isFirst) bodyStr.append('&');
+                isFirst = false;
 
-        return sb.toString();
+                bodyStr.append(entry.getKey()).append('=');
+                bodyStr.append(URLEncoder.encode(value, "UTF-8"));
+            }
+        }
+        return send(url, bodyStr.toString());
     }
 
     private HttpURLConnection buildConnection(String url) throws NoSuchAlgorithmException, IOException, KeyManagementException {

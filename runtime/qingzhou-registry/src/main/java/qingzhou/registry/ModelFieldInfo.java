@@ -1,12 +1,13 @@
 package qingzhou.registry;
 
 public class ModelFieldInfo {
-    public String name;
-    public String[] nameI18n;
-    public String[] infoI18n;
-    public boolean shownOnList;
-    public FieldValidationInfo fieldValidationInfo;
-    public FieldPageInfo fieldPageInfo;
+    private String name;
+    private String[] nameI18n;
+    private String[] infoI18n;
+    private String defaultValue;
+    private boolean shownOnList;
+    private FieldValidationInfo fieldValidationInfo;
+    private FieldViewInfo fieldViewInfo;
 
     public String getName() {
         return name;
@@ -32,6 +33,14 @@ public class ModelFieldInfo {
         this.infoI18n = infoI18n;
     }
 
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
+    }
+
     public boolean isShownOnList() {
         return shownOnList;
     }
@@ -48,11 +57,11 @@ public class ModelFieldInfo {
         this.fieldValidationInfo = fieldValidationInfo;
     }
 
-    public FieldPageInfo getFieldPageInfo() {
-        return fieldPageInfo;
+    public FieldViewInfo getFieldViewInfo() {
+        return fieldViewInfo;
     }
 
-    public void setFieldPageInfo(FieldPageInfo fieldPageInfo) {
-        this.fieldPageInfo = fieldPageInfo;
+    public void setFieldViewInfo(FieldViewInfo fieldViewInfo) {
+        this.fieldViewInfo = fieldViewInfo;
     }
 }

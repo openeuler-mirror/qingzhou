@@ -9,9 +9,9 @@ import qingzhou.logger.Logger;
 import java.io.File;
 import java.util.Arrays;
 
-public class Controller extends ServiceRegister<Deployer> {
-    public static Logger logger;
-    public static Deployer deployer;
+class Controller extends ServiceRegister<Deployer> {
+    static Logger logger;
+    static Deployer deployer;
 
     @Override
     public Class<Deployer> serviceType() {

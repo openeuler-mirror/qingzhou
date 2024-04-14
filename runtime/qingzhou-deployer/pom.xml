@@ -27,5 +27,10 @@
             <artifactId>qingzhou-api</artifactId>
             <version>x</version>
         </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-registry</artifactId>
+            <version>x</version>
+        </dependency>
     </dependencies>
 </project>

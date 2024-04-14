@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class MemoryDataStore implements DataStore {
+class MemoryDataStore implements DataStore {
     private final Map<String, List<Map<String, String>>> dataStore = new ConcurrentHashMap<>();
 
     @Override

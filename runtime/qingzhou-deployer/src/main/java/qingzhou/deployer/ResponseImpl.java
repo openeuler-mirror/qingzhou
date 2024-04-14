@@ -1,9 +1,8 @@
-package qingzhou.console;
+package qingzhou.deployer;
 
 import qingzhou.api.ModelBase;
 import qingzhou.api.Response;
 
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ResponseImpl implements Response, Serializable {
+public class ResponseImpl implements Response {
     private boolean success = true;
     private String msg;
     private final List<Map<String, String>> dataList = new ArrayList<>();

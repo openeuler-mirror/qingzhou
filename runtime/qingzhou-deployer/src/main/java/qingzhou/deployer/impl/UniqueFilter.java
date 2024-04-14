@@ -5,10 +5,9 @@ import qingzhou.api.AppContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.Createable;
-import qingzhou.console.I18nTool;
-import qingzhou.console.ResponseImpl;
+import qingzhou.deployer.ResponseImpl;
 
-public class UniqueFilter implements ActionFilter {
+class UniqueFilter implements ActionFilter {
     private final I18nTool i18nTool = new I18nTool();
     private volatile boolean i18nDone = false;
 
@@ -36,7 +35,7 @@ public class UniqueFilter implements ActionFilter {
             if (i18nDone) return;
             i18nDone = true;
 
-            i18nTool.addI18n("list.id.exists", new String[]{"%s已存在", "en:%s already exists"}, true);
+            i18nTool.addI18n("list.id.exists", new String[]{"%s已存在", "en:%s already exists"});
         }
     }
 }

@@ -1,20 +1,11 @@
 package qingzhou.api;
 
-import qingzhou.api.metadata.AppMetadata;
-
 import java.io.File;
 
 /**
  * 应用上下文接口，提供应用元数据、平台信息获取，以及服务定位、临时文件管理、国际化信息、菜单管理和动作过滤器管理等功能。
  */
 public interface AppContext {
-    /**
-     * 获取应用元数据。
-     *
-     * @return AppMetadata 应用元数据对象，包含应用的基本信息。
-     */
-    AppMetadata getAppMetadata();
-
     /**
      * 获取临时文件目录。
      *

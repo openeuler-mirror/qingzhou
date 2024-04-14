@@ -1,16 +1,19 @@
-package qingzhou.console;
+package qingzhou.deployer.impl;
 
 import qingzhou.api.Lang;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class I18nTool implements Serializable {
-    private final Map<String, String[]> langMap = new HashMap<>();
+class I18nTool {
+    private Map<String, String[]> langMap = new HashMap<>();
 
-    public void addI18n(String key, String[] i18n, boolean checkContainChinese) {
+    void addI18n(String key, String[] i18n) {
+        addI18n(key, i18n, true);
+    }
+
+    void addI18n(String key, String[] i18n, boolean checkContainChinese) {
         Map<Lang, String> i18nMap = retrieveI18n(i18n);
         for (Lang lang : i18nMap.keySet()) {
             String val = i18nMap.get(lang);
@@ -32,7 +35,7 @@ public class I18nTool implements Serializable {
         }
     }
 
-    public String getI18n(Lang lang, String key, Object... args) {
+    String getI18n(Lang lang, String key, Object... args) {
         String[] values = langMap.get(key);
         if (values != null) {
             String s = values[lang.ordinal()];
@@ -44,7 +47,7 @@ public class I18nTool implements Serializable {
         return null;
     }
 
-    public static Map<Lang, String> retrieveI18n(String[] i18n) {
+    static Map<Lang, String> retrieveI18n(String[] i18n) {
         Map<Lang, String> i18nMap = new HashMap<>();
         for (String langLine : i18n) {
             Lang lang = null;

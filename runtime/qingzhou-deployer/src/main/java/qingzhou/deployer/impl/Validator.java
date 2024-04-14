@@ -6,7 +6,6 @@ import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
-import qingzhou.console.CharMap;
 import qingzhou.engine.util.IPUtil;
 import qingzhou.engine.util.StringUtil;
 
@@ -115,7 +114,7 @@ public class Validator {
         ModelBase tempModel = Controller.deployer.getApp(request.getAppName()).getModelInstance(request.getModelName());
         boolean isUpdate = Editable.ACTION_NAME_UPDATE.equals(request.getActionName());
         if (newValue == null) { // NOTE：不能使用 StringUtil.isBlank 来判断，空串 "" 表示有值，且与 null（无值） 是不同含义
-            if (modelField.required()) {
+            if (modelField require d) {
                 if (isUpdate && modelField.disableOnEdit()) { // for #NC-1624|创建时必填，编辑时允许为空。
                     return null;
                 }
@@ -130,7 +129,7 @@ public class Validator {
             }
         } else {
             if (newValue.isEmpty()) {
-                if (modelField.required()) { // 必填项，但页面的输入框为空的情况！！！例如安全域用户的用户名
+                if (modelField require d) { // 必填项，但页面的输入框为空的情况！！！例如安全域用户的用户名
                     boolean isUpdatingFile = isUpdate && modelField.type() == FieldType.file; // 上传应用，编辑时候
                     if (!isUpdatingFile) {
                         return getI18n(request, "validator.require");

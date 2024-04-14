@@ -6,7 +6,6 @@ import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.metadata.AppMetadata;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.console.AppMetadataManager;

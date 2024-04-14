@@ -3,7 +3,7 @@ package qingzhou.app.common.monitor;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
+import qingzhou.api.MonitorField;
 import qingzhou.api.type.Monitorable;
 import qingzhou.engine.util.StringUtil;
 
@@ -20,57 +20,57 @@ import java.util.Map;
         infoI18n = {"描述 Java 虚拟机（JVM）的版本、厂商等基本信息，以及Java进程的堆内存、非堆内存等使用情况。",
                 "en:Describes basic information such as the version and manufacturer of the Java Virtual Machine (JVM), as well as the usage of heap memory and non-heap memory of the Java process."})
 public class Jvm extends ModelBase implements Monitorable {
-    @ModelField(isMonitorField = true, nameI18n = {"名称", "en:Name"}, infoI18n = {"Java 虚拟机规范名称。", "en:Java virtual machine specification name."})
+    @MonitorField(dynamic = false, nameI18n = {"名称", "en:Name"}, infoI18n = {"Java 虚拟机规范名称。", "en:Java virtual machine specification name."})
     public String SpecName;
 
-    @ModelField(isMonitorField = true, nameI18n = {"版本", "en:Version"}, infoI18n = {"Java 虚拟机规范版本。", "en:Java virtual machine specification version."})
+    @MonitorField(dynamic = false, nameI18n = {"版本", "en:Version"}, infoI18n = {"Java 虚拟机规范版本。", "en:Java virtual machine specification version."})
     public String SpecVersion;
 
-    @ModelField(isMonitorField = true, nameI18n = {"JVM 软件名称", "en:JVM Software Name"}, infoI18n = {"Java 虚拟机名称。", "en:The Java virtual machine implementation name."})
+    @MonitorField(dynamic = false, nameI18n = {"JVM 软件名称", "en:JVM Software Name"}, infoI18n = {"Java 虚拟机名称。", "en:The Java virtual machine implementation name."})
     public String VmName;
 
-    @ModelField(isMonitorField = true, nameI18n = {"JVM 软件供应商", "en:JVM Software Version"}, infoI18n = {"Java 虚拟机供应商。", "en:JVM software vendor."})
+    @MonitorField(dynamic = false, nameI18n = {"JVM 软件供应商", "en:JVM Software Version"}, infoI18n = {"Java 虚拟机供应商。", "en:JVM software vendor."})
     public String VmVendor;
 
-    @ModelField(isMonitorField = true, nameI18n = {"JVM 软件版本号", "en:JVM Software Vendor"}, infoI18n = {"Java 虚拟机版本。", "en:JVM software version."})
+    @MonitorField(dynamic = false, nameI18n = {"JVM 软件版本号", "en:JVM Software Vendor"}, infoI18n = {"Java 虚拟机版本。", "en:JVM software version."})
     public String VmVersion;
 
-    @ModelField(isMonitorField = true, nameI18n = {"进程信息", "en:Process Name"}, infoI18n = {"当前运行服务的操作系统PID。", "en:PID of the operating system currently running the service."})
+    @MonitorField(dynamic = false, nameI18n = {"进程信息", "en:Process Name"}, infoI18n = {"当前运行服务的操作系统PID。", "en:PID of the operating system currently running the service."})
     public String Name;
 
-    @ModelField(isMonitorField = true, nameI18n = {"启动时间", "en:Start Time"}, infoI18n = {"Java 虚拟机的启动时间。", "en:The Java virtual machine startup time."})
+    @MonitorField(dynamic = false, nameI18n = {"启动时间", "en:Start Time"}, infoI18n = {"Java 虚拟机的启动时间。", "en:The Java virtual machine startup time."})
     public String StartTime;
 
-    @ModelField(isMonitorField = true,
+    @MonitorField(dynamic = false,
             nameI18n = {"最大堆内存（MB）", "en:Heap Memory Max (MB)"},
             infoI18n = {"可使用的最大堆内存，单位MB。", "en:The maximum heap memory that can be used, in MB."})
     public double heapCommitted;
 
-    @ModelField(isMonitorField = true, nameI18n = {"JVM 线程总数", "en:JVM Thread Count"},
-            supportGraphical = true,
+    @MonitorField(nameI18n = {"JVM 线程总数", "en:JVM Thread Count"},
             infoI18n = {"当前活动线程的数量，包括守护线程和非守护线程。", "en:The current number of live threads including both daemon and non-daemon threads."})
     public int threadCount;
 
-    @ModelField(isMonitorField = true, nameI18n = {"死锁线程数", "en:Deadlocked Threads"},
-            supportGraphical = true,
+    @MonitorField(nameI18n = {"死锁线程数", "en:Deadlocked Threads"},
             infoI18n = {"死锁等待对象监视器或同步器的线程数。", "en:The number of threads deadlocked waiting for an object monitor or synchronizer."})
     public int deadlockedThreadCount;
 
-    @ModelField(isMonitorField = true, supportGraphical = true,
+    @MonitorField(
             nameI18n = {"使用中堆内存（MB）", "en:Heap Memory Used (MB)"},
             infoI18n = {"正在使用的堆内存的大小，单位MB。", "en:The size of the heap memory in use, in MB."})
     public double heapUsed;
 
-    @ModelField(isMonitorField = true, supportGraphical = true,
+    @MonitorField(
             nameI18n = {"使用中非堆内存（MB）", "en:Non-Heap Memory Used (MB)"},
             infoI18n = {"正在使用的非堆内存的大小，单位MB。", "en:The size of the non-heap memory in use, in MB."})
     public double nonHeapUsed;
 
-    @ModelField(isMonitorField = true, supportGraphicalDynamic = true, nameI18n = {"收集总数", "en:GC Count"},
+    @MonitorField(dynamicMultiple = true,
+            nameI18n = {"收集总数", "en:GC Count"},
             infoI18n = {"垃圾收集发生的次数。", "en:The total number of collections that have occurred."})
     public int collectionCount = 0;
 
-    @ModelField(isMonitorField = true, supportGraphicalDynamic = true, nameI18n = {"GC时间(毫秒)", "en:GC Time (milliseconds)"},
+    @MonitorField(dynamicMultiple = true,
+            nameI18n = {"GC时间(毫秒)", "en:GC Time (milliseconds)"},
             infoI18n = {"垃圾收集的累积时间（以毫秒为单位）。", "en:The approximate accumulated collection elapsed time in milliseconds."})
     public int collectionTime = 0;
 

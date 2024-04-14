@@ -46,17 +46,6 @@ public abstract class ModelBase {
     }
 
     /**
-     * 定制验证逻辑，返回 i18n 的 key。
-     *
-     * @param request   请求实例。
-     * @param fieldName 验证的字段名。
-     * @return 返回验证失败时的 i18n 错误消息 key，如果验证通过则返回 null。
-     */
-    public String validate(Request request, String fieldName) {
-        return null;
-    }
-
-    /**
      * 获取页面表单字段分组信息。
      *
      * @return 返回页面表单字段分组信息，如果无分组则返回 null。

@@ -15,8 +15,11 @@ class MessageDigestImpl implements MessageDigest {
 
     @Override
     public String digest(String text, String algorithm, int saltLength, int iterations) {
-        byte[] salt = new byte[saltLength];
-        random.nextBytes(salt);
+        byte[] salt = null;
+        if (saltLength > 0) {
+            salt = new byte[saltLength];
+            random.nextBytes(salt);
+        }
         return digest(text, algorithm, salt, iterations);
     }
 
@@ -34,10 +37,15 @@ class MessageDigestImpl implements MessageDigest {
         return Objects.equals(digest, msgDigest);
     }
 
+    @Override
+    public String fingerprint(String data) {
+        return digest(data, "MD5", 0, 1);
+    }
+
     private String digest(String inputCredentials, String algorithm, byte[] salt, int iterations) {
         byte[] digest = digest(algorithm, iterations, salt, inputCredentials.getBytes(StandardCharsets.UTF_8));
         String pwd = encode(digest);
-        return encode(salt) + SP + iterations + SP + pwd + SP + algorithm;
+        return algorithm + SP + encode(salt) + SP + iterations + SP + pwd;
     }
 
     private byte[] decode(String encode) {
@@ -45,6 +53,7 @@ class MessageDigestImpl implements MessageDigest {
     }
 
     private String encode(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) return "";
         return HexUtil.bytesToHex(bytes);
     }
 
@@ -72,7 +81,9 @@ class MessageDigestImpl implements MessageDigest {
 
         // Round 1
         for (byte[] bytes : input) {
-            md.update(bytes);
+            if (bytes != null && bytes.length > 0) {
+                md.update(bytes);
+            }
         }
         byte[] result = md.digest();
 

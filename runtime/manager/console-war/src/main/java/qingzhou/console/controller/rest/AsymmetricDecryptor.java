@@ -4,7 +4,7 @@ import qingzhou.api.FieldType;
 import qingzhou.api.metadata.ModelFieldData;
 import qingzhou.api.metadata.ModelManager;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.RequestImpl;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 

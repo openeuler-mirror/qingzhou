@@ -1,16 +1,31 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.deployer.App;
-import qingzhou.console.ResponseImpl;
+import qingzhou.registry.AppInfo;
 
 import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.Map;
 
-public class AppImpl implements App {
-    private QingzhouApp qingzhouApp;
-    private AppContextImpl appContext;
+class AppImpl implements App {
     private URLClassLoader loader;
+    private AppInfo appInfo;
+    private AppContextImpl appContext;
+    private Map<String, ModelBase> modelBaseMap = new HashMap<>();
+    private QingzhouApp qingzhouApp;
     private Validator validator;
+
+    private Map<String, Map<String, ActionMethod>> actionMap = new HashMap<>();
+
+    AppInfo getAppInfo() {
+        return appInfo;
+    }
+
+    void setAppInfo(AppInfo appInfo) {
+        this.appInfo = appInfo;
+    }
 
     @Override
     public AppContextImpl getAppContext() {
@@ -20,13 +35,12 @@ public class AppImpl implements App {
     @Override
     public void invoke(Request request, Response response) throws Exception {
         String modelName = request.getModelName();
-        ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getAppMetadata().getModelManager();
-        ModelInfo modelInfo = modelManager.getModelInfo(modelName);
-        if (modelInfo == null) return;
+        Map<String, ActionMethod> methodMap = actionMap.get(modelName);
+        if (methodMap == null) return;
 
         String actionName = request.getActionName();
-        ActionInfo actionInfo = modelInfo.actionInfoMap.get(actionName);
-        if (actionInfo == null) return;
+        ActionMethod actionMethod = methodMap.get(actionName);
+        if (actionMethod == null) return;
 
         ResponseImpl validationResponse = new ResponseImpl();
         if (validator == null) {
@@ -35,7 +49,7 @@ public class AppImpl implements App {
         boolean ok = validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
         if (!ok) {
             if (validationResponse.getMsg() == null) {
-                validationResponse.setMsg(appContext.getAppMetadata().getI18n(request.getI18nLang(), "validator.fail"));
+                validationResponse.setMsg(appContext.getI18n(request.getI18nLang(), "validator.fail"));
             }
             return;
         }
@@ -59,12 +73,7 @@ public class AppImpl implements App {
         invokeMethod.invokeMethod(request, response);
     }
 
-    @Override
-    public ModelBase getModelInstance(String modelName) {
-        return ((ModelManagerImpl) appContext.getAppMetadata().getModelManager()).getModelInfo(modelName).instance;
-    }
-
-    public void setAppContext(AppContextImpl appContext) {
+    void setAppContext(AppContextImpl appContext) {
         this.appContext = appContext;
     }
 
@@ -73,15 +82,15 @@ public class AppImpl implements App {
         return qingzhouApp;
     }
 
-    public void setQingzhouApp(QingzhouApp qingzhouApp) {
+    void setQingzhouApp(QingzhouApp qingzhouApp) {
         this.qingzhouApp = qingzhouApp;
     }
 
-    public URLClassLoader getLoader() {
+    URLClassLoader getLoader() {
         return loader;
     }
 
-    public void setLoader(URLClassLoader loader) {
+    void setLoader(URLClassLoader loader) {
         this.loader = loader;
     }
 }

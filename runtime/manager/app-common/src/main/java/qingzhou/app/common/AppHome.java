@@ -22,9 +22,9 @@ public class AppHome extends ModelBase {
     public String javaHome;
 
     @ModelAction(name = Showable.ACTION_NAME_SHOW,
-            icon = "info-sign", forwardTo = "show",
             nameI18n = {"首页", "en:Home"},
             infoI18n = {"展示应用的首页信息。", "en:Displays the homepage information of the app."})
+    @ActionView(icon = "info-sign", forwardTo = "show")
     public void show(Request request, Response response) throws Exception {
         AppHome home = new AppHome();
         home.appName = request.getAppName();

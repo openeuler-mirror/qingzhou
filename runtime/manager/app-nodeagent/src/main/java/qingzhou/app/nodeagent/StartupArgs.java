@@ -1,12 +1,6 @@
 package qingzhou.app.nodeagent;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Options;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 
 import java.util.ArrayList;
@@ -37,34 +31,41 @@ public class StartupArgs extends ModelBase implements Editable {
     /**
      * 参数
      */
-    @ModelField(required = true,
+    @ModelField(
             checkXssLevel1 = true,
             skipCharacterCheck = STARTUP_ARGS_SKIP_CHARACTER_CHECK,
-            shownOnList = true, showToEdit = false, lengthMax = 1024, nameI18n = {"参数", "en:Argument"}, infoI18n = {"该参数将用于 JVM 启动时的进程入参。", "en:This argument will be used for the process entry when the JVM is started."})
+            shownOnList = true, showToEdit = false, nameI18n = {"参数", "en:Argument"}, infoI18n = {"该参数将用于 JVM 启动时的进程入参。", "en:This argument will be used for the process entry when the JVM is started."})
+    @FieldValidation(required = true, lengthMax = 1024)
     public String id;
 
     @ModelField(
             skipCharacterCheck = STARTUP_ARGS_SKIP_CHARACTER_CHECK,
             checkXssLevel1 = true,
-            required = true, nameI18n = {"更改为", "en:Change to"}, infoI18n = {"将参数更改为此值。", "en:Change the argument to this value."})
+            nameI18n = {"更改为", "en:Change to"}, infoI18n = {"将参数更改为此值。", "en:Change the argument to this value."})
+    @FieldValidation(required = true)
     public String changeToArg;
 
-    @ModelField(type = FieldType.bool, shownOnList = true, nameI18n = {"启用", "en:Enabled"}, infoI18n = {"只有启用的参数才会传给 JVM 加载，未启用的则不会。", "en:Only arguments that are enabled are passed to the JVM for loading, those that are not are not."})
+    @ModelField(shownOnList = true, nameI18n = {"启用", "en:Enabled"}, infoI18n = {"只有启用的参数才会传给 JVM 加载，未启用的则不会。", "en:Only arguments that are enabled are passed to the JVM for loading, those that are not are not."})
+    @FieldView(type = FieldType.bool)
     public Boolean enabled = true;
 
-    @ModelField(type = FieldType.bool, shownOnList = true, nameI18n = {"仅 Linux 有效", "en:Only For Linux"}, infoI18n = {"开启后，该参数仅会在 linux 操作系统上启用。", "en:When turned on, this parameter is only enabled on linux operating systems."})
+    @ModelField(shownOnList = true, nameI18n = {"仅 Linux 有效", "en:Only For Linux"}, infoI18n = {"开启后，该参数仅会在 linux 操作系统上启用。", "en:When turned on, this parameter is only enabled on linux operating systems."})
+    @FieldView(type = FieldType.bool)
     public Boolean onlyForLinux = false;
 
     /**
      * 支持JRE版本
      */
-    @ModelField(type = FieldType.select, shownOnList = true, nameI18n = {"限定 JRE 版本", "en:Limited JRE"}, infoI18n = {"限定该参数支持的 JRE 的版本，限定后，只有限定的 JRE 可以加载到该参数；其它 JRE 则不会，为空表示不限制。", "en:Limit the version of JRE supported by this parameter. After the limitation, only the limited JRE can be loaded into this parameter, and other JREs will not. If it is empty, it means no limitation."})
+    @ModelField(shownOnList = true, nameI18n = {"限定 JRE 版本", "en:Limited JRE"}, infoI18n = {"限定该参数支持的 JRE 的版本，限定后，只有限定的 JRE 可以加载到该参数；其它 JRE 则不会，为空表示不限制。", "en:Limit the version of JRE supported by this parameter. After the limitation, only the limited JRE can be loaded into this parameter, and other JREs will not. If it is empty, it means no limitation."})
+    @FieldView(type = FieldType.select)
     public String supportedJRE;
 
     /**
      * 兼容方向
      */
-    @ModelField(type = FieldType.radio, shownOnList = true, effectiveWhen = SUPPORTED_JRE_KEY + "!=", nameI18n = {"限定区间", "en:Limited Range"}, infoI18n = {"限定支持的 JRE 版本区间，大于、等于或者小于指定的 JRE 版本号。 + 表示大于等于，= 表示等于，- 表示小于等于。", "en:Limit the supported JRE version interval to greater than, equal to or less than the specified JRE version number."})
+    @ModelField(shownOnList = true, nameI18n = {"限定区间", "en:Limited Range"}, infoI18n = {"限定支持的 JRE 版本区间，大于、等于或者小于指定的 JRE 版本号。 + 表示大于等于，= 表示等于，- 表示小于等于。", "en:Limit the supported JRE version interval to greater than, equal to or less than the specified JRE version number."})
+    @FieldView(type = FieldType.radio)
+    @FieldValidation(effectiveWhen = SUPPORTED_JRE_KEY + "!=")
     public String range;
 
     /**

@@ -1,6 +1,5 @@
 package qingzhou.console;
 
-import qingzhou.api.metadata.AppMetadata;
 import qingzhou.console.controller.SystemController;
 
 import java.util.HashMap;
