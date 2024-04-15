@@ -1,6 +1,5 @@
 package qingzhou.api;
 
-import java.util.Enumeration;
 import java.util.Map;
 
 /**
@@ -51,17 +50,7 @@ public interface Request {
      * <p>
      * You should only use this method when you are sure the parameter has only
      * one value. If the parameter might have more than one value, use
-     * {@link #getParameterValues}.
-     * <p>
-     * If you use this method with a multivalued parameter, the value returned
-     * is equal to the first value in the array returned by
-     * <code>getParameterValues</code>.
-     * <p>
-     *
-     * @param name a <code>String</code> specifying the name of the parameter
-     * @return a <code>String</code> representing the single value of the
-     * parameter
-     * @see #getParameterValues
+     * {@link #getParameterMap}.
      */
     String getParameter(String name);
 
@@ -77,34 +66,6 @@ public interface Request {
      * String array.
      */
     Map<String, String[]> getParameterMap();
-
-    /**
-     * Returns an <code>Enumeration</code> of <code>String</code> objects
-     * containing the names of the parameters contained in this request. If the
-     * request has no parameters, the method returns an empty
-     * <code>Enumeration</code>.
-     *
-     * @return an <code>Enumeration</code> of <code>String</code> objects, each
-     * <code>String</code> containing the name of a request parameter;
-     * or an empty <code>Enumeration</code> if the request has no
-     * parameters
-     */
-    Enumeration<String> getParameterNames();
-
-    /**
-     * Returns an array of <code>String</code> objects containing all of the
-     * values the given request parameter has, or <code>null</code> if the
-     * parameter does not exist.
-     * <p>
-     * If the parameter has a single value, the array has a length of 1.
-     *
-     * @param name a <code>String</code> containing the name of the parameter
-     *             whose value is requested
-     * @return an array of <code>String</code> objects containing the parameter's
-     * values
-     * @see #getParameter
-     */
-    String[] getParameterValues(String name);
 
     /**
      * 获取用户名。

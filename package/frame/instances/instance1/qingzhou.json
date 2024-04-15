@@ -1,0 +1,84 @@
+{
+  "jvm": {
+    "env": [
+      {
+        "enabled": "false",
+        "name": "JAVA_HOME",
+        "value": ""
+      }
+    ],
+    "arg": [
+      {
+        "name": "-Xms64m",
+        "desc": "初始分配的堆内存"
+      },
+      {
+        "name": "-Xmx64m",
+        "desc": "最大可分配的堆内存"
+      },
+      {
+        "name": "-Dqingzhou.instance=${qingzhou.instance}",
+        "desc": "运行目录"
+      },
+      {
+        "name": "-XX:+HeapDumpOnOutOfMemoryError",
+        "desc": "开启堆转储"
+      },
+      {
+        "name": "-server"
+      },
+      {
+        "name": "-Djava.security.egd=file:/dev/./urandom",
+        "onlyForLinux": "true"
+      },
+      {
+        "name": "-Djava.security.manager",
+        "enabled": "false"
+      },
+      {
+        "name": "-Djava.rmi.server.hostname=127.0.0.1"
+      },
+      {
+        "name": "-Djava.awt.headless=true"
+      },
+      {
+        "name": "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:8888",
+        "enabled": "true",
+        "desc": "远程调试参数"
+      }
+    ]
+  },
+  "console": {
+    "enabled": "true",
+    "port": "9000",
+    "contextRoot": "/console",
+    "security": {
+      "trustedIP": "",
+      "verCodeEnabled": "true"
+    },
+    "user": [
+      {
+        "id": "qingzhou",
+        "info": "系统预置管理员",
+        "password": "E239$2$1CEA50EE641A31AD053B2BCC38A323ECF783DDE35652475495D5B112518C4D29$SHA-256",
+        "active": "true",
+        "changeInitPwd": "true",
+        "enable2FA": "false",
+        "keyFor2FA": "",
+        "enablePasswordAge": "true",
+        "passwordMaxAge": "90",
+        "passwordMinAge": "0"
+      }
+    ]
+  },
+  "remote": {
+    "enabled": "false",
+    "name": "",
+    "host": "",
+    "port": "7000",
+    "master": {
+      "url": "http://localhost:9000/console/",
+      "publicKey": "xxx"
+    }
+  }
+}

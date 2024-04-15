@@ -6,22 +6,14 @@
 
     <groupId>qingzhou</groupId>
     <artifactId>qingzhou-project</artifactId>
-    <version>0.1.0</version>
+    <version>x</version>
     <packaging>pom</packaging>
 
     <modules>
-        <module>qingzhou-launcher</module>
-        <module>qingzhou-command</module>
-        <module>qingzhou-bootstrap</module>
         <module>qingzhou-api</module>
-        <module>qingzhou-framework</module>
-        <module>service</module>
-        <module>qingzhou-config</module>
-        <module>qingzhou-app</module>
-        <module>qingzhou-remote</module>
-        <module>qingzhou-console</module>
-        <module>manager</module>
         <module>package</module>
+        <module>boot</module>
+        <module>runtime</module>
     </modules>
 
     <properties>
@@ -51,6 +43,12 @@
 
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
@@ -58,6 +56,7 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
@@ -67,6 +66,7 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.2</version>
                 <configuration>
