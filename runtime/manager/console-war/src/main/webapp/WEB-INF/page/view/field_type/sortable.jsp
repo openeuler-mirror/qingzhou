@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.deployer.impl.Validator" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%
@@ -14,7 +13,7 @@
     <input type="hidden" name="<%=fieldName%>" value='<%=fieldValue%>'>
     <ul class="sortable">
         <%
-            String[] vals = (fieldValue == null ? "" : fieldValue).split(Validator.DATA_SEPARATOR);
+            String[] vals = (fieldValue == null ? "" : fieldValue).split(",");
             for (int ii = 0; ii < vals.length; ii++) {
         %>
         <li class="droptarget" draggable="true">

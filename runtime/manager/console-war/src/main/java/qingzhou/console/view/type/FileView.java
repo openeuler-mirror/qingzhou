@@ -19,7 +19,7 @@ public class FileView implements View {
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
         ResponseImpl response = restContext.response;
-        String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModelName() + "-" + System.currentTimeMillis()) : request.getId();
+        String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModel() + "-" + System.currentTimeMillis()) : request.getId();
         HttpServletResponse servletResponse = restContext.servletResponse;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
 

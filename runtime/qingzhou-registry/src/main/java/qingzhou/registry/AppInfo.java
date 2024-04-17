@@ -1,22 +1,19 @@
 package qingzhou.registry;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
 
 public class AppInfo {
     private String name;
-    private ModelInfo[] modelInfos;
-    private Set<MenuInfo> menuInfos;
+    private Collection<ModelInfo> modelInfos;
+    private Collection<MenuInfo> menuInfos;
 
-    public synchronized Set<MenuInfo> getMenuInfos() {
-        if (menuInfos == null) {
-            menuInfos = new HashSet<>();
+    public ModelInfo getModelInfo(String modelName) {
+        for (ModelInfo modelInfo : modelInfos) {
+            if (modelInfo.getCode().equals(modelName)) {
+                return modelInfo;
+            }
         }
-        return menuInfos;
-    }
-
-    public void setMenuInfos(Set<MenuInfo> menuInfos) {
-        this.menuInfos = menuInfos;
+        return null;
     }
 
     public String getName() {
@@ -27,11 +24,19 @@ public class AppInfo {
         this.name = name;
     }
 
-    public ModelInfo[] getModelInfos() {
+    public Collection<ModelInfo> getModelInfos() {
         return modelInfos;
     }
 
-    public void setModelInfos(ModelInfo[] modelInfos) {
+    public void setModelInfos(Collection<ModelInfo> modelInfos) {
         this.modelInfos = modelInfos;
+    }
+
+    public Collection<MenuInfo> getMenuInfos() {
+        return menuInfos;
+    }
+
+    public void setMenuInfos(Collection<MenuInfo> menuInfos) {
+        this.menuInfos = menuInfos;
     }
 }

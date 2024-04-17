@@ -1,77 +1,68 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.api.metadata.ModelFieldData;
-import qingzhou.api.metadata.ModelManager;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Listable;
+import qingzhou.api.type.Monitorable;
 import qingzhou.deployer.ResponseImpl;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelFieldInfo;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
- class PresetAction {
-    private final ModelBase modelBase;
+class PresetAction {
+    private final ModelBase instance;
+    private final AppImpl app;
 
-    PresetAction(ModelBase modelBase) {
-        this.modelBase = modelBase;
+    PresetAction(AppImpl app, ModelBase instance) {
+        this.app = app;
+        this.instance = instance;
+    }
+
+    private AppInfo getAppInfo() {
+        return app.getAppInfo();
     }
 
     private AppContext getAppContext() {
-        return modelBase.getAppContext();
+        return instance.getAppContext();
     }
 
     private DataStore getDataStore() {
-        return modelBase.getDataStore();
+        return instance.getDataStore();
     }
 
-    @ModelAction(name = Showable.ACTION_NAME_SHOW,
-            nameI18n = {"查看", "en:Show"},
-            infoI18n = {"查看该组件的相关信息。", "en:View the information of this model."})
-    @ActionView(icon = "info-sign", forwardTo = "show")
+    @ModelAction(
+            name = {"查看", "en:Show"},
+            info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
-        Map<String, String> data = dataStore.getDataById(request.getModelName(), request.getId());
+        Map<String, String> data = dataStore.getDataById(request.getModel(), request.getId());
         response.addData(data);
     }
 
-    @ModelAction(name = Monitorable.ACTION_NAME_MONITOR,
-            nameI18n = {"监视", "en:Monitor"},
-            infoI18n = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
+    @ModelAction(
+            name = {"监视", "en:Monitor"},
+            info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
-    @ActionView(icon = "area-chart", forwardTo = "show", shownOnList = 9)
     public void monitor(Request request, Response response) {
-        Map<String, String> p = ((Monitorable) modelBase).monitorData();
+        Map<String, String> p = ((Monitorable) instance).monitorData();
 
         if (p == null || p.isEmpty()) {
             return;
         }
-        List<String> graphicalDynamicFields = new ArrayList<>();
         Map<String, String> monitorData = new HashMap<>();
         Map<String, String> infoData = new HashMap<>();
-        for (Map.Entry<String, ModelFieldData> entry : getAppContext().getAppMetadata().getModelManager().getMonitorFieldMap(request.getModelName()).entrySet()) {
-            String fieldName = entry.getKey();
-            ModelFieldData monitorField = entry.getValue();
-            if (monitorField.supportGraphicalDynamic()) {
-                graphicalDynamicFields.add(fieldName);
-            } else {
-                String value = p.get(fieldName);
-                if (value != null) {
-                    if (monitorField.supportGraphicalDynamic()) {
-                        graphicalDynamicFields.add(fieldName);
-                    } else if (monitorField.supportGraphical()) {
-                        monitorData.put(fieldName, value);
-                    } else {
-                        infoData.put(fieldName, value);
-                    }
-                }
-            }
-        }
+        String[] monitorFieldNames = getAppInfo().getModelInfo(request.getModel()).getMonitorFieldNames();
+        for (String fieldName : monitorFieldNames) {
+            ModelFieldInfo monitorField = getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
+            String value = p.get(fieldName);
+            if (value == null) continue;
 
-        // 检查是否有待扩展属性？
-        for (String check : graphicalDynamicFields) {
-            for (String k : p.keySet()) {
-                if (k.startsWith(check + Monitorable.MONITOR_EXT_SEPARATOR)) {
-                    monitorData.put(k, p.get(k));
-                }
+            if (monitorField.isNumeric()) {
+                monitorData.put(fieldName, value);
+            } else {
+                infoData.put(fieldName, value);
             }
         }
 
@@ -79,12 +70,11 @@ import java.util.*;
         response.addData(infoData);
     }
 
-    @ModelAction(name = Listable.ACTION_NAME_LIST,
-            nameI18n = {"列表", "en:List"},
-            infoI18n = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    @ActionView(icon = "list", forwardTo = "list")
+    @ModelAction(
+            name = {"列表", "en:List"},
+            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request, Response response) throws Exception {
-        String modelName = request.getModelName();
+        String modelName = request.getModel();
         DataStore dataStore = getDataStore();
         if (dataStore == null) {
             return;
@@ -102,36 +92,32 @@ import java.util.*;
         response.setPageNum(pageNum);
 
         String[] dataIdInPage = dataStore.getDataIdInPage(modelName, ((ResponseImpl) response).getPageSize(), pageNum).toArray(new String[0]);
-        ModelManager manager = getAppContext().getAppMetadata().getModelManager();
-        String[] fieldNamesToList = Arrays.stream(manager.getFieldNames(modelName)).filter(s -> manager.getModelField(modelName, s).showToList()).toArray(String[]::new);
+        String[] fieldNamesToList = getAppInfo().getModelInfo(modelName).getFormFieldList();
         List<Map<String, String>> result = dataStore.getDataFieldByIds(modelName, dataIdInPage, fieldNamesToList);
         for (Map<String, String> data : result) {
             response.addData(data);
         }
     }
 
-    @ModelAction(name = Editable.ACTION_NAME_EDIT,
-            nameI18n = {"编辑", "en:Edit"},
-            infoI18n = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
-    @ActionView(icon = "edit", forwardTo = "form")
+    @ModelAction(
+            name = {"编辑", "en:Edit"},
+            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {
         show(request, response);
     }
 
-    @ModelAction(name = Editable.ACTION_NAME_UPDATE,
-            nameI18n = {"更新", "en:Update"},
-            infoI18n = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-    @ActionView(icon = "save")
+    @ModelAction(
+            name = {"更新", "en:Update"},
+            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
         Map<String, String> properties = prepareParameters(request);
-        dataStore.updateDataById(request.getModelName(), request.getId(), properties);
+        dataStore.updateDataById(request.getModel(), request.getId(), properties);
     }
 
-     Map<String, String> prepareParameters(Request request) {
+    Map<String, String> prepareParameters(Request request) {
         Map<String, String> properties = new HashMap<>();
-        String[] fieldNames = getAppContext().getAppMetadata().getModelManager().getFieldNames(request.getModelName());
-        for (String fieldName : fieldNames) {
+        for (String fieldName : getAppInfo().getModelInfo(request.getModel()).getFormFieldNames()) {
             String value = request.getParameter(fieldName);
             if (value != null) {
                 properties.put(fieldName, value);
@@ -299,36 +285,31 @@ import java.util.*;
 //        return key;
 //    }
 
-    @ModelAction(
-            name = Deletable.ACTION_NAME_DELETE,
-            supportBatch = true,
-            nameI18n = {"删除", "en:Delete"},
-            infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
+    @ModelAction(batch = true,
+            name = {"删除", "en:Delete"},
+            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
-    @ActionView(icon = "trash", shownOnList = 9)
     public void delete(Request request, Response response) throws Exception {
 
         DataStore dataStore = getDataStore();
-        dataStore.deleteDataById(request.getModelName(), request.getId());
+        dataStore.deleteDataById(request.getModel(), request.getId());
     }
 
-    @ModelAction(name = Createable.ACTION_NAME_CREATE,
-            nameI18n = {"创建", "en:Create"},
-            infoI18n = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
-    @ActionView(icon = "plus-sign", forwardTo = "form", shownOnListHead = 1)
+    @ModelAction(
+            name = {"创建", "en:Create"},
+            info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request, Response response) throws Exception {
-        Map<String, String> properties = getAppContext().getAppMetadata().getModelManager().getModelDefaultProperties(request.getModelName());
+        Map<String, String> properties = getAppInfo().getModelInfo(request.getModel()).getFormFieldDefaultValues();
         response.addData(properties);
     }
 
-    @ModelAction(name = Createable.ACTION_NAME_ADD,
-            nameI18n = {"添加", "en:Add"},
-            infoI18n = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    @ActionView(icon = "save")
+    @ModelAction(
+            name = {"添加", "en:Add"},
+            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
         Map<String, String> properties = prepareParameters(request);
         String id = properties.get(Listable.FIELD_NAME_ID);
         DataStore dataStore = getDataStore();
-        dataStore.addData(request.getModelName(), id, properties);
+        dataStore.addData(request.getModel(), id, properties);
     }
 }

@@ -26,8 +26,8 @@ public class HtmlView implements View {
         req.setAttribute(QZ_REQUEST_KEY, request);
         req.setAttribute(QZ_RESPONSE_KEY, response);
 
-        String modelName = request.getModelName();
-        String actionName = request.getActionName();
+        String modelName = request.getModel();
+        String actionName = request.getAction();
         ModelActionData modelAction = SystemController.getAppMetadata(request).getModelManager().getModelAction(modelName, actionName);
         String pageForward = null;
         if (modelAction != null) {
@@ -57,12 +57,12 @@ public class HtmlView implements View {
     }
 
     private boolean isManageAction(Request request) {
-        if (!App.SYS_ACTION_MANAGE_PAGE.equals(request.getActionName())) return false;
+        if (!App.SYS_ACTION_MANAGE_PAGE.equals(request.getAction())) return false;
 
-        if (!App.SYS_APP_MASTER.equals(request.getAppName())) return false;
+        if (!App.SYS_APP_MASTER.equals(request.getApp())) return false;
 
-        return App.SYS_MODEL_APP.equals(request.getModelName())
-                || App.SYS_MODEL_NODE.equals(request.getModelName());
+        return App.SYS_MODEL_APP.equals(request.getModel())
+                || App.SYS_MODEL_NODE.equals(request.getModel());
     }
 
     @Override

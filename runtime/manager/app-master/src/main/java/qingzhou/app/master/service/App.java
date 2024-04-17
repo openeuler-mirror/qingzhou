@@ -5,8 +5,8 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
-import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.StringUtil;
 import qingzhou.logger.Logger;
@@ -15,63 +15,54 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Stream;
 
-@Model(name = qingzhou.deployer.App.SYS_MODEL_APP, icon = "cube-alt",
-        menuName = "Service", menuOrder = 1,
-        nameI18n = {"应用", "en:App"},
-        infoI18n = {"应用。",
+@Model(code = qingzhou.deployer.App.SYS_MODEL_APP, icon = "cube-alt",
+        menu = "Service", order = 1,
+        name = {"应用", "en:App"},
+        info = {"应用。",
                 "en:App Management."})
 public class App extends ModelBase implements Createable {
 
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"名称", "en:Name"},
-            infoI18n = {"应用名称。", "en:App Name"})
-    @FieldValidation(cannotAdd = true, cannotUpdate = true,
-            unsupportedStrings = {qingzhou.deployer.App.SYS_APP_MASTER, qingzhou.deployer.App.SYS_APP_NODE_AGENT})
+            list = true,
+            name = {"名称", "en:Name"},
+            info = {"应用名称。", "en:App Name"})
     public String id;
 
     @ModelField(
-            nameI18n = {"使用上传", "en:Enable Upload"},
-            infoI18n = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。",
+            name = {"使用上传", "en:Enable Upload"},
+            info = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。",
                     "en:The installed app can be uploaded from the client or read from a location specified on the server side."})
-    @FieldValidation(required = true, cannotUpdate = true)
-    @FieldView(type = FieldType.bool)
     public boolean appFrom = false;
 
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"应用位置", "en:Application File"},
-            infoI18n = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar 类型的文件。",
+            list = true,
+            name = {"应用位置", "en:Application File"},
+            info = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar 类型的文件。",
                     "en:The location of the application on the server, usually the app package, Note: Must be a *.jar file."})
-    @FieldValidation(required = true, lengthMax = 255, unsupportedCharacters = "#", effectiveWhen = "appFrom=false", cannotUpdate = true)
     public String filename;
 
     @ModelField(
-            nameI18n = {"上传应用", "en:Upload Application"},
-            infoI18n = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
+            name = {"上传应用", "en:Upload Application"},
+            info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
                     "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
-    @FieldValidation(required = true, unsupportedCharacters = "#", effectiveWhen = "appFrom=true", cannotUpdate = true)
-    @FieldView(type = FieldType.file)
     public String fromUpload;
 
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"节点", "en:Node"},
-            infoI18n = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
-    @FieldValidation(required = true)
-    @FieldView(type = FieldType.checkbox)
+            list = true,
+            name = {"节点", "en:Node"},
+            info = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
     public String nodes;
 
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"应用版本", "en:Instance Version"},
-            infoI18n = {"此应用的版本。", "en:The version of this app."})
+            list = true,
+            name = {"应用版本", "en:Instance Version"},
+            info = {"此应用的版本。", "en:The version of this app."})
     public String version;
 
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"类型", "en:Type"},
-            infoI18n = {"此应用的类型。", "en:The type of this app."})
+            list = true,
+            name = {"类型", "en:Type"},
+            info = {"此应用的类型。", "en:The type of this app."})
     public String type;
 
     @Override
@@ -83,7 +74,7 @@ public class App extends ModelBase implements Createable {
     @Override
     public Options options(Request request, String fieldName) {
         if ("nodes".equals(fieldName)) {
-            String userName = request.getUserName();
+            String userName = request.getUser();
             List<Option> nodeList = new ArrayList<>();
             nodeList.add(Option.of(qingzhou.deployer.App.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
             Set<String> nodeSet = new HashSet<>();
@@ -116,9 +107,8 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(name = Createable.ACTION_NAME_ADD,
-            nameI18n = {"安装", "en:Install"},
-            infoI18n = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
-    @ActionView(icon = "save")
+            name = {"安装", "en:Install"},
+            info = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
     public void add(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
         Map<String, String> p = MasterApp.prepareParameters(request, getAppContext());
@@ -130,7 +120,7 @@ public class App extends ModelBase implements Createable {
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
             response.setSuccess(false);
-            String msg = getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "app.id.not.exist");
+            String msg = getAppContext().getAppMetadata().getI18n(request.getLang(), "app.id.not.exist");
             response.setMsg(msg);
             return;
         }
@@ -143,7 +133,7 @@ public class App extends ModelBase implements Createable {
             appName = srcFileName.substring(0, index);
         } else {
             response.setSuccess(false);
-            String msg = getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "app.type.unknown");
+            String msg = getAppContext().getAppMetadata().getI18n(request.getLang(), "app.type.unknown");
             response.setMsg(msg);
             return;
         }
@@ -175,19 +165,17 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(name = qingzhou.deployer.App.SYS_ACTION_MANAGE_PAGE,
-            nameI18n = {"管理", "en:Manage"},
-            infoI18n = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
-    @ActionView(icon = "location-arrow", forwardTo = "sys/" + qingzhou.deployer.App.SYS_ACTION_MANAGE_PAGE, shownOnList = 1)
+            name = {"管理", "en:Manage"},
+            info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
     }
 
     @ModelAction(
             name = Deletable.ACTION_NAME_DELETE,
-            supportBatch = true,
-            nameI18n = {"删除", "en:Delete"},
-            infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
+            batch = true,
+            name = {"删除", "en:Delete"},
+            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
-    @ActionView(icon = "trash", shownOnList = 9)
     public void delete(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
         String appName = request.getId();

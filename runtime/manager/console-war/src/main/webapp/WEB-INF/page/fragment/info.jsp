@@ -123,11 +123,6 @@
                 for (Map.Entry<String, String> e : models.get(0).entrySet()) {
                     String key = e.getKey();
                     String i18n = I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + key);
-                    int i = key.indexOf(Monitorable.MONITOR_EXT_SEPARATOR);
-                    if (i > 0) {
-                        i18n = I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + key.substring(0, i));
-                        i18n = i18n + ":" + key.substring(i + 1);
-                    }
                     keysBuilder.append("\"").append(key).append("\":\"").append(i18n).append("\",");
                 }
                 if (keysBuilder.indexOf(",") > 0) {

@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <form name="filterForm" id="filterForm" method="POST"
-      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getAppName() + "/" + qzRequest.getModelName() + "/" + Listable.ACTION_NAME_LIST)%>">
+      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getApp() + "/" + qzRequest.getModel() + "/" + Listable.ACTION_NAME_LIST)%>">
     <div class="row filterForm" style="margin-top: 10px;">
         <%
             for (Integer i : indexToShow) {
@@ -9,7 +9,7 @@
                 List<Option> modelOptionsEntry = null;
                 if (PageBackendService.isFilterSelect(qzRequest, i)) {
                     try {
-                        Options modelOptions = modelManager.getOptions(qzRequest, qzRequest.getModelName(), fieldName);
+                        Options modelOptions = modelManager.getOptions(qzRequest, qzRequest.getModel(), fieldName);
                         if (modelOptions != null) {
                             modelOptionsEntry = modelOptions.options();
                         }
@@ -31,7 +31,7 @@
                     }
                 %>
                 <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control"
-                       placeholder="<%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>">
+                       placeholder="<%=I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + fieldName)%>">
                 <%
                     }
                 %>

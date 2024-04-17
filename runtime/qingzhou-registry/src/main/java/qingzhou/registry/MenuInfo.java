@@ -3,51 +3,51 @@ package qingzhou.registry;
 import java.util.Objects;
 
 public class MenuInfo {
-    private String menuName;
-    private String[] menuI18n;
-    private String menuIcon;
-    private int menuOrder;
+    private String name;
+    private String[] i18n;
+    private String icon;
+    private int order;
 
     public MenuInfo() {
     }
 
-    public MenuInfo(String menuName, String[] menuI18n, String menuIcon, int menuOrder) {
-        this.menuName = menuName;
-        this.menuI18n = menuI18n;
-        this.menuIcon = menuIcon;
-        this.menuOrder = menuOrder;
+    public MenuInfo(String name, String[] i18n, String icon, int order) {
+        this.name = name;
+        this.i18n = i18n;
+        this.icon = icon;
+        this.order = order;
     }
 
-    public String getMenuName() {
-        return menuName;
+    public String getName() {
+        return name;
     }
 
-    public void setMenuName(String menuName) {
-        this.menuName = menuName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String[] getMenuI18n() {
-        return menuI18n;
+    public String[] getI18n() {
+        return i18n;
     }
 
-    public void setMenuI18n(String[] menuI18n) {
-        this.menuI18n = menuI18n;
+    public void setI18n(String[] i18n) {
+        this.i18n = i18n;
     }
 
-    public String getMenuIcon() {
-        return menuIcon;
+    public String getIcon() {
+        return icon;
     }
 
-    public void setMenuIcon(String menuIcon) {
-        this.menuIcon = menuIcon;
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 
-    public int getMenuOrder() {
-        return menuOrder;
+    public int getOrder() {
+        return order;
     }
 
-    public void setMenuOrder(int menuOrder) {
-        this.menuOrder = menuOrder;
+    public void setOrder(int order) {
+        this.order = order;
     }
 
     @Override
@@ -55,11 +55,11 @@ public class MenuInfo {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MenuInfo menuInfo = (MenuInfo) o;
-        return Objects.equals(menuName, menuInfo.menuName);
+        return Objects.equals(name, menuInfo.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(menuName);
+        return Objects.hash(name);
     }
 }

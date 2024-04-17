@@ -7,7 +7,6 @@ import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.deployer.App;
-import qingzhou.deployer.impl.Validator;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
@@ -43,19 +42,19 @@ public class PageBackendService {
         if (modelManager == null) {
             return new String[0];
         }
-        String modelName = request.getModelName();
+        String modelName = request.getModel();
         return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelActionData::showToList).sorted(Comparator.comparingInt(ModelActionData::orderOnList)).map(ModelActionData::name).toArray(String[]::new);
     }
 
     public static String[] getActionNamesShowToListHead(Request request) {
         ModelManager modelManager = getModelManager(request);
-        String modelName = request.getModelName();
+        String modelName = request.getModel();
         return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelActionData::showToListHead).sorted(Comparator.comparingInt(ModelActionData::orderOnList)).map(ModelActionData::name).toArray(String[]::new);
     }
 
     public static String getFieldName(Request request, int fieldIndex) {
         ModelManager modelManager = getModelManager(request);
-        return modelManager.getFieldNames(request.getModelName())[fieldIndex];
+        return modelManager.getFieldNames(request.getModel())[fieldIndex];
     }
 
     public static String getAppName(Request request) {
@@ -67,7 +66,7 @@ public class PageBackendService {
             return App.SYS_APP_NODE_AGENT;
         }
 
-        return request.getAppName();
+        return request.getApp();
     }
 
     public static String getAppName(String manageType, String appName) {
@@ -119,9 +118,9 @@ public class PageBackendService {
     static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, RequestImpl qzRequest, StringBuilder menuBuilder) {
         String model = menu.getMenuName();
         String action = menu.getMenuAction();
-        menuBuilder.append("<li class=\"treeview ").append((model.equals(qzRequest.getModelName()) ? " active" : "")).append("\">");
+        menuBuilder.append("<li class=\"treeview ").append((model.equals(qzRequest.getModel()) ? " active" : "")).append("\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + qzRequest.getManageType() + "/" + qzRequest.getAppName() + "/" + model + "/" + action;
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + qzRequest.getManageType() + "/" + qzRequest.getApp() + "/" + model + "/" + action;
         menuBuilder.append("<a href='").append(encodeURL(response, url)).append("' modelName='").append(model).append("'>");
         menuBuilder.append("<i class='icon icon-").append(menu.getMenuIcon()).append("'></i>");
         menuBuilder.append("<span>").append(I18n.getString(getAppName(qzRequest), "model." + model)).append("</span>");
@@ -151,7 +150,7 @@ public class PageBackendService {
             } else {
                 StringBuilder parentBuilder = new StringBuilder();
                 buildMenuHtmlBuilder(children, request, response, viewName, qzRequest, childrenBuilder, false);
-                printParentMenu(menu, qzRequest.getModelName(), parentBuilder, childrenBuilder);
+                printParentMenu(menu, qzRequest.getModel(), parentBuilder, childrenBuilder);
                 builder.append(parentBuilder);
             }
         }
@@ -164,7 +163,7 @@ public class PageBackendService {
             return menus;
         }
         String appName = getAppName(request);
-        ModelData[] allModels = AccessControl.getLoginUserAppMenuModels(request.getUserName(), appName);
+        ModelData[] allModels = AccessControl.getLoginUserAppMenuModels(request.getUser(), appName);
         /**
          *  name -> String,
          *  parentName -> name,
@@ -239,7 +238,7 @@ public class PageBackendService {
     public static Map<String, Map<String, ModelFieldData>> getGroupedModelFieldMap(Request request) {
         Map<String, Map<String, ModelFieldData>> result = new LinkedHashMap<>();
         ModelManager manager = getModelManager(request);
-        String modelName = request.getModelName();
+        String modelName = request.getModel();
         for (String groupName : manager.getGroupNames(modelName)) {
             Map<String, ModelFieldData> map = new LinkedHashMap<>();
             String[] fieldNamesByGroup = manager.getFieldNamesByGroup(modelName, groupName);
@@ -258,8 +257,8 @@ public class PageBackendService {
         if (modelManager == null) {
             return null;
         }
-        boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, request.getActionName());
-        for (String actionName : modelManager.getActionNames(request.getModelName())) {
+        boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, request.getAction());
+        for (String actionName : modelManager.getActionNames(request.getModel())) {
             if (actionName.equals(Editable.ACTION_NAME_UPDATE)) {
                 if (isEdit) {
                     return Editable.ACTION_NAME_UPDATE;
@@ -278,8 +277,8 @@ public class PageBackendService {
         if (modelManager == null) {
             return false;
         }
-        ModelActionData listAction = modelManager.getModelAction(request.getModelName(), Listable.ACTION_NAME_LIST);
-        ModelFieldData idField = modelManager.getModelField(request.getModelName(), Listable.FIELD_NAME_ID);
+        ModelActionData listAction = modelManager.getModelAction(request.getModel(), Listable.ACTION_NAME_LIST);
+        ModelFieldData idField = modelManager.getModelField(request.getModel(), Listable.FIELD_NAME_ID);
         return listAction != null && idField != null;
     }
 
@@ -298,7 +297,7 @@ public class PageBackendService {
             if (!effective) {
                 return String.format(
                         ConsoleI18n.getI18n(I18n.getI18nLang(), "validator.ActionEffective.notsupported"),
-                        I18n.getString(request.getAppName(), "model.action." + request.getModelName() + "." + request.getActionName()),// todo
+                        I18n.getString(request.getApp(), "model.action." + request.getModel() + "." + request.getAction()),// todo
                         effectiveWhen);
             }
         }
@@ -311,7 +310,7 @@ public class PageBackendService {
             return new HashMap<>();
         }
         Map<String, String> result = new HashMap<>();
-        String modelName = request.getModelName();
+        String modelName = request.getModel();
         for (String fieldName : modelManager.getFieldNames(modelName)) {
             ModelFieldData modelField = modelManager.getModelField(modelName, fieldName);
             String condition = modelField.effectiveWhen();
@@ -331,11 +330,11 @@ public class PageBackendService {
         if (modelManager == null) {
             return false;
         }
-        String modelName = request.getModelName();
+        String modelName = request.getModel();
         String[] allFieldNames = modelManager.getFieldNames(modelName);
         ModelFieldData modelField = modelManager.getModelField(modelName, allFieldNames[i]);
         FieldType fieldType = modelField.type();
-        return fieldType == FieldType.radio || fieldType == FieldType.bool || fieldType == FieldType.select || fieldType == FieldType.groupedMultiselect || fieldType == FieldType.checkbox || fieldType == FieldType.sortableCheckbox;
+        return fieldType == FieldType.radio || fieldType == FieldType.bool || fieldType == FieldType.select || fieldType == FieldType.groupmultiselect || fieldType == FieldType.checkbox || fieldType == FieldType.sortablecheckbox;
     }
 
     public static boolean isFieldReadOnly(Request request, String fieldName) {
@@ -343,7 +342,7 @@ public class PageBackendService {
         if (modelManager == null) {
             return false;
         }
-        ModelFieldData modelField = modelManager.getModelField(request.getModelName(), fieldName);
+        ModelFieldData modelField = modelManager.getModelField(request.getModel(), fieldName);
         if (modelField.maxLength() < 1) {
             return true;
         }
@@ -377,7 +376,7 @@ public class PageBackendService {
         final ModelManager modelManager = getModelManager(request);
         List<ModelActionData> actions = new ArrayList<>();
         if (modelManager != null) {
-            final String modelName = request.getModelName();
+            final String modelName = request.getModel();
             boolean hasId = hasIDField(request);
             if (hasId && !dataList.isEmpty()) {
                 for (String ac : modelManager.getActionNamesSupportBatch(modelName)) {
@@ -406,7 +405,7 @@ public class PageBackendService {
     }
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, RequestImpl request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getManageType() + "/" + request.getAppName() + "/" + request.getModelName() + "/" + actionName;
+        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getManageType() + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
         return response.encodeURL(url);
     }
 

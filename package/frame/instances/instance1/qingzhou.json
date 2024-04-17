@@ -73,6 +73,7 @@
   },
   "remote": {
     "enabled": "false",
+    "id": "",
     "name": "",
     "host": "",
     "port": "7000",

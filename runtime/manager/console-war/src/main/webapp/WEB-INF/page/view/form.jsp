@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.deployer.impl.Validator" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -7,10 +6,10 @@
         return; // for 静态源码漏洞扫描
     }
 
-    boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, qzRequest.getActionName());
+    boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, qzRequest.getAction());
     String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
     String idFieldName = Listable.FIELD_NAME_ID;
-    ModelFieldData idField = modelManager.getModelField(qzRequest.getModelName(), idFieldName);
+    ModelFieldData idField = modelManager.getModelField(qzRequest.getModel(), idFieldName);
     final boolean hasId = idField != null;
     List<String> passwordFields = new ArrayList<>();
     String id = qzRequest.getId();
@@ -48,7 +47,7 @@
             <li <%=isFirst ? "class='active'" : ""%>>
                 <a data-tab href="#group-<%=group%>-<%=suffixId%>"
                    tabGroup="<%=group%>">
-                    <%=I18n.getString(modelManager.getGroup(qzRequest.getModelName(), group).i18n())%>
+                    <%=I18n.getString(modelManager.getGroup(qzRequest.getModel(), group).i18n())%>
                 </a>
             </li>
             <%
@@ -112,7 +111,7 @@
                         }
 
                         String fieldValue = model.get(fieldName);// 需要在 isFieldReadOnly 之后，原因是 license 限制的 5 个并发会在其中被修改，总之最后读取值是最新的最准确的
-                        List<String> fieldValues = fieldValue == null ? new ArrayList<>() : Arrays.asList(fieldValue.split(Validator.DATA_SEPARATOR));
+                        List<String> fieldValues = fieldValue == null ? new ArrayList<>() : Arrays.asList(fieldValue.split(","));
                         if (fieldValue == null) {
                             fieldValue = "";
                         }
@@ -121,9 +120,9 @@
                 <div class="form-group" id="form-item-<%=fieldName%>">
                     <label for="<%=fieldName%>" class="col-sm-4">
                         <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
-                        <%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
+                        <%=I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + fieldName)%>
                         <%
-                            String fieldInfo = I18n.getString(menuAppName, "model.field.info." + qzRequest.getModelName() + "." + fieldName);
+                            String fieldInfo = I18n.getString(menuAppName, "model.field.info." + qzRequest.getModel() + "." + fieldName);
                             if (fieldInfo != null) {
                                 // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
                                 fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
@@ -197,7 +196,6 @@
                         <%
                                 break;
                             case select:
-                            case selectCharset:
                         %>
                         <%@ include file="field_type/select.jsp" %>
                         <%
@@ -207,9 +205,9 @@
                         <%@ include file="field_type/multiselect.jsp" %>
                         <%
                                 break;
-                            case groupedMultiselect:
+                            case groupmultiselect:
                         %>
-                        <%@ include file="field_type/groupedMultiselect.jsp" %>
+                        <%@ include file="field_type/groupmultiselect.jsp" %>
                         <%
                                 break;
                             case checkbox:
@@ -217,7 +215,7 @@
                         <%@ include file="field_type/checkbox.jsp" %>
                         <%
                                 break;
-                            case sortableCheckbox:
+                            case sortablecheckbox:
                         %>
                         <%@ include file="field_type/sortablecheckbox.jsp" %>
                         <%
@@ -265,15 +263,15 @@
         <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
             <div class="form-btn">
                 <%
-                    boolean submitPermission = AccessControl.canAccess(menuAppName, qzRequest.getModelName() + "/" + submitActionName, LoginManager.getLoginUser(session));
+                    boolean submitPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + submitActionName, LoginManager.getLoginUser(session));
                     if (submitPermission) {
                 %>
                 <input type="submit" class="btn"
-                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + submitActionName)%>'>
+                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + submitActionName)%>'>
                 <%
                     }
 
-                    boolean listPermission = AccessControl.canAccess(menuAppName, qzRequest.getModelName() + "/" + Listable.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
+                    boolean listPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Listable.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
                     if (hasId && listPermission) {
                 %>
                 <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_NAME_LIST)%>"

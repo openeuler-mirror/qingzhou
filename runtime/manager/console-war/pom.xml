@@ -41,25 +41,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-console</artifactId>
-            <version>x</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-deployer</artifactId>
-            <version>x</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-json</artifactId>
-            <version>x</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
 </project>

@@ -56,7 +56,7 @@ public class Admin extends CommandLineProcessor { // 由 Launcher 来调用
 
     private List<CommandLineProcessor> listCommandsTemp() {
         List<CommandLineProcessor> processors = new ArrayList<>();
-        ServiceLoader.load(CommandLineProcessor.class).forEach(processors::add);
+        ServiceLoader.load(CommandLineProcessor.class, CommandLineProcessor.class.getClassLoader()).forEach(processors::add);
         processors.sort(Comparator.comparing(CommandLineProcessor::name));
         return processors;
     }

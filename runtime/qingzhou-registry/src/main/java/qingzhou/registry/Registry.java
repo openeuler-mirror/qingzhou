@@ -15,4 +15,6 @@ public interface Registry {
     Collection<String> getAllInstanceId();
 
     InstanceInfo getInstanceInfo(String id);
+
+    InstanceInfo thisInstanceInfo() throws Exception;
 }

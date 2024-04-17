@@ -22,22 +22,22 @@ public class RequestImpl implements Request, Cloneable {
     protected Map<String, String[]> parameters = new HashMap<>();
 
     @Override
-    public String getAppName() {
+    public String getApp() {
         return appName;
     }
 
     @Override
-    public String getModelName() {
+    public String getModel() {
         return modelName;
     }
 
     @Override
-    public String getActionName() {
+    public String getAction() {
         return actionName;
     }
 
     @Override
-    public String getViewName() {
+    public String getView() {
         return viewName;
     }
 
@@ -65,12 +65,12 @@ public class RequestImpl implements Request, Cloneable {
     }
 
     @Override
-    public String getUserName() {
+    public String getUser() {
         return userName;
     }
 
     @Override
-    public Lang getI18nLang() {
+    public Lang getLang() {
         return lang;
     }
 

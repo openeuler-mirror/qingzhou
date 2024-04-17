@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 class Controller extends ServiceRegister<Deployer> {
     static Logger logger;
-    static Deployer deployer;
+    private Deployer deployer;
 
     @Override
     public Class<Deployer> serviceType() {

@@ -14,12 +14,12 @@ import qingzhou.engine.Module;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.StringUtil;
-import qingzhou.heartbeat.Heartbeat;
 import qingzhou.http.Http;
 import qingzhou.http.HttpContext;
 import qingzhou.http.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.registry.Registry;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -30,9 +30,9 @@ public class Controller implements Module {
     private String path;
     private HttpServer server;
     private CryptoService cryptoService;
-    private Heartbeat heartbeat;
     private Json json;
     private Deployer deployer;
+    private Registry registry;
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
@@ -41,9 +41,9 @@ public class Controller implements Module {
         if (!remote.isEnabled()) return;
 
         cryptoService = moduleContext.getService(CryptoService.class);
-        heartbeat = moduleContext.getService(Heartbeat.class);
         json = moduleContext.getService(Json.class);
         deployer = moduleContext.getService(Deployer.class);
+        registry = moduleContext.getService(Registry.class);
 
         path = "/";
         String remoteHost = remote.getHost();
@@ -94,14 +94,14 @@ public class Controller implements Module {
         byte[] requestData = bos.toByteArray();
 
         // 2. 数据解密，带认证
-        String remoteKey = heartbeat.getInstanceKey();
+        String remoteKey = this.registry.thisInstanceInfo().getKey();
         KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
         byte[] decryptedData = keyCipher.decrypt(requestData);
 
         // 3. 处理请求
         RequestImpl request = json.fromJson(new String(decryptedData, StandardCharsets.UTF_8), RequestImpl.class);
         Response response = new ResponseImpl();
-        App app = deployer.getApp(request.getAppName());
+        App app = deployer.getApp(request.getApp());
         app.invoke(request, response);
 
         // 4. 响应数据

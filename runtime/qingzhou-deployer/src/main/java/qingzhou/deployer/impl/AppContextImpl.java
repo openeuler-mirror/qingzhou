@@ -10,6 +10,8 @@ import qingzhou.registry.MenuInfo;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 class AppContextImpl implements AppContext {
@@ -49,13 +51,18 @@ class AppContextImpl implements AppContext {
         this.i18nTool.addI18n(key, i18n);
     }
 
-    public String getI18n(String key, Lang lang, Object... args) {
-        return this.i18nTool.getI18n(lang, key);
+    public String getI18n(Lang lang, String key, Object... args) {
+        return this.i18nTool.getI18n(lang, key, args);
     }
 
     @Override
-    public void addMenu(String menuName, String[] menuI18n, String menuIcon, int menuOrder) {
-        this.appInfo.getMenuInfos().add(new MenuInfo(menuName, menuI18n, menuIcon, menuOrder));
+    public void addMenu(String name, String[] i18n, String icon, int order) {
+        Collection<MenuInfo> menuInfos = this.appInfo.getMenuInfos();
+        if (menuInfos == null) {
+            menuInfos = new HashSet<>();
+            this.appInfo.setMenuInfos(menuInfos);
+        }
+        menuInfos.add(new MenuInfo(name, i18n, icon, order));
     }
 
     @Override

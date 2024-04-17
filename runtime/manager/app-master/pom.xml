@@ -10,17 +10,4 @@
     </parent>
 
     <artifactId>app-master</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-deployer</artifactId>
-            <version>x</version>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-crypto</artifactId>
-            <version>x</version>
-        </dependency>
-    </dependencies>
 </project>

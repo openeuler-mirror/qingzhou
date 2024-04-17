@@ -21,16 +21,18 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
- class DeployerImpl implements Deployer {
-    private final Map<Method, ModelAction> presetActions = new AnnotationReader(PresetAction.class).readModelAction();
+class DeployerImpl implements Deployer {
+    private final Map<Method, ModelActionInfo> presetMethodActionInfos;
 
-    private final Map<String, App> apps = new HashMap<>();
     private final ModuleContext moduleContext;
+    private final Map<String, App> apps = new HashMap<>();
 
-     DeployerImpl(ModuleContext moduleContext) {
+    DeployerImpl(ModuleContext moduleContext) {
         this.moduleContext = moduleContext;
+        this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(PresetAction.class));
     }
 
     @Override
@@ -41,65 +43,12 @@ import java.util.stream.Stream;
         }
         boolean needCommonModel = !App.SYS_APP_MASTER.equals(appName) && !App.SYS_APP_NODE_AGENT.equals(appName);
         AppImpl app = buildApp(appName, appFile, needCommonModel);
-        apps.put(appName, app);
-
-        // 初始化每个 Model
-        initActionMethod(app);
 
         // 启动应用
         app.getQingzhouApp().start(app.getAppContext());
-    }
 
-    private void initActionMethod(AppImpl app) {
-        for (ModelInfo modelInfo : app.getAppInfo().getModelInfos()) {
-            ModelBase modelInstance = app.getModelInstance(modelInfo.getName());
-            if (!ModelBase.class.isAssignableFrom(cls)) {
-                throw new IllegalArgumentException("The class annotated by the @Model ( " + cls.getName() + " ) needs to 'extends ModelBase'.");
-            }
-            modelBaseMap.computeIfAbsent(modelName, s -> {
-                try {
-                    return (ModelBase) cls.newInstance();
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
-                }
-            });
-
-            modelInstance.setAppContext(app.getAppContext());
-            modelInstance.init();
-        }
-
-        // 1. 添加预设的 Action
-        Arrays.stream(cls.getInterfaces()).filter(aClass -> aClass.getPackage() == Showable.class.getPackage()).distinct().flatMap((Function<Class<?>, Stream<String>>) aClass -> Arrays.stream(aClass.getFields()).filter(field -> field.getName().startsWith("ACTION_NAME_")).map(field -> {
-            try {
-                return field.get(null).toString();
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        })).forEach(actionName -> {
-            for (Map.Entry<Method, ModelAction> entry : presetActions.entrySet()) {
-                ModelAction modelAction = entry.getValue();
-                if (modelAction.name().equals(actionName)) {
-                    ActionInfo actionInfo = new ActionInfo(
-                            ModelUtil.toModelActionData(modelAction),
-                            actionName,
-                            new ModelManagerImpl.InvokeMethodImpl(actionMethod, entry.getKey()));
-                    actionInfos.put(actionName, actionInfo);
-                    break;
-                }
-            }
-        });
-
-        // 2. 添加 Mode 自定义的 Action
-        Map<Method, ModelAction> clsActions = annotation.readModelAction(cls);
-        for (Map.Entry<Method, ModelAction> entry : clsActions.entrySet()) {
-            ModelAction modelAction = entry.getValue();
-            String actionName = modelAction.name();
-            ActionInfo.InvokeMethod invokeMethod = new ModelManagerImpl.InvokeMethodImpl(instance, entry.getKey());
-            ModelActionDataImpl modelActionData = ModelUtil.toModelActionData(modelAction);
-            actionInfos.put(actionName, new ActionInfo(modelActionData, actionName, invokeMethod));
-        }
-
-        return actionInfos;
+        // 注册完成
+        apps.put(appName, app);
     }
 
     @Override
@@ -143,77 +92,173 @@ import java.util.stream.Stream;
         URLClassLoader loader = buildLoader(appLibs);
         app.setLoader(loader);
 
+        QingzhouApp qingzhouApp = buildQingzhouApp(loader, appLibs);
+        if (qingzhouApp instanceof QingzhouSystemApp) {
+            QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
+            qingzhouSystemApp.setModuleContext(this.moduleContext);
+        }
+        app.setQingzhouApp(qingzhouApp);
+
         Collection<String> modelClassName = detectModelClass(appLibs);
-        ModelInfo[] modelInfos = getModelInfos(modelClassName, loader);
+        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(modelClassName, loader);
+        // 构建 Action 执行器
+        modelInfos.forEach((modelBase, modelInfo) -> {
+            initActionMap(app, modelInfo.getCode(), modelInfo.getModelActionInfos(), modelBase);
+        });
+        // 构建 Action 执行器
+        Map<String, Collection<ModelActionInfo>> addPresetAction = addPresetAction(modelInfos);// 追加系统预置的 action
+        addPresetAction.forEach((modelName, addedModelActions) -> {
+            final ModelBase[] modelBase = new ModelBase[1];
+            modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> modelBase[0] = entry.getKey());
+            PresetAction presetAction = new PresetAction(app, modelBase[0]);
+            initActionMap(app, modelName, addedModelActions.toArray(new ModelActionInfo[0]), presetAction);
+        });
+
+        // 初始化 Model
+        modelInfos.keySet().forEach(ModelBase::init);
 
         AppInfo appInfo = new AppInfo();
         appInfo.setName(appName);
-        appInfo.setModelInfos(modelInfos);
+        appInfo.setModelInfos(modelInfos.values());
         app.setAppInfo(appInfo);
 
         AppContextImpl appContext = buildAppContext(appInfo);
         app.setAppContext(appContext);
 
-        QingzhouApp qingzhouApp = buildQingzhouApp(loader, appLibs);
-        if (qingzhouApp instanceof QingzhouSystemApp) {
-            QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
-            qingzhouSystemApp.setModuleContext(moduleContext);
-        }
-        app.setQingzhouApp(qingzhouApp);
-
         return app;
+    }
+
+    private void initActionMap(AppImpl app, String modelName, ModelActionInfo[] modelActionInfos, Object instance) {
+        Arrays.stream(modelActionInfos).forEach(modelActionInfo -> {
+            Map<String, ActionMethod> actionMap = app.getActionMap().computeIfAbsent(modelName, s -> new HashMap<>());
+            actionMap.computeIfAbsent(modelActionInfo.getCode(), s -> buildActionMethod(instance, s));
+        });
+    }
+
+    private ActionMethod buildActionMethod(Object instance, String methodName) {
+        return new ActionMethod() {
+            private final Method method;
+
+            {
+                try {
+                    method = instance.getClass().getMethod(methodName, Request.class, Response.class);
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public void invoke(Request request, Response response) throws Exception {
+                method.invoke(instance, request, response);
+            }
+        };
+    }
+
+    private Map<String, Collection<ModelActionInfo>> addPresetAction(Map<ModelBase, ModelInfo> modelSelfInfos) {
+        Map<String, Collection<ModelActionInfo>> addedModelActions = new HashMap<>();
+
+        for (Map.Entry<ModelBase, ModelInfo> entry : modelSelfInfos.entrySet()) {
+            List<ModelActionInfo> added = new ArrayList<>();
+
+            Set<String> actions = Arrays.stream(entry.getValue().getModelActionInfos()).map(ModelActionInfo::getCode).collect(Collectors.toSet());
+            ModelBase modelBase = entry.getKey();
+
+            // 1. 添加预设的 Action
+            Arrays.stream(modelBase.getClass().getInterfaces()).filter(aClass -> aClass.getPackage() == Showable.class.getPackage()).distinct().flatMap((Function<Class<?>, Stream<String>>) aClass -> Arrays.stream(aClass.getFields()).filter(field -> field.getName().startsWith("ACTION_NAME_")).map(field -> {
+                try {
+                    return field.get(null).toString();
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            })).forEach(addAction -> {
+                if (!actions.contains(addAction)) {
+                    for (Map.Entry<Method, ModelActionInfo> ma : presetMethodActionInfos.entrySet()) {
+                        if (addAction.equals(ma.getValue().getCode())) {
+                            added.add(ma.getValue());
+                        }
+                    }
+                }
+            });
+
+            addedModelActions.put(entry.getValue().getCode(), added);
+        }
+
+        for (Map.Entry<String, Collection<ModelActionInfo>> addedModelActionInfos : addedModelActions.entrySet()) {
+            ModelInfo addedToModel = null;
+            for (ModelInfo value : modelSelfInfos.values()) {
+                if (value.getCode().equals(addedModelActionInfos.getKey())) {
+                    addedToModel = value;
+                    break;
+                }
+            }
+            if (addedToModel != null) {
+                List<ModelActionInfo> modelActionInfoList = new ArrayList<>(Arrays.asList(addedToModel.getModelActionInfos()));
+                modelActionInfoList.addAll(addedModelActionInfos.getValue());
+                addedToModel.setModelActionInfos(modelActionInfoList.toArray(new ModelActionInfo[0]));
+            }
+        }
+
+        return addedModelActions;
     }
 
     private Collection<String> detectModelClass(File[] appLibs) throws Exception {
         Collection<String> modelClasses = new HashSet<>();
         // 构造临时类加载器，避免静态块加载影响业务逻辑
-        URLClassLoader tempLoader = new URLClassLoader(Arrays.stream(appLibs).map(file -> {
+        try (URLClassLoader tempLoader = new URLClassLoader(Arrays.stream(appLibs).map(file -> {
             try {
                 return file.toURI().toURL();
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
             }
-        }).toArray(URL[]::new), Model.class.getClassLoader());
-        for (File file : appLibs) {
-            if (!file.getName().endsWith(".jar")) continue;
-            try (JarFile jar = new JarFile(file)) {
-                Enumeration<JarEntry> entries = jar.entries();
-                while (entries.hasMoreElements()) {
-                    JarEntry jarEntry = entries.nextElement();
-                    String entryName = jarEntry.getName();
-                    String endsWithFlag = ".class";
-                    if (entryName.contains("$") || !entryName.endsWith(endsWithFlag)) continue;
-                    int i = entryName.indexOf(endsWithFlag);
-                    String className = entryName.substring(0, i).replace("/", ".");
-                    Class<?> cls = tempLoader.loadClass(className);
-                    for (Annotation declaredAnnotation : cls.getDeclaredAnnotations()) {
-                        if (declaredAnnotation.getClass().getName().equals(Model.class.getName())) {
-                            modelClasses.add(className);
-                            break;
-                        }
+        }).toArray(URL[]::new), Model.class.getClassLoader())) {
+            for (File file : appLibs) {
+                if (!file.getName().endsWith(".jar")) continue;
+                try (JarFile jar = new JarFile(file)) {
+                    Enumeration<JarEntry> entries = jar.entries();
+                    while (entries.hasMoreElements()) {
+                        JarEntry jarEntry = entries.nextElement();
+                        String entryName = jarEntry.getName();
+                        String endsWithFlag = ".class";
+                        if (entryName.contains("$") || !entryName.endsWith(endsWithFlag)) continue;
+                        int i = entryName.indexOf(endsWithFlag);
+                        String className = entryName.substring(0, i).replace("/", ".");
+                        Class<?> cls = tempLoader.loadClass(className);
+                        if (ModelBase.class.isAssignableFrom(cls))
+                            for (Annotation declaredAnnotation : cls.getDeclaredAnnotations()) {
+                                if (declaredAnnotation.getClass().getName().equals(Model.class.getName())) {
+                                    modelClasses.add(className);
+                                    break;
+                                }
+                            }
                     }
                 }
             }
         }
+
         return modelClasses;
     }
 
-    private ModelInfo[] getModelInfos(Collection<String> modelClassName, URLClassLoader loader) throws Exception {
-        Set<ModelInfo> modelInfos = new HashSet<>();
+    private Map<ModelBase, ModelInfo> getModelInfos(Collection<String> modelClassName, URLClassLoader loader) throws Exception {
+        Map<ModelBase, ModelInfo> modelInfos = new HashMap<>();
 
+        Set<String> allCodes = new HashSet<>();
         for (String s : modelClassName) {
             Class<?> aClass = loader.loadClass(s);
             Model model = aClass.getDeclaredAnnotation(Model.class);
 
+            if (!allCodes.add(model.code())) {
+                throw new IllegalStateException("Duplicate model name: " + model.code());
+            }
+
             ModelInfo modelInfo = new ModelInfo();
+            modelInfo.setCode(model.code());
             modelInfo.setName(model.name());
+            modelInfo.setInfo(model.info());
             modelInfo.setIcon(model.icon());
-            modelInfo.setNameI18n(model.nameI18n());
-            modelInfo.setInfoI18n(model.infoI18n());
-            modelInfo.setEntryAction(model.entryAction());
-            modelInfo.setShowToMenu(model.showToMenu());
-            modelInfo.setMenuName(model.menuName());
-            modelInfo.setMenuOrder(model.menuOrder());
+            modelInfo.setMenu(model.menu());
+            modelInfo.setOrder(model.order());
+            modelInfo.setEntrance(model.entrance());
+            modelInfo.setHidden(model.hidden());
 
             AnnotationReader annotation = new AnnotationReader(aClass);
             ModelBase instance;
@@ -226,17 +271,12 @@ import java.util.stream.Stream;
                 throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
             }
             modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
-            modelInfo.setMonitorFieldInfos(getMonitorFieldInfos(annotation));
-            modelInfo.setModelActionInfos(getModelActionInfos(annotation));
+            modelInfo.setModelActionInfos(parseModelActionInfos(annotation).values().toArray(new ModelActionInfo[0]));
             modelInfo.setGroupInfos(getGroupInfo(instance));
-
-            boolean added = modelInfos.add(modelInfo);
-            if (!added) {
-                throw new IllegalStateException("Duplicate model name: " + model.name());
-            }
+            modelInfos.put(instance, modelInfo);
         }
 
-        return modelInfos.toArray(new ModelInfo[0]);
+        return modelInfos;
     }
 
     private GroupInfo[] getGroupInfo(ModelBase instance) {
@@ -253,86 +293,41 @@ import java.util.stream.Stream;
         return groupInfoList.toArray(new GroupInfo[0]);
     }
 
-    private ModelActionInfo[] getModelActionInfos(AnnotationReader annotation) {
-        Set<ModelActionInfo> modelActionInfos = new HashSet<>();
+    private Map<Method, ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
+        Map<Method, ModelActionInfo> modelActionInfos = new HashMap<>();
         annotation.readModelAction().forEach((method, modelAction) -> {
             ModelActionInfo modelActionInfo = new ModelActionInfo();
+            modelActionInfo.setCode(method.getName());
             modelActionInfo.setName(modelAction.name());
-            modelActionInfo.setNameI18n(modelAction.nameI18n());
-            modelActionInfo.setInfoI18n(modelAction.infoI18n());
-            modelActionInfo.setEffectiveWhen(modelAction.effectiveWhen());
-            ActionView actionView = method.getAnnotation(ActionView.class);
-            if (actionView != null) {
-                ActionViewInfo actionViewInfo = new ActionViewInfo();
-                actionViewInfo.setIcon(actionView.icon());
-                actionViewInfo.setForwardTo(actionView.forwardTo());
-                actionViewInfo.setShownOnList(actionView.shownOnList());
-                actionViewInfo.setShownOnListHead(actionView.shownOnListHead());
-                modelActionInfo.setActionViewInfo(actionViewInfo);
-            }
-            modelActionInfos.add(modelActionInfo);
+            modelActionInfo.setInfo(modelAction.info());
+            modelActionInfo.setIcon(modelAction.icon());
+            modelActionInfo.setOrder(modelAction.order());
+            modelActionInfo.setCondition(modelAction.condition());
+            modelActionInfo.setForward(modelAction.forward());
+            modelActionInfo.setBatch(modelAction.batch());
+            modelActionInfo.setDisable(modelAction.disable());
+            modelActionInfos.put(method, modelActionInfo);
         });
-        return modelActionInfos.toArray(new ModelActionInfo[0]);
-    }
-
-    private MonitorFieldInfo[] getMonitorFieldInfos(AnnotationReader annotation) {
-        List<MonitorFieldInfo> monitorFieldInfoList = new ArrayList<>();
-        annotation.readMonitorField().forEach((field, monitorField) -> {
-            MonitorFieldInfo monitorFieldInfo = new MonitorFieldInfo();
-            monitorFieldInfo.setName(field.getName());
-            monitorFieldInfo.setNameI18n(monitorField.nameI18n());
-            monitorFieldInfo.setInfoI18n(monitorField.infoI18n());
-            monitorFieldInfo.setDynamic(monitorField.dynamic());
-            monitorFieldInfo.setDynamicMultiple(monitorField.dynamicMultiple());
-            monitorFieldInfoList.add(monitorFieldInfo);
-        });
-        return monitorFieldInfoList.toArray(new MonitorFieldInfo[0]);
+        return modelActionInfos;
     }
 
     private ModelFieldInfo[] getModelFieldInfos(AnnotationReader annotation, ModelBase instance) {
         List<ModelFieldInfo> modelFieldInfoList = new ArrayList<>();
         annotation.readModelField().forEach((field, modelField) -> {
             ModelFieldInfo modelFieldInfo = new ModelFieldInfo();
-            modelFieldInfo.setName(field.getName());
-            modelFieldInfo.setNameI18n(modelField.nameI18n());
-            modelFieldInfo.setInfoI18n(modelField.infoI18n());
-            modelFieldInfo.setShownOnList(modelField.shownOnList());
+            modelFieldInfo.setCode(field.getName());
+            modelFieldInfo.setName(modelField.name());
+            modelFieldInfo.setInfo(modelField.info());
+            modelFieldInfo.setGroup(modelField.group());
+            modelFieldInfo.setType(modelField.type().name());
+            modelFieldInfo.setOptions(modelField.options());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
-            FieldValidation fieldValidation = field.getAnnotation(FieldValidation.class);
-            if (fieldValidation != null) {
-                modelFieldInfo.setFieldValidationInfo(getFieldValidationInfo(fieldValidation));
-            }
-            FieldView fieldView = field.getAnnotation(FieldView.class);
-            if (fieldView != null) {
-                modelFieldInfo.setFieldViewInfo(getFieldViewInfo(fieldView));
-            }
+            modelFieldInfo.setList(modelField.list());
+            modelFieldInfo.setMonitor(modelField.monitor());
+            modelFieldInfo.setNumeric(modelField.numeric());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);
-    }
-
-    private FieldViewInfo getFieldViewInfo(FieldView fieldView) {
-        FieldViewInfo fieldViewInfo = new FieldViewInfo();
-        fieldViewInfo.setGroup(fieldView.group());
-        fieldViewInfo.setType(fieldView.type());
-        return fieldViewInfo;
-    }
-
-    private FieldValidationInfo getFieldValidationInfo(FieldValidation fieldValidation) {
-        FieldValidationInfo fieldValidationInfo = new FieldValidationInfo();
-        fieldValidationInfo.setRequired(fieldValidation.required());
-        fieldValidationInfo.setNumberMin(fieldValidation.numberMin());
-        fieldValidationInfo.setNumberMax(fieldValidation.numberMax());
-        fieldValidationInfo.setLengthMin(fieldValidation.lengthMin());
-        fieldValidationInfo.setNumberMax(fieldValidation.lengthMax());
-        fieldValidationInfo.setHostname(fieldValidation.hostname());
-        fieldValidationInfo.setPort(fieldValidation.port());
-        fieldValidationInfo.setUnsupportedCharacters(fieldValidation.unsupportedCharacters());
-        fieldValidationInfo.setUnsupportedStrings(fieldValidation.unsupportedStrings());
-        fieldValidationInfo.setCannotAdd(fieldValidation.cannotAdd());
-        fieldValidationInfo.setCannotUpdate(fieldValidation.cannotUpdate());
-        fieldValidationInfo.setEffectiveWhen(fieldValidation.effectiveWhen());
-        return fieldValidationInfo;
     }
 
     private String getDefaultValue(Field field, ModelBase modelBase) {
@@ -380,8 +375,7 @@ import java.util.stream.Stream;
 
     private AppContextImpl buildAppContext(AppInfo appInfo) {
         AppContextImpl appContext = new AppContextImpl(moduleContext, appInfo);
-        appContext.addI18n("validator.fail", new String[]{"部分数据不合法", "en:Some of the data is not legitimate"});
-        appContext.addActionFilter(new UniqueFilter());
+        appContext.addActionFilter(new UniqueFilter(appContext));
         return appContext;
     }
 

@@ -45,7 +45,7 @@ public class Server extends CommandLineProcessor {
         if (base.isAbsolute()) {
             instance = base.getCanonicalPath();
         } else {
-            instance = new File(homeDir, instance).getCanonicalPath();
+            instance = new File(new File(homeDir, "instances"), instance).getCanonicalPath();
         }
 
         File instanceDir = new File(instance);

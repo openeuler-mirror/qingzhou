@@ -1,5 +1,8 @@
 package qingzhou.console.impl;
 
+import qingzhou.config.Config;
+import qingzhou.config.ConfigService;
+import qingzhou.config.Console;
 import qingzhou.console.impl.servlet.ServletService;
 import qingzhou.console.impl.servlet.impl.ServletServiceImpl;
 import qingzhou.engine.Module;
@@ -14,18 +17,19 @@ import java.io.File;
 public class Controller implements Module {
     public static ModuleContext moduleContext;
     public static Logger logger;
-    private static Config config;
+    private static Console console;
 
     private ProcessSequence sequence;
     private ServletService servletService;
-    private int consolePort;
 
     @Override
     public void start(ModuleContext context) throws Exception {
         Controller.moduleContext = context;
 
         logger = context.getService(Logger.class);
-        config = context.getService(Config.class);
+        Config config = context.getService(ConfigService.class).getConfig();
+        console = config.getConsole();
+        if (!console.isEnabled()) return;
 
         sequence = new ProcessSequence(
                 new StartServletContainer(),
@@ -45,8 +49,7 @@ public class Controller implements Module {
         @Override
         public void exec() throws Exception {
             servletService = new ServletServiceImpl();
-            consolePort = Integer.parseInt(config.getDataById("console", null).get("port"));
-            servletService.start(consolePort,
+            servletService.start(console.getPort(),
                     moduleContext.getTemp().getAbsolutePath());
         }
 
@@ -60,12 +63,12 @@ public class Controller implements Module {
         private String contextPath;
 
         @Override
-        public void exec() throws Exception {
+        public void exec() {
             File consoleApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-console", "console");
             String docBase = consoleApp.getAbsolutePath();
-            contextPath = config.getDataById("console", null).get("contextRoot");
+            contextPath = console.getContextRoot();
             servletService.addWebapp(contextPath, docBase);
-            moduleContext.getService(Logger.class).info("Open a browser to access the Qingzhou console: http://localhost:" + consolePort + contextPath);
+            moduleContext.getService(Logger.class).info("Open a browser to access the Qingzhou console: http://localhost:" + console.getPort() + contextPath);
         }
 
         @Override

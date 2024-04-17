@@ -76,7 +76,7 @@
     </div>
 
     <%
-        if (modelManager.getModelAction(qzRequest.getModelName(), Listable.ACTION_NAME_LIST) != null) {
+        if (modelManager.getModelAction(qzRequest.getModel(), Listable.ACTION_NAME_LIST) != null) {
     %>
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
         <div class="form-btn">

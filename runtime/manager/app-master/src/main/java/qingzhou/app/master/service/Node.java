@@ -10,42 +10,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Model(name = App.SYS_MODEL_NODE, icon = "node",
-        menuName = "Service", menuOrder = 2,
-        nameI18n = {"节点", "en:Node"},
-        infoI18n = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
+@Model(code = App.SYS_MODEL_NODE, icon = "node",
+        menu = "Service", order = 2,
+        name = {"节点", "en:Node"},
+        info = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
                 "en:A node is an abstraction of a physical or virtual computer environment and is the infrastructure that runs instances."})
 public class Node extends ModelBase implements Createable {
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"名称", "en:Name"},
-            infoI18n = {"唯一标识。", "en:Unique identifier."})
-    @FieldValidation(required = true, unsupportedStrings = App.SYS_NODE_LOCAL)
+            list = true,
+            name = {"名称", "en:Name"},
+            info = {"唯一标识。", "en:Unique identifier."})
     public String id;
 
-    @ModelField(shownOnList = true,
-            nameI18n = {"IP", "en:IP"},
-            infoI18n = {"连接节点的 IP 地址。", "en:The IP address of the connected node."})
-    @FieldValidation(required = true, hostname = true, cannotUpdate = true)
+    @ModelField(list = true,
+            name = {"IP", "en:IP"},
+            info = {"连接节点的 IP 地址。", "en:The IP address of the connected node."})
     public String ip;
 
-    @ModelField(shownOnList = true,
-            nameI18n = {"管理端口", "en:Management Port"},
-            infoI18n = {"节点的管理端口。", "en:The management port of the node."})
-    @FieldValidation(required = true, port = true)
-    @FieldView(type = FieldType.number)
+    @ModelField(list = true,
+            name = {"管理端口", "en:Management Port"},
+            info = {"节点的管理端口。", "en:The management port of the node."})
     public int port = 7000;
 
-    @ModelField(shownOnList = true,
-            nameI18n = {"运行中", "en:Running"}, infoI18n = {"了解该组件的运行状态。", "en:Know the operational status of the component."})
-    @FieldView(type = FieldType.bool)
-    @FieldValidation(cannotAdd = true, cannotUpdate = true)
+    @ModelField(list = true,
+            name = {"运行中", "en:Running"}, info = {"了解该组件的运行状态。", "en:Know the operational status of the component."})
     public boolean running;
 
     @ModelAction(name = App.SYS_ACTION_MANAGE_PAGE,
-            nameI18n = {"管理", "en:Manage"},
-            infoI18n = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
-    @ActionView(icon = "location-arrow", forwardTo = "sys/" + App.SYS_ACTION_MANAGE_PAGE, shownOnList = 1)
+            name = {"管理", "en:Manage"},
+            info = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
     public void switchTarget(Request request, Response response) throws Exception {
     }
 

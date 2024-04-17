@@ -31,12 +31,12 @@ public interface AppContext {
     /**
      * 添加菜单项。
      *
-     * @param menuName  菜单项的名称。
-     * @param menuI18n  菜单项的国际化信息数组。
-     * @param menuIcon  菜单项的图标。
-     * @param menuOrder 菜单项的顺序。
+     * @param name  菜单项的名称。
+     * @param i18n  菜单项的国际化信息数组。
+     * @param icon  菜单项的图标。
+     * @param order 菜单项的顺序。
      */
-    void addMenu(String menuName, String[] menuI18n, String menuIcon, int menuOrder);
+    void addMenu(String name, String[] i18n, String icon, int order);
 
     /**
      * 设置默认数据存储。
@@ -52,4 +52,3 @@ public interface AppContext {
      */
     DataStore getDefaultDataStore();
 }
-

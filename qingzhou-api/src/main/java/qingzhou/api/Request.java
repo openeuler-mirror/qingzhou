@@ -12,28 +12,28 @@ public interface Request {
      *
      * @return 返回应用程序的名称。
      */
-    String getAppName();
+    String getApp();
 
     /**
      * 获取模型名称。
      *
      * @return 返回模型的名称。
      */
-    String getModelName();
+    String getModel();
 
     /**
      * 获取操作名称。
      *
      * @return 返回操作的名称。
      */
-    String getActionName();
+    String getAction();
 
     /**
      * 获取视图名称。
      *
      * @return 返回视图的名称。
      */
-    String getViewName();
+    String getView();
 
     /**
      * 获取请求的ID。
@@ -44,10 +44,7 @@ public interface Request {
 
     /**
      * Returns the value of a request parameter as a <code>String</code>, or
-     * <code>null</code> if the parameter does not exist. Request parameters are
-     * extra information sent with the request. For HTTP servlets, parameters
-     * are contained in the query string or posted form data.
-     * <p>
+     * <code>null</code> if the parameter does not exist.
      * You should only use this method when you are sure the parameter has only
      * one value. If the parameter might have more than one value, use
      * {@link #getParameterMap}.
@@ -55,15 +52,9 @@ public interface Request {
     String getParameter(String name);
 
     /**
-     * Returns a java.util.Map of the parameters of this request. Request
-     * parameters are extra information sent with the request. For HTTP
-     * servlets, parameters are contained in the query string or posted form
-     * data.
-     *
-     * @return an immutable java.util.Map containing parameter names as keys and
+     * Returns a java.util.Map of the parameters of this request containing parameter names as keys and
      * parameter values as map values. The keys in the parameter map are
-     * of type String. The values in the parameter map are of type
-     * String array.
+     * of type String. The values in the parameter map are of type String array.
      */
     Map<String, String[]> getParameterMap();
 
@@ -72,13 +63,12 @@ public interface Request {
      *
      * @return 返回当前请求的用户名。
      */
-    String getUserName();
+    String getUser();
 
     /**
      * 获取国际化语言设置。
      *
      * @return 返回当前的国际化语言设置。
      */
-    Lang getI18nLang();
+    Lang getLang();
 }
-

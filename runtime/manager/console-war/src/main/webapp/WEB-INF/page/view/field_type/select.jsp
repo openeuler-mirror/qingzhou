@@ -17,7 +17,7 @@
     String selectText = "";
     String selectHtml = "<ul class=\"list\">";
 
-    Options optionManager = modelManager.getOptions(qzRequest, qzRequest.getModelName(), fieldName);
+    Options optionManager = modelManager.getOptions(qzRequest, qzRequest.getModel(), fieldName);
     if (optionManager != null) {
         for (Option option : optionManager.options()) {
             String val = option.value();

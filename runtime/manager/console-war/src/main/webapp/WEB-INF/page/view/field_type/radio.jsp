@@ -12,7 +12,7 @@
         readonly = " onclick='return false;' readonly";
     }
 
-    Options radioOptions = modelManager.getOptions(qzRequest, qzRequest.getModelName(), fieldName);
+    Options radioOptions = modelManager.getOptions(qzRequest, qzRequest.getModel(), fieldName);
     for (Option option : radioOptions.options()) {
         String val = option.value();
         String name = I18n.getString(option.i18n());

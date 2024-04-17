@@ -85,6 +85,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-registry</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-config</artifactId>
             <version>x</version>
         </dependency>

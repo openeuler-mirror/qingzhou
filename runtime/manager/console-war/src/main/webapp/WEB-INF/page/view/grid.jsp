@@ -8,9 +8,9 @@
     }
 
     LinkedHashMap<String, ModelFieldData> fieldInfos = new LinkedHashMap<>();
-    String[] fieldNames = modelManager.getFieldNames(qzRequest.getModelName());
+    String[] fieldNames = modelManager.getFieldNames(qzRequest.getModel());
     for (String fieldName : fieldNames) {
-        fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModelName(), fieldName));
+        fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModel(), fieldName));
     }
     int num = -1;
     List<Integer> indexToShow = new ArrayList<>();

@@ -10,11 +10,4 @@
     </parent>
 
     <artifactId>app-nodeagent</artifactId>
-    <dependencies>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-deployer</artifactId>
-            <version>x</version>
-        </dependency>
-    </dependencies>
 </project>

@@ -304,9 +304,7 @@ public class FileUtil {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
         for (String line; (line = reader.readLine()) != null; ) {
             line = line.trim();
-            if (line.isEmpty()) {
-                continue;
-            }
+            if (line.isEmpty() || line.startsWith("#")) continue;
 
             int i = line.indexOf("=");
             if (i != -1) {

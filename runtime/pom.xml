@@ -19,7 +19,7 @@
         <module>qingzhou-deployer</module>
         <module>qingzhou-config</module>
         <module>component</module>
-        <module>manager</module>
         <module>qingzhou-agent</module>
+<!--        <module>manager</module>-->
     </modules>
 </project>

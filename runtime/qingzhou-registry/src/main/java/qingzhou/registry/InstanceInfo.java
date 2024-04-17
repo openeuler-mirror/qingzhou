@@ -1,12 +1,12 @@
 package qingzhou.registry;
 
 public class InstanceInfo {
-    public String id;
-    public String name;
-    public String host;
-    public int port;
-    public String key;
-    public AppInfo[] appInfos;
+    private String id;
+    private String name;
+    private String host;
+    private int port;
+    private String key;
+    private AppInfo[] appInfos;
 
     public String getId() {
         return id;

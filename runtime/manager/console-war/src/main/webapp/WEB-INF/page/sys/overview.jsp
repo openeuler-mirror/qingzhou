@@ -8,7 +8,7 @@
     <%-- 仪表盘 --%>
     <div class="panel" view="dashboard"
          data-url="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView , "os")%>"
-         actName="<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + ".os")%>"
+         actName="<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + ".os")%>"
          style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
         <div class="panel-heading"
              style="background-color: #FFFFFF; opacity:0.9;border-color:#EFEEEE; font-size:14px;height:50px;line-height:35px;font-weight:600;">
@@ -21,7 +21,7 @@
     <%-- 柱状图 --%>
     <div class="panel" view="bars"
          data-url="<%=PageBackendService.buildRequestUrl(request, response,qzRequest, ViewManager.jsonView, ACTION_NAME_SERVER)%>"
-         actName="<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModelName() + "." + ACTION_NAME_SERVER)%>"
+         actName="<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + ACTION_NAME_SERVER)%>"
          style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
         <div class="panel-heading"
              style="background-color: #FFFFFF; opacity:0.9;border-color:#EFEEEE; font-size:14px;height:50px;line-height:35px;font-weight:600;">

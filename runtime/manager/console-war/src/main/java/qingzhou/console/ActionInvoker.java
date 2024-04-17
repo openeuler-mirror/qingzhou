@@ -6,7 +6,6 @@ import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
-import qingzhou.deployer.impl.Validator;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
@@ -44,9 +43,9 @@ public class ActionInvoker {
         if (StringUtil.isBlank(ids)) return false;
 
         ModelManager modelManager = PageBackendService.getModelManager(request);
-        String[] actionNamesSupportBatch = modelManager.getActionNamesSupportBatch(request.getModelName());
+        String[] actionNamesSupportBatch = modelManager.getActionNamesSupportBatch(request.getModel());
         for (String batch : actionNamesSupportBatch) {
-            if (batch.equals(request.getActionName())) return true;
+            if (batch.equals(request.getAction())) return true;
         }
 
         return false;
@@ -59,7 +58,7 @@ public class ActionInvoker {
         StringBuilder errbuilder = new StringBuilder();
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
         String oid = request.getParameter(Listable.FIELD_NAME_ID);
-        for (String id : oid.split(Validator.DATA_SEPARATOR)) {
+        for (String id : oid.split(",")) {
             if (StringUtil.notBlank(id)) {
                 id = PageBackendService.decodeId(id);
                 ((RequestImpl) request).setId(id);
@@ -70,7 +69,7 @@ public class ActionInvoker {
                     String actionContextMsg = response.getMsg();
                     if (result.containsKey(actionContextMsg)) {
                         errbuilder.append(result.get(actionContextMsg));
-                        errbuilder.append(Validator.DATA_SEPARATOR);
+                        errbuilder.append(",");
                         errbuilder.append(id);
                         result.put(actionContextMsg, errbuilder.toString());
                         errbuilder.setLength(0);
@@ -83,8 +82,8 @@ public class ActionInvoker {
         }
         ((RequestImpl) request).setId(oid);
         String appName = PageBackendService.getAppName(request);
-        String model = I18n.getString(appName, "model." + request.getModelName());
-        String action = I18n.getString(appName, "model.action." + request.getModelName() + "." + request.getActionName());
+        String model = I18n.getString(appName, "model." + request.getModel());
+        String action = I18n.getString(appName, "model.action." + request.getModel() + "." + request.getAction());
         if (result.isEmpty()) {
             String resultMsg = ConsoleI18n.getI18n(I18n.getI18nLang(), "batch.ops.success", model, action, suc);
             response.setMsg(resultMsg);
@@ -166,7 +165,7 @@ public class ActionInvoker {
         Map<String, ResponseImpl> resultOnNode = new HashMap<>();
         List<String> appNodes = new ArrayList<>();
         String manageType = ((RequestImpl) request).getManageType();
-        String appName = request.getAppName();
+        String appName = request.getApp();
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
             appNodes.add(appName);
         } else if (ConsoleConstants.MANAGE_TYPE_APP.equals(manageType)) {

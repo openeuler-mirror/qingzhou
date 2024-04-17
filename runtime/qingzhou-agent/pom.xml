@@ -36,7 +36,7 @@
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-heartbeat</artifactId>
+            <artifactId>qingzhou-registry</artifactId>
             <version>x</version>
         </dependency>
         <dependency>

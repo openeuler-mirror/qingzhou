@@ -1,58 +1,85 @@
 package qingzhou.registry;
 
 public class ModelActionInfo {
-    public String name;
-    public String[] nameI18n;
-    public String[] infoI18n;
-    public String effectiveWhen;
-    public boolean supportBatch;
-    public ActionViewInfo actionViewInfo;
+    private String code;
+    private String[] name;
+    private String[] info;
+    private String icon;
+    private int order;
+    private String condition;
+    private String forward;
+    private boolean batch;
+    private boolean disable;
 
-    public String getName() {
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String[] getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String[] name) {
         this.name = name;
     }
 
-    public String[] getNameI18n() {
-        return nameI18n;
+    public String[] getInfo() {
+        return info;
     }
 
-    public void setNameI18n(String[] nameI18n) {
-        this.nameI18n = nameI18n;
+    public void setInfo(String[] info) {
+        this.info = info;
     }
 
-    public String[] getInfoI18n() {
-        return infoI18n;
+    public String getCondition() {
+        return condition;
     }
 
-    public void setInfoI18n(String[] infoI18n) {
-        this.infoI18n = infoI18n;
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 
-    public String getEffectiveWhen() {
-        return effectiveWhen;
+    public boolean isBatch() {
+        return batch;
     }
 
-    public void setEffectiveWhen(String effectiveWhen) {
-        this.effectiveWhen = effectiveWhen;
+    public void setBatch(boolean batch) {
+        this.batch = batch;
     }
 
-    public boolean isSupportBatch() {
-        return supportBatch;
+    public String getIcon() {
+        return icon;
     }
 
-    public void setSupportBatch(boolean supportBatch) {
-        this.supportBatch = supportBatch;
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 
-    public ActionViewInfo getActionViewInfo() {
-        return actionViewInfo;
+    public int getOrder() {
+        return order;
     }
 
-    public void setActionViewInfo(ActionViewInfo actionViewInfo) {
-        this.actionViewInfo = actionViewInfo;
+    public void setOrder(int order) {
+        this.order = order;
+    }
+
+    public String getForward() {
+        return forward;
+    }
+
+    public void setForward(String forward) {
+        this.forward = forward;
+    }
+
+    public boolean isDisable() {
+        return disable;
+    }
+
+    public void setDisable(boolean disable) {
+        this.disable = disable;
     }
 }

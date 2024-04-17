@@ -1,36 +1,39 @@
 package qingzhou.registry;
 
 public class ModelFieldInfo {
-    private String name;
-    private String[] nameI18n;
-    private String[] infoI18n;
+    private String code;
+    private String[] name;
+    private String[] info;
+    private String group;
+    private String type;
+    private String[] options;
     private String defaultValue;
-    private boolean shownOnList;
-    private FieldValidationInfo fieldValidationInfo;
-    private FieldViewInfo fieldViewInfo;
+    private boolean list;
+    private boolean monitor;
+    private boolean numeric;
 
-    public String getName() {
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String[] getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String[] name) {
         this.name = name;
     }
 
-    public String[] getNameI18n() {
-        return nameI18n;
+    public String[] getInfo() {
+        return info;
     }
 
-    public void setNameI18n(String[] nameI18n) {
-        this.nameI18n = nameI18n;
-    }
-
-    public String[] getInfoI18n() {
-        return infoI18n;
-    }
-
-    public void setInfoI18n(String[] infoI18n) {
-        this.infoI18n = infoI18n;
+    public void setInfo(String[] info) {
+        this.info = info;
     }
 
     public String getDefaultValue() {
@@ -41,27 +44,51 @@ public class ModelFieldInfo {
         this.defaultValue = defaultValue;
     }
 
-    public boolean isShownOnList() {
-        return shownOnList;
+    public boolean isList() {
+        return list;
     }
 
-    public void setShownOnList(boolean shownOnList) {
-        this.shownOnList = shownOnList;
+    public void setList(boolean list) {
+        this.list = list;
     }
 
-    public FieldValidationInfo getFieldValidationInfo() {
-        return fieldValidationInfo;
+    public String getGroup() {
+        return group;
     }
 
-    public void setFieldValidationInfo(FieldValidationInfo fieldValidationInfo) {
-        this.fieldValidationInfo = fieldValidationInfo;
+    public void setGroup(String group) {
+        this.group = group;
     }
 
-    public FieldViewInfo getFieldViewInfo() {
-        return fieldViewInfo;
+    public String getType() {
+        return type;
     }
 
-    public void setFieldViewInfo(FieldViewInfo fieldViewInfo) {
-        this.fieldViewInfo = fieldViewInfo;
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String[] getOptions() {
+        return options;
+    }
+
+    public void setOptions(String[] options) {
+        this.options = options;
+    }
+
+    public boolean isMonitor() {
+        return monitor;
+    }
+
+    public void setMonitor(boolean monitor) {
+        this.monitor = monitor;
+    }
+
+    public boolean isNumeric() {
+        return numeric;
+    }
+
+    public void setNumeric(boolean numeric) {
+        this.numeric = numeric;
     }
 }

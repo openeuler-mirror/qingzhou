@@ -1,5 +1,3 @@
-<%@ page import="qingzhou.console.i18n.SetI18n" %>
-<%@ page import="qingzhou.deployer.App" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <header class="main-header">

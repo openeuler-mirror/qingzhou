@@ -1,7 +1,9 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.api.ActionFilter;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.deployer.App;
 import qingzhou.registry.AppInfo;
 
@@ -13,13 +15,12 @@ class AppImpl implements App {
     private URLClassLoader loader;
     private AppInfo appInfo;
     private AppContextImpl appContext;
-    private Map<String, ModelBase> modelBaseMap = new HashMap<>();
     private QingzhouApp qingzhouApp;
-    private Validator validator;
 
-    private Map<String, Map<String, ActionMethod>> actionMap = new HashMap<>();
+    private final Map<String, Map<String, ActionMethod>> actionMap = new HashMap<>();
 
-    AppInfo getAppInfo() {
+    @Override
+    public AppInfo getAppInfo() {
         return appInfo;
     }
 
@@ -34,28 +35,8 @@ class AppImpl implements App {
 
     @Override
     public void invoke(Request request, Response response) throws Exception {
-        String modelName = request.getModelName();
-        Map<String, ActionMethod> methodMap = actionMap.get(modelName);
-        if (methodMap == null) return;
-
-        String actionName = request.getActionName();
-        ActionMethod actionMethod = methodMap.get(actionName);
-        if (actionMethod == null) return;
-
-        ResponseImpl validationResponse = new ResponseImpl();
-        if (validator == null) {
-            validator = new Validator(appContext);
-        }
-        boolean ok = validator.validate(request, validationResponse);// 本地和远程走这统一的一次校验
-        if (!ok) {
-            if (validationResponse.getMsg() == null) {
-                validationResponse.setMsg(appContext.getI18n(request.getI18nLang(), "validator.fail"));
-            }
-            return;
-        }
-
         for (ActionFilter actionFilter : appContext.getActionFilters()) {
-            String msg = actionFilter.doFilter(request, response, appContext);
+            String msg = actionFilter.doFilter(request, response);
             if (msg != null) {
                 response.setSuccess(false);
                 response.setMsg(msg);
@@ -68,9 +49,19 @@ class AppImpl implements App {
 
     @Override
     public void invokeDirectly(Request request, Response response) throws Exception {
-        ModelManagerImpl modelManager = (ModelManagerImpl) appContext.getAppMetadata().getModelManager();
-        ActionInfo.InvokeMethod invokeMethod = modelManager.getModelInfo(request.getModelName()).actionInfoMap.get(request.getActionName()).invokeMethod;
-        invokeMethod.invokeMethod(request, response);
+        String modelName = request.getModel();
+        Map<String, ActionMethod> methodMap = actionMap.get(modelName);
+        if (methodMap == null) return;
+
+        String actionName = request.getAction();
+        ActionMethod actionMethod = methodMap.get(actionName);
+        if (actionMethod == null) return;
+
+        actionMethod.invoke(request, response);
+    }
+
+    Map<String, Map<String, ActionMethod>> getActionMap() {
+        return actionMap;
     }
 
     void setAppContext(AppContextImpl appContext) {

@@ -4,40 +4,33 @@ import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Showable;
 
-@Model(name = "password", icon = "key",
-        menuOrder = 99,
-        showToMenu = false,
-        entryAction = Editable.ACTION_NAME_EDIT,
-        nameI18n = {"修改密码", "en:Change Password"},
-        infoI18n = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
+@Model(code = "password", icon = "key",
+        order = 99,
+        hidden = true,
+        entrance = Editable.ACTION_NAME_EDIT,
+        name = {"修改密码", "en:Change Password"},
+        info = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
 public class Password extends ModelBase implements Editable {
     @ModelField(
-            nameI18n = {"原始密码", "en:Original Password"},
-            infoI18n = {"登录系统的原始密码。", "en:The original password to log in to the system."})
-    @FieldView(type = FieldType.password)
-    @FieldValidation(required = true, effectiveWhen = "update2FA=false")
+            name = {"原始密码", "en:Original Password"},
+            info = {"登录系统的原始密码。", "en:The original password to log in to the system."})
     public String originalPassword;
 
     @ModelField(
-            nameI18n = {"新密码", "en:Password"},
-            infoI18n = {"用于登录系统的新密码。", "en:The new password used to log in to the system."})
-    @FieldValidation(required = true, effectiveWhen = "update2FA=false")
-    @FieldView(type = FieldType.password)
+            name = {"新密码", "en:Password"},
+            info = {"用于登录系统的新密码。", "en:The new password used to log in to the system."})
     public String newPassword;
 
     @ModelField(
-            nameI18n = {"确认密码", "en:Confirm Password"},
-            infoI18n = {"确认用于登录系统的新密码。", "en:Confirm the new password used to log in to the system."})
-    @FieldView(type = FieldType.password)
-    @FieldValidation(required = true, effectiveWhen = "update2FA=false")
+            name = {"确认密码", "en:Confirm Password"},
+            info = {"确认用于登录系统的新密码。", "en:Confirm the new password used to log in to the system."})
     public String confirmPassword;
 
     @ModelField(
-            nameI18n = {"更新双因子认证密钥", "en:Update Two-factor Authentication Key"},
-            infoI18n = {"安全起见，建议定期刷新双因子认证密钥。刷新后，需要重新在用户终端的双因子认证客户端设备进行绑定。",
+            name = {"更新双因子认证密钥", "en:Update Two-factor Authentication Key"},
+            info = {"安全起见，建议定期刷新双因子认证密钥。刷新后，需要重新在用户终端的双因子认证客户端设备进行绑定。",
                     "en:For security reasons, it is recommended to periodically refresh the two-factor authentication key. After refreshing, you need to re-bind it on the two-factor authentication client device of the user terminal."}
     )
-    @FieldView(type = FieldType.bool)
     public boolean update2FA = false;
 
     @Override
@@ -54,17 +47,15 @@ public class Password extends ModelBase implements Editable {
     }
 
     @ModelAction(name = Editable.ACTION_NAME_EDIT,
-            nameI18n = {"编辑", "en:Edit"},
-            infoI18n = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
-    @ActionView(icon = "edit", forwardTo = "form")
+            name = {"编辑", "en:Edit"},
+            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {
         response.addModelData(new Password());
     }
 
     @ModelAction(name = Showable.ACTION_NAME_SHOW,
-            nameI18n = {"查看", "en:Show"},
-            infoI18n = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
-    @ActionView(icon = "info-sign", forwardTo = "show")
+            name = {"查看", "en:Show"},
+            info = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
     public void show(Request request, Response response) {
     }
 //

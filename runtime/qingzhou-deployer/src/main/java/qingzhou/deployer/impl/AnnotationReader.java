@@ -2,7 +2,6 @@ package qingzhou.deployer.impl;
 
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
-import qingzhou.api.MonitorField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -33,22 +32,6 @@ class AnnotationReader {
         return map;
     }
 
-    Map<Field, MonitorField> readMonitorField() {
-        Field[] fields = clazz.getFields();//.getDeclaredFields();
-        Map<Field, MonitorField> map = new LinkedHashMap<>(fields.length);
-        for (Field field : fields) {
-            if (Modifier.isStatic(field.getModifiers())) {
-                continue;
-            }
-            MonitorField monitorField = field.getAnnotation(MonitorField.class);
-            if (monitorField != null) {
-                map.put(field, monitorField);
-            }
-        }
-
-        return map;
-    }
-
     Map<Method, ModelAction> readModelAction() {
         Method[] methods = clazz.getMethods();
         Map<Method, ModelAction> map = new LinkedHashMap<>(methods.length);
@@ -62,7 +45,7 @@ class AnnotationReader {
                 action = searchActionFromParent(clazz, method);
             }
 
-            if (action != null && !action.disabled()) {
+            if (action != null && !action.disable()) {
                 map.put(method, action);
             }
         }

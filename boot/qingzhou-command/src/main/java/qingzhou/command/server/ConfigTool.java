@@ -22,19 +22,6 @@ import java.util.Map;
 
 class ConfigTool {
     private final String[] JAVA_9_PLUS = new String[]{
-            "--add-opens=java.base/java.lang=ALL-UNNAMED",
-            "--add-opens=java.base/java.io=ALL-UNNAMED",
-            "--add-opens=java.base/java.math=ALL-UNNAMED",
-            "--add-opens=java.base/java.util=ALL-UNNAMED",
-            "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
-            "--add-opens=java.base/java.net=ALL-UNNAMED",
-            "--add-opens=java.base/java.text=ALL-UNNAMED",
-            "--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED", // for OpenRasp的agent
-            "--add-opens=java.base/sun.security.action=ALL-UNNAMED", // for #ITAIT-5445
-            "--add-opens=java.sql/java.sql=ALL-UNNAMED",
-            "--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED",
-            "--add-opens=java.management.rmi/javax.management.remote.rmi=ALL-UNNAMED",
-            "--add-exports=java.management/com.sun.jmx.remote.security=ALL-UNNAMED"
     };
     private final File instanceDir;
     private Jvm jvm;
@@ -109,14 +96,19 @@ class ConfigTool {
                 fileContent.append(line);
             }
         }
-        String jsonContent = fileContent.toString().replace("${qingzhou.instance}", instanceDir.getAbsolutePath());
+        String allContent = fileContent.toString().replace("${qingzhou.instance}", instanceDir.getAbsolutePath().replace("\\", "\\\\"));
 
         URL jsonURL = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonURL})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
-            Method method = loadedClass.getMethod("fromJson", String.class, Class.class);
-            return (Jvm) method.invoke(instance, jsonContent, Jvm.class);
+            Method fromJson = loadedClass.getMethod("fromJson", String.class, Class.class);
+            Method toJson = loadedClass.getMethod("toJson", Object.class);
+
+            Map<String, String> allData = (Map<String, String>) fromJson.invoke(instance, allContent, Map.class);
+            String jvmContent = (String) toJson.invoke(instance, allData.get("jvm"));
+
+            return (Jvm) fromJson.invoke(instance, jvmContent, Jvm.class);
         }
     }
 }

@@ -1,5 +1,8 @@
 package qingzhou.deployer.impl;
 
+import qingzhou.api.Request;
+import qingzhou.api.Response;
+
 interface ActionMethod {
-    void invoke(Object... args) throws Exception;
+    void invoke(Request request, Response response) throws Exception;
 }

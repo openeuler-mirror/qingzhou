@@ -1,6 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.deployer.impl.Validator;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.SystemController;
@@ -152,9 +151,9 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = SystemController.getAppMetadata(request).getModelManager().getActionNames(request.getModelName());
+        String[] actions = SystemController.getAppMetadata(request).getModelManager().getActionNames(request.getModel());
         for (String name : actions) {
-            if (name.equals(request.getActionName())) {
+            if (name.equals(request.getAction())) {
                 actionFound = true;
                 break;
             }
@@ -173,7 +172,7 @@ public class RESTController extends HttpServlet {
             String k = parameterNames.nextElement();
             String[] v = req.getParameterValues(k);
             if (v != null) {
-                data.put(k, String.join(Validator.DATA_SEPARATOR, v));
+                data.put(k, String.join(",", v));
             }
         }
 

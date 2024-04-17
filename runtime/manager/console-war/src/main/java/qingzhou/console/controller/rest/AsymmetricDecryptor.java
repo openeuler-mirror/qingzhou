@@ -13,8 +13,8 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
         ModelManager modelManager = SystemController.getAppMetadata(request).getModelManager();
-        for (String fieldName : modelManager.getFieldNames(request.getModelName())) {
-            ModelFieldData modelField = modelManager.getModelField(request.getModelName(), fieldName);
+        for (String fieldName : modelManager.getFieldNames(request.getModel())) {
+            ModelFieldData modelField = modelManager.getModelField(request.getModel(), fieldName);
             if (modelField.type() == FieldType.password
                     || modelField.clientEncrypt()
             ) {

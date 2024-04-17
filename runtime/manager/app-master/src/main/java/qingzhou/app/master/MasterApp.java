@@ -39,7 +39,7 @@ public class MasterApp extends QingzhouSystemApp {
 
     public static Map<String, String> prepareParameters(Request request, AppContext appContext) {
         Map<String, String> properties = new HashMap<>();
-        String[] fieldNames = appContext.getAppMetadata().getModelManager().getFieldNames(request.getModelName());
+        String[] fieldNames = appContext.getAppMetadata().getModelManager().getFieldNames(request.getModel());
         for (String fieldName : fieldNames) {
             String value = request.getParameter(fieldName);
             if (value != null) {
@@ -53,10 +53,10 @@ public class MasterApp extends QingzhouSystemApp {
 
         @Override
         public String doFilter(Request request, Response response, AppContext appContext) {
-            if (App.SYS_MODEL_NODE.equals(request.getModelName()) && App.SYS_NODE_LOCAL.equals(request.getId())) {
-                if (Editable.ACTION_NAME_UPDATE.equals(request.getActionName())
-                        || Deletable.ACTION_NAME_DELETE.equals(request.getActionName())) {
-                    return appContext.getAppMetadata().getI18n(request.getI18nLang(), "validator.master.system");
+            if (App.SYS_MODEL_NODE.equals(request.getModel()) && App.SYS_NODE_LOCAL.equals(request.getId())) {
+                if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())
+                        || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
+                    return appContext.getAppMetadata().getI18n(request.getLang(), "validator.master.system");
                 }
             }
 

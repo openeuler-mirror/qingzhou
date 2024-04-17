@@ -1,33 +1,54 @@
 package qingzhou.registry;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 public class ModelInfo {
-    private String name;
+    private String code;
+    private String[] name;
+    private String[] info;
     private String icon;
-    private String[] nameI18n;
-    private String[] infoI18n;
-    private String entryAction;
-    private boolean showToMenu;
-    private String menuName;
-    private int menuOrder;
+    private String menu;
+    private int order;
+    private String entrance;
+    private boolean hidden;
+
     private ModelFieldInfo[] modelFieldInfos;
-    private MonitorFieldInfo[] monitorFieldInfos;
     private ModelActionInfo[] modelActionInfos;
     private GroupInfo[] groupInfos;
 
-    public MonitorFieldInfo[] getMonitorFieldInfos() {
-        return monitorFieldInfos;
+    public Map<String, String> getFormFieldDefaultValues() {
+        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> !modelFieldInfo.isMonitor()).collect(Collectors.toMap(ModelFieldInfo::getCode, ModelFieldInfo::getDefaultValue));
     }
 
-    public void setMonitorFieldInfos(MonitorFieldInfo[] monitorFieldInfos) {
-        this.monitorFieldInfos = monitorFieldInfos;
+    public ModelFieldInfo getModelFieldInfo(String fieldName) {
+        for (ModelFieldInfo fieldInfo : modelFieldInfos) {
+            if (fieldInfo.getCode().equals(fieldName)) {
+                return fieldInfo;
+            }
+        }
+        return null;
     }
 
-    public String getName() {
-        return name;
+    public String[] getMonitorFieldNames() {
+        return Arrays.stream(modelFieldInfos).filter(ModelFieldInfo::isMonitor).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String[] getFormFieldList() {
+        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> (!modelFieldInfo.isMonitor() && modelFieldInfo.isList())).map(ModelFieldInfo::getCode).toArray(String[]::new);
+    }
+
+    public String[] getFormFieldNames() {
+        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> !modelFieldInfo.isMonitor()).map(ModelFieldInfo::getCode).toArray(String[]::new);
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getIcon() {
@@ -38,52 +59,52 @@ public class ModelInfo {
         this.icon = icon;
     }
 
-    public String[] getNameI18n() {
-        return nameI18n;
+    public String[] getName() {
+        return name;
     }
 
-    public void setNameI18n(String[] nameI18n) {
-        this.nameI18n = nameI18n;
+    public void setName(String[] name) {
+        this.name = name;
     }
 
-    public String[] getInfoI18n() {
-        return infoI18n;
+    public String[] getInfo() {
+        return info;
     }
 
-    public void setInfoI18n(String[] infoI18n) {
-        this.infoI18n = infoI18n;
+    public void setInfo(String[] info) {
+        this.info = info;
     }
 
-    public String getEntryAction() {
-        return entryAction;
+    public String getEntrance() {
+        return entrance;
     }
 
-    public void setEntryAction(String entryAction) {
-        this.entryAction = entryAction;
+    public void setEntrance(String entrance) {
+        this.entrance = entrance;
     }
 
-    public boolean isShowToMenu() {
-        return showToMenu;
+    public boolean isHidden() {
+        return hidden;
     }
 
-    public void setShowToMenu(boolean showToMenu) {
-        this.showToMenu = showToMenu;
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 
-    public String getMenuName() {
-        return menuName;
+    public String getMenu() {
+        return menu;
     }
 
-    public void setMenuName(String menuName) {
-        this.menuName = menuName;
+    public void setMenu(String menu) {
+        this.menu = menu;
     }
 
-    public int getMenuOrder() {
-        return menuOrder;
+    public int getOrder() {
+        return order;
     }
 
-    public void setMenuOrder(int menuOrder) {
-        this.menuOrder = menuOrder;
+    public void setOrder(int order) {
+        this.order = order;
     }
 
     public GroupInfo[] getGroupInfos() {

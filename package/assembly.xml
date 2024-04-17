@@ -69,6 +69,7 @@
                 <include>${project.groupId}:qingzhou-console</include>
                 <include>${project.groupId}:qingzhou-agent</include>
                 <include>${project.groupId}:qingzhou-deployer</include>
+                <include>${project.groupId}:qingzhou-registry</include>
                 <include>${project.groupId}:qingzhou-config</include>
                 <include>${project.groupId}:qingzhou-heartbeat</include>
                 <include>${project.groupId}:qingzhou-logger</include>

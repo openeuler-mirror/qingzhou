@@ -14,10 +14,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Model(name = "user", icon = "user",
-        menuName = "System", menuOrder = 1,
-        nameI18n = {"系统用户", "en:System User"},
-        infoI18n = {"管理登录和操作服务器的用户，用户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
+@Model(code = "user", icon = "user",
+        menu = "System", order = 1,
+        name = {"系统用户", "en:System User"},
+        info = {"管理登录和操作服务器的用户，用户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements Createable {
     public static final String pwdKey = "password";
     public static final String confirmPwdKey = "confirmPassword";
@@ -35,125 +35,99 @@ public class User extends ModelBase implements Createable {
     }
 
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"用户名", "en:User Name"},
-            infoI18n = {"用于登录系统的用户名。", "en:The username used to log in to the system."})
-    @FieldValidation(required = true)
+            list = true,
+            name = {"用户名", "en:User Name"},
+            info = {"用于登录系统的用户名。", "en:The username used to log in to the system."})
     public String id;
 
     @ModelField(
-            nameI18n = {"密码", "en:Password"},
-            infoI18n = {"密码", "en:Password"})
-    @FieldValidation(required = true)
-    @FieldView(type = FieldType.password)
+            name = {"密码", "en:Password"},
+            info = {"密码", "en:Password"})
     public String password;
 
     @ModelField(
-            nameI18n = {"确认密码", "en:Confirm Password"},
-            infoI18n = {"确认登录系统的新密码。", "en:Confirm the new password for logging in to the system."})
-    @FieldValidation(required = true)
-    @FieldView(type = FieldType.password)
+            name = {"确认密码", "en:Confirm Password"},
+            info = {"确认登录系统的新密码。", "en:Confirm the new password for logging in to the system."})
     public String confirmPassword;
 
     @ModelField(
-            nameI18n = {"摘要算法", "en:Digest Algorithm"},
-            infoI18n = {"进行摘要加密所采用的算法。", "en:The algorithm used for digest encryption."}
+            name = {"摘要算法", "en:Digest Algorithm"},
+            info = {"进行摘要加密所采用的算法。", "en:The algorithm used for digest encryption."}
     )
-    @FieldValidation(required = true)
-    @FieldView(type = FieldType.select)
     public String digestAlg = "SHA-256";
 
     @ModelField(
-            nameI18n = {"加盐长度", "en:Salt Length"},
-            infoI18n = {"将自动生成的盐值和字符串一起加密可以提高加密强度。", "en:Encrypting the automatically generated salt value along with the string increases the encryption strength."}
+            name = {"加盐长度", "en:Salt Length"},
+            info = {"将自动生成的盐值和字符串一起加密可以提高加密强度。", "en:Encrypting the automatically generated salt value along with the string increases the encryption strength."}
     )
-    @FieldView(type = FieldType.number)
-    @FieldValidation(numberMin = 1, numberMax = 128)
     public Integer saltLength = defSaltLength;
 
     @ModelField(
-            nameI18n = {"迭代次数", "en:Iterations"},
-            infoI18n = {"连续多次摘要加密可以提高加密强度。", "en:The encryption strength can be improved by multiple digest encryption."}
+            name = {"迭代次数", "en:Iterations"},
+            info = {"连续多次摘要加密可以提高加密强度。", "en:The encryption strength can be improved by multiple digest encryption."}
     )
-    @FieldValidation(numberMin = 1, numberMax = 128)
     public Integer iterations = defIterations;
 
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"可用节点", "en:Available Nodes"},
-            infoI18n = {"选择用户可使用的节点。", "en:Select the nodes that are available to the user."})
-    @FieldValidation(required = true)
-    @FieldView(type = FieldType.checkbox)
+            list = true,
+            name = {"可用节点", "en:Available Nodes"},
+            info = {"选择用户可使用的节点。", "en:Select the nodes that are available to the user."})
     public String nodes = App.SYS_NODE_LOCAL;
 
     @ModelField(
-            nameI18n = {"须修改初始密码", "en:Change Initial Password"},
-            infoI18n = {"安全起见，开启该功能后，初始密码须修改以后才能登录系统。",
+            name = {"须修改初始密码", "en:Change Initial Password"},
+            info = {"安全起见，开启该功能后，初始密码须修改以后才能登录系统。",
                     "en:For security reasons, the initial password must be changed before you can log in to the system once this function is enabled."})
-    @FieldView(group = "security", type = FieldType.number)
     public Boolean changeInitPwd = true;
 
     @ModelField(
-            nameI18n = {"密码期限", "en:Password Age"},
-            infoI18n = {"开启该功能，可限制密码的使用期限。",// 内部：0 表示可以永久不更新。
+            name = {"密码期限", "en:Password Age"},
+            info = {"开启该功能，可限制密码的使用期限。",// 内部：0 表示可以永久不更新。
                     "en:Enable this feature to limit the expiration date of the password."}
     )
-    @FieldView(group = "security", type = FieldType.bool)
     public Boolean enablePasswordAge = true;
 
     @ModelField(
-            nameI18n = {"密码最长使用期限", "en:Maximum Password Age"},
-            infoI18n = {"用户登录系统的密码距离上次修改超过该期限（单位为天）后，需首先更新密码才能继续登录系统。",// 内部：0 表示可以永久不更新。
+            name = {"密码最长使用期限", "en:Maximum Password Age"},
+            info = {"用户登录系统的密码距离上次修改超过该期限（单位为天）后，需首先更新密码才能继续登录系统。",// 内部：0 表示可以永久不更新。
                     "en:After the password of the user logging in to the system has been last modified beyond this period (in days), the user must first update the password before continuing to log in to the system."}
     )
-    @FieldView(group = "security", type = FieldType.number)
-    @FieldValidation(numberMin = 1, numberMax = 90, effectiveWhen = "enablePasswordAge=true")
     public Integer passwordMaxAge = 90;
 
     @ModelField(
-            nameI18n = {"密码最短使用期限", "en:Minimum Password Age"},
-            infoI18n = {"用户登录系统的密码距离上次修改未达到该期限（单位为天），则不能进行更新。0 表示可以随时更新。",
+            name = {"密码最短使用期限", "en:Minimum Password Age"},
+            info = {"用户登录系统的密码距离上次修改未达到该期限（单位为天），则不能进行更新。0 表示可以随时更新。",
                     "en:If the user password for logging in to the system has not reached this period (in days) since the last modification, it cannot be updated. 0 means that it can be updated at any time."}
     )
-    @FieldView(group = "security", type = FieldType.number)
-    @FieldValidation(numberMin = 0, effectiveWhen = "enablePasswordAge=true")
     public Integer passwordMinAge = 0;
 
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"双因子认证", "en:Two-factor Authentication"},
-            infoI18n = {"用户开启双因子认证后，在登录系统时，除验证用户的登录密码之外，还会验证用户的动态密码（由用户终端的双因子认证客户端设备产生），全部验证通过后才允许登录系统。开启双因子认证会自动初始化密钥，该密钥需要在用户的双因子认证客户端上同步绑定（通常是用户通过手机扫描密码修改页面的二维码来进行）。",
+            list = true,
+            name = {"双因子认证", "en:Two-factor Authentication"},
+            info = {"用户开启双因子认证后，在登录系统时，除验证用户的登录密码之外，还会验证用户的动态密码（由用户终端的双因子认证客户端设备产生），全部验证通过后才允许登录系统。开启双因子认证会自动初始化密钥，该密钥需要在用户的双因子认证客户端上同步绑定（通常是用户通过手机扫描密码修改页面的二维码来进行）。",
                     "en:After a user enables two-factor authentication, when logging into the system, in addition to verifying the user login password, the user dynamic password (generated by the two-factor authentication client device of the user terminal) will also be verified, and the system will be allowed to log in after all verifications are passed. . Enabling two-factor authentication will automatically initialize the key, which needs to be synchronously bound on the user two-factor authentication client (usually the user scans the QR code on the password modification page through the mobile phone)."}
     )
-    @FieldView(group = "security", type = FieldType.bool)
     public Boolean enable2FA = false;
 
-    @ModelField(shownOnList = true, nameI18n = {"是否激活", "en:Is Active"}, infoI18n = {"若未激活，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
-    @FieldView(group = "security", type = FieldType.bool)
+    @ModelField(list = true, name = {"是否激活", "en:Is Active"}, info = {"若未激活，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
     public Boolean active = true;
 
     @ModelField(
-            shownOnList = true,
-            nameI18n = {"密码最后修改时间", "en:Password Last Modified"},
-            infoI18n = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}
+            list = true,
+            name = {"密码最后修改时间", "en:Password Last Modified"},
+            info = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}
     )
-    @FieldView(group = "security")
-    @FieldValidation(cannotAdd = true, cannotUpdate = true)
     public String passwordLastModifiedTime;
 
     @ModelField(
-            nameI18n = {"不与最近密码重复", "en:Recent Password Restrictions"},
-            infoI18n = {"限制本次更新的密码不能和最近几次使用过的密码重复。注：设置为 “1” 表示只要不与当前密码重复即可。",
+            name = {"不与最近密码重复", "en:Recent Password Restrictions"},
+            info = {"限制本次更新的密码不能和最近几次使用过的密码重复。注：设置为 “1” 表示只要不与当前密码重复即可。",
                     "en:Restrict this update password to not be duplicated by the last few times you have used. Note: A setting of 1 means as long as it does not duplicate the current password."})
-    @FieldView(group = "security", type = FieldType.number)
-    @FieldValidation(numberMin = 1, numberMax = 10)
     public Integer limitRepeats = defLimitRepeats;
 
     @ModelField(
-            nameI18n = {"历史密码", "en:Historical Passwords"},
-            infoI18n = {"记录最近几次使用过的密码。", "en:Keep a record of the last few passwords you have used."})
-    @FieldView(group = "security")
-    @FieldValidation(cannotAdd = true, cannotUpdate = true)
+            name = {"历史密码", "en:Historical Passwords"},
+            info = {"记录最近几次使用过的密码。", "en:Keep a record of the last few passwords you have used."})
     public String oldPasswords;
 
     @Override
@@ -172,27 +146,25 @@ public class User extends ModelBase implements Createable {
 
 
     @ModelAction(name = Createable.ACTION_NAME_ADD,
-            nameI18n = {"添加", "en:Add"},
-            infoI18n = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    @ActionView(icon = "save")
+            name = {"添加", "en:Add"},
+            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
         if (!checkForbidden(request, response)) {
             return;
         }
         Map<String, String> newUser = MasterApp.prepareParameters(request, getAppContext());
         rectifyParameters(request, newUser, new HashMap<>());
-        getDataStore().addData(request.getModelName(), newUser.get(Listable.FIELD_NAME_ID), newUser);
+        getDataStore().addData(request.getModel(), newUser.get(Listable.FIELD_NAME_ID), newUser);
     }
 
 
     @ModelAction(name = Showable.ACTION_NAME_SHOW,
-            nameI18n = {"查看", "en:Show"},
-            infoI18n = {"查看该组件的相关信息。", "en:View the information of this model."})
-    @ActionView(icon = "info-sign", forwardTo = "show")
+            name = {"查看", "en:Show"},
+            info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
-        Map<String, String> data = dataStore.getDataById(request.getModelName(), request.getId());
-        if (Editable.ACTION_NAME_EDIT.equals(request.getActionName())) {
+        Map<String, String> data = dataStore.getDataById(request.getModel(), request.getId());
+        if (Editable.ACTION_NAME_EDIT.equals(request.getAction())) {
             data.put("password", PASSWORD_FLAG);
             data.put("confirmPassword", PASSWORD_FLAG);
         }
@@ -200,16 +172,15 @@ public class User extends ModelBase implements Createable {
     }
 
     @ModelAction(name = Editable.ACTION_NAME_UPDATE,
-            nameI18n = {"更新", "en:Update"},
-            infoI18n = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-    @ActionView(icon = "save")
+            name = {"更新", "en:Update"},
+            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
         if (!checkForbidden(request, response)) {
             return;
         }
 
         DataStore dataStore = getDataStore();
-        String modelName = request.getModelName();
+        String modelName = request.getModel();
         String userId = request.getId();
         Map<String, String> oldUser = dataStore.getDataById(modelName, userId);
         Map<String, String> newUser = MasterApp.prepareParameters(request, getAppContext());
@@ -312,17 +283,17 @@ public class User extends ModelBase implements Createable {
         String id = request.getId();
         if (StringUtil.notBlank(id)) {
             if ("qingzhou".contains(id)) {
-                if (Createable.ACTION_NAME_ADD.equals(request.getActionName())
-                        || Deletable.ACTION_NAME_DELETE.equals(request.getActionName())) {
+                if (Createable.ACTION_NAME_ADD.equals(request.getAction())
+                        || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
                     response.setSuccess(false);
-                    response.setMsg(getAppContext().getI18n(request.getI18nLang(), "operate.system.users.not"));
+                    response.setMsg(getAppContext().getI18n(request.getLang(), "operate.system.users.not"));
                     return false;
                 }
 
-                if (Editable.ACTION_NAME_UPDATE.equals(request.getActionName())) {
+                if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())) {
                     if (!Boolean.parseBoolean(request.getParameter("active"))) {
                         response.setSuccess(false);
-                        response.setMsg(getAppContext().getAppMetadata().getI18n(request.getI18nLang(), "System.users.keep.active"));
+                        response.setMsg(getAppContext().getAppMetadata().getI18n(request.getLang(), "System.users.keep.active"));
                         return false;
                     }
                 }
@@ -333,18 +304,17 @@ public class User extends ModelBase implements Createable {
 
     @ModelAction(
             name = Deletable.ACTION_NAME_DELETE,
-            effectiveWhen = "id!=qingzhou",
-            nameI18n = {"删除", "en:Delete"},
-            infoI18n = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
+            showWhen = "id!=qingzhou",
+            name = {"删除", "en:Delete"},
+            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
-    @ActionView(icon = "trash", shownOnList = 9)
     public void delete(Request request, Response response) throws Exception {
         if (!checkForbidden(request, response)) {
             return;
         }
 
         DataStore dataStore = getDataStore();
-        dataStore.deleteDataById(request.getModelName(), request.getId());
+        dataStore.deleteDataById(request.getModel(), request.getId());
     }
 
     static void insertPasswordModifiedTime(Map<String, String> params) {
