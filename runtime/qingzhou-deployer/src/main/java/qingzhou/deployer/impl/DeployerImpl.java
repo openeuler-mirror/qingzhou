@@ -41,8 +41,8 @@ class DeployerImpl implements Deployer {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-        boolean needCommonModel = !App.SYS_APP_MASTER.equals(appName) && !App.SYS_APP_NODE_AGENT.equals(appName);
-        AppImpl app = buildApp(appName, appFile, needCommonModel);
+        boolean isSystemApp = App.SYS_APP_MASTER.equals(appName) || App.SYS_APP_NODE_AGENT.equals(appName);
+        AppImpl app = buildApp(appName, appFile, isSystemApp);
 
         // 启动应用
         app.getQingzhouApp().start(app.getAppContext());
@@ -85,11 +85,11 @@ class DeployerImpl implements Deployer {
         return apps.get(name);
     }
 
-    private AppImpl buildApp(String appName, File appDir, boolean needCommonModel) throws Exception {
+    private AppImpl buildApp(String appName, File appDir, boolean isSystemApp) throws Exception {
         AppImpl app = new AppImpl();
 
-        File[] appLibs = buildLib(appDir, needCommonModel);
-        URLClassLoader loader = buildLoader(appLibs);
+        File[] appLibs = buildLib(appDir, isSystemApp);
+        URLClassLoader loader = buildLoader(appLibs, isSystemApp);
         app.setLoader(loader);
 
         QingzhouApp qingzhouApp = buildQingzhouApp(loader, appLibs);
@@ -102,9 +102,7 @@ class DeployerImpl implements Deployer {
         Collection<String> modelClassName = detectModelClass(appLibs);
         Map<ModelBase, ModelInfo> modelInfos = getModelInfos(modelClassName, loader);
         // 构建 Action 执行器
-        modelInfos.forEach((modelBase, modelInfo) -> {
-            initActionMap(app, modelInfo.getCode(), modelInfo.getModelActionInfos(), modelBase);
-        });
+        modelInfos.forEach((modelBase, modelInfo) -> initActionMap(app, modelInfo.getCode(), modelInfo.getModelActionInfos(), modelBase));
         // 构建 Action 执行器
         Map<String, Collection<ModelActionInfo>> addPresetAction = addPresetAction(modelInfos);// 追加系统预置的 action
         addPresetAction.forEach((modelName, addedModelActions) -> {
@@ -379,13 +377,13 @@ class DeployerImpl implements Deployer {
         return appContext;
     }
 
-    private File[] buildLib(File appDir, boolean needCommonModel) {
+    private File[] buildLib(File appDir, boolean isSystemApp) {
         File[] appFiles = appDir.listFiles();
         if (appFiles == null) {
             throw new IllegalArgumentException("app lib not found: " + appDir.getName());
         }
         File[] appLibs = appFiles;
-        if (needCommonModel) {
+        if (!isSystemApp) {
             File[] commonFiles = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
             if (commonFiles != null) {
                 int appFileLength = appFiles.length;
@@ -398,7 +396,7 @@ class DeployerImpl implements Deployer {
         return appLibs;
     }
 
-    private URLClassLoader buildLoader(File[] appLibs) {
+    private URLClassLoader buildLoader(File[] appLibs, boolean isSystemApp) {
         URL[] urls = Arrays.stream(appLibs).map(file -> {
             try {
                 return file.toURI().toURL();
@@ -406,6 +404,9 @@ class DeployerImpl implements Deployer {
                 throw new RuntimeException(e);
             }
         }).toArray(URL[]::new);
-        return new URLClassLoader(urls, QingzhouSystemApp.class.getClassLoader());
+        return new URLClassLoader(urls,
+                isSystemApp
+                        ? QingzhouSystemApp.class.getClassLoader()
+                        : QingzhouApp.class.getClassLoader());
     }
 }

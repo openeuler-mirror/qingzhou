@@ -1,37 +1,32 @@
 package qingzhou.engine.impl;
 
 import qingzhou.engine.Module;
-import qingzhou.engine.ModuleContext;
 import qingzhou.engine.ServiceRegister;
 import qingzhou.engine.util.FileUtil;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 public class Main {
     private final List<Module> moduleList = new ArrayList<>();
-    private final ModuleContext moduleContext = new ModuleContextImpl();
+    private final ModuleContextImpl moduleContext = new ModuleContextImpl();
 
     public static void main(String[] args) throws Exception {
         new Main().start();
     }
 
     private void start() throws Exception {
-        CompositeClassLoader rootLoader = new CompositeClassLoader(null);
-        File apiJarFile = new File(moduleContext.getLibDir(), "qingzhou-api.jar");
-        rootLoader.add(new URLClassLoader(new URL[]{apiJarFile.toURI().toURL()}));
-        rootLoader.add(Module.class.getClassLoader());
+        LinkedHashMap<File, Set<File>> startLevelFiles = loadStartLevelFiles();
 
-        LinkedHashMap<File, Set<File>> startLevel = startLevel();
-
-        ClassLoader[] moduleLoaders = moduleLoaders(startLevel, rootLoader);
+        ClassLoader[] moduleLoaders = buildModuleLoaders(startLevelFiles);
 
         for (ClassLoader moduleLoader : moduleLoaders) {
             startModule(moduleLoader);
@@ -40,75 +35,109 @@ public class Main {
         waitForStop();
     }
 
-    private ClassLoader[] moduleLoaders(LinkedHashMap<File, Set<File>> startLevel, ClassLoader parentLoader) {
-        Map<File, ClassLoader> apiLoaders = new HashMap<>();
-        startLevel.forEach((key, value) -> {
-            apiLoaders.computeIfAbsent(key, file -> {
-                try {
-                    return splitApiLoader(file);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+    private ClassLoader[] buildModuleLoaders(LinkedHashMap<File, Set<File>> startLevel) throws Exception {
+        File tempBase = moduleContext.getTemp();
+        String moduleApiFileName = "module-api.jar";
+        List<String> implFileNames = new ArrayList<>();
+        ArrayList<File> files = new ArrayList<>(startLevel.keySet());
+        Collections.reverse(files);
+        splitApiFiles(files, tempBase, moduleApiFileName, implFileNames);
 
-            value.forEach(file -> apiLoaders.computeIfAbsent(file, file1 -> {
-                try {
-                    return splitApiLoader(file1);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }));
-        });
+        File apiJarFile = new File(moduleContext.getLibDir(), "qingzhou-api.jar");
+        URLClassLoader apiLoader = new URLClassLoader(new URL[]{apiJarFile.toURI().toURL()}, Main.class.getClassLoader());
 
-        ArrayList<Map.Entry<File, Set<File>>> entries = new ArrayList<>(startLevel.entrySet());
-        Collections.reverse(entries);
+        URLClassLoader moduleApiLoader = new URLClassLoader(new URL[]{new File(tempBase, moduleApiFileName).toURI().toURL()}, apiLoader);
+
         List<ClassLoader> loaderList = new ArrayList<>();
-        entries.forEach(entry -> {
-            CompositeClassLoader moduleApi = new CompositeClassLoader(null);
-            FileFilterLoader fileApiLoader = (FileFilterLoader) apiLoaders.get(entry.getKey());
-            moduleApi.add(fileApiLoader);
-            entry.getValue().forEach(file -> moduleApi.add(apiLoaders.get(file)));
-
-            try {
-                ClassLoader implLoader = new FileFilterLoader(fileApiLoader.file, name -> !fileApiLoader.filter.accept(name), ); parentLoader or moduleApi 都不行？
-                loaderList.add(implLoader);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        for (String implFileName : implFileNames) {
+            loaderList.add(new URLClassLoader(new URL[]{new File(tempBase, implFileName).toURI().toURL()}, moduleApiLoader));
+        }
         return loaderList.toArray(new ClassLoader[0]);
     }
 
-    private ClassLoader splitApiLoader(File moduleFile) throws IOException {
-        String moduleFileName = moduleFile.getName();
-        int i = moduleFileName.lastIndexOf(".");
-        String moduleName = moduleFileName.substring(0, i);
-        String apiPackage = moduleName.replace("-", ".");
+    private void splitApiFiles(List<File> moduleLevels, File loaderTemp, String apiFileName, List<String> implFileNameContainer) throws Exception {
+        // 合并 api jar
+        try (ZipOutputFile apiJar = new ZipOutputFile(new File(loaderTemp, apiFileName))) {
+            Set<String> alreadyNames = new HashSet<>();
+            for (File moduleFile : moduleLevels) {
+                try (ZipFile moduleZip = new ZipFile(moduleFile)) {
+                    String moduleFileName = moduleFile.getName();
+                    String implFileName = moduleFileName.substring(0, moduleFileName.length() - 4) + "-impl.jar";
+                    implFileNameContainer.add(implFileName);
+                    try (ZipOutputFile moduleImplJar = new ZipOutputFile(new File(loaderTemp, implFileName))) {
+                        Enumeration<? extends ZipEntry> entries = moduleZip.entries();
 
-        ResourceLoadingFilter apiFilter = name -> {
-            if (name.startsWith(apiPackage) && name.endsWith(".class")) {
-                String simpleName = name.substring(apiPackage.length() + 1, name.lastIndexOf(".class".length()));
-                return !simpleName.contains(".");// 不再有子目录，表示最外层的api
+                        String moduleName = moduleFileName.substring(0, moduleFileName.length() - ".jar".length());
+                        String prefix = moduleName.replace("-", "/") + "/";
+                        while (entries.hasMoreElements()) {
+                            ZipEntry zipEntry = entries.nextElement();
+                            String entryName = zipEntry.getName();
+
+                            // 写入 api jar
+                            if (zipEntry.isDirectory() && prefix.startsWith(entryName)) {
+                                if (alreadyNames.add(entryName)) { // 多个 jar 都有 qingzhou 这个父目录，多次会重复报错
+                                    apiJar.writeZipEntry(entryName, true, null);
+                                }
+                                continue;
+                            }
+                            if (!zipEntry.isDirectory() && entryName.startsWith(prefix)) {
+                                int inner = entryName.indexOf("/", prefix.length());
+                                if (inner == -1) { // 不需要子目录
+                                    apiJar.writeZipEntry(entryName, false,
+                                            moduleZip.getInputStream(zipEntry));
+                                    continue;
+                                }
+                            }
+
+                            // 其它文件，都切割到 impl jar
+                            if (zipEntry.isDirectory()) {
+                                moduleImplJar.writeZipEntry(entryName, true, null);
+                            } else {
+                                moduleImplJar.writeZipEntry(entryName, false,
+                                        moduleZip.getInputStream(zipEntry));
+                            }
+                        }
+                    }
+                }
             }
-            return false;
-        };
-
-        return new FileFilterLoader(moduleFile, apiFilter, null);
+        }
     }
 
-    private LinkedHashMap<File, Set<File>> startLevel() throws Exception {
+    private static class ZipOutputFile implements AutoCloseable {
+        final ZipOutputStream zos;
+
+        private ZipOutputFile(File file) throws IOException {
+            this.zos = new ZipOutputStream(Files.newOutputStream(file.toPath()));
+        }
+
+        void writeZipEntry(String entryName, boolean isDirectory, InputStream entryStream) throws IOException {
+            this.zos.putNextEntry(new ZipEntry(entryName));
+
+            if (!isDirectory) {
+                FileUtil.copyStream(entryStream, zos);
+            }
+
+            this.zos.closeEntry();
+        }
+
+        @Override
+        public void close() throws Exception {
+            this.zos.close();
+        }
+    }
+
+    private LinkedHashMap<File, Set<File>> loadStartLevelFiles() throws Exception {
         LinkedHashMap<File, Set<File>> startLevel = new LinkedHashMap<>();
 
         String moduleConfigFile = "/module.properties";
         try (InputStream inputStream = Main.class.getResourceAsStream(moduleConfigFile)) {
             if (inputStream == null) throw new IllegalStateException("Not found: " + moduleConfigFile);
 
-            Properties properties = FileUtil.streamToProperties(inputStream);
+            LinkedHashMap<String, String> data = FileUtil.streamToProperties(inputStream);
             File moduleDir = new File(moduleContext.getLibDir(), "module");
-            properties.stringPropertyNames().forEach(k -> {
-                File kJar = new File(moduleDir, k + ".jar");
+            data.forEach((key, vs) -> {
+                File kJar = new File(moduleDir, key + ".jar");
                 if (kJar.isFile()) {
-                    String vs = properties.getProperty(k);
                     Set<File> vJars = new HashSet<>();
                     for (String v : vs.split(",")) {
                         File vJar = new File(moduleDir, v + ".jar");
@@ -126,22 +155,29 @@ public class Main {
 
     private void startModule(ClassLoader classLoader) {
         try {
-            for (Module module : ServiceLoader.load(Module.class, classLoader)) {
+            for (Module module : findModules(classLoader)) {
                 if (module instanceof ServiceRegister) {
                     Class<?> serviceType = ((ServiceRegister<?>) module).serviceType();
                     if (moduleList.stream().anyMatch(module1 -> (module1 instanceof ServiceRegister) && (((ServiceRegister<?>) module1).serviceType() == serviceType))) {
-                        continue;
+                        throw new IllegalStateException("duplicate binding service: " + serviceType);
                     }
                 }
 
                 module.start(moduleContext);
                 moduleList.add(module);
-
-                System.out.println("The module is loaded: " + module.getClass().getName());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private List<Module> findModules(ClassLoader classLoader) {
+        List<Module> modules = new ArrayList<>();
+        ServiceLoader<Module> serviceLoader = ServiceLoader.load(Module.class, classLoader);
+        for (Module module : serviceLoader) {
+            modules.add(module);
+        }
+        return modules;
     }
 
     private void waitForStop() throws Exception {
@@ -152,46 +188,12 @@ public class Main {
 
                 System.out.println("The module has been unloaded: " + module.getClass().getName());
             }
+            moduleContext.close();
+            System.out.println("Qingzhou has been stopped.");
         }));
 
         synchronized (Main.class) {
             Main.class.wait();
         }
-    }
-
-    private static class FileFilterLoader extends URLClassLoader {
-        final File file;
-        final ResourceLoadingFilter filter;
-
-        private final ZipFile zipFile;
-
-        protected FileFilterLoader(File file, ResourceLoadingFilter filter, ClassLoader parent) throws IOException {
-            super(new URL[]{file.toURI().toURL()}, parent);
-            this.file = file;
-            this.filter = filter;
-            this.zipFile = new ZipFile(file);
-        }
-
-        @Override
-        protected Class<?> findClass(String name) throws ClassNotFoundException {
-            if (this.filter.accept(name)) {
-                ZipEntry entry = this.zipFile.getEntry(name.replace(".", "/"));
-                if (entry != null) {
-                    try (InputStream resourceStream = this.zipFile.getInputStream(entry)) {
-                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                        FileUtil.copyStream(resourceStream, bos);
-                        return defineClass(name, bos.toByteArray(), 0, bos.size());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-
-            return super.findClass(name);
-        }
-    }
-
-    private interface ResourceLoadingFilter {
-        boolean accept(String name);
     }
 }

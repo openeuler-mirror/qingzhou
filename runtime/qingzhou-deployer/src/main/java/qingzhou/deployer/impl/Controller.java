@@ -9,7 +9,7 @@ import qingzhou.logger.Logger;
 import java.io.File;
 import java.util.Arrays;
 
-class Controller extends ServiceRegister<Deployer> {
+public class Controller extends ServiceRegister<Deployer> {
     static Logger logger;
     private Deployer deployer;
 
@@ -31,10 +31,14 @@ class Controller extends ServiceRegister<Deployer> {
         deployer = new DeployerImpl(moduleContext);
 
         File masterApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", App.SYS_APP_MASTER);
-        deployer.installApp(masterApp);
+        if (masterApp.exists()) {
+            deployer.installApp(masterApp);
+        }
 
         File nodeAgentApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", App.SYS_APP_NODE_AGENT);
-        deployer.installApp(nodeAgentApp);
+        if (nodeAgentApp.exists()) {
+            deployer.installApp(nodeAgentApp);
+        }
 
         File[] files = FileUtil.newFile(moduleContext.getInstanceDir(), "apps").listFiles();
         if (files != null) {

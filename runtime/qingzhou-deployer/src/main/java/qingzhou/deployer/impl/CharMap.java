@@ -3,10 +3,7 @@ package qingzhou.deployer.impl;
 import qingzhou.api.Lang;
 import qingzhou.engine.util.FileUtil;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,9 +14,9 @@ class CharMap {
 
     static {
         try {
-            Properties props = FileUtil.streamToProperties(CharMap.class.getResourceAsStream("/" + CharMap.class.getPackage().getName().replace(".", "/") + "/CharMap.txt"));
-            String zh = props.getProperty("zh");
-            String tr = props.getProperty("tr");
+            LinkedHashMap<String, String> props = FileUtil.streamToProperties(CharMap.class.getResourceAsStream("/" + CharMap.class.getPackage().getName().replace(".", "/") + "/CharMap.txt"));
+            String zh = props.get("zh");
+            String tr = props.get("tr");
             for (int i = 0; i < zh.length(); i++) {
                 Character check = zh_tr_Map.put(zh.charAt(i), tr.charAt(i));
                 if (check != null) {

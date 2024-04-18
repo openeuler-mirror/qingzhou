@@ -54,7 +54,7 @@ class AnnotationReader {
     }
 
     private ModelAction searchActionFromParent(Class<?> aClass, Method targetMethod) {
-        if (aClass == null) {
+        if (aClass == null || aClass == Object.class) {
             return null;
         }
 

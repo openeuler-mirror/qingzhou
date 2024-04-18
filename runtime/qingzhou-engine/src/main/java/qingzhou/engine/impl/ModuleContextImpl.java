@@ -2,15 +2,18 @@ package qingzhou.engine.impl;
 
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.RegistryKey;
+import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.UUID;
 
 class ModuleContextImpl implements ModuleContext {
     private final ServiceManagerImpl serviceManager = new ServiceManagerImpl();
     private File libDir;
     private File instanceDir;
+    private final LinkedList<File> tempFileCache = new LinkedList<>();
 
     @Override
     public File getLibDir() {
@@ -57,7 +60,13 @@ class ModuleContextImpl implements ModuleContext {
 
     @Override
     public File getTemp() {
-        File temp = new File(getInstanceDir(), "temp");
-        return new File(temp, UUID.randomUUID().toString());
+        File temp = FileUtil.newFile(getInstanceDir(), "temp", UUID.randomUUID().toString().replace("-", ""));
+        FileUtil.mkdirs(temp);
+        tempFileCache.add(temp);
+        return temp;
+    }
+
+    void close() {
+        tempFileCache.forEach(FileUtil::forceDeleteQuietly);
     }
 }

@@ -8,8 +8,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -299,8 +299,8 @@ public class FileUtil {
     private FileUtil() {
     }
 
-    public static Properties streamToProperties(InputStream inputStream) throws Exception {
-        Properties properties = new Properties();
+    public static LinkedHashMap<String, String> streamToProperties(InputStream inputStream) throws Exception {
+        LinkedHashMap<String, String> data = new LinkedHashMap<>(); // 保持顺序
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
         for (String line; (line = reader.readLine()) != null; ) {
             line = line.trim();
@@ -310,11 +310,11 @@ public class FileUtil {
             if (i != -1) {
                 String key = line.substring(0, i);
                 String val = line.substring(i + 1);
-                properties.setProperty(key, val);
+                data.put(key, val);
             } else {
-                properties.setProperty(line, "");
+                data.put(line, "");
             }
         }
-        return properties;
+        return data;
     }
 }

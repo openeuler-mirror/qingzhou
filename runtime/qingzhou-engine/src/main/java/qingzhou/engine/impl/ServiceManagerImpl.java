@@ -17,7 +17,6 @@ class ServiceManagerImpl {
         RegistryKey registryKey = new RegistryKey() {
         };
         REGISTRY.put(registryKey, clazz);
-        System.out.println("Registered Service: " + clazz.getName());
         return registryKey;
     }
 

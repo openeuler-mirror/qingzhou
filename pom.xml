@@ -10,10 +10,11 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>qingzhou-api</module>
-        <module>package</module>
         <module>boot</module>
+        <module>qingzhou-api</module>
         <module>runtime</module>
+        <module>manager</module>
+        <module>package</module>
     </modules>
 
     <properties>
