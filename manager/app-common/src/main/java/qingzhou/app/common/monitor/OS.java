@@ -82,13 +82,13 @@ public class OS extends ModelBase implements Monitorable {
             }
         } catch (Throwable ignored) {
         }
-        map.put("TotalPhysicalMemorySize", StringUtil.convertGBytes(TotalPhysicalMemorySize));
-        map.put("FreePhysicalMemorySize", StringUtil.convertGBytes(FreePhysicalMemorySize));
-        map.put("TotalSwapSpaceSize", StringUtil.convertGBytes(TotalSwapSpaceSize));
-        map.put("FreeSwapSpaceSize", StringUtil.convertGBytes(FreeSwapSpaceSize));
-        map.put("CommittedVirtualMemorySize", StringUtil.convertGBytes(CommittedVirtualMemorySize));
-        map.put("fileTotalSpace", StringUtil.convertGBytes(getAppContext().getTemp().getTotalSpace()));
-        map.put("fileFreeSpace", StringUtil.convertGBytes(getAppContext().getTemp().getFreeSpace()));
+        map.put("TotalPhysicalMemorySize", convertGBytes(TotalPhysicalMemorySize));
+        map.put("FreePhysicalMemorySize", convertGBytes(FreePhysicalMemorySize));
+        map.put("TotalSwapSpaceSize", convertGBytes(TotalSwapSpaceSize));
+        map.put("FreeSwapSpaceSize", convertGBytes(FreeSwapSpaceSize));
+        map.put("CommittedVirtualMemorySize", convertGBytes(CommittedVirtualMemorySize));
+        map.put("fileTotalSpace", convertGBytes(getAppContext().getTemp().getTotalSpace()));
+        map.put("fileFreeSpace", convertGBytes(getAppContext().getTemp().getFreeSpace()));
 
         double v;
         if (mxBean.getSystemLoadAverage() < 0) {
@@ -100,5 +100,11 @@ public class OS extends ModelBase implements Monitorable {
         map.put("SystemCpuLoad", String.format("%.2f", v));// #ITAIT-3029
 
         return map;
+    }
+
+    private String convertGBytes(long val) {
+        double v = ((double) val) / 1024 / 1024 / 1024;
+        DecimalFormat df = new DecimalFormat("##0.0");//这样为保持1位
+        return df.format(v);
     }
 }

@@ -60,12 +60,17 @@ public class Jvm extends ModelBase implements Monitorable {
         properties.put("deadlockedThreadCount", String.valueOf(deadlockedThreadCount));
 
         MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-        properties.put("heapUsed", StringUtil.convertMBytes(memoryMXBean.getHeapMemoryUsage().getUsed()));
-        properties.put("heapCommitted", StringUtil.convertMBytes(memoryMXBean.getHeapMemoryUsage().getCommitted()));
+        properties.put("heapUsed", convertMBytes(memoryMXBean.getHeapMemoryUsage().getUsed()));
+        properties.put("heapCommitted", convertMBytes(memoryMXBean.getHeapMemoryUsage().getCommitted()));
 
-        properties.put("nonHeapUsed", StringUtil.convertMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
+        properties.put("nonHeapUsed", convertMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
 
         return properties;
+    }
+    private String convertMBytes(long val) {
+        double v = ((double) val) / 1024 / 1024;
+        DecimalFormat df = new DecimalFormat("##0.0");//这样为保持1位
+        return df.format(v);
     }
 
     private Map<String, String> basicProperties;

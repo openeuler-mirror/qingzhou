@@ -15,10 +15,8 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 class ConfigTool {
     private final String[] JAVA_9_PLUS = new String[]{
@@ -79,8 +77,8 @@ class ConfigTool {
         }
 
         // 启动类
-        File engineJar = new File(new File(CommandUtil.getLibDir(), "engine"), "qingzhou-engine.jar");
-        String classpath = engineJar.getCanonicalPath();
+        String classpath = Arrays.stream(Objects.requireNonNull(new File(CommandUtil.getLibDir(), "engine").listFiles()))
+                .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
         jvm.getArg().add(new Arg("-classpath"));
         jvm.getArg().add(new Arg(classpath));
         jvm.getArg().add(new Arg("qingzhou.engine.impl.Main"));

@@ -13,10 +13,17 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>qingzhou-console</module>
         <module>console-war</module>
         <module>app-common</module>
         <module>app-master</module>
         <module>app-nodeagent</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-api</artifactId>
+            <version>x</version>
+        </dependency>
+    </dependencies>
 </project>

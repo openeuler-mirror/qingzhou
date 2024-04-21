@@ -11,9 +11,10 @@
 
     <modules>
         <module>boot</module>
+        <module>qingzhou-engine</module>
         <module>qingzhou-api</module>
-        <module>runtime</module>
-        <module>manager</module>
+        <module>module</module>
+<!--        <module>manager</module>-->
         <module>package</module>
     </modules>
 
