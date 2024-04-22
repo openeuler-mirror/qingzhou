@@ -1,7 +1,5 @@
 package qingzhou.deployer;
 
-import qingzhou.registry.InstanceInfo;
-
 import java.io.File;
 import java.util.Collection;
 
@@ -13,6 +11,4 @@ public interface Deployer {
     Collection<String> getAllApp();
 
     App getApp(String name);
-
-    InstanceInfo getInstanceInfo();
 }

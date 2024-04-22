@@ -17,11 +17,6 @@
             <artifactId>qingzhou-logger</artifactId>
             <version>x</version>
         </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-engine</artifactId>
-            <version>x</version>
-        </dependency>
 
         <dependency>
             <groupId>org.eclipse.jdt</groupId>

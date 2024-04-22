@@ -1,4 +1,4 @@
-package qingzhou.deployer;
+package qingzhou.console;
 
 import qingzhou.api.ModelBase;
 import qingzhou.api.Response;

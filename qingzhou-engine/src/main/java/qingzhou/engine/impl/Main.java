@@ -35,9 +35,20 @@ public class Main {
 
         loadModuleActivator();
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> moduleOrder.forEach(moduleName -> {
+            ModuleInfo moduleInfo = moduleInfoMap.get(moduleName);
+            moduleInfo.getModuleActivators().forEach(ModuleActivator::stop);
+            try {
+                FileUtil.forceDelete(moduleInfo.getModuleContext().getTemp());
+            } catch (IOException ignored) {
+            }
+        })));
+
         startModule();
 
-        waitForStop();
+        synchronized (Main.class) {
+            Main.class.wait();
+        }
     }
 
     private void startModule() throws Exception {
@@ -46,7 +57,8 @@ public class Main {
             if (!moduleInfo.getDependencies().isEmpty()) {
                 injectModuleService(moduleInfo);
             }
-            ModuleContextImpl moduleContext = new ModuleContextImpl(engineContext);
+            ModuleContextImpl moduleContext = new ModuleContextImpl(
+                    moduleInfo.getName(), engineContext);
             moduleInfo.setModuleContext(moduleContext);
             for (ModuleActivator moduleActivator : moduleInfo.getModuleActivators()) {
                 moduleActivator.start(moduleContext);
@@ -229,20 +241,5 @@ public class Main {
         }
 
         Collections.reverse(moduleOrder);
-    }
-
-    private void waitForStop() throws Exception {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> moduleOrder.forEach(moduleName -> {
-            ModuleInfo moduleInfo = moduleInfoMap.get(moduleName);
-            moduleInfo.getModuleActivators().forEach(ModuleActivator::stop);
-            try {
-                FileUtil.forceDelete(moduleInfo.getModuleContext().getTemp());
-            } catch (IOException ignored) {
-            }
-        })));
-
-        synchronized (Main.class) {
-            Main.class.wait();
-        }
     }
 }

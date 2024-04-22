@@ -14,6 +14,11 @@
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-api</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
             <artifactId>qingzhou-servlet</artifactId>
             <version>x</version>
         </dependency>

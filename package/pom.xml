@@ -123,27 +123,27 @@
             <version>x</version>
         </dependency>
 
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>console-war</artifactId>
-            <version>x</version>
-            <type>war</type>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>app-master</artifactId>
-            <version>x</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>app-nodeagent</artifactId>
-            <version>x</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>app-common</artifactId>
-            <version>x</version>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>${project.groupId}</groupId>-->
+        <!--            <artifactId>console-war</artifactId>-->
+        <!--            <version>x</version>-->
+        <!--            <type>war</type>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>${project.groupId}</groupId>-->
+        <!--            <artifactId>app-master</artifactId>-->
+        <!--            <version>x</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>${project.groupId}</groupId>-->
+        <!--            <artifactId>app-nodeagent</artifactId>-->
+        <!--            <version>x</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>${project.groupId}</groupId>-->
+        <!--            <artifactId>app-common</artifactId>-->
+        <!--            <version>x</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>javassist</groupId>

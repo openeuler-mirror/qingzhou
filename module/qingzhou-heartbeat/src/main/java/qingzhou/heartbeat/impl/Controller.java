@@ -1,5 +1,6 @@
 package qingzhou.heartbeat.impl;
 
+import qingzhou.agent.Agent;
 import qingzhou.config.ConfigService;
 import qingzhou.config.Remote;
 import qingzhou.crypto.CryptoService;
@@ -33,6 +34,8 @@ public class Controller implements ModuleActivator {
     private Json json;
     @Service
     private Deployer deployer;
+    @Service
+    private Agent agent;
 
     // 定时器设计目的：解决 master 未启动或者宕机重启等引起的注册失效问题
     private Timer timer;
@@ -65,7 +68,7 @@ public class Controller implements ModuleActivator {
     }
 
     private void register() throws Exception {
-        InstanceInfo instanceInfo = deployer.getInstanceInfo();
+        InstanceInfo instanceInfo = agent.thisInstanceInfo();
         List<AppInfo> appInfos = new ArrayList<>();
         for (String a : deployer.getAllApp()) {
             appInfos.add(deployer.getApp(a).getAppInfo());

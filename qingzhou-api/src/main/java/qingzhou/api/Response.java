@@ -35,6 +35,8 @@ public interface Response {
      */
     void setPageSize(int pageSize);
 
+    int getPageSize();
+
     /**
      * 设置当前页码。
      *

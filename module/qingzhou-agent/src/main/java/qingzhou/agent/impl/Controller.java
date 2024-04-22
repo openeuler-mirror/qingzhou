@@ -1,14 +1,15 @@
 package qingzhou.agent.impl;
 
+import qingzhou.agent.Agent;
 import qingzhou.api.Response;
 import qingzhou.config.ConfigService;
 import qingzhou.config.Remote;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -35,18 +36,22 @@ public class Controller implements ModuleActivator {
     @Service
     private Json json;
     @Service
-    private Deployer deployer;
-    @Service
     private Http http;
     @Service
     private Logger logger;
+    @Service
+    private Deployer deployer;
 
+    private Agent agent;
     private String path;
     private HttpServer server;
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
         Remote remote = configService.getConfig().getRemote();
+        agent = new AgentImpl(remote, cryptoService);
+        moduleContext.registerService(Agent.class, agent);
+
         if (!remote.isEnabled()) return;
 
         path = "/";
@@ -97,7 +102,7 @@ public class Controller implements ModuleActivator {
         byte[] requestData = bos.toByteArray();
 
         // 2. 数据解密，带认证
-        String remoteKey = deployer.getInstanceInfo().getKey();
+        String remoteKey = agent.thisInstanceInfo().getKey();
         KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
         byte[] decryptedData = keyCipher.decrypt(requestData);
 

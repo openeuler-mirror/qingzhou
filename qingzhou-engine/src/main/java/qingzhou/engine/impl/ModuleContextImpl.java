@@ -6,15 +6,16 @@ import qingzhou.engine.util.FileUtil;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 class ModuleContextImpl implements ModuleContext {
+    private final String name;
     private final EngineContext engineContext;
     final Map<Class<?>, Object> registeredServices = new HashMap<>();
 
     private File temp;
 
-    ModuleContextImpl(EngineContext engineContext) {
+    ModuleContextImpl(String name, EngineContext engineContext) {
+        this.name = name;
         this.engineContext = engineContext;
     }
 
@@ -39,7 +40,7 @@ class ModuleContextImpl implements ModuleContext {
     @Override
     public File getTemp() {
         if (temp == null) {
-            temp = FileUtil.newFile(engineContext.getTemp(), UUID.randomUUID().toString());
+            temp = FileUtil.newFile(engineContext.getTemp(), "module-context", name);
             FileUtil.mkdirs(temp);
         }
         return temp;

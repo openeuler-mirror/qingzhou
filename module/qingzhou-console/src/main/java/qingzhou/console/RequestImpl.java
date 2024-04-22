@@ -1,4 +1,4 @@
-package qingzhou.deployer;
+package qingzhou.console;
 
 import qingzhou.api.Lang;
 import qingzhou.api.Request;

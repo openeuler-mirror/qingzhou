@@ -3,7 +3,6 @@ package qingzhou.deployer.impl;
 import qingzhou.api.*;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Monitorable;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 
@@ -91,7 +90,7 @@ class PresetAction {
         }
         response.setPageNum(pageNum);
 
-        String[] dataIdInPage = dataStore.getDataIdInPage(modelName, ((ResponseImpl) response).getPageSize(), pageNum).toArray(new String[0]);
+        String[] dataIdInPage = dataStore.getDataIdInPage(modelName, response.getPageSize(), pageNum).toArray(new String[0]);
         String[] fieldNamesToList = getAppInfo().getModelInfo(modelName).getFormFieldList();
         List<Map<String, String>> result = dataStore.getDataFieldByIds(modelName, dataIdInPage, fieldNamesToList);
         for (Map<String, String> data : result) {
