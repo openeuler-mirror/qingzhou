@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -59,8 +60,7 @@ public class Main {
             Collection<String> annotatedClasses = FileUtil.detectAnnotatedClass(
                     new File[]{moduleInfo.getFile()},
                     Module.class,
-                    "qingzhou.",
-                    null);
+                    "qingzhou.");
             for (String a : annotatedClasses) {
                 Class<?> aClass = moduleInfo.getLoader().loadClass(a);
                 ModuleActivator activator = (ModuleActivator) aClass.newInstance();
@@ -75,9 +75,14 @@ public class Main {
                 Service service = field.getAnnotation(Service.class);
                 if (service != null) {
                     Object serviceObj = findService(field.getType(), moduleInfo.getDependencies());
-
                     field.setAccessible(true);
-                    field.set(moduleActivator, serviceObj);
+
+                    int modifiers = field.getModifiers();
+                    if (Modifier.isStatic(modifiers)) {
+                        field.set(null, serviceObj);
+                    } else {
+                        field.set(moduleActivator, serviceObj);
+                    }
                 }
             }
         }

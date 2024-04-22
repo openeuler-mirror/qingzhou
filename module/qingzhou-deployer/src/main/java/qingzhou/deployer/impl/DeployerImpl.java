@@ -122,7 +122,7 @@ class DeployerImpl implements Deployer {
         }
         app.setQingzhouApp(qingzhouApp);
 
-        Collection<String> modelClassName = FileUtil.detectAnnotatedClass(appLibs, Model.class, null, QingzhouSystemApp.class.getClassLoader());
+        Collection<String> modelClassName = FileUtil.detectAnnotatedClass(appLibs, Model.class, null);
         Map<ModelBase, ModelInfo> modelInfos = getModelInfos(modelClassName, loader);
         // 构建 Action 执行器
         modelInfos.forEach((modelBase, modelInfo) -> initActionMap(app, modelInfo.getCode(), modelInfo.getModelActionInfos(), modelBase));

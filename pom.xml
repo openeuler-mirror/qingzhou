@@ -14,7 +14,7 @@
         <module>qingzhou-engine</module>
         <module>qingzhou-api</module>
         <module>module</module>
-<!--        <module>manager</module>-->
+        <module>manager</module>
         <module>package</module>
     </modules>
 

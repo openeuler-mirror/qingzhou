@@ -19,8 +19,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 class ConfigTool {
-    private final String[] JAVA_9_PLUS = new String[]{
-    };
     private final File instanceDir;
     private Jvm jvm;
 
@@ -62,21 +60,6 @@ class ConfigTool {
     private void initConfig() throws Exception {
         Jvm jvm = parseFileConfig();
 
-        // 支持高版本 jdk
-        for (String addArg : JAVA_9_PLUS) {
-            boolean exists = false;
-            for (Arg arg : jvm.getArg()) {
-                if (arg.getName().equals(addArg)) {
-                    exists = true;
-                    break;
-                }
-            }
-            if (!exists) {
-                jvm.getArg().add(new Arg(addArg));
-            }
-        }
-
-        // 启动类
         String classpath = Arrays.stream(Objects.requireNonNull(new File(CommandUtil.getLibDir(), "engine").listFiles()))
                 .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
         jvm.getArg().add(new Arg("-classpath"));
@@ -88,7 +71,7 @@ class ConfigTool {
 
     private Jvm parseFileConfig() throws Exception {
         StringBuilder fileContent = new StringBuilder();
-        try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
+        try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "jvm.json").toPath())) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             for (String line; (line = reader.readLine()) != null; ) {
                 fileContent.append(line);
@@ -101,12 +84,8 @@ class ConfigTool {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
             Method fromJson = loadedClass.getMethod("fromJson", String.class, Class.class);
-            Method toJson = loadedClass.getMethod("toJson", Object.class);
 
-            Map<String, String> allData = (Map<String, String>) fromJson.invoke(instance, allContent, Map.class);
-            String jvmContent = (String) toJson.invoke(instance, allData.get("jvm"));
-
-            return (Jvm) fromJson.invoke(instance, jvmContent, Jvm.class);
+            return (Jvm) fromJson.invoke(instance, allContent, Jvm.class);
         }
     }
 }

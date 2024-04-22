@@ -1,5 +1,7 @@
 package qingzhou.config;
 
+import java.io.IOException;
+
 public interface ConfigService {
-    Config getConfig();
+    Config getConfig() throws IOException;
 }

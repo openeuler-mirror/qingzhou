@@ -16,17 +16,30 @@ import java.util.zip.ZipFile;
 
 public class FileUtil {
 
-    public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, String scopePrefix, ClassLoader parent) throws Exception {
-        Collection<String> scopeClasses = getScopeClasses(libs, scopePrefix);
+    public static String read(File file) throws IOException {
+        try (InputStream inputStream = Files.newInputStream(file.toPath())) {
+            return read(inputStream);
+        }
+    }
 
+    public static String read(InputStream inputStream) throws IOException {
+        StringBuilder fileContent = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        for (String line; (line = reader.readLine()) != null; ) {
+            fileContent.append(line);
+        }
+
+        return fileContent.toString();
+    }
+
+    public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, String scopePrefix) throws Exception {
         Collection<String> targetClasses = new HashSet<>();
         ClassPool classPool = ClassPool.getDefault();
-        Thread.currentThread().setContextClassLoader(parent);
         classPool.appendPathList(Arrays.stream(libs).map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
-        scopeClasses.forEach(s -> {
+        getScopeClasses(libs, scopePrefix).forEach(s -> {
             try {
                 CtClass ctClass = classPool.get(s);
-                if (ctClass.getAnnotation(annotationClass) != null) { // todo：到底有没有 side-effect？？？？
+                if (ctClass.getAnnotation(annotationClass) != null) {
                     targetClasses.add(s);
                 }
             } catch (Exception ignored) {
@@ -45,8 +58,7 @@ public class FileUtil {
                 while (entries.hasMoreElements()) {
                     ZipEntry zipEntry = entries.nextElement();
                     String entryName = zipEntry.getName();
-                    String endsWithFlag = ".class";
-                    int i = entryName.indexOf(endsWithFlag);
+                    int i = entryName.indexOf(".class");
                     if (i < 1) continue;
                     String className = entryName.substring(0, i).replace("/", ".");
                     if (scopePrefix != null && !className.startsWith(scopePrefix)) continue;

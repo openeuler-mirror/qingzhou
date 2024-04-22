@@ -16,6 +16,7 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
+import java.io.IOException;
 import java.util.*;
 
 @Module
@@ -39,7 +40,7 @@ public class Controller implements ModuleActivator {
 
 
     @Override
-    public void start(ModuleContext context) {
+    public void start(ModuleContext context) throws IOException {
         remote = configService.getConfig().getRemote();
         if (!remote.isEnabled()) return;
 
@@ -80,7 +81,7 @@ public class Controller implements ModuleActivator {
                 put(Registry.PARAMETER_FINGERPRINT, fingerprint);
             }});
             if (response.getResponseCode() == 200) {
-                HashMap<String, String> resultMap = json.fromJson(response.getResponseBody(), HashMap.class);
+                Map<String, String> resultMap = json.fromJson(response.getResponseBody(), Map.class);
                 String checkResult = resultMap.get(fingerprint);
                 doRegister = !Boolean.parseBoolean(checkResult);
             }
