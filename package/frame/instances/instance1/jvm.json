@@ -1,0 +1,49 @@
+{
+  "env": [
+    {
+      "enabled": "false",
+      "name": "JAVA_HOME",
+      "value": ""
+    }
+  ],
+  "arg": [
+    {
+      "name": "-Xms64m",
+      "desc": "初始分配的堆内存"
+    },
+    {
+      "name": "-Xmx64m",
+      "desc": "最大可分配的堆内存"
+    },
+    {
+      "name": "-Dqingzhou.instance=${qingzhou.instance}",
+      "desc": "运行目录"
+    },
+    {
+      "name": "-XX:+HeapDumpOnOutOfMemoryError",
+      "desc": "开启堆转储"
+    },
+    {
+      "name": "-server"
+    },
+    {
+      "name": "-Djava.security.egd=file:/dev/./urandom",
+      "onlyForLinux": "true"
+    },
+    {
+      "name": "-Djava.security.manager",
+      "enabled": "false"
+    },
+    {
+      "name": "-Djava.rmi.server.hostname=127.0.0.1"
+    },
+    {
+      "name": "-Djava.awt.headless=true"
+    },
+    {
+      "name": "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:8888",
+      "enabled": "true",
+      "desc": "远程调试参数"
+    }
+  ]
+}

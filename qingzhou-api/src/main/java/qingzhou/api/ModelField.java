@@ -19,20 +19,30 @@ public @interface ModelField {
      *
      * @return 字段国际化名称数组
      */
-    String[] nameI18n();
+    String[] name();
 
     /**
      * 获取字段的国际化描述信息数组，用于提供字段的详细说明信息。
      *
      * @return 字段国际化描述信息数组
      */
-    String[] infoI18n();
+    String[] info();
+
+    /**
+     * 设置字段所属的页面表单展示分组，默认为空字符串表示“其它”分组。
+     */
+    String group() default "";
+
+    FieldType type() default FieldType.text;
+
+    String[] options() default "";
 
     /**
      * 是否显示在列表中。
-     * 默认为false，表示不显示。
-     *
-     * @return 返回true表示在列表中显示，false则表示不显示。
      */
-    boolean shownOnList() default false;
+    boolean list() default false;
+
+    boolean monitor() default false;
+
+    boolean numeric() default true;
 }

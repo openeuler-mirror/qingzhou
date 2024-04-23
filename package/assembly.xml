@@ -45,6 +45,7 @@
         <dependencySet>
             <includes>
                 <include>${project.groupId}:qingzhou-engine</include>
+                <include>javassist:javassist</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
@@ -67,8 +68,10 @@
         <dependencySet>
             <includes>
                 <include>${project.groupId}:qingzhou-console</include>
+                <include>${project.groupId}:qingzhou-servlet</include>
                 <include>${project.groupId}:qingzhou-agent</include>
                 <include>${project.groupId}:qingzhou-deployer</include>
+                <include>${project.groupId}:qingzhou-registry</include>
                 <include>${project.groupId}:qingzhou-config</include>
                 <include>${project.groupId}:qingzhou-heartbeat</include>
                 <include>${project.groupId}:qingzhou-logger</include>
@@ -92,7 +95,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-console/console</outputDirectory>
+            <outputDirectory>lib/version${project.version}/module/console</outputDirectory>
             <unpackOptions>
                 <excludes>
                     <exclude>META-INF/**</exclude>

@@ -10,15 +10,11 @@ public interface Monitorable {
     // 监控操作的常量名称。
     String ACTION_NAME_MONITOR = "monitor";
 
-    // 监控数据扩展字段的分隔符，用于在监控数据键值对中区分不同的扩展字段。
-    String MONITOR_EXT_SEPARATOR = ":";
-
     /**
      * 获取监控数据。
      *
      * @return 返回一个包含监控数据的键值对集合。每个键值对代表一个监控数据项，
-     *         其中键表示监控数据的名称，值表示监控数据的当前值。
+     * 其中键表示监控数据的名称，值表示监控数据的当前值。
      */
     Map<String, String> monitorData();
 }
-

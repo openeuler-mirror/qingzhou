@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>qingzhou</groupId>
+        <artifactId>module</artifactId>
+        <version>x</version>
+    </parent>
+
+    <artifactId>qingzhou-heartbeat</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-config</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-agent</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-json</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-crypto</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-http</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-logger</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-registry</artifactId>
+            <version>x</version>
+        </dependency>
+    </dependencies>
+
+</project>

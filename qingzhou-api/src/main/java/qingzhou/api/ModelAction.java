@@ -15,45 +15,47 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ModelAction {
-
-    /**
-     * 指定模型操作的名称，通常是一个简短易懂的字符串标识符。
-     *
-     * @return 操作的名称
-     */
-    String name();
-
     /**
      * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作名称。
      *
      * @return 国际化资源键数组
      */
-    String[] nameI18n();
+    String[] name();
 
     /**
      * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
      *
      * @return 国际化资源键数组
      */
-    String[] infoI18n();
+    String[] info();
 
     /**
-     * 设置操作生效的条件表达式，默认为空字符串，表示无特定生效条件。
+     * 指定与该模型操作关联的图标名称。
      *
-     * @return 操作生效的条件表达式
+     * @return 图标名称
      */
-    String effectiveWhen() default "";
+    String icon() default "";
+
+    int order() default 0;
+
+    String condition() default "";
+
+    /**
+     * 指定执行该操作后应跳转到的目标页面，默认为空字符串表示无页面转发。
+     *
+     * @return 转发的目标页面路径
+     */
+    String forward() default "";
 
     /**
      * 标识该操作是否支持批量处理，默认为 {@code false}。
      *
      * @return 是否支持批量操作
      */
-    boolean supportBatch() default false;
+    boolean batch() default false;
 
     /**
      * 可用于禁用继承的 action
      */
-    boolean disabled() default false;
+    boolean disable() default false;
 }
-

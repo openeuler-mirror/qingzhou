@@ -53,16 +53,4 @@ public abstract class ModelBase {
     public Groups groups() {
         return null;
     }
-
-    /**
-     * 获取字段选项。
-     *
-     * @param request   请求实例。
-     * @param fieldName 相关字段名。
-     * @return 返回字段的选项信息，如果无需选项或不存在则返回 null。
-     */
-    public Options options(Request request, String fieldName) {
-        return null;
-    }
 }
-
