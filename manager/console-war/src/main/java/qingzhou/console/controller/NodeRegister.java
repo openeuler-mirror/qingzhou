@@ -1,6 +1,5 @@
 package qingzhou.console.controller;
 
-import qingzhou.console.AppMetadataManager;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.crypto.CryptoService;

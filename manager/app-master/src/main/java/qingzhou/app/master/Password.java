@@ -2,7 +2,6 @@ package qingzhou.app.master;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
-import qingzhou.api.type.Showable;
 
 @Model(code = "password", icon = "key",
         order = 99,
@@ -46,14 +45,14 @@ public class Password extends ModelBase implements Editable {
                 "en:For security reasons, the use of old passwords that have been used last %s is prohibited"});
     }
 
-    @ModelAction(name = Editable.ACTION_NAME_EDIT,
+    @ModelAction(
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {
         response.addModelData(new Password());
     }
 
-    @ModelAction(name = Showable.ACTION_NAME_SHOW,
+    @ModelAction(
             name = {"查看", "en:Show"},
             info = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
     public void show(Request request, Response response) {

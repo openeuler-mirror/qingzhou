@@ -4,15 +4,14 @@ import qingzhou.api.Request;
 import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.deployer.App;
-import qingzhou.engine.util.StringUtil;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 
 import javax.naming.NameNotFoundException;
 import java.net.SocketException;
@@ -40,7 +39,7 @@ public class ActionInvoker {
 
     private boolean isBatchAction(Request request) {
         String ids = request.getParameter(Listable.FIELD_NAME_ID);
-        if (StringUtil.isBlank(ids)) return false;
+        if (ids == null) return false;
 
         ModelManager modelManager = PageBackendService.getModelManager(request);
         String[] actionNamesSupportBatch = modelManager.getActionNamesSupportBatch(request.getModel());
@@ -59,7 +58,7 @@ public class ActionInvoker {
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
         String oid = request.getParameter(Listable.FIELD_NAME_ID);
         for (String id : oid.split(",")) {
-            if (StringUtil.notBlank(id)) {
+            if (!id.isEmpty()) {
                 id = PageBackendService.decodeId(id);
                 ((RequestImpl) request).setId(id);
                 response = invoke(request);
@@ -174,7 +173,7 @@ public class ActionInvoker {
 
         for (String node : appNodes) {
             ResponseImpl responseOnNode;
-            if (node.equals(App.SYS_NODE_LOCAL)) {
+            if (node.equals("local")) {
                 ResponseImpl response = new ResponseImpl();
                 SystemController.getAppManager().getApp(PageBackendService.getAppName(request)).invoke(request, response);
                 responseOnNode = response;
@@ -194,13 +193,13 @@ public class ActionInvoker {
 
     private List<String> getAppNodes(String appName) throws Exception {
         List<String> nodes = new ArrayList<>();
-        if (App.SYS_APP_MASTER.equals(appName)) {
-            nodes.add(App.SYS_NODE_LOCAL);
+        if ("master".equals(appName)) {
+            nodes.add("local");
         } else {
             RequestImpl request = new RequestImpl();
             ResponseImpl response = new ResponseImpl();
-            request.setAppName(App.SYS_APP_MASTER);
-            request.setModelName(App.SYS_MODEL_APP);
+            request.setAppName("master");
+            request.setModelName("app");
             request.setActionName(Showable.ACTION_NAME_SHOW);
             request.setId(appName);
             SystemController.invokeLocalApp(request, response);

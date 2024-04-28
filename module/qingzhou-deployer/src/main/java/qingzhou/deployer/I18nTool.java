@@ -1,4 +1,4 @@
-package qingzhou.deployer.impl;
+package qingzhou.deployer;
 
 import qingzhou.api.Lang;
 
@@ -6,10 +6,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-class I18nTool {
+public class I18nTool {
     private Map<String, String[]> langMap = new HashMap<>();
 
-    void addI18n(String key, String[] i18n) {
+    public void addI18n(String key, String[] i18n) {
         addI18n(key, i18n, true);
     }
 
@@ -35,7 +35,7 @@ class I18nTool {
         }
     }
 
-    String getI18n(Lang lang, String key, Object... args) {
+    public String getI18n(Lang lang, String key, Object... args) {
         String[] values = langMap.get(key);
         if (values != null) {
             String s = values[lang.ordinal()];

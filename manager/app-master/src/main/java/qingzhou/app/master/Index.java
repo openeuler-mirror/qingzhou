@@ -2,9 +2,9 @@ package qingzhou.app.master;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.deployer.App;
+import qingzhou.engine.ModuleContext;
 
-@Model(code = App.SYS_MODEL_INDEX, icon = "home",
+@Model(code = "index", icon = "home",
         entrance = Showable.ACTION_NAME_SHOW,
         name = {"主页", "en:Home"},
         info = {"查看 Qingzhou 产品的相关信息。", "en:Check out the relevant information of Qingzhou products."})
@@ -19,7 +19,7 @@ public class Index extends ModelBase implements Showable {
             info = {"此 Qingzhou 平台的版本。", "en:This version of this Qingzhou platform."})
     public String version;
 
-    @ModelAction(name = Showable.ACTION_NAME_SHOW,
+    @ModelAction(
             name = {"主页", "en:Home"},
             info = {"查看 Qingzhou 的产品信息。",
                     "en:View Qingzhou product information."})
@@ -27,12 +27,11 @@ public class Index extends ModelBase implements Showable {
         Index index = new Index();
         index.name = "Qingzhou（轻舟）";
         String versionFlag = "version";
-        MasterApp.getFramework().getName().substring(versionFlag.length());
-        index.version = M.getVersion();
+        index.version = MasterApp.getService(ModuleContext.class).getLibDir().getName().substring(versionFlag.length());
         response.addModelData(index);
     }
 
-    @ModelAction(name = App.SYS_MODEL_INDEX, // NOTE: 这个方法用作是 Login 成功后 跳过的
+    @ModelAction(// NOTE: 这个方法用作是 Login 成功后 跳过的
             name = {"主页", "en:Home"},
             info = {"查看 Qingzhou 的产品信息。",
                     "en:View Qingzhou product information."})

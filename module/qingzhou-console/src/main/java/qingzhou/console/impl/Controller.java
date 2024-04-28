@@ -15,9 +15,29 @@ import qingzhou.servlet.ServletContainer;
 import qingzhou.servlet.ServletService;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Module
 public class Controller implements ModuleActivator {
+    public static ModuleContext moduleContext;
+    private static Controller instance;
+
+    public static <T> T getService(Class<T> type) {
+        List<Field> collect = Arrays.stream(Controller.class.getDeclaredFields()).filter(field -> field.getType() == type).collect(Collectors.toList());
+        try {
+            return (T) collect.get(0).get(instance);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Controller() {
+        instance = this;
+    }
+
     @Service
     private Logger logger;
     @Service
@@ -25,8 +45,7 @@ public class Controller implements ModuleActivator {
     @Service
     private ServletService servletService;
 
-    private ModuleContext moduleContext;
-    private static Console console;
+    private Console console;
     private ProcessSequence sequence;
     private ServletContainer servletContainer;
 

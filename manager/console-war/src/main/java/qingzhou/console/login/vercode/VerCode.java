@@ -1,15 +1,14 @@
 package qingzhou.console.login.vercode;
 
-import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.login.LockOutRealm;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.util.IPUtil;
 import qingzhou.engine.util.pattern.Filter;
-import qingzhou.engine.util.IPUtil;
-import qingzhou.engine.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -82,7 +81,7 @@ public class VerCode implements Filter<HttpServletContext> {
      */
     public static boolean validate(HttpServletRequest request) {
         String clientCode = AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA));
-        if (StringUtil.isBlank(clientCode)) {
+        if (clientCode == null) {
             return false;
         }
 

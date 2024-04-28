@@ -11,10 +11,9 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
+import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.engine.util.IPUtil;
-import qingzhou.engine.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -93,7 +92,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
             if (!response.isCommitted()) {
                 String redirectUri = failedMsg.getRedirectUri();
-                if (StringUtil.isBlank(redirectUri)) {
+                if (redirectUri == null) {
                     redirectUri = LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + failedMsgKey;
                 }
 
@@ -137,7 +136,7 @@ public class LoginManager implements Filter<HttpServletContext> {
     public static LoginFailedMsg login(HttpServletRequest request) throws Exception {
         String user = request.getParameter(LOGIN_USER);
         String password = request.getParameter(LOGIN_PASSWORD);
-        if (StringUtil.isBlank(user) || StringUtil.isBlank(password)) {
+        if (user == null || password == null) {
             return new LoginFailedMsg("jmx.credentials.element.isNull", null);
         }
 
@@ -205,7 +204,7 @@ public class LoginManager implements Filter<HttpServletContext> {
             return true; // 放过，用户要去扫描二维码绑定密钥
         }
 
-        if (StringUtil.isBlank(login2FA)) {
+        if (login2FA == null) {
             return false;
         }
 
@@ -241,7 +240,7 @@ public class LoginManager implements Filter<HttpServletContext> {
         HttpSession session = request.getSession(false);
         if (session != null) {
             String user = getLoginUser(session);
-            if (StringUtil.notBlank(user)) {
+            if (user != null) {
                 session.invalidate();
             }
         }
@@ -249,7 +248,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static String retrieveI18nMsg(String webLoginMsg) { // 来自 head.jsp
         String common_msg = webLoginMsg;
-        if (StringUtil.notBlank(common_msg)) {
+        if (common_msg != null) {
             String[] split = common_msg.split(",");
             if (split.length < 2) {
                 common_msg = getMsg(common_msg);
@@ -263,7 +262,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     private static String getMsg(String msg) {
         String i18n = ConsoleI18n.getI18n(I18n.getI18nLang(), msg);
-        return StringUtil.notBlank(i18n) ? i18n : msg;
+        return i18n != null ? i18n : msg;
     }
 
     @Override

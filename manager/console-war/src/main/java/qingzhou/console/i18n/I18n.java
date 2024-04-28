@@ -2,8 +2,6 @@ package qingzhou.console.i18n;
 
 import qingzhou.api.Lang;
 import qingzhou.console.controller.SystemController;
-import qingzhou.deployer.impl.I18nTool;
-import qingzhou.engine.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -19,7 +17,7 @@ public class I18n {
     public static void setI18nLang(HttpServletRequest request, Lang lang) {
         try {
             String p = request.getParameter(SetI18n.SESSION_LANG_FLAG);
-            if (StringUtil.notBlank(p)) {
+            if (p != null) {
                 lang = Lang.valueOf(p);
             }
         } catch (Exception ignored) {

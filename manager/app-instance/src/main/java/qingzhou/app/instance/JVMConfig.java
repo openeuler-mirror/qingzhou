@@ -1,4 +1,4 @@
-package qingzhou.app.nodeagent;
+package qingzhou.app.instance;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
@@ -64,7 +64,10 @@ public class JVMConfig extends ModelBase implements Editable {
     @ModelField(name = {"堆外内存", "en:MaxDirectMemorySize"}, info = {"设置最大堆外内存，当 Direct ByteBuffer 分配的堆外内存达到该大小后，即触发 Full GC (-XX:MaxDirectMemorySize)。", "en:Set the maximum out-of-heap memory. When the out-of-heap memory allocated by Direct ByteBuffer reaches this size, Full GC is triggered (-XX:MaxDirectMemorySize)."})
     public String MaxDirectMemorySize;
 
-    @ModelField(name = {"垃圾回收器", "en:GarbageCollector"}, info = {"设置 JVM 回收内存使用的垃圾回收器。", "en:Set up the garbage collector used by the JVM to reclaim memory."})
+    @ModelField(
+            options = {"", "UseSerialGC", "UseParallelGC", "UseConcMarkSweepGC", "UseG1GC"},
+            name = {"垃圾回收器", "en:GarbageCollector"},
+            info = {"设置 JVM 回收内存使用的垃圾回收器。", "en:Set up the garbage collector used by the JVM to reclaim memory."})
     public String useGC;
 
     @ModelField(name = {"并行收集线程数", "en:ParallelGCThreads"}, info = {"设置并行收集器收集时使用的CPU数，即并行收集线程数 (-XX:ParallelGCThreads)。", "en:Set the number of CPUs used by the parallel collector collection, that is, the number of parallel collection threads (-XX:ParallelGCThreads)."})
@@ -129,20 +132,5 @@ public class JVMConfig extends ModelBase implements Editable {
                 Group.of(group_environment, new String[]{"环境变量", "en:Environment Variables"}),
                 Group.of(group_IP, new String[]{"IP 版本", "en:IP Version"})
         );
-    }
-
-    @Override
-    public Options options(Request request, String fieldName) {
-        if (fieldName.equals("useGC")) {
-            return Options.of(
-                    Option.of("", new String[]{"JVM 默认", "en:JVM Default"}),
-                    Option.of("UseSerialGC", new String[]{"串行", "en:Serial"}),
-                    Option.of("UseParallelGC", new String[]{"并行", "en:Parallel"}),
-                    Option.of("UseConcMarkSweepGC", new String[]{"并发", "en:ConcMarkSweep"}),
-                    Option.of("UseG1GC", new String[]{"G1", "en:UseG1GC"})
-            );
-        }
-
-        return super.options(request, fieldName);
     }
 }

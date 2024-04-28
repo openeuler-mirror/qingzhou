@@ -4,6 +4,7 @@ import qingzhou.api.ActionFilter;
 import qingzhou.api.AppContext;
 import qingzhou.api.DataStore;
 import qingzhou.api.Lang;
+import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.MenuInfo;

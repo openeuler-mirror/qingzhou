@@ -6,9 +6,6 @@ import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.console.AppMetadataManager;
 import qingzhou.console.i18n.SetI18n;
 import qingzhou.console.impl.Controller;
 import qingzhou.console.jmx.JMXServerHolder;
@@ -17,60 +14,31 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.crypto.CryptoService;
+import qingzhou.deployer.Deployer;
+import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
-import qingzhou.json.Json;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
 
-    public static AppMetadata getAppMetadata(String appName) {
-        return AppMetadataManager.getInstance().getAppMetadata(appName);
+    public static <T> T getService(Class<T> type) {
+        return Controller.getService(type);
     }
 
-    public static AppMetadata getAppMetadata(Request request) {
-        return getAppMetadata(PageBackendService.getAppName(request));
-    }
-
-    public static Config getConfig() {
-        return Controller.moduleContext.getService(Config.class);
-    }
-
-    public static Deployer getAppManager() {
-        return Controller.moduleContext.getService(Deployer.class);
-    }
-
-    public static App getLocalApp(String appName) {
-        return getAppManager().getApp(appName);
+    public static ModuleContext getModuleContext() {
+        return Controller.moduleContext;
     }
 
     public static void invokeLocalApp(Request request, Response response) throws Exception {
-        getAppManager().getApp(PageBackendService.getAppName(request)).invokeDirectly(request, response);
-    }
-
-    public static Json getSerializer() {
-        return Controller.moduleContext.getService(Json.class);
-    }
-
-    public static CryptoService getCryptoService() {
-        return Controller.moduleContext.getService(CryptoService.class);
-    }
-
-    public static Logger getLogger() {
-        return Controller.moduleContext.getService(Logger.class);
-    }
-
-    public static File getCache() {
-        return Controller.moduleContext.getTemp();
+        getService(Deployer.class).getApp(PageBackendService.getAppName(request)).invokeDirectly(request, response);
     }
 
     private final Filter<HttpServletContext>[] processors = new Filter[]{
@@ -121,7 +89,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                 }
             }
         } catch (Exception e) {
-            getLogger().warn(e.getMessage(), e);
+            getService(Logger.class).warn(e.getMessage(), e);
         }
     }
 
@@ -130,7 +98,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         try {
             JMXServerHolder.getInstance().destroy();
         } catch (Exception e) {
-            getLogger().warn(e.getMessage(), e);
+            getService(Logger.class).warn(e.getMessage(), e);
         }
     }
 
@@ -142,7 +110,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         try {
             FilterPattern.doFilter(context, processors);
         } catch (Throwable e) {
-            getLogger().error(e.getMessage(), e);
+            getService(Logger.class).error(e.getMessage(), e);
         }
     }
 }

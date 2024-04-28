@@ -45,7 +45,7 @@ class DeployerImpl implements Deployer {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-        boolean isSystemApp = App.SYS_APP_MASTER.equals(appName) || App.SYS_APP_NODE_AGENT.equals(appName);
+        boolean isSystemApp = "master".equals(appName) || "instance".equals(appName);
         AppImpl app = buildApp(appName, appFile, isSystemApp);
 
         // 启动应用
@@ -98,7 +98,9 @@ class DeployerImpl implements Deployer {
         QingzhouApp qingzhouApp = buildQingzhouApp(loader, appLibs);
         if (qingzhouApp instanceof QingzhouSystemApp) {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
-            qingzhouSystemApp.setModuleContext(this.moduleContext);
+            qingzhouSystemApp.setModuleContext(moduleContext);
+            qingzhouSystemApp.setDeployer(this);
+            qingzhouSystemApp.setCryptoService(cryptoService);
         }
         app.setQingzhouApp(qingzhouApp);
 

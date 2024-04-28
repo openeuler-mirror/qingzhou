@@ -116,13 +116,13 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:app-nodeagent</include>
+                <include>${project.groupId}:app-instance</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/nodeagent</outputDirectory>
+            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/instance</outputDirectory>
         </dependencySet>
 
         <dependencySet>

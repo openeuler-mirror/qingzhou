@@ -1,12 +1,13 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Createable;
+import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Editable;
+import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
-import qingzhou.deployer.App;
-import qingzhou.engine.util.StringUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -51,6 +52,7 @@ public class User extends ModelBase implements Createable {
     public String confirmPassword;
 
     @ModelField(
+            options = {"SHA-256", "SHA-384", "SHA-512"},
             name = {"摘要算法", "en:Digest Algorithm"},
             info = {"进行摘要加密所采用的算法。", "en:The algorithm used for digest encryption."}
     )
@@ -71,8 +73,8 @@ public class User extends ModelBase implements Createable {
     @ModelField(
             list = true,
             name = {"可用节点", "en:Available Nodes"},
-            info = {"选择用户可使用的节点。", "en:Select the nodes that are available to the user."})
-    public String nodes = App.SYS_NODE_LOCAL;
+            info = {"选择用户可使用的节点。", "en:Select the instances that are available to the user."})
+    public String instances = "local";
 
     @ModelField(
             name = {"须修改初始密码", "en:Change Initial Password"},
@@ -135,30 +137,20 @@ public class User extends ModelBase implements Createable {
         return Groups.of(Group.of("security", new String[]{"安全", "en:Security"}));
     }
 
-    @Override
-    public Options options(Request request, String fieldName) {
-        if ("digestAlg".equals(fieldName)) {
-            return Options.of("SHA-256", "SHA-384", "SHA-512");
-        }
-
-        return super.options(request, fieldName);
-    }
-
-
-    @ModelAction(name = Createable.ACTION_NAME_ADD,
+    @ModelAction(
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
         if (!checkForbidden(request, response)) {
             return;
         }
-        Map<String, String> newUser = MasterApp.prepareParameters(request, getAppContext());
+        Map<String, String> newUser = MasterApp.prepareParameters(request);
         rectifyParameters(request, newUser, new HashMap<>());
         getDataStore().addData(request.getModel(), newUser.get(Listable.FIELD_NAME_ID), newUser);
     }
 
 
-    @ModelAction(name = Showable.ACTION_NAME_SHOW,
+    @ModelAction(
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
@@ -171,7 +163,7 @@ public class User extends ModelBase implements Createable {
         response.addData(data);
     }
 
-    @ModelAction(name = Editable.ACTION_NAME_UPDATE,
+    @ModelAction(
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
@@ -183,7 +175,7 @@ public class User extends ModelBase implements Createable {
         String modelName = request.getModel();
         String userId = request.getId();
         Map<String, String> oldUser = dataStore.getDataById(modelName, userId);
-        Map<String, String> newUser = MasterApp.prepareParameters(request, getAppContext());
+        Map<String, String> newUser = MasterApp.prepareParameters(request);
         rectifyParameters(request, newUser, oldUser);
         dataStore.updateDataById(modelName, userId, newUser);
 
@@ -233,7 +225,7 @@ public class User extends ModelBase implements Createable {
 
             String oldPasswords = oldUser.get("oldPasswords");
             String limitRepeats = newUser.get("limitRepeats");
-            if (StringUtil.isBlank(limitRepeats)) {
+            if (limitRepeats == null) {
                 limitRepeats = oldUser.get("limitRepeats");
             }
 
@@ -241,7 +233,7 @@ public class User extends ModelBase implements Createable {
             newUser.put("oldPasswords", cutOldPasswords);
         } else {
             String oldPassword = oldUser.get("password");
-            if (StringUtil.notBlank(oldPassword)) {
+            if (oldPassword != null) {
                 newUser.put("password", oldPassword);
             }
         }
@@ -253,11 +245,11 @@ public class User extends ModelBase implements Createable {
         if (oldPasswords == null) {
             oldPasswords = "";
         }
-        if (StringUtil.notBlank(newPwd)) {
+        if (!newPwd.isEmpty()) {
             oldPasswords += (oldPasswords.isEmpty() ? "" : DATA_SEPARATOR) + newPwd;
         }
 
-        if (StringUtil.isBlank(repeats)) {
+        if (repeats.isEmpty()) {
             repeats = String.valueOf(User.defLimitRepeats);
         }
         int currentLength;
@@ -281,7 +273,7 @@ public class User extends ModelBase implements Createable {
 
     private boolean checkForbidden(Request request, Response response) {
         String id = request.getId();
-        if (StringUtil.notBlank(id)) {
+        if (id != null) {
             if ("qingzhou".contains(id)) {
                 if (Createable.ACTION_NAME_ADD.equals(request.getAction())
                         || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
@@ -293,7 +285,7 @@ public class User extends ModelBase implements Createable {
                 if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())) {
                     if (!Boolean.parseBoolean(request.getParameter("active"))) {
                         response.setSuccess(false);
-                        response.setMsg(getAppContext().getAppMetadata().getI18n(request.getLang(), "System.users.keep.active"));
+                        response.setMsg(getAppContext().getI18n(request.getLang(), "System.users.keep.active"));
                         return false;
                     }
                 }
@@ -303,8 +295,7 @@ public class User extends ModelBase implements Createable {
     }
 
     @ModelAction(
-            name = Deletable.ACTION_NAME_DELETE,
-            showWhen = "id!=qingzhou",
+            condition = "id!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})

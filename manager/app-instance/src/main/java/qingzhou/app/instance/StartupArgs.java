@@ -1,16 +1,13 @@
-package qingzhou.app.nodeagent;
+package qingzhou.app.instance;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 @Model(code = "startupargs", icon = "file-code", entrance = Editable.ACTION_NAME_EDIT, name = {"启动参数", "en:Startup Args"}, info = {"管理TongWeb的启动参数。", "en:Manage TongWeb start-up arguments."})
 public class StartupArgs extends ModelBase implements Editable {
     private static final String[] mustStartsWithFlags = {"-X", "-D", "-agentlib", "-server", "-client", "-javaagent", "-verbose"}; // 如果直接增加参数 aaa 没有前缀，会重启启动不了
-    private static final String SUPPORTED_JRE_KEY = "supportedJRE";
     private static final String IF_GREATER_OR_EQUAL_KEY = "range";
     private static final String PLUS = "+";
     private static final String MINUS = "-";
@@ -32,15 +29,14 @@ public class StartupArgs extends ModelBase implements Editable {
      * 参数
      */
     @ModelField(
-            checkXssLevel1 = true,
-            skipCharacterCheck = STARTUP_ARGS_SKIP_CHARACTER_CHECK,
-            list = true, showToEdit = false, name = {"参数", "en:Argument"}, info = {"该参数将用于 JVM 启动时的进程入参。", "en:This argument will be used for the process entry when the JVM is started."})
+            list = true,
+            name = {"参数", "en:Argument"},
+            info = {"该参数将用于 JVM 启动时的进程入参。", "en:This argument will be used for the process entry when the JVM is started."})
     public String id;
 
     @ModelField(
-            skipCharacterCheck = STARTUP_ARGS_SKIP_CHARACTER_CHECK,
-            checkXssLevel1 = true,
-            name = {"更改为", "en:Change to"}, info = {"将参数更改为此值。", "en:Change the argument to this value."})
+            name = {"更改为", "en:Change to"},
+            info = {"将参数更改为此值。", "en:Change the argument to this value."})
     public String changeToArg;
 
     @ModelField(list = true, name = {"启用", "en:Enabled"}, info = {"只有启用的参数才会传给 JVM 加载，未启用的则不会。", "en:Only arguments that are enabled are passed to the JVM for loading, those that are not are not."})
@@ -48,12 +44,6 @@ public class StartupArgs extends ModelBase implements Editable {
 
     @ModelField(list = true, name = {"仅 Linux 有效", "en:Only For Linux"}, info = {"开启后，该参数仅会在 linux 操作系统上启用。", "en:When turned on, this parameter is only enabled on linux operating systems."})
     public Boolean onlyForLinux = false;
-
-    /**
-     * 支持JRE版本
-     */
-    @ModelField(list = true, name = {"限定 JRE 版本", "en:Limited JRE"}, info = {"限定该参数支持的 JRE 的版本，限定后，只有限定的 JRE 可以加载到该参数；其它 JRE 则不会，为空表示不限制。", "en:Limit the version of JRE supported by this parameter. After the limitation, only the limited JRE can be loaded into this parameter, and other JREs will not. If it is empty, it means no limitation."})
-    public String supportedJRE;
 
     /**
      * 兼容方向
@@ -67,49 +57,6 @@ public class StartupArgs extends ModelBase implements Editable {
     @ModelField(name = {"描述", "en:Description"}, info = {"该参数的描述信息。", "en:The descriptive information for this argument."})
     public String desc;
 
-    @Override
-    public Options options(Request request, String fieldName) {
-        if (SUPPORTED_JRE_KEY.equals(fieldName)) {
-            List<String> list = new ArrayList<String>() {{
-                add("");
-                for (int i = 8; i <= 21; i++) {
-                    add(String.valueOf(i));
-                }
-            }};
-            return Options.of(list.toArray(new String[0]));
-        }
-
-        if (IF_GREATER_OR_EQUAL_KEY.equals(fieldName)) {
-            return Options.of(PLUS, EQUAL, MINUS);
-        }
-
-        return super.options(request, fieldName);
-    }
-
-    /**
-     * 〈将前端数据，转换成后端存储数据格式〉
-     *
-     * @author LiJingJing 2021/11/5 10:06
-     */
-//  todo  @Override
-//    protected Properties rectifyParameters(Properties properties) throws Exception {
-//        String jre = (String) properties.remove(SUPPORTED_JRE_KEY);
-//        String flag = (String) properties.remove(IF_GREATER_OR_EQUAL_KEY);
-//
-//        if (jre == null) { // for #ITAIT-4568
-//            return properties;
-//        } else {
-//            properties.put(SUPPORTED_JRE_KEY, jre);
-//        }
-//
-//
-//        if (!Utils.isBlank(flag) && (PLUS.equals(flag) || MINUS.equals(flag))) {
-//            properties.put(SUPPORTED_JRE_KEY, jre + flag);
-//        }
-//
-//        return super.rectifyParameters(properties);
-//    }
-
 //  todo  @Override
 //    public void show(ActionContext actionContext) throws Exception {
 //        super.show(actionContext);
@@ -121,26 +68,6 @@ public class StartupArgs extends ModelBase implements Editable {
 //        super.listInternal(actionContext);
 //        List<ModelBase> args = actionContext.getModels();
 //        rectifyModels(args);
-//    }
-
-//  todo  private void rectifyModels(List<ModelBase> args) {
-//        for (ModelBase model : args) {
-//            StartupArgs arg = (StartupArgs) model;
-//            arg.changeToArg = arg.name;// 校验 changeToArg 时候的 List<String> otherValues 需要这个
-//            String ver = arg.supportedJRE;
-//            if (Utils.notBlank(ver)) {
-//                String lastFlag = ver.substring(ver.length() - 1);
-//                if (PLUS.equals(lastFlag)) {
-//                    arg.range = PLUS;
-//                    arg.supportedJRE = ver.substring(0, ver.length() - 1);
-//                } else if (MINUS.equals(lastFlag)) {
-//                    arg.range = MINUS;
-//                    arg.supportedJRE = ver.substring(0, ver.length() - 1);
-//                } else {
-//                    arg.range = EQUAL;
-//                }
-//            }
-//        }
 //    }
 
 //    @Override

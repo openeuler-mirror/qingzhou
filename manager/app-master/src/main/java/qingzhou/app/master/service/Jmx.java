@@ -30,17 +30,17 @@ public class Jmx extends ModelBase implements Editable {
 
     @ModelField(
             name = {"端口", "en:Port"},
-            info = {"指定 JMX 监听服务绑定的端口。", "en:Specifies the port to which the JMX listening service is bound."},
+            info = {"指定 JMX 监听服务绑定的端口。", "en:Specifies the port to which the JMX listening service is bound."}
     )
     public Integer port = 7200;
 
-    @ModelAction(name = Editable.ACTION_NAME_UPDATE,
+    @ModelAction(
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
         Map<String, String> oldProperties = getDataStore().getDataById(request.getModel(), DEFAULT_ID);
 
-        Map<String, String> properties = MasterApp.prepareParameters(request, getAppContext());
+        Map<String, String> properties = MasterApp.prepareParameters(request);
         getDataStore().updateDataById(request.getModel(), DEFAULT_ID, properties);
 
         // ConsoleXml.getInstance().consoleXmlChanged();
@@ -67,7 +67,7 @@ public class Jmx extends ModelBase implements Editable {
         }
     }
 
-    @ModelAction(name = Editable.ACTION_NAME_EDIT,
+    @ModelAction(
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {

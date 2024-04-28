@@ -44,5 +44,5 @@ public @interface ModelField {
 
     boolean monitor() default false;
 
-    boolean numeric() default true;
+    boolean numeric() default false;
 }

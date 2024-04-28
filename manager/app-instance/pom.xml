@@ -9,5 +9,5 @@
         <version>x</version>
     </parent>
 
-    <artifactId>app-nodeagent</artifactId>
+    <artifactId>app-instance</artifactId>
 </project>

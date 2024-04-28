@@ -2,14 +2,11 @@ package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.metadata.ModelActionData;
 import qingzhou.console.ConsoleConstants;
+import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
-import qingzhou.deployer.App;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.engine.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -39,16 +36,16 @@ public class HtmlView implements View {
 
         if (isManageAction(request)) {
             String manageAppName = null;
-            if (App.SYS_MODEL_APP.equals(modelName)) {
+            if ("app".equals(modelName)) {
                 request.setManageType(ConsoleConstants.MANAGE_TYPE_APP);
                 manageAppName = request.getId();
-            } else if (App.SYS_MODEL_NODE.equals(modelName)) {
+            } else if ("node".equals(modelName)) {
                 request.setManageType(ConsoleConstants.MANAGE_TYPE_NODE);
-                manageAppName = App.SYS_NODE_LOCAL;
+                manageAppName = "local";
             }
             request.setAppName(manageAppName);
-            request.setModelName(App.SYS_MODEL_HOME);
-            request.setActionName(App.SYS_ACTION_ENTRY_HOME);
+            request.setModelName("home");
+            request.setActionName("show");
             SystemController.invokeLocalApp(request, response);// todo：到 html render 这里已经执行过一次 invoke app 了，这里是重复执行可以优化?
         }
 
@@ -57,12 +54,12 @@ public class HtmlView implements View {
     }
 
     private boolean isManageAction(Request request) {
-        if (!App.SYS_ACTION_MANAGE_PAGE.equals(request.getAction())) return false;
+        if (!"manage".equals(request.getAction())) return false;
 
-        if (!App.SYS_APP_MASTER.equals(request.getApp())) return false;
+        if (!"master".equals(request.getApp())) return false;
 
-        return App.SYS_MODEL_APP.equals(request.getModel())
-                || App.SYS_MODEL_NODE.equals(request.getModel());
+        return "app".equals(request.getModel())
+                || "node".equals(request.getModel());
     }
 
     @Override

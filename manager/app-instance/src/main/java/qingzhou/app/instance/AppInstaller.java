@@ -1,20 +1,20 @@
-package qingzhou.app.nodeagent;
+package qingzhou.app.instance;
 
 import qingzhou.api.*;
-import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
+import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 
-@Model(code = App.SYS_MODEL_APP_INSTALLER, icon = "",
+@Model(code = "appinstaller",
         hidden = true,
         name = {"应用安装器", "en:App Installer"},
         info = {"执行管理节点下发的应用安装、卸载等指令。",
                 "en:Execute the commands issued by the management node to install and uninstall applications."})
 public class AppInstaller extends ModelBase {
 
-    @ModelAction(name = App.SYS_ACTION_INSTALL_APP,
+    @ModelAction(
             name = {"安装应用", "en:Install App"},
             info = {"在该节点上安装应用。", "en:Install the application on the node."})
     public void installApp(Request request, Response response) throws Exception {
@@ -49,19 +49,18 @@ public class AppInstaller extends ModelBase {
             throw new IllegalArgumentException("unknown app type");
         }
 
-        Deployer deployer = NodeAgentApp.getService(Deployer.class);
-        deployer.installApp(app);
+        InstanceApp.getService(Deployer.class).installApp(app);
     }
 
-    @ModelAction(name = App.SYS_ACTION_UNINSTALL_APP,
+    @ModelAction(
             name = {"卸载应用", "en:UnInstall App"},
             info = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {
-        NodeAgentApp.getService(Deployer.class).unInstallApp(request.getId());
+        InstanceApp.getService(Deployer.class).unInstallApp(request.getId());
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
 
     private File getAppsDir() {
-        return FileUtil.newFile(NodeAgentApp.getFc().getInstanceDir(), "apps");
+        return FileUtil.newFile(InstanceApp.getService(ModuleContext.class).getInstanceDir(), "apps");
     }
 }

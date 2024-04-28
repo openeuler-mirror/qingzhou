@@ -2,15 +2,14 @@ package qingzhou.console.controller;
 
 import qingzhou.api.Lang;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
+import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.engine.util.IPUtil;
-import qingzhou.engine.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -56,7 +55,7 @@ public class TrustedIPChecker implements Filter<HttpServletContext> {
             return true;
         }
 
-        if (StringUtil.notBlank(trustedPattern)) {
+        if (trustedPattern != null) {
             if (Pattern.matches(trustedPattern, checkIp)) {
                 return true;
             }
@@ -71,7 +70,7 @@ public class TrustedIPChecker implements Filter<HttpServletContext> {
     }
 
     private static boolean validateIpOrigin(String validIps, String ip) throws UnknownHostException {
-        if (StringUtil.isBlank(validIps)) {
+        if (validIps == null) {
             return false;
         }
 

@@ -15,6 +15,32 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class FileUtil {
+    public static void unZipToDir(File srcFile, File unZipDir) throws IOException {
+        try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ, StandardCharsets.UTF_8)) {
+            for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
+                ZipEntry entry = e.nextElement();
+                File targetFile = newFile(unZipDir, entry.getName());
+                if (entry.isDirectory()) {
+                    if (!targetFile.exists()) {
+                        boolean mkdirs = targetFile.mkdirs();
+                        if (!mkdirs) {
+                            throw new IllegalStateException("Failed to mkdirs: " + targetFile.getPath());
+                        }
+                    }
+                } else {
+                    if (!targetFile.getParentFile().exists()) {
+                        boolean mkdirs = targetFile.getParentFile().mkdirs();
+                        if (!mkdirs) {
+                            throw new IllegalStateException("Failed to mkdirs: " + targetFile.getParentFile().getPath());
+                        }
+                    }
+                    try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
+                        copyStream(zip.getInputStream(entry), out);
+                    }
+                }
+            }
+        }
+    }
 
     public static String read(File file) throws IOException {
         try (InputStream inputStream = Files.newInputStream(file.toPath())) {
