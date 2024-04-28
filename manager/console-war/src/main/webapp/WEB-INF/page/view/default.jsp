@@ -54,7 +54,7 @@
                                 </span>
                         <span class="value">
                                     <%
-                                        if (StringUtil.notBlank(value)) {
+                                        if (!value.isEmpty()) {
                                             if (value.startsWith("http")) {
                                     %>
                                             <a target="_blank" href="<%=value%>"><%=value%></a>

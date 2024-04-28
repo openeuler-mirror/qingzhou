@@ -2,8 +2,7 @@ package qingzhou.app.common.monitor;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Listable;
-import qingzhou.api.type.Showable;
-import qingzhou.deployer.ReadOnlyDataStore;
+import qingzhou.app.common.ReadOnlyDataStore;
 
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class DeadlockedThread extends ModelBase implements Listable {
                     "en:Marks whether the thread supports forced termination."})
     private boolean canBeKilled = false;
 
-    @ModelAction(name = Showable.ACTION_NAME_SHOW, name = {"查看", "en:Show"},
+    @ModelAction(name = {"查看", "en:Show"},
             info = {"查看该死锁线程的信息，包括其死锁的堆栈等。", "en:View information about the deadlocked thread, including its deadlocked stack, etc."})
     public void show(Request request, Response response) {
         // show 方法已经在 qingzhou.app.ActionMethod.show 中定义，此处的逻辑会被忽略

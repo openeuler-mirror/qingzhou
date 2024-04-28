@@ -55,10 +55,10 @@
                     <%-- 用户/修改密码 --%>
                     <li>
                         <a id="reset-password-btn"
-                           href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ ConsoleConstants.MANAGE_TYPE_APP +"/"+ App.SYS_APP_MASTER +"/password/"+ "edit")%>"
+                           href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ ConsoleConstants.MANAGE_TYPE_APP +"/"+ "master" +"/password/"+ "edit")%>"
                            class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=PageBackendService.getModelManager(App.SYS_APP_MASTER).getModel("user").icon()%>"></i>
+                                <i class="icon icon-<%=PageBackendService.getModelManager("master").getModel("user").icon()%>"></i>
                             </span>
                         </a>
                     </li>

@@ -2,19 +2,18 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
+import qingzhou.console.RequestImpl;
+import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.deployer.App;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
+import qingzhou.registry.Registry;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -32,9 +31,9 @@ import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + App.SYS_APP_MASTER + "/" + App.SYS_MODEL_INDEX + "/" + App.SYS_MODEL_INDEX;
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + ConsoleConstants.MANAGE_TYPE_APP + "/" + "master" + "/" + "index" + "/" + "index";
     public static final String MSG_FLAG = "MSG_FLAG";
-    public static final File TEMP_BASE_PATH = SystemController.getCache();
+    public static final File TEMP_BASE_PATH = SystemController.getModuleContext().getTemp();
 
     public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
@@ -44,10 +43,10 @@ public class RESTController extends HttpServlet {
         List<String> result = new ArrayList<>();
 
         String uri = req.getPathInfo();
-        if (StringUtil.notBlank(uri)) {
+        if (uri != null) {
             String[] restTemp = uri.split("/");
             for (String r : restTemp) {
-                if (StringUtil.notBlank(r)) {
+                if (r != null) {
                     result.add(r);
                 }
             }
@@ -113,7 +112,7 @@ public class RESTController extends HttpServlet {
                             File parentFile = f.getParentFile();
                             if (parentFile.exists()
                                     && parentFile.getCanonicalPath().startsWith(TEMP_BASE_PATH.getCanonicalPath())) {
-                                FileUtil.forceDeleteQuietly(parentFile);
+                                FileUtil.forceDelete(parentFile);
                             }
                         }
                     } catch (Exception ignored) {
@@ -151,7 +150,7 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = SystemController.getAppMetadata(request).getModelManager().getActionNames(request.getModel());
+        String[] actions = SystemController.getService(Registry.class).get(request).getModelManager().getActionNames(request.getModel());
         for (String name : actions) {
             if (name.equals(request.getAction())) {
                 actionFound = true;

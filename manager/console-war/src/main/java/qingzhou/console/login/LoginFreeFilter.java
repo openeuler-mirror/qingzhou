@@ -3,7 +3,6 @@ package qingzhou.console.login;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.engine.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;

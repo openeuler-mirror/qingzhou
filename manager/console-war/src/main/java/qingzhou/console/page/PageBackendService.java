@@ -1,15 +1,13 @@
 package qingzhou.console.page;
 
-import qingzhou.api.*;
-import qingzhou.api.metadata.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Lang;
+import qingzhou.api.Request;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
-import qingzhou.deployer.App;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
@@ -17,7 +15,6 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.util.Base32Util;
 import qingzhou.console.view.ViewManager;
-import qingzhou.engine.util.StringUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -59,11 +56,11 @@ public class PageBackendService {
 
     public static String getAppName(Request request) {
         if (request == null) {
-            return App.SYS_APP_MASTER;
+            return "master";
         }
 
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(((RequestImpl) request).getManageType())) {
-            return App.SYS_APP_NODE_AGENT;
+            return "agent";
         }
 
         return request.getApp();
@@ -71,7 +68,7 @@ public class PageBackendService {
 
     public static String getAppName(String manageType, String appName) {
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
-            return App.SYS_APP_NODE_AGENT;
+            return "agent";
         }
 
         return appName;

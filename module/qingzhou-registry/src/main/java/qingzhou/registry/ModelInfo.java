@@ -18,6 +18,10 @@ public class ModelInfo {
     private ModelActionInfo[] modelActionInfos;
     private GroupInfo[] groupInfos;
 
+    public String[] getActionNames() {
+        return Arrays.stream(modelActionInfos).map(ModelActionInfo::getCode).toArray(String[]::new);
+    }
+
     public Map<String, String> getFormFieldDefaultValues() {
         return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> !modelFieldInfo.isMonitor()).collect(Collectors.toMap(ModelFieldInfo::getCode, ModelFieldInfo::getDefaultValue));
     }

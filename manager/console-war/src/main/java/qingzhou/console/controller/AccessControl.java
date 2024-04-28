@@ -9,7 +9,6 @@ import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.engine.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,7 +34,7 @@ public class AccessControl implements Filter<HttpServletContext> {
             models.add(modelManager.getModel(modelName));
         }
 
-        if (!"qingzhou".equals(loginUser) && App.SYS_APP_MASTER.equals(appName)) {
+        if (!"qingzhou".equals(loginUser) && "master".equals(appName)) {
             models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
         }
 
@@ -127,7 +126,7 @@ public class AccessControl implements Filter<HttpServletContext> {
         }
 
         String user = LoginManager.getLoginUser(httpServletRequest.getSession(false));
-        if (StringUtil.notBlank(user)) {
+        if (user!=null) {
             List<String> rest = RESTController.retrieveRestPathInfo(httpServletRequest);
             if (rest.size() >= 5) {
                 String appName = PageBackendService.getAppName(rest.get(1), rest.get(2));

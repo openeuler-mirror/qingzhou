@@ -15,7 +15,6 @@ import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.StringUtil;
 import qingzhou.http.Http;
 import qingzhou.http.HttpContext;
 import qingzhou.http.HttpServer;
@@ -71,7 +70,7 @@ public class Controller implements ModuleActivator {
                     inputStream.close();
                     exchange.setStatus(200);
                 } catch (Exception e) {
-                    result = StringUtil.convertStackTrace(e.getStackTrace()).getBytes(StandardCharsets.UTF_8);
+                    result = convertStackTrace(e.getStackTrace()).getBytes(StandardCharsets.UTF_8);
                     exchange.setStatus(500);
                 }
                 OutputStream outputStream = exchange.getResponseBody();
@@ -84,6 +83,15 @@ public class Controller implements ModuleActivator {
 
         String serverUrl = "http://" + remoteHost + ":" + remote.getPort() + path + context.getPath();
         logger.info("The remote service is started: " + serverUrl);
+    }
+
+    private String convertStackTrace(StackTraceElement[] stackTrace) {
+        StringBuilder msg = new StringBuilder();
+        String sp = System.lineSeparator();
+        for (StackTraceElement element : stackTrace) {
+            msg.append("\t").append(element).append(sp);
+        }
+        return msg.toString();
     }
 
     @Override

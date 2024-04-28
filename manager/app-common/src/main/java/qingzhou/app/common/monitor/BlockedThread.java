@@ -2,8 +2,7 @@ package qingzhou.app.common.monitor;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Listable;
-import qingzhou.api.type.Showable;
-import qingzhou.deployer.ReadOnlyDataStore;
+import qingzhou.app.common.ReadOnlyDataStore;
 
 import java.util.List;
 import java.util.Map;
@@ -26,6 +25,7 @@ public class BlockedThread extends ModelBase implements Listable {
 
     @ModelField(name = {"线程状态", "en:Thread State"},
             list = true,
+            options = {"BLOCKED", "WAITING", "TIMED_WAITING"},
             info = {"阻塞线程的当前状态。", "en:The current state of the blocked thread."})
     private String threadState;
 
@@ -53,19 +53,11 @@ public class BlockedThread extends ModelBase implements Listable {
                     "en:Marks whether the thread supports forced termination."})
     private boolean canBeKilled = false;
 
-    @ModelAction(name = Showable.ACTION_NAME_SHOW, name = {"查看", "en:Show"},
+    @ModelAction(
+            name = {"查看", "en:Show"},
             info = {"查看该阻塞线程的信息，包括其调用的堆栈等。", "en:View the information of the blocking thread, including the stack of its calls."})
     public void show(Request request, Response response) {
         // show 方法已经在 qingzhou.app.ActionMethod.show 中定义，此处的逻辑会被忽略
-    }
-
-    @Override
-    public Options options(Request request, String fieldName) {
-        if ("threadState".equals(fieldName)) {
-            return Options.of("BLOCKED", "WAITING", "TIMED_WAITING");
-        }
-
-        return super.options(request, fieldName);
     }
 
     private final ReadOnlyDataStore dataStore = new ReadOnlyDataStore() {

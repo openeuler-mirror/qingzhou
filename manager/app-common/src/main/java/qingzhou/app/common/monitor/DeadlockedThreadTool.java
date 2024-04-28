@@ -1,7 +1,5 @@
 package qingzhou.app.common.monitor;
 
-import qingzhou.engine.util.StringUtil;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -42,7 +40,7 @@ public class DeadlockedThreadTool {
             // ITAIT-4119
             StackTraceElement[] stackTraceElement = threadInfo.getStackTrace();
             if (stackTraceElement != null) {
-                properties.put("deadlockedStack", StringUtil.convertStackTrace(stackTraceElement));
+                properties.put("deadlockedStack", BlockedThreadTool.convertStackTrace(stackTraceElement));
             }
             return properties;
         } else {

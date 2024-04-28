@@ -28,6 +28,8 @@ public interface AppContext {
      */
     void addI18n(String key, String[] i18n);
 
+    String getI18n(Lang lang, String key, Object... args);
+
     /**
      * 添加菜单项。
      *

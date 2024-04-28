@@ -134,7 +134,7 @@
                     </label>
                     <div class="col-sm-5">
                         <%
-                            if (StringUtil.notBlank(readonly)) {
+                            if (!readonly.isEmpty()) {
                                 if (FieldType.textarea.equals(modelField.type())) {
                         %>
                         <textarea rows="3" disabled="disabled" name="<%=fieldName%>" <%=valueFrom%> class="form-control"

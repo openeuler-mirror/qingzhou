@@ -2,7 +2,6 @@ package qingzhou.deployer.impl;
 
 import qingzhou.config.ConfigService;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -33,14 +32,14 @@ public class Controller implements ModuleActivator {
 
         moduleContext.registerService(Deployer.class, deployer);
 
-        File masterApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", App.SYS_APP_MASTER);
+        File masterApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "master");
         if (masterApp.exists()) {
             deployer.installApp(masterApp);
         }
 
-        File nodeAgentApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", App.SYS_APP_NODE_AGENT);
-        if (nodeAgentApp.exists()) {
-            deployer.installApp(nodeAgentApp);
+        File instanceApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "instance");
+        if (instanceApp.exists()) {
+            deployer.installApp(instanceApp);
         }
 
         File[] files = FileUtil.newFile(moduleContext.getInstanceDir(), "apps").listFiles();

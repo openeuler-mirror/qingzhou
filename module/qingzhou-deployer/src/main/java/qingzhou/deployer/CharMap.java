@@ -1,4 +1,4 @@
-package qingzhou.deployer.impl;
+package qingzhou.deployer;
 
 import qingzhou.api.Lang;
 import qingzhou.engine.util.FileUtil;

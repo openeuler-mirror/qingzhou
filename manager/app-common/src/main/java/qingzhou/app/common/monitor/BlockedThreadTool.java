@@ -1,7 +1,6 @@
 package qingzhou.app.common.monitor;
 
 import qingzhou.api.type.Listable;
-import qingzhou.engine.util.StringUtil;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
@@ -114,14 +113,22 @@ class BlockedThreadTool {
                 continue;
             }
 
-            String stackTrace = StringUtil.convertStackTrace(threadInfo.getStackTrace());
-            if (StringUtil.isBlank(stackTrace)) continue;
+            String stackTrace = convertStackTrace(threadInfo.getStackTrace());
+            if (stackTrace.isEmpty()) continue;
 
             Info infos = map.computeIfAbsent(stackTrace, s -> new Info(threadInfo));
             infos.getCount().incrementAndGet();
             infos.getNames().add(threadInfo.getThreadName());
         }
         return map;
+    }
+    static String convertStackTrace(StackTraceElement[] stackTrace) {
+        StringBuilder msg = new StringBuilder();
+        String sp = System.lineSeparator();
+        for (StackTraceElement element : stackTrace) {
+            msg.append("\t").append(element).append(sp);
+        }
+        return msg.toString();
     }
 
     private boolean isIgnoredThreadInfo(ThreadInfo threadInfo) {

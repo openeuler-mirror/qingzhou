@@ -5,17 +5,14 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
+import qingzhou.console.RequestImpl;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.StringUtil;
-import qingzhou.logger.Logger;
 
 import java.io.File;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.Map;
 
-@Model(code = qingzhou.deployer.App.SYS_MODEL_APP, icon = "cube-alt",
+@Model(code = "app", icon = "cube-alt",
         menu = "Service", order = 1,
         name = {"应用", "en:App"},
         info = {"应用。",
@@ -51,7 +48,7 @@ public class App extends ModelBase implements Createable {
             list = true,
             name = {"节点", "en:Node"},
             info = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
-    public String nodes;
+    public String instances;
 
     @ModelField(
             list = true,
@@ -71,56 +68,21 @@ public class App extends ModelBase implements Createable {
         getAppContext().addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
     }
 
-    @Override
-    public Options options(Request request, String fieldName) {
-        if ("nodes".equals(fieldName)) {
-            String userName = request.getUser();
-            List<Option> nodeList = new ArrayList<>();
-            nodeList.add(Option.of(qingzhou.deployer.App.SYS_NODE_LOCAL));  // 将SYS_NODE_LOCAL始终添加到列表的第一位
-            Set<String> nodeSet = new HashSet<>();
-            try {
-                if ("qingzhou".equals(userName)) {
-                    List<Map<String, String>> nodes = getDataStore().getAllData("node");
-                    nodes.stream()
-                            .map(node -> node.get("id"))
-                            .filter(Objects::nonNull)
-                            .forEach(nodeSet::add);
-                } else {
-                    Map<String, String> user = getDataStore().getDataById("user", userName);
-                    if (user != null) {
-                        Stream.of(user.getOrDefault("nodes", "").split(","))
-                                .map(String::trim)
-                                .filter(StringUtil::notBlank)
-                                .forEach(nodeSet::add);
-                    }
-                }
-                nodeSet.remove(qingzhou.deployer.App.SYS_NODE_LOCAL);
-                nodeSet.stream().map(Option::of).forEach(nodeList::add);
-            } catch (Exception e) {
-                MasterApp.getService(Logger.class).error(e.getMessage(), e);
-            }
-
-            return () -> nodeList;
-        }
-
-        return super.options(request, fieldName);
-    }
-
-    @ModelAction(name = Createable.ACTION_NAME_ADD,
+    @ModelAction(
             name = {"安装", "en:Install"},
             info = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
     public void add(Request req, Response response) throws Exception {
         RequestImpl request = (RequestImpl) req;
-        Map<String, String> p = MasterApp.prepareParameters(request, getAppContext());
+        Map<String, String> p = MasterApp.prepareParameters(request);
         File srcFile;
         if (Boolean.parseBoolean(p.remove("appFrom"))) {
             srcFile = FileUtil.newFile(p.remove("fromUpload"));
         } else {
             srcFile = new File(p.remove("filename"));
         }
-        if (!srcFile.exists() || !srcFile.isFile()) {
+        if (!srcFile.isFile()) {
             response.setSuccess(false);
-            String msg = getAppContext().getAppMetadata().getI18n(request.getLang(), "app.id.not.exist");
+            String msg = getAppContext().getI18n(request.getLang(), "app.id.not.exist");
             response.setMsg(msg);
             return;
         }
@@ -133,19 +95,19 @@ public class App extends ModelBase implements Createable {
             appName = srcFileName.substring(0, index);
         } else {
             response.setSuccess(false);
-            String msg = getAppContext().getAppMetadata().getI18n(request.getLang(), "app.type.unknown");
+            String msg = getAppContext().getI18n(request.getLang(), "app.type.unknown");
             response.setMsg(msg);
             return;
         }
 
         String[] nodes = p.get("nodes") == null ? new String[0] : p.get("nodes").split(",");
-        request.setModelName(qingzhou.deployer.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.deployer.App.SYS_ACTION_INSTALL_APP);
+        request.setModelName("appinstaller");
+        request.setActionName("install");
         try {
             for (String node : nodes) {
                 try {
-                    if (qingzhou.deployer.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        MasterApp.getService(Deployer.class).getApp(qingzhou.deployer.App.SYS_APP_NODE_AGENT).invokeDirectly(request, response);
+                    if ("local".equals(node)) { // 安装到本地节点
+                        MasterApp.getService(Deployer.class).getApp("agent").invokeDirectly(request, response);
                     } else {
                         // TODO：调用远端 node 上的app add
                     }
@@ -156,22 +118,21 @@ public class App extends ModelBase implements Createable {
                 }
             }
         } finally {
-            request.setModelName(qingzhou.deployer.App.SYS_MODEL_APP);
+            request.setModelName("app");
             request.setActionName(Createable.ACTION_NAME_ADD);
         }
 
         p.put(Listable.FIELD_NAME_ID, appName);
-        getDataStore().addData(qingzhou.deployer.App.SYS_MODEL_APP, appName, p);
+        getDataStore().addData("app", appName, p);
     }
 
-    @ModelAction(name = qingzhou.deployer.App.SYS_ACTION_MANAGE_PAGE,
+    @ModelAction(
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
     }
 
     @ModelAction(
-            name = Deletable.ACTION_NAME_DELETE,
             batch = true,
             name = {"删除", "en:Delete"},
             info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
@@ -182,13 +143,13 @@ public class App extends ModelBase implements Createable {
         Map<String, String> p = getDataStore().getDataById("app", appName);
         String[] nodes = p.get("nodes").split(",");
 
-        request.setModelName(qingzhou.deployer.App.SYS_MODEL_APP_INSTALLER);
-        request.setActionName(qingzhou.deployer.App.SYS_ACTION_UNINSTALL_APP);
+        request.setModelName("appinstaller");
+        request.setActionName("uninstall");
         try {
             for (String node : nodes) {
                 try {
-                    if (qingzhou.deployer.App.SYS_NODE_LOCAL.equals(node)) { // 安装到本地节点
-                        MasterApp.getService(Deployer.class).getApp(qingzhou.deployer.App.SYS_APP_NODE_AGENT).invokeDirectly(request, response);
+                    if ("local".equals(node)) { // 安装到本地节点
+                        MasterApp.getService(Deployer.class).getApp("agent").invokeDirectly(request, response);
                     } else {
                         // TODO：调用远端 node 上的app delete
                     }
@@ -198,7 +159,7 @@ public class App extends ModelBase implements Createable {
                 }
             }
         } finally {
-            request.setModelName(qingzhou.deployer.App.SYS_MODEL_APP);
+            request.setModelName("app");
             request.setActionName(Deletable.ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);

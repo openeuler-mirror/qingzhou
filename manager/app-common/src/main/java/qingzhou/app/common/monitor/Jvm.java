@@ -4,12 +4,12 @@ package qingzhou.app.common.monitor;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.type.Monitorable;
-import qingzhou.engine.util.StringUtil;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -67,6 +67,7 @@ public class Jvm extends ModelBase implements Monitorable {
 
         return properties;
     }
+
     private String convertMBytes(long val) {
         double v = ((double) val) / 1024 / 1024;
         DecimalFormat df = new DecimalFormat("##0.0");//这样为保持1位
