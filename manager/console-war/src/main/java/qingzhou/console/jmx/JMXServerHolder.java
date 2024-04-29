@@ -1,6 +1,7 @@
 package qingzhou.console.jmx;
 
-import qingzhou.console.ServerXml;
+import qingzhou.config.ConfigService;
+import qingzhou.config.Jmx;
 import qingzhou.console.controller.SystemController;
 import qingzhou.logger.Logger;
 
@@ -50,7 +51,8 @@ public class JMXServerHolder {
     }
 
     public boolean init() throws Exception {
-        if (!ServerXml.get().isJmxEnabled()) {
+        Jmx jmx = SystemController.getConsole().getJmx();
+        if (!jmx.isEnabled()) {
             return false;
         }
 
@@ -61,11 +63,11 @@ public class JMXServerHolder {
         if (!mBeanServer.isRegistered(objectName)) {
             mBeanServer.registerMBean(new ConsoleJmx(), objectName);
         }
-        Map<String, String> jmxProp = ServerXml.get().jmx();
-        String jmxIp = jmxProp.get("ip");
+
+        String jmxIp = jmx.getHost();
         System.setProperty("java.rmi.server.hostname", jmxIp);
 
-        int jmxPort = Integer.parseInt(jmxProp.get("port"));
+        int jmxPort = jmx.getPort();
         registry = LocateRegistry.createRegistry(jmxPort);
 
         String ipAndPort = jmxIp + ":" + jmxPort;

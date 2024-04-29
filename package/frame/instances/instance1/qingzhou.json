@@ -4,8 +4,15 @@
     "port": "9000",
     "contextRoot": "/console",
     "security": {
+      "publicKey": "",
+      "privateKey": "",
       "trustedIP": "",
-      "verCodeEnabled": "true"
+      "verCodeEnabled": "true",
+      "lockOutTime": "300",
+      "failureCount": "5",
+      "enablePasswordAge": "true",
+      "passwordMaxAge": "90",
+      "passwordMinAge": "0"
     },
     "user": [
       {
@@ -16,11 +23,14 @@
         "changeInitPwd": "true",
         "enable2FA": "false",
         "keyFor2FA": "",
-        "enablePasswordAge": "true",
-        "passwordMaxAge": "90",
-        "passwordMinAge": "0"
+        "passwordLastModifiedTime": ""
       }
-    ]
+    ],
+    "jmx": {
+      "enabled": "false",
+      "host": "",
+      "port": ""
+    }
   },
   "remote": {
     "enabled": "false",

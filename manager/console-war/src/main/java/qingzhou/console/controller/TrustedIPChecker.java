@@ -2,7 +2,6 @@ package qingzhou.console.controller;
 
 import qingzhou.api.Lang;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ServerXml;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
@@ -44,8 +43,9 @@ public class TrustedIPChecker implements Filter<HttpServletContext> {
             return true;
         }
         try {
-            return validateIps(ServerXml.get().trustedIP(), clientIp);
-        } catch (UnknownHostException e) {
+            String trustedIP = SystemController.getConsole().getSecurity().getTrustedIP();
+            return validateIps(trustedIP, clientIp);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

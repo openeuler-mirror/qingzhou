@@ -6,7 +6,6 @@ import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
-import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.View;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.Registry;

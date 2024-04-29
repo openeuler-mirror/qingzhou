@@ -1,8 +1,8 @@
 package qingzhou.console.login;
 
 import qingzhou.api.Lang;
+import qingzhou.config.User;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;
@@ -58,14 +58,6 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static LockOutRealm getLockOutRealm(String clientIp) {
         return userLockOutRealms.computeIfAbsent(clientIp, s -> new LockOutRealm());
-    }
-
-    public static String getUserPassword(String user) throws Exception {
-        Map<String, String> userP = ServerXml.get().user(user);
-        if (userP == null) {
-            return null;
-        }
-        return userP.get("password");
     }
 
     private static void webLogin(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -189,27 +181,22 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static boolean check2FA(HttpServletRequest request) throws Exception {
-        return check2FA(request.getParameter(LOGIN_USER), AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
+        return check2FA(request.getParameter(LOGIN_USER),
+                AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
     }
 
-    public static boolean check2FA(String user, String login2FA) throws Exception {
-        Map<String, String> userP = ServerXml.get().user(user);
+    private static boolean check2FA(String user, String login2FA) throws Exception {
+        User u = SystemController.getConsole().getUser(user);
 
-        if (userP == null) return false;
-
-        if (!Boolean.parseBoolean(userP.get("enable2FA"))) {
+        if (!u.isEnable2FA()) {
             return true; // 用户未开启双因子认证
-        }
-
-        if (!Boolean.parseBoolean(userP.get("bound2FA"))) {
-            return true; // 放过，用户要去扫描二维码绑定密钥
         }
 
         if (login2FA == null) {
             return false;
         }
 
-        String keyFor2FA = userP.get("keyFor2FA");
+        String keyFor2FA = u.getKeyFor2FA();
         return Totp.verify(keyFor2FA, login2FA);
     }
 
@@ -220,8 +207,10 @@ public class LoginManager implements Filter<HttpServletContext> {
         }
 
         try {
-            String userPwd = getUserPassword(user);
-            if (SystemController.getService(CryptoService.class).getMessageDigest().matches(password, userPwd)) {
+            User u = SystemController.getConsole().getUser(user);
+            if (u != null
+                    && u.isActive()
+                    && SystemController.getService(CryptoService.class).getMessageDigest().matches(password, u.getPassword())) {
                 return null;
             } else {
                 return LOGIN_ERROR_MSG_KEY;
@@ -233,7 +222,7 @@ public class LoginManager implements Filter<HttpServletContext> {
             } else {
                 msg = ": " + msg;
             }
-            return "An error occurred in the password verification process" + msg;
+            return "An error occurred in the password verification process: " + msg;
         }
     }
 

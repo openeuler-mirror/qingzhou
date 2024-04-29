@@ -13,6 +13,7 @@ import java.nio.file.Files;
 public class ConfigServiceImpl implements ConfigService {
     private final Json json;
     private final File instanceDir;
+    private Config cache;
 
     public ConfigServiceImpl(Json json, File instanceDir) {
         this.json = json;
@@ -21,9 +22,12 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     public Config getConfig() throws IOException {
-        try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
-            String read = FileUtil.read(inputStream);
-            return json.fromJson(read, Config.class);
+        if (cache == null) {
+            try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
+                String read = FileUtil.read(inputStream);
+                cache = json.fromJson(read, Config.class);
+            }
         }
+        return cache;
     }
 }

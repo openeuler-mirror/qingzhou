@@ -22,6 +22,11 @@ public class ModelInfo {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().get();
     }
 
+    public String[] getBatchActionNames() {
+        return Arrays.stream(modelActionInfos).filter(ModelActionInfo::isBatch).map(ModelActionInfo::getCode).toArray(String[]::new);
+
+    }
+
     public String[] getActionNames() {
         return Arrays.stream(modelActionInfos).map(ModelActionInfo::getCode).toArray(String[]::new);
     }

@@ -10,8 +10,8 @@ import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.List;
 
 public class AccessControl implements Filter<HttpServletContext> {
     static {
@@ -20,54 +20,39 @@ public class AccessControl implements Filter<HttpServletContext> {
 
     private static final List<String> masterAppModels = Arrays.asList("user", "version", "node");
 
-    public static ModelData[] getLoginUserAppMenuModels(String loginUser, String appName) {
-        ModelManager modelManager = SystemController.getAppMetadata(appName).getModelManager();
-        if (modelManager == null) {
-            return new ModelData[0];
-        }
-
-        List<ModelData> models = new ArrayList<>();
-        for (String modelName : modelManager.getModelNames()) {
-            models.add(modelManager.getModel(modelName));
-        }
-
-        if (!"qingzhou".equals(loginUser) && "master".equals(appName)) {
-            models = models.stream().filter(model -> !masterAppModels.contains(model.name())).collect(Collectors.toList());
-        }
-
-        return models.toArray(new ModelData[0]);
-    }
-
     public static boolean canAccess(String appName, String modelAction, String user) throws Exception {
-        String[] ma = modelAction.split("/");
-        String checkModel = ma[0];
-        String checkAction = ma[1];
-        if (ma.length == 2) {
-            ModelManager modelManager = SystemController.getAppMetadata(appName).getModelManager();
-            ModelActionData modelAction1 = modelManager.getModelAction(checkModel, checkAction);
-            return modelAction1 != null;
-        }
-
-        return nodePermission(appName, user);
+        return true;
     }
+//    public static boolean canAccess(String appName, String modelAction, String user) throws Exception {
+//        String[] ma = modelAction.split("/");
+//        String checkModel = ma[0];
+//        String checkAction = ma[1];
+//        if (ma.length == 2) {
+//            ModelManager modelManager = SystemController.getAppMetadata(appName).getModelManager();
+//            ModelActionData modelAction1 = modelManager.getModelAction(checkModel, checkAction);
+//            return modelAction1 != null;
+//        }
+//
+//        return nodePermission(appName, user);
+//    }
 
-    public static boolean nodePermission(String appName, String user) throws Exception {
-        if ("qingzhou".equals(user)) {
-            return true;
-        }
-
-        Config config = SystemController.getConfig();
-        Map<String, String> userPro = config.getDataById("user", user);
-        String userNodes = userPro.getOrDefault("nodes", "");
-        Set<String> userNodeSet = Arrays.stream(userNodes.split(","))
-                .filter(node -> node != null && !node.trim().isEmpty())
-                .map(String::trim).collect(Collectors.toSet());
-
-        Map<String, String> app = config.getDataById("app", appName);
-        String appNodes = app.getOrDefault("nodes", "");
-
-        return Arrays.stream(appNodes.split(",")).map(String::trim).anyMatch(userNodeSet::contains);
-    }
+//    public static boolean nodePermission(String appName, String user) throws Exception {
+//        if ("qingzhou".equals(user)) {
+//            return true;
+//        }
+//
+//        Config config = SystemController.getConfig();
+//        Map<String, String> userPro = config.getDataById("user", user);
+//        String userNodes = userPro.getOrDefault("nodes", "");
+//        Set<String> userNodeSet = Arrays.stream(userNodes.split(","))
+//                .filter(node -> node != null && !node.trim().isEmpty())
+//                .map(String::trim).collect(Collectors.toSet());
+//
+//        Map<String, String> app = config.getDataById("app", appName);
+//        String appNodes = app.getOrDefault("nodes", "");
+//
+//        return Arrays.stream(appNodes.split(",")).map(String::trim).anyMatch(userNodeSet::contains);
+//    }
 
     public static boolean isNoNeedPermissionUri(HttpServletRequest request) {
         String servletPathAndPathInfo = RESTController.retrieveServletPathAndPathInfo(request);

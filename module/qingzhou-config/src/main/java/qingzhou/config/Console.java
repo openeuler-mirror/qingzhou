@@ -1,11 +1,27 @@
 package qingzhou.config;
 
+import java.util.Arrays;
+
 public class Console {
     private boolean enabled;
     private String contextRoot;
     private int port;
     private Security security;
     private User[] user;
+    private Jmx jmx;
+
+    public User getUser(String name) {
+        if (user == null) return null;
+        return Arrays.stream(user).filter(user -> user.getId().equals(name)).findAny().orElse(null);
+    }
+
+    public Jmx getJmx() {
+        return jmx;
+    }
+
+    public void setJmx(Jmx jmx) {
+        this.jmx = jmx;
+    }
 
     public boolean isEnabled() {
         return enabled;
