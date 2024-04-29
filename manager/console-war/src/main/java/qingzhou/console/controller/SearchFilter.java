@@ -1,8 +1,8 @@
 package qingzhou.console.controller;
 
 import qingzhou.api.Lang;
-import qingzhou.console.i18n.I18n;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.engine.util.pattern.Filter;
 

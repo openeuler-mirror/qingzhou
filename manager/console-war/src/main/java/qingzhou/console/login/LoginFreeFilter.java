@@ -2,6 +2,7 @@ package qingzhou.console.login;
 
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.pattern.Filter;
 

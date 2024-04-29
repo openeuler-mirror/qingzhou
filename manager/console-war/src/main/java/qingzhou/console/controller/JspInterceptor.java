@@ -1,6 +1,7 @@
 package qingzhou.console.controller;
 
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletResponse;
