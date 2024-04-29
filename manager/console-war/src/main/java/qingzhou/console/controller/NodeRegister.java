@@ -1,5 +1,6 @@
 package qingzhou.console.controller;
 
+import qingzhou.config.ConfigService;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.crypto.CryptoService;
@@ -32,9 +33,9 @@ public class NodeRegister implements Filter<HttpServletContext> {
             map.put(name, value);
         }
         String arg = map.get("A");
-        CryptoService cryptoService = SystemController.getCryptoService();
+        CryptoService cryptoService = SystemController.getService(CryptoService.class);
         if (arg != null) {
-            String privateKey = SystemController.getConfig().getKey(Config.privateKeyName);
+            String privateKey = SystemController.getService(ConfigService.class).getConfig().getKey(Config.privateKeyName);
             KeyPairCipher keyPairCipher = cryptoService.getKeyPairCipher(null, privateKey);
             arg = keyPairCipher.decryptWithPrivateKey(arg);
             Map<String, String> params = parseArg(arg);

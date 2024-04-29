@@ -2,6 +2,7 @@ package qingzhou.console.jmx;
 
 import qingzhou.console.ServerXml;
 import qingzhou.console.controller.SystemController;
+import qingzhou.logger.Logger;
 
 import javax.management.MBeanServer;
 import javax.management.Notification;
@@ -39,7 +40,7 @@ public class JMXServerHolder {
             try {
                 RMISocketFactory.setSocketFactory(new HostSocketFactory());
             } catch (IOException e) {
-                SystemController.getLogger().warn(e.getMessage(), e);
+                SystemController.getService(Logger.class).warn(e.getMessage(), e);
             }
         }
     }
@@ -151,7 +152,7 @@ public class JMXServerHolder {
                 }
             }
         } catch (Exception e) {
-            SystemController.getLogger().warn("RMIConnection close failed! sessionId: " + sessionId, e);
+            SystemController.getService(Logger.class).warn("RMIConnection close failed! sessionId: " + sessionId, e);
         }
     }
 }

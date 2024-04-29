@@ -14,6 +14,7 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.crypto.CryptoService;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -220,7 +221,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
         try {
             String userPwd = getUserPassword(user);
-            if (SystemController.getCryptoService().getMessageDigest().matches(password, userPwd)) {
+            if (SystemController.getService(CryptoService.class).getMessageDigest().matches(password, userPwd)) {
                 return null;
             } else {
                 return LOGIN_ERROR_MSG_KEY;
