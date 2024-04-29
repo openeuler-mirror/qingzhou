@@ -1,7 +1,5 @@
 package qingzhou.api;
 
-import java.util.Map;
-
 /**
  * 请求接口定义了获取请求相关信息的方法。
  */
@@ -45,18 +43,9 @@ public interface Request {
     /**
      * Returns the value of a request parameter as a <code>String</code>, or
      * <code>null</code> if the parameter does not exist.
-     * You should only use this method when you are sure the parameter has only
-     * one value. If the parameter might have more than one value, use
-     * {@link #getParameterMap}.
+     * 多值须以英文逗号（,）分割
      */
     String getParameter(String name);
-
-    /**
-     * Returns a java.util.Map of the parameters of this request containing parameter names as keys and
-     * parameter values as map values. The keys in the parameter map are
-     * of type String. The values in the parameter map are of type String array.
-     */
-    Map<String, String[]> getParameterMap();
 
     /**
      * 获取用户名。

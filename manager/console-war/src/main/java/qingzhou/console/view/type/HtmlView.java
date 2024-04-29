@@ -7,6 +7,8 @@ import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.Registry;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -24,13 +26,15 @@ public class HtmlView implements View {
         req.setAttribute(QZ_RESPONSE_KEY, response);
 
         String modelName = request.getModel();
-        String actionName = request.getAction();
-        ModelActionData modelAction = SystemController.getAppMetadata(request).getModelManager().getModelAction(modelName, actionName);
+        ModelActionInfo modelAction = SystemController.getService(Registry.class)
+                .getAppInfo(request.getApp())
+                .getModelInfo(modelName)
+                .getModelActionInfo(request.getAction());
         String pageForward = null;
         if (modelAction != null) {
-            pageForward = modelAction.forwardToPage();
+            pageForward = modelAction.getForward();
         }
-        if (StringUtil.isBlank(pageForward)) {
+        if (pageForward == null || pageForward.isEmpty()) {
             pageForward = "default";
         }
 

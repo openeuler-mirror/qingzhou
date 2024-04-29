@@ -23,8 +23,7 @@ public class JVMConfig extends ModelBase implements Editable {
     };
 
     @Override
-    public void init() {
-        AppContext appContext = getAppContext();
+    public void start() {
         appContext.addI18n("validator.javaHome.notDir", new String[]{"Java 路径不是一个有效的目录", "en:The Java path is not a valid directory"});
         appContext.addI18n("validator.javaHome.notValid", new String[]{"Java 路径无效", "en:Invalid Java path"});
         appContext.addI18n("validator.javaHome.version.notSupport", new String[]{"Java 版本不支持, 需要 Java 8 或以上版本", "en:Java version is not supported and requires Java 8 or later"});

@@ -1,8 +1,10 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
+import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.engine.util.pattern.Filter;
+import qingzhou.logger.Logger;
 
 public class AsymmetricDecryptor implements Filter<RestContext> {
     @Override
@@ -31,7 +33,7 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
     }
 
     public static String decryptWithConsolePrivateKey(String input) {
-        if (StringUtil.isBlank(input)) {
+        if (input == null || input.isEmpty()) {
             return input;
         }
         try {
@@ -39,7 +41,7 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
             String priKey = SystemController.getConfig().getKey(Config.privateKeyName);
             return SystemController.getCryptoService().getKeyPairCipher(pubKey, priKey).decryptWithPrivateKey(input);
         } catch (Exception e) {
-            SystemController.getLogger().warn("Decryption error", e);
+            SystemController.getService(Logger.class).warn("Decryption error", e);
             return input;
         }
     }

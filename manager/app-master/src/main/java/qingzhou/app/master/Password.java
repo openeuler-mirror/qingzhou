@@ -33,15 +33,14 @@ public class Password extends ModelBase implements Editable {
     public boolean update2FA = false;
 
     @Override
-    public void init() {
-        AppContext master = getAppContext();
-        master.addI18n("update2FA.rebind", new String[]{"双因子认证密钥更新成功，请扫描二维码重新绑定双因子认证密钥",
+    public void start() {
+        appContext.addI18n("update2FA.rebind", new String[]{"双因子认证密钥更新成功，请扫描二维码重新绑定双因子认证密钥",
                 "en:The two-factor authentication key is updated successfully, please scan the QR code to re-bind the two-factor authentication key"});
-        master.addI18n("password.confirm.failed", new String[]{"确认密码与新密码不一致", "en:Confirm that the password does not match the new password"});
-        master.addI18n("password.original.failed", new String[]{"原始密码错误", "en:The original password is wrong"});
-        master.addI18n("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变", "en:The new password is the same as the original password and has not changed"});
-        master.addI18n("password.min", new String[]{"未达到密码最短使用期限 %s 天，上次修改时间为：%s", "en:The minimum password age of %s days has not been reached, last modified: %s"});
-        master.addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，禁止使用最近 %s 次使用过的旧密码",
+        appContext.addI18n("password.confirm.failed", new String[]{"确认密码与新密码不一致", "en:Confirm that the password does not match the new password"});
+        appContext.addI18n("password.original.failed", new String[]{"原始密码错误", "en:The original password is wrong"});
+        appContext.addI18n("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变", "en:The new password is the same as the original password and has not changed"});
+        appContext.addI18n("password.min", new String[]{"未达到密码最短使用期限 %s 天，上次修改时间为：%s", "en:The minimum password age of %s days has not been reached, last modified: %s"});
+        appContext.addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，禁止使用最近 %s 次使用过的旧密码",
                 "en:For security reasons, the use of old passwords that have been used last %s is prohibited"});
     }
 

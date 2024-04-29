@@ -1,8 +1,5 @@
 package qingzhou.console.controller;
 
-import qingzhou.api.metadata.ModelActionData;
-import qingzhou.api.metadata.ModelManager;
-import qingzhou.deployer.App;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
@@ -126,7 +123,7 @@ public class AccessControl implements Filter<HttpServletContext> {
         }
 
         String user = LoginManager.getLoginUser(httpServletRequest.getSession(false));
-        if (user!=null) {
+        if (user != null) {
             List<String> rest = RESTController.retrieveRestPathInfo(httpServletRequest);
             if (rest.size() >= 5) {
                 String appName = PageBackendService.getAppName(rest.get(1), rest.get(2));

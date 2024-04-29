@@ -1,7 +1,6 @@
 package qingzhou.console;
 
 import qingzhou.api.Request;
-import qingzhou.api.metadata.ModelManager;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
 import qingzhou.console.controller.SystemController;
@@ -9,9 +8,7 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
-import qingzhou.deployer.App;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.logger.Logger;
 
 import javax.naming.NameNotFoundException;
 import java.net.SocketException;
@@ -135,7 +132,7 @@ public class ActionInvoker {
             if (msg == null) {
                 msg = "Server exception, please check log for details.";
                 // 不能抛异常，否则到不了 view 处理
-                SystemController.getLogger().warn(msg, e);
+                SystemController.getService(Logger.class).warn(msg, e);
             }
 
             response.setMsg(msg);

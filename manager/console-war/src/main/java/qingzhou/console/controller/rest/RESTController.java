@@ -150,7 +150,10 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = SystemController.getService(Registry.class).get(request).getModelManager().getActionNames(request.getModel());
+        String[] actions = SystemController.getService(Registry.class)
+                .getAppInfo(request.getApp())
+                .getModelInfo(request.getModel())
+                .getActionNames();
         for (String name : actions) {
             if (name.equals(request.getAction())) {
                 actionFound = true;
@@ -201,7 +204,8 @@ public class RESTController extends HttpServlet {
                         part.getName()
                 };
                 for (String checkName : checkNames) {
-                    if (StringUtil.isBlank(checkName)
+                    if (checkName == null
+                            || checkName.isEmpty()
                             || checkName.contains("/") // 风险文件
                             || checkName.contains("\\") // 风险文件
                     ) {

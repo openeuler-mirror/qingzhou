@@ -29,8 +29,7 @@ public class User extends ModelBase implements Createable {
     public static final String PASSWORD_FLAG = "***************";
 
     @Override
-    public void init() {
-        AppContext appContext = getAppContext();
+    public void start() {
         appContext.addI18n("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
         appContext.addI18n("operate.system.users.not", new String[]{"为安全起见，请勿操作系统内置用户", "en:For security reasons, do not operate the system built-in users"});
     }
@@ -278,14 +277,14 @@ public class User extends ModelBase implements Createable {
                 if (Createable.ACTION_NAME_ADD.equals(request.getAction())
                         || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
                     response.setSuccess(false);
-                    response.setMsg(getAppContext().getI18n(request.getLang(), "operate.system.users.not"));
+                    response.setMsg(this.appContext.getI18n(request.getLang(), "operate.system.users.not"));
                     return false;
                 }
 
                 if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())) {
                     if (!Boolean.parseBoolean(request.getParameter("active"))) {
                         response.setSuccess(false);
-                        response.setMsg(getAppContext().getI18n(request.getLang(), "System.users.keep.active"));
+                        response.setMsg(this.appContext.getI18n(request.getLang(), "System.users.keep.active"));
                         return false;
                     }
                 }

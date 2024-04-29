@@ -7,13 +7,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class I18nTool {
-    private Map<String, String[]> langMap = new HashMap<>();
+    private final Map<String, String[]> langMap = new HashMap<>();
 
     public void addI18n(String key, String[] i18n) {
         addI18n(key, i18n, true);
     }
 
-    void addI18n(String key, String[] i18n, boolean checkContainChinese) {
+    public void addI18n(String key, String[] i18n, boolean checkContainChinese) {
         Map<Lang, String> i18nMap = retrieveI18n(i18n);
         for (Lang lang : i18nMap.keySet()) {
             String val = i18nMap.get(lang);
@@ -47,7 +47,7 @@ public class I18nTool {
         return null;
     }
 
-    static Map<Lang, String> retrieveI18n(String[] i18n) {
+    public static Map<Lang, String> retrieveI18n(String[] i18n) {
         Map<Lang, String> i18nMap = new HashMap<>();
         for (String langLine : i18n) {
             Lang lang = null;

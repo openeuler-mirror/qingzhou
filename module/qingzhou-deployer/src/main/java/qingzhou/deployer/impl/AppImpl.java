@@ -1,14 +1,13 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.ActionFilter;
-import qingzhou.api.QingzhouApp;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.deployer.App;
 import qingzhou.registry.AppInfo;
 
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 class AppImpl implements App {
@@ -16,21 +15,18 @@ class AppImpl implements App {
     private AppInfo appInfo;
     private AppContextImpl appContext;
     private QingzhouApp qingzhouApp;
+    private final List<ModelBase> modelBases = new ArrayList<>();
 
     private final Map<String, Map<String, ActionMethod>> actionMap = new HashMap<>();
 
     @Override
-    public AppInfo getAppInfo() {
-        return appInfo;
-    }
-
-    void setAppInfo(AppInfo appInfo) {
-        this.appInfo = appInfo;
+    public AppContextImpl getAppContext() {
+        return appContext;
     }
 
     @Override
-    public AppContextImpl getAppContext() {
-        return appContext;
+    public AppInfo getAppInfo() {
+        return appInfo;
     }
 
     @Override
@@ -77,11 +73,19 @@ class AppImpl implements App {
         this.qingzhouApp = qingzhouApp;
     }
 
+    public List<ModelBase> getModelBases() {
+        return modelBases;
+    }
+
     URLClassLoader getLoader() {
         return loader;
     }
 
     void setLoader(URLClassLoader loader) {
         this.loader = loader;
+    }
+
+    void setAppInfo(AppInfo appInfo) {
+        this.appInfo = appInfo;
     }
 }

@@ -20,8 +20,8 @@ class AppContextImpl implements AppContext {
     private final AppInfo appInfo;
     private final List<ActionFilter> actionFilters = new ArrayList<>();
     private final I18nTool i18nTool = new I18nTool();
+    private DataStore defaultDataStore;
 
-    private DataStore dataStore = new MemoryDataStore();
     private File appTemp;
 
     AppContextImpl(ModuleContext moduleContext, AppInfo appInfo) {
@@ -35,16 +35,6 @@ class AppContextImpl implements AppContext {
             appTemp = moduleContext.getTemp();
         }
         return appTemp;
-    }
-
-    @Override
-    public void setDefaultDataStore(DataStore dataStore) {
-        this.dataStore = dataStore;
-    }
-
-    @Override
-    public DataStore getDefaultDataStore() {
-        return dataStore;
     }
 
     @Override
@@ -64,6 +54,16 @@ class AppContextImpl implements AppContext {
             this.appInfo.setMenuInfos(menuInfos);
         }
         menuInfos.add(new MenuInfo(name, i18n, icon, order));
+    }
+
+    @Override
+    public void setDefaultDataStore(DataStore dataStore) {
+        defaultDataStore = dataStore;
+    }
+
+    @Override
+    public DataStore getDefaultDataStore() {
+        return defaultDataStore;
     }
 
     @Override

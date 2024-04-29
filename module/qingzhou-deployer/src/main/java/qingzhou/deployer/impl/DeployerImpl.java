@@ -2,7 +2,6 @@ package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.config.Remote;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
@@ -28,13 +27,11 @@ class DeployerImpl implements Deployer {
     private final Map<Method, ModelActionInfo> presetMethodActionInfos;
 
     private final Map<String, App> apps = new HashMap<>();
-    private final Remote remote;
     private final CryptoService cryptoService;
     private final ModuleContext moduleContext;
 
-    DeployerImpl(Remote remote, CryptoService cryptoService, ModuleContext moduleContext) {
+    DeployerImpl(CryptoService cryptoService, ModuleContext moduleContext) {
         this.moduleContext = moduleContext;
-        this.remote = remote;
         this.cryptoService = cryptoService;
         this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(PresetAction.class));
     }
@@ -49,10 +46,30 @@ class DeployerImpl implements Deployer {
         AppImpl app = buildApp(appName, appFile, isSystemApp);
 
         // 启动应用
-        app.getQingzhouApp().start(app.getAppContext());
+        startApp(app);
+
+        // 初始化各模块
+        startModel(app);
 
         // 注册完成
         apps.put(appName, app);
+    }
+
+    private void startModel(AppImpl app) {
+        Field appContextField = Arrays.stream(ModelBase.class.getDeclaredFields()).filter(field -> field.getType() == AppContext.class).findFirst().get();
+
+        app.getModelBases().forEach(modelBase -> {
+            try {
+                appContextField.set(modelBase, app.getAppContext());
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+            modelBase.start();
+        });
+    }
+
+    private void startApp(AppImpl app) throws Exception {
+        app.getQingzhouApp().start(app.getAppContext());
     }
 
     @Override
@@ -95,7 +112,7 @@ class DeployerImpl implements Deployer {
         URLClassLoader loader = buildLoader(appLibs, isSystemApp);
         app.setLoader(loader);
 
-        QingzhouApp qingzhouApp = buildQingzhouApp(loader, appLibs);
+        QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader);
         if (qingzhouApp instanceof QingzhouSystemApp) {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
@@ -104,8 +121,17 @@ class DeployerImpl implements Deployer {
         }
         app.setQingzhouApp(qingzhouApp);
 
-        Collection<String> modelClassName = FileUtil.detectAnnotatedClass(appLibs, Model.class, null);
-        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(modelClassName, loader);
+        AppInfo appInfo = new AppInfo();
+        appInfo.setName(appName);
+        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader);
+        appInfo.setModelInfos(modelInfos.values());
+        app.setAppInfo(appInfo);
+
+        AppContextImpl appContext = buildAppContext(appInfo);
+        app.setAppContext(appContext);
+
+        app.getModelBases().addAll(modelInfos.keySet());
+
         // 构建 Action 执行器
         modelInfos.forEach((modelBase, modelInfo) -> initActionMap(app, modelInfo.getCode(), modelInfo.getModelActionInfos(), modelBase));
         // 构建 Action 执行器
@@ -116,17 +142,6 @@ class DeployerImpl implements Deployer {
             PresetAction presetAction = new PresetAction(app, modelBase[0]);
             initActionMap(app, modelName, addedModelActions.toArray(new ModelActionInfo[0]), presetAction);
         });
-
-        // 初始化 Model
-        modelInfos.keySet().forEach(ModelBase::init);
-
-        AppInfo appInfo = new AppInfo();
-        appInfo.setName(appName);
-        appInfo.setModelInfos(modelInfos.values());
-        app.setAppInfo(appInfo);
-
-        AppContextImpl appContext = buildAppContext(appInfo);
-        app.setAppContext(appContext);
 
         return app;
     }
@@ -204,7 +219,9 @@ class DeployerImpl implements Deployer {
         return addedModelActions;
     }
 
-    private Map<ModelBase, ModelInfo> getModelInfos(Collection<String> modelClassName, URLClassLoader loader) throws Exception {
+    private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader) throws Exception {
+        Collection<String> modelClassName = FileUtil.detectAnnotatedClass(appLibs, Model.class, null);
+
         Map<ModelBase, ModelInfo> modelInfos = new HashMap<>();
 
         Set<String> allCodes = new HashSet<>();
@@ -318,7 +335,7 @@ class DeployerImpl implements Deployer {
         }
     }
 
-    private QingzhouApp buildQingzhouApp(URLClassLoader loader, File[] appLibs) throws Exception {
+    private QingzhouApp buildQingzhouApp(File[] appLibs, URLClassLoader loader) throws Exception {
         for (File file : appLibs) {
             if (!file.getName().endsWith(".jar")) continue;
             try (JarFile jar = new JarFile(file)) {
@@ -340,8 +357,10 @@ class DeployerImpl implements Deployer {
     }
 
     private AppContextImpl buildAppContext(AppInfo appInfo) {
+        AppContextImpl appContext = new AppContextImpl(moduleContext, appInfo);
         //        appContext.addActionFilter(new UniqueFilter(appContext));
-        return new AppContextImpl(moduleContext, appInfo);
+        appContext.setDefaultDataStore(null);// todo DefaultDataStore 这个设计不够好，设置默认的文件数据源？
+        return appContext;
     }
 
     private File[] buildLib(File appDir, boolean isSystemApp) {
