@@ -1,6 +1,8 @@
 package qingzhou.app.instance;
 
-import qingzhou.api.*;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
 import qingzhou.api.type.Editable;
 
 import java.util.Arrays;
@@ -17,8 +19,7 @@ public class StartupArgs extends ModelBase implements Editable {
     private static final String[] invalidChars = {"#", "?", "&", " ", "`", "|", "(", ")", "@", "!", "^", "*"};// for #ITAIT-4940 replenish for NC-3285
 
     @Override
-    public void init() {
-        AppContext appContext = getAppContext();
+    public void start() {
         appContext.addI18n("jre.limit.none", new String[]{"不限", "en:No Limited"});
         appContext.addI18n("validator.arg.dataInvalid", new String[]{"不允许使用空白字符或特殊字符：" + Arrays.toString(StartupArgs.invalidChars), "en:Special characters " + Arrays.toString(StartupArgs.invalidChars) + " are not allowed"});
         appContext.addI18n("validator.sysmanaged", new String[]{"请勿修改 TongWeb 系统参数，这可能影响系统的正常运行", "en:Do not modify TongWeb system parameters, this may affect the normal operation of the system"});

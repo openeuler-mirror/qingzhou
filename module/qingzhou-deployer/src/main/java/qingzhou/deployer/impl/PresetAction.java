@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 class PresetAction {
-    private final ModelBase instance;
     private final AppImpl app;
+    private final ModelBase instance;
 
     PresetAction(AppImpl app, ModelBase instance) {
         this.app = app;
@@ -23,20 +23,11 @@ class PresetAction {
         return app.getAppInfo();
     }
 
-    private AppContext getAppContext() {
-        return instance.getAppContext();
-    }
-
-    private DataStore getDataStore() {
-        return instance.getDataStore();
-    }
-
     @ModelAction(
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
-        DataStore dataStore = getDataStore();
-        Map<String, String> data = dataStore.getDataById(request.getModel(), request.getId());
+        Map<String, String> data = instance.getDataStore().getDataById(request.getModel(), request.getId());
         response.addData(data);
     }
 
@@ -74,7 +65,7 @@ class PresetAction {
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request, Response response) throws Exception {
         String modelName = request.getModel();
-        DataStore dataStore = getDataStore();
+        DataStore dataStore = instance.getDataStore();
         if (dataStore == null) {
             return;
         }
@@ -109,7 +100,7 @@ class PresetAction {
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
-        DataStore dataStore = getDataStore();
+        DataStore dataStore = instance.getDataStore();
         Map<String, String> properties = prepareParameters(request);
         dataStore.updateDataById(request.getModel(), request.getId(), properties);
     }
@@ -290,7 +281,7 @@ class PresetAction {
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
 
-        DataStore dataStore = getDataStore();
+        DataStore dataStore = instance.getDataStore();
         dataStore.deleteDataById(request.getModel(), request.getId());
     }
 
@@ -308,7 +299,7 @@ class PresetAction {
     public void add(Request request, Response response) throws Exception {
         Map<String, String> properties = prepareParameters(request);
         String id = properties.get(Listable.FIELD_NAME_ID);
-        DataStore dataStore = getDataStore();
+        DataStore dataStore = instance.getDataStore();
         dataStore.addData(request.getModel(), id, properties);
     }
 }

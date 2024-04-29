@@ -18,7 +18,6 @@ import java.util.Map;
         info = {"应用。",
                 "en:App Management."})
 public class App extends ModelBase implements Createable {
-
     @ModelField(
             list = true,
             name = {"名称", "en:Name"},
@@ -63,9 +62,9 @@ public class App extends ModelBase implements Createable {
     public String type;
 
     @Override
-    public void init() {
-        getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
-        getAppContext().addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
+    public void start() {
+        appContext.addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
+        appContext.addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
     }
 
     @ModelAction(
@@ -82,7 +81,7 @@ public class App extends ModelBase implements Createable {
         }
         if (!srcFile.isFile()) {
             response.setSuccess(false);
-            String msg = getAppContext().getI18n(request.getLang(), "app.id.not.exist");
+            String msg = this.appContext.getI18n(request.getLang(), "app.id.not.exist");
             response.setMsg(msg);
             return;
         }
@@ -95,7 +94,7 @@ public class App extends ModelBase implements Createable {
             appName = srcFileName.substring(0, index);
         } else {
             response.setSuccess(false);
-            String msg = getAppContext().getI18n(request.getLang(), "app.type.unknown");
+            String msg = this.appContext.getI18n(request.getLang(), "app.type.unknown");
             response.setMsg(msg);
             return;
         }

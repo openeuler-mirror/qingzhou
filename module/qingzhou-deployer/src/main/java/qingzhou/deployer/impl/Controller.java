@@ -1,6 +1,5 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.config.ConfigService;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.Module;
@@ -18,17 +17,13 @@ public class Controller implements ModuleActivator {
     @Service
     private Logger logger;
     @Service
-    private ConfigService configService;
-    @Service
     private CryptoService cryptoService;
 
     private Deployer deployer;
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        deployer = new DeployerImpl(configService.getConfig().getRemote(),
-                cryptoService,
-                moduleContext);
+        deployer = new DeployerImpl(cryptoService, moduleContext);
 
         moduleContext.registerService(Deployer.class, deployer);
 

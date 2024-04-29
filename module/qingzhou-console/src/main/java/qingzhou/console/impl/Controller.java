@@ -51,7 +51,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) throws Exception {
-        this.moduleContext = context;
+        moduleContext = context;
         Config config = configService.getConfig();
         console = config.getConsole();
 

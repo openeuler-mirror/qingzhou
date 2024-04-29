@@ -22,5 +22,10 @@
             <artifactId>qingzhou-deployer</artifactId>
             <version>x</version>
         </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-config</artifactId>
+            <version>x</version>
+        </dependency>
     </dependencies>
 </project>

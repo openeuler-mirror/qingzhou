@@ -8,7 +8,6 @@ import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
-import qingzhou.registry.Registry;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
 @qingzhou.api.App
 public class MasterApp extends QingzhouSystemApp {
     private static MasterApp masterApp;
-    private static Deployer DE;
 
     @Override
     public void start(AppContext appContext) {
@@ -46,8 +44,7 @@ public class MasterApp extends QingzhouSystemApp {
 
     public static Map<String, String> prepareParameters(Request request) {
         Map<String, String> properties = new HashMap<>();
-        MasterApp.getService(Registry.class).getInstanceInfo()
-        String[] fieldNames = DE.getApp(request.getApp()).getAppInfo().getModelInfo(request.getModel()).getFormFieldNames();
+        String[] fieldNames = getService(Deployer.class).getApp(request.getApp()).getAppInfo().getModelInfo(request.getModel()).getFormFieldNames();
         for (String fieldName : fieldNames) {
             String value = request.getParameter(fieldName);
             if (value != null) {

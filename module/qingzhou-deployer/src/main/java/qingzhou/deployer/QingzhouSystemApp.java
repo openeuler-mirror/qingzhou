@@ -4,7 +4,7 @@ import qingzhou.api.QingzhouApp;
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.ModuleContext;
 
-public abstract class QingzhouSystemApp extends QingzhouApp {
+public abstract class QingzhouSystemApp implements QingzhouApp {
     protected ModuleContext moduleContext;
     protected Deployer deployer;
     protected CryptoService cryptoService;

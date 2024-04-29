@@ -13,4 +13,6 @@ public interface Registry {
     Collection<String> getAllInstanceId();
 
     InstanceInfo getInstanceInfo(String id);
+
+    AppInfo getAppInfo(String appName);
 }

@@ -1,7 +1,7 @@
 package qingzhou.console.i18n;
 
 import qingzhou.api.Lang;
-import qingzhou.deployer.impl.I18nTool;
+import qingzhou.deployer.I18nTool;
 
 public class ConsoleI18n {
     private static final I18nTool i18nTool = new I18nTool();

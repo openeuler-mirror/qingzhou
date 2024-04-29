@@ -55,11 +55,6 @@ public class RequestImpl implements Request, Cloneable {
         return value[0];
     }
 
-    @Override
-    public Map<String, String[]> getParameterMap() {
-        return parameters;
-    }
-
     public void setId(String id) {
         this.id = id;
     }

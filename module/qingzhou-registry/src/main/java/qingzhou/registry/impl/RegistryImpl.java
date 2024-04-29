@@ -2,6 +2,7 @@ package qingzhou.registry.impl;
 
 import qingzhou.crypto.CryptoService;
 import qingzhou.json.Json;
+import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
@@ -44,5 +45,17 @@ public class RegistryImpl implements Registry {
     @Override
     public InstanceInfo getInstanceInfo(String id) {
         return instanceInfos.get(id);
+    }
+
+    @Override
+    public AppInfo getAppInfo(String appName) {
+        for (InstanceInfo instanceInfo : instanceInfos.values()) {
+            for (AppInfo appInfo : instanceInfo.getAppInfos()) {
+                if (appInfo.getName().equals(appName)) {
+                    return appInfo;
+                }
+            }
+        }
+        throw new IllegalArgumentException("App not found: " + appName);
     }
 }

@@ -2,6 +2,8 @@ package qingzhou.console.i18n;
 
 import qingzhou.api.Lang;
 import qingzhou.console.controller.SystemController;
+import qingzhou.deployer.I18nTool;
+import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -45,8 +47,55 @@ public class I18n {
     }
 
     public static String getString(String appName, String i18nKey) {
-        AppMetadata metadata = SystemController.getAppMetadata(appName);
-        return metadata.getI18n(I18n.getI18nLang(), i18nKey);
+        AppInfo appInfo = SystemController.getService(Registry.class).getAppInfo(appName);
+
+        int fieldInfo = i18nKey.indexOf("model.field.info.");
+        if (fieldInfo > 0) {
+            String[] split = i18nKey.substring(fieldInfo).split("\\.");
+            ModelInfo modelInfo = appInfo.getModelInfo(split[0]);
+            ModelFieldInfo modelFieldInfo = modelInfo.getModelFieldInfo(split[1]);
+            return getString(modelFieldInfo.getInfo());
+        }
+
+        int field = i18nKey.indexOf("model.field.");
+        if (field > 0) {
+            String[] split = i18nKey.substring(field).split("\\.");
+            ModelInfo modelInfo = appInfo.getModelInfo(split[0]);
+            ModelFieldInfo modelFieldInfo = modelInfo.getModelFieldInfo(split[1]);
+            return getString(modelFieldInfo.getName());
+        }
+
+        int actionInfo = i18nKey.indexOf("model.action.info.");
+        if (actionInfo > 0) {
+            String[] split = i18nKey.substring(actionInfo).split("\\.");
+            ModelInfo modelInfo = appInfo.getModelInfo(split[0]);
+            ModelActionInfo modelActionInfo = modelInfo.getModelActionInfo(split[1]);
+            return getString(modelActionInfo.getInfo());
+        }
+
+        int action = i18nKey.indexOf("model.action.");
+        if (action > 0) {
+            String[] split = i18nKey.substring(action).split("\\.");
+            ModelInfo modelInfo = appInfo.getModelInfo(split[0]);
+            ModelActionInfo modelActionInfo = modelInfo.getModelActionInfo(split[1]);
+            return getString(modelActionInfo.getName());
+        }
+
+        int info = i18nKey.indexOf("model.info.");
+        if (info > 0) {
+            String[] split = i18nKey.substring(info).split("\\.");
+            ModelInfo modelInfo = appInfo.getModelInfo(split[0]);
+            return getString(modelInfo.getInfo());
+        }
+
+        int model = i18nKey.indexOf("model.");
+        if (model > 0) {
+            String[] split = i18nKey.substring(model).split("\\.");
+            ModelInfo modelInfo = appInfo.getModelInfo(split[0]);
+            return getString(modelInfo.getName());
+        }
+
+        throw new IllegalArgumentException("appName: " + appName + ", i18nKey: " + i18nKey);
     }
 
     public static String getString(String[] i18n) {

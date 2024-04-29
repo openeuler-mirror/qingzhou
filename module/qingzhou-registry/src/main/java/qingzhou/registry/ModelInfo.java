@@ -18,6 +18,10 @@ public class ModelInfo {
     private ModelActionInfo[] modelActionInfos;
     private GroupInfo[] groupInfos;
 
+    public ModelActionInfo getModelActionInfo(String actionName) {
+        return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().get();
+    }
+
     public String[] getActionNames() {
         return Arrays.stream(modelActionInfos).map(ModelActionInfo::getCode).toArray(String[]::new);
     }

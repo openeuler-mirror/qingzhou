@@ -6,6 +6,7 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Monitorable;
 
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.text.DecimalFormat;
@@ -89,8 +90,8 @@ public class OS extends ModelBase implements Monitorable {
         map.put("TotalSwapSpaceSize", convertGBytes(TotalSwapSpaceSize));
         map.put("FreeSwapSpaceSize", convertGBytes(FreeSwapSpaceSize));
         map.put("CommittedVirtualMemorySize", convertGBytes(CommittedVirtualMemorySize));
-        map.put("fileTotalSpace", convertGBytes(getAppContext().getTemp().getTotalSpace()));
-        map.put("fileFreeSpace", convertGBytes(getAppContext().getTemp().getFreeSpace()));
+        map.put("fileTotalSpace", convertGBytes(new File(".").getTotalSpace()));
+        map.put("fileFreeSpace", convertGBytes(new File(".").getFreeSpace()));
 
         double v;
         if (mxBean.getSystemLoadAverage() < 0) {
