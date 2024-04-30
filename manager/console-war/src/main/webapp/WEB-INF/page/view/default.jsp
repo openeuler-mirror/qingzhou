@@ -2,7 +2,7 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-    if (qzRequest == null || qzResponse == null || modelManager == null) {
+    if (qzRequest == null || qzResponse == null || modelInfo == null) {
         return; // for 静态源码漏洞扫描
     }
     final boolean hasId = PageBackendService.hasIDField(qzRequest);
@@ -76,7 +76,7 @@
     </div>
 
     <%
-        if (modelManager.getModelAction(qzRequest.getModel(), Listable.ACTION_NAME_LIST) != null) {
+        if (modelInfo.getModelActionInfo(Listable.ACTION_NAME_LIST) != null) {
     %>
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
         <div class="form-btn">

@@ -1,15 +1,16 @@
+<%@ page import="qingzhou.registry.ModelFieldInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-    if (qzRequest == null || qzResponse == null || modelManager == null) {
+    if (qzRequest == null || qzResponse == null || modelInfo == null) {
         return; // for 静态源码漏洞扫描
     }
 
     boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, qzRequest.getAction());
     String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
     String idFieldName = Listable.FIELD_NAME_ID;
-    ModelFieldData idField = modelManager.getModelField(qzRequest.getModel(), idFieldName);
+    ModelFieldInfo idField = modelInfo.getModelFieldInfo(idFieldName);
     final boolean hasId = idField != null;
     List<String> passwordFields = new ArrayList<>();
     String id = qzRequest.getId();
@@ -33,7 +34,7 @@
         List<Map<String, String>> models = qzResponse.getDataList();
         if (!models.isEmpty()) {
             model = models.get(0);
-            Map<String, Map<String, ModelFieldData>> fieldMapWithGroup = PageBackendService.getGroupedModelFieldMap(qzRequest);
+            Map<String, Map<String, ModelFieldInfo>> fieldMapWithGroup = PageBackendService.getGroupedModelFieldMap(qzRequest);
             Set<String> groups = fieldMapWithGroup.keySet();
             long suffixId = System.currentTimeMillis();
             if (groups.size() > 1) {
@@ -43,11 +44,13 @@
                 boolean isFirst = true;
                 for (String group : groups) {
                     group = "".equals(group) ? "OTHERS" : group;
-            %>
+                    String finalGroup = group;%>
             <li <%=isFirst ? "class='active'" : ""%>>
                 <a data-tab href="#group-<%=group%>-<%=suffixId%>"
                    tabGroup="<%=group%>">
-                    <%=I18n.getString(modelManager.getGroup(qzRequest.getModel(), group).i18n())%>
+                    <%=I18n.getString((Arrays.stream(modelInfo.getGroupInfos())
+                            .filter(groupInfo -> groupInfo.getName().equals(finalGroup))
+                            .findFirst().get().getI18n()))%>
                 </a>
             </li>
             <%
@@ -66,28 +69,28 @@
                  tabGroup="<%=("".equals(group) ? "OTHERS":group)%>">
                 <%
                     isFirstGroup = false;
-                    Map<String, ModelFieldData> groupFieldMap = fieldMapWithGroup.get(group);
+                    Map<String, ModelFieldInfo> groupFieldMap = fieldMapWithGroup.get(group);
                     if (groupFieldMap == null) {
                         continue;
                     }
-                    for (Map.Entry<String, ModelFieldData> e : groupFieldMap.entrySet()) {
-                        ModelFieldData modelField = e.getValue();
-                        if (modelField.disableOnCreate() && !isEdit) {
+                    for (Map.Entry<String, ModelFieldInfo> e : groupFieldMap.entrySet()) {
+                        ModelFieldInfo modelField = e.getValue();
+                        /*if (modelField.disableOnCreate() && !isEdit) {
                             continue;
                         }
                         if (!modelField.showToEdit() && isEdit) {
                             continue;
-                        }
+                        }*/
 
                         String fieldName = e.getKey();
 
-                        if (modelField.clientEncrypt()) {
+                       /* if (modelField.clientEncrypt()) {
                             passwordFields.add(fieldName);
-                        }
+                        }*/
 
                         String readonly = "";
-                        boolean required;
-                        if (modelField.disableOnEdit() && isEdit) {
+                        boolean required = false;
+                        if (/*modelField.disableOnEdit() &&*/ isEdit) {
                             readonly = "readonly";
                         }
                         if (idFieldName.equals(fieldName)) {
@@ -102,10 +105,10 @@
                         if (fieldName.equals(idFieldName)) {
                             required = true;
                         } else {
-                            required = modelField.required();
+                            /*required = modelField.required();*/
                         }
 
-                        String valueFrom = modelField.valueFrom();
+                        String valueFrom = /*modelField.valueFrom()*/"";
                         if (!"".equals(valueFrom)) {
                             valueFrom = "valueFrom='" + valueFrom.trim() + "'";
                         }
@@ -135,7 +138,7 @@
                     <div class="col-sm-5">
                         <%
                             if (!readonly.isEmpty()) {
-                                if (FieldType.textarea.equals(modelField.type())) {
+                                if (FieldType.textarea.name().equals(modelField.getType())) {
                         %>
                         <textarea rows="3" disabled="disabled" name="<%=fieldName%>" <%=valueFrom%> class="form-control"
                                   readonly="readonly"><%=fieldValue%></textarea>
@@ -147,7 +150,8 @@
                         <%
                             }
                         } else {
-                            switch (modelField.type()) {
+                                FieldType fieldType = FieldType.valueOf(modelField.getType());
+                            switch (fieldType) {
                                 case text:
                         %>
                         <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%>
@@ -156,8 +160,8 @@
                                 break;
                             case number:
                         %>
-                        <input type="number" min="<%=modelField.min()%>"
-                               max="<%=(modelField.isPort()?"65535":modelField.max())%>"
+                        <input type="number" <%--min="<%=modelField.min()%>"
+                               max="<%=(modelField.isPort()?"65535":modelField.max())%>"--%>
                                name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%> class="form-control">
                         <%
                                 break;
@@ -241,7 +245,7 @@
                         <%
                                         break;
                                     default:
-                                        throw new IllegalStateException(modelField.type().name() + ".jsp not found.");
+                                        throw new IllegalStateException(modelField.getType() + ".jsp not found.");
                                 }
                             }
                         %>
