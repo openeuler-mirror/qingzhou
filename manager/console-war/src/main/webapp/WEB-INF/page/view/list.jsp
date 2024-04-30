@@ -1,3 +1,5 @@
+<%@ page import="qingzhou.registry.ModelFieldInfo" %>
+<%@ page import="qingzhou.registry.ModelActionInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -8,19 +10,19 @@
     }
 
     final boolean hasId = PageBackendService.hasIDField(qzRequest);
-    LinkedHashMap<String, ModelFieldData> fieldInfos = new LinkedHashMap<>();
-    String[] fieldNames = modelManager.getFieldNames(qzRequest.getModel());
+    LinkedHashMap<String, ModelFieldInfo> fieldInfos = new LinkedHashMap<>();
+    String[] fieldNames = modelInfo.getFormFieldList();
     for (String fieldName : fieldNames) {
-        fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModel(), fieldName));
+        fieldInfos.put(fieldName, modelInfo.getModelFieldInfo(fieldName));
     }
     List<Integer> indexToShow = new ArrayList<>();
     int num = -1;
-    for (Map.Entry<String, ModelFieldData> e : fieldInfos.entrySet()) {
+    for (Map.Entry<String, ModelFieldInfo> e : fieldInfos.entrySet()) {
         num++;
-        ModelFieldData modelField = e.getValue();
-        if (!modelField.showToList()) {
+        ModelFieldInfo modelField = e.getValue();
+        /*if (!modelField.showToList()) {
             continue;
-        }
+        }*/
         indexToShow.add(num);
     }
 
@@ -49,11 +51,11 @@
                 <%
                     // 用于判断是否需要操作列
                     boolean needOperationColumn = PageBackendService.needOperationColumn(qzRequest);
-                    ModelActionData[] opsActions = PageBackendService.listCommonOps(qzRequest, qzResponse);
+                    ModelActionInfo[] opsActions = PageBackendService.listCommonOps(qzRequest, qzResponse);
                     if (needOperationColumn) {
-                        String modelIcon = modelManager.getModel(qzRequest.getModel()).icon();
-                        for (ModelActionData action : opsActions) {
-                            String actionKey = action.name();
+                        String modelIcon = modelInfo.getIcon();
+                        for (ModelActionInfo action : opsActions) {
+                            String actionKey = action.getCode();
                             String titleStr = I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + actionKey);
                             if (titleStr != null) {
                                 titleStr = "data-tip='" + titleStr + "'";
@@ -78,7 +80,7 @@
                             }
                         %>
                 >
-                    <i class="icon icon-<%=action.icon()%>"></i>
+                    <i class="icon icon-<%=action.getIcon()%>"></i>
                     <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey)%>
                 </a>
                 <%
@@ -128,7 +130,7 @@
                     int listOrder = (pageNum - 1) * pageSize;
                     for (int idx = 0; idx < modelDataList.size(); idx++) {
                         Map<String, String> modelBase = modelDataList.get(idx);
-                        String modelIcon = modelManager.getModel(qzRequest.getModel()).icon();
+                        String modelIcon = modelInfo.getIcon();
 
                         String originUnEncodedId = modelBase.get(Listable.FIELD_NAME_ID);
                         String encodedId = PageBackendService.encodeId(originUnEncodedId);
@@ -149,14 +151,14 @@
                 <td class="sequence"><%=++listOrder%>
                 </td>
                 <%
-                    ModelActionData targetAction = null;
+                    ModelActionInfo targetAction = null;
                     if (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Editable.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
                             && AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Editable.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
-                        targetAction = modelManager.getModelAction(qzRequest.getModel(), Editable.ACTION_NAME_EDIT);
+                        targetAction = modelInfo.getModelActionInfo(Editable.ACTION_NAME_EDIT);
                     }
                     if (targetAction == null) {
                         if (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Showable.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
-                            targetAction = modelManager.getModelAction(qzRequest.getModel(), Showable.ACTION_NAME_SHOW);
+                            targetAction = modelInfo.getModelActionInfo(Showable.ACTION_NAME_SHOW);
                         }
                     }
                     boolean isFirst = true;
@@ -169,10 +171,10 @@
                             isFirst = false;
                 %>
                 <td>
-                    <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.name() + "/" + encodedId)%>'
+                    <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.getName() + "/" + encodedId)%>'
                        class="dataid tooltips"
-                       record-action-id="<%=targetAction.name()%>"
-                       data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + targetAction.name())%>'
+                       record-action-id="<%=targetAction.getIcon()%>"
+                       data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + targetAction.getName())%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
                         <%=value%>
@@ -181,7 +183,7 @@
                 <%
                 } else {
                     String fieldName = PageBackendService.getFieldName(qzRequest, i);
-                    String linkField = modelManager.getModelField(qzRequest.getModel(), fieldName).linkModel();
+                    String linkField = /*modelInfo.getModelFieldInfo(fieldName).linkModel()*/null;
                     if (linkField != null && !linkField.isEmpty()) {
                         String[] split = linkField.split("\\.");
                         String idFieldValue = modelBase.get(Listable.FIELD_NAME_ID);
@@ -211,14 +213,14 @@
                     <%
                         String[] actions = PageBackendService.getActionNamesShowToList(qzRequest);
                         for (String actionName : actions) {
-                            ModelActionData action = modelManager.getModelAction(qzRequest.getModel(), actionName);
+                            ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                             if (action == null) {
                                 continue;
                             }
                             if (PageBackendService.isActionEffective(qzRequest, modelBase, action) != null) {
                                 continue;
                             }
-                            String actionKey = action.name();
+                            String actionKey = action.getCode();
                             if (actionKey.equals(Editable.ACTION_NAME_EDIT)) {
                                 continue;
                             }
@@ -255,7 +257,7 @@
                                 }
                             %>
                     >
-                        <i class="icon icon-<%=action.icon()%>"></i>
+                        <i class="icon icon-<%=action.getIcon()%>"></i>
                         <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey)%>
                     </a>
                     <%

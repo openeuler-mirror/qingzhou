@@ -1,9 +1,10 @@
+<%@ page import="qingzhou.registry.ModelFieldInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%
     boolean hasId = PageBackendService.hasIDField(qzRequest);
     boolean chartEnabled = !qzResponse.getDataList().isEmpty();
-    boolean isMonitor = Monitorable.ACTION_NAME_MONITOR.equals(qzRequest.getActionName());
+    boolean isMonitor = Monitorable.ACTION_NAME_MONITOR.equals(qzRequest.getAction());
 
     String encodedId = PageBackendService.encodeId(qzRequest.getId());
     String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, Monitorable.ACTION_NAME_MONITOR + (hasId ? "/" + encodedId : ""));
@@ -34,14 +35,14 @@
             }
             List<String> infoFieldMap = new ArrayList<>();
             if (isMonitor) {
-                for (Map.Entry<String, ModelFieldData> entry : modelManager.getMonitorFieldMap(qzRequest.getModelName()).entrySet()) {
-                    ModelFieldData monitoringField = entry.getValue();
+                for (Map.Entry<String, ModelFieldInfo> entry : modelInfo.getMonitorFieldMap(qzRequest.getModel()).entrySet()) {
+                    ModelFieldInfo monitoringField = entry.getValue();
                     if (!monitoringField.supportGraphicalDynamic() && !monitoringField.supportGraphical()) {
                         infoFieldMap.add(entry.getKey());
                     }
                 }
             } else {
-                for (String field : modelManager.getFieldNames(qzRequest.getModelName())) {
+                for (String field : modelInfo.getFieldNames(qzRequest.getModel())) {
                     infoFieldMap.add(field);
                 }
             }
@@ -66,22 +67,22 @@
                                 continue;
                             }
 
-                            String msg = I18n.getString(menuAppName, "model.field.info." + qzRequest.getModelName() + "." + fieldName);
+                            String msg = I18n.getString(menuAppName, "model.field.info." + qzRequest.getModel() + "." + fieldName);
                             String info = "";
                             if (msg != null && !msg.startsWith("model.field.")) {
                                 info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-question-sign' data-tip-arrow=\"right\"></i></span>";
                             }
-                            ModelFieldData modelField = modelManager.getModelField(qzRequest.getModelName(), fieldName);
+                            ModelFieldInfo modelField = modelInfo.getModelField(qzRequest.getModel(), fieldName);
                             String fieldValue = allData.get(fieldName);
                             fieldValue = fieldValue != null ? fieldValue : "";
-                            if (modelField == null || modelField.type() != FieldType.markdown) {
+                            if (modelField == null || modelField.getType().equals(FieldType.markdown.name())) {
                                 fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
                             }
                     %>
                     <tr row-item="<%=fieldName%>">
                         <td class="home-field-info" field="<%=fieldName%>">
                             <label for="<%=fieldName%>"><%=info%>&nbsp;
-                                <%=I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + fieldName)%>
+                                <%=I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + fieldName)%>
                             </label>
                         </td>
                         <td style="word-break: break-all" field-val="<%=fieldValue%>">
@@ -93,7 +94,7 @@
                             </a>
                             <%
                                 } else {
-                                    if (modelField.type() == FieldType.markdown) {
+                                    if (FieldType.markdown.name().equals(modelField.getType())) {
                                         out.print("<div class=\"markedview\"></div><textarea name=\"" + fieldName
                                                 + "\" class=\"markedviewText\" rows=\"3\">" + fieldValue + "</textarea>");
                                     } else {
@@ -122,7 +123,7 @@
                 keysBuilder.append("{");
                 for (Map.Entry<String, String> e : models.get(0).entrySet()) {
                     String key = e.getKey();
-                    String i18n = I18n.getString(menuAppName, "model.field." + qzRequest.getModelName() + "." + key);
+                    String i18n = I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + key);
                     keysBuilder.append("\"").append(key).append("\":\"").append(i18n).append("\",");
                 }
                 if (keysBuilder.indexOf(",") > 0) {

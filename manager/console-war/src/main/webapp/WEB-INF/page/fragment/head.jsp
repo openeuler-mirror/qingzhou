@@ -20,7 +20,7 @@
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     ResponseImpl qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
     String menuAppName = PageBackendService.getAppName(qzRequest);
-    ModelInfo modelManager = PageBackendService.getModelInfo(qzRequest);
+    ModelInfo modelInfo = PageBackendService.getModelInfo(qzRequest);
 %>
 
 <script type="text/javascript">

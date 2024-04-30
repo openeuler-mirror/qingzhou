@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.registry.ModelFieldInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -7,19 +8,19 @@
         return; // for 静态源码漏洞扫描
     }
 
-    LinkedHashMap<String, ModelFieldData> fieldInfos = new LinkedHashMap<>();
-    String[] fieldNames = modelManager.getFieldNames(qzRequest.getModel());
+    LinkedHashMap<String, ModelFieldInfo> fieldInfos = new LinkedHashMap<>();
+    String[] fieldNames = modelInfo.getFormFieldNames();
     for (String fieldName : fieldNames) {
-        fieldInfos.put(fieldName, modelManager.getModelField(qzRequest.getModel(), fieldName));
+        fieldInfos.put(fieldName, modelInfo.getModelFieldInfo(fieldName));
     }
     int num = -1;
     List<Integer> indexToShow = new ArrayList<>();
-    for (Map.Entry<String, ModelFieldData> e : fieldInfos.entrySet()) {
+    for (Map.Entry<String, ModelFieldInfo> e : fieldInfos.entrySet()) {
         num++;
-        ModelFieldData modelField = e.getValue();
-        if (!modelField.showToList()) {
+        ModelFieldInfo modelField = e.getValue();
+        /*if (!modelField.showToList()) {
             continue;
-        }
+        }*/
         indexToShow.add(num);
     }
 
