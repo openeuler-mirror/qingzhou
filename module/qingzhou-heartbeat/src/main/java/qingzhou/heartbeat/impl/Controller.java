@@ -44,7 +44,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) throws IOException {
-        remote = configService.getConfig().getRemote();
+        remote = configService.getModule().getRemote();
         if (!remote.isEnabled()) return;
 
         timer = new Timer();

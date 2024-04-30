@@ -6,11 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 定义了一个名为{@code ModelAction}的注解，用于描述模型层面的操作行为。此注解应用于方法级别，
- * 并在运行时可被获取和解析，提供了对模型操作的各种元数据配置能力。
- *
- * @see ElementType#METHOD 可将此注解应用于方法元素上
- * @see RetentionPolicy#RUNTIME 运行时保留策略，使得注解信息可在运行时通过反射API读取
+ * 定义模型的操作。
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -48,9 +44,7 @@ public @interface ModelAction {
     String forward() default "";
 
     /**
-     * 标识该操作是否支持批量处理，默认为 {@code false}。
-     *
-     * @return 是否支持批量操作
+     * 标识该操作是否支持批量处理
      */
     boolean batch() default false;
 

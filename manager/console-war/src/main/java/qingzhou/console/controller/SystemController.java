@@ -8,8 +8,8 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.config.ConfigService;
 import qingzhou.config.Console;
+import qingzhou.console.ContextHelper;
 import qingzhou.console.i18n.SetI18n;
-import qingzhou.console.impl.Controller;
 import qingzhou.console.jmx.JMXServerHolder;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
@@ -37,8 +37,11 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     private static String publicKey;
     private static String privateKey;
     public static KeyPairCipher keyPairCipher;
+    private static ContextHelper contextHelper;
 
     static {
+        contextHelper = ContextHelper.GetInstance.get();
+
         CryptoService cryptoService = getService(CryptoService.class);
         publicKey = getConsole().getSecurity().getPublicKey();
         privateKey = getConsole().getSecurity().getPrivateKey();
@@ -55,16 +58,16 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     public static <T> T getService(Class<T> type) {
-        return Controller.getService(type);
+        return contextHelper.getService(type);
     }
 
     public static ModuleContext getModuleContext() {
-        return Controller.moduleContext;
+        return contextHelper.getModuleContext();
     }
 
     public static Console getConsole() {
         try {
-            return getService(ConfigService.class).getConfig().getConsole();
+            return getService(ConfigService.class).getModule().getConsole();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

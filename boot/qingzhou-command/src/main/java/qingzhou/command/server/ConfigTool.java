@@ -71,7 +71,7 @@ class ConfigTool {
 
     private Jvm parseFileConfig() throws Exception {
         StringBuilder fileContent = new StringBuilder();
-        try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "jvm.json").toPath())) {
+        try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             for (String line; (line = reader.readLine()) != null; ) {
                 fileContent.append(line);
@@ -83,9 +83,9 @@ class ConfigTool {
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonURL})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
-            Method fromJson = loadedClass.getMethod("fromJson", String.class, Class.class);
+            Method fromJson = loadedClass.getMethod("fromJsonMember", String.class, String.class, Class.class);
 
-            return (Jvm) fromJson.invoke(instance, allContent, Jvm.class);
+            return (Jvm) fromJson.invoke(instance, allContent, "jvm", Jvm.class);
         }
     }
 }

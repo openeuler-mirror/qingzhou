@@ -1,6 +1,6 @@
 package qingzhou.config;
 
-public class Config {
+public class Module {
     private Console console;
     private Remote remote;
 

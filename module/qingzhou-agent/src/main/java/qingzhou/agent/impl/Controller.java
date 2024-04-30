@@ -47,7 +47,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        Remote remote = configService.getConfig().getRemote();
+        Remote remote = configService.getModule().getRemote();
         agent = new AgentImpl(remote, cryptoService);
         moduleContext.registerService(Agent.class, agent);
 

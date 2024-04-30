@@ -40,7 +40,8 @@ public class Main {
             moduleInfo.getModuleActivators().forEach(ModuleActivator::stop);
             try {
                 FileUtil.forceDelete(moduleInfo.getModuleContext().getTemp());
-            } catch (IOException ignored) {
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         })));
 
@@ -114,7 +115,7 @@ public class Main {
             }
         }
         if (serviceObj == null) {
-            throw new IllegalStateException("Service not found");
+            throw new IllegalStateException("Service not found: " + serviceType);
         }
         return serviceObj;
     }

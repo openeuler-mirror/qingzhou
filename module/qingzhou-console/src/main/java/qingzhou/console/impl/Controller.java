@@ -1,9 +1,10 @@
 package qingzhou.console.impl;
 
-import qingzhou.config.Config;
 import qingzhou.config.ConfigService;
 import qingzhou.config.Console;
-import qingzhou.engine.Module;
+import qingzhou.config.Module;
+import qingzhou.console.ContextHelper;
+import qingzhou.crypto.CryptoService;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
@@ -20,40 +21,32 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Module
+@qingzhou.engine.Module
 public class Controller implements ModuleActivator {
-    public static ModuleContext moduleContext;
-    private static Controller instance;
-
-    public static <T> T getService(Class<T> type) {
-        List<Field> collect = Arrays.stream(Controller.class.getDeclaredFields()).filter(field -> field.getType() == type).collect(Collectors.toList());
-        try {
-            return (T) collect.get(0).get(instance);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Controller() {
-        instance = this;
-    }
-
     @Service
     private Logger logger;
     @Service
     private ConfigService configService;
     @Service
     private ServletService servletService;
+    @Service
+    private CryptoService cryptoService; // war 里需要
 
     private Console console;
     private ProcessSequence sequence;
     private ServletContainer servletContainer;
+    public ModuleContext moduleContext;
+    private Controller instance;
+
+    public Controller() {
+        instance = this;
+    }
 
     @Override
     public void start(ModuleContext context) throws Exception {
         moduleContext = context;
-        Config config = configService.getConfig();
-        console = config.getConsole();
+        Module module = configService.getModule();
+        console = module.getConsole();
 
         if (!console.isEnabled()) return;
 
@@ -90,6 +83,33 @@ public class Controller implements ModuleActivator {
 
         @Override
         public void exec() {
+            try {
+                ContextHelper.GetInstance.set(new ContextHelper() {
+                    @Override
+                    public <T> T getService(Class<T> type) {
+                        List<Field> collect = Arrays.stream(Controller.class.getDeclaredFields()).filter(field -> field.getType() == type).collect(Collectors.toList());
+                        try {
+                            Field field = collect.get(0);
+                            field.setAccessible(true);
+                            return (T) field.get(Controller.this.instance);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    @Override
+                    public ModuleContext getModuleContext() {
+                        return Controller.this.moduleContext;
+                    }
+                });
+
+                exec0();
+            } finally {
+                ContextHelper.GetInstance.remove();
+            }
+        }
+
+        private void exec0() {
             File consoleApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "console");
             String docBase = consoleApp.getAbsolutePath();
             contextPath = console.getContextRoot();

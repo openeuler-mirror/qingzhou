@@ -27,7 +27,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="${project.basedir}/../../../README.md"
+                                <copy file="${project.basedir}/../../README.md"
                                       tofile="${project.build.directory}/${project.build.finalName}/static/readme/README.md"
                                       overwrite="true"/>
                                 <!--<copy todir="${project.build.directory}/${project.build.finalName}/static/readme/"-->
@@ -38,6 +38,16 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <packagingExcludes>WEB-INF/lib/</packagingExcludes>
+                    <archive>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
+                </configuration>
             </plugin>
         </plugins>
     </build>

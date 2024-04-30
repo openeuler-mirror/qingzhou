@@ -8,8 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 模型的元数据注解。
- * 该注解用于标注在类上，提供模型的基本信息和配置选项，
+ * 模型的元数据注解，用于定义一个模型，提供模型的基本信息和配置选项，
  * 这些信息主要用于UI展示、菜单构建以及模型的初始化等场景。
  */
 @Target(ElementType.TYPE)
