@@ -1,87 +1,76 @@
 package qingzhou.console.remote;
 
+import qingzhou.api.Request;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.json.Json;
 
 import javax.net.ssl.*;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
 public class RemoteClient {
     private static SSLSocketFactory ssf;
     public static final X509TrustManager TRUST_ALL_MANAGER = new X509TrustManagerInternal();
 
-    public static ResponseImpl sendReq(String url, Object object, String remoteKey) throws Exception {
+    public static ResponseImpl sendReq(String url, Request request, String remoteKey) throws Exception {
+        try {
+            return sendReq0(url, request, remoteKey);
+        } catch (Exception e) {
+            if (e instanceof SSLException
+                    && e.getMessage() != null
+                    && e.getMessage().contains("Unrecognized SSL message")) {
+                url = "http" + url.substring(5);
+                return sendReq0(url, request, remoteKey);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private static ResponseImpl sendReq0(String url, Request request, String remoteKey) throws Exception {
         HttpURLConnection connection = null;
         try {
-            connection = buildConnection(url);
-            setConnectionProperties(connection);
+            Json jsonService = SystemController.getService(Json.class);
+            String json = jsonService.toJson(request);
 
             KeyCipher cipher;
             try {
-                CryptoService cryptoService = SystemController.getCryptoService();
-                String localKey = SystemController.getConfig().getKey(Config.localKeyName);
-                cipher = cryptoService.getKeyCipher(cryptoService.getKeyCipher(localKey).decrypt(remoteKey));
+                CryptoService cryptoService = SystemController.getService(CryptoService.class);
+                cipher = cryptoService.getKeyCipher(remoteKey);
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }
+            byte[] encrypt = cipher.encrypt(json.getBytes(StandardCharsets.UTF_8));
 
-            Json json = SystemController.getSerializer();
-            byte[] serialize = json.serialize(object);
-            byte[] encrypt = cipher.encrypt(serialize);
-            OutputStream outStream = connection.getOutputStream();
-            outStream.write(encrypt);
-            outStream.flush();
-            outStream.close();
+            connection = buildConnection(url);
+            try (OutputStream outStream = connection.getOutputStream()) {
+                outStream.write(encrypt);
+                outStream.flush();
+            }
 
-            if (connection.getResponseCode() == HttpURLConnection.HTTP_MOVED_TEMP) {
-                String location = connection.getHeaderField("Location");
-                if (StringUtil.isBlank(location)) {
-                    URL tempUrl = connection.getURL();
-                    throw new RuntimeException(String.format("Remote server [%s:%s] request error: %s. Please check the logs for details", tempUrl.getHost(), tempUrl.getPort(), "The redirect address is wrong."));
-                }
-                return sendReq(location, object, remoteKey);
-            } else {
-                try (InputStream inputStream = connection.getInputStream()) {
-                    ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-                    int length = objectInputStream.readInt();
-                    byte[] deserializeBytes = new byte[length];
-                    int read = 0;
-                    while (length > read) {
-                        int r = objectInputStream.read(deserializeBytes, read, length - read);
-                        read += r;
-                    }
-                    // 再读取一次返回 -1，表示当前块已结束，close时才能将 sun.net.www.protocol.https.HttpsClient放入缓存中，实现复用
-                    int last = objectInputStream.read();
-                    if (last != -1) {
-                        SystemController.getLogger().warn("The data parsing is abnormal...");
-                    }
-                    if (read == deserializeBytes.length) {
-                        byte[] decrypt = cipher.decrypt(deserializeBytes);
-                        return json.deserialize(decrypt, ResponseImpl.class);
-                    } else {
-                        throw new RuntimeException("The expected file size was not reached");
-                    }
-                }
+            try (InputStream inputStream = connection.getInputStream()) {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream(inputStream.available());
+                FileUtil.copyStream(inputStream, bos);
+                byte[] decryptedData = cipher.decrypt(bos.toByteArray());
+                return jsonService.fromJson(new String(decryptedData, StandardCharsets.UTF_8), ResponseImpl.class);
             }
         } catch (Exception e) {
-            if (e instanceof SSLException && e.getMessage() != null && e.getMessage().contains("Unrecognized SSL message")) {
-                url = "http" + url.substring(5);
-                return sendReq(url, object, remoteKey);
-            }
             if (e instanceof RuntimeException || e instanceof FileNotFoundException) {
                 throw e;
             } else {
-                URL tempUrl = new URL(url);
-                throw new RuntimeException(String.format("Remote server [%s:%s] request error: %s. Please check the logs for details", tempUrl.getHost(), tempUrl.getPort(), e.getMessage()));
+                throw new RuntimeException(String.format("Remote server [%s] request error: %s.",
+                        url,
+                        e.getMessage()));
             }
         } finally {
             if (connection != null) {
@@ -106,6 +95,8 @@ public class RemoteClient {
         } else {
             conn = (HttpURLConnection) http.openConnection();
         }
+
+        setConnectionProperties(conn);
 
         return conn;
     }

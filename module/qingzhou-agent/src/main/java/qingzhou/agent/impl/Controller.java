@@ -62,20 +62,19 @@ public class Controller implements ModuleActivator {
         server.start(remoteHost, remote.getPort(), 200);
         HttpContext context = server.createContext(path);
         context.setHandler(exchange -> {
-            InputStream inputStream = exchange.getRequestBody();
             try {
                 byte[] result;
-                try {
+                try (InputStream inputStream = exchange.getRequestBody()) {
                     result = process(inputStream);
-                    inputStream.close();
                     exchange.setStatus(200);
                 } catch (Exception e) {
                     result = convertStackTrace(e.getStackTrace()).getBytes(StandardCharsets.UTF_8);
                     exchange.setStatus(500);
                 }
-                OutputStream outputStream = exchange.getResponseBody();
-                outputStream.write(result);
-                outputStream.close();
+
+                try (OutputStream outputStream = exchange.getResponseBody()) {
+                    outputStream.write(result);
+                }
             } finally {
                 exchange.close();
             }
@@ -114,16 +113,18 @@ public class Controller implements ModuleActivator {
         KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
         byte[] decryptedData = keyCipher.decrypt(requestData);
 
-        // 3. 处理请求
+        // 3. 得到请求对象
         RequestImpl request = json.fromJson(new String(decryptedData, StandardCharsets.UTF_8), RequestImpl.class);
+
+        // 4. 处理
         Response response = new ResponseImpl();
         App app = deployer.getApp(request.getApp());
         app.invoke(request, response);
 
-        // 4. 响应数据
+        // 5. 响应数据
         byte[] responseData = json.toJson(response).getBytes(StandardCharsets.UTF_8);
 
-        // 5. 数据加密，返回到客户端
+        // 6. 数据加密，返回到客户端
         return keyCipher.encrypt(responseData);
     }
 }

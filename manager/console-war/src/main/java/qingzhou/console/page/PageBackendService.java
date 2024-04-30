@@ -9,7 +9,6 @@ import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
-import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
@@ -17,18 +16,13 @@ import qingzhou.console.i18n.I18n;
 import qingzhou.console.util.Base32Util;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
+import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -43,24 +37,27 @@ public class PageBackendService {
     private PageBackendService() {
     }
 
-    public static String[] getActionNamesShowToList(Request request) {
-        ModelManager modelManager = getModelManager(request);
-        if (modelManager == null) {
-            return new String[0];
-        }
-        String modelName = request.getModel();
-        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelActionData::showToList).sorted(Comparator.comparingInt(ModelActionData::orderOnList)).map(ModelActionData::name).toArray(String[]::new);
+    public static AppInfo getAppInfo(String appName) {
+        return SystemController.getService(Registry.class).getAppInfo(appName);
     }
 
-    public static String[] getActionNamesShowToListHead(Request request) {
-        ModelManager modelManager = getModelManager(request);
-        String modelName = request.getModel();
-        return Arrays.stream(modelManager.getActionNames(modelName)).map(s -> modelManager.getModelAction(modelName, s)).filter(Objects::nonNull).filter(ModelActionData::showToListHead).sorted(Comparator.comparingInt(ModelActionData::orderOnList)).map(ModelActionData::name).toArray(String[]::new);
+    public static ModelInfo getModelInfo(Request request) {
+        return getModelInfo(request.getApp(), request.getModel());
+    }
+
+    public static ModelInfo getModelInfo(String appName, String model) {
+        AppInfo appInfo = getAppInfo(appName);
+        return appInfo.getModelInfo(model);
+    }
+
+    public static String[] getActionNamesShowToList(Request request) {
+        ModelInfo modelInfo = getModelInfo(request);
+        return Arrays.stream(modelInfo.getModelActionInfos()).filter(modelActionInfo -> modelActionInfo.getOrder() > 0).sorted(Comparator.comparingInt(ModelActionInfo::getOrder)).map(ModelActionInfo::getCode).toArray(String[]::new);
     }
 
     public static String getFieldName(Request request, int fieldIndex) {
-        ModelManager modelManager = getModelManager(request);
-        return modelManager.getFieldNames(request.getModel())[fieldIndex];
+        ModelInfo modelInfo = getModelInfo(request);
+        return modelInfo.getFormFieldList()[fieldIndex];
     }
 
     public static String getAppName(Request request) {
@@ -89,18 +86,6 @@ public class PageBackendService {
 
     public static String getMasterAppI18nString(String key) {
         return ConsoleI18n.getI18n(I18n.getI18nLang(), key);
-    }
-
-    public static ModelManager getModelManager(String appName) { // 应该只能被 jsp 页面调用
-        return SystemController.getAppMetadata(appName).getModelManager();
-    }
-
-    public static ModelManager getModelManager(Request request) { // 应该只能被 jsp 页面调用
-        return getModelManager((RequestImpl) request);
-    }
-
-    public static ModelManager getModelManager(RequestImpl request) { // 应该只能被 jsp 页面调用
-        return getModelManager(getAppName(request));
     }
 
     static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -164,12 +149,18 @@ public class PageBackendService {
 
     public static List<MenuItem> getAppMenuList(RequestImpl request) {
         List<MenuItem> menus = new ArrayList<>();
-        ModelManager modelManager = getModelManager(request);
+        ModelInfo modelManager = getModelInfo(request);
         if (modelManager == null) {
             return menus;
         }
         String appName = getAppName(request);
-        ModelData[] allModels = AccessControl.getLoginUserAppMenuModels(request.getUser(), appName);
+        AppInfo appInfo = getAppInfo(appName);
+        Map<String, List<ModelInfo>> groupMap = appInfo.getModelInfos().stream().filter(modelInfo -> !modelInfo.isHidden()).collect(Collectors.groupingBy(new Function<ModelInfo, String>() {
+            @Override
+            public String apply(ModelInfo modelInfo) {
+                return modelInfo.getMenu();
+            }
+        }));
         /**
          *  name -> String,
          *  parentName -> name,
@@ -177,10 +168,8 @@ public class PageBackendService {
          *  order -> int
          *  children -> Properties
          */
-        AppMetadata metadata = SystemController.getAppMetadata(appName);
-        Map<String, List<ModelData>> groupMap = Arrays.stream(allModels).filter(ModelData::showToMenu).collect(Collectors.groupingBy(ModelData::menuName));
         groupMap.forEach((menuGroup, models) -> {
-            MenuData menuData = metadata.getMenu(menuGroup);
+            MenuInfo menuData = appInfo.getMenuInfo(menuGroup);
             MenuItem parentMenu = new MenuItem();
             if (menuData != null) {
                 parentMenu.setMenuName(menuGroup);
@@ -188,7 +177,7 @@ public class PageBackendService {
                 parentMenu.setI18ns(menuData.getI18n());
                 parentMenu.setOrder(menuData.getOrder());
             }
-            models.sort(Comparator.comparingInt(ModelData::menuOrder));
+            models.sort(Comparator.comparingInt(ModelInfo::getOrder));
             models.forEach(i -> {
                 MenuItem subMenu = new MenuItem();
                 subMenu.setMenuName(i.name());

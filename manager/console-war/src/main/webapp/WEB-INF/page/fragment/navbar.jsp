@@ -58,7 +58,7 @@
                            href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ ConsoleConstants.MANAGE_TYPE_APP +"/"+ "master" +"/password/"+ "edit")%>"
                            class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=PageBackendService.getModelManager("master").getModel("user").icon()%>"></i>
+                                <i class="icon icon-<%=PageBackendService.getModelInfo("master","user").getIcon()%>"></i>
                             </span>
                         </a>
                     </li>

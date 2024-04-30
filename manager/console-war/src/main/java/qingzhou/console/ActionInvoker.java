@@ -8,7 +8,11 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
+import qingzhou.deployer.Deployer;
 import qingzhou.logger.Logger;
+import qingzhou.registry.InstanceInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 import javax.naming.NameNotFoundException;
 import java.net.SocketException;
@@ -38,8 +42,8 @@ public class ActionInvoker {
         String ids = request.getParameter(Listable.FIELD_NAME_ID);
         if (ids == null) return false;
 
-        ModelManager modelManager = PageBackendService.getModelManager(request);
-        String[] actionNamesSupportBatch = modelManager.getActionNamesSupportBatch(request.getModel());
+        ModelInfo modelInfo = SystemController.getService(Registry.class).getAppInfo(request.getApp()).getModelInfo(request.getModel());
+        String[] actionNamesSupportBatch = modelInfo.getBatchActionNames();
         for (String batch : actionNamesSupportBatch) {
             if (batch.equals(request.getAction())) return true;
         }
@@ -171,16 +175,16 @@ public class ActionInvoker {
         for (String node : appNodes) {
             ResponseImpl responseOnNode;
             if (node.equals("local")) {
-                ResponseImpl response = new ResponseImpl();
-                SystemController.getAppManager().getApp(PageBackendService.getAppName(request)).invoke(request, response);
-                responseOnNode = response;
+                responseOnNode = new ResponseImpl();
+                SystemController.getService(Deployer.class)
+                        .getApp(PageBackendService.getAppName(request))
+                        .invoke(request, responseOnNode);
             } else {
-                Map<String, String> nodeById = ServerXml.get().getNodeById(node);
-                String ip = nodeById.get("ip"); // 需和远程节点ip保持一致
-                String port = nodeById.get("port");
-                String remoteUrl = String.format("http://%s:%s", ip, port);
-                String remoteKey = SystemController.getConfig().getKey(Config.remoteKeyName);
-                responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
+                InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(node);
+                String remoteUrl = String.format("http://%s:%s",
+                        instanceInfo.getHost(),
+                        instanceInfo.getPort());
+                responseOnNode = RemoteClient.sendReq(remoteUrl, request, instanceInfo.getKey());
             }
             resultOnNode.put(node, responseOnNode);
         }

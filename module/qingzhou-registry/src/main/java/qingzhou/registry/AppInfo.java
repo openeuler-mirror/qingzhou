@@ -7,6 +7,10 @@ public class AppInfo {
     private Collection<ModelInfo> modelInfos;
     private Collection<MenuInfo> menuInfos;
 
+    public MenuInfo getMenuInfo(String name) {
+        return menuInfos.stream().filter(menuInfo -> menuInfo.getName().equals(name)).findAny().orElse(null);
+    }
+
     public ModelInfo getModelInfo(String modelName) {
         for (ModelInfo modelInfo : modelInfos) {
             if (modelInfo.getCode().equals(modelName)) {

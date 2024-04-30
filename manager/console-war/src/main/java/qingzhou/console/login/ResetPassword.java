@@ -1,10 +1,12 @@
 package qingzhou.console.login;
 
 import qingzhou.api.Lang;
+import qingzhou.config.Security;
+import qingzhou.config.User;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.ServerXml;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
@@ -16,15 +18,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Map;
 
 public class ResetPassword implements Filter<HttpServletContext> {
     private static final String setPasswordMsg = "page.warn.setpassword";
-    private static final String set2FAMsg = "page.warn.set2fa";
 
     static {
         ConsoleI18n.addI18n(setPasswordMsg, new String[]{"请先重置默认密码", "en:Please reset your default password first"});
-        ConsoleI18n.addI18n(set2FAMsg, new String[]{"请先扫描二维码绑定双因子认证密钥", "en:Please scan the QR code to bind the two-factor authentication key"});
         ConsoleI18n.addI18n("password.max", new String[]{"已达到密码最长使用期限 %s 天，上次修改时间为：%s", "en:The maximum password age of %s days has been reached, last modified: %s"});
     }
 
@@ -80,33 +79,27 @@ public class ResetPassword implements Filter<HttpServletContext> {
     }
 
     private String needReset(String user) throws Exception {
-        Map<String, String> userP = ServerXml.get().user(user);
-        if (userP == null) {
+        User u = SystemController.getConsole().getUser(user);
+        if (u == null) {
             return null;
         }
 
-        if (Boolean.parseBoolean(userP.get("enable2FA"))) {
-            if (!Boolean.parseBoolean(userP.get("bound2FA"))) {
-                return set2FAMsg;
-            }
-        }
-
-        if (Boolean.parseBoolean(userP.get("changeInitPwd"))) {
+        if (u.isChangeInitPwd()) {
             return setPasswordMsg;
         }
 
-        if (Boolean.parseBoolean(userP.get("enablePasswordAge"))) {
-            String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
-            if (passwordLastModifiedTime != null) {
-                long time = new SimpleDateFormat(",").parse(passwordLastModifiedTime).getTime();
-                String maxAge = userP.get("passwordMaxAge");
-                if (maxAge != null && !maxAge.equals("0")) {
-                    long max = time + Integer.parseInt(maxAge) * ConsoleConstants.DAY_MILLIS_VALUE;
-                    if (System.currentTimeMillis() > max) {
-                        return "password.max," + maxAge + "," + passwordLastModifiedTime;
-                    }
+        Security security = SystemController.getConsole().getSecurity();
+        if (security.isEnablePasswordAge()) {
+            String passwordLastModifiedTime = u.getPasswordLastModifiedTime();
+            long time = new SimpleDateFormat(",").parse(passwordLastModifiedTime).getTime();
+            int maxAge = security.getPasswordMaxAge();
+            if (maxAge > 0) {
+                long max = time + maxAge * ConsoleConstants.DAY_MILLIS_VALUE;
+                if (System.currentTimeMillis() > max) {
+                    return "password.max," + maxAge + "," + passwordLastModifiedTime;
                 }
             }
+
         }
 
         return null;

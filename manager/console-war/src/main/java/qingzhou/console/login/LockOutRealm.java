@@ -1,8 +1,6 @@
 package qingzhou.console.login;
 
-import qingzhou.console.ServerXml;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.util.StringUtil;
 import qingzhou.logger.Logger;
 
 import java.util.LinkedHashMap;
@@ -37,21 +35,11 @@ public class LockOutRealm {
     }
 
     public int getLockOutTime() {
-        int lockOutTime = 300;
-        String count = ServerXml.get().lockOutTime();
-        if (StringUtil.notBlank(count)) {
-            lockOutTime = Integer.parseInt(count);
-        }
-        return lockOutTime;
+        return SystemController.getConsole().getSecurity().getLockOutTime();
     }
 
     public int getFailureCount() {
-        int failureCount = 5;
-        String count = ServerXml.get().failureCount();
-        if (StringUtil.notBlank(count)) {
-            failureCount = Integer.parseInt(count);
-        }
-        return failureCount;
+        return SystemController.getConsole().getSecurity().getFailureCount();
     }
 
     /*

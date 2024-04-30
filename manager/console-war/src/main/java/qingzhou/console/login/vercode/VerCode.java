@@ -1,7 +1,7 @@
 package qingzhou.console.login.vercode;
 
-import qingzhou.console.ServerXml;
 import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
@@ -52,7 +52,7 @@ public class VerCode implements Filter<HttpServletContext> {
     }
 
     public static boolean isVerCodeDisabled() {
-        return ServerXml.get().verCodeEnabled();
+        return SystemController.getConsole().getSecurity().isVerCodeEnabled();
     }
 
     public static LoginManager.LoginFailedMsg checkVerCode(HttpServletRequest request) {

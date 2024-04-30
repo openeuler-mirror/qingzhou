@@ -47,25 +47,6 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    for (String action : PageBackendService.getActionNamesShowToListHead(qzRequest)) {
-                        ModelActionData modelAction = modelManager.getModelAction(qzRequest.getModel(), action);
-                        if (modelAction != null) {
-                            String viewName = ViewManager.htmlView;
-                %>
-                <a class="btn" btn-type="<%=action%>" action-name="<%=action%>"
-                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, action)%>"
-                        <%
-                            if (action.equals(Downloadable.ACTION_NAME_FILES)) {
-                                out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_NAME_DOWNLOAD) + "'");
-                            }
-                        %>
-                >
-                    <i class="icon icon-<%=modelAction.icon()%>"></i>
-                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + action)%>
-                </a>
-                <%
-                        }
-                    }
                     // 用于判断是否需要操作列
                     boolean needOperationColumn = PageBackendService.needOperationColumn(qzRequest);
                     ModelActionData[] opsActions = PageBackendService.listCommonOps(qzRequest, qzResponse);

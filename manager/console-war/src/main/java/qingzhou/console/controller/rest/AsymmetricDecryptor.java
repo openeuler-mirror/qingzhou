@@ -3,19 +3,21 @@ package qingzhou.console.controller.rest;
 import qingzhou.api.FieldType;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.logger.Logger;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 public class AsymmetricDecryptor implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
-        ModelManager modelManager = SystemController.getAppMetadata(request).getModelManager();
-        for (String fieldName : modelManager.getFieldNames(request.getModel())) {
-            ModelFieldData modelField = modelManager.getModelField(request.getModel(), fieldName);
-            if (modelField.type() == FieldType.password
-                    || modelField.clientEncrypt()
-            ) {
+        ModelInfo modelInfo = SystemController.getService(Registry.class).getAppInfo(request.getApp()).getModelInfo(request.getModel());
+        for (String fieldName : modelInfo.getFormFieldNames()) {
+            ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
+            if (modelField.getType().equals(FieldType.password.name())) {
                 String val = request.getParameter(fieldName);
                 if (!StringUtil.isBlank(val)) {
                     try {
@@ -37,21 +39,19 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
             return input;
         }
         try {
-            String pubKey = SystemController.getConfig().getKey(Config.publicKeyName);
-            String priKey = SystemController.getConfig().getKey(Config.privateKeyName);
-            return SystemController.getCryptoService().getKeyPairCipher(pubKey, priKey).decryptWithPrivateKey(input);
+            return SystemController.keyPairCipher.decryptWithPrivateKey(input);
         } catch (Exception e) {
             SystemController.getService(Logger.class).warn("Decryption error", e);
             return input;
         }
     }
 
-    // jsp加密： 获取非对称算法密钥长度
+    // js 加密： 获取非对称算法密钥长度
     public static int getKeySize() { // login.jsp 使用
-        return 1024;// 保持一致：PasswordCipherFactory.KeyGenerate
+        return 1024;
     }
 
-    public static String getPublicKeyString() throws Exception {
-        return SystemController.getConfig().getKey(Config.publicKeyName);
+    public static String getPublicKeyString() {
+        return SystemController.getPublicKeyString();
     }
 }
