@@ -32,7 +32,7 @@ class AppContextImpl implements AppContext {
     @Override
     public synchronized File getTemp() {
         if (appTemp == null) {
-            appTemp = moduleContext.getTemp();
+            appTemp = new File(moduleContext.getTemp(), appInfo.getName());
         }
         return appTemp;
     }

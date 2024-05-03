@@ -7,7 +7,7 @@ import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.console.RequestImpl;
 import qingzhou.deployer.Deployer;
-import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 
 import java.io.File;
 import java.util.Map;
@@ -75,7 +75,7 @@ public class App extends ModelBase implements Createable {
         Map<String, String> p = MasterApp.prepareParameters(request);
         File srcFile;
         if (Boolean.parseBoolean(p.remove("appFrom"))) {
-            srcFile = FileUtil.newFile(p.remove("fromUpload"));
+            srcFile = Utils.newFile(p.remove("fromUpload"));
         } else {
             srcFile = new File(p.remove("filename"));
         }

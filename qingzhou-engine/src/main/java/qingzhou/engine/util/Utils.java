@@ -14,7 +14,16 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class FileUtil {
+public class Utils {
+    public static String stackTraceToString(StackTraceElement[] stackTrace) {
+        StringBuilder msg = new StringBuilder();
+        String sp = System.lineSeparator();
+        for (StackTraceElement element : stackTrace) {
+            msg.append("\t").append(element).append(sp);
+        }
+        return msg.toString();
+    }
+
     public static void unZipToDir(File srcFile, File unZipDir) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ, StandardCharsets.UTF_8)) {
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
@@ -123,7 +132,6 @@ public class FileUtil {
         }
     }
 
-    // 删除 文件 或 文件夹
     public static void forceDelete(File file) throws IOException {
         if (file.isDirectory()) {
             deleteDirectory(file);
@@ -325,7 +333,7 @@ public class FileUtil {
         }
     }
 
-    private FileUtil() {
+    private Utils() {
     }
 
     public static LinkedHashMap<String, String> streamToProperties(InputStream inputStream) throws Exception {

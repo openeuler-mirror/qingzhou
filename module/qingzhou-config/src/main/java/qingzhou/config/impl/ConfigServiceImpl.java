@@ -2,7 +2,7 @@ package qingzhou.config.impl;
 
 import qingzhou.config.Module;
 import qingzhou.config.ConfigService;
-import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
 
 import java.io.File;
@@ -24,7 +24,7 @@ public class ConfigServiceImpl implements ConfigService {
     public Module getModule() throws IOException {
         if (cache == null) {
             try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
-                String read = FileUtil.read(inputStream);
+                String read = Utils.read(inputStream);
                 cache = json.fromJsonMember(read, "module", Module.class);
             }
         }

@@ -1,7 +1,7 @@
 package qingzhou.deployer;
 
 import qingzhou.api.Lang;
-import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -14,7 +14,7 @@ class CharMap {
 
     static {
         try {
-            LinkedHashMap<String, String> props = FileUtil.streamToProperties(CharMap.class.getResourceAsStream("/" + CharMap.class.getPackage().getName().replace(".", "/") + "/CharMap.txt"));
+            LinkedHashMap<String, String> props = Utils.streamToProperties(CharMap.class.getResourceAsStream("/" + CharMap.class.getPackage().getName().replace(".", "/") + "/CharMap.txt"));
             String zh = props.get("zh");
             String tr = props.get("tr");
             for (int i = 0; i < zh.length(); i++) {

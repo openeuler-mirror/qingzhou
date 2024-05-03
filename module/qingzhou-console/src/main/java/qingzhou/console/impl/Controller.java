@@ -8,7 +8,7 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
-import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.logger.Logger;
@@ -69,7 +69,7 @@ public class Controller implements ModuleActivator {
         public void exec() throws Exception {
             servletContainer = servletService.createServletContainer();
             servletContainer.start(console.getPort(),
-                    moduleContext.getTemp().getAbsolutePath());
+                    new File(moduleContext.getTemp(), "servlet"));
         }
 
         @Override
@@ -110,7 +110,7 @@ public class Controller implements ModuleActivator {
         }
 
         private void exec0() {
-            File consoleApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "console");
+            File consoleApp = Utils.newFile(moduleContext.getLibDir(), "module", "console");
             String docBase = consoleApp.getAbsolutePath();
             contextPath = console.getContextRoot();
             servletContainer.addWebapp(contextPath, docBase);

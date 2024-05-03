@@ -1,14 +1,16 @@
 package qingzhou.engine.impl;
 
+import qingzhou.engine.util.Utils;
+
 import java.io.File;
 import java.io.IOException;
 
-class EngineContext {
+public class EngineContext {
     private File libDir;
     private File instanceDir;
     private File temp;
 
-    File getLibDir() {
+    public File getLibDir() {
         if (libDir == null) {
             String jarPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
             String flag = "/engine/qingzhou-engine.jar";
@@ -19,7 +21,7 @@ class EngineContext {
         return libDir;
     }
 
-    File getInstanceDir() {
+    public File getInstanceDir() {
         if (instanceDir == null) {
             String instance = System.getProperty("qingzhou.instance");
             if (instance == null || instance.trim().isEmpty()) {
@@ -34,9 +36,9 @@ class EngineContext {
         return instanceDir;
     }
 
-    File getTemp() {
+    public File getTemp() {
         if (temp == null) {
-            temp = new File(getInstanceDir(), "temp");
+            temp = Utils.newFile(getInstanceDir(), "temp", "engine");
         }
         return temp;
     }
