@@ -1,6 +1,5 @@
 package qingzhou.registry.impl;
 
-import qingzhou.crypto.CryptoService;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -12,11 +11,9 @@ import qingzhou.registry.Registry;
 public class Controller implements ModuleActivator {
     @Service
     private Json json;
-    @Service
-    private CryptoService cryptoService;
 
     @Override
     public void start(ModuleContext context) {
-        context.registerService(Registry.class, new RegistryImpl(json, cryptoService));
+        context.registerService(Registry.class, new RegistryImpl(json));
     }
 }

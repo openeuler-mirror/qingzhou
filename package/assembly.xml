@@ -76,7 +76,6 @@
                 <include>${project.groupId}:qingzhou-heartbeat</include>
                 <include>${project.groupId}:qingzhou-logger</include>
                 <include>${project.groupId}:qingzhou-json</include>
-                <include>${project.groupId}:qingzhou-crypto</include>
                 <include>${project.groupId}:qingzhou-http</include>
                 <include>${project.groupId}:qingzhou-ssh</include>
             </includes>

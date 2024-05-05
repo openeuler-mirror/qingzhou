@@ -99,11 +99,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-crypto</artifactId>
-            <version>x</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-http</artifactId>
             <version>x</version>
         </dependency>

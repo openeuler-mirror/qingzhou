@@ -3,7 +3,6 @@ package qingzhou.app.master.service;
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.console.RequestImpl;
 import qingzhou.deployer.Deployer;
@@ -70,14 +69,12 @@ public class App extends ModelBase implements Createable {
     @ModelAction(
             name = {"安装", "en:Install"},
             info = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
-    public void add(Request req, Response response) throws Exception {
-        RequestImpl request = (RequestImpl) req;
-        Map<String, String> p = MasterApp.prepareParameters(request);
+    public void add(Request request, Response response) throws Exception {
         File srcFile;
-        if (Boolean.parseBoolean(p.remove("appFrom"))) {
-            srcFile = Utils.newFile(p.remove("fromUpload"));
+        if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
+            srcFile = Utils.newFile(request.getParameter("fromUpload"));
         } else {
-            srcFile = new File(p.remove("filename"));
+            srcFile = new File(request.getParameter("filename"));
         }
         if (!srcFile.isFile()) {
             response.setSuccess(false);
@@ -99,9 +96,11 @@ public class App extends ModelBase implements Createable {
             return;
         }
 
-        String[] nodes = p.get("nodes") == null ? new String[0] : p.get("nodes").split(",");
-        request.setModelName("appinstaller");
-        request.setActionName("install");
+        String[] nodes = request.getParameter("nodes") != null
+                ? request.getParameter("nodes").split(",")
+                : new String[0];
+        ((RequestImpl) request).setModelName("appinstaller");
+        ((RequestImpl) request).setActionName("install");
         try {
             for (String node : nodes) {
                 try {
@@ -117,12 +116,9 @@ public class App extends ModelBase implements Createable {
                 }
             }
         } finally {
-            request.setModelName("app");
-            request.setActionName(Createable.ACTION_NAME_ADD);
+            ((RequestImpl) request).setModelName("app");
+            ((RequestImpl) request).setActionName(Createable.ACTION_NAME_ADD);
         }
-
-        p.put(Listable.FIELD_NAME_ID, appName);
-        getDataStore().addData("app", appName, p);
     }
 
     @ModelAction(
@@ -136,14 +132,13 @@ public class App extends ModelBase implements Createable {
             name = {"删除", "en:Delete"},
             info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
-    public void delete(Request req, Response response) throws Exception {
-        RequestImpl request = (RequestImpl) req;
+    public void delete(Request request, Response response) throws Exception {
         String appName = request.getId();
         Map<String, String> p = getDataStore().getDataById("app", appName);
         String[] nodes = p.get("nodes").split(",");
 
-        request.setModelName("appinstaller");
-        request.setActionName("uninstall");
+        ((RequestImpl) request).setModelName("appinstaller");
+        ((RequestImpl) request).setActionName("uninstall");
         try {
             for (String node : nodes) {
                 try {
@@ -158,8 +153,8 @@ public class App extends ModelBase implements Createable {
                 }
             }
         } finally {
-            request.setModelName("app");
-            request.setActionName(Deletable.ACTION_NAME_DELETE);
+            ((RequestImpl) request).setModelName("app");
+            ((RequestImpl) request).setActionName(Deletable.ACTION_NAME_DELETE);
         }
         getDataStore().deleteDataById("app", appName);
     }

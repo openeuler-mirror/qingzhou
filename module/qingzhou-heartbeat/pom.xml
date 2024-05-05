@@ -14,12 +14,12 @@
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-config</artifactId>
+            <artifactId>qingzhou-agent</artifactId>
             <version>x</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-agent</artifactId>
+            <artifactId>qingzhou-deployer</artifactId>
             <version>x</version>
         </dependency>
         <dependency>

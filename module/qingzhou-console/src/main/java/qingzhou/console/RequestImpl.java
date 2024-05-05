@@ -19,7 +19,7 @@ public class RequestImpl implements Request, Cloneable {
     /**
      * The request parameters for this request.
      */
-    protected Map<String, String[]> parameters = new HashMap<>();
+    protected Map<String, String> parameters = new HashMap<>();
 
     @Override
     public String getApp() {
@@ -48,11 +48,12 @@ public class RequestImpl implements Request, Cloneable {
 
     @Override
     public String getParameter(String name) {
-        String[] value = parameters.get(name);
-        if (value == null) {
-            return null;
-        }
-        return value[0];
+        return parameters.get(name);
+    }
+
+    @Override
+    public Map<String, String> getParameters() {
+        return parameters;
     }
 
     public void setId(String id) {
@@ -94,13 +95,13 @@ public class RequestImpl implements Request, Cloneable {
     }
 
     public void setParameter(String parameterName, String parameterValue) {
-        parameters.put(parameterName, new String[]{parameterValue});
+        parameters.put(parameterName, parameterValue);
     }
 
     public void setParameters(Map<String, String> parameters) {
         if (parameters == null) return;
 
-        parameters.forEach((s, s2) -> RequestImpl.this.parameters.put(s, new String[]{s2}));
+        RequestImpl.this.parameters.putAll(parameters);
     }
 
     public String getManageType() {

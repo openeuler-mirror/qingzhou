@@ -1,12 +1,10 @@
 package qingzhou.console.jmx;
 
-import qingzhou.config.ConfigService;
 import qingzhou.config.Jmx;
 import qingzhou.console.controller.SystemController;
 import qingzhou.logger.Logger;
 
 import javax.management.MBeanServer;
-import javax.management.Notification;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnectionNotification;
 import javax.management.remote.JMXConnectorServer;
@@ -56,8 +54,6 @@ public class JMXServerHolder {
             return false;
         }
 
-        if (server != null) return false;
-
         objectName = new ObjectName("Qingzhou:name=console");
         mBeanServer = ManagementFactory.getPlatformMBeanServer();
         if (!mBeanServer.isRegistered(objectName)) {
@@ -82,7 +78,16 @@ public class JMXServerHolder {
         server.setMBeanServerForwarder(new CustomMBeanServerAccessController());
         server.addNotificationListener((notification, handback) -> {
             try {
-                handleNotification(notification);
+                if (notification instanceof JMXConnectionNotification
+                        && notification.getType().equals(JMXConnectionNotification.CLOSED)) {
+                    JMXConnectionNotification jmxConnectionNotification = (JMXConnectionNotification) notification;
+                    String connectionId = jmxConnectionNotification.getConnectionId();
+                    String[] s = connectionId.split(" ");
+                    HttpSession session = (HttpSession) SystemController.SESSIONS_MANAGER.findSession(s[1]);
+                    if (session != null) {
+                        session.invalidate();
+                    }
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -91,19 +96,6 @@ public class JMXServerHolder {
         System.out.println("Jmx service started: " + jmxServiceUrl);
 
         return true;
-    }
-
-    public void handleNotification(Notification notification) throws Exception {
-        if (notification instanceof JMXConnectionNotification
-                && notification.getType().equals(JMXConnectionNotification.CLOSED)) {
-            JMXConnectionNotification jmxConnectionNotification = (JMXConnectionNotification) notification;
-            String connectionId = jmxConnectionNotification.getConnectionId();
-            String[] s = connectionId.split(" ");
-            HttpSession session = (HttpSession) SystemController.SESSIONS_MANAGER.findSession(s[1]);
-            if (session != null) {
-                session.invalidate();
-            }
-        }
     }
 
     public void destroy() throws Exception {

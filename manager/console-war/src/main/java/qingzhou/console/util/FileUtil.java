@@ -11,11 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
@@ -143,43 +141,6 @@ public class FileUtil {
                 StreamUtil.copyStream(in, zos);
             }
         }
-    }
-
-    // NOTO: 保持一致：VersionUtil
-    public static void unZipToDir(File srcFile, File unZipDir) throws IOException {
-        try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ, StandardCharsets.UTF_8)) {
-            for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
-                ZipEntry entry = e.nextElement();
-                File targetFile = newFile(unZipDir, entry);
-                if (entry.isDirectory()) {
-                    if (!targetFile.exists()) {
-                        boolean mkdirs = targetFile.mkdirs();
-                        if (!mkdirs) {
-                            new IllegalStateException("Failed to mkdirs: " + targetFile.getPath()).printStackTrace();
-                        }
-                    }
-                } else {
-                    if (!targetFile.getParentFile().exists()) {
-                        boolean mkdirs = targetFile.getParentFile().mkdirs();
-                        if (!mkdirs) {
-                            new IllegalStateException("Failed to mkdirs: " + targetFile.getParentFile().getPath()).printStackTrace();
-                        }
-                    }
-                    try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
-                        StreamUtil.copyStream(zip.getInputStream(entry), out);
-                    }
-                }
-            }
-        }
-    }
-
-    // NOTO: 保持一致：VersionUtil
-    private static File newFile(File destDir, ZipEntry entry) throws IOException {
-        File destFile = new File(destDir, entry.getName());
-        if (!destFile.getCanonicalPath().startsWith(destDir.getCanonicalPath())) {
-            throw new IOException("Entry is outside of target dir:" + entry.getName());
-        }
-        return destFile;
     }
 
     /**

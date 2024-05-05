@@ -13,6 +13,7 @@
 <%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.page.*" %>
 <%@ page import="qingzhou.registry.ModelInfo" %>
+<%@ page import="qingzhou.registry.AppInfo" %>
 
 
 <%
@@ -20,6 +21,7 @@
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
     ResponseImpl qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
     String menuAppName = PageBackendService.getAppName(qzRequest);
+    AppInfo appInfo = PageBackendService.getAppInfo(qzRequest.getApp());
     ModelInfo modelInfo = PageBackendService.getModelInfo(qzRequest);
 %>
 

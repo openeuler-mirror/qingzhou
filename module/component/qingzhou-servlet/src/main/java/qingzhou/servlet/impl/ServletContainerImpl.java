@@ -18,7 +18,8 @@ public class ServletContainerImpl implements ServletContainer {
     public void start(int port, File baseDir) throws Exception {
         ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
         try {
-            Thread.currentThread().setContextClassLoader(ServletContainerImpl.class.getClassLoader());
+            // 为了 接管 tomcat 的日志系统
+            Thread.currentThread().setContextClassLoader(TomcatLogDelegate.class.getClassLoader());
 
             tomcat = new Tomcat();
             tomcat.setBaseDir(baseDir.getAbsolutePath());

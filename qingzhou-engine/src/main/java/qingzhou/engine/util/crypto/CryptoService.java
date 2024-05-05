@@ -1,4 +1,4 @@
-package qingzhou.crypto;
+package qingzhou.engine.util.crypto;
 
 public interface CryptoService {
     String generateKey();

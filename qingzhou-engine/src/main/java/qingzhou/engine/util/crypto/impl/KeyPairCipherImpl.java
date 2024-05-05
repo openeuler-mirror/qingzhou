@@ -1,6 +1,6 @@
-package qingzhou.crypto.impl;
+package qingzhou.engine.util.crypto.impl;
 
-import qingzhou.crypto.KeyPairCipher;
+import qingzhou.engine.util.crypto.KeyPairCipher;
 
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;

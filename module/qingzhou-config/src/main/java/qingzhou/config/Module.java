@@ -2,7 +2,8 @@ package qingzhou.config;
 
 public class Module {
     private Console console;
-    private Remote remote;
+    private Agent agent;
+    private Heartbeat heartbeat;
 
     public Console getConsole() {
         return console;
@@ -12,11 +13,19 @@ public class Module {
         this.console = console;
     }
 
-    public Remote getRemote() {
-        return remote;
+    public Agent getAgent() {
+        return agent;
     }
 
-    public void setRemote(Remote remote) {
-        this.remote = remote;
+    public void setAgent(Agent agent) {
+        this.agent = agent;
+    }
+
+    public Heartbeat getHeartbeat() {
+        return heartbeat;
+    }
+
+    public void setHeartbeat(Heartbeat heartbeat) {
+        this.heartbeat = heartbeat;
     }
 }

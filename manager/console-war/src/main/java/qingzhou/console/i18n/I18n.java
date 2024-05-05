@@ -3,7 +3,10 @@ package qingzhou.console.i18n;
 import qingzhou.api.Lang;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.I18nTool;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
@@ -47,7 +50,7 @@ public class I18n {
     }
 
     public static String getString(String appName, String i18nKey) {
-        AppInfo appInfo = SystemController.getService(Registry.class).getAppInfo(appName);
+        AppInfo appInfo = SystemController.getAppInfo(appName);
 
         int fieldInfo = i18nKey.indexOf("model.field.info.");
         if (fieldInfo > 0) {

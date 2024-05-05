@@ -5,9 +5,8 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
-import qingzhou.app.master.MasterApp;
-import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.MessageDigest;
+import qingzhou.engine.util.crypto.CryptoServiceFactory;
+import qingzhou.engine.util.crypto.MessageDigest;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -143,8 +142,8 @@ public class User extends ModelBase implements Createable {
         if (!checkForbidden(request, response)) {
             return;
         }
-        Map<String, String> newUser = MasterApp.prepareParameters(request);
-        rectifyParameters(request, newUser, new HashMap<>());
+        Map<String, String> newUser = request.getParameters();
+        rectifyParameters(newUser, new HashMap<>());
         getDataStore().addData(request.getModel(), newUser.get(Listable.FIELD_NAME_ID), newUser);
     }
 
@@ -174,8 +173,8 @@ public class User extends ModelBase implements Createable {
         String modelName = request.getModel();
         String userId = request.getId();
         Map<String, String> oldUser = dataStore.getDataById(modelName, userId);
-        Map<String, String> newUser = MasterApp.prepareParameters(request);
-        rectifyParameters(request, newUser, oldUser);
+        Map<String, String> newUser = request.getParameters();
+        rectifyParameters(newUser, oldUser);
         dataStore.updateDataById(modelName, userId, newUser);
 
         Map<String, String> newPro = dataStore.getDataById(modelName, userId);
@@ -207,7 +206,7 @@ public class User extends ModelBase implements Createable {
         return true;
     }
 
-    protected Map<String, String> rectifyParameters(Request request, Map<String, String> newUser, Map<String, String> oldUser) throws Exception {
+    protected Map<String, String> rectifyParameters(Map<String, String> newUser, Map<String, String> oldUser) {
         String password = newUser.remove(pwdKey);
         newUser.remove(confirmPwdKey);
         boolean passwordChanged = passwordChanged(password);
@@ -215,7 +214,7 @@ public class User extends ModelBase implements Createable {
             String digestAlg = newUser.get("digestAlg");
             String saltLength = newUser.get("saltLength");
             String iterations = newUser.get("iterations");
-            MessageDigest messageDigest = MasterApp.getService(CryptoService.class).getMessageDigest();
+            MessageDigest messageDigest = CryptoServiceFactory.getInstance().getMessageDigest();
             newUser.put(pwdKey, messageDigest.digest(password,
                     digestAlg,
                     Integer.parseInt(saltLength),

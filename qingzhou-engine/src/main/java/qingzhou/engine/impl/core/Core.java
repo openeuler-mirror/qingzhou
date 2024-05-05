@@ -64,16 +64,20 @@ public class Core implements Process {
         for (ModuleActivator moduleActivator : moduleInfo.getModuleActivators()) {
             for (Field field : moduleActivator.getClass().getDeclaredFields()) {
                 Service service = field.getAnnotation(Service.class);
-                if (service != null) {
-                    Object serviceObj = findService(field.getType(), moduleInfo.getDependencies());
-                    field.setAccessible(true);
+                if (service == null) continue;
 
-                    int modifiers = field.getModifiers();
-                    if (Modifier.isStatic(modifiers)) {
-                        field.set(null, serviceObj);
-                    } else {
-                        field.set(moduleActivator, serviceObj);
-                    }
+                Object serviceObj = findService(field.getType(), moduleInfo.getDependencies());
+                if (serviceObj == null) {
+                    new Exception("Service " + field.getType().getName() + " required by module " + moduleInfo.getName() + " is not found in the dependency").printStackTrace();
+                    continue;
+                }
+
+                field.setAccessible(true);
+                int modifiers = field.getModifiers();
+                if (Modifier.isStatic(modifiers)) {
+                    field.set(null, serviceObj);
+                } else {
+                    field.set(moduleActivator, serviceObj);
                 }
             }
         }
@@ -92,12 +96,8 @@ public class Core implements Process {
                 }
             }
         }
-        if (serviceObj == null) {
-            throw new IllegalStateException("Service not found: " + serviceType);
-        }
         return serviceObj;
     }
-
 
     private void buildModuleActivators() throws Exception {
         for (ModuleInfo moduleInfo : moduleInfoList) {

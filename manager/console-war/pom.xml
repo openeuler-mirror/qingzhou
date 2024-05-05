@@ -12,6 +12,14 @@
     <artifactId>console-war</artifactId>
     <packaging>war</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-console</artifactId>
+            <version>x</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <finalName>console</finalName>
         <plugins>

@@ -62,6 +62,7 @@ class ConfigTool {
 
         String classpath = Arrays.stream(Objects.requireNonNull(new File(CommandUtil.getLibDir(), "engine").listFiles()))
                 .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
+        jvm.getArg().add(new Arg("-Dqingzhou.instance=" + instanceDir.getAbsolutePath().replace("\\", "/")));
         jvm.getArg().add(new Arg("-classpath"));
         jvm.getArg().add(new Arg(classpath));
         jvm.getArg().add(new Arg("qingzhou.engine.impl.Main"));
@@ -77,7 +78,6 @@ class ConfigTool {
                 fileContent.append(line);
             }
         }
-        String allContent = fileContent.toString().replace("${qingzhou.instance}", instanceDir.getAbsolutePath().replace("\\", "\\\\"));
 
         URL jsonURL = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonURL})) {
@@ -85,7 +85,7 @@ class ConfigTool {
             Object instance = loadedClass.newInstance();
             Method fromJson = loadedClass.getMethod("fromJsonMember", String.class, String.class, Class.class);
 
-            return (Jvm) fromJson.invoke(instance, allContent, "jvm", Jvm.class);
+            return (Jvm) fromJson.invoke(instance, fileContent.toString(), "jvm", Jvm.class);
         }
     }
 }

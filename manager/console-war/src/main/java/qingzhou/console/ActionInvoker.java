@@ -42,7 +42,7 @@ public class ActionInvoker {
         String ids = request.getParameter(Listable.FIELD_NAME_ID);
         if (ids == null) return false;
 
-        ModelInfo modelInfo = SystemController.getService(Registry.class).getAppInfo(request.getApp()).getModelInfo(request.getModel());
+        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
         String[] actionNamesSupportBatch = modelInfo.getBatchActionNames();
         for (String batch : actionNamesSupportBatch) {
             if (batch.equals(request.getAction())) return true;
@@ -182,7 +182,7 @@ public class ActionInvoker {
             } else {
                 InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(node);
                 String remoteUrl = String.format("http://%s:%s",
-                        instanceInfo.getHost(),
+                        instanceInfo.getHost(), //todo: 多网卡的 agent 会注册多个 ip 地址，考虑优化为 被动模式 使得master不依赖agent的ip？（ps:agent在docker容器里，master可能无法放到到agent的ip）
                         instanceInfo.getPort());
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, instanceInfo.getKey());
             }

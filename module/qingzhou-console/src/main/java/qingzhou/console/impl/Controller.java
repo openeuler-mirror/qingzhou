@@ -2,9 +2,9 @@ package qingzhou.console.impl;
 
 import qingzhou.config.ConfigService;
 import qingzhou.config.Console;
-import qingzhou.config.Module;
 import qingzhou.console.ContextHelper;
-import qingzhou.crypto.CryptoService;
+import qingzhou.deployer.Deployer;
+import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
@@ -12,6 +12,7 @@ import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.logger.Logger;
+import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletContainer;
 import qingzhou.servlet.ServletService;
 
@@ -21,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@qingzhou.engine.Module
+@Module
 public class Controller implements ModuleActivator {
     @Service
     private Logger logger;
@@ -30,7 +31,9 @@ public class Controller implements ModuleActivator {
     @Service
     private ServletService servletService;
     @Service
-    private CryptoService cryptoService; // war 里需要
+    private Deployer deployer;
+    @Service
+    private Registry registry;
 
     private Console console;
     private ProcessSequence sequence;
@@ -45,8 +48,7 @@ public class Controller implements ModuleActivator {
     @Override
     public void start(ModuleContext context) throws Exception {
         moduleContext = context;
-        Module module = configService.getModule();
-        console = module.getConsole();
+        console = configService.getModule().getConsole();
 
         if (!console.isEnabled()) return;
 

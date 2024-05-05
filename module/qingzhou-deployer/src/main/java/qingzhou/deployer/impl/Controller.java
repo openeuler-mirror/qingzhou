@@ -1,6 +1,5 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -16,14 +15,12 @@ import java.util.Arrays;
 public class Controller implements ModuleActivator {
     @Service
     private Logger logger;
-    @Service
-    private CryptoService cryptoService;
 
     private Deployer deployer;
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        deployer = new DeployerImpl(cryptoService, moduleContext);
+        deployer = new DeployerImpl(moduleContext);
 
         moduleContext.registerService(Deployer.class, deployer);
 

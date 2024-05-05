@@ -17,10 +17,6 @@
         "desc": "最大可分配的堆内存"
       },
       {
-        "name": "-Dqingzhou.instance=${qingzhou.instance}",
-        "desc": "运行目录"
-      },
-      {
         "name": "-XX:+HeapDumpOnOutOfMemoryError",
         "desc": "开启堆转储"
       },
@@ -68,7 +64,7 @@
         {
           "id": "qingzhou",
           "info": "系统预置管理员",
-          "password": "E239$2$1CEA50EE641A31AD053B2BCC38A323ECF783DDE35652475495D5B112518C4D29$SHA-256",
+          "password": "SHA-256$684B$2$0ED27B6EB4D921613F3512971CDC66EDF6C8505166E3FA61C1C511705067D6F5",
           "active": "true",
           "changeInitPwd": "true",
           "enable2FA": "false",
@@ -82,16 +78,16 @@
         "port": "7200"
       }
     },
-    "remote": {
+    "agent": {
       "enabled": "false",
-      "id": "",
-      "name": "",
       "host": "",
       "port": "7000",
-      "master": {
-        "url": "http://localhost:9000/console/",
-        "publicKey": "xxx"
-      }
+      "key": ""
+    },
+    "heartbeat": {
+      "enabled": "false",
+      "masterUrl": "",
+      "masterKey": ""
     }
   }
 }

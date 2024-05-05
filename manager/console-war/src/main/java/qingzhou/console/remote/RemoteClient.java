@@ -3,9 +3,9 @@ package qingzhou.console.remote;
 import qingzhou.api.Request;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.SystemController;
-import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyCipher;
 import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.crypto.CryptoServiceFactory;
+import qingzhou.engine.util.crypto.KeyCipher;
 import qingzhou.json.Json;
 
 import javax.net.ssl.*;
@@ -45,8 +45,7 @@ public class RemoteClient {
 
             KeyCipher cipher;
             try {
-                CryptoService cryptoService = SystemController.getService(CryptoService.class);
-                cipher = cryptoService.getKeyCipher(remoteKey);
+                cipher = CryptoServiceFactory.getInstance().getKeyCipher(remoteKey);
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }

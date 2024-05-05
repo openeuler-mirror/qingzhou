@@ -40,7 +40,7 @@ public class Jmx extends ModelBase implements Editable {
     public void update(Request request, Response response) throws Exception {
         Map<String, String> oldProperties = getDataStore().getDataById(request.getModel(), DEFAULT_ID);
 
-        Map<String, String> properties = MasterApp.prepareParameters(request);
+        Map<String, String> properties = request.getParameters();
         getDataStore().updateDataById(request.getModel(), DEFAULT_ID, properties);
 
         // ConsoleXml.getInstance().consoleXmlChanged();

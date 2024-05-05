@@ -2,7 +2,6 @@ package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
@@ -28,12 +27,10 @@ class DeployerImpl implements Deployer {
     private final Map<Method, ModelActionInfo> presetMethodActionInfos;
 
     private final Map<String, App> apps = new HashMap<>();
-    private final CryptoService cryptoService;
     private final ModuleContext moduleContext;
 
-    DeployerImpl(CryptoService cryptoService, ModuleContext moduleContext) {
+    DeployerImpl(ModuleContext moduleContext) {
         this.moduleContext = moduleContext;
-        this.cryptoService = cryptoService;
         this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(PresetAction.class));
     }
 
@@ -63,6 +60,7 @@ class DeployerImpl implements Deployer {
 
         app.getModelBases().forEach(modelBase -> {
             try {
+                appContextField.setAccessible(true);
                 appContextField.set(modelBase, app.getAppContext());
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -113,7 +111,6 @@ class DeployerImpl implements Deployer {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
             qingzhouSystemApp.setDeployer(this);
-            qingzhouSystemApp.setCryptoService(cryptoService);
         }
         app.setQingzhouApp(qingzhouApp);
 

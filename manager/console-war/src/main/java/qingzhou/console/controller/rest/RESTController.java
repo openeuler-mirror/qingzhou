@@ -13,7 +13,6 @@ import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
-import qingzhou.registry.Registry;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -150,8 +149,7 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = SystemController.getService(Registry.class)
-                .getAppInfo(request.getApp())
+        String[] actions = SystemController.getAppInfo(request.getApp())
                 .getModelInfo(request.getModel())
                 .getActionNames();
         for (String name : actions) {

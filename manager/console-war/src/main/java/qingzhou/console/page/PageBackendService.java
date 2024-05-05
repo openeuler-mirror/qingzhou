@@ -17,25 +17,12 @@ import qingzhou.console.i18n.I18n;
 import qingzhou.console.util.Base32Util;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.GroupInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -52,7 +39,7 @@ public class PageBackendService {
     }
 
     public static AppInfo getAppInfo(String appName) {
-        return SystemController.getService(Registry.class).getAppInfo(appName);
+        return SystemController.getAppInfo(appName);
     }
 
     public static ModelInfo getModelInfo(Request request) {
@@ -381,7 +368,7 @@ public class PageBackendService {
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
-                        if (isActionEffective(request, data, action) != null || Editable.ACTION_NAME_EDIT.equals(actionName) ) {
+                        if (isActionEffective(request, data, action) != null || Editable.ACTION_NAME_EDIT.equals(actionName)) {
                             isShow = false;
                             break;
                         }
