@@ -1,4 +1,4 @@
-package qingzhou.crypto.impl;
+package qingzhou.engine.util.crypto.impl;
 
 class HexUtil {
     private static final char[] DIGITS_LOWER = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',

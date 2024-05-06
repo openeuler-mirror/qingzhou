@@ -1,4 +1,12 @@
 <%@ page import="qingzhou.console.i18n.I18n" %>
+<%@ page import="qingzhou.console.page.PageBackendService" %>
+<%@ page import="qingzhou.console.login.LoginManager" %>
+<%@ page import="qingzhou.console.ConsoleConstants" %>
+<%@ page import="qingzhou.console.login.vercode.VerCode" %>
+<%@ page import="qingzhou.console.controller.About" %>
+<%@ page import="qingzhou.console.controller.rest.AsymmetricDecryptor" %>
+<%@ page import="qingzhou.console.controller.rest.RESTController" %>
+
 <%@ page pageEncoding="UTF-8" %>
 <%
     String contextPath = request.getContextPath();
@@ -26,8 +34,6 @@
     <script type="text/javascript" src="<%=contextPath%>/static/js/main.js"></script>
 </head>
 
-<%@ include file="fragment/head.jsp" %>
-
 <body class="login_body" onload="escapeFrame();">
 <header class="login-header">
     <img src="<%=contextPath%>/static/images/login/top_logo.png" class="login-top-logo" alt="">
@@ -50,7 +56,7 @@
                        placeholder="name<%=PageBackendService.getMasterAppI18nString( "model.field.user.name")%>"
                        autofocus required>
                 <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;"><i
-                        class="icon icon-<%=modelManager.getModel("user").icon()%> "></i></label>
+                        class="icon icon-<%=PageBackendService.getAppInfo("master").getModelInfo("user").getIcon()%> "></i></label>
             </div>
             <div class="input-control has-icon-left">
                 <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt"
@@ -62,7 +68,7 @@
                        name="<%=LoginManager.LOGIN_PASSWORD%>">
                 <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left"
                        style="line-height: 44px;"><i
-                        class="icon icon-<%=modelManager.getModel("password").icon()%>"></i></label>
+                        class="icon icon-<%=PageBackendService.getAppInfo("master").getModelInfo("password").getIcon()%>"></i></label>
                 <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt"
                        class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;"><i
                         class="icon icon-eye-close"></i></label>
@@ -83,7 +89,7 @@
                 <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control" required
                        style="width:250px;display:inline-block;float:left;"
                        placeholder="<%=PageBackendService.getMasterAppI18nString( "page.vercode")%>">
-                <label for="randomcode" class="input-control-icon-left" style="line-height: 44px;"><i
+                <label class="input-control-icon-left" style="line-height: 44px;"><i
                         class="icon icon-shield"></i></label>
                 <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>"
                      class="captcha"
@@ -162,5 +168,26 @@
     }
 </script>
 </body>
-
+<%--公用“重定向页面”消息提示--%>
+<%
+    String common_msg = request.getParameter(RESTController.MSG_FLAG);
+    common_msg = LoginManager.retrieveI18nMsg(common_msg);
+    if (common_msg != null) {
+%>
+<script>
+    $(document).ready(function () {
+        window.setTimeout(function () {
+            var common_msgIndex = showError("<%=common_msg%>");
+                            // 记录最后一次通知弹窗
+                            try {
+                                $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
+                            } catch (e) {
+                                // login.jsp
+                            }
+                        }, 350);
+                    });
+</script>
+<%
+    }
+%>
 </html>

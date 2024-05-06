@@ -1,6 +1,6 @@
 package qingzhou.registry.impl;
 
-import qingzhou.crypto.CryptoService;
+import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.json.Json;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
@@ -12,13 +12,11 @@ import java.util.Map;
 
 public class RegistryImpl implements Registry {
     private final Json json;
-    private final CryptoService cryptoService;
     private final Map<String, InstanceInfo> instanceInfos = new HashMap<>();
     private final Map<String, String> instanceFingerprints = new HashMap<>();
 
-    public RegistryImpl(Json json, CryptoService cryptoService) {
+    public RegistryImpl(Json json) {
         this.json = json;
-        this.cryptoService = cryptoService;
     }
 
     @Override
@@ -29,7 +27,7 @@ public class RegistryImpl implements Registry {
     @Override
     public void register(String registrationData) {
         InstanceInfo instanceInfo = json.fromJson(registrationData, InstanceInfo.class);
-        register(instanceInfo, instanceInfo.getId(), this.cryptoService.getMessageDigest().fingerprint(registrationData));
+        register(instanceInfo, instanceInfo.getId(), CryptoServiceFactory.getInstance().getMessageDigest().fingerprint(registrationData));
     }
 
     private void register(InstanceInfo instanceInfo, String id, String fingerprint) {

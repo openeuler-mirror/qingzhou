@@ -8,8 +8,8 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.config.ConfigService;
 import qingzhou.config.Console;
+import qingzhou.console.ContextHelper;
 import qingzhou.console.i18n.SetI18n;
-import qingzhou.console.impl.Controller;
 import qingzhou.console.jmx.JMXServerHolder;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
@@ -17,13 +17,17 @@ import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.StringUtil;
-import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyPairCipher;
+import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.crypto.CryptoService;
+import qingzhou.engine.util.crypto.CryptoServiceFactory;
+import qingzhou.engine.util.crypto.KeyPairCipher;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.Registry;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -37,9 +41,12 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     private static String publicKey;
     private static String privateKey;
     public static KeyPairCipher keyPairCipher;
+    private static ContextHelper contextHelper;
 
     static {
-        CryptoService cryptoService = getService(CryptoService.class);
+        contextHelper = ContextHelper.GetInstance.get();
+
+        CryptoService cryptoService = CryptoServiceFactory.getInstance();
         publicKey = getConsole().getSecurity().getPublicKey();
         privateKey = getConsole().getSecurity().getPrivateKey();
         if (StringUtil.isBlank(publicKey) || StringUtil.isBlank(privateKey)) {
@@ -54,17 +61,26 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         }
     }
 
+    public static AppInfo getAppInfo(String appName) {
+        // 优先找本地，master和instance都在本地
+        App app = getService(Deployer.class).getApp(appName);
+        if (app != null) return app.getAppInfo();
+
+        // 再找远程
+        return getService(Registry.class).getAppInfo(appName);
+    }
+
     public static <T> T getService(Class<T> type) {
-        return Controller.getService(type);
+        return contextHelper.getService(type);
     }
 
     public static ModuleContext getModuleContext() {
-        return Controller.moduleContext;
+        return contextHelper.getModuleContext();
     }
 
     public static Console getConsole() {
         try {
-            return getService(ConfigService.class).getConfig().getConsole();
+            return getService(ConfigService.class).getModule().getConsole();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

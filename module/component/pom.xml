@@ -13,7 +13,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>qingzhou-crypto</module>
         <module>qingzhou-http</module>
         <module>qingzhou-logger</module>
         <module>qingzhou-json</module>

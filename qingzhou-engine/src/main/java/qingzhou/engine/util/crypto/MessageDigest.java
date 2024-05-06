@@ -1,4 +1,4 @@
-package qingzhou.crypto;
+package qingzhou.engine.util.crypto;
 
 public interface MessageDigest {
     String digest(String text, String algorithm, int saltLength, int iterations);

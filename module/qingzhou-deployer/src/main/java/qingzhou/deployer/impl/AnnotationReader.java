@@ -53,12 +53,12 @@ class AnnotationReader {
         return map;
     }
 
-    private ModelAction searchActionFromParent(Class<?> aClass, Method targetMethod) {
+    private static ModelAction searchActionFromParent(Class<?> aClass, Method targetMethod) {
         if (aClass == null || aClass == Object.class) {
             return null;
         }
 
-        for (Method m : clazz.getDeclaredMethods()) {
+        for (Method m : aClass.getDeclaredMethods()) {
             if (Modifier.isStatic(m.getModifiers())) {
                 continue;
             }
@@ -73,15 +73,15 @@ class AnnotationReader {
             }
         }
 
-        Class<?> superclass = clazz.getSuperclass();
-        if (superclass != null) {
+        Class<?> superclass = aClass.getSuperclass();
+        if (superclass != null && superclass != Object.class) {
             ModelAction action = searchActionFromParent(superclass, targetMethod);
             if (action != null) {
                 return action;
             }
         }
 
-        for (Class<?> check : clazz.getInterfaces()) {
+        for (Class<?> check : aClass.getInterfaces()) {
             ModelAction action = searchActionFromParent(check, targetMethod);
             if (action != null) {
                 return action;
@@ -92,7 +92,7 @@ class AnnotationReader {
     }
 
 
-    private boolean equalMethod(Method m, Method other) {
+    private static boolean equalMethod(Method m, Method other) {
         if (m.getName().equals(other.getName())) {
             if (!m.getReturnType().equals(other.getReturnType())) {
                 return false;
@@ -102,7 +102,7 @@ class AnnotationReader {
         return false;
     }
 
-    private boolean equalParamTypes(Class<?>[] params1, Class<?>[] params2) {
+    private static boolean equalParamTypes(Class<?>[] params1, Class<?>[] params2) {
         if (params1.length == params2.length) {
             for (int i = 0; i < params1.length; i++) {
                 if (params1[i] != params2[i]) {

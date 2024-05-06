@@ -8,13 +8,12 @@ import qingzhou.engine.util.pattern.Filter;
 import qingzhou.logger.Logger;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
 
 public class AsymmetricDecryptor implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
-        ModelInfo modelInfo = SystemController.getService(Registry.class).getAppInfo(request.getApp()).getModelInfo(request.getModel());
+        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
         for (String fieldName : modelInfo.getFormFieldNames()) {
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField.getType().equals(FieldType.password.name())) {

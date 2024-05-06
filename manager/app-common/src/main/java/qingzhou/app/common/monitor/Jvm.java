@@ -1,6 +1,5 @@
 package qingzhou.app.common.monitor;
 
-
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.type.Monitorable;

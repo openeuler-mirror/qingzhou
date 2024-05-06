@@ -6,7 +6,6 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
-import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
 
 import java.lang.reflect.Field;
@@ -40,18 +39,6 @@ public class MasterApp extends QingzhouSystemApp {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static Map<String, String> prepareParameters(Request request) {
-        Map<String, String> properties = new HashMap<>();
-        String[] fieldNames = getService(Deployer.class).getApp(request.getApp()).getAppInfo().getModelInfo(request.getModel()).getFormFieldNames();
-        for (String fieldName : fieldNames) {
-            String value = request.getParameter(fieldName);
-            if (value != null) {
-                properties.put(fieldName, value);
-            }
-        }
-        return properties;
     }
 
     private static class LocalNodeProtection implements ActionFilter {

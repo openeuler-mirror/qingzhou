@@ -8,21 +8,21 @@ import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import qingzhou.servlet.ServletContainer;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 
 public class ServletContainerImpl implements ServletContainer {
     private Tomcat tomcat;
 
     @Override
-    public void start(int port, String baseDir) throws Exception {
+    public void start(int port, File baseDir) throws Exception {
         ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
         try {
-            Thread.currentThread().setContextClassLoader(ServletContainerImpl.class.getClassLoader());
+            // 为了 接管 tomcat 的日志系统
+            Thread.currentThread().setContextClassLoader(TomcatLogDelegate.class.getClassLoader());
 
             tomcat = new Tomcat();
-            if (null != baseDir && !baseDir.isEmpty()) {
-                tomcat.setBaseDir(baseDir);
-            }
+            tomcat.setBaseDir(baseDir.getAbsolutePath());
             tomcat.setPort(port); // 设置默认连接器端口
             tomcat.getHost().setParentClassLoader(Tomcat.class.getClassLoader());// 应用需要依赖 tomcat 里面的 javax.servlet api
             Connector connector = tomcat.getConnector();// 建立连接器
@@ -65,13 +65,13 @@ public class ServletContainerImpl implements ServletContainer {
         try {
             tomcat.stop();
         } catch (Exception e) {
-            e.printStackTrace();
+            Controller.logger.warn(e.getMessage(), e);
         }
 
         try {
             tomcat.destroy();
         } catch (Exception e) {
-            e.printStackTrace();
+            Controller.logger.warn(e.getMessage(), e);
         }
     }
 }

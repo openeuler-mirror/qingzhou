@@ -2,12 +2,11 @@ package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
 
 import java.io.File;
@@ -18,6 +17,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -27,12 +27,10 @@ class DeployerImpl implements Deployer {
     private final Map<Method, ModelActionInfo> presetMethodActionInfos;
 
     private final Map<String, App> apps = new HashMap<>();
-    private final CryptoService cryptoService;
     private final ModuleContext moduleContext;
 
-    DeployerImpl(CryptoService cryptoService, ModuleContext moduleContext) {
+    DeployerImpl(ModuleContext moduleContext) {
         this.moduleContext = moduleContext;
-        this.cryptoService = cryptoService;
         this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(PresetAction.class));
     }
 
@@ -55,11 +53,14 @@ class DeployerImpl implements Deployer {
         apps.put(appName, app);
     }
 
-    private void startModel(AppImpl app) {
-        Field appContextField = Arrays.stream(ModelBase.class.getDeclaredFields()).filter(field -> field.getType() == AppContext.class).findFirst().get();
+    private void startModel(AppImpl app) throws Exception {
+        Field appContextField = Arrays.stream(ModelBase.class.getDeclaredFields())
+                .filter(field -> field.getType() == AppContext.class)
+                .findFirst().orElseThrow((Supplier<Exception>) () -> new IllegalStateException("not found: " + app.getAppInfo().getName()));
 
         app.getModelBases().forEach(modelBase -> {
             try {
+                appContextField.setAccessible(true);
                 appContextField.set(modelBase, app.getAppContext());
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -77,21 +78,14 @@ class DeployerImpl implements Deployer {
         AppImpl app = (AppImpl) apps.remove(appName);
         if (app == null) return;
 
-        File temp = null;
-
         QingzhouApp qingzhouApp = app.getQingzhouApp();
         if (qingzhouApp != null) {
-            temp = app.getAppContext().getTemp();
             qingzhouApp.stop();
         }
 
         try {
             app.getLoader().close();
         } catch (Exception ignored) {
-        }
-
-        if (temp != null) {
-            FileUtil.forceDelete(temp);
         }
     }
 
@@ -117,7 +111,6 @@ class DeployerImpl implements Deployer {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
             qingzhouSystemApp.setDeployer(this);
-            qingzhouSystemApp.setCryptoService(cryptoService);
         }
         app.setQingzhouApp(qingzhouApp);
 
@@ -220,7 +213,7 @@ class DeployerImpl implements Deployer {
     }
 
     private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader) throws Exception {
-        Collection<String> modelClassName = FileUtil.detectAnnotatedClass(appLibs, Model.class, null);
+        Collection<String> modelClassName = Utils.detectAnnotatedClass(appLibs, Model.class, null);
 
         Map<ModelBase, ModelInfo> modelInfos = new HashMap<>();
 
@@ -370,7 +363,7 @@ class DeployerImpl implements Deployer {
         }
         File[] appLibs = appFiles;
         if (!isSystemApp) {
-            File[] commonFiles = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
+            File[] commonFiles = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
             if (commonFiles != null) {
                 int appFileLength = appFiles.length;
                 int commonFileLength = commonFiles.length;

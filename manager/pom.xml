@@ -22,7 +22,12 @@
     <dependencies>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-console</artifactId>
+            <artifactId>qingzhou-api</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-engine</artifactId>
             <version>x</version>
         </dependency>
     </dependencies>

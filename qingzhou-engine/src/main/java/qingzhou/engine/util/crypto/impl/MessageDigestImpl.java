@@ -1,6 +1,6 @@
-package qingzhou.crypto.impl;
+package qingzhou.engine.util.crypto.impl;
 
-import qingzhou.crypto.MessageDigest;
+import qingzhou.engine.util.crypto.MessageDigest;
 
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -30,9 +30,9 @@ class MessageDigestImpl implements MessageDigest {
         }
 
         String[] splitPwd = splitPwd(msgDigest);
-        String algorithm = splitPwd[3];
-        int iterations = Integer.parseInt(splitPwd[1]);
-        byte[] salt = decode(splitPwd[0]);
+        String algorithm = splitPwd[0];
+        byte[] salt = decode(splitPwd[1]);
+        int iterations = Integer.parseInt(splitPwd[2]);
         String digest = digest(text, algorithm, salt, iterations);
         return Objects.equals(digest, msgDigest);
     }

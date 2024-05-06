@@ -62,6 +62,7 @@ class ConfigTool {
 
         String classpath = Arrays.stream(Objects.requireNonNull(new File(CommandUtil.getLibDir(), "engine").listFiles()))
                 .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
+        jvm.getArg().add(new Arg("-Dqingzhou.instance=" + instanceDir.getAbsolutePath().replace("\\", "/")));
         jvm.getArg().add(new Arg("-classpath"));
         jvm.getArg().add(new Arg(classpath));
         jvm.getArg().add(new Arg("qingzhou.engine.impl.Main"));
@@ -71,21 +72,20 @@ class ConfigTool {
 
     private Jvm parseFileConfig() throws Exception {
         StringBuilder fileContent = new StringBuilder();
-        try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "jvm.json").toPath())) {
+        try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             for (String line; (line = reader.readLine()) != null; ) {
                 fileContent.append(line);
             }
         }
-        String allContent = fileContent.toString().replace("${qingzhou.instance}", instanceDir.getAbsolutePath().replace("\\", "\\\\"));
 
         URL jsonURL = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonURL})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
-            Method fromJson = loadedClass.getMethod("fromJson", String.class, Class.class);
+            Method fromJson = loadedClass.getMethod("fromJsonMember", String.class, String.class, Class.class);
 
-            return (Jvm) fromJson.invoke(instance, allContent, Jvm.class);
+            return (Jvm) fromJson.invoke(instance, fileContent.toString(), "jvm", Jvm.class);
         }
     }
 }

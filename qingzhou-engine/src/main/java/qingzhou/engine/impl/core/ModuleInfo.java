@@ -1,4 +1,4 @@
-package qingzhou.engine.impl;
+package qingzhou.engine.impl.core;
 
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;

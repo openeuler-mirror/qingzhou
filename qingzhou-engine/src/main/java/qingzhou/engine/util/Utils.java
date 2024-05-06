@@ -4,6 +4,7 @@ import javassist.ClassPool;
 import javassist.CtClass;
 
 import java.io.*;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
@@ -14,12 +15,89 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class FileUtil {
+public class Utils {
+    private static Set<String> localIps;
+
+    public static Set<String> getLocalIps() {
+        if (localIps != null) {
+            return localIps;
+        }
+
+        localIps = new HashSet<>();
+
+        Set<String> first = new HashSet<>();
+        Set<String> second = new HashSet<>();
+        Set<String> third = new HashSet<>();
+        try {
+            OUT:
+            for (Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces(); ifaces.hasMoreElements(); ) {
+                NetworkInterface iface = ifaces.nextElement();
+                if (iface.isLoopback()) {
+                    continue;
+                }
+                String iName = iface.getName().toLowerCase();
+                String iDisplayName = iface.getDisplayName().toLowerCase();
+                String[] ignores = {"vm", "tun", "vbox", "docker", "virtual"};// *tun* 是 k8s 的 Calico 网络网卡
+                for (String ignore : ignores) {
+                    if (iDisplayName.contains(ignore)) {
+                        continue OUT;
+                    }
+                }
+                for (Enumeration<InetAddress> inetAddrs = iface.getInetAddresses(); inetAddrs.hasMoreElements(); ) {
+                    InetAddress inetAddr = inetAddrs.nextElement();
+
+                    if (inetAddr instanceof Inet6Address) {
+                        continue;// for #ITAIT-3712
+                    }
+
+                    if (inetAddr != null && !inetAddr.isLoopbackAddress()) {
+                        if (inetAddr.isSiteLocalAddress()) {
+                            if (iName.startsWith("eth") || iName.startsWith("en") // ITAIT-3024
+                            ) {
+                                first.add(inetAddr.getHostAddress());
+                            } else if (iName.startsWith("wlan")) {
+                                second.add(inetAddr.getHostAddress());
+                            }
+                        } else {
+                            third.add(inetAddr.getHostAddress());
+                        }
+                    }
+                }
+            }
+
+            if (first.isEmpty()) {
+                if (!second.isEmpty()) {
+                    first.addAll(second);
+                } else {
+                    first.addAll(third);
+                }
+            }
+
+            if (first.isEmpty()) {
+                // 如果没有发现 non-loopback地址.只能用最次选的方案
+                InetAddress jdkSuppliedAddress = InetAddress.getLocalHost();
+                if (jdkSuppliedAddress == null) {
+                    System.out.println("The JDK InetAddress.getLocalHost() method unexpectedly returned null.");
+                } else {
+                    first.add(jdkSuppliedAddress.getHostAddress());
+                }
+            }
+        } catch (SocketException | UnknownHostException e) {
+            System.out.println("Failed to getLocalInetAddress: " + e.getMessage());
+        }
+
+        localIps = first;
+        if (localIps.isEmpty()) {
+            localIps.add("127.0.0.1");
+        }
+        return localIps;
+    }
+
     public static void unZipToDir(File srcFile, File unZipDir) throws IOException {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ, StandardCharsets.UTF_8)) {
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
                 ZipEntry entry = e.nextElement();
-                File targetFile = newFile(unZipDir, entry.getName());
+                File targetFile = newFile(unZipDir, entry);
                 if (entry.isDirectory()) {
                     if (!targetFile.exists()) {
                         boolean mkdirs = targetFile.mkdirs();
@@ -42,6 +120,23 @@ public class FileUtil {
         }
     }
 
+    private static File newFile(File destDir, ZipEntry entry) throws IOException {
+        File destFile = new File(destDir, entry.getName());
+        if (!destFile.getCanonicalPath().startsWith(destDir.getCanonicalPath())) {
+            throw new IOException("Entry is outside of target dir:" + entry.getName());
+        }
+        return destFile;
+    }
+
+    public static String stackTraceToString(StackTraceElement[] stackTrace) {
+        StringBuilder msg = new StringBuilder();
+        String sp = System.lineSeparator();
+        for (StackTraceElement element : stackTrace) {
+            msg.append("\t").append(element).append(sp);
+        }
+        return msg.toString();
+    }
+
     public static String read(File file) throws IOException {
         try (InputStream inputStream = Files.newInputStream(file.toPath())) {
             return read(inputStream);
@@ -60,17 +155,23 @@ public class FileUtil {
 
     public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, String scopePrefix) throws Exception {
         Collection<String> targetClasses = new HashSet<>();
-        ClassPool classPool = ClassPool.getDefault();
-        classPool.appendPathList(Arrays.stream(libs).map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
-        getScopeClasses(libs, scopePrefix).forEach(s -> {
-            try {
-                CtClass ctClass = classPool.get(s);
-                if (ctClass.getAnnotation(annotationClass) != null) {
-                    targetClasses.add(s);
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(annotationClass.getClassLoader());
+            ClassPool classPool = ClassPool.getDefault();
+            classPool.appendPathList(Arrays.stream(libs).map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
+            getScopeClasses(libs, scopePrefix).forEach(s -> {
+                try {
+                    CtClass ctClass = classPool.get(s);
+                    if (ctClass.getAnnotation(annotationClass) != null) {
+                        targetClasses.add(s);
+                    }
+                } catch (Exception ignored) {
                 }
-            } catch (Exception ignored) {
-            }
-        });
+            });
+        } finally {
+            Thread.currentThread().setContextClassLoader(contextClassLoader);
+        }
         return targetClasses;
     }
 
@@ -123,7 +224,6 @@ public class FileUtil {
         }
     }
 
-    // 删除 文件 或 文件夹
     public static void forceDelete(File file) throws IOException {
         if (file.isDirectory()) {
             deleteDirectory(file);
@@ -325,7 +425,7 @@ public class FileUtil {
         }
     }
 
-    private FileUtil() {
+    private Utils() {
     }
 
     public static LinkedHashMap<String, String> streamToProperties(InputStream inputStream) throws Exception {

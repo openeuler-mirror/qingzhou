@@ -99,11 +99,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-crypto</artifactId>
-            <version>x</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-http</artifactId>
             <version>x</version>
         </dependency>
@@ -146,9 +141,9 @@
         </dependency>
 
         <dependency>
-            <groupId>javassist</groupId>
+            <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
-            <version>3.12.1.GA</version>
+            <version>3.28.0-GA</version>
         </dependency>
 
     </dependencies>

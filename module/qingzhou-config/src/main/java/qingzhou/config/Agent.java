@@ -1,12 +1,10 @@
 package qingzhou.config;
 
-public class Remote {
+public class Agent {
     private boolean enabled;
-    private String id;
-    private String name;
     private String host;
     private int port;
-    private Master master;
+    private String key;
 
     public boolean isEnabled() {
         return enabled;
@@ -14,22 +12,6 @@ public class Remote {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getHost() {
@@ -48,11 +30,11 @@ public class Remote {
         this.port = port;
     }
 
-    public Master getMaster() {
-        return master;
+    public String getKey() {
+        return key;
     }
 
-    public void setMaster(Master master) {
-        this.master = master;
+    public void setKey(String key) {
+        this.key = key;
     }
 }

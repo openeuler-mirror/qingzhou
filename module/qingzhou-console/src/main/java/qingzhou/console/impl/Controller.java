@@ -1,16 +1,18 @@
 package qingzhou.console.impl;
 
-import qingzhou.config.Config;
 import qingzhou.config.ConfigService;
 import qingzhou.config.Console;
+import qingzhou.console.ContextHelper;
+import qingzhou.deployer.Deployer;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
-import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.logger.Logger;
+import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletContainer;
 import qingzhou.servlet.ServletService;
 
@@ -22,38 +24,31 @@ import java.util.stream.Collectors;
 
 @Module
 public class Controller implements ModuleActivator {
-    public static ModuleContext moduleContext;
-    private static Controller instance;
-
-    public static <T> T getService(Class<T> type) {
-        List<Field> collect = Arrays.stream(Controller.class.getDeclaredFields()).filter(field -> field.getType() == type).collect(Collectors.toList());
-        try {
-            return (T) collect.get(0).get(instance);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Controller() {
-        instance = this;
-    }
-
     @Service
     private Logger logger;
     @Service
     private ConfigService configService;
     @Service
     private ServletService servletService;
+    @Service
+    private Deployer deployer;
+    @Service
+    private Registry registry;
 
     private Console console;
     private ProcessSequence sequence;
     private ServletContainer servletContainer;
+    public ModuleContext moduleContext;
+    private Controller instance;
+
+    public Controller() {
+        instance = this;
+    }
 
     @Override
     public void start(ModuleContext context) throws Exception {
         moduleContext = context;
-        Config config = configService.getConfig();
-        console = config.getConsole();
+        console = configService.getModule().getConsole();
 
         if (!console.isEnabled()) return;
 
@@ -76,7 +71,7 @@ public class Controller implements ModuleActivator {
         public void exec() throws Exception {
             servletContainer = servletService.createServletContainer();
             servletContainer.start(console.getPort(),
-                    moduleContext.getTemp().getAbsolutePath());
+                    new File(moduleContext.getTemp(), "servlet"));
         }
 
         @Override
@@ -90,7 +85,34 @@ public class Controller implements ModuleActivator {
 
         @Override
         public void exec() {
-            File consoleApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "console");
+            try {
+                ContextHelper.GetInstance.set(new ContextHelper() {
+                    @Override
+                    public <T> T getService(Class<T> type) {
+                        List<Field> collect = Arrays.stream(Controller.class.getDeclaredFields()).filter(field -> field.getType() == type).collect(Collectors.toList());
+                        try {
+                            Field field = collect.get(0);
+                            field.setAccessible(true);
+                            return (T) field.get(Controller.this.instance);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    @Override
+                    public ModuleContext getModuleContext() {
+                        return Controller.this.moduleContext;
+                    }
+                });
+
+                exec0();
+            } finally {
+                ContextHelper.GetInstance.remove();
+            }
+        }
+
+        private void exec0() {
+            File consoleApp = Utils.newFile(moduleContext.getLibDir(), "module", "console");
             String docBase = consoleApp.getAbsolutePath();
             contextPath = console.getContextRoot();
             servletContainer.addWebapp(contextPath, docBase);

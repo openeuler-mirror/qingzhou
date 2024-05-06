@@ -3,7 +3,7 @@ package qingzhou.app.instance;
 import qingzhou.api.*;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 
 import java.io.File;
 
@@ -20,7 +20,7 @@ public class AppInstaller extends ModelBase {
     public void installApp(Request request, Response response) throws Exception {
         File srcFile;
         if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
-            srcFile = FileUtil.newFile(request.getParameter("fromUpload"));
+            srcFile = Utils.newFile(request.getParameter("fromUpload"));
         } else {
             srcFile = new File(request.getParameter("filename"));
         }
@@ -33,18 +33,18 @@ public class AppInstaller extends ModelBase {
         String srcFileName = srcFile.getName();
         File app;
         if (srcFile.isDirectory()) {
-            app = FileUtil.newFile(getAppsDir(), srcFileName);
-            FileUtil.copyFileOrDirectory(srcFile, app);
+            app = Utils.newFile(getAppsDir(), srcFileName);
+            Utils.copyFileOrDirectory(srcFile, app);
         } else if (srcFileName.endsWith(".jar")) {
             int index = srcFileName.lastIndexOf(".");
             String appName = srcFileName.substring(0, index);
-            app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, srcFileName));
+            app = Utils.newFile(getAppsDir(), appName);
+            Utils.copyFileOrDirectory(srcFile, Utils.newFile(app, srcFileName));
         } else if (srcFileName.endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             String appName = srcFileName.substring(0, index);
-            app = FileUtil.newFile(getAppsDir(), appName);
-            FileUtil.unZipToDir(srcFile, app);
+            app = Utils.newFile(getAppsDir(), appName);
+            Utils.unZipToDir(srcFile, app);
         } else {
             throw new IllegalArgumentException("unknown app type");
         }
@@ -57,10 +57,10 @@ public class AppInstaller extends ModelBase {
             info = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
     public void unInstallApp(Request request, Response response) throws Exception {
         InstanceApp.getService(Deployer.class).unInstallApp(request.getId());
-        FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
+        Utils.forceDelete(Utils.newFile(getAppsDir(), request.getId()));
     }
 
     private File getAppsDir() {
-        return FileUtil.newFile(InstanceApp.getService(ModuleContext.class).getInstanceDir(), "apps");
+        return Utils.newFile(InstanceApp.getService(ModuleContext.class).getInstanceDir(), "apps");
     }
 }

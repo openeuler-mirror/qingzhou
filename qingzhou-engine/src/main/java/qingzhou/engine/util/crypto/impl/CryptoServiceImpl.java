@@ -1,15 +1,15 @@
-package qingzhou.crypto.impl;
+package qingzhou.engine.util.crypto.impl;
 
-import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyCipher;
-import qingzhou.crypto.KeyPairCipher;
-import qingzhou.crypto.MessageDigest;
+import qingzhou.engine.util.crypto.CryptoService;
+import qingzhou.engine.util.crypto.KeyCipher;
+import qingzhou.engine.util.crypto.KeyPairCipher;
+import qingzhou.engine.util.crypto.MessageDigest;
 
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.UUID;
 
-class CryptoServiceImpl implements CryptoService {
+public class CryptoServiceImpl implements CryptoService {
     private final MessageDigest messageDigest = new MessageDigestImpl();
 
     @Override
