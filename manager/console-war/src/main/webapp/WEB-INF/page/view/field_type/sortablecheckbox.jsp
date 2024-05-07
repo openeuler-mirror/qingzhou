@@ -1,3 +1,4 @@
+<%@ page import="java.util.stream.Collectors" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%
@@ -17,20 +18,19 @@
 %>
 <div class="checkbox-group sortable">
     <%
-        Options manager = modelManager.getOptions(qzRequest, qzRequest.getModel(), fieldName);
-        List<Option> list = manager.options();
-        Collections.sort(list, Comparator.comparingInt(o -> fieldValues.indexOf(o.value())));
-        for (Option option : list) {
-            String val = option.value();
-            String name = I18n.getString(option.i18n());
-    %>
-    <a draggable="true" href="javascript:void(0);">
-        <input type="checkbox" name="<%=fieldName%>"
-               value='<%=val%>' <%=(fieldValues.contains(val) ? "checked" : "")%> <%=readonly%>>
-        <label><%=name%>
-        </label>
-    </a>
-    <%
+        String[] sortableCheckBoxOptions = modelInfo.getFieldOptions(fieldName);
+        if(sortableCheckBoxOptions != null){
+            List<String> list = Arrays.stream(sortableCheckBoxOptions).sorted(Comparator.comparingInt(fieldValues::indexOf)).collect(Collectors.toList());
+            for (String option : list) {
+        %>
+        <a draggable="true" href="javascript:void(0);">
+            <input type="checkbox" name="<%=fieldName%>"
+                   value='<%=option%>' <%=(fieldValues.contains(option) ? "checked" : "")%> <%=readonly%>>
+            <label><%=option%>
+            </label>
+        </a>
+            <%
+            }
         }
     %>
 </div>

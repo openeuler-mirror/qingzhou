@@ -18,6 +18,15 @@ public class ModelInfo {
     private ModelActionInfo[] modelActionInfos;
     private GroupInfo[] groupInfos;
 
+    public String[] getFieldOptions(String fieldName) {
+        ModelFieldInfo modelFieldInfo = getModelFieldInfo(fieldName);
+        if (modelFieldInfo != null) {
+            return modelFieldInfo.getOptions();
+        }
+
+        return null;
+    }
+
     public ModelActionInfo getModelActionInfo(String actionName) {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
     }
