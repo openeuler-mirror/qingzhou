@@ -166,14 +166,10 @@ public class PageBackendService {
         }
         String appName = getAppName(request);
         AppInfo appInfo = getAppInfo(appName);
-        Map<String, List<ModelInfo>> groupMap = appInfo.getModelInfos().stream().filter(modelInfo -> !modelInfo.isHidden()).collect(Collectors.groupingBy(ModelInfo::getMenu));
-        /**
-         *  name -> String,
-         *  parentName -> name,
-         *  entryAction -> String,
-         *  order -> int
-         *  children -> Properties
-         */
+        Map<String, List<ModelInfo>> groupMap = appInfo.getModelInfos().stream()
+                .filter(modelInfo -> !modelInfo.isHidden())
+                .collect(Collectors.groupingBy(ModelInfo::getMenu));
+
         groupMap.forEach((menuGroup, models) -> {
             MenuInfo menuData = appInfo.getMenuInfo(menuGroup);
             MenuItem parentMenu = new MenuItem();
@@ -183,33 +179,25 @@ public class PageBackendService {
                 parentMenu.setI18ns(menuData.getI18n());
                 parentMenu.setOrder(menuData.getOrder());
             }
+
             models.sort(Comparator.comparingInt(ModelInfo::getOrder));
+
             models.forEach(modelInfo -> {
-                String modelMenu = modelInfo.getMenu();
-                if (StringUtil.isBlank(modelMenu)) {
-                    MenuItem subMenu = new MenuItem();
-                    subMenu.setMenuName(modelInfo.getCode());
-                    subMenu.setMenuIcon(modelInfo.getIcon());
-                    subMenu.setI18ns(modelInfo.getName());
-                    subMenu.setMenuAction(modelInfo.getEntrance());
-                    subMenu.setOrder(modelInfo.getOrder());
-                    menus.add(subMenu);
+                MenuItem subMenu = new MenuItem();
+                subMenu.setMenuName(modelInfo.getCode());
+                subMenu.setMenuIcon(modelInfo.getIcon());
+                subMenu.setI18ns(modelInfo.getName());
+                subMenu.setMenuAction(modelInfo.getEntrance());
+                subMenu.setOrder(modelInfo.getOrder());
+                if (menuData != null) {
+                    subMenu.setParentMenu(parentMenu.getMenuName());
+                    parentMenu.getChildren().add(subMenu);
                 } else {
-                    MenuItem subMenu = new MenuItem();
-                    subMenu.setMenuName(modelInfo.getCode());
-                    subMenu.setMenuIcon(modelInfo.getIcon());
-                    subMenu.setI18ns(modelInfo.getName());
-                    subMenu.setMenuAction(modelInfo.getEntrance());
-                    subMenu.setOrder(modelInfo.getOrder());
-                    if (menuData == null) {
-                        menus.add(subMenu);
-                    } else {
-                        subMenu.setParentMenu(parentMenu.getMenuName());
-                        parentMenu.getChildren().add(subMenu);
-                    }
+                    menus.add(subMenu);
                 }
             });
-            if (menuData != null) {
+
+            if (menuData != null && !parentMenu.getChildren().isEmpty()) {
                 menus.add(parentMenu);
             }
         });
