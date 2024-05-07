@@ -12,7 +12,7 @@
         </div>
     </li>
     <%
-        if (!Objects.equals(I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + qzRequest.getModel()), I18n.getString(menuAppName, "model." + qzRequest.getModel()))) {
+        if (!Objects.equals(I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + qzRequest.getAction()), I18n.getString(menuAppName, "model." + qzRequest.getModel()))) {
             if (I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + qzRequest.getAction()) != null) {
     %>
     <li class="active">

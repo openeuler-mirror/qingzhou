@@ -14,7 +14,7 @@
 <%@ page import="qingzhou.console.page.*" %>
 <%@ page import="qingzhou.registry.ModelInfo" %>
 <%@ page import="qingzhou.registry.AppInfo" %>
-
+<%@ page import="qingzhou.registry.ModelFieldInfo" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);

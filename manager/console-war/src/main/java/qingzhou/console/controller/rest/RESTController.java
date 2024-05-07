@@ -8,6 +8,7 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
+import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.Utils;
@@ -45,7 +46,7 @@ public class RESTController extends HttpServlet {
         if (uri != null) {
             String[] restTemp = uri.split("/");
             for (String r : restTemp) {
-                if (r != null) {
+                if (StringUtil.notBlank(r)) {
                     result.add(r);
                 }
             }

@@ -1,13 +1,23 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.Groups;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Showable;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.GroupInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -15,7 +25,15 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.jar.JarEntry;
@@ -171,7 +189,7 @@ class DeployerImpl implements Deployer {
         for (Map.Entry<ModelBase, ModelInfo> entry : modelSelfInfos.entrySet()) {
             List<ModelActionInfo> added = new ArrayList<>();
 
-            Set<String> actions = Arrays.stream(entry.getValue().getModelActionInfos()).map(ModelActionInfo::getCode).collect(Collectors.toSet());
+            Set<ModelActionInfo> actions = Arrays.stream(entry.getValue().getModelActionInfos()).collect(Collectors.toSet());
             ModelBase modelBase = entry.getKey();
 
             // 1. 添加预设的 Action
@@ -182,11 +200,22 @@ class DeployerImpl implements Deployer {
                     throw new RuntimeException(e);
                 }
             })).forEach(addAction -> {
-                if (!actions.contains(addAction)) {
-                    for (Map.Entry<Method, ModelActionInfo> ma : presetMethodActionInfos.entrySet()) {
-                        if (addAction.equals(ma.getValue().getCode())) {
+                ModelActionInfo actionInfo = null;
+                for (ModelActionInfo action : actions) {
+                    if (addAction.equals(action.getCode())) {
+                        actionInfo = action;
+                        break;
+                    }
+                }
+
+                for (Map.Entry<Method, ModelActionInfo> ma : presetMethodActionInfos.entrySet()) {
+                    if (addAction.equals(ma.getValue().getCode())) {
+                        if (actionInfo == null) {
                             added.add(ma.getValue());
+                        } else {
+                            actionInfo.setForward(ma.getValue().getForward());
                         }
+                        break;
                     }
                 }
             });

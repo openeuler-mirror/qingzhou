@@ -26,7 +26,7 @@ public class HtmlView implements View {
         req.setAttribute(QZ_RESPONSE_KEY, response);
 
         String modelName = request.getModel();
-        ModelActionInfo modelAction = SystemController.getService(Registry.class)
+        ModelActionInfo modelAction = SystemController
                 .getAppInfo(request.getApp())
                 .getModelInfo(modelName)
                 .getModelActionInfo(request.getAction());

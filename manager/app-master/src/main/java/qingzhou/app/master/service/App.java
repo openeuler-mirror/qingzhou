@@ -122,7 +122,7 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(
-            name = {"管理", "en:Manage"},
+            name = {"管理", "en:Manage"}, forward = "sys/manage",
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
     }

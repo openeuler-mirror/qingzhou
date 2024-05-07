@@ -6,5 +6,5 @@
     }
 %>
 
-<input type="number" step="0.1" min="<%=modelField.min()%>" max="<%=modelField.max()%>"
+<input type="number" step="0.1" <%--min="<%=modelField.min()%>" max="<%=modelField.max()--%>%>"
        name="<%=fieldName%>" value='<%=fieldValue%>' class="form-control" <%=readonly%>>
