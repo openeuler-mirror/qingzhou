@@ -17,18 +17,16 @@
     String selectText = "";
     String selectHtml = "<ul class=\"list\">";
 
-    Options optionManager = modelManager.getOptions(qzRequest, qzRequest.getModel(), fieldName);
-    if (optionManager != null) {
-        for (Option option : optionManager.options()) {
-            String val = option.value();
-            String name = I18n.getString(option.i18n());
-            if (Objects.equals(fieldValue, val)) {
-                selectVal = val;
-                selectText = name;
+    String[] selectOptions = modelInfo.getFieldOptions(fieldName);
+    if (selectOptions != null) {
+        for (String option : selectOptions) {
+            if (Objects.equals(fieldValue, option)) {
+                selectVal = option;
+                selectText = option;
                 tabIndex = index;
-                selectHtml += "<li data-value=\"" + val + "\" class=\"option selected focus\" format=\"" + name + "\">" + name + "</li>"; // TODO options.getFormat(name) ?
+                selectHtml += "<li data-value=\"" + option + "\" class=\"option selected focus\" format=\"" + option + "\">" + option + "</li>"; // TODO options.getFormat(name) ?
             } else {
-                selectHtml += "<li data-value=\"" + val + "\" class=\"option\" format=\"" + name + "\">" + name + "</li>";
+                selectHtml += "<li data-value=\"" + option + "\" class=\"option\" format=\"" + option + "\">" + option + "</li>";
             }
             index++;
         }

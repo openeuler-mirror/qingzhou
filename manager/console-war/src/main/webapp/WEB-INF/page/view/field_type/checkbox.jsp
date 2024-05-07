@@ -17,15 +17,14 @@
 %>
 <%
     {
-        Options checkboxOptions = modelManager.getOptions(qzRequest, qzRequest.getModel(), fieldName);
+        String[] checkboxOptions = modelInfo.getFieldOptions(fieldName);
         if (checkboxOptions != null) {
-            for (Option option : checkboxOptions.options()) {
-                String val = option.value();
+            for (String option : checkboxOptions) {
 %>
 <label class="checkbox-inline checkbox-label checkbox-anim">
     <input type="checkbox" name="<%=fieldName%>"
-           value='<%=val%>' <%=(fieldValues.contains(val) ? "checked" : "")%> <%=readonly%>>
-    <i class="checkbox-i"></i> <%=I18n.getString(option.i18n())%>
+           value='<%=option%>' <%=(fieldValues.contains(option) ? "checked" : "")%> <%=readonly%>>
+    <i class="checkbox-i"></i> <%=option%>
 </label>
 <%
             }

@@ -90,9 +90,9 @@
 
                         String readonly = "";
                         boolean required = false;
-                        if (/*modelField.disableOnEdit() &&*/ isEdit) {
+                       /* if (modelField.disableOnEdit() && isEdit) {
                             readonly = "readonly";
-                        }
+                        }*/
                         if (idFieldName.equals(fieldName)) {
                             if (isEdit) {
                                 readonly = "readonly";
@@ -105,7 +105,7 @@
                         if (fieldName.equals(idFieldName)) {
                             required = true;
                         } else {
-                            /*required = modelField.required();*/
+                            required = false;//modelField.required();
                         }
 
                         String valueFrom = /*modelField.valueFrom()*/"";

@@ -14,15 +14,15 @@
     if (!readonly.isEmpty()) {
         readonly = "onfocus='this.defaultIndex=this.selectedIndex;' onchange='this.selectedIndex=this.defaultIndex;' readonly";
     }
-    Options multiOptionManager = modelManager.getOptions(qzRequest, qzRequest.getModel(), fieldName);
+    String[] multiOptions = modelInfo.getFieldOptions(fieldName);;
 %>
 <select name="<%=fieldName%>" multiple="multiple" <%=readonly%> style="width:100%;">
     <%
-        if (multiOptionManager != null) {
-            for (Option option : multiOptionManager.options()) {
+        if (multiOptions != null) {
+            for (String option : multiOptions) {
     %>
-    <option value='<%=option.value()%>' <%=fieldValues.contains(option.value()) ? "selected" : ""%>>
-        <%=I18n.getString(option.i18n())%>
+    <option value='<%=option%>' <%=fieldValues.contains(option) ? "selected" : ""%>>
+        <%=option%>
     </option>
     <%
             }
