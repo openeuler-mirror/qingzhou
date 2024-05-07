@@ -76,7 +76,7 @@ class DeployerImpl implements Deployer {
                 .filter(field -> field.getType() == AppContext.class)
                 .findFirst().orElseThrow((Supplier<Exception>) () -> new IllegalStateException("not found: " + app.getAppInfo().getName()));
 
-        app.getModelBases().forEach(modelBase -> {
+        app.getModelBaseMap().values().forEach(modelBase -> {
             try {
                 appContextField.setAccessible(true);
                 appContextField.set(modelBase, app.getAppContext());
@@ -141,7 +141,7 @@ class DeployerImpl implements Deployer {
         AppContextImpl appContext = buildAppContext(appInfo);
         app.setAppContext(appContext);
 
-        app.getModelBases().addAll(modelInfos.keySet());
+        modelInfos.forEach((key, value) -> app.getModelBaseMap().put(value.getCode(), key));
 
         // 构建 Action 执行器
         modelInfos.forEach((modelBase, modelInfo) -> initActionMap(app, modelInfo.getCode(), modelInfo.getModelActionInfos(), modelBase));

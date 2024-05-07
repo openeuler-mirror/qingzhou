@@ -11,6 +11,14 @@ public class ModelFieldInfo {
     private boolean list;
     private boolean monitor;
     private boolean numeric;
+    private boolean required;
+    private long min;
+    private long max;
+    private int lengthMin;
+    private int lengthMax;
+    private boolean port;
+    private String unsupportedCharacters;
+    private String[] unsupportedStrings;
 
     public String getCode() {
         return code;
@@ -90,5 +98,69 @@ public class ModelFieldInfo {
 
     public void setNumeric(boolean numeric) {
         this.numeric = numeric;
+    }
+
+    public boolean isRequired() {
+        return required;
+    }
+
+    public void setRequired(boolean required) {
+        this.required = required;
+    }
+
+    public long getMin() {
+        return min;
+    }
+
+    public void setMin(long min) {
+        this.min = min;
+    }
+
+    public long getMax() {
+        return max;
+    }
+
+    public void setMax(long max) {
+        this.max = max;
+    }
+
+    public int getLengthMin() {
+        return lengthMin;
+    }
+
+    public void setLengthMin(int lengthMin) {
+        this.lengthMin = lengthMin;
+    }
+
+    public int getLengthMax() {
+        return lengthMax;
+    }
+
+    public void setLengthMax(int lengthMax) {
+        this.lengthMax = lengthMax;
+    }
+
+    public boolean isPort() {
+        return port;
+    }
+
+    public void setPort(boolean port) {
+        this.port = port;
+    }
+
+    public String getUnsupportedCharacters() {
+        return unsupportedCharacters;
+    }
+
+    public void setUnsupportedCharacters(String unsupportedCharacters) {
+        this.unsupportedCharacters = unsupportedCharacters;
+    }
+
+    public String[] getUnsupportedStrings() {
+        return unsupportedStrings;
+    }
+
+    public void setUnsupportedStrings(String[] unsupportedStrings) {
+        this.unsupportedStrings = unsupportedStrings;
     }
 }

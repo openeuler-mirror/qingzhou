@@ -45,4 +45,20 @@ public @interface ModelField {
     boolean monitor() default false;
 
     boolean numeric() default false;
+
+    boolean required() default true;
+
+    long min() default Long.MIN_VALUE;
+
+    long max() default Long.MAX_VALUE;
+
+    int lengthMin() default -1;
+
+    int lengthMax() default Integer.MAX_VALUE;
+
+    boolean port() default false;
+
+    String unsupportedCharacters() default "";
+
+    String[] unsupportedStrings() default {};
 }

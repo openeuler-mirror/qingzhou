@@ -57,7 +57,9 @@ public class RESTController extends HttpServlet {
 
     private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
-            new AsymmetricDecryptor(),// 解密前端的 password 类型的表单域
+            new AsymmetricDecryptor(), // 解密前端的 password 类型的表单域
+            new ValidationFilter(), // 参数校验
+
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
