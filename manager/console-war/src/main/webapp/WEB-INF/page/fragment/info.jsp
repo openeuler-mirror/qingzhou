@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.registry.ModelFieldInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%
@@ -34,17 +33,8 @@
                 allData.putAll(models.get(1));
             }
             List<String> infoFieldMap = new ArrayList<>();
-            if (isMonitor) {
-                for (Map.Entry<String, ModelFieldInfo> entry : modelInfo.getMonitorFieldMap(qzRequest.getModel()).entrySet()) {
-                    ModelFieldInfo monitoringField = entry.getValue();
-                    if (!monitoringField.supportGraphicalDynamic() && !monitoringField.supportGraphical()) {
-                        infoFieldMap.add(entry.getKey());
-                    }
-                }
-            } else {
-                for (String field : modelInfo.getFieldNames(qzRequest.getModel())) {
-                    infoFieldMap.add(field);
-                }
+            for (String fieldName : modelInfo.getFormFieldNames()) {
+                infoFieldMap.add(fieldName);
             }
             boolean hasItem = false;
             for (String fieldName : infoFieldMap) {
@@ -72,7 +62,7 @@
                             if (msg != null && !msg.startsWith("model.field.")) {
                                 info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-question-sign' data-tip-arrow=\"right\"></i></span>";
                             }
-                            ModelFieldInfo modelField = modelInfo.getModelField(qzRequest.getModel(), fieldName);
+                            ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
                             String fieldValue = allData.get(fieldName);
                             fieldValue = fieldValue != null ? fieldValue : "";
                             if (modelField == null || modelField.getType().equals(FieldType.markdown.name())) {

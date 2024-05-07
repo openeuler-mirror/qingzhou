@@ -19,7 +19,7 @@ public class ModelInfo {
     private GroupInfo[] groupInfos;
 
     public ModelActionInfo getModelActionInfo(String actionName) {
-        return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().get();
+        return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
     }
 
     public String[] getBatchActionNames() {

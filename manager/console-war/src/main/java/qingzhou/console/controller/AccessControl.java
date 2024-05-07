@@ -10,6 +10,7 @@ import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,6 +18,10 @@ public class AccessControl implements Filter<HttpServletContext> {
     static {
         ConsoleI18n.addI18n("page.error.permission.deny", new String[]{"对不起，您无权访问该资源", "en:Sorry, you do not have access to this resource"});
     }
+
+    private static final List<String> generalUris = new ArrayList<String>() {{
+        add(RESTController.INDEX_PATH);
+    }};
 
     private static final List<String> masterAppModels = Arrays.asList("user", "version", "node");
 
@@ -67,12 +72,12 @@ public class AccessControl implements Filter<HttpServletContext> {
             return true;
         }
         // 需要能调用加密接口，才能进行修改密码，故此设定：免权限的接口不需要修改密码即可认证。
-//        String check = wrapCheckingPath(servletPathAndPathInfo);
-//        for (String uri : generalUris) {
-//            if (check.startsWith(uri)) {
-//                return true;
-//            }
-//        }
+        String check = wrapCheckingPath(servletPathAndPathInfo);
+        for (String uri : generalUris) {
+            if (check.startsWith(uri)) {
+                return true;
+            }
+        }
 
         return false;
     }

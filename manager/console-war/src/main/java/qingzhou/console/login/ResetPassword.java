@@ -37,7 +37,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
         }
 
         List<String> rest = RESTController.retrieveRestPathInfo(httpServletRequest);
-        if (rest.size() < 6) {
+        if (rest.size() < 5) {
             return true;
         }
 
@@ -66,7 +66,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
             httpServletResponse.sendRedirect(PageBackendService.encodeURL(httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
-                    "/" + ConsoleConstants.MODEL_NAME_node +
+                    "/" + ConsoleConstants.MANAGE_TYPE_APP +
                     "/" + "master" +
                     "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
@@ -104,4 +104,14 @@ public class ResetPassword implements Filter<HttpServletContext> {
 
         return null;
     }
+    private static String wrapCheckingPath(String uri) {
+        if (!uri.startsWith("/")) {
+            uri = "/" + uri;
+        }
+        if (!uri.endsWith("/")) {
+            uri = uri + "/";
+        }
+        return uri;
+    }
+
 }
