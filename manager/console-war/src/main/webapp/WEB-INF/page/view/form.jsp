@@ -105,7 +105,7 @@
                         if (fieldName.equals(idFieldName)) {
                             required = true;
                         } else {
-                            required = false;//modelField.required();
+                            required = modelField.isRequired();
                         }
 
                         String valueFrom = /*modelField.valueFrom()*/"";
@@ -115,7 +115,7 @@
 
                         String fieldValue = model.get(fieldName);// 需要在 isFieldReadOnly 之后，原因是 license 限制的 5 个并发会在其中被修改，总之最后读取值是最新的最准确的
                         List<String> fieldValues = fieldValue == null ? new ArrayList<>() : Arrays.asList(fieldValue.split(","));
-                        if (fieldValue == null) {
+                        if (fieldValue == null || fieldValue.equals("null")) {
                             fieldValue = "";
                         }
 
@@ -160,8 +160,8 @@
                                 break;
                             case number:
                         %>
-                        <input type="number" <%--min="<%=modelField.min()%>"
-                               max="<%=(modelField.isPort()?"65535":modelField.max())%>"--%>
+                        <input type="number" min="<%=modelField.getMin()%>"
+                               max="<%=(modelField.isPort()?"65535":modelField.getMax())%>"
                                name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%> class="form-control">
                         <%
                                 break;

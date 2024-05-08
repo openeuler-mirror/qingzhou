@@ -306,7 +306,7 @@ public class User extends ModelBase implements Createable {
         dataStore.deleteDataById(request.getModel(), request.getId());
     }
 
-    static void insertPasswordModifiedTime(Map<String, String> params) {
+    public static void insertPasswordModifiedTime(Map<String, String> params) {
         String value = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         params.put("passwordLastModifiedTime", value);
     }
