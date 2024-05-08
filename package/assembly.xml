@@ -45,7 +45,6 @@
         <dependencySet>
             <includes>
                 <include>${project.groupId}:qingzhou-engine</include>
-                <include>org.javassist:javassist</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

@@ -16,7 +16,7 @@ public class Controller implements ModuleActivator {
     @Service
     private Logger logger;
 
-    private Deployer deployer;
+    static Deployer deployer;
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {

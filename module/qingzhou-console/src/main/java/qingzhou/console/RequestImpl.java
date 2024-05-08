@@ -94,6 +94,10 @@ public class RequestImpl implements Request, Cloneable {
         this.lang = lang;
     }
 
+    public void removeParameter(String parameterName) {
+        parameters.remove(parameterName);
+    }
+
     public void setParameter(String parameterName, String parameterValue) {
         parameters.put(parameterName, parameterValue);
     }

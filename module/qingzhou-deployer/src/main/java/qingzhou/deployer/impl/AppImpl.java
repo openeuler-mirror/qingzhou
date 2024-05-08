@@ -5,9 +5,7 @@ import qingzhou.deployer.App;
 import qingzhou.registry.AppInfo;
 
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 class AppImpl implements App {
@@ -15,7 +13,7 @@ class AppImpl implements App {
     private AppInfo appInfo;
     private AppContextImpl appContext;
     private QingzhouApp qingzhouApp;
-    private final List<ModelBase> modelBases = new ArrayList<>();
+    private final Map<String, ModelBase> modelBaseMap = new HashMap<>();
 
     private final Map<String, Map<String, ActionMethod>> actionMap = new HashMap<>();
 
@@ -73,10 +71,6 @@ class AppImpl implements App {
         this.qingzhouApp = qingzhouApp;
     }
 
-    public List<ModelBase> getModelBases() {
-        return modelBases;
-    }
-
     URLClassLoader getLoader() {
         return loader;
     }
@@ -87,5 +81,9 @@ class AppImpl implements App {
 
     void setAppInfo(AppInfo appInfo) {
         this.appInfo = appInfo;
+    }
+
+    Map<String, ModelBase> getModelBaseMap() {
+        return modelBaseMap;
     }
 }
