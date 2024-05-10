@@ -1,3 +1,4 @@
+<%@ page import="java.util.stream.Collectors" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <form name="filterForm" id="filterForm" method="POST"
@@ -6,12 +7,12 @@
         <%
             for (Integer i : indexToShow) {
                 String fieldName = PageBackendService.getFieldName(qzRequest, i);
-                List<Option> modelOptionsEntry = null;
+                List<String> modelOptionsEntry = null;
                 if (PageBackendService.isFilterSelect(qzRequest, i)) {
                     try {
-                        Options modelOptions = modelInfo.getOptions(qzRequest, qzRequest.getModel(), fieldName);
+                        String[] modelOptions = modelInfo.getFieldOptions(fieldName);
                         if (modelOptions != null) {
-                            modelOptionsEntry = modelOptions.options();
+                            modelOptionsEntry = Arrays.stream(modelOptions).collect(Collectors.toList());
                         }
                     } catch (Exception ignored) {
                     }

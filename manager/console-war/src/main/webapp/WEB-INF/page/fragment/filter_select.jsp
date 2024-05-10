@@ -4,28 +4,25 @@
     String selectVal = "";
     String selectHtml = "<ul class=\"list\">";
     selectHtml += "<li data-value=\"\" class=\"option\"></li>";
-    for (Option option : modelOptionsEntry) {
-        String val = option.value();
-        if (val == null) {
+    for (String option : modelOptionsEntry) {
+        if (option == null) {
             continue;
         }
-        val = val.trim();
-        if (val.isEmpty()) {
+        if (option.trim().isEmpty()) {
             continue;
         }
 
-        String name = I18n.getString(option.i18n());
         String param = request.getParameter(fieldName);
         boolean setSelect = false;
-        if (!Objects.equals(param, val) &&
-                Objects.equals(param, name)) {
+        if (!Objects.equals(param, option) &&
+                Objects.equals(param, option)) {
             setSelect = true;
         }
-        if (Objects.equals(param, val) || setSelect) {
-            selectVal = val;
-            selectHtml += "<li data-value=\"" + val + "\" class=\"option selected focus\">" + name + "</li>";
+        if (Objects.equals(param, option) || setSelect) {
+            selectVal = option;
+            selectHtml += "<li data-value=\"" + option + "\" class=\"option selected focus\">" + option + "</li>";
         } else {
-            selectHtml += "<li data-value=\"" + val + "\" class=\"option\">" + name + "</li>";
+            selectHtml += "<li data-value=\"" + option + "\" class=\"option\">" + option + "</li>";
         }
     }
     selectHtml += "</ul>";
