@@ -91,15 +91,16 @@ public class ResetPassword implements Filter<HttpServletContext> {
         Security security = SystemController.getConsole().getSecurity();
         if (security.isEnablePasswordAge()) {
             String passwordLastModifiedTime = u.getPasswordLastModifiedTime();
-            long time = new SimpleDateFormat(",").parse(passwordLastModifiedTime).getTime();
-            int maxAge = security.getPasswordMaxAge();
-            if (maxAge > 0) {
-                long max = time + maxAge * ConsoleConstants.DAY_MILLIS_VALUE;
-                if (System.currentTimeMillis() > max) {
-                    return "password.max," + maxAge + "," + passwordLastModifiedTime;
+            if (passwordLastModifiedTime != null && !passwordLastModifiedTime.isEmpty()) {
+                long time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(passwordLastModifiedTime).getTime();
+                int maxAge = security.getPasswordMaxAge();
+                if (maxAge > 0) {
+                    long max = time + maxAge * ConsoleConstants.DAY_MILLIS_VALUE;
+                    if (System.currentTimeMillis() > max) {
+                        return "password.max," + maxAge + "," + passwordLastModifiedTime;
+                    }
                 }
             }
-
         }
 
         return null;
