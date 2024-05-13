@@ -37,6 +37,9 @@ public @interface ModelField {
 
     String[] options() default "";
 
+    // 若 refModel 有，则 options() 会列出指定 model 的所有 id
+    String refModel() default "";
+
     /**
      * 是否显示在列表中。
      */

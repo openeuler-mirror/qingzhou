@@ -14,7 +14,7 @@
     if (!readonly.isEmpty()) {
         readonly = "onfocus='this.defaultIndex=this.selectedIndex;' onchange='this.selectedIndex=this.defaultIndex;' readonly";
     }
-    String[] multiOptions = modelInfo.getFieldOptions(fieldName);;
+    String[] multiOptions = PageBackendService.getFieldOptions(menuAppName, modelInfo.getCode(), fieldName);
 %>
 <select name="<%=fieldName%>" multiple="multiple" <%=readonly%> style="width:100%;">
     <%

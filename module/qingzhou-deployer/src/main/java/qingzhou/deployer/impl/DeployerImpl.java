@@ -289,7 +289,7 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setInfo(modelAction.info());
             modelActionInfo.setIcon(modelAction.icon());
             modelActionInfo.setOrder(modelAction.order());
-            modelActionInfo.setCondition(modelAction.condition());
+            modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setForward(modelAction.forward());
             modelActionInfo.setBatch(modelAction.batch());
             modelActionInfo.setDisable(modelAction.disable());
@@ -308,6 +308,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setGroup(modelField.group());
             modelFieldInfo.setType(modelField.type().name());
             modelFieldInfo.setOptions(modelField.options());
+            modelFieldInfo.setRefModel(modelField.refModel());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setList(modelField.list());
             modelFieldInfo.setMonitor(modelField.monitor());

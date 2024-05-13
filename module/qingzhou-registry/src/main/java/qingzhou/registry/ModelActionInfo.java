@@ -6,7 +6,7 @@ public class ModelActionInfo {
     private String[] info;
     private String icon;
     private int order;
-    private String condition;
+    private String show;
     private String forward;
     private boolean batch;
     private boolean disable;
@@ -35,12 +35,12 @@ public class ModelActionInfo {
         this.info = info;
     }
 
-    public String getCondition() {
-        return condition;
+    public String getShow() {
+        return show;
     }
 
-    public void setCondition(String condition) {
-        this.condition = condition;
+    public void setShow(String show) {
+        this.show = show;
     }
 
     public boolean isBatch() {

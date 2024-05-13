@@ -12,7 +12,7 @@
         readonly = " onclick='return false;' readonly";
     }
 
-    String[] radioOptions = modelInfo.getFieldOptions(fieldName);
+    String[] radioOptions = PageBackendService.getFieldOptions(menuAppName, modelInfo.getCode(), fieldName);
     for (String option : radioOptions) {
 %>
 <label class="radio-inline radio-label radio-anim">

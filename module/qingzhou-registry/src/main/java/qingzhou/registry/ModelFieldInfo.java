@@ -7,6 +7,7 @@ public class ModelFieldInfo {
     private String group;
     private String type;
     private String[] options;
+    private String refModel;
     private String defaultValue;
     private boolean list;
     private boolean monitor;
@@ -82,6 +83,14 @@ public class ModelFieldInfo {
 
     public void setOptions(String[] options) {
         this.options = options;
+    }
+
+    public String getRefModel() {
+        return refModel;
+    }
+
+    public void setRefModel(String refModel) {
+        this.refModel = refModel;
     }
 
     public boolean isMonitor() {

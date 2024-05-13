@@ -17,7 +17,7 @@
     String selectText = "";
     String selectHtml = "<ul class=\"list\">";
 
-    String[] selectOptions = modelInfo.getFieldOptions(fieldName);
+    String[] selectOptions = PageBackendService.getFieldOptions(menuAppName, modelInfo.getCode(), fieldName);
     if (selectOptions != null) {
         for (String option : selectOptions) {
             if (Objects.equals(fieldValue, option)) {
