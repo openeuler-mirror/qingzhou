@@ -49,6 +49,19 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
+                    boolean canAccess = (AccessControl.canAccess(qzRequest.getApp(), qzRequest.getModel() + "/" + Createable.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
+                    if (canAccess
+                            && modelInfo.getModelActionInfo(Createable.ACTION_NAME_CREATE) != null
+                            && modelInfo.getModelActionInfo(Createable.ACTION_NAME_ADD) != null
+                    ) {
+                        %>
+                        <a class="btn" href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Createable.ACTION_NAME_CREATE)%>">
+                            <i class="icon icon-plus-sign"></i>
+                            <%=I18n.getString(qzRequest.getApp(), "model.action." + qzRequest.getModel() + "." + Createable.ACTION_NAME_CREATE)%>
+                        </a>
+                        <%
+                    }
+
                     // 用于判断是否需要操作列
                     boolean needOperationColumn = PageBackendService.needOperationColumn(qzRequest);
                     ModelActionInfo[] opsActions = PageBackendService.listCommonOps(qzRequest, qzResponse);
@@ -171,10 +184,10 @@
                             isFirst = false;
                 %>
                 <td>
-                    <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.getName() + "/" + encodedId)%>'
+                    <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.getCode() + "/" + encodedId)%>'
                        class="dataid tooltips"
                        record-action-id="<%=targetAction.getIcon()%>"
-                       data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + targetAction.getName())%>'
+                       data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + targetAction.getCode())%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
                         <%=value%>

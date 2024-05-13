@@ -8,11 +8,10 @@ import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.deployer.QingzhouSystemApp;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @qingzhou.api.App
@@ -30,6 +29,10 @@ public class MasterApp extends QingzhouSystemApp {
         appContext.addMenu("System", new String[]{"系统管理", "en:System"}, "cog", 2);
 
         appContext.addActionFilter(new LocalNodeProtection(appContext));// 禁止修改本地节点
+    }
+
+    public static String getInstanceId() {
+        return masterApp.moduleContext.getInstanceDir().getName();
     }
 
     public static <T> T getService(Class<T> type) {
