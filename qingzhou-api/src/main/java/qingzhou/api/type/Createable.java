@@ -5,5 +5,7 @@ package qingzhou.api.type;
  * 该接口主要提供了与创建操作相关的功能定义。
  */
 public interface Createable extends Deletable, Editable {
+    String ACTION_NAME_CREATE = "create";
+
     String ACTION_NAME_ADD = "add";
 }
