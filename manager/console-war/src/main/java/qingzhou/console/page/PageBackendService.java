@@ -17,23 +17,12 @@ import qingzhou.console.i18n.I18n;
 import qingzhou.console.util.Base32Util;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
+import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +35,17 @@ public class PageBackendService {
     private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
 
     private PageBackendService() {
+    }
+
+    public static String[] getFieldOptions(String app, String model, String field) {
+        ModelInfo modelInfo = getAppInfo(app).getModelInfo(model);
+        String refModel = modelInfo.getModelFieldInfo(field).getRefModel();
+        if (refModel.isEmpty()) {
+            return modelInfo.getFieldOptions(field);
+        } else {
+            // todo 包含 refModel 的这里需要获取对应model的所有id
+            return null;
+        }
     }
 
     public static AppInfo getAppInfo(String appName) {
@@ -286,7 +286,7 @@ public class PageBackendService {
             return null;
         }
         if (modelAction != null) {
-            String condition = modelAction.getCondition();
+            String condition = modelAction.getShow();
             boolean effective = false;
             try {
                 effective = true;// todo Validator.isEffective(obj::get, condition);

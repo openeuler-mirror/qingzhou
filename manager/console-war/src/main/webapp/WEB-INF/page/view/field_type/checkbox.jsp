@@ -17,7 +17,7 @@
 %>
 <%
     {
-        String[] checkboxOptions = modelInfo.getFieldOptions(fieldName);
+        String[] checkboxOptions = PageBackendService.getFieldOptions(menuAppName, modelInfo.getCode(), fieldName);
         if (checkboxOptions != null) {
             for (String option : checkboxOptions) {
 %>

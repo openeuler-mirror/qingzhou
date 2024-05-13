@@ -293,7 +293,7 @@ public class User extends ModelBase implements Createable {
     }
 
     @ModelAction(
-            condition = "id!=qingzhou",
+            show = "id!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})

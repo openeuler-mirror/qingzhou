@@ -34,7 +34,7 @@ public @interface ModelAction {
 
     int order() default 0;
 
-    String condition() default "";
+    String show() default "";
 
     /**
      * 指定执行该操作后应跳转到的目标页面，默认为空字符串表示无页面转发。
