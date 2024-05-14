@@ -1,25 +1,46 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.Groups;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Showable;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.GroupInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -121,6 +142,7 @@ class DeployerImpl implements Deployer {
         app.setAppInfo(appInfo);
 
         AppContextImpl appContext = buildAppContext(appInfo);
+        appContext.setAppDir(appDir);
         app.setAppContext(appContext);
 
         modelInfos.forEach((key, value) -> app.getModelBaseMap().put(value.getCode(), key));
@@ -376,23 +398,58 @@ class DeployerImpl implements Deployer {
         return appContext;
     }
 
-    private File[] buildLib(File appDir, boolean isSystemApp) {
+    private File[] buildLib(File appDir, boolean isSystemApp) throws IOException {
         File[] appFiles = appDir.listFiles();
-        if (appFiles == null) {
+        if (appFiles == null || appFiles.length == 0) {
             throw new IllegalArgumentException("app lib not found: " + appDir.getName());
         }
-        File[] appLibs = appFiles;
+
+        List<File> libs = new ArrayList<>();
+        for (File appFile : appFiles) {
+            if (appFile.isDirectory()) {
+                continue;
+            }
+
+            if (!appFile.getName().endsWith(".jar")) {
+                continue;
+            }
+
+            libs.add(appFile);
+            parseAppFile(appFile, libs);
+        }
+
         if (!isSystemApp) {
             File[] commonFiles = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
-            if (commonFiles != null) {
-                int appFileLength = appFiles.length;
-                int commonFileLength = commonFiles.length;
-                appLibs = new File[appFileLength + commonFileLength];
-                System.arraycopy(appFiles, 0, appLibs, 0, appFileLength);
-                System.arraycopy(commonFiles, 0, appLibs, appFileLength, commonFileLength);
+            if (commonFiles != null && commonFiles.length > 0) {
+                libs.addAll(Arrays.asList(commonFiles));
             }
         }
-        return appLibs;
+        return libs.toArray(new File[0]);
+    }
+
+    private void parseAppFile(File appFile, List<File> libs) throws IOException {
+        try (JarFile jarFile = new JarFile(appFile)) {
+            Manifest manifest = jarFile.getManifest();
+            Attributes mainAttributes = manifest.getMainAttributes();
+            String classPathValue = mainAttributes.getValue(Attributes.Name.CLASS_PATH);
+            if (classPathValue == null || classPathValue.isEmpty()) {
+                return;
+            }
+
+            String[] classPathEntries = classPathValue.split(" ");
+            File parentFile = appFile.getParentFile();
+            for (String entry : classPathEntries) {
+                File file = new File(entry);
+                if (!file.isAbsolute()) {
+                    if (entry.startsWith("./")) {
+                        file = new File(parentFile, entry.substring(2));
+                    } else {
+                        file = new File(parentFile, entry);
+                    }
+                }
+                libs.add(file);
+            }
+        }
     }
 
     private URLClassLoader buildLoader(File[] appLibs, boolean isSystemApp) {

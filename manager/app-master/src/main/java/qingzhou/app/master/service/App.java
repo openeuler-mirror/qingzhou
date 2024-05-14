@@ -138,23 +138,6 @@ public class App extends ModelBase implements Createable {
         response.setPageNum(pageNum);
     }
 
-    private List<Map<String, String>> createAppList(Object source, String instanceId) {
-        return Stream.of(source)
-                .map(app -> {
-                    Map<String, String> appMap = new HashMap<>();
-                    if (app instanceof String) {
-                        appMap.put("id", (String) app);
-                    } else if (app instanceof AppInfo) {
-                        appMap.put("id", ((AppInfo) app).getName());
-                    }
-                    appMap.put("instances", instanceId);
-                    appMap.put("filename", ""); // TODO
-                    return appMap;
-                })
-                .collect(Collectors.toList());
-    }
-
-
     @ModelAction(
             name = {"安装", "en:Install"},
             info = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
