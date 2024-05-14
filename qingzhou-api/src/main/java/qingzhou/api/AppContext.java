@@ -7,6 +7,13 @@ import java.io.File;
  */
 public interface AppContext {
     /**
+     * 获取应用程序目录的文件对象。
+     *
+     * @return 返回表示应用程序目录的File对象。如果无法确定或创建应用程序目录，则返回null。
+     */
+    File getAppDir();
+
+    /**
      * 获取临时文件目录。
      *
      * @return File 临时文件目录的File对象。

@@ -23,10 +23,20 @@ class AppContextImpl implements AppContext {
     private DataStore defaultDataStore;
 
     private File appTemp;
+    private File appDir;
 
     AppContextImpl(ModuleContext moduleContext, AppInfo appInfo) {
         this.moduleContext = moduleContext;
         this.appInfo = appInfo;
+    }
+
+    @Override
+    public File getAppDir() {
+        return appDir;
+    }
+
+    public void setAppDir(File appDir) {
+        this.appDir = appDir;
     }
 
     @Override
