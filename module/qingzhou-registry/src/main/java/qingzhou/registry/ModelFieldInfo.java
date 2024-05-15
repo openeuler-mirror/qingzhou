@@ -21,6 +21,8 @@ public class ModelFieldInfo {
     private String unsupportedCharacters;
     private String[] unsupportedStrings;
 
+    private String show;
+
     public String getCode() {
         return code;
     }
@@ -171,5 +173,13 @@ public class ModelFieldInfo {
 
     public void setUnsupportedStrings(String[] unsupportedStrings) {
         this.unsupportedStrings = unsupportedStrings;
+    }
+
+    public String getShow() {
+        return show;
+    }
+
+    public void setShow(String show) {
+        this.show = show;
     }
 }

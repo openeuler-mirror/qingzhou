@@ -230,7 +230,7 @@
                             if (action == null) {
                                 continue;
                             }
-                            if (PageBackendService.isActionEffective(qzRequest, modelBase, action) != null) {
+                            if (PageBackendService.isActionShow(qzRequest, modelBase, action) != null) {
                                 continue;
                             }
                             String actionKey = action.getCode();

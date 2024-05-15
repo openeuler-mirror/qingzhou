@@ -41,6 +41,15 @@ public @interface ModelField {
     String refModel() default "";
 
     /**
+     * 定义可见性条件的函数。
+     * 该函数用于指定一个条件，根据该条件确定某个元素是否可见。
+     * 默认情况下，如果没有指定条件，则元素总是可见的。
+     *
+     * @return 返回一个字符串，表示可见性的条件。如果条件为空字符串，则表示元素总是可见的。
+     */
+    String show() default "";
+
+    /**
      * 是否显示在列表中。
      */
     boolean list() default false;
