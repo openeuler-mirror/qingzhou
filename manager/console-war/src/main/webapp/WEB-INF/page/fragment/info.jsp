@@ -129,7 +129,7 @@
             // added by yuanwc for: ModelField 注解 effectiveWhen()
             StringBuilder conditionBuilder = new StringBuilder();
             conditionBuilder.append("{");
-            Map<String, String> conditions = PageBackendService.modelFieldEffectiveWhenMap(qzRequest);
+            Map<String, String> conditions = PageBackendService.modelFieldShowMap(qzRequest);
             for (Map.Entry<String, String> e : conditions.entrySet()) {
                 //e.getValue().replace(/\&\&/g, '&').replace(/\|\|/g, '|');
                 conditionBuilder.append("'").append(e.getKey()).append("' : '")

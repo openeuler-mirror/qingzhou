@@ -343,6 +343,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setPort(modelField.port());
             modelFieldInfo.setUnsupportedCharacters(modelField.unsupportedCharacters());
             modelFieldInfo.setUnsupportedStrings(modelField.unsupportedStrings());
+            modelFieldInfo.setShow(modelField.show());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);

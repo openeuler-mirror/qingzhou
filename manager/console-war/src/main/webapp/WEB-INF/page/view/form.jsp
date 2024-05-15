@@ -295,10 +295,10 @@
 
         <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">
         <%
-            // added by yuanwc for: ModelField 注解 effectiveWhen()
+            // added by yuanwc for: ModelField 注解 show()
             StringBuilder conditionBuilder = new StringBuilder();
             conditionBuilder.append("{");
-            Map<String, String> conditions = PageBackendService.modelFieldEffectiveWhenMap(qzRequest);
+            Map<String, String> conditions = PageBackendService.modelFieldShowMap(qzRequest);
             for (Map.Entry<String, String> e : conditions.entrySet()) {
                 //e.getValue().replace(/\&\&/g, '&').replace(/\|\|/g, '|');
                 conditionBuilder.append("'").append(e.getKey()).append("' : '")

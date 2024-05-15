@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Model(code = "app", icon = "cube-alt",
         menu = "Service", order = 1,
@@ -47,14 +46,14 @@ public class App extends ModelBase implements Createable {
     public boolean appFrom = false;
 
     @ModelField(
-            list = true,
+            list = true, show = "appFrom=false",
             name = {"应用位置", "en:Application File"},
             info = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar 类型的文件。",
                     "en:The location of the application on the server, usually the app package, Note: Must be a *.jar file."})
     public String filename;
 
     @ModelField(
-            type = FieldType.file,
+            type = FieldType.file, show = "appFrom=true",
             name = {"上传应用", "en:Upload Application"},
             info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
                     "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
@@ -177,7 +176,7 @@ public class App extends ModelBase implements Createable {
             for (String node : nodes) {
                 try {
                     if ("local".equals(node)) { // 安装到本地节点
-                        MasterApp.getService(Deployer.class).getApp("agent").invokeDirectly(request, response);
+                        MasterApp.getService(Deployer.class).getApp("instance").invokeDirectly(request, response);
                     } else {
                         // TODO：调用远端 node 上的app add
                     }
@@ -216,7 +215,7 @@ public class App extends ModelBase implements Createable {
             for (String node : nodes) {
                 try {
                     if ("local".equals(node)) { // 安装到本地节点
-                        MasterApp.getService(Deployer.class).getApp("agent").invokeDirectly(request, response);
+                        MasterApp.getService(Deployer.class).getApp("instance").invokeDirectly(request, response);
                     } else {
                         // TODO：调用远端 node 上的app delete
                     }

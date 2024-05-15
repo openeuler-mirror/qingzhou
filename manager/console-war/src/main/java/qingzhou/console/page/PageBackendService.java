@@ -77,7 +77,7 @@ public class PageBackendService {
         }
 
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(((RequestImpl) request).getManageType())) {
-            return "agent";
+            return "instance";
         }
 
         return request.getApp();
@@ -85,7 +85,7 @@ public class PageBackendService {
 
     public static String getAppName(String manageType, String appName) {
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
-            return "agent";
+            return "instance";
         }
 
         return appName;
@@ -280,21 +280,21 @@ public class PageBackendService {
         return listAction != null && idField != null;
     }
 
-    public static String isActionEffective(Request request, Map<String, String> obj, ModelActionInfo modelAction) {
+    public static String isActionShow(Request request, Map<String, String> obj, ModelActionInfo modelAction) {
         final ModelInfo modelInfo = getModelInfo(request);
         if (modelInfo == null) {
             return null;
         }
         if (modelAction != null) {
             String condition = modelAction.getShow();
-            boolean effective = false;
+            boolean isShow = false;
             try {
-                effective = true;// todo Validator.isEffective(obj::get, condition);
+                isShow = isShow(obj::get, condition);
             } catch (Exception ignored) {
             }
-            if (!effective) {
+            if (!isShow) {
                 return String.format(
-                        ConsoleI18n.getI18n(I18n.getI18nLang(), "validator.ActionEffective.notsupported"),
+                        ConsoleI18n.getI18n(I18n.getI18nLang(), "validator.ActionShow.notsupported"),
                         I18n.getString(request.getApp(), "model.action." + request.getModel() + "." + request.getAction()),// todo
                         condition);
             }
@@ -302,13 +302,18 @@ public class PageBackendService {
         return null;
     }
 
-    public static Map<String, String> modelFieldEffectiveWhenMap(Request request) {
+    public static Map<String, String> modelFieldShowMap(Request request) {
         final ModelInfo modelInfo = getModelInfo(request);
         if (modelInfo == null) {
             return new HashMap<>();
         }
         Map<String, String> result = new HashMap<>();
-        // todo 移除
+        for (ModelFieldInfo e : modelInfo.getModelFieldInfos()) {
+            String condition = e.getShow().trim();
+            if (!"".equals(condition)) {
+                result.put(e.getCode(), condition);
+            }
+        }
 
         return result;
     }
@@ -332,9 +337,9 @@ public class PageBackendService {
             return false;
         }
         ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-        /*if (modelField.maxLength() < 1) {
+        if (modelField.getLengthMax() < 1) {
             return true;
-        }*/
+        }
         return false;/*modelField.disableOnCreate() && modelField.disableOnEdit()*/ //todo
     }
 
@@ -371,7 +376,7 @@ public class PageBackendService {
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
-                        if (isActionEffective(request, data, action) != null || Editable.ACTION_NAME_EDIT.equals(actionName)) {
+                        if (isActionShow(request, data, action) != null || Editable.ACTION_NAME_EDIT.equals(actionName)) {
                             isShow = false;
                             break;
                         }
@@ -448,4 +453,106 @@ public class PageBackendService {
         }
         return map;
     }
+
+    public static boolean isShow(FieldValueRetriever retriever, String show) throws Exception {
+        if (StringUtil.isBlank(show)) {
+            return true;
+        }
+
+        AndOrQueue queue = null;
+        String[] split;
+        if ((split = show.split("&")).length > 1) {
+            queue = new AndOrQueue(true);
+        } else if ((split = show.split("\\|")).length > 1) {
+            queue = new AndOrQueue(false);
+        }
+        if (queue == null) {
+            if (split.length > 0) {
+                queue = new AndOrQueue(true);
+            }
+        }
+        if (queue == null) {
+            return true;
+        }
+
+        String notEqStr = "!=";
+        String eqStr = "=";
+        for (String s : split) {
+            int notEq = s.indexOf(notEqStr);
+            if (notEq > 1) {
+                String f = s.substring(0, notEq);
+                String v = s.substring(notEq + notEqStr.length());
+                queue.addComparator(new ShowComparator(false, retriever.getFieldValue(f), v));
+                continue;
+            }
+            int eq = s.indexOf(eqStr);
+            if (eq > 1) {
+                String f = s.substring(0, eq);
+                String v = s.substring(eq + eqStr.length());
+                queue.addComparator(new ShowComparator(true, retriever.getFieldValue(f), v));
+            }
+        }
+
+        return queue.compare();
+    }
+
+    public interface FieldValueRetriever {
+        String getFieldValue(String fieldName) throws Exception;
+    }
+
+    private static final class ShowComparator {
+        final boolean eqOrNot;
+        final String v1;
+        final String v2;
+
+        ShowComparator(boolean eqOrNot, String v1, String v2) {
+            this.eqOrNot = eqOrNot;
+            this.v1 = v1;
+            this.v2 = v2;
+        }
+
+        boolean compare() {
+            String vv1 = v1;
+            String vv2 = v2;
+            if (vv1 != null) {
+                vv1 = vv1.toLowerCase();
+            }
+            if (vv2 != null) {
+                vv2 = vv2.toLowerCase();
+            }
+            return eqOrNot == Objects.equals(vv1, vv2);
+        }
+    }
+
+    private static final class AndOrQueue {
+        final boolean andOr;
+        final List<ShowComparator> comparators = new ArrayList<>();
+
+        AndOrQueue(boolean andOr) {
+            this.andOr = andOr;
+        }
+
+        void addComparator(ShowComparator comparator) {
+            comparators.add(comparator);
+        }
+
+        boolean compare() {
+            if (andOr) {
+                for (ShowComparator c : comparators) {
+                    if (!c.compare()) {
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                for (ShowComparator c : comparators) {
+                    if (c.compare()) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
 }
