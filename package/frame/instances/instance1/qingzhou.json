@@ -66,7 +66,7 @@
           "info": "系统预置管理员",
           "password": "SHA-256$684B$2$0ED27B6EB4D921613F3512971CDC66EDF6C8505166E3FA61C1C511705067D6F5",
           "active": "true",
-          "changeInitPwd": "true",
+          "changeInitPwd": "false",
           "enable2FA": "false",
           "keyFor2FA": "",
           "passwordLastModifiedTime": ""

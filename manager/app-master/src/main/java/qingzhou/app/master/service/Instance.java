@@ -3,11 +3,11 @@ package qingzhou.app.master.service;
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 
-@Model(code = "instance", icon = "node",
+@Model(code = "instance", icon = "cube-alt",
         menu = "Service", order = 2,
-        name = {"节点", "en:Node"},
-        info = {"节点是对物理或虚拟计算机环境的抽象，是运行实例的基础设施。",
-                "en:A node is an abstraction of a physical or virtual computer environment and is the infrastructure that runs instances."})
+        name = {"实例", "en:Instance"},
+        info = {"实例是轻舟提供的运行应用的实际环境，即应用的运行时。",
+                "en:The instance is the actual environment for running the application provided by Qingzhou, that is, the runtime of the application."})
 public class Instance extends ModelBase implements Createable {
     @ModelField(
             list = true,
@@ -17,12 +17,12 @@ public class Instance extends ModelBase implements Createable {
 
     @ModelField(list = true,
             name = {"IP", "en:IP"},
-            info = {"连接节点的 IP 地址。", "en:The IP address of the connected node."})
+            info = {"连接实例的 IP 地址。", "en:The IP address of the connected instance."})
     public String ip;
 
     @ModelField(list = true,
             name = {"管理端口", "en:Management Port"},
-            info = {"节点的管理端口。", "en:The management port of the node."})
+            info = {"实例的管理端口。", "en:The management port of the instance."})
     public int port = 7000;
 
     @ModelField(list = true,
@@ -31,7 +31,7 @@ public class Instance extends ModelBase implements Createable {
 
     @ModelAction(
             name = {"管理", "en:Manage"},
-            info = {"转到此节点的管理页面。", "en:Go to the administration page for this node."})
+            info = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
     public void switchTarget(Request request, Response response) throws Exception {
     }
 }
