@@ -5,7 +5,6 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Createable;
 
-// todo 升级所有的节点版本，支持各版本切换，除正在使用的版本外皆可删除，切换后尚未重启的版本页可以删除
 @Model(code = "version", icon = "upload-alt",
         menu = "System", order = 2,
         name = {"系统版本", "en:System Version"},

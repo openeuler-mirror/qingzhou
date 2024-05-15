@@ -1,4 +1,4 @@
-package qingzhou.app.master.service;
+package qingzhou.app.master.system;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
@@ -6,8 +6,8 @@ import qingzhou.api.type.Editable;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Model(code = "jmx", icon = "code",
-        menu = "Service", order = 3,
+@Model(code = "jmx", icon = "exchange",
+        menu = "System", order = 3,
         entrance = Editable.ACTION_NAME_EDIT,
         name = {"JMX", "en:JMX"},
         info = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 Qingzhou。",

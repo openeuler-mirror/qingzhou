@@ -3,7 +3,7 @@ package qingzhou.app.master.service;
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 
-@Model(code = "instance", icon = "cube-alt",
+@Model(code = "instance", icon = "stack",
         menu = "Service", order = 2,
         name = {"实例", "en:Instance"},
         info = {"实例是轻舟提供的运行应用的实际环境，即应用的运行时。",
