@@ -13,12 +13,10 @@ import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.console.RequestImpl;
 import qingzhou.deployer.Deployer;
-import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -60,10 +58,10 @@ public class App extends ModelBase implements Createable {
     public String fromUpload;
 
     @ModelField(
-            type = FieldType.select,
-            list = true,
-            name = {"节点", "en:Node"},
-            info = {"选择安装应用的节点。", "en:Select the node where you want to install the application."})
+            type = FieldType.multiselect,
+            list = true, refModel = "instance",
+            name = {"实例", "en:Instance"},
+            info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
     public String instances;
 
     @Override
@@ -73,7 +71,7 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(
-            name = {"列表", "en:List"}, forward = "list",
+            name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request, Response response) throws Exception {
         int pageNum = 1;
@@ -139,46 +137,20 @@ public class App extends ModelBase implements Createable {
 
     @ModelAction(
             name = {"安装", "en:Install"},
-            info = {"按配置要求安装应用到指定的节点。", "en:Install the app to the specified node as required."})
+            info = {"按配置要求安装应用到指定的实例。", "en:Install the app to the specified instance as required."})
     public void add(Request request, Response response) throws Exception {
-        File srcFile;
-        if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
-            srcFile = Utils.newFile(request.getParameter("fromUpload"));
-        } else {
-            srcFile = new File(request.getParameter("filename"));
-        }
-        if (!srcFile.isFile()) {
-            response.setSuccess(false);
-            String msg = this.appContext.getI18n(request.getLang(), "app.id.not.exist");
-            response.setMsg(msg);
-            return;
-        }
-        String srcFileName = srcFile.getName();
-        String appName;
-        if (srcFile.isDirectory()) {
-            appName = srcFileName;
-        } else if (srcFileName.toLowerCase().endsWith(".jar") || srcFileName.toLowerCase().endsWith(".zip")) {
-            int index = srcFileName.lastIndexOf(".");
-            appName = srcFileName.substring(0, index);
-        } else {
-            response.setSuccess(false);
-            String msg = this.appContext.getI18n(request.getLang(), "app.type.unknown");
-            response.setMsg(msg);
-            return;
-        }
-
-        String[] nodes = request.getParameter("nodes") != null
-                ? request.getParameter("nodes").split(",")
+        String[] instances = request.getParameter("instances") != null
+                ? request.getParameter("instances").split(",")
                 : new String[0];
         ((RequestImpl) request).setModelName("appinstaller");
-        ((RequestImpl) request).setActionName("install");
+        ((RequestImpl) request).setActionName("installApp");
         try {
-            for (String node : nodes) {
+            for (String instance : instances) {
                 try {
-                    if ("local".equals(node)) { // 安装到本地节点
+                    if ("local".equals(instance)) { // 安装到本地节点
                         MasterApp.getService(Deployer.class).getApp("instance").invokeDirectly(request, response);
                     } else {
-                        // TODO：调用远端 node 上的app add
+                        // TODO：调用远端 instance 上的app add
                     }
                 } catch (Exception e) { // todo 部分失败，如何显示到页面？
                     response.setSuccess(false);
@@ -193,42 +165,53 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(
-            name = {"管理", "en:Manage"}, forward = "sys/manage",
+            show = "id!=master&id!=instance",
+            name = {"管理", "en:Manage"}, forward = "sys/manage", order = 1,
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void switchTarget(Request request, Response response) throws Exception {
     }
 
     @ModelAction(
-            batch = true,
+            batch = true, order = 2, show = "id!=master&id!=instance",
             name = {"删除", "en:Delete"},
             info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
         String appName = request.getId();
-        Map<String, String> p = getDataStore().getDataById("app", appName);
-        String[] nodes = p.get("nodes").split(",");
+        Deployer deployer = MasterApp.getService(Deployer.class);
+        qingzhou.deployer.App app = deployer.getApp(appName);
 
-        ((RequestImpl) request).setAppName("instance");
         ((RequestImpl) request).setModelName("appinstaller");
-        ((RequestImpl) request).setActionName("uninstall");
+        ((RequestImpl) request).setActionName("unInstallApp");
         try {
-            for (String node : nodes) {
-                try {
-                    if ("local".equals(node)) { // 安装到本地节点
-                        MasterApp.getService(Deployer.class).getApp("instance").invokeDirectly(request, response);
-                    } else {
-                        // TODO：调用远端 node 上的app delete
+            if (app != null) {
+                ((RequestImpl) request).setAppName("instance");
+                deployer.getApp("instance").invokeDirectly(request, response);
+            }
+
+            // 卸载远程实例
+            Registry registry = MasterApp.getService(Registry.class);
+            AppInfo appInfo = registry.getAppInfo(appName);
+            if (appInfo != null) {
+                for (String instanceId : registry.getAllInstanceId()) {
+                    InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
+                    for (AppInfo info : instanceInfo.getAppInfos()) {
+                        if (appName.equals(info.getName())) {
+                            ((RequestImpl) request).setManageType("node");
+                            ((RequestImpl) request).setAppName(instanceId);
+                            deployer.getApp("instance").invokeDirectly(request, response);
+                            break;
+                        }
                     }
-                } catch (Exception e) { // todo 部分失败，如何显示到页面？
-                    response.setSuccess(false);
-                    response.setMsg(e.getMessage());
                 }
             }
+        } catch (Exception e) { // todo 部分失败，如何显示到页面？
+            response.setSuccess(false);
+            response.setMsg(e.getMessage());
         } finally {
             ((RequestImpl) request).setAppName("master");
             ((RequestImpl) request).setModelName("app");
             ((RequestImpl) request).setActionName(Deletable.ACTION_NAME_DELETE);
         }
-        getDataStore().deleteDataById("app", appName);
     }
 }

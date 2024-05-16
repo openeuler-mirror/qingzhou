@@ -18,7 +18,7 @@
 %>
 <div class="checkbox-group sortable">
     <%
-        String[] sortableCheckBoxOptions = PageBackendService.getFieldOptions(menuAppName, modelInfo.getCode(), fieldName);
+        String[] sortableCheckBoxOptions = PageBackendService.getFieldOptions(currentUser, menuAppName, modelInfo.getCode(), fieldName);
         if(sortableCheckBoxOptions != null){
             List<String> list = Arrays.stream(sortableCheckBoxOptions).sorted(Comparator.comparingInt(fieldValues::indexOf)).collect(Collectors.toList());
             for (String option : list) {

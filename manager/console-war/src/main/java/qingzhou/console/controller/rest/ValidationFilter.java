@@ -6,6 +6,7 @@ import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.ConsoleI18n;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
@@ -76,9 +77,9 @@ public class ValidationFilter implements Filter<RestContext> {
             new unsupportedCharacters(), new unsupportedStrings()
     };
 
-    private String[] validate(ModelFieldInfo fieldInfo, String parameterVal) {
+    private String[] validate(ModelFieldInfo fieldInfo, String parameterVal) throws Exception {
         if (parameterVal == null || parameterVal.isEmpty()) {
-            if (fieldInfo.isRequired()) {
+            if (fieldInfo.isRequired() && PageBackendService.isShow(o -> parameterVal, fieldInfo.getShow())) {
                 return new String[]{validation_required};
             }
         }

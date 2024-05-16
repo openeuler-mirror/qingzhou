@@ -9,11 +9,11 @@
     ],
     "arg": [
       {
-        "name": "-Xms64m",
+        "name": "-Xms256m",
         "desc": "初始分配的堆内存"
       },
       {
-        "name": "-Xmx64m",
+        "name": "-Xmx256m",
         "desc": "最大可分配的堆内存"
       },
       {
