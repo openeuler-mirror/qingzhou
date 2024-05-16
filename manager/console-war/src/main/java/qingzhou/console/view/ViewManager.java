@@ -33,7 +33,7 @@ public class ViewManager {
         if (response.getMsg() == null) {
             String appName = PageBackendService.getAppName(request);
             String SP = I18n.isZH() ? "" : " ";
-            String msg = response.isSuccess() ? ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.success") : I18n.getString(appName, "msg.fail");
+            String msg = response.isSuccess() ? ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.success") : ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.fail");
             String model = I18n.getString(appName, "model." + request.getModel());
             String action = I18n.getString(appName, "model.action." + request.getModel() + "." + request.getAction());
             String operation = Objects.equals(model, action) ? model : model + SP + action;
