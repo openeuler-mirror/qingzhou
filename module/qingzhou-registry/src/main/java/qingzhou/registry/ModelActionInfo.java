@@ -7,7 +7,6 @@ public class ModelActionInfo {
     private String icon;
     private int order;
     private String show;
-    private String forward;
     private boolean batch;
     private boolean disable;
 
@@ -62,17 +61,9 @@ public class ModelActionInfo {
     public int getOrder() {
         return order;
     }
-
+    
     public void setOrder(int order) {
         this.order = order;
-    }
-
-    public String getForward() {
-        return forward;
-    }
-
-    public void setForward(String forward) {
-        this.forward = forward;
     }
 
     public boolean isDisable() {

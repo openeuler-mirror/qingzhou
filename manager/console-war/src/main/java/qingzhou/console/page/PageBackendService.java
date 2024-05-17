@@ -163,7 +163,7 @@ public class PageBackendService {
 
     public static String buildMenuHtmlBuilder(HttpServletRequest request, HttpServletResponse response, RequestImpl qzRequest) {
         StringBuilder builder = new StringBuilder();
-        List<MenuItem> models = PageBackendService.getAppMenuList(qzRequest);
+        List<MenuItem> models = getAppMenuList(qzRequest);
         buildMenuHtmlBuilder(models, request, response, ViewManager.htmlView, qzRequest, builder, true);
         String menus = builder.toString();
         return String.format(menus, " ");

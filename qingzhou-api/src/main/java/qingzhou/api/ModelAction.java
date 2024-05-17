@@ -37,13 +37,6 @@ public @interface ModelAction {
     String show() default "";
 
     /**
-     * 指定执行该操作后应跳转到的目标页面，默认为空字符串表示无页面转发。
-     *
-     * @return 转发的目标页面路径
-     */
-    String forward() default "";
-
-    /**
      * 标识该操作是否支持批量处理
      */
     boolean batch() default false;

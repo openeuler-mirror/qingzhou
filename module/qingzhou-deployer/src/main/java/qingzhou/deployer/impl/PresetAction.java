@@ -36,7 +36,7 @@ class PresetAction {
     }
 
     @ModelAction(
-            name = {"监视", "en:Monitor"}, forward = "fragment/info",
+            name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
     public void monitor(Request request, Response response) {
@@ -65,7 +65,7 @@ class PresetAction {
     }
 
     @ModelAction(
-            name = {"列表", "en:List"}, forward = "list",
+            name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request, Response response) throws Exception {
         String modelName = request.getModel();
@@ -94,7 +94,7 @@ class PresetAction {
     }
 
     @ModelAction(
-            name = {"编辑", "en:Edit"}, forward = "form",
+            name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {
         show(request, response);
@@ -290,7 +290,7 @@ class PresetAction {
     }
 
     @ModelAction(
-            name = {"创建", "en:Create"}, forward = "form",
+            name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request, Response response) throws Exception {
         Map<String, String> properties = getAppInfo().getModelInfo(request.getModel()).getFormFieldDefaultValues();

@@ -37,7 +37,7 @@ public class Index extends ModelBase implements Showable {
     }
 
     @ModelAction(// NOTE: 这个方法用作是 Login 成功后 跳过的
-            name = {"主页", "en:Home"}, forward = "sys/index",
+            name = {"主页", "en:Home"},
             info = {"查看 Qingzhou 的产品信息。",
                     "en:View Qingzhou product information."})
     public void index(Request request, Response response) throws Exception {

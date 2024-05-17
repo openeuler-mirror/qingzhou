@@ -1,12 +1,12 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    boolean hasId = PageBackendService.hasIDField(qzRequest);
+    boolean existId = PageBackendService.hasIDField(qzRequest);
     boolean chartEnabled = !qzResponse.getDataList().isEmpty();
     boolean isMonitor = Monitorable.ACTION_NAME_MONITOR.equals(qzRequest.getAction());
 
     String encodedId = PageBackendService.encodeId(qzRequest.getId());
-    String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, Monitorable.ACTION_NAME_MONITOR + (hasId ? "/" + encodedId : ""));
+    String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, Monitorable.ACTION_NAME_MONITOR + (existId ? "/" + encodedId : ""));
 %>
 
 <div class="infoPage" chartMonitor="<%=isMonitor && chartEnabled%>" data-url="<%=url%>">

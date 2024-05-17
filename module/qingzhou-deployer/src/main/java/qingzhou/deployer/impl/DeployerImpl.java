@@ -216,8 +216,6 @@ class DeployerImpl implements Deployer {
                     if (addAction.equals(ma.getValue().getCode())) {
                         if (actionInfo == null) {
                             added.add(ma.getValue());
-                        } else {
-                            actionInfo.setForward(ma.getValue().getForward());
                         }
                         break;
                     }
@@ -312,7 +310,6 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setIcon(modelAction.icon());
             modelActionInfo.setOrder(modelAction.order());
             modelActionInfo.setShow(modelAction.show());
-            modelActionInfo.setForward(modelAction.forward());
             modelActionInfo.setBatch(modelAction.batch());
             modelActionInfo.setDisable(modelAction.disable());
             modelActionInfos.put(method, modelActionInfo);

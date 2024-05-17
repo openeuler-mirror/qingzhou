@@ -3,12 +3,12 @@ package qingzhou.console.view.type;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.console.ConsoleConstants;
+
+import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.Registry;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -26,17 +26,6 @@ public class HtmlView implements View {
         req.setAttribute(QZ_RESPONSE_KEY, response);
 
         String modelName = request.getModel();
-        ModelActionInfo modelAction = SystemController
-                .getAppInfo(request.getApp())
-                .getModelInfo(modelName)
-                .getModelActionInfo(request.getAction());
-        String pageForward = null;
-        if (modelAction != null) {
-            pageForward = modelAction.getForward();
-        }
-        if (pageForward == null || pageForward.isEmpty()) {
-            pageForward = "default";
-        }
 
         if (isManageAction(request)) {
             String manageAppName = null;
@@ -53,6 +42,7 @@ public class HtmlView implements View {
             SystemController.invokeLocalApp(request, response);// todo：到 html render 这里已经执行过一次 invoke app 了，这里是重复执行可以优化?
         }
 
+        String pageForward = getPageForward(request.getModel(), request.getAction());
         String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
         restContext.servletRequest.getRequestDispatcher(forwardToPage).forward(restContext.servletRequest, restContext.servletResponse);
     }
@@ -69,5 +59,25 @@ public class HtmlView implements View {
     @Override
     public String getContentType() {
         return "text/html;charset=UTF-8";
+    }
+
+    private String getPageForward(String model, String action) {
+        if (ConsoleConstants.MODEL_NAME_index.equals(model) && ConsoleConstants.ACTION_NAME_show.equals(action)) {
+            return ConsoleConstants.VIEW_RENDER_HOME;
+        }
+        switch (action) {
+            case ConsoleConstants.ACTION_NAME_list:
+                return ConsoleConstants.VIEW_RENDER_LIST;
+            case ConsoleConstants.ACTION_NAME_create:
+            case ConsoleConstants.ACTION_NAME_edit:
+                return ConsoleConstants.VIEW_RENDER_FORM;
+            case ConsoleConstants.ACTION_NAME_index:
+                return ConsoleConstants.VIEW_RENDER_INDEX;
+            case ConsoleConstants.ACTION_NAME_monitor:
+                return ConsoleConstants.VIEW_RENDER_INFO;
+            case ConsoleConstants.ACTION_NAME_switchTarget:
+                return ConsoleConstants.VIEW_RENDER_MANAGE;
+        }
+        return ConsoleConstants.VIEW_RENDER_DEFAULT;
     }
 }
