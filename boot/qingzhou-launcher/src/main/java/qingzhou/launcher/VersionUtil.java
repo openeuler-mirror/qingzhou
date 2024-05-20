@@ -101,7 +101,7 @@ class VersionUtil {
 
     private File getHomeDir() throws IOException {
         if (qingzhouHomeFile == null) {
-            String jarPath = VersionUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            String jarPath = java.net.URLDecoder.decode(VersionUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath(), StandardCharsets.UTF_8);
             String flag = "/bin/qingzhou-launcher.jar";
             int i = jarPath.indexOf(flag);
             String pre = jarPath.substring(0, i);
