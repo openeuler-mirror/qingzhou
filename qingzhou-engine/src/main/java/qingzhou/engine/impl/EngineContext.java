@@ -4,7 +4,8 @@ import qingzhou.engine.util.Utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 
 public class EngineContext {
     private File libDir;
@@ -13,7 +14,13 @@ public class EngineContext {
 
     public File getLibDir() {
         if (libDir == null) {
-            String jarPath = java.net.URLDecoder.decode(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath(), StandardCharsets.UTF_8);
+            String jarPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            try {
+                jarPath = java.net.URLDecoder.decode( // 兼容中文路径
+                        jarPath,
+                        Charset.defaultCharset().name());
+            } catch (UnsupportedEncodingException ignored) {
+            }
             String flag = "/engine/qingzhou-engine.jar";
             int i = jarPath.indexOf(flag);
             String pre = jarPath.substring(0, i);

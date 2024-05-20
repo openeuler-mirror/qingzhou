@@ -1,7 +1,8 @@
 package qingzhou.command;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -10,7 +11,13 @@ import java.util.Locale;
 
 public class CommandUtil {
     public static File getLibDir() {
-        String jarPath = java.net.URLDecoder.decode(Admin.class.getProtectionDomain().getCodeSource().getLocation().getPath(), StandardCharsets.UTF_8);
+        String jarPath = Admin.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        try {
+            jarPath = java.net.URLDecoder.decode( // 兼容中文路径
+                    jarPath,
+                    Charset.defaultCharset().name());
+        } catch (UnsupportedEncodingException ignored) {
+        }
         String flag = "/command/qingzhou-command.jar";
         int i = jarPath.indexOf(flag);
         String pre = jarPath.substring(0, i);
