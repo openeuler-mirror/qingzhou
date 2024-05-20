@@ -1,9 +1,8 @@
 package qingzhou.launcher;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Enumeration;
@@ -15,7 +14,7 @@ class VersionUtil {
     private File qingzhouHomeFile;
     private File versionFile = null;
 
-    File getLibDir() throws IOException {
+    File getLibDir() {
         if (versionFile != null) {
             return versionFile;
         }
@@ -99,13 +98,23 @@ class VersionUtil {
         }
     }
 
-    private File getHomeDir() throws IOException {
+    private File getHomeDir() {
         if (qingzhouHomeFile == null) {
-            String jarPath = java.net.URLDecoder.decode(VersionUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath(), StandardCharsets.UTF_8);
+            String jarPath = VersionUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            try {
+                jarPath = URLDecoder.decode( // 兼容中文路径
+                        jarPath,
+                        Charset.defaultCharset().name());
+            } catch (UnsupportedEncodingException ignored) {
+            }
             String flag = "/bin/qingzhou-launcher.jar";
             int i = jarPath.indexOf(flag);
             String pre = jarPath.substring(0, i);
-            qingzhouHomeFile = new File(pre).getCanonicalFile();
+            try {
+                qingzhouHomeFile = new File(pre).getCanonicalFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return qingzhouHomeFile;
