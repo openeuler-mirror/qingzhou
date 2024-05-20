@@ -4,6 +4,7 @@ import qingzhou.engine.util.Utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class EngineContext {
     private File libDir;
@@ -12,7 +13,7 @@ public class EngineContext {
 
     public File getLibDir() {
         if (libDir == null) {
-            String jarPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            String jarPath = java.net.URLDecoder.decode(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath(), StandardCharsets.UTF_8);
             String flag = "/engine/qingzhou-engine.jar";
             int i = jarPath.indexOf(flag);
             String pre = jarPath.substring(0, i);

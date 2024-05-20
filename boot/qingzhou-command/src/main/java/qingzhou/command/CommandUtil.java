@@ -1,6 +1,7 @@
 package qingzhou.command;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -9,7 +10,7 @@ import java.util.Locale;
 
 public class CommandUtil {
     public static File getLibDir() {
-        String jarPath = Admin.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String jarPath = java.net.URLDecoder.decode(Admin.class.getProtectionDomain().getCodeSource().getLocation().getPath(), StandardCharsets.UTF_8);
         String flag = "/command/qingzhou-command.jar";
         int i = jarPath.indexOf(flag);
         String pre = jarPath.substring(0, i);
