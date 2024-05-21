@@ -123,11 +123,16 @@ class DeployerImpl implements Deployer {
     private AppImpl buildApp(String appName, File appDir, boolean isSystemApp) throws Exception {
         AppImpl app = new AppImpl();
 
-        File[] appLibs = buildLib(appDir, isSystemApp);
-        URLClassLoader loader = buildLoader(appLibs, isSystemApp);
+        List<File> qzLibList = new ArrayList<>();
+        File[] dependLibs = buildLib(appDir, isSystemApp, qzLibList);
+        if (dependLibs.length == 0) {
+            throw new IllegalArgumentException(String.format("The jar that implements the Qingzhou App API was not found in the root directory of app [%s]", appName));
+        }
+        URLClassLoader loader = buildLoader(dependLibs, isSystemApp);
         app.setLoader(loader);
 
-        QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader);
+        File[] qzLibs = qzLibList.toArray(new File[0]);
+        QingzhouApp qingzhouApp = buildQingzhouApp(qzLibs, loader);
         if (qingzhouApp instanceof QingzhouSystemApp) {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
@@ -137,7 +142,7 @@ class DeployerImpl implements Deployer {
 
         AppInfo appInfo = new AppInfo();
         appInfo.setName(appName);
-        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader);
+        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(qzLibs, loader);
         appInfo.setModelInfos(modelInfos.values());
         app.setAppInfo(appInfo);
 
@@ -244,7 +249,7 @@ class DeployerImpl implements Deployer {
     }
 
     private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader) throws Exception {
-        Collection<String> modelClassName = Utils.detectAnnotatedClass(appLibs, Model.class, null);
+        Collection<String> modelClassName = Utils.detectAnnotatedClass(appLibs, Model.class, null, loader);
 
         Map<ModelBase, ModelInfo> modelInfos = new HashMap<>();
 
@@ -396,12 +401,11 @@ class DeployerImpl implements Deployer {
         return appContext;
     }
 
-    private File[] buildLib(File appDir, boolean isSystemApp) throws IOException {
+    private File[] buildLib(File appDir, boolean isSystemApp, List<File> qzLibs) throws IOException {
         File[] appFiles = appDir.listFiles();
         if (appFiles == null || appFiles.length == 0) {
             throw new IllegalArgumentException("app lib not found: " + appDir.getName());
         }
-
         List<File> libs = new ArrayList<>();
         for (File appFile : appFiles) {
             if (appFile.isDirectory()) {
@@ -411,7 +415,7 @@ class DeployerImpl implements Deployer {
             if (!appFile.getName().endsWith(".jar")) {
                 continue;
             }
-
+            qzLibs.add(appFile);
             libs.add(appFile);
             parseAppFile(appFile, libs);
         }
@@ -422,6 +426,7 @@ class DeployerImpl implements Deployer {
                 libs.addAll(Arrays.asList(commonFiles));
             }
         }
+
         return libs.toArray(new File[0]);
     }
 

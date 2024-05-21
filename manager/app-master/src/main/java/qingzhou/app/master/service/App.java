@@ -71,6 +71,52 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(
+            name = {"查看", "en:Show"},
+            info = {"查看该组件的相关信息。", "en:View the information of this model."})
+    public void show(Request request, Response response) throws Exception {
+        Map<String, String> appMap = new HashMap<>();
+        String id = request.getId();
+        qingzhou.deployer.App app = MasterApp.getService(Deployer.class).getApp(id);
+        if (app != null) {
+            appMap.put("id", id);
+            appMap.put("instances", MasterApp.getInstanceId());
+            appMap.put("filename", ""); // ToDo
+            response.addData(appMap);
+            return;
+        }
+
+        try {
+            Registry registry = MasterApp.getService(Registry.class);
+            Collection<String> allInstanceIds = registry.getAllInstanceId();
+            // 处理远程实例的应用信息
+            for (String instanceId : allInstanceIds) {
+                InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
+                AppInfo[] appInfos = instanceInfo.getAppInfos();
+                for (AppInfo appInfo : appInfos) {
+                    if (id.equals(appInfo.getName())) {
+                        appMap.put("id", appInfo.getName());
+                        appMap.put("instances", instanceId);
+                        appMap.put("filename", ""); // ToDo
+                        response.addData(appMap);
+                        break;
+                    }
+                }
+                if (!appMap.isEmpty()) {
+                    break;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    @ModelAction(
+            name = {"编辑", "en:Edit"},
+            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
+    public void edit(Request request, Response response) throws Exception {
+        show(request, response);
+    }
+
+    @ModelAction(
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request, Response response) throws Exception {
@@ -189,8 +235,8 @@ public class App extends ModelBase implements Createable {
                 deployer.getApp("instance").invokeDirectly(request, response);
             }
 
-            // 卸载远程实例
-            Registry registry = MasterApp.getService(Registry.class);
+            // 卸载远程实例 todo registry目前获取不到
+            /*Registry registry = MasterApp.getService(Registry.class);
             AppInfo appInfo = registry.getAppInfo(appName);
             if (appInfo != null) {
                 for (String instanceId : registry.getAllInstanceId()) {
@@ -204,7 +250,7 @@ public class App extends ModelBase implements Createable {
                         }
                     }
                 }
-            }
+            }*/
         } catch (Exception e) { // todo 部分失败，如何显示到页面？
             response.setSuccess(false);
             response.setMsg(e.getMessage());

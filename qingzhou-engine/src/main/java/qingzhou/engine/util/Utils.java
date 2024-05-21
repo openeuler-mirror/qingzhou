@@ -2,6 +2,7 @@ package qingzhou.engine.util;
 
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.LoaderClassPath;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -172,13 +173,19 @@ public class Utils {
         return fileContent.toString();
     }
 
-    public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, String scopePrefix) throws Exception {
+    public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, String scopePrefix, ClassLoader classLoader) throws Exception {
         Collection<String> targetClasses = new HashSet<>();
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
-            Thread.currentThread().setContextClassLoader(annotationClass.getClassLoader());
-            ClassPool classPool = ClassPool.getDefault();
-            classPool.appendPathList(Arrays.stream(libs).map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
+            ClassPool classPool;
+            if (classLoader != null) {
+                Thread.currentThread().setContextClassLoader(classLoader);
+                classPool = new ClassPool(true);
+                classPool.appendClassPath(new LoaderClassPath(classLoader));
+            } else {
+                classPool = ClassPool.getDefault();
+                classPool.appendPathList(Arrays.stream(libs).map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
+            }
             getScopeClasses(libs, scopePrefix).forEach(s -> {
                 try {
                     CtClass ctClass = classPool.get(s);

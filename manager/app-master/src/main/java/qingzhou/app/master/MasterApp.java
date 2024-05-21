@@ -52,7 +52,11 @@ public class MasterApp extends QingzhouSystemApp {
 
         @Override
         public String doFilter(Request request, Response response) {
-            if ("instance".equals(request.getModel()) && "local".equals(request.getId())) {
+            String model = request.getModel();
+            String id = request.getId();
+            if (("instance".equals(model) && "local".equals(id)) ||
+                    ("app".equals(model) && ("instance".equals(id) || "master".equals(id)))
+            ) {
                 if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())
                         || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
                     return appContext.getI18n(request.getLang(), "validator.master.system");

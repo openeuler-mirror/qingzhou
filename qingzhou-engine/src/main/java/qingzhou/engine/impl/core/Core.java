@@ -103,7 +103,7 @@ public class Core implements Process {
         for (ModuleInfo moduleInfo : moduleInfoList) {
             Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
                     new File[]{moduleInfo.getFile()},
-                    Module.class, "qingzhou.");
+                    Module.class, "qingzhou.", moduleInfo.getLoader());
             for (String a : annotatedClasses) {
                 Class<?> aClass = moduleInfo.getLoader().loadClass(a);
                 ModuleActivator activator = (ModuleActivator) aClass.newInstance();
