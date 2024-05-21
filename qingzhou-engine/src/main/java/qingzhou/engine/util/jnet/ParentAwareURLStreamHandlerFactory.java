@@ -30,8 +30,6 @@ public abstract class ParentAwareURLStreamHandlerFactory implements URLStreamHan
 
     /**
      * Set the parent factory.
-     *
-     * @param factory
      */
     public void setParentFactory(URLStreamHandlerFactory factory) {
         this.parentFactory = factory;

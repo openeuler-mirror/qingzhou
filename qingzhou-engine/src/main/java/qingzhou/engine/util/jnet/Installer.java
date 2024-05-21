@@ -32,9 +32,6 @@ public class Installer {
 
     /**
      * Set the url stream handler factory.
-     *
-     * @param factory
-     * @throws Exception
      */
     public static void setURLStreamHandlerFactory(URLStreamHandlerFactory factory)
             throws Exception {
@@ -64,22 +61,9 @@ public class Installer {
                     ((ParentAwareURLStreamHandlerFactory) factory).setParentFactory(oldFactory);
                 }
                 factoryField.set(null, factory);
-            } catch (IllegalArgumentException e) {
-                throw new Exception("Unable to set url stream handler factory " + factory);
-            } catch (IllegalAccessException e) {
+            } catch (IllegalArgumentException | IllegalAccessException e) {
                 throw new Exception("Unable to set url stream handler factory " + factory);
             }
         }
-    }
-
-    protected static Field getStaticURLStreamHandlerFactoryField() {
-        Field[] fields = URL.class.getDeclaredFields();
-        for (int i = 0; i < fields.length; i++) {
-            if (Modifier.isStatic(fields[i].getModifiers()) && fields[i].getType().equals(URLStreamHandlerFactory.class)) {
-                fields[i].setAccessible(true);
-                return fields[i];
-            }
-        }
-        return null;
     }
 }

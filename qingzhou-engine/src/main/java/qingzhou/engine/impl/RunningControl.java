@@ -22,10 +22,13 @@ class RunningControl implements Process {
             throw new IllegalStateException("Qingzhou is already starting");
         }
 
-        running.getParentFile().mkdirs();
+        Utils.mkdirs(running.getParentFile());
         if (!running.exists() && !running.createNewFile()) {
             throw new IllegalStateException("failed to create new file: " + running);
         }
+
+        // 正常启动之前先清理上次启动的缓存文件
+        Utils.forceDelete(engineContext.getTemp());
     }
 
     private boolean checkService() {

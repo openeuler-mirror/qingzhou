@@ -24,7 +24,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        deployer = new DeployerImpl(moduleContext, registry);
+        deployer = new DeployerImpl(moduleContext);
 
         moduleContext.registerService(Deployer.class, deployer);
 

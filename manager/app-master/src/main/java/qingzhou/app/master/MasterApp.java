@@ -7,11 +7,7 @@ import qingzhou.api.Response;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.deployer.QingzhouSystemApp;
-
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import qingzhou.engine.ModuleContext;
 
 @qingzhou.api.App
 public class MasterApp extends QingzhouSystemApp {
@@ -35,12 +31,9 @@ public class MasterApp extends QingzhouSystemApp {
     }
 
     public static <T> T getService(Class<T> type) {
-        List<Field> collect = Arrays.stream(QingzhouSystemApp.class.getDeclaredFields()).filter(field -> field.getType() == type).collect(Collectors.toList());
-        try {
-            return (T) collect.get(0).get(masterApp);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        if (type == ModuleContext.class) return (T) masterApp.moduleContext;
+
+        return masterApp.moduleContext.getService(type);
     }
 
     private static class LocalNodeProtection implements ActionFilter {

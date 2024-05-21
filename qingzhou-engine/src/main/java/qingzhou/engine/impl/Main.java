@@ -1,6 +1,6 @@
 package qingzhou.engine.impl;
 
-import qingzhou.engine.impl.core.Core;
+import qingzhou.engine.impl.core.ModuleLoading;
 import qingzhou.engine.util.pattern.ProcessSequence;
 
 public class Main {
@@ -9,7 +9,7 @@ public class Main {
         EngineContext engineContext = new EngineContext();
         ProcessSequence sequence = new ProcessSequence(
                 new RunningControl(engineContext),
-                new Core(engineContext)
+                new ModuleLoading(engineContext)
         );
         try {
             sequence.exec();
