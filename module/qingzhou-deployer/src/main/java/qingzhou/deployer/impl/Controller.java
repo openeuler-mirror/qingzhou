@@ -7,6 +7,7 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
+import qingzhou.registry.Registry;
 
 import java.io.File;
 import java.util.Arrays;
@@ -16,11 +17,14 @@ public class Controller implements ModuleActivator {
     @Service
     private Logger logger;
 
+    @Service
+    private Registry registry;
+
     static Deployer deployer;
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        deployer = new DeployerImpl(moduleContext);
+        deployer = new DeployerImpl(moduleContext, registry);
 
         moduleContext.registerService(Deployer.class, deployer);
 

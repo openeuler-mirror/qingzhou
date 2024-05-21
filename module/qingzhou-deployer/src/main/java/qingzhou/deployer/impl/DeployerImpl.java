@@ -18,6 +18,7 @@ import qingzhou.registry.GroupInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,8 +51,11 @@ class DeployerImpl implements Deployer {
     private final Map<String, App> apps = new HashMap<>();
     private final ModuleContext moduleContext;
 
-    DeployerImpl(ModuleContext moduleContext) {
+    private final Registry registry;
+
+    DeployerImpl(ModuleContext moduleContext, Registry registry) {
         this.moduleContext = moduleContext;
+        this.registry = registry;
         this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(PresetAction.class));
     }
 
@@ -136,6 +140,7 @@ class DeployerImpl implements Deployer {
         if (qingzhouApp instanceof QingzhouSystemApp) {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
+            qingzhouSystemApp.setRegistry(registry);
             qingzhouSystemApp.setDeployer(this);
         }
         app.setQingzhouApp(qingzhouApp);

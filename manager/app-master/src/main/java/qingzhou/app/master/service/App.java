@@ -235,8 +235,8 @@ public class App extends ModelBase implements Createable {
                 deployer.getApp("instance").invokeDirectly(request, response);
             }
 
-            // 卸载远程实例 todo registry目前获取不到
-            /*Registry registry = MasterApp.getService(Registry.class);
+            // 卸载远程实例
+            Registry registry = MasterApp.getService(Registry.class);
             AppInfo appInfo = registry.getAppInfo(appName);
             if (appInfo != null) {
                 for (String instanceId : registry.getAllInstanceId()) {
@@ -250,8 +250,11 @@ public class App extends ModelBase implements Createable {
                         }
                     }
                 }
-            }*/
+            }
         } catch (Exception e) { // todo 部分失败，如何显示到页面？
+            if (e.getMessage().contains("App not found:")) {
+                return;
+            }
             response.setSuccess(false);
             response.setMsg(e.getMessage());
         } finally {
