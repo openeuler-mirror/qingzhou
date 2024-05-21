@@ -1,24 +1,13 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.Groups;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingzhouApp;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Showable;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.GroupInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,19 +16,10 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -51,11 +31,9 @@ class DeployerImpl implements Deployer {
     private final Map<String, App> apps = new HashMap<>();
     private final ModuleContext moduleContext;
 
-    private final Registry registry;
 
-    DeployerImpl(ModuleContext moduleContext, Registry registry) {
+    DeployerImpl(ModuleContext moduleContext) {
         this.moduleContext = moduleContext;
-        this.registry = registry;
         this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(PresetAction.class));
     }
 
@@ -127,27 +105,25 @@ class DeployerImpl implements Deployer {
     private AppImpl buildApp(String appName, File appDir, boolean isSystemApp) throws Exception {
         AppImpl app = new AppImpl();
 
-        List<File> qzLibList = new ArrayList<>();
-        File[] dependLibs = buildLib(appDir, isSystemApp, qzLibList);
-        if (dependLibs.length == 0) {
-            throw new IllegalArgumentException(String.format("The jar that implements the Qingzhou App API was not found in the root directory of app [%s]", appName));
+        List<File> scanAppFilesCache = new ArrayList<>();
+        File[] appLibs = buildLib(appDir, isSystemApp, scanAppFilesCache);
+        if (appLibs.length == 0) {
+            throw new IllegalArgumentException("The app[" + appName + "] jar file was not found");
         }
-        URLClassLoader loader = buildLoader(dependLibs, isSystemApp);
+        URLClassLoader loader = buildLoader(appLibs, isSystemApp);
         app.setLoader(loader);
 
-        File[] qzLibs = qzLibList.toArray(new File[0]);
-        QingzhouApp qingzhouApp = buildQingzhouApp(qzLibs, loader);
+        File[] scanAppFiles = scanAppFilesCache.toArray(new File[0]);
+        QingzhouApp qingzhouApp = buildQingzhouApp(scanAppFiles, loader);
         if (qingzhouApp instanceof QingzhouSystemApp) {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
-            qingzhouSystemApp.setRegistry(registry);
-            qingzhouSystemApp.setDeployer(this);
         }
         app.setQingzhouApp(qingzhouApp);
 
         AppInfo appInfo = new AppInfo();
         appInfo.setName(appName);
-        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(qzLibs, loader);
+        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(scanAppFiles, loader);
         appInfo.setModelInfos(modelInfos.values());
         app.setAppInfo(appInfo);
 
@@ -379,24 +355,13 @@ class DeployerImpl implements Deployer {
     }
 
     private QingzhouApp buildQingzhouApp(File[] appLibs, URLClassLoader loader) throws Exception {
-        for (File file : appLibs) {
-            if (!file.getName().endsWith(".jar")) continue;
-            try (JarFile jar = new JarFile(file)) {
-                Enumeration<JarEntry> entries = jar.entries();
-                while (entries.hasMoreElements()) {
-                    String entryName = entries.nextElement().getName();
-                    if (entryName.contains("$") || !entryName.endsWith(".class")) continue;
-                    int i = entryName.indexOf(".class");
-                    String className = entryName.substring(0, i).replace("/", ".");
-                    Class<?> cls = loader.loadClass(className);
-                    if (cls.getDeclaredAnnotation(qingzhou.api.App.class) != null) {
-                        return (QingzhouApp) cls.newInstance();
-                    }
-                }
-            }
+        Collection<String> annotatedClass = Utils.detectAnnotatedClass(appLibs, qingzhou.api.App.class, null, loader);
+        if (annotatedClass.size() == 1) {
+            Class<?> cls = loader.loadClass(annotatedClass.iterator().next());
+            return (QingzhouApp) cls.newInstance();
+        } else {
+            throw new IllegalStateException("An app must have and can only have one implementation class for qingzhou.api.QingzhouApp");
         }
-
-        throw new IllegalStateException("The main class of the app is missing");
     }
 
     private AppContextImpl buildAppContext(AppInfo appInfo) {
@@ -406,7 +371,7 @@ class DeployerImpl implements Deployer {
         return appContext;
     }
 
-    private File[] buildLib(File appDir, boolean isSystemApp, List<File> qzLibs) throws IOException {
+    private File[] buildLib(File appDir, boolean isSystemApp, List<File> scanAppFilesCache) throws IOException {
         File[] appFiles = appDir.listFiles();
         if (appFiles == null || appFiles.length == 0) {
             throw new IllegalArgumentException("app lib not found: " + appDir.getName());
@@ -420,22 +385,26 @@ class DeployerImpl implements Deployer {
             if (!appFile.getName().endsWith(".jar")) {
                 continue;
             }
-            qzLibs.add(appFile);
             libs.add(appFile);
-            parseAppFile(appFile, libs);
+            appendAppClassPath(appFile, libs);
+
+            scanAppFilesCache.add(appFile);
         }
 
         if (!isSystemApp) {
             File[] commonFiles = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
             if (commonFiles != null && commonFiles.length > 0) {
-                libs.addAll(Arrays.asList(commonFiles));
+                List<File> commonModels = Arrays.asList(commonFiles);
+                libs.addAll(commonModels);
+
+                scanAppFilesCache.addAll(commonModels);
             }
         }
 
         return libs.toArray(new File[0]);
     }
 
-    private void parseAppFile(File appFile, List<File> libs) throws IOException {
+    private void appendAppClassPath(File appFile, List<File> libs) throws IOException {
         try (JarFile jarFile = new JarFile(appFile)) {
             Manifest manifest = jarFile.getManifest();
             Attributes mainAttributes = manifest.getMainAttributes();

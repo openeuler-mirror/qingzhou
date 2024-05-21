@@ -17,10 +17,6 @@ import qingzhou.servlet.ServletContainer;
 import qingzhou.servlet.ServletService;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -89,14 +85,7 @@ public class Controller implements ModuleActivator {
                 ContextHelper.GetInstance.set(new ContextHelper() {
                     @Override
                     public <T> T getService(Class<T> type) {
-                        List<Field> collect = Arrays.stream(Controller.class.getDeclaredFields()).filter(field -> field.getType() == type).collect(Collectors.toList());
-                        try {
-                            Field field = collect.get(0);
-                            field.setAccessible(true);
-                            return (T) field.get(Controller.this.instance);
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
+                        return moduleContext.getService(type);
                     }
 
                     @Override

@@ -1,9 +1,4 @@
-package qingzhou.engine.impl.core.loader;
-
-import qingzhou.engine.impl.EngineContext;
-import qingzhou.engine.impl.Main;
-import qingzhou.engine.impl.core.ModuleInfo;
-import qingzhou.engine.impl.core.ModuleLoaderBuilder;
+package qingzhou.engine.impl.core;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,20 +9,14 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-public class FilterLoading implements ModuleLoaderBuilder {
-    @Override
-    public void build(List<ModuleInfo> moduleInfoList, EngineContext engineContext) throws Exception {
-        // 系统 api
-        URLClassLoader appApiLoader = new URLClassLoader(new URL[]
-                {new File(engineContext.getLibDir(), "qingzhou-api.jar").toURI().toURL()},
-                Main.class.getClassLoader());
-
+class FilterLoading {
+    void setModuleLoader(List<ModuleInfo> moduleInfoList, ClassLoader parentLoader) throws Exception {
         // 模块 api
-        FilterClassLoader moduleApiLoader = new FilterClassLoader(new URL[0], appApiLoader);
+        FilterClassLoader moduleApiLoader = new FilterClassLoader(new URL[0], parentLoader);
         for (ModuleInfo moduleInfo : moduleInfoList) {
             moduleApiLoader.addClassPathFile(moduleInfo.getFile());
             FileFilter fileFilter = new FileFilter();
-            fileFilter.includePackages.add(moduleInfo.getName().replace("-", "."));
+            fileFilter.includePackages.add(getApiPkg(moduleInfo.getFile()));
             moduleApiLoader.addFileFilter(fileFilter);
         }
 
@@ -37,10 +26,16 @@ public class FilterLoading implements ModuleLoaderBuilder {
                     new URL[]{moduleInfo.getFile().toURI().toURL()},
                     moduleApiLoader);
             FileFilter fileFilter = new FileFilter();
-            fileFilter.excludePackages.add(moduleInfo.getName().replace("-", "."));
+            fileFilter.excludePackages.add(getApiPkg(moduleInfo.getFile()));
             loader.addFileFilter(fileFilter);
             moduleInfo.setLoader(loader);
         }
+    }
+
+    private String getApiPkg(File jarFile) {
+        String fileName = jarFile.getName();
+        String moduleName = fileName.substring(0, fileName.length() - ".jar".length());
+        return moduleName.replace("-", ".");
     }
 
     static class FilterClassLoader extends URLClassLoader {

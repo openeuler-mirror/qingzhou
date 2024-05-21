@@ -251,8 +251,8 @@ public class App extends ModelBase implements Createable {
                     }
                 }
             }
-        } catch (Exception e) { // todo 部分失败，如何显示到页面？
-            if (e.getMessage().contains("App not found:")) {
+        } catch (Exception e) {
+            if (e.getMessage().contains("App not found:")) { // todo 部分失败，如何显示到页面？
                 return;
             }
             response.setSuccess(false);

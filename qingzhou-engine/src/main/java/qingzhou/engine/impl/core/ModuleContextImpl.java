@@ -12,6 +12,7 @@ class ModuleContextImpl implements ModuleContext {
     private final String name;
     private final EngineContext engineContext;
     final Map<Class<?>, Object> registeredServices = new HashMap<>();
+    final Map<Class<?>, Object> injectedServices = new HashMap<>();
 
     private File temp;
 
@@ -31,6 +32,14 @@ class ModuleContextImpl implements ModuleContext {
             throw new IllegalStateException("Re-registration is not allowed: " + serviceType.getName());
         }
         registeredServices.put(serviceType, service);
+    }
+
+    @Override
+    public <T> T getService(Class<T> clazz) {
+        T selfService = (T) registeredServices.get(clazz);
+        if (selfService != null) return selfService;
+
+        return (T) injectedServices.get(clazz);
     }
 
     @Override

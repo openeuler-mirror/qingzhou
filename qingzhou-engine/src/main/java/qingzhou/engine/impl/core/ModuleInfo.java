@@ -1,71 +1,56 @@
 package qingzhou.engine.impl.core;
 
 import qingzhou.engine.ModuleActivator;
-import qingzhou.engine.ModuleContext;
 
 import java.io.File;
-import java.util.*;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ModuleInfo {
-    private final String name;
-    private final Set<ModuleInfo> dependencies = new HashSet<>();
-    private File file;
-    private ClassLoader loader;
+class ModuleInfo {
+    private final File file;
+    private URLClassLoader loader;
     private final List<ModuleActivator> moduleActivators = new ArrayList<>();
-    private ModuleContext moduleContext;
+    private ModuleContextImpl moduleContext;
+    private boolean started;
 
-    public ModuleInfo(String name) {
-        this.name = Objects.requireNonNull(name);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public File getFile() {
-        return file;
-    }
-
-    public void setFile(File file) {
+    ModuleInfo(File file) {
         this.file = file;
     }
 
-    public ClassLoader getLoader() {
+    String getName() {
+        return file.getName();
+    }
+
+    File getFile() {
+        return file;
+    }
+
+    URLClassLoader getLoader() {
         return loader;
     }
 
-    public void setLoader(ClassLoader loader) {
+    void setLoader(URLClassLoader loader) {
         this.loader = loader;
     }
 
-    public List<ModuleActivator> getModuleActivators() {
+    List<ModuleActivator> getModuleActivators() {
         return moduleActivators;
     }
 
-    public ModuleContext getModuleContext() {
+    ModuleContextImpl getModuleContext() {
         return moduleContext;
     }
 
-    public void setModuleContext(ModuleContext moduleContext) {
+    void setModuleContext(ModuleContextImpl moduleContext) {
         this.moduleContext = moduleContext;
     }
 
-    public Set<ModuleInfo> getDependencies() {
-        return dependencies;
+    boolean isStarted() {
+        return started;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ModuleInfo that = (ModuleInfo) o;
-
-        return name.equals(that.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return name.hashCode();
+    void setStarted(boolean started) {
+        this.started = started;
     }
 }
