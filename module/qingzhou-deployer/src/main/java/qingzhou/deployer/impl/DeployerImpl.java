@@ -45,12 +45,17 @@ class DeployerImpl implements Deployer {
         }
         boolean isSystemApp = "master".equals(appName) || "instance".equals(appName);
         AppImpl app = buildApp(appName, appFile, isSystemApp);
-
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
-        startApp(app);
+        try {
+            Thread.currentThread().setContextClassLoader(app.getLoader());
+            startApp(app);
+            // 初始化各模块
+            startModel(app);
+        } finally {
+            Thread.currentThread().setContextClassLoader(classLoader);
+        }
 
-        // 初始化各模块
-        startModel(app);
 
         // 注册完成
         apps.put(appName, app);
