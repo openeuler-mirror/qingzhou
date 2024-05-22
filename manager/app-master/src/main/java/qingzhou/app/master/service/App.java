@@ -214,7 +214,7 @@ public class App extends ModelBase implements Createable {
             show = "id!=master&id!=instance",
             name = {"管理", "en:Manage"}, order = 1,
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
-    public void switchTarget(Request request, Response response) throws Exception {
+    public void manage(Request request, Response response) throws Exception {
     }
 
     @ModelAction(

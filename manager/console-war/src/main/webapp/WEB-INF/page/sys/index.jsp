@@ -311,7 +311,7 @@
         logout: '<%=PageBackendService.getMasterAppI18nString("page.logout.confirm")%>',
         filesName: '<%=Downloadable.ACTION_NAME_FILES%>',
         downloadTip: '<%=PageBackendService.getMasterAppI18nString("page.download.log.tip")%>',
-        actionName_target: '<%=ConsoleConstants.ACTION_NAME_switchTarget%>',
+        actionName_target: '<%=ConsoleConstants.ACTION_NAME_manage%>',
         downloadFileNames: '<%=ConsoleConstants.PARAMETER_DOWNLOAD_FILE_NAMES%>',
         showAction: '<%=Showable.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18nString("page.download.checkall")%>',

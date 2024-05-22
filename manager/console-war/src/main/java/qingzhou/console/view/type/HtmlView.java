@@ -3,8 +3,6 @@ package qingzhou.console.view.type;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.console.ConsoleConstants;
-
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
@@ -26,8 +24,8 @@ public class HtmlView implements View {
         req.setAttribute(QZ_RESPONSE_KEY, response);
 
         String modelName = request.getModel();
-
-        if (isManageAction(request)) {
+        boolean isManageAction = isManageAction(request);
+        if (isManageAction) {
             String manageAppName = null;
             if ("app".equals(modelName)) {
                 request.setManageType(ConsoleConstants.MANAGE_TYPE_APP);
@@ -42,7 +40,7 @@ public class HtmlView implements View {
             SystemController.invokeLocalApp(request, response);// todo：到 html render 这里已经执行过一次 invoke app 了，这里是重复执行可以优化?
         }
 
-        String pageForward = getPageForward(request.getModel(), request.getAction());
+        String pageForward = getPageForward(request.getModel(), request.getAction(), isManageAction);
         String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
         restContext.servletRequest.getRequestDispatcher(forwardToPage).forward(restContext.servletRequest, restContext.servletResponse);
     }
@@ -61,10 +59,16 @@ public class HtmlView implements View {
         return "text/html;charset=UTF-8";
     }
 
-    private String getPageForward(String model, String action) {
-        if (ConsoleConstants.MODEL_NAME_index.equals(model) && ConsoleConstants.ACTION_NAME_show.equals(action)) {
+    private String getPageForward(String model, String action, boolean isManageAction) {
+        if (isManageAction) {
+            return ConsoleConstants.VIEW_RENDER_MANAGE;
+        }
+
+        if ((ConsoleConstants.MODEL_NAME_index.equals(model) || ConsoleConstants.MODEL_NAME_apphome.equals(model))
+                && ConsoleConstants.ACTION_NAME_show.equals(action)) {
             return ConsoleConstants.VIEW_RENDER_HOME;
         }
+
         switch (action) {
             case ConsoleConstants.ACTION_NAME_list:
                 return ConsoleConstants.VIEW_RENDER_LIST;
@@ -75,7 +79,7 @@ public class HtmlView implements View {
                 return ConsoleConstants.VIEW_RENDER_INDEX;
             case ConsoleConstants.ACTION_NAME_monitor:
                 return ConsoleConstants.VIEW_RENDER_INFO;
-            case ConsoleConstants.ACTION_NAME_switchTarget:
+            case ConsoleConstants.ACTION_NAME_manage:
                 return ConsoleConstants.VIEW_RENDER_MANAGE;
         }
         return ConsoleConstants.VIEW_RENDER_DEFAULT;

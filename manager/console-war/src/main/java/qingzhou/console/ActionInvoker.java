@@ -2,14 +2,15 @@ package qingzhou.console;
 
 import qingzhou.api.Request;
 import qingzhou.api.type.Listable;
-import qingzhou.api.type.Showable;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
+import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.logger.Logger;
+import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.ModelInfo;
 import qingzhou.registry.Registry;
@@ -18,7 +19,13 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ActionInvoker {
     private static final ActionInvoker instance = new ActionInvoker();
@@ -163,56 +170,64 @@ public class ActionInvoker {
 
     private Map<String, ResponseImpl> processRequest(Request request) throws Exception {
         Map<String, ResponseImpl> resultOnNode = new HashMap<>();
-        List<String> appNodes = new ArrayList<>();
+        List<String> appInstances = new ArrayList<>();
         String manageType = ((RequestImpl) request).getManageType();
         String appName = request.getApp();
         if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
-            appNodes.add(appName);
+            appInstances.add(appName);
         } else if (ConsoleConstants.MANAGE_TYPE_APP.equals(manageType)) {
-            appNodes = getAppNodes(appName);
+            appInstances = getAppInstances(appName);
         }
 
-        for (String node : appNodes) {
+        for (String instance : appInstances) {
             ResponseImpl responseOnNode;
-            if (node.equals("local")) {
+            if (instance.equals("local")) {
                 responseOnNode = new ResponseImpl();
                 SystemController.getService(Deployer.class)
                         .getApp(PageBackendService.getAppName(request))
                         .invoke(request, responseOnNode);
             } else {
-                InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(node);
+                InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(instance);
                 String remoteUrl = String.format("http://%s:%s",
                         instanceInfo.getHost(), //todo: 多网卡的 agent 会注册多个 ip 地址，考虑优化为 被动模式 使得master不依赖agent的ip？（ps:agent在docker容器里，master可能无法放到到agent的ip）
                         instanceInfo.getPort());
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, instanceInfo.getKey());
             }
-            resultOnNode.put(node, responseOnNode);
+            resultOnNode.put(instance, responseOnNode);
         }
 
         return resultOnNode;
     }
 
-    private List<String> getAppNodes(String appName) throws Exception {
-        List<String> nodes = new ArrayList<>();
-        if ("master".equals(appName)) {
-            nodes.add("local");
-        } else {
-            RequestImpl request = new RequestImpl();
-            ResponseImpl response = new ResponseImpl();
-            request.setAppName("master");
-            request.setModelName("app");
-            request.setActionName(Showable.ACTION_NAME_SHOW);
-            request.setId(appName);
-            SystemController.invokeLocalApp(request, response);
-            List<Map<String, String>> dataList = response.getDataList();
-            if (dataList != null && !dataList.isEmpty()) {
-                Map<String, String> res = dataList.get(0);
-                nodes.addAll(Arrays.asList(res.get("nodes").split(",")));
-            } else {
-                throw new IllegalArgumentException("App [ " + appName + " ] not found.");
-            }
-
+    private List<String> getAppInstances(String appName) throws Exception {
+        List<String> instances = new ArrayList<>();
+        Deployer deployer = SystemController.getService(Deployer.class);
+        App app = deployer.getApp(appName);
+        if (app != null) {
+            instances.add("local");
         }
-        return nodes;
+        if (!"instance".equals(appName) && !"master".equals(appName)) {
+            try {
+                Registry registry = SystemController.getService(Registry.class);
+                AppInfo appInfo = registry.getAppInfo(appName);
+                if (appInfo != null) {
+                    for (String instanceId : registry.getAllInstanceId()) {
+                        InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
+                        for (AppInfo info : instanceInfo.getAppInfos()) {
+                            if (appName.equals(info.getName())) {
+                                instances.add(instanceId);
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                if (!e.getMessage().contains("App not found:")) {
+                    throw e;
+                }
+            }
+        }
+
+        return instances;
     }
 }

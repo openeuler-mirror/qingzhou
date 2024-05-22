@@ -7,6 +7,7 @@ public interface ConsoleConstants {
     String MODEL_NAME_node = "node";// todo: 如何保持和 mode 的同步？
     String MODEL_NAME_password = "password";// todo: 如何保持和 mode 的同步？
     String MODEL_NAME_index = "index";
+    String MODEL_NAME_apphome = "home";
     String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
     String GROUP_SEPARATOR = "/";
     String REGISTER_URI = "/register";
@@ -30,7 +31,7 @@ public interface ConsoleConstants {
     String ACTION_NAME_create = "create";
     String ACTION_NAME_edit = "edit";
     String ACTION_NAME_monitor = "monitor";
-    String ACTION_NAME_switchTarget = "switchTarget";
+    String ACTION_NAME_manage = "manage";
     // view renders
     String VIEW_RENDER_DEFAULT = "default";
     String VIEW_RENDER_INDEX = "sys/index";
