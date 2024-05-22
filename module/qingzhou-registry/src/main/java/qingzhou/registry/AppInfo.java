@@ -8,6 +8,9 @@ public class AppInfo {
     private Collection<MenuInfo> menuInfos;
 
     public MenuInfo getMenuInfo(String name) {
+        if (menuInfos == null) {
+            return null;
+        }
         return menuInfos.stream().filter(menuInfo -> menuInfo.getName().equals(name)).findAny().orElse(null);
     }
 

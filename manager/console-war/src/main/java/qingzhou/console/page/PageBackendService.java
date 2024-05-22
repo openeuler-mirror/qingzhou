@@ -191,12 +191,11 @@ public class PageBackendService {
 
     public static List<MenuItem> getAppMenuList(RequestImpl request) {
         List<MenuItem> menus = new ArrayList<>();
-        ModelInfo modelManager = getModelInfo(request);
-        if (modelManager == null) {
+        AppInfo appInfo = getAppInfo(getAppName(request));
+        if (appInfo == null) {
             return menus;
         }
-        String appName = getAppName(request);
-        AppInfo appInfo = getAppInfo(appName);
+
         Map<String, List<ModelInfo>> groupMap = appInfo.getModelInfos().stream()
                 .filter(modelInfo -> !modelInfo.isHidden())
                 .collect(Collectors.groupingBy(ModelInfo::getMenu));

@@ -41,7 +41,7 @@ public class Instance extends ModelBase implements Createable {
     @ModelAction(
             name = {"管理", "en:Manage"}, show = "running=true", order = 1,
             info = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
-    public void switchTarget(Request request, Response response) throws Exception {
+    public void manage(Request request, Response response) throws Exception {
     }
 
     @ModelAction(
