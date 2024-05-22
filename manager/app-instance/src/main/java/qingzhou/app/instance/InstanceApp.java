@@ -15,6 +15,9 @@ public class InstanceApp extends QingzhouSystemApp {
     }
 
     public static <T> T getService(Class<T> type) {
+        if (ModuleContext.class == type) {
+            return (T) MODULECONTEXT;
+        }
         return MODULECONTEXT.getService(type);
     }
 }
