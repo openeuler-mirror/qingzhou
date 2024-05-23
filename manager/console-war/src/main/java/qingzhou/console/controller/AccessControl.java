@@ -90,6 +90,13 @@ public class AccessControl implements Filter<HttpServletContext> {
                 }
             }
         }
+
+        // 远程实例注册
+        if (path.startsWith("/rest/json/app/master/heartservice/heatbeat") ||
+                path.startsWith("/rest/json/app/master/heartservice/register")) {
+            return true;
+        }
+
         return false;
     }
 

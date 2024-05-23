@@ -21,6 +21,7 @@ public class HttpClientImpl implements HttpClient {
         HttpURLConnection conn = buildConnection(url);
         conn.setRequestMethod("POST");
         conn.setDoInput(true);
+        conn.setDoOutput(true);
         conn.setUseCaches(false);
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(10000);

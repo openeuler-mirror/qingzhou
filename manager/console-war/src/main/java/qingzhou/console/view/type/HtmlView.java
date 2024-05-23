@@ -2,9 +2,9 @@ package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
-import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 
@@ -18,10 +18,7 @@ public class HtmlView implements View {
     @Override
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
-        Response response = restContext.response;
         HttpServletRequest req = restContext.servletRequest;
-        req.setAttribute(QZ_REQUEST_KEY, request);
-        req.setAttribute(QZ_RESPONSE_KEY, response);
 
         String modelName = request.getModel();
         boolean isManageAction = isManageAction(request);
@@ -37,8 +34,10 @@ public class HtmlView implements View {
             request.setAppName(manageAppName);
             request.setModelName("home");
             request.setActionName("show");
-            SystemController.invokeLocalApp(request, response);// todo：到 html render 这里已经执行过一次 invoke app 了，这里是重复执行可以优化?
+            restContext.response = ActionInvoker.getInstance().invokeAction(request);
         }
+        req.setAttribute(QZ_REQUEST_KEY, request);
+        req.setAttribute(QZ_RESPONSE_KEY, restContext.response);
 
         String pageForward = getPageForward(request.getModel(), request.getAction(), isManageAction);
         String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));

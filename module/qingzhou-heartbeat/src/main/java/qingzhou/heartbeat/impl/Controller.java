@@ -19,7 +19,14 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -68,8 +75,17 @@ public class Controller implements ModuleActivator {
     }
 
     private void register() throws Exception {
+        String masterUrl = heartbeat.getMasterUrl();
+        if (masterUrl == null || masterUrl.trim().isEmpty()) {
+            logger.warn("MasterUrl cannot be empty");
+            return;
+        }
+
         List<AppInfo> appInfos = new ArrayList<>();
         for (String a : deployer.getAllApp()) {
+            if ("instance".equals(a) || "master".equals(a)) {
+                continue;
+            }
             appInfos.add(deployer.getApp(a).getAppInfo());
         }
         thisInstanceInfo.setAppInfos(appInfos.toArray(new AppInfo[0]));
@@ -78,21 +94,29 @@ public class Controller implements ModuleActivator {
 
         boolean doRegister = false;
         try {
+            if (masterUrl.endsWith("/")) {
+                masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
+            }
+            String fingerprintUrl = masterUrl + "/rest/json/app/master/heartservice/heatbeat";
             String fingerprint = CryptoServiceFactory.getInstance().getMessageDigest().fingerprint(registerData);
-            HttpResponse response = http.buildHttpClient().send(heartbeat.getMasterUrl(), new HashMap<String, String>() {{
+            HttpResponse response = http.buildHttpClient().send(fingerprintUrl, new HashMap<String, String>() {{
                 put("fingerprint", fingerprint);
             }});
             if (response.getResponseCode() == 200) {
                 Map resultMap = json.fromJson(response.getResponseBody(), Map.class);
-                String checkResult = (String) resultMap.get(fingerprint);
-                doRegister = !Boolean.parseBoolean(checkResult);
+                List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get("data");
+                if (dataList != null && !dataList.isEmpty()) {
+                    String checkResult = dataList.get(0).get(fingerprint);
+                    doRegister = !Boolean.parseBoolean(checkResult);
+                }
             }
         } catch (Throwable e) {
             logger.warn("An exception occurred during the registration process", e);
         }
         if (!doRegister) return;
 
-        http.buildHttpClient().send(heartbeat.getMasterUrl(), new HashMap<String, String>() {{
+        String registerUrl = masterUrl + "/rest/json/app/master/heartservice/register";
+        http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
             put("doRegister", registerData);
         }});
     }

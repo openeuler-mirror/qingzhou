@@ -8,7 +8,11 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Listable;
+import qingzhou.app.master.MasterApp;
+import qingzhou.registry.InstanceInfo;
+import qingzhou.registry.Registry;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,20 +52,58 @@ public class Instance extends ModelBase implements Createable {
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request, Response response) throws Exception {
-        response.setTotalSize(1);
-        response.setPageSize(10);
+        int pageSize = 10;
         int pageNum = 1;
-        try {
-            pageNum = Integer.parseInt(request.getParameter(Listable.PARAMETER_PAGE_NUM));
-        } catch (NumberFormatException ignored) {
+        int totalSize = 0;
+
+        String pageNumParam = request.getParameter(Listable.PARAMETER_PAGE_NUM);
+        if (pageNumParam != null && !pageNumParam.isEmpty()) {
+            try {
+                pageNum = Integer.parseInt(pageNumParam);
+            } catch (NumberFormatException ignored) {
+                // 忽略异常，使用默认页码
+            }
         }
+
+        response.setPageSize(pageSize);
         response.setPageNum(pageNum);
 
-        Map<String, String> local = new HashMap<>();
-        local.put("id", "local");
-        local.put("ip", "127.0.0.1");
-        local.put("port", "7000");
-        local.put("running", "true");
-        response.addData(local);
+        int startIndex = (pageNum - 1) * pageSize;
+        int endIndex = pageNum * pageSize;
+
+        if (startIndex == 0) {
+            Map<String, String> local = new HashMap<>();
+            local.put("id", "local");
+            local.put("ip", "127.0.0.1");
+            local.put("port", "7000");
+            local.put("running", "true");
+            response.addData(local);
+            totalSize = 1;
+        }
+
+        int index = 0;
+        Registry registry = MasterApp.getService(Registry.class);
+        Collection<String> allInstanceId = registry.getAllInstanceId();
+        for (String instanceId : allInstanceId) {
+            InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
+            if (instanceInfo != null) {
+                Map<String, String> data = new HashMap<>();
+                data.put("id", instanceInfo.getId());
+                data.put("ip", instanceInfo.getHost());
+                data.put("port", String.valueOf(instanceInfo.getPort()));
+                data.put("running", "true");
+
+                if (index >= startIndex && index < endIndex) {
+                    response.addData(data);
+                }
+                index++;
+
+                if (index == endIndex) {
+                    break;
+                }
+            }
+        }
+        totalSize += allInstanceId.size();
+        response.setTotalSize(totalSize);
     }
 }

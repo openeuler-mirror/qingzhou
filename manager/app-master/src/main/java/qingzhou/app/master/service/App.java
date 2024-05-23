@@ -46,8 +46,8 @@ public class App extends ModelBase implements Createable {
     @ModelField(
             list = true, show = "appFrom=false",
             name = {"应用位置", "en:Application File"},
-            info = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar 类型的文件。",
-                    "en:The location of the application on the server, usually the app package, Note: Must be a *.jar file."})
+            info = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar, *.zip 类型的文件或目录。",
+                    "en:The location of the application on the server, usually the app package, Note: Must be a *.jar, *.zip file or directory."})
     public String filename;
 
     @ModelField(
@@ -215,6 +215,7 @@ public class App extends ModelBase implements Createable {
             name = {"管理", "en:Manage"}, order = 1,
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request, Response response) throws Exception {
+
     }
 
     @ModelAction(
