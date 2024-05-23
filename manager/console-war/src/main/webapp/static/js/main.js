@@ -78,35 +78,33 @@ function getActiveTabContent() {
 function bindTabEvent() {
     var now = new Date().getTime();
     $(".tab-box>ul>li").each(function (i) {
-        if (!$(this).attr("id")) {
-            $(this).attr("id", now + i);
-            if ($(this).hasClass("active")) {
-                $(this).parent().attr("preTab", now + i);
-            }
-        }
         var $this = this;
         $(this).unbind("click").bind("click", function (e) {
-            $(this).parent().attr("preTab", $(".tab-box li.active").attr("id"));
-            $(".tab-box li.active").removeClass("active");
+            e.preventDefault();
+            if ($($this).hasClass("active") || (e.target.tagName === "LABEL" && $(e.target).hasClass("close"))) {
+                return false;
+            }
+            var activeTab = $(".tab-box li.active");
+            $(this).parent().attr("preTab", $(activeTab).attr("id"));
+            $(activeTab).removeClass("active");
+            $($(".content-box>ul>li")[$(activeTab).index()]).removeClass("active").addClass("inactive");
             $(this).addClass("active");
-            $(".content-box>ul>li.active").removeClass("active").addClass("inactive");
             $($(".content-box>ul>li")[$(this).index()]).removeClass("inactive").addClass("active");
             autoAdaptTip();
+            return false;
         });
         $(".close", this).unbind("click").bind("click", function (e) {
+            e.preventDefault();
             if ($($this).hasClass("active")) {
-                $("#" + $($this).parent().attr("preTab")).click();
+                var preTab = $("#" + $($this).parent().attr("preTab"));
+                $(preTab).addClass("active");
+                $($(".content-box>ul>li")[$(preTab).index()]).removeClass("inactive").addClass("active");
+            } else {
+                $($this).parent().attr("preTab", $(".tab-box li.active").attr("id"));
             }
             $($(".content-box>ul>li")[$($this).index()]).remove();
             $($this).remove();
-            window.setTimeout(function () {
-                if ($(".tab-box>ul>li.active").length === 0) {
-                    $($(".tab-box>ul>li")[0]).removeClass("inactive").addClass("active");
-                    $(".content-box>ul>li")[$($(".tab-box>ul>li")[0]).index()].removeClass("inactive").addClass("active");
-                }
-                autoAdaptTip();
-            }, 50);
-            e.preventDefault();
+            autoAdaptTip();
             return false;
         });
     });
