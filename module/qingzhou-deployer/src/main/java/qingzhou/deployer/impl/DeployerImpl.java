@@ -38,13 +38,13 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public void installApp(File appFile) throws Exception {
-        String appName = appFile.getName();
+    public void installApp(File appDir) throws Exception {
+        String appName = appDir.getName();
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
         boolean isSystemApp = "master".equals(appName) || "instance".equals(appName);
-        AppImpl app = buildApp(appName, appFile, isSystemApp);
+        AppImpl app = buildApp(appName, appDir, isSystemApp);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
         try {
