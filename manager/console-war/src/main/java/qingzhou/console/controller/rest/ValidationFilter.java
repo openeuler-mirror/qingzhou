@@ -27,6 +27,8 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String validation_port = "validation_port";
     public static String unsupportedCharacters = "unsupportedCharacters";
     public static String unsupportedStrings = "unsupportedStrings";
+    public static String createable = "createable";
+    public static String editable = "editable";
 
     static {
         ConsoleI18n.addI18n(validation_required, new String[]{"内容不能为空白", "en:The content cannot be blank"});
@@ -36,21 +38,25 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n(validation_lengthMax, new String[]{"字符串长度不能大于%s", "en:The length of the string cannot be greater than %s"});
         ConsoleI18n.addI18n(validation_port, new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
         ConsoleI18n.addI18n(unsupportedStrings, new String[]{"不能包含字串%s", "en:Cannot contain the string %s"});
+        ConsoleI18n.addI18n(createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
+        ConsoleI18n.addI18n(editable, new String[]{"编辑时不支持写入该属性", "en:Writing this property is not supported during editing"});
     }
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
-        if (Createable.ACTION_NAME_ADD.equals(request.getAction())
-                || Editable.ACTION_NAME_UPDATE.equals(request.getAction())) {
+        boolean isAddAction = Createable.ACTION_NAME_ADD.equals(request.getAction());
+        boolean isUpdateAction = Editable.ACTION_NAME_UPDATE.equals(request.getAction());
+        if (isAddAction || isUpdateAction) {
             AppInfo appInfo = SystemController.getAppInfo(request.getApp());
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
             clipParameter(request, modelInfo);
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                 String parameterVal = request.getParameter(field);
-                String[] error = validate(fieldInfo, parameterVal);
+                ValidationContext vc = new ValidationContext(fieldInfo, parameterVal, isAddAction, isUpdateAction);
+                String[] error = validate(vc);
                 if (error != null) {
                     String[] params = Arrays.copyOfRange(error, 1, error.length);
                     String i18n = ConsoleI18n.getI18n(request.getLang(), error[0], (Object) params);
@@ -74,10 +80,13 @@ public class ValidationFilter implements Filter<RestContext> {
             new min(), new max(),
             new lengthMin(), new lengthMax(),
             new port(),
-            new unsupportedCharacters(), new unsupportedStrings()
+            new unsupportedCharacters(), new unsupportedStrings(),
+            new createable(), new editable()
     };
 
-    private String[] validate(ModelFieldInfo fieldInfo, String parameterVal) throws Exception {
+    private String[] validate(ValidationContext context) throws Exception {
+        ModelFieldInfo fieldInfo = context.fieldInfo;
+        String parameterVal = context.parameterVal;
         if (parameterVal == null || parameterVal.isEmpty()) {
             if (fieldInfo.isRequired() && PageBackendService.isShow(o -> parameterVal, fieldInfo.getShow())) {
                 return new String[]{validation_required};
@@ -85,7 +94,7 @@ public class ValidationFilter implements Filter<RestContext> {
         }
 
         for (Validator validator : validators) {
-            String[] error = validator.validate(fieldInfo, parameterVal);
+            String[] error = validator.validate(context);
             if (error != null) return error;
         }
 
@@ -93,13 +102,29 @@ public class ValidationFilter implements Filter<RestContext> {
     }
 
     interface Validator {
-        String[] validate(ModelFieldInfo fieldInfo, String parameterVal);
+        String[] validate(ValidationContext context);
+    }
+
+    static class ValidationContext {
+        final ModelFieldInfo fieldInfo;
+        final String parameterVal;
+        final boolean isAddAction;
+        final boolean isUpdateAction;
+
+        ValidationContext(ModelFieldInfo fieldInfo, String parameterVal, boolean isAddAction, boolean isUpdateAction) {
+            this.fieldInfo = fieldInfo;
+            this.parameterVal = parameterVal;
+            this.isAddAction = isAddAction;
+            this.isUpdateAction = isUpdateAction;
+        }
     }
 
     static class min implements Validator {
 
         @Override
-        public String[] validate(ModelFieldInfo fieldInfo, String parameterVal) {
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
             if (fieldInfo.getMin() == Long.MIN_VALUE) return null;
             if (Long.parseLong(parameterVal) >= fieldInfo.getMin()) return null;
             return new String[]{validation_min, String.valueOf(fieldInfo.getMin())};
@@ -109,7 +134,9 @@ public class ValidationFilter implements Filter<RestContext> {
     static class max implements Validator {
 
         @Override
-        public String[] validate(ModelFieldInfo fieldInfo, String parameterVal) {
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
             if (fieldInfo.getMax() == Long.MAX_VALUE) return null;
             if (Long.parseLong(parameterVal) <= fieldInfo.getMax()) return null;
             return new String[]{validation_max, String.valueOf(fieldInfo.getMax())};
@@ -119,7 +146,9 @@ public class ValidationFilter implements Filter<RestContext> {
     static class lengthMin implements Validator {
 
         @Override
-        public String[] validate(ModelFieldInfo fieldInfo, String parameterVal) {
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
             if (fieldInfo.getLengthMin() == -1) return null;
             if (parameterVal.length() >= fieldInfo.getLengthMin()) return null;
             return new String[]{validation_lengthMin, String.valueOf(fieldInfo.getLengthMin())};
@@ -129,7 +158,9 @@ public class ValidationFilter implements Filter<RestContext> {
     static class lengthMax implements Validator {
 
         @Override
-        public String[] validate(ModelFieldInfo fieldInfo, String parameterVal) {
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
             if (fieldInfo.getLengthMax() == Integer.MAX_VALUE) return null;
             if (parameterVal.length() <= fieldInfo.getLengthMax()) return null;
             return new String[]{validation_lengthMax, String.valueOf(fieldInfo.getLengthMax())};
@@ -139,7 +170,9 @@ public class ValidationFilter implements Filter<RestContext> {
     static class port implements Validator {
 
         @Override
-        public String[] validate(ModelFieldInfo fieldInfo, String parameterVal) {
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
             if (!fieldInfo.isPort()) return null;
             return new String[]{validation_port};
         }
@@ -148,7 +181,9 @@ public class ValidationFilter implements Filter<RestContext> {
     static class unsupportedCharacters implements Validator {
 
         @Override
-        public String[] validate(ModelFieldInfo fieldInfo, String parameterVal) {
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
             if (fieldInfo.getUnsupportedCharacters().isEmpty()) return null;
             for (char c : fieldInfo.getUnsupportedCharacters().toCharArray()) {
                 String s = String.valueOf(c);
@@ -163,13 +198,41 @@ public class ValidationFilter implements Filter<RestContext> {
     static class unsupportedStrings implements Validator {
 
         @Override
-        public String[] validate(ModelFieldInfo fieldInfo, String parameterVal) {
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
             for (String unsupportedString : fieldInfo.getUnsupportedStrings()) {
                 if (parameterVal.contains(unsupportedString)) {
                     return new String[]{unsupportedStrings, unsupportedString};
                 }
             }
             return null;
+        }
+    }
+
+    static class createable implements Validator {
+
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            if (fieldInfo.isCreateable()) return null;
+
+            if (!context.isAddAction) return null;
+
+            return new String[]{createable};
+        }
+    }
+
+    static class editable implements Validator {
+
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            if (fieldInfo.isEditable()) return null;
+
+            if (!context.isUpdateAction) return null;
+
+            return new String[]{editable};
         }
     }
 

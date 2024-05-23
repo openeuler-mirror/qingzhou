@@ -12,6 +12,8 @@ public class ModelFieldInfo {
     private boolean list;
     private boolean monitor;
     private boolean numeric;
+    private boolean createable;
+    private boolean editable;
     private boolean required;
     private long min;
     private long max;
@@ -109,6 +111,22 @@ public class ModelFieldInfo {
 
     public void setNumeric(boolean numeric) {
         this.numeric = numeric;
+    }
+
+    public boolean isCreateable() {
+        return createable;
+    }
+
+    public void setCreateable(boolean createable) {
+        this.createable = createable;
+    }
+
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
     }
 
     public boolean isRequired() {
