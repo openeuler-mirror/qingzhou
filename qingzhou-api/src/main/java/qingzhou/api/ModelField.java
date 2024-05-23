@@ -33,8 +33,14 @@ public @interface ModelField {
      */
     String group() default "";
 
+    /**
+     * 字段的显示类型
+     */
     FieldType type() default FieldType.text;
 
+    /**
+     * 字段的取值范围
+     */
     String[] options() default "";
 
     // 若 refModel 有，则 options() 会列出指定 model 的所有 id
@@ -54,9 +60,20 @@ public @interface ModelField {
      */
     boolean list() default false;
 
+    /**
+     * 仅用于数据监视
+     */
     boolean monitor() default false;
 
+    /**
+     * 用于数据监视时，其值是否是数字类型的，数字类型的值可用于绘制折线图、统计分析等
+     */
     boolean numeric() default false;
+
+    /*********** 校验信息 ***********/
+    boolean createable() default true; // 允许创建时指定值
+
+    boolean editable() default true; // 允许编辑此字段
 
     boolean required() default true;
 
