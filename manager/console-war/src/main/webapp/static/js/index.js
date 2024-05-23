@@ -338,7 +338,7 @@ $(document).ready(function () {
     // 用户修改密码点击事件
     $("#reset-password-btn").unbind("click").bind("click", function (e) {
         e.preventDefault();
-        $(".tab-box>ul>li[central='true']").click();
+        $(".tab-box>ul>li[fixed='true']").click();
         var lis = $(".sidebar-menu .active", getRestrictedArea());
         lis.removeClass("menu-open active");
         for(var i = 0; i < lis.length; i++){
@@ -1127,7 +1127,7 @@ function bindEventForListPage() {
             return;
         }
         var url = $(this).attr("href");
-        var tabHtml = "<li bind-id=\"" + $(this).attr("data-id") + "\">"
+        var tabHtml = "<li id=\"" + new Date().getTime() + "\" bind-id=\"" + $(this).attr("data-id") + "\">"
             + "<a href=\"javascript:void(0);\" href-attr=\"" + url + "\" rel=\"noopener noreferrer\">"
             + "    <i class=\"icon icon-" + $(this).attr("model-icon") + "\"></i>"
             + "    <label>" + $(this).attr("data-name") + "</label>"

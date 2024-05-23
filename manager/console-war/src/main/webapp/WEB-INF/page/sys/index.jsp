@@ -5,22 +5,23 @@
     request.setAttribute("indexPageFlag", true);
 %>
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <base href="<%=contextPath%>/">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5,shrink-to-fit=no,user-scalable=yes">
     <meta name="author" content="https://gitee.com/openeuler/qingzhou">
     <title>Qingzhou Console</title>
     <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
-    <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
-    <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.css">
-    <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/css/index.css">
-    <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/css/nice-select.css">
-    <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.css">
+    <link rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
+    <link rel="stylesheet" href="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.css">
+    <link rel="stylesheet" href="<%=contextPath%>/static/css/index.css">
+    <link rel="stylesheet" href="<%=contextPath%>/static/css/nice-select.css">
+    <link rel="stylesheet" href="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.css">
 
-    <style type="text/css">
+    <style>
         /* list.jsp */
         table.table.table-striped.table-hover th {
             color: black;
@@ -217,20 +218,19 @@
         }
     </style>
     <%--注意：后面的<!--\>一定不能省略，否则在 IE 之外的浏览器就无法加载 jQuery --%>
-    <script type="text/javascript" src="<%=contextPath%>/static/js/jquery.min.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/js/jquery.form.min.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/js/jsencrypt.min.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/lib/zui/js/zui.min.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.js"></script>
+    <script src="<%=contextPath%>/static/js/jquery.min.js"></script>
+    <script src="<%=contextPath%>/static/js/jquery.form.min.js"></script>
+    <script src="<%=contextPath%>/static/js/jsencrypt.min.js"></script>
+    <script src="<%=contextPath%>/static/lib/zui/js/zui.min.js"></script>
+    <script src="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.js"></script>
     <%--  echarts   https://echarts.apache.org/zh/builder.html  定制的 5.3.0 如果缺少要用的模块请重新定制 --%>
     <%--  echarts  当前定制 模块有 柱状图 折线图 饼图 直角坐标系 日历 标题 图例 提示框 svg 兼容IE8 工具集 代码压缩 --%>
-    <script type="text/javascript" src="<%=contextPath%>/static/js/echarts.min.js?v=5.3.0"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/js/msg.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/lib/layer/layer.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.js"></script>
-    <script type="text/javascript"
-            src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
-    <script type="text/javascript" src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
+    <script src="<%=contextPath%>/static/js/echarts.min.js?v=5.3.0"></script>
+    <script src="<%=contextPath%>/static/js/msg.js"></script>
+    <script src="<%=contextPath%>/static/lib/layer/layer.js"></script>
+    <script src="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.js"></script>
+    <script src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
+    <script src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
     <script src="<%=contextPath%>/static/lib/muuri/muuri.min.js"></script>
     <%@ include file="../fragment/head.jsp" %>
 </head>
@@ -244,12 +244,11 @@
 
 <main>
     <section class="tab-box">
-        <ul>
-            <li class="active" central="true">
+        <ul preTab="defaultTab">
+            <li id="defaultTab" class="active" fixed="true">
                 <a href="javascript:void(0);">
                     <i class="icon icon-resize"></i>
-                    <label><%=PageBackendService.getMasterAppI18nString("page.index.centralized")%>
-                    </label>
+                    <label><%=PageBackendService.getMasterAppI18nString("page.index.centralized")%></label>
                 </a>
             </li>
         </ul>
@@ -257,7 +256,7 @@
 
     <section class="content-box">
         <ul>
-            <li class="active" central="true">
+            <li id="defaultTabBox" class="active" fixed="true">
                 <%-- 左侧菜单 --%>
                 <aside class="main-sidebar">
                     <div class="sidebar sidebar-scroll">
@@ -292,7 +291,7 @@
     <div class="loading"></div>
 </div>
 
-<script type="text/javascript">
+<script>
     var global_setting = {
         check2FA: '<%=ConsoleConstants.LOGIN_2FA%>',
         separa: ',',
@@ -328,9 +327,9 @@
     };
     var searchUrl = '<%=PageBackendService.encodeURL( response, contextPath + "/search")%>';
 </script>
-<script type="text/javascript" src="<%=contextPath%>/static/js/main.js"></script>
-<script type="text/javascript" src="<%=contextPath%>/static/js/index.js"></script>
-<script type="text/javascript">
+<script src="<%=contextPath%>/static/js/main.js"></script>
+<script src="<%=contextPath%>/static/js/index.js"></script>
+<script>
     tooltip(".tooltips", {transition: true, time: 200});
 </script>
 </body>
