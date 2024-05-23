@@ -41,6 +41,8 @@ public class Controller implements ModuleActivator {
         File[] files = Utils.newFile(moduleContext.getInstanceDir(), "apps").listFiles();
         if (files != null) {
             for (File file : files) {
+                if (!file.isDirectory()) continue;
+
                 deployer.installApp(file);
             }
         }
