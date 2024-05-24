@@ -17,6 +17,11 @@
             <artifactId>qingzhou-json</artifactId>
             <version>x</version>
         </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-logger</artifactId>
+            <version>x</version>
+        </dependency>
     </dependencies>
 
 </project>
