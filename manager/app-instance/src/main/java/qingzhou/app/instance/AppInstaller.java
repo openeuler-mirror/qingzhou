@@ -16,7 +16,7 @@ public class AppInstaller extends ModelBase {
 
     @ModelAction(
             name = {"安装应用", "en:Install App"},
-            info = {"在该节点上安装应用。", "en:Install the application on the node."})
+            info = {"在该实例上安装应用。", "en:Install the application on the instance."})
     public void installApp(Request request, Response response) throws Exception {
         File srcFile;
         if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
@@ -54,7 +54,7 @@ public class AppInstaller extends ModelBase {
 
     @ModelAction(
             name = {"卸载应用", "en:UnInstall App"},
-            info = {"从该节点上卸载应用。", "en:Uninstall the app from the node."})
+            info = {"从该实例上卸载应用。", "en:Uninstall the app from the instance."})
     public void unInstallApp(Request request, Response response) throws Exception {
         InstanceApp.getService(Deployer.class).unInstallApp(request.getId());
         Utils.forceDelete(Utils.newFile(getAppsDir(), request.getId()));

@@ -23,7 +23,7 @@ public class AccessControl implements Filter<HttpServletContext> {
         add(RESTController.INDEX_PATH);
     }};
 
-    private static final List<String> masterAppModels = Arrays.asList("user", "version", "node");
+    private static final List<String> masterAppModels = Arrays.asList("user", "version", "instance");
 
     public static boolean canAccess(String appName, String modelAction, String user) throws Exception {
         return true;

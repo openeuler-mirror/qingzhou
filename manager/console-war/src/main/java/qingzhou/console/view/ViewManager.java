@@ -32,6 +32,9 @@ public class ViewManager {
         // 完善响应的 msg
         if (response.getMsg() == null) {
             String appName = PageBackendService.getAppName(request);
+            if ("instance".equals(appName)) {
+                appName = "master";
+            }
             String SP = I18n.isZH() ? "" : " ";
             String msg = response.isSuccess() ? ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.success") : ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.fail");
             String model = I18n.getString(appName, "model." + request.getModel());

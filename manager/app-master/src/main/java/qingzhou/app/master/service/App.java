@@ -243,9 +243,9 @@ public class App extends ModelBase implements Createable {
                     InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
                     for (AppInfo info : instanceInfo.getAppInfos()) {
                         if (appName.equals(info.getName())) {
-                            ((RequestImpl) request).setManageType("node");
+                            ((RequestImpl) request).setManageType("instance");
                             ((RequestImpl) request).setAppName(instanceId);
-                            deployer.getApp("instance").invokeDirectly(request, response);
+                            // deployer.getApp("instance").invokeDirectly(request, response);// todo 需要远程请求
                             break;
                         }
                     }

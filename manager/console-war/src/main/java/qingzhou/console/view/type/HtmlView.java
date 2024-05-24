@@ -1,7 +1,6 @@
 package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
-import qingzhou.api.Response;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
@@ -27,8 +26,8 @@ public class HtmlView implements View {
             if ("app".equals(modelName)) {
                 request.setManageType(ConsoleConstants.MANAGE_TYPE_APP);
                 manageAppName = request.getId();
-            } else if ("node".equals(modelName)) {
-                request.setManageType(ConsoleConstants.MANAGE_TYPE_NODE);
+            } else if ("instance".equals(modelName)) {
+                request.setManageType(ConsoleConstants.MANAGE_TYPE_INSTANCE);
                 manageAppName = "local";
             }
             request.setAppName(manageAppName);
@@ -50,7 +49,7 @@ public class HtmlView implements View {
         if (!"master".equals(request.getApp())) return false;
 
         return "app".equals(request.getModel())
-                || "node".equals(request.getModel());
+                || "instance".equals(request.getModel());
     }
 
     @Override

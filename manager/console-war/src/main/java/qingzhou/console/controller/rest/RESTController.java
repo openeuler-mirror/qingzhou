@@ -152,7 +152,7 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = SystemController.getAppInfo(request.getApp())
+        String[] actions = PageBackendService.getAppInfo(PageBackendService.getAppName(request))
                 .getModelInfo(request.getModel())
                 .getActionNames();
         for (String name : actions) {
