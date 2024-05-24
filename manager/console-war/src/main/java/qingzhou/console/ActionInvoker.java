@@ -9,6 +9,7 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
+import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
@@ -191,7 +192,9 @@ public class ActionInvoker {
                 String remoteUrl = String.format("http://%s:%s",
                         instanceInfo.getHost(), //todo: 多网卡的 agent 会注册多个 ip 地址，考虑优化为 被动模式 使得master不依赖agent的ip？（ps:agent在docker容器里，master可能无法放到到agent的ip）
                         instanceInfo.getPort());
-                responseOnNode = RemoteClient.sendReq(remoteUrl, request, instanceInfo.getKey());
+
+                String remoteKey = CryptoServiceFactory.getInstance().getKeyPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
+                responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
             }
             resultOnNode.put(instance, responseOnNode);
         }

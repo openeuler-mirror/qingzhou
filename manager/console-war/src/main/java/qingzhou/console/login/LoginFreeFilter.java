@@ -1,5 +1,6 @@
 package qingzhou.console.login;
 
+import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.util.StringUtil;
@@ -26,12 +27,8 @@ public class LoginFreeFilter implements Filter<HttpServletContext> {
             }
         }
         String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
-        if (checkPath.startsWith("/static/")) {
-            for (String suffix : LoginManager.STATIC_RES_SUFFIX) {
-                if (checkPath.endsWith(suffix)) {
-                    return true;
-                }
-            }
+        if(AccessControl.isNoLoginCheckUris(checkPath)){
+            return true;
         }
 
         if (checkPath.equals(LoginManager.LOGIN_URI)) { // 浏览器登录

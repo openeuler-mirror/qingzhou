@@ -3,6 +3,7 @@ package qingzhou.console.login;
 import qingzhou.api.Lang;
 import qingzhou.config.User;
 import qingzhou.console.ConsoleConstants;
+import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.AsymmetricDecryptor;
@@ -260,13 +261,8 @@ public class LoginManager implements Filter<HttpServletContext> {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
         String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
-
-        if (checkPath.startsWith("/static/")) {
-            for (String suffix : STATIC_RES_SUFFIX) {
-                if (checkPath.endsWith(suffix)) {
-                    return true;
-                }
-            }
+        if (AccessControl.isNoLoginCheckUris(checkPath)) {
+            return true;
         }
 
         if (checkPath.equals(LOGIN_PATH)) {

@@ -74,7 +74,7 @@ public class Controller implements ModuleActivator {
             }
         });
 
-        String serverUrl = "http://" + agentService.getAgentHost() + ":" + agentService.getAgentPort() + path + context.getPath();
+        String serverUrl = "http://" + agentService.getAgentHost() + ":" + agentService.getAgentPort() + context.getPath();
         logger.info("The remote service is started: " + serverUrl);
     }
 

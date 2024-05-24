@@ -11,6 +11,7 @@ import qingzhou.engine.Service;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
+import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletContainer;
@@ -30,6 +31,9 @@ public class Controller implements ModuleActivator {
     private Deployer deployer;
     @Service
     private Registry registry;
+
+    @Service
+    private Json json;// RemoteClient会用到
 
     private Console console;
     private ProcessSequence sequence;
