@@ -8,7 +8,13 @@ import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.KeyCipher;
 import qingzhou.json.Json;
 
-import javax.net.ssl.*;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -57,8 +63,8 @@ public class RemoteClient {
                 outStream.flush();
             }
 
-            try (InputStream inputStream = connection.getInputStream()) {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream(inputStream.available());
+            try (InputStream inputStream = connection.getInputStream();
+                 ByteArrayOutputStream bos = new ByteArrayOutputStream(inputStream.available())) {
                 Utils.copyStream(inputStream, bos);
                 byte[] decryptedData = cipher.decrypt(bos.toByteArray());
                 return jsonService.fromJson(new String(decryptedData, StandardCharsets.UTF_8), ResponseImpl.class);

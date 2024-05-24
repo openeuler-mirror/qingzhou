@@ -370,7 +370,7 @@ public class PageBackendService {
         if (modelField.getLengthMax() < 1) {
             return true;
         }
-        return false;/*modelField.disableOnCreate() && modelField.disableOnEdit()*/ //todo
+        return modelField.isCreateable() && modelField.isEditable();
     }
 
     public static boolean isAjaxAction(String actionName) {

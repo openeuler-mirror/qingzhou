@@ -75,10 +75,10 @@
                     }
                     for (Map.Entry<String, ModelFieldInfo> e : groupFieldMap.entrySet()) {
                         ModelFieldInfo modelField = e.getValue();
-                        /*if (modelField.disableOnCreate() && !isEdit) {
+                        if (modelField.isCreateable() && !isEdit) {
                             continue;
                         }
-                        if (!modelField.showToEdit() && isEdit) {
+                        /*if (!modelField.showToEdit() && isEdit) {
                             continue;
                         }*/
 
@@ -90,9 +90,9 @@
 
                         String readonly = "";
                         boolean required = false;
-                       /* if (modelField.disableOnEdit() && isEdit) {
+                        if (modelField.isEditable() && isEdit) {
                             readonly = "readonly";
-                        }*/
+                        }
                         if (idFieldName.equals(fieldName)) {
                             if (isEdit) {
                                 readonly = "readonly";
