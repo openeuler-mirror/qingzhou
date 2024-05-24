@@ -49,7 +49,7 @@ public class ValidationFilter implements Filter<RestContext> {
         boolean isAddAction = Createable.ACTION_NAME_ADD.equals(request.getAction());
         boolean isUpdateAction = Editable.ACTION_NAME_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
-            AppInfo appInfo = SystemController.getAppInfo(request.getApp());
+            AppInfo appInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request));
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
             clipParameter(request, modelInfo);
             for (String field : modelInfo.getFormFieldNames()) {

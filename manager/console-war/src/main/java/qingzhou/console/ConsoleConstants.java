@@ -4,7 +4,6 @@ public interface ConsoleConstants {
     String LOGIN_2FA = "password2fa";
     String OPTION_GROUP_SEPARATOR = "/";
     long DAY_MILLIS_VALUE = 24 * 60 * 60 * 1000; // 一天的毫秒值
-    String MODEL_NAME_node = "node";// todo: 如何保持和 mode 的同步？
     String MODEL_NAME_password = "password";// todo: 如何保持和 mode 的同步？
     String MODEL_NAME_index = "index";
     String MODEL_NAME_apphome = "home";
@@ -13,7 +12,7 @@ public interface ConsoleConstants {
     String REGISTER_URI = "/register";
 
     String MANAGE_TYPE_APP = "app";
-    String MANAGE_TYPE_NODE = "node";
+    String MANAGE_TYPE_INSTANCE = "instance";
 
     // 交互参数
     String PARAMETER_DOWNLOAD_FILE_NAMES = "downloadFileNames";

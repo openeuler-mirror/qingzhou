@@ -2,6 +2,7 @@ package qingzhou.console.i18n;
 
 import qingzhou.api.Lang;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.deployer.I18nTool;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.MenuInfo;
@@ -51,7 +52,7 @@ public class I18n {
     }
 
     public static String getString(String appName, String i18nKey) {
-        AppInfo appInfo = SystemController.getAppInfo(appName);
+        AppInfo appInfo = PageBackendService.getAppInfo(appName);
 
         int fieldInfo = i18nKey.indexOf("model.field.info.");
         if (fieldInfo > -1) {

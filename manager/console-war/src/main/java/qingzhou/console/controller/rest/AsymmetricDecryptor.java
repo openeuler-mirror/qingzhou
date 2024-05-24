@@ -3,6 +3,7 @@ package qingzhou.console.controller.rest;
 import qingzhou.api.FieldType;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.logger.Logger;
@@ -13,7 +14,7 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
-        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
+        ModelInfo modelInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request)).getModelInfo(request.getModel());
         for (String fieldName : modelInfo.getFormFieldNames()) {
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField.getType().equals(FieldType.password.name())) {

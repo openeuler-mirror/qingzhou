@@ -84,7 +84,7 @@ public class PageBackendService {
     }
 
     public static ModelInfo getModelInfo(Request request) {
-        return getModelInfo(request.getApp(), request.getModel());
+        return getModelInfo(getAppName(request), request.getModel());
     }
 
     public static ModelInfo getModelInfo(String appName, String model) {
@@ -107,7 +107,7 @@ public class PageBackendService {
             return "master";
         }
 
-        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(((RequestImpl) request).getManageType())) {
+        if (ConsoleConstants.MANAGE_TYPE_INSTANCE.equals(((RequestImpl) request).getManageType())) {
             return "instance";
         }
 
@@ -115,7 +115,7 @@ public class PageBackendService {
     }
 
     public static String getAppName(String manageType, String appName) {
-        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
+        if (ConsoleConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
             return "instance";
         }
 

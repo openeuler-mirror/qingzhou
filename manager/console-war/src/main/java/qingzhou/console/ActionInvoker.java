@@ -50,7 +50,7 @@ public class ActionInvoker {
         String ids = request.getParameter(Listable.FIELD_NAME_ID);
         if (ids == null) return false;
 
-        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
+        ModelInfo modelInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request)).getModelInfo(request.getModel());
         String[] actionNamesSupportBatch = modelInfo.getBatchActionNames();
         for (String batch : actionNamesSupportBatch) {
             if (batch.equals(request.getAction())) return true;
@@ -174,7 +174,7 @@ public class ActionInvoker {
         List<String> appInstances = new ArrayList<>();
         String manageType = ((RequestImpl) request).getManageType();
         String appName = request.getApp();
-        if (ConsoleConstants.MANAGE_TYPE_NODE.equals(manageType)) {
+        if (ConsoleConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
             appInstances.add(appName);
         } else if (ConsoleConstants.MANAGE_TYPE_APP.equals(manageType)) {
             appInstances = getAppInstances(appName);
