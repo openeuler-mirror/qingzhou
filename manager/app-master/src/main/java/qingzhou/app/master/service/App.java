@@ -17,12 +17,13 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @Model(code = "app", icon = "cube-alt",
         menu = "Service", order = 1,
@@ -131,49 +132,47 @@ public class App extends ModelBase implements Createable {
             pageSize = 10;
         }
 
-        int totalSize = 0;
-        Map<String, List<Map<String, String>>> appNameMap = new HashMap<>();
-        Collection<String> localAppNames = MasterApp.getService(Deployer.class).getAllApp();
+        Deployer deployer = MasterApp.getService(Deployer.class);
+        Collection<String> localAppNames = deployer.getAllApp();
+        Map<String, Set<String>> uniqueApps = new HashMap<>();
+
         // 处理本地应用名称
-        if (!localAppNames.isEmpty()) {
-            appNameMap.put(MasterApp.getInstanceId(), localAppNames.stream().map(appName -> {
-                Map<String, String> appMap = new HashMap<>();
-                appMap.put("id", appName);
-                appMap.put("instances", MasterApp.getInstanceId());
-                appMap.put("filename", ""); // ToDo
-                return appMap;
-            }).collect(Collectors.toList()));
-            totalSize += localAppNames.size();
+        for (String appName : localAppNames) {
+            String instanceId = MasterApp.getInstanceId();
+            uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add(instanceId);
         }
 
         try {
-            Registry registry = MasterApp.getService(Registry.class);
-            Collection<String> allInstanceIds = registry.getAllInstanceId();
             // 处理远程实例的应用信息
-            for (String instanceId : allInstanceIds) {
+            Registry registry = MasterApp.getService(Registry.class);
+            for (String instanceId : registry.getAllInstanceId()) {
                 InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
-                AppInfo[] appInfos = instanceInfo.getAppInfos();
-                appNameMap.put(instanceId, Arrays.stream(appInfos).map(appInfo -> {
-                    Map<String, String> appMap = new HashMap<>();
-                    appMap.put("id", appInfo.getName());
-                    appMap.put("instances", instanceId);
-                    appMap.put("filename", ""); // ToDo
-                    return appMap;
-                }).collect(Collectors.toList()));
-                totalSize += appInfos.length;
+                for (AppInfo appInfo : instanceInfo.getAppInfos()) {
+                    String appName = appInfo.getName();
+                    uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add(instanceId);
+                }
             }
         } catch (Exception ignored) {
         }
 
-        int startIndex = (pageNum - 1) * pageSize;
-        int endIndex = startIndex + pageSize;
+        List<Map<String, String>> finalAppList = new ArrayList<>();
+        for (Map.Entry<String, Set<String>> entry : uniqueApps.entrySet()) {
+            String appName = entry.getKey();
+            Set<String> instances = entry.getValue();
+            Map<String, String> appMap = new HashMap<>();
+            appMap.put("id", appName);
+            appMap.put("instances", String.join(",", instances));
+            appMap.put("filename", !("instance".equals(appName) || "master".equals(appName)) ? "apps/" + appName : "");
+            finalAppList.add(appMap);
+        }
 
-        for (List<Map<String, String>> apps : appNameMap.values()) {
-            if (apps.size() > startIndex) {
-                for (int i = startIndex; i < Math.min(endIndex, apps.size()); i++) {
-                    response.addData(apps.get(i));
-                }
-            }
+        int totalSize = finalAppList.size();
+        int startIndex = (pageNum - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, totalSize);
+
+        List<Map<String, String>> pagedApps = finalAppList.subList(startIndex, endIndex);
+        for (Map<String, String> app : pagedApps) {
+            response.addData(app);
         }
 
         response.setTotalSize(totalSize);
