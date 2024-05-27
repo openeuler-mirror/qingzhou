@@ -1,6 +1,11 @@
 package qingzhou.app.master.service;
 
-import qingzhou.api.*;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
@@ -36,7 +41,7 @@ public class Instance extends ModelBase implements Createable {
             info = {"实例的管理端口。", "en:The management port of the instance."})
     public int port = 7000;
 
-    @ModelField(list = true,
+    @ModelField(list = true, createable = false, editable = false,
             name = {"运行中", "en:Running"}, info = {"了解该组件的运行状态。", "en:Know the operational status of the component."})
     public boolean running;
 
