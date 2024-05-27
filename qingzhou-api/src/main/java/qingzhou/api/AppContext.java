@@ -46,18 +46,4 @@ public interface AppContext {
      * @param order 菜单项的顺序。
      */
     void addMenu(String name, String[] i18n, String icon, int order);
-
-    /**
-     * 设置默认数据存储。
-     *
-     * @param dataStore 默认数据存储实例。
-     */
-    void setDefaultDataStore(DataStore dataStore);
-
-    /**
-     * 获取默认数据存储。
-     *
-     * @return DataStore 默认数据存储实例。
-     */
-    DataStore getDefaultDataStore();
 }

@@ -7,7 +7,6 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.SystemController;
@@ -18,23 +17,13 @@ import qingzhou.console.util.Base32Util;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.Deployer;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -58,7 +47,7 @@ public class PageBackendService {
             // todo 包含 refModel 的这里需要获取对应model的所有id
             RequestImpl request = new RequestImpl();
             request.setViewName(ViewManager.jsonView);
-            request.setManageType(ConsoleConstants.MANAGE_TYPE_APP);
+            request.setManageType(DeployerConstants.MANAGE_TYPE_APP);
             request.setAppName(app);
             request.setModelName(refModel);
             request.setActionName(Listable.ACTION_NAME_LIST);
@@ -104,19 +93,19 @@ public class PageBackendService {
 
     public static String getAppName(Request request) {
         if (request == null) {
-            return "master";
+            return DeployerConstants.MASTER_APP_NAME;
         }
 
-        if (ConsoleConstants.MANAGE_TYPE_INSTANCE.equals(((RequestImpl) request).getManageType())) {
-            return "instance";
+        if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(((RequestImpl) request).getManageType())) {
+            return DeployerConstants.INSTANCE_APP_NAME;
         }
 
         return request.getApp();
     }
 
     public static String getAppName(String manageType, String appName) {
-        if (ConsoleConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
-            return "instance";
+        if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
+            return DeployerConstants.INSTANCE_APP_NAME;
         }
 
         return appName;

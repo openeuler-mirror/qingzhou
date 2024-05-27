@@ -5,6 +5,7 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.MessageDigest;
 
@@ -72,7 +73,7 @@ public class User extends ModelBase implements Createable {
             list = true,
             name = {"可用节点", "en:Available Nodes"},
             info = {"选择用户可使用的节点。", "en:Select the instances that are available to the user."})
-    public String instances = "local";
+    public String instances = DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID;
 
     @ModelField(
             name = {"须修改初始密码", "en:Change Initial Password"},

@@ -1,31 +1,21 @@
 package qingzhou.app.master.service;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.console.RequestImpl;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-@Model(code = "app", icon = "cube-alt",
+@Model(code = DeployerConstants.MASTER_APP_APP_MODEL_NAME, icon = "cube-alt",
         menu = "Service", order = 1,
         name = {"应用", "en:App"},
         info = {"应用。",
@@ -60,7 +50,7 @@ public class App extends ModelBase implements Createable {
 
     @ModelField(
             type = FieldType.multiselect,
-            list = true, refModel = "instance",
+            list = true, refModel = Instance.class,
             name = {"实例", "en:Instance"},
             info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
     public String instances;
@@ -69,6 +59,17 @@ public class App extends ModelBase implements Createable {
     public void start() {
         appContext.addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
         appContext.addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
+
+        actionFilters.add((request, response) -> {
+            if (request.getId().equals(DeployerConstants.MASTER_APP_NAME)
+                    || request.getId().equals(DeployerConstants.INSTANCE_APP_NAME)) {
+                if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())
+                        || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
+                    return appContext.getI18n(request.getLang(), "validator.master.system");
+                }
+            }
+            return null;
+        });
     }
 
     @ModelAction(
@@ -162,7 +163,7 @@ public class App extends ModelBase implements Createable {
             Map<String, String> appMap = new HashMap<>();
             appMap.put("id", appName);
             appMap.put("instances", String.join(",", instances));
-            appMap.put("filename", !("instance".equals(appName) || "master".equals(appName)) ? "apps/" + appName : "");
+            appMap.put("filename", !(DeployerConstants.INSTANCE_APP_NAME.equals(appName) || DeployerConstants.MASTER_APP_NAME.equals(appName)) ? "apps/" + appName : "");
             finalAppList.add(appMap);
         }
 
@@ -192,8 +193,8 @@ public class App extends ModelBase implements Createable {
         try {
             for (String instance : instances) {
                 try {
-                    if ("local".equals(instance)) { // 安装到本地节点
-                        MasterApp.getService(Deployer.class).getApp("instance").invokeDirectly(request, response);
+                    if (DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID.equals(instance)) { // 安装到本地节点
+                        MasterApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).invokeDirectly(request, response);
                     } else {
                         // TODO：调用远端 instance 上的app add
                     }
@@ -204,7 +205,7 @@ public class App extends ModelBase implements Createable {
                 }
             }
         } finally {
-            ((RequestImpl) request).setModelName("app");
+            ((RequestImpl) request).setModelName(DeployerConstants.MASTER_APP_APP_MODEL_NAME);
             ((RequestImpl) request).setActionName(Createable.ACTION_NAME_ADD);
         }
     }
@@ -231,8 +232,8 @@ public class App extends ModelBase implements Createable {
         ((RequestImpl) request).setActionName("unInstallApp");
         try {
             if (app != null) {
-                ((RequestImpl) request).setAppName("instance");
-                deployer.getApp("instance").invokeDirectly(request, response);
+                ((RequestImpl) request).setAppName(DeployerConstants.INSTANCE_APP_NAME);
+                deployer.getApp(DeployerConstants.INSTANCE_APP_NAME).invokeDirectly(request, response);
             }
 
             // 卸载远程实例
@@ -243,9 +244,9 @@ public class App extends ModelBase implements Createable {
                     InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
                     for (AppInfo info : instanceInfo.getAppInfos()) {
                         if (appName.equals(info.getName())) {
-                            ((RequestImpl) request).setManageType("instance");
+                            ((RequestImpl) request).setManageType(DeployerConstants.MANAGE_TYPE_INSTANCE);
                             ((RequestImpl) request).setAppName(instanceId);
-                            // deployer.getApp("instance").invokeDirectly(request, response);// todo 需要远程请求
+//                             deployer.getApp(qingzhou.deployer.App.INSTANCE_APP).invokeDirectly(request, response);// todo 需要远程请求
                             break;
                         }
                     }
@@ -258,8 +259,8 @@ public class App extends ModelBase implements Createable {
             response.setSuccess(false);
             response.setMsg(e.getMessage());
         } finally {
-            ((RequestImpl) request).setAppName("master");
-            ((RequestImpl) request).setModelName("app");
+            ((RequestImpl) request).setAppName(DeployerConstants.MASTER_APP_NAME);
+            ((RequestImpl) request).setModelName(DeployerConstants.MASTER_APP_APP_MODEL_NAME);
             ((RequestImpl) request).setActionName(Deletable.ACTION_NAME_DELETE);
         }
     }

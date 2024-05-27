@@ -1,6 +1,7 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -28,12 +29,12 @@ public class Controller implements ModuleActivator {
 
         moduleContext.registerService(Deployer.class, deployer);
 
-        File masterApp = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "master");
+        File masterApp = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.MASTER_APP_NAME);
         if (masterApp.exists()) {
             deployer.installApp(masterApp);
         }
 
-        File instanceApp = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "instance");
+        File instanceApp = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.INSTANCE_APP_NAME);
         if (instanceApp.exists()) {
             deployer.installApp(instanceApp);
         }

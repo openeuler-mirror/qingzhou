@@ -10,6 +10,7 @@ import qingzhou.api.Response;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.system.User;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.crypto.MessageDigest;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
@@ -79,7 +80,7 @@ public class Password extends ModelBase implements Editable {
     }
 
     private Map<String, String> prepareParameters(Request request) {
-        AppInfo master = MasterApp.getService(Deployer.class).getApp("master").getAppInfo();
+        AppInfo master = MasterApp.getService(Deployer.class).getApp(DeployerConstants.MASTER_APP_NAME).getAppInfo();
         Map<String, String> properties = new HashMap<>();
         for (String fieldName : master.getModelInfo(request.getModel()).getFormFieldNames()) {
             String value = request.getParameter(fieldName);

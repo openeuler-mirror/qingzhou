@@ -8,6 +8,7 @@ public class ModelFieldInfo {
     private String type;
     private String[] options;
     private String refModel;
+    private transient Class<?> refModelClass;
     private String defaultValue;
     private boolean list;
     private boolean monitor;
@@ -95,6 +96,14 @@ public class ModelFieldInfo {
 
     public void setRefModel(String refModel) {
         this.refModel = refModel;
+    }
+
+    public Class<?> getRefModelClass() {
+        return refModelClass;
+    }
+
+    public void setRefModelClass(Class<?> refModelClass) {
+        this.refModelClass = refModelClass;
     }
 
     public boolean isMonitor() {

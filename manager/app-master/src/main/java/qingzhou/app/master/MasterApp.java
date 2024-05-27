@@ -1,11 +1,6 @@
 package qingzhou.app.master;
 
-import qingzhou.api.ActionFilter;
 import qingzhou.api.AppContext;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Editable;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 
@@ -22,8 +17,6 @@ public class MasterApp extends QingzhouSystemApp {
 
         appContext.addMenu("Service", new String[]{"服务管理", "en:Service"}, "th-large", 1);
         appContext.addMenu("System", new String[]{"系统管理", "en:System"}, "cog", 2);
-
-        appContext.addActionFilter(new LocalNodeProtection(appContext));// 禁止修改本地节点
     }
 
     public static String getInstanceId() {
@@ -34,29 +27,5 @@ public class MasterApp extends QingzhouSystemApp {
         if (type == ModuleContext.class) return (T) masterApp.moduleContext;
 
         return masterApp.moduleContext.getService(type);
-    }
-
-    private static class LocalNodeProtection implements ActionFilter {
-        private final AppContext appContext;
-
-        private LocalNodeProtection(AppContext appContext) {
-            this.appContext = appContext;
-        }
-
-        @Override
-        public String doFilter(Request request, Response response) {
-            String model = request.getModel();
-            String id = request.getId();
-            if (("instance".equals(model) && "local".equals(id)) ||
-                    ("app".equals(model) && ("instance".equals(id) || "master".equals(id)))
-            ) {
-                if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())
-                        || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
-                    return appContext.getI18n(request.getLang(), "validator.master.system");
-                }
-            }
-
-            return null;
-        }
     }
 }

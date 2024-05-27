@@ -71,4 +71,9 @@ public class Jmx extends ModelBase implements Editable {
     public void edit(Request request, Response response) throws Exception {
         response.addModelData(new Jmx());
     }
+
+    @Override
+    public DataStore getDataStore() {
+        return null;
+    }
 }

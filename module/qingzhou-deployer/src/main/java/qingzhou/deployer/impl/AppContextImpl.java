@@ -2,7 +2,6 @@ package qingzhou.deployer.impl;
 
 import qingzhou.api.ActionFilter;
 import qingzhou.api.AppContext;
-import qingzhou.api.DataStore;
 import qingzhou.api.Lang;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
@@ -20,7 +19,6 @@ class AppContextImpl implements AppContext {
     private final AppInfo appInfo;
     private final List<ActionFilter> actionFilters = new ArrayList<>();
     private final I18nTool i18nTool = new I18nTool();
-    private DataStore defaultDataStore;
 
     private File appTemp;
     private File appDir;
@@ -64,16 +62,6 @@ class AppContextImpl implements AppContext {
             this.appInfo.setMenuInfos(menuInfos);
         }
         menuInfos.add(new MenuInfo(name, i18n, icon, order));
-    }
-
-    @Override
-    public void setDefaultDataStore(DataStore dataStore) {
-        defaultDataStore = dataStore;
-    }
-
-    @Override
-    public DataStore getDefaultDataStore() {
-        return defaultDataStore;
     }
 
     @Override

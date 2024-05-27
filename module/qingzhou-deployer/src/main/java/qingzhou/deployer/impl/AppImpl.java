@@ -6,6 +6,7 @@ import qingzhou.registry.AppInfo;
 
 import java.net.URLClassLoader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 class AppImpl implements App {
@@ -16,6 +17,7 @@ class AppImpl implements App {
     private final Map<String, ModelBase> modelBaseMap = new HashMap<>();
 
     private final Map<String, Map<String, ActionMethod>> actionMap = new HashMap<>();
+    private final Map<String, List<ActionFilter>> actionFilters = new HashMap<>();
 
     @Override
     public AppContextImpl getAppContext() {
@@ -35,6 +37,18 @@ class AppImpl implements App {
                 response.setSuccess(false);
                 response.setMsg(msg);
                 return;
+            }
+        }
+
+        List<ActionFilter> modelActionFilters = actionFilters.get(request.getModel());
+        if (modelActionFilters != null) {
+            for (ActionFilter filter : modelActionFilters) {
+                String msg = filter.doFilter(request, response);
+                if (msg != null) {
+                    response.setSuccess(false);
+                    response.setMsg(msg);
+                    return;
+                }
             }
         }
 

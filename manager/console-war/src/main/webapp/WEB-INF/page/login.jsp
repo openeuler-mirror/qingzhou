@@ -6,6 +6,7 @@
 <%@ page import="qingzhou.console.controller.About" %>
 <%@ page import="qingzhou.console.controller.rest.AsymmetricDecryptor" %>
 <%@ page import="qingzhou.console.controller.rest.RESTController" %>
+<%@ page import="qingzhou.deployer.DeployerConstants" %>
 
 <%@ page pageEncoding="UTF-8" %>
 <%
@@ -56,7 +57,7 @@
                        placeholder="name<%=PageBackendService.getMasterAppI18nString( "model.field.user.name")%>"
                        autofocus required>
                 <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;"><i
-                        class="icon icon-<%=PageBackendService.getAppInfo("master").getModelInfo("user").getIcon()%> "></i></label>
+                        class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("user").getIcon()%> "></i></label>
             </div>
             <div class="input-control has-icon-left">
                 <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt"
@@ -68,7 +69,7 @@
                        name="<%=LoginManager.LOGIN_PASSWORD%>">
                 <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left"
                        style="line-height: 44px;"><i
-                        class="icon icon-<%=PageBackendService.getAppInfo("master").getModelInfo("password").getIcon()%>"></i></label>
+                        class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("password").getIcon()%>"></i></label>
                 <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt"
                        class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;"><i
                         class="icon icon-eye-close"></i></label>

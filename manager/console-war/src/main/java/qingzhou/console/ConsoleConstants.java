@@ -11,9 +11,6 @@ public interface ConsoleConstants {
     String GROUP_SEPARATOR = "/";
     String REGISTER_URI = "/register";
 
-    String MANAGE_TYPE_APP = "app";
-    String MANAGE_TYPE_INSTANCE = "instance";
-
     // 交互参数
     String PARAMETER_DOWNLOAD_FILE_NAMES = "downloadFileNames";
     String DOWNLOAD_FILE_NAME_SEPARATOR = ",";

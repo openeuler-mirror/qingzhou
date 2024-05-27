@@ -1,14 +1,12 @@
 package qingzhou.app.master.service;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Createable;
+import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
@@ -16,7 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-@Model(code = "instance", icon = "stack",
+@Model(code = DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME, icon = "stack",
         menu = "Service", order = 2,
         name = {"实例", "en:Instance"},
         info = {"实例是轻舟提供的运行应用的实际环境，即应用的运行时。",
@@ -48,6 +46,19 @@ public class Instance extends ModelBase implements Createable {
     public void manage(Request request, Response response) throws Exception {
     }
 
+    @Override
+    public void start() {
+        actionFilters.add((request, response) -> {
+            if (request.getId().equals(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID)) {
+                if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())
+                        || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
+                    return appContext.getI18n(request.getLang(), "validator.master.system");
+                }
+            }
+            return null;
+        });
+    }
+
     @ModelAction(
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
@@ -73,10 +84,10 @@ public class Instance extends ModelBase implements Createable {
 
         if (startIndex == 0) {
             Map<String, String> local = new HashMap<>();
-            local.put("id", "local");
-            local.put("ip", "127.0.0.1");
-            local.put("port", "7000");
-            local.put("running", "true");
+            local.put("id", DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
+            local.put("ip", "127.0.0.1"); // todo
+            local.put("port", "7000"); // todo
+            local.put("running", Boolean.TRUE.toString());
             response.addData(local);
             totalSize = 1;
         }

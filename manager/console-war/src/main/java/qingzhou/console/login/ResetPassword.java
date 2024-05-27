@@ -12,6 +12,7 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -66,8 +67,8 @@ public class ResetPassword implements Filter<HttpServletContext> {
             httpServletResponse.sendRedirect(PageBackendService.encodeURL(httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
-                    "/" + ConsoleConstants.MANAGE_TYPE_APP +
-                    "/" + "master" +
+                    "/" + DeployerConstants.MANAGE_TYPE_APP +
+                    "/" + DeployerConstants.MASTER_APP_NAME +
                     "/" + ConsoleConstants.MODEL_NAME_password +
                     "/edit" +
                     "/" + user +

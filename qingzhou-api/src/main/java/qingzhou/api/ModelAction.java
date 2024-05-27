@@ -13,22 +13,16 @@ import java.lang.annotation.Target;
 public @interface ModelAction {
     /**
      * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作名称。
-     *
-     * @return 国际化资源键数组
      */
     String[] name();
 
     /**
      * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
-     *
-     * @return 国际化资源键数组
      */
     String[] info();
 
     /**
      * 指定与该模型操作关联的图标名称。
-     *
-     * @return 图标名称
      */
     String icon() default "";
 
