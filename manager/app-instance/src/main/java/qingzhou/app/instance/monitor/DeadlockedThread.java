@@ -1,13 +1,19 @@
-package qingzhou.app.common.monitor;
+package qingzhou.app.instance.monitor;
 
-import qingzhou.api.*;
+import qingzhou.api.DataStore;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Listable;
-import qingzhou.app.common.ReadOnlyDataStore;
+import qingzhou.app.instance.ReadOnlyDataStore;
 
 import java.util.List;
 import java.util.Map;
 
-@Model(code = "deadlockedthread", icon = "lock",
+@Model(code = "deadlockedthread", icon = "lock", menu = "Monitor",
         name = {"死锁线程", "en:Deadlocked Thread"},
         info = {"汇总死锁的线程，可查看死锁等待对象监视器或同步器的线程栈。",
                 "en:To summarize the deadlocked threads, you can view the thread stacks of the deadlock waiting object monitor or synchronizer."})

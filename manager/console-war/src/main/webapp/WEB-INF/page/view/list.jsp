@@ -20,9 +20,9 @@
     for (Map.Entry<String, ModelFieldInfo> e : fieldInfos.entrySet()) {
         num++;
         ModelFieldInfo modelField = e.getValue();
-        /*if (!modelField.showToList()) {
+        if (!modelField.isList()) {
             continue;
-        }*/
+        }
         indexToShow.add(num);
     }
 
@@ -50,9 +50,11 @@
             <div class="tools-group">
                 <%
                     boolean canAccess = (AccessControl.canAccess(qzRequest.getApp(), qzRequest.getModel() + "/" + Createable.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
+                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo(Createable.ACTION_NAME_CREATE);
+                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo(Createable.ACTION_NAME_ADD);
                     if (canAccess
-                            && modelInfo.getModelActionInfo(Createable.ACTION_NAME_CREATE) != null
-                            && modelInfo.getModelActionInfo(Createable.ACTION_NAME_ADD) != null
+                            && (listCreateAction != null && !listCreateAction.isDisable())
+                            && (listAddAction != null && !listAddAction.isDisable())
                     ) {
                         %>
                         <a class="btn" href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Createable.ACTION_NAME_CREATE)%>">
@@ -68,6 +70,9 @@
                     if (needOperationColumn) {
                         String modelIcon = modelInfo.getIcon();
                         for (ModelActionInfo action : opsActions) {
+                            if (action.isDisable()) {
+                                continue;
+                            }
                             String actionKey = action.getCode();
                             String titleStr = I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + actionKey);
                             if (titleStr != null) {
@@ -180,7 +185,7 @@
                         if (value == null) {
                             value = "";
                         }
-                        if (isFirst && hasId && targetAction != null) {
+                        if (isFirst && hasId && (targetAction != null && !targetAction.isDisable())) {
                             isFirst = false;
                 %>
                 <td>
@@ -227,7 +232,7 @@
                         String[] actions = PageBackendService.getActionNamesShowToList(qzRequest);
                         for (String actionName : actions) {
                             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                            if (action == null) {
+                            if (action == null || action.isDisable()) {
                                 continue;
                             }
                             if (PageBackendService.isActionShow(qzRequest, modelBase, action) != null) {

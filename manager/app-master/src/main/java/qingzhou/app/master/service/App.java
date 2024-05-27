@@ -1,6 +1,12 @@
 package qingzhou.app.master.service;
 
-import qingzhou.api.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
@@ -13,7 +19,13 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Model(code = DeployerConstants.MASTER_APP_APP_MODEL_NAME, icon = "cube-alt",
         menu = "Service", order = 1,
@@ -22,7 +34,7 @@ import java.util.*;
                 "en:App Management."})
 public class App extends ModelBase implements Createable {
     @ModelField(
-            list = true,
+            list = true, editable = false, createable = false,
             name = {"名称", "en:Name"},
             info = {"应用名称。", "en:App Name"})
     public String id;
@@ -49,7 +61,7 @@ public class App extends ModelBase implements Createable {
     public String fromUpload;
 
     @ModelField(
-            type = FieldType.multiselect,
+            type = FieldType.multiselect, createable = false, editable = false,// TODO 暂时不支持远程实例部署
             list = true, refModel = Instance.class,
             name = {"实例", "en:Instance"},
             info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
@@ -81,7 +93,7 @@ public class App extends ModelBase implements Createable {
         qingzhou.deployer.App app = MasterApp.getService(Deployer.class).getApp(id);
         if (app != null) {
             appMap.put("id", id);
-            appMap.put("instances", MasterApp.getInstanceId());
+            appMap.put("instances", DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
             appMap.put("filename", ""); // ToDo
             response.addData(appMap);
             return;
@@ -139,8 +151,7 @@ public class App extends ModelBase implements Createable {
 
         // 处理本地应用名称
         for (String appName : localAppNames) {
-            String instanceId = MasterApp.getInstanceId();
-            uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add(instanceId);
+            uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
         }
 
         try {
@@ -182,12 +193,19 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(
+            name = {"部署", "en:Deploy"},
+            info = {"部署应用到本地实例。", "en:Deploy the app to an on-premises instance."})
+    public void create(Request request, Response response) throws Exception {
+        response.addModelData(new App());
+    }
+
+    @ModelAction(
             name = {"安装", "en:Install"},
             info = {"按配置要求安装应用到指定的实例。", "en:Install the app to the specified instance as required."})
     public void add(Request request, Response response) throws Exception {
-        String[] instances = request.getParameter("instances") != null
+        String[] instances = new String[]{DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID}/*request.getParameter("instances") != null
                 ? request.getParameter("instances").split(",")
-                : new String[0];
+                : new String[0]*/;
         ((RequestImpl) request).setModelName("appinstaller");
         ((RequestImpl) request).setActionName("installApp");
         try {
@@ -215,14 +233,13 @@ public class App extends ModelBase implements Createable {
             name = {"管理", "en:Manage"}, order = 1,
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request, Response response) throws Exception {
-
     }
 
     @ModelAction(
             batch = true, order = 2, show = "id!=master&id!=instance",
-            name = {"删除", "en:Delete"},
-            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
-                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
+            name = {"卸载", "en:Uninstall"},
+            info = {"卸载应用，只能卸载本地实例部署的应用。注：请谨慎操作，删除后不可恢复。",
+                    "en:If you uninstall an application, you can only uninstall an application deployed on a local instance. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
         String appName = request.getId();
         Deployer deployer = MasterApp.getService(Deployer.class);

@@ -1,4 +1,4 @@
-package qingzhou.app.common;
+package qingzhou.app.instance;
 
 import qingzhou.api.DataStore;
 

@@ -1,4 +1,4 @@
-package qingzhou.app.common.monitor;
+package qingzhou.app.instance.monitor;
 
 import qingzhou.engine.util.Utils;
 

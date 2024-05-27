@@ -19,10 +19,6 @@ public class MasterApp extends QingzhouSystemApp {
         appContext.addMenu("System", new String[]{"系统管理", "en:System"}, "cog", 2);
     }
 
-    public static String getInstanceId() {
-        return masterApp.moduleContext.getInstanceDir().getName();
-    }
-
     public static <T> T getService(Class<T> type) {
         if (type == ModuleContext.class) return (T) masterApp.moduleContext;
 

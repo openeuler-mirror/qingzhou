@@ -88,6 +88,12 @@ public class ValidationFilter implements Filter<RestContext> {
         ModelFieldInfo fieldInfo = context.fieldInfo;
         String parameterVal = context.parameterVal;
         if (parameterVal == null || parameterVal.isEmpty()) {
+            if (context.isAddAction && !fieldInfo.isCreateable()) {
+                return null;
+            }
+            if (context.isUpdateAction && !fieldInfo.isEditable()) {
+                return null;
+            }
             if (fieldInfo.isRequired() && PageBackendService.isShow(o -> parameterVal, fieldInfo.getShow())) {
                 return new String[]{validation_required};
             }

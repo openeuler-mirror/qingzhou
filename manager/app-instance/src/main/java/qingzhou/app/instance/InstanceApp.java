@@ -12,6 +12,7 @@ public class InstanceApp extends QingzhouSystemApp {
     @Override
     public void start(AppContext appContext) {
         MODULECONTEXT = this.moduleContext;
+        appContext.addMenu("Monitor", new String[]{"监视", "en:Monitor"}, "server", 1);
     }
 
     public static <T> T getService(Class<T> type) {
