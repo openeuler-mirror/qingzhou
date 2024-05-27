@@ -6,6 +6,7 @@ import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
+import qingzhou.deployer.DeployerConstants;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,12 +24,12 @@ public class HtmlView implements View {
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
             String manageAppName = null;
-            if ("app".equals(modelName)) {
-                request.setManageType(ConsoleConstants.MANAGE_TYPE_APP);
+            if (DeployerConstants.MASTER_APP_APP_MODEL_NAME.equals(modelName)) {
+                request.setManageType(DeployerConstants.MANAGE_TYPE_APP);
                 manageAppName = request.getId();
-            } else if ("instance".equals(modelName)) {
-                request.setManageType(ConsoleConstants.MANAGE_TYPE_INSTANCE);
-                manageAppName = "local";
+            } else if (DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME.equals(modelName)) {
+                request.setManageType(DeployerConstants.MANAGE_TYPE_INSTANCE);
+                manageAppName = DeployerConstants.INSTANCE_APP_NAME;
             }
             request.setAppName(manageAppName);
             request.setModelName("home");
@@ -44,12 +45,12 @@ public class HtmlView implements View {
     }
 
     private boolean isManageAction(Request request) {
-        if (!"manage".equals(request.getAction())) return false;
+        if (!ConsoleConstants.ACTION_NAME_manage.equals(request.getAction())) return false;
 
-        if (!"master".equals(request.getApp())) return false;
+        if (!DeployerConstants.MASTER_APP_NAME.equals(request.getApp())) return false;
 
-        return "app".equals(request.getModel())
-                || "instance".equals(request.getModel());
+        return DeployerConstants.MASTER_APP_APP_MODEL_NAME.equals(request.getModel())
+                || DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME.equals(request.getModel());
     }
 
     @Override

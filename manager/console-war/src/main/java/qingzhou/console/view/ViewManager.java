@@ -9,6 +9,7 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.FileView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.deployer.DeployerConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,8 +33,8 @@ public class ViewManager {
         // 完善响应的 msg
         if (response.getMsg() == null) {
             String appName = PageBackendService.getAppName(request);
-            if ("instance".equals(appName)) {
-                appName = "master";
+            if (DeployerConstants.INSTANCE_APP_NAME.equals(appName)) { // todo ？
+                appName = DeployerConstants.MASTER_APP_NAME;
             }
             String SP = I18n.isZH() ? "" : " ";
             String msg = response.isSuccess() ? ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.success") : ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.fail");

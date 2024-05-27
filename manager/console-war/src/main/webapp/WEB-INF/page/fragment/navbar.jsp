@@ -1,3 +1,4 @@
+<%@ page import="qingzhou.deployer.DeployerConstants" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <header class="main-header">
@@ -55,10 +56,10 @@
                     <%-- 用户/修改密码 --%>
                     <li>
                         <a id="reset-password-btn"
-                           href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ ConsoleConstants.MANAGE_TYPE_APP +"/"+ "master" +"/password/"+ "edit")%>"
+                           href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ DeployerConstants.MANAGE_TYPE_APP +"/"+ DeployerConstants.MASTER_APP_NAME +"/password/"+ Editable.ACTION_NAME_EDIT)%>"
                            class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=PageBackendService.getModelInfo("master","user").getIcon()%>"></i>
+                                <i class="icon icon-<%=PageBackendService.getModelInfo(DeployerConstants.MASTER_APP_NAME,"user").getIcon()%>"></i>
                             </span>
                         </a>
                     </li>

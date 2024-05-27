@@ -4,6 +4,7 @@ import qingzhou.api.*;
 import qingzhou.api.type.Showable;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -43,7 +44,7 @@ class DeployerImpl implements Deployer {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-        boolean isSystemApp = "master".equals(appName) || "instance".equals(appName);
+        boolean isSystemApp = DeployerConstants.MASTER_APP_NAME.equals(appName) || DeployerConstants.INSTANCE_APP_NAME.equals(appName);
         AppImpl app = buildApp(appName, appDir, isSystemApp);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
@@ -274,6 +275,24 @@ class DeployerImpl implements Deployer {
             modelInfos.put(instance, modelInfo);
         }
 
+        // 转换 refModel 属性
+        modelInfos.forEach((modelBase, modelInfo) -> {
+            for (ModelFieldInfo modelFieldInfo : modelInfo.getModelFieldInfos()) {
+                Map.Entry<ModelBase, ModelInfo> modelInfoEntry;
+                Class<?> refModelClass = modelFieldInfo.getRefModelClass();
+                if (refModelClass == ModelBase.class
+                        || !ModelBase.class.isAssignableFrom(refModelClass)) {
+                    continue;
+                }
+                try {
+                    modelInfoEntry = modelInfos.entrySet().stream().filter(entry -> refModelClass == entry.getKey().getClass()).findAny().orElseThrow((Supplier<Throwable>) () -> new IllegalArgumentException("Ref-Model-Class " + refModelClass + " not fouond"));
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
+                modelFieldInfo.setRefModel(modelInfoEntry.getValue().getCode());
+            }
+        });
+
         return modelInfos;
     }
 
@@ -318,7 +337,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setGroup(modelField.group());
             modelFieldInfo.setType(modelField.type().name());
             modelFieldInfo.setOptions(modelField.options());
-            modelFieldInfo.setRefModel(modelField.refModel());
+            modelFieldInfo.setRefModelClass(modelField.refModel());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setList(modelField.list());
             modelFieldInfo.setMonitor(modelField.monitor());
@@ -374,7 +393,6 @@ class DeployerImpl implements Deployer {
     private AppContextImpl buildAppContext(AppInfo appInfo) {
         AppContextImpl appContext = new AppContextImpl(moduleContext, appInfo);
         //        appContext.addActionFilter(new UniqueFilter(appContext));
-        appContext.setDefaultDataStore(null);// todo DefaultDataStore 这个设计不够好，设置默认的文件数据源？
         return appContext;
     }
 

@@ -4,7 +4,6 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Editable;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
-import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.engine.util.pattern.Filter;
@@ -67,6 +66,7 @@ public class ValidationFilter implements Filter<RestContext> {
 
         ResponseImpl response = context.response;
         response.setSuccess(errorMsg.isEmpty());
+        response.addData(errorMsg);
 
         return response.isSuccess();
     }

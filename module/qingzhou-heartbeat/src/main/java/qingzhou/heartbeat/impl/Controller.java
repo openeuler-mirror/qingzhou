@@ -4,6 +4,7 @@ import qingzhou.agent.AgentService;
 import qingzhou.config.ConfigService;
 import qingzhou.config.Heartbeat;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -83,7 +84,7 @@ public class Controller implements ModuleActivator {
 
         List<AppInfo> appInfos = new ArrayList<>();
         for (String a : deployer.getAllApp()) {
-            if ("instance".equals(a) || "master".equals(a)) {
+            if (DeployerConstants.INSTANCE_APP_NAME.equals(a) || DeployerConstants.MASTER_APP_NAME.equals(a)) {
                 continue;
             }
             appInfos.add(deployer.getApp(a).getAppInfo());

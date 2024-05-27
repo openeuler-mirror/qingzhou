@@ -9,6 +9,7 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
@@ -20,13 +21,7 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ActionInvoker {
     private static final ActionInvoker instance = new ActionInvoker();
@@ -174,15 +169,15 @@ public class ActionInvoker {
         List<String> appInstances = new ArrayList<>();
         String manageType = ((RequestImpl) request).getManageType();
         String appName = request.getApp();
-        if (ConsoleConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
+        if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
             appInstances.add(appName);
-        } else if (ConsoleConstants.MANAGE_TYPE_APP.equals(manageType)) {
+        } else if (DeployerConstants.MANAGE_TYPE_APP.equals(manageType)) {
             appInstances = getAppInstances(appName);
         }
 
         for (String instance : appInstances) {
             ResponseImpl responseOnNode;
-            if (instance.equals("local")) {
+            if (instance.equals(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID)) {
                 responseOnNode = new ResponseImpl();
                 SystemController.getService(Deployer.class)
                         .getApp(PageBackendService.getAppName(request))
@@ -207,9 +202,9 @@ public class ActionInvoker {
         Deployer deployer = SystemController.getService(Deployer.class);
         App app = deployer.getApp(appName);
         if (app != null) {
-            instances.add("local");
+            instances.add(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
         }
-        if (!"instance".equals(appName) && !"master".equals(appName)) {
+        if (!DeployerConstants.INSTANCE_APP_NAME.equals(appName) && !DeployerConstants.MASTER_APP_NAME.equals(appName)) {
             try {
                 Registry registry = SystemController.getService(Registry.class);
                 AppInfo appInfo = registry.getAppInfo(appName);
