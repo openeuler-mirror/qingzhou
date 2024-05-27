@@ -29,7 +29,7 @@ public class HtmlView implements View {
                 manageAppName = request.getId();
             } else if (DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME.equals(modelName)) {
                 request.setManageType(DeployerConstants.MANAGE_TYPE_INSTANCE);
-                manageAppName = DeployerConstants.INSTANCE_APP_NAME;
+                manageAppName = DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID;
             }
             request.setAppName(manageAppName);
             request.setModelName("home");
