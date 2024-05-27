@@ -45,7 +45,7 @@ class AnnotationReader {
                 action = searchActionFromParent(clazz, method);
             }
 
-            if (action != null && !action.disable()) {
+            if (action != null) {
                 map.put(method, action);
             }
         }

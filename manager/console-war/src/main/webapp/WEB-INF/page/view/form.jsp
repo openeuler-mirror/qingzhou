@@ -1,4 +1,5 @@
 <%@ page import="qingzhou.registry.ModelFieldInfo" %>
+<%@ page import="qingzhou.registry.ModelActionInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -78,9 +79,9 @@
                         if (!modelField.isCreateable() && !isEdit) {
                             continue;
                         }
-                        /*if (!modelField.showToEdit() && isEdit) {
+                        if (!modelField.isEditable() && isEdit) {
                             continue;
-                        }*/
+                        }
 
                         String fieldName = e.getKey();
 
@@ -268,7 +269,8 @@
             <div class="form-btn">
                 <%
                     boolean submitPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + submitActionName, LoginManager.getLoginUser(session));
-                    if (submitPermission) {
+                    ModelActionInfo formCreateAction = modelInfo.getModelActionInfo(submitActionName);
+                    if (submitPermission && (formCreateAction !=null && !formCreateAction.isDisable())) {
                 %>
                 <input type="submit" class="btn"
                        value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + submitActionName)%>'>

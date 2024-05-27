@@ -1,13 +1,19 @@
-package qingzhou.app.common.monitor;
+package qingzhou.app.instance.monitor;
 
-import qingzhou.api.*;
+import qingzhou.api.DataStore;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Listable;
-import qingzhou.app.common.ReadOnlyDataStore;
+import qingzhou.app.instance.ReadOnlyDataStore;
 
 import java.util.List;
 import java.util.Map;
 
-@Model(code = "blockedthread", icon = "pause",
+@Model(code = "blockedthread", icon = "pause", menu = "Monitor",
         name = {"阻塞线程", "en:Blocked Thread"},
         info = {"汇总阻塞的线程，可查看阻塞的堆栈及相同堆栈上阻塞的线程。",
                 "en:Summarize blocked threads, and view blocked stacks and blocked threads on the same stack."})
