@@ -32,7 +32,7 @@ public class Index extends ModelBase implements Showable {
         Index index = new Index();
         index.name = "Qingzhou（轻舟）";
         String versionFlag = "version";
-        index.version = MasterApp.getService(ModuleContext.class).getLibDir().getName().substring(versionFlag.length());
+        index.version = MasterApp.getLibDir().getName().substring(versionFlag.length());
         response.addModelData(index);
     }
 

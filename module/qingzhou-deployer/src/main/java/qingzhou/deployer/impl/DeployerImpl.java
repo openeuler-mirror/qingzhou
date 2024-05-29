@@ -1,6 +1,12 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.Groups;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Showable;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
@@ -8,7 +14,11 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.GroupInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +27,14 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
@@ -416,7 +433,9 @@ class DeployerImpl implements Deployer {
             scanAppFilesCache.add(appFile);
         }
 
-        if (!isSystemApp) {
+        if (isSystemApp) {
+            libs.add(Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-json.jar"));// dataStore使用Gson库需要
+        } else {
             File[] commonFiles = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
             if (commonFiles != null && commonFiles.length > 0) {
                 List<File> commonModels = Arrays.asList(commonFiles);

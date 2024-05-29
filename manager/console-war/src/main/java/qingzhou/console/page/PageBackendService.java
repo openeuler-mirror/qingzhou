@@ -18,12 +18,23 @@ import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.MenuInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -41,7 +52,7 @@ public class PageBackendService {
     public static String[] getFieldOptions(String userName, String app, String model, String field) {
         ModelInfo modelInfo = getAppInfo(app).getModelInfo(model);
         String refModel = modelInfo.getModelFieldInfo(field).getRefModel();
-        if (refModel.isEmpty()) {
+        if (refModel == null || refModel.isEmpty()) {
             return modelInfo.getFieldOptions(field);
         } else {
             // todo 包含 refModel 的这里需要获取对应model的所有id
