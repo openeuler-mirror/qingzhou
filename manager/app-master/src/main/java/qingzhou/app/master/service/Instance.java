@@ -148,7 +148,6 @@ public class Instance extends ModelBase implements Createable {
         int endIndex = pageNum * pageSize;
 
         if (startIndex == 0) {
-
             response.addData(local);
             totalSize = 1;
         }

@@ -145,7 +145,7 @@ public class User extends ModelBase implements Createable {
         }
         Map<String, String> newUser = request.getParameters();
         rectifyParameters(newUser, new HashMap<>());
-        getDataStore().addData(request.getModel(), newUser.get(Listable.FIELD_NAME_ID), newUser);
+        getDataStore().addData(newUser.get(Listable.FIELD_NAME_ID), newUser);
     }
 
 
@@ -154,7 +154,7 @@ public class User extends ModelBase implements Createable {
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
-        Map<String, String> data = dataStore.getDataById(request.getModel(), request.getId());
+        Map<String, String> data = dataStore.getDataById(request.getId());
         if (Editable.ACTION_NAME_EDIT.equals(request.getAction())) {
             data.put("password", PASSWORD_FLAG);
             data.put("confirmPassword", PASSWORD_FLAG);
@@ -173,12 +173,12 @@ public class User extends ModelBase implements Createable {
         DataStore dataStore = getDataStore();
         String modelName = request.getModel();
         String userId = request.getId();
-        Map<String, String> oldUser = dataStore.getDataById(modelName, userId);
+        Map<String, String> oldUser = dataStore.getDataById(userId);
         Map<String, String> newUser = request.getParameters();
         rectifyParameters(newUser, oldUser);
-        dataStore.updateDataById(modelName, userId, newUser);
+        dataStore.updateDataById(userId, newUser);
 
-        Map<String, String> newPro = dataStore.getDataById(modelName, userId);
+        Map<String, String> newPro = dataStore.getDataById(userId);
 
         // 检查是否要重新登录: 简单设计，只要更新即要求重新登录，这可用于强制踢人
         if (!isSameMap(oldUser, newPro)) {
@@ -304,7 +304,7 @@ public class User extends ModelBase implements Createable {
         }
 
         DataStore dataStore = getDataStore();
-        dataStore.deleteDataById(request.getModel(), request.getId());
+        dataStore.deleteDataById(request.getId());
     }
 
     public static void insertPasswordModifiedTime(Map<String, String> params) {

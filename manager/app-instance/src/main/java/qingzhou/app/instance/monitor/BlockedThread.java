@@ -70,12 +70,12 @@ public class BlockedThread extends ModelBase implements Listable {
         private final BlockedThreadTool blockedThreadTool = new BlockedThreadTool();
 
         @Override
-        public List<Map<String, String>> getAllData(String type) {
+        public List<Map<String, String>> getAllData() {
             return blockedThreadTool.list();
         }
 
         @Override
-        public Map<String, String> getDataById(String type, String id) {
+        public Map<String, String> getDataById(String id) {
             return blockedThreadTool.show(id);
         }
     };

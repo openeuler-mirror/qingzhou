@@ -36,10 +36,10 @@ public class Jmx extends ModelBase implements Editable {
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
-        Map<String, String> oldProperties = getDataStore().getDataById(request.getModel(), DEFAULT_ID);
+        Map<String, String> oldProperties = getDataStore().getDataById(DEFAULT_ID);
 
         Map<String, String> properties = request.getParameters();
-        getDataStore().updateDataById(request.getModel(), DEFAULT_ID, properties);
+        getDataStore().updateDataById(DEFAULT_ID, properties);
 
         // ConsoleXml.getInstance().consoleXmlChanged();
         try {
@@ -59,7 +59,7 @@ public class Jmx extends ModelBase implements Editable {
                 // JMXServerHolder.getInstance().destroy();
             }
         } catch (Exception e) {
-            getDataStore().updateDataById(request.getModel(), DEFAULT_ID, oldProperties);
+            getDataStore().updateDataById(DEFAULT_ID, oldProperties);
             // ConsoleXml.getInstance().consoleXmlChanged();
             throw e;
         }
