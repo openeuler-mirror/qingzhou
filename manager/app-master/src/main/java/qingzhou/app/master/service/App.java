@@ -245,12 +245,16 @@ public class App extends ModelBase implements Createable {
         Deployer deployer = MasterApp.getService(Deployer.class);
         qingzhou.deployer.App app = deployer.getApp(appName);
 
+        ((RequestImpl) request).setAppName(DeployerConstants.INSTANCE_APP_NAME);
         ((RequestImpl) request).setModelName("appinstaller");
         ((RequestImpl) request).setActionName("unInstallApp");
         try {
             if (app != null) {
-                ((RequestImpl) request).setAppName(DeployerConstants.INSTANCE_APP_NAME);
                 deployer.getApp(DeployerConstants.INSTANCE_APP_NAME).invokeDirectly(request, response);
+            } else {
+                response.setSuccess(false);
+                response.setMsg(appContext.getI18n(request.getLang(), "app.delete.notlocal"));
+                return;
             }
 
             // 卸载远程实例
@@ -261,7 +265,6 @@ public class App extends ModelBase implements Createable {
                     InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
                     for (AppInfo info : instanceInfo.getAppInfos()) {
                         if (appName.equals(info.getName())) {
-                            ((RequestImpl) request).setManageType(DeployerConstants.MANAGE_TYPE_INSTANCE);
                             ((RequestImpl) request).setAppName(instanceId);
 //                             deployer.getApp(qingzhou.deployer.App.INSTANCE_APP).invokeDirectly(request, response);// todo 需要远程请求
                             break;
@@ -276,6 +279,7 @@ public class App extends ModelBase implements Createable {
             response.setSuccess(false);
             response.setMsg(e.getMessage());
         } finally {
+            ((RequestImpl) request).setManageType(DeployerConstants.MANAGE_TYPE_APP);
             ((RequestImpl) request).setAppName(DeployerConstants.MASTER_APP_NAME);
             ((RequestImpl) request).setModelName(DeployerConstants.MASTER_APP_APP_MODEL_NAME);
             ((RequestImpl) request).setActionName(Deletable.ACTION_NAME_DELETE);
