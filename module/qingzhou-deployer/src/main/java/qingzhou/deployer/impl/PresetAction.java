@@ -31,7 +31,7 @@ class PresetAction {
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
-        Map<String, String> data = instance.getDataStore().getDataById(request.getModel(), request.getId());
+        Map<String, String> data = instance.getDataStore().getDataById(request.getId());
         response.addData(data);
     }
 
@@ -73,7 +73,7 @@ class PresetAction {
         if (dataStore == null) {
             return;
         }
-        int totalSize = dataStore.getTotalSize(modelName);
+        int totalSize = dataStore.getTotalSize();
         response.setTotalSize(totalSize);
 
         response.setPageSize(10);
@@ -85,9 +85,9 @@ class PresetAction {
         }
         response.setPageNum(pageNum);
 
-        String[] dataIdInPage = dataStore.getDataIdInPage(modelName, response.getPageSize(), pageNum).toArray(new String[0]);
+        String[] dataIdInPage = dataStore.getDataIdInPage(response.getPageSize(), pageNum).toArray(new String[0]);
         String[] fieldNamesToList = getAppInfo().getModelInfo(modelName).getFormFieldList();
-        List<Map<String, String>> result = dataStore.getDataFieldByIds(modelName, dataIdInPage, fieldNamesToList);
+        List<Map<String, String>> result = dataStore.getDataFieldByIds(dataIdInPage, fieldNamesToList);
         for (Map<String, String> data : result) {
             response.addData(data);
         }
@@ -106,7 +106,7 @@ class PresetAction {
     public void update(Request request, Response response) throws Exception {
         DataStore dataStore = instance.getDataStore();
         Map<String, String> properties = prepareParameters(request);
-        dataStore.updateDataById(request.getModel(), request.getId(), properties);
+        dataStore.updateDataById(request.getId(), properties);
     }
 
     Map<String, String> prepareParameters(Request request) {
@@ -286,7 +286,7 @@ class PresetAction {
     public void delete(Request request, Response response) throws Exception {
 
         DataStore dataStore = instance.getDataStore();
-        dataStore.deleteDataById(request.getModel(), request.getId());
+        dataStore.deleteDataById(request.getId());
     }
 
     @ModelAction(
@@ -304,6 +304,6 @@ class PresetAction {
         Map<String, String> properties = prepareParameters(request);
         String id = properties.get(Listable.FIELD_NAME_ID);
         DataStore dataStore = instance.getDataStore();
-        dataStore.addData(request.getModel(), id, properties);
+        dataStore.addData(id, properties);
     }
 }

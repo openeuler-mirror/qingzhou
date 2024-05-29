@@ -107,7 +107,7 @@ public class Password extends ModelBase implements Editable {
                 return;
             }
 
-            Map<String, String> loginUserPro = getDataStore().getDataById("user", loginUser);
+            Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
 
             String digestAlg = loginUserPro.get("digestAlg");
             if (null == digestAlg || digestAlg.isEmpty()) {
@@ -141,7 +141,7 @@ public class Password extends ModelBase implements Editable {
             p.put("oldPasswords", oldPasswords);
         }
 
-        getDataStore().updateDataById("user", loginUser, p);
+        getDataStore().updateDataById(loginUser, p);
 
         if (Boolean.parseBoolean(paramMap.getOrDefault("update2FA", "false"))) {
             response.setMsg(appContext.getI18n(request.getLang(), "update2FA.rebind"));
@@ -171,7 +171,7 @@ public class Password extends ModelBase implements Editable {
                     return appContext.getI18n(request.getLang(), "validator.require");
                 }
 
-                String pwd = getDataStore().getDataById("user", loginUser).get(User.pwdKey);
+                String pwd = getDataStore().getDataById(loginUser).get(User.pwdKey);
 
                 MessageDigest digest = MasterApp.getService(MessageDigest.class);
                 if (!digest.matches(newValue, pwd)) {
@@ -190,14 +190,14 @@ public class Password extends ModelBase implements Editable {
 //                    return msg;
 //                } TODO
 
-                String pwd = getDataStore().getDataById("user", loginUser).get(User.pwdKey);
+                String pwd = getDataStore().getDataById(loginUser).get(User.pwdKey);
                 MessageDigest digest = MasterApp.getService(MessageDigest.class);
                 boolean matches = digest.matches(newValue, pwd);
                 if (matches) {
                     return appContext.getI18n(request.getLang(), "password.change.not");
                 }
 
-                Map<String, String> userP = getDataStore().getDataById("user", loginUser);
+                Map<String, String> userP = getDataStore().getDataById(loginUser);
                 if (!Boolean.parseBoolean(userP.getOrDefault("changeInitPwd", "false"))) {
                     String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
                     if (null != passwordLastModifiedTime && !"".equals(passwordLastModifiedTime)) {
@@ -217,7 +217,7 @@ public class Password extends ModelBase implements Editable {
                     }
                 }
 
-                Map<String, String> loginUserPro = getDataStore().getDataById("user", loginUser);
+                Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
                 if (loginUserPro != null) {
                     String oldPasswords = loginUserPro.get("oldPasswords");
                     if (null != oldPasswords && !oldPasswords.isEmpty()) {
@@ -254,7 +254,7 @@ public class Password extends ModelBase implements Editable {
             return false;
         }
 
-        Map<String, String> userP = getDataStore().getDataById("user", loginUser);
+        Map<String, String> userP = getDataStore().getDataById(loginUser);
         String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
         // 首次修改密码，只能在本机进行，因为默认密码是公开的，防止通过公网抢先修改
         if (null == passwordLastModifiedTime || passwordLastModifiedTime.isEmpty()) { // 不要靠 changeInitPwd 来判定，靠 passwordLastModifiedTime，改过一次之后就不必要限制本机了
@@ -314,7 +314,7 @@ public class Password extends ModelBase implements Editable {
         String reqCode = request.getParameter("password2fa");
         if (null != reqCode && !reqCode.isEmpty()) {
             String loginUser = request.getUser();
-            Map<String, String> attributes = getDataStore().getDataById("user", loginUser);
+            Map<String, String> attributes = getDataStore().getDataById(loginUser);
             String keyFor2FA = attributes.get("keyFor2FA");
             try {
                 //result = Totp.verify(keyFor2FA, reqCode); TODO
@@ -323,7 +323,7 @@ public class Password extends ModelBase implements Editable {
             }
             if (result) {
                 attributes.put("bound2FA", "true");
-                getDataStore().updateDataById("user", loginUser, attributes);
+                getDataStore().updateDataById(loginUser, attributes);
             }
         }
         //response.setDirectBody("{\"result\":" + result + "}");

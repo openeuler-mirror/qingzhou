@@ -72,12 +72,12 @@ public class DeadlockedThread extends ModelBase implements Listable {
         private final DeadlockedThreadTool tool = new DeadlockedThreadTool();
 
         @Override
-        public List<Map<String, String>> getAllData(String type) {
+        public List<Map<String, String>> getAllData() {
             return tool.list();
         }
 
         @Override
-        public Map<String, String> getDataById(String type, String id) {
+        public Map<String, String> getDataById(String id) {
             return tool.show(id);
         }
     };
