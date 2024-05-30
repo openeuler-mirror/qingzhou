@@ -23,15 +23,12 @@ public class HtmlView implements View {
         String modelName = request.getModel();
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
-            String manageAppName = null;
             if (DeployerConstants.MASTER_APP_APP_MODEL_NAME.equals(modelName)) {
                 request.setManageType(DeployerConstants.MANAGE_TYPE_APP);
-                manageAppName = request.getId();
             } else if (DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME.equals(modelName)) {
                 request.setManageType(DeployerConstants.MANAGE_TYPE_INSTANCE);
-                manageAppName = DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID;
             }
-            request.setAppName(manageAppName);
+            request.setAppName(request.getId());
             request.setModelName("home");
             request.setActionName("show");
             restContext.response = ActionInvoker.getInstance().invokeAction(request);

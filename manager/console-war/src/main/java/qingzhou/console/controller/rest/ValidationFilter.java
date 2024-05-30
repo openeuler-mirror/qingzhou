@@ -24,6 +24,7 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String validation_lengthMin = "validation_lengthMin";
     public static String validation_lengthMax = "validation_lengthMax";
     public static String validation_port = "validation_port";
+    public static String validation_port_valueBetween = "validation_port_valueBetween";
     public static String unsupportedCharacters = "unsupportedCharacters";
     public static String unsupportedStrings = "unsupportedStrings";
     public static String createable = "createable";
@@ -36,6 +37,7 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n(validation_lengthMin, new String[]{"字符串长度不能小于%s", "en:The length of the string cannot be less than %s"});
         ConsoleI18n.addI18n(validation_lengthMax, new String[]{"字符串长度不能大于%s", "en:The length of the string cannot be greater than %s"});
         ConsoleI18n.addI18n(validation_port, new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
+        ConsoleI18n.addI18n(validation_port_valueBetween, new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         ConsoleI18n.addI18n(unsupportedStrings, new String[]{"不能包含字串%s", "en:Cannot contain the string %s"});
         ConsoleI18n.addI18n(createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
         ConsoleI18n.addI18n(editable, new String[]{"编辑时不支持写入该属性", "en:Writing this property is not supported during editing"});
@@ -131,6 +133,9 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             String parameterVal = context.parameterVal;
+            if (parameterVal == null || parameterVal.isEmpty()) {
+                return null;
+            }
             if (fieldInfo.getMin() == Long.MIN_VALUE) return null;
             if (Long.parseLong(parameterVal) >= fieldInfo.getMin()) return null;
             return new String[]{validation_min, String.valueOf(fieldInfo.getMin())};
@@ -143,6 +148,9 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             String parameterVal = context.parameterVal;
+            if (parameterVal == null || parameterVal.isEmpty()) {
+                return null;
+            }
             if (fieldInfo.getMax() == Long.MAX_VALUE) return null;
             if (Long.parseLong(parameterVal) <= fieldInfo.getMax()) return null;
             return new String[]{validation_max, String.valueOf(fieldInfo.getMax())};
@@ -178,9 +186,20 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
             if (!fieldInfo.isPort()) return null;
-            return new String[]{validation_port};
+            try {
+                String parameterVal = context.parameterVal;
+                long guessNumber = Long.parseLong(parameterVal);
+                int min = 1;
+                int max = 65535;
+                if (guessNumber < min || guessNumber > max) {
+                    return new String[]{validation_port_valueBetween, String.valueOf(min), String.valueOf(max)};
+                }
+            } catch (Exception e) {
+                return new String[]{validation_port};
+            }
+
+            return null;
         }
     }
 

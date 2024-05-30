@@ -13,6 +13,7 @@ public class InstanceApp extends QingzhouSystemApp {
     public void start(AppContext appContext) {
         MODULECONTEXT = this.moduleContext;
         appContext.addMenu("Monitor", new String[]{"监视", "en:Monitor"}, "server", 1);
+        appContext.addMenu("BasicConfig", new String[]{"基础配置", "en:Basic Config"}, "stack", 2);
     }
 
     public static <T> T getService(Class<T> type) {

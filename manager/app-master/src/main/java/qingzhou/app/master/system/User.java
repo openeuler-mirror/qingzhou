@@ -391,7 +391,7 @@ public class User extends ModelBase implements Createable {
 
         private String configFile;
 
-        private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        private static final Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 
         @Override
         public List<Map<String, String>> getAllData() throws Exception {
