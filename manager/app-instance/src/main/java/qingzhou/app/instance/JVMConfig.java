@@ -274,7 +274,7 @@ public class JVMConfig extends ModelBase implements Editable {
         }
 
         @Override
-        public void addData(String id, Map<String, String> user) throws Exception {
+        public void addData(String id, Map<String, String> data) throws Exception {
             throw new RuntimeException("No Support.");
         }
 

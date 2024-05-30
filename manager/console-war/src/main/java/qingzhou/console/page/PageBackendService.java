@@ -326,7 +326,7 @@ public class PageBackendService {
             if (!isShow) {
                 return String.format(
                         ConsoleI18n.getI18n(I18n.getI18nLang(), "validator.ActionShow.notsupported"),
-                        I18n.getString(request.getApp(), "model.action." + request.getModel() + "." + request.getAction()),// todo
+                        I18n.getString(getAppName(request), "model.action." + request.getModel() + "." + request.getAction()),// todo
                         condition);
             }
         }

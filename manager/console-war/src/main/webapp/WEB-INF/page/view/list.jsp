@@ -49,7 +49,7 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    boolean canAccess = (AccessControl.canAccess(qzRequest.getApp(), qzRequest.getModel() + "/" + Createable.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
+                    boolean canAccess = (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Createable.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
                     ModelActionInfo listCreateAction = modelInfo.getModelActionInfo(Createable.ACTION_NAME_CREATE);
                     ModelActionInfo listAddAction = modelInfo.getModelActionInfo(Createable.ACTION_NAME_ADD);
                     if (canAccess
@@ -59,7 +59,7 @@
                         %>
                         <a class="btn" href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Createable.ACTION_NAME_CREATE)%>">
                             <i class="icon icon-plus-sign"></i>
-                            <%=I18n.getString(qzRequest.getApp(), "model.action." + qzRequest.getModel() + "." + Createable.ACTION_NAME_CREATE)%>
+                            <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + Createable.ACTION_NAME_CREATE)%>
                         </a>
                         <%
                     }
