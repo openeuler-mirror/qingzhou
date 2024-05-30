@@ -22,7 +22,7 @@
         <%
             Map<String, String> map = PageBackendService.stringToMap(fieldValue);
             for (Map.Entry<String, String> entry : map.entrySet()) {
-        %>w
+        %>
         <tr>
             <td class="edit-kv" style="padding:0px 0px !important; width: 30%;">
                 <input type="text" class="form-control" value='<%=entry.getKey()%>'

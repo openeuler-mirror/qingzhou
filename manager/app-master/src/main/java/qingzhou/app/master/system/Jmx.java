@@ -1,8 +1,34 @@
 package qingzhou.app.master.system;
 
-import qingzhou.api.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import qingzhou.api.DataStore;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Editable;
+import qingzhou.api.type.Listable;
+import qingzhou.app.master.MasterApp;
+import qingzhou.engine.util.Utils;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +42,7 @@ public class Jmx extends ModelBase implements Editable {
     private static final String DEFAULT_ID = "jmx_0";
 
     @ModelField(
+            type = FieldType.bool,
             name = {"启用", "en:Enabled"},
             info = {"功能开关，配置是否开启 Qingzhou 的 JMX 接口服务。",
                     "en:Function switch, configure whether to enable Qingzhou JMX interface service."})
@@ -27,6 +54,7 @@ public class Jmx extends ModelBase implements Editable {
     public String host = "127.0.0.1";
 
     @ModelField(
+            port = true,
             name = {"端口", "en:Port"},
             info = {"指定 JMX 监听服务绑定的端口。", "en:Specifies the port to which the JMX listening service is bound."}
     )
@@ -65,15 +93,95 @@ public class Jmx extends ModelBase implements Editable {
         }
     }
 
-    @ModelAction(
-            name = {"编辑", "en:Edit"},
-            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
-    public void edit(Request request, Response response) throws Exception {
-        response.addModelData(new Jmx());
-    }
-
     @Override
     public DataStore getDataStore() {
-        return null;
+        return jmxDataStore;
+    }
+
+    private final JmxDataStore jmxDataStore = new JmxDataStore();
+
+    private static class JmxDataStore implements DataStore {
+        public JmxDataStore() {
+        }
+
+        private String configFile;
+
+        private static final Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+
+        @Override
+        public List<Map<String, String>> getAllData() throws Exception {
+            JsonObject jsonObject = readJsonFile();
+            if (jsonObject != null) {
+                JsonObject jmxObject = getJmxObject(jsonObject);
+                List<Map<String, String>> list = new ArrayList<>();
+                Map<String, String> map = new HashMap<>();
+                for (String key : jmxObject.keySet()) {
+                    JsonElement element = jmxObject.get(key);
+                    if (!element.isJsonNull()) {
+                        map.put(key, element.getAsString());
+                    } else {
+                        map.put(key, "");
+                    }
+                }
+                list.add(map);
+
+                return list;
+            }
+
+            return null;
+        }
+
+        @Override
+        public void addData(String id, Map<String, String> user) throws Exception {
+            throw new RuntimeException("No Support.");
+        }
+
+        @Override
+        public void updateDataById(String id, Map<String, String> data) throws Exception {
+            JsonObject jsonObject = readJsonFile();
+
+            if (jsonObject != null) {
+                JsonObject jmxObject = getJmxObject(jsonObject);
+                for (String key : data.keySet()) {
+                    jmxObject.addProperty(key, data.get(key));
+                }
+
+                writeJsonFile(jsonObject);
+            }
+        }
+
+        @Override
+        public void deleteDataById(String id) throws Exception {
+            throw new RuntimeException("No Support.");
+        }
+
+        private JsonObject getJmxObject(JsonObject jsonObject) {
+            return jsonObject.getAsJsonObject("module").getAsJsonObject("console").getAsJsonObject("jmx");
+        }
+
+        private JsonObject readJsonFile() {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
+                return JsonParser.parseReader(reader).getAsJsonObject();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        private void writeJsonFile(JsonObject jsonObject) {
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
+                gson.toJson(jsonObject, writer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private String getConfigFile() throws IOException {
+            if (configFile == null || configFile.isEmpty()) {
+                configFile = Utils.newFile(MasterApp.getInstanceDir(), "qingzhou.json").getCanonicalPath();
+            }
+
+            return configFile;
+        }
     }
 }

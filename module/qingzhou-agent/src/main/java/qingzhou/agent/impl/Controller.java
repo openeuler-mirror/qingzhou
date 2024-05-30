@@ -8,6 +8,7 @@ import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -103,7 +104,11 @@ public class Controller implements ModuleActivator {
 
         // 4. 处理
         Response response = new ResponseImpl();
-        App app = deployer.getApp(request.getApp());
+        String appName = request.getApp();
+        if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(request.getManageType())) {
+            appName = DeployerConstants.INSTANCE_APP_NAME;
+        }
+        App app = deployer.getApp(appName);
         app.invoke(request, response);
 
         // 5. 响应数据
