@@ -3,11 +3,18 @@ package qingzhou.app.instance;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Editable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-@Model(code = "startupargs", icon = "file-code", entrance = Editable.ACTION_NAME_EDIT, name = {"启动参数", "en:Startup Args"}, info = {"管理TongWeb的启动参数。", "en:Manage TongWeb start-up arguments."})
+@Model(code = "startupargs", icon = "file-code", entrance = Editable.ACTION_NAME_EDIT,
+        menu = "BasicConfig",
+        name = {"启动参数", "en:Startup Args"}, info = {"管理TongWeb的启动参数。", "en:Manage TongWeb start-up arguments."})
 public class StartupArgs extends ModelBase implements Editable {
     private static final String[] mustStartsWithFlags = {"-X", "-D", "-agentlib", "-server", "-client", "-javaagent", "-verbose"}; // 如果直接增加参数 aaa 没有前缀，会重启启动不了
     private static final String IF_GREATER_OR_EQUAL_KEY = "range";
@@ -58,194 +65,195 @@ public class StartupArgs extends ModelBase implements Editable {
     @ModelField(name = {"描述", "en:Description"}, info = {"该参数的描述信息。", "en:The descriptive information for this argument."})
     public String desc;
 
-//  todo  @Override
-//    public void show(ActionContext actionContext) throws Exception {
-//        super.show(actionContext);
-//        rectifyModels(actionContext.getModels());
-//    }
 
-//  todo  @Override
-//    public void listInternal(ActionContext actionContext) throws Exception {
-//        super.listInternal(actionContext);
-//        List<ModelBase> args = actionContext.getModels();
-//        rectifyModels(args);
-//    }
 
-//    @Override
-//    public void delete(ActionContext actionContext) throws Exception {
-//        for (String managedPrefix : Constants.StartupArgs.systemManagedPrefix) {
-//            if (actionContext.getId().startsWith(managedPrefix)) {
-//                actionContext.setSuccess(false);
-//                actionContext.setMsg(I18n.getString("validator.sysmanaged"));
-//                return;
-//            }
-//        }
-//
-//        super.delete(actionContext);
-//    }
-//
-//    @Override
-//    public String validate(Request request, String fieldName) {
-//        if (Createable.ACTION_NAME_ADD.equals(request.getActionName())) { // 创建新参数
-//            if ("name".equals(fieldName)) {
-//                String validateArg = validateArg(newValue, otherValues, oldValue);
-//                if (validateArg != null) {
-//                    return validateArg;
-//                }
-//            }
-//        } else { // 编辑已有参数 （可能的bug：name整体全部更新变成一个新参数，例如 -Xms 更新为 -Xmx，本质是删除+创建，验证可能不正确）
-//            if ("changeToArg".equals(fieldName)) {
-//                String validateArg = validateArg(newValue, otherValues, oldValue);
-//                if (validateArg != null) {
-//                    return validateArg;
-//                }
-//            }
-//        }
-//
-//        return super.validate(request, fieldName);
-//    }
-//
-//    private String validateArg(String newValue, List<String> otherValues, String oldValue) {
-//        for (String managedPrefix : Constants.StartupArgs.systemManagedPrefix) {
-//            if ((Utils.notBlank(newValue) && newValue.startsWith(managedPrefix)) || (Utils.notBlank(oldValue) && oldValue.startsWith(managedPrefix))) {
-//                return I18n.getString("validator.sysmanaged");
-//            }
-//        }
-//
-//        if (Utils.isBlank(newValue)
-//                || "-D".equals(newValue)
-//                || "-X".equals(newValue)) {
-//            return I18n.getString("validator.require");
-//        }
-//
-//        if (otherValues.contains(newValue)) {
-//            return I18n.getString("validator.exist");
-//        }
-//
-//        //排除一些不能在url中传递的参数
-//        for (String s : StartupArgs.invalidChars) {
-//            if (newValue.contains(s)) {
-//                return I18n.getString("validator.arg.dataInvalid");
-//            }
-//        }
-//
-//        // 1. 验证内存类参数的取值格式
-//        List<String> checkValueFormat = new ArrayList<>();
-//        checkValueFormat.addAll(Arrays.asList(Constants.StartupArgs.uniqueMemoryArgKeys));
-//        checkValueFormat.addAll(Arrays.asList(Constants.StartupArgs.uniqueMemoryArgKeyPairs));
-//        for (String k : checkValueFormat) {
-//            if (newValue.startsWith(k)) {
-//                try {
-//                    getValueAsByte(newValue, k);
-//                } catch (IllegalArgumentException e) {
-//                    return I18n.getString("validator.arg.memory.invalid");
-//                }
-//                break;
-//            }
-//        }
-//        for (String k : Constants.StartupArgs.uniqueBooleanArgKeys) {
-//            if (newValue.startsWith(k)) {
-//                String b = newValue.substring(k.length()).toLowerCase();
-//                boolean isBool = "true".equals(b) || "false".equals(b);
-//                if (!isBool) {
-//                    return String.format(I18n.getString("validator.optionRange"), "[true, false]");
-//                }
-//                break;
-//            }
-//        }
-//
-//        // 2. 检查 最小-最大 取值比较
-//        for (int i = 0; i < Constants.StartupArgs.uniqueMemoryArgKeyPairs.length; i += 2) {
-//            String minKey = Constants.StartupArgs.uniqueMemoryArgKeyPairs[i];
-//            String maxKey = Constants.StartupArgs.uniqueMemoryArgKeyPairs[i + 1];
-//
-//            if (newValue.startsWith(minKey)) {
-//                for (String test : otherValues) {
-//                    if (test.startsWith(maxKey)) {
-//                        if (getValueAsByte(newValue, minKey) > getValueAsByte(test, maxKey)) {
-//                            String msg = I18n.getString("validator.larger.cannot");
-//                            return String.format(msg, getKeyMsg(maxKey));
-//                        }
-//                        break;
-//                    }
-//                }
-//                break;
-//            }
-//            if (newValue.startsWith(maxKey)) {
-//                for (String test : otherValues) {
-//                    if (test.startsWith(minKey)) {
-//                        if (getValueAsByte(newValue, maxKey) < getValueAsByte(test, minKey)) {
-//                            String msg = I18n.getString("validator.less.cannot");
-//                            return String.format(msg, getKeyMsg(minKey));
-//                        }
-//                        break;
-//                    }
-//                }
-//                break;
-//            }
-//        }
-//
-//        // 重复性检查
-//        for (String k : Constants.StartupArgs.uniqueArgs) {
-//            if (newValue.startsWith(k)) {
-//                if (Utils.isBlank(oldValue) || !oldValue.startsWith(k)) { // 兼容编辑
-//                    for (String otherValue : otherValues) {
-//                        if (otherValue.startsWith(k)) {
-//                            return I18n.getString("validator.exist");
-//                        }
-//                    }
-//                }
-//                break;
-//            }
-//        }
-//
-//        boolean check = false;
-//        for (String startsWith : mustStartsWithFlags) {
-//            if (newValue.startsWith(startsWith)) {
-//                check = true;
-//                break;
-//            }
-//        }
-//        if (!check) {
-//            return String.format(I18n.getString("validator.mustStartsWith"), Arrays.toString(mustStartsWithFlags));
-//        }
-//
-//        return null;
-//    }
-//
-//    private String getKeyMsg(String key) {
-//        return key.endsWith("=") ? key.substring(0, key.length() - 1) : key;
-//    }
-//
-//    private long getValueAsByte(String val, String prefix) throws IllegalArgumentException {
-//        String v = val;
-//        v = v.substring(prefix.length());
-//        if (Utils.isBlank(v)) {
-//            throw new IllegalArgumentException(val);
-//        }
-//        String unit = v.substring(v.length() - 1);
-//        if (Utils.notBlank(unit)) {
-//            int level = -1;
-//            if (unit.equalsIgnoreCase("M")) {
-//                level = 1024;
-//            } else if (unit.equalsIgnoreCase("G")) {
-//                level = 1024 * 1024;
-//            } else {
-//                if (Character.isDigit(unit.charAt(0))) {
-//                    level = 1;
-//                }
-//            }
-//            if (level < 1) {
-//                throw new IllegalArgumentException(val + ":" + level);
-//            }
-//
-//            if (level == 1) {
-//                return Long.parseLong(v);
-//            } else {
-//                return Long.parseLong(v.substring(0, v.length() - 1)) * level;
-//            }
-//        } else {
-//            throw new IllegalArgumentException(val);
-//        }
-//    }
+    /*@Override
+    public String validate(Request request, String fieldName) {
+        if (Createable.ACTION_NAME_ADD.equals(request.getActionName())) { // 创建新参数
+            if ("name".equals(fieldName)) {
+                String validateArg = validateArg(newValue, otherValues, oldValue);
+                if (validateArg != null) {
+                    return validateArg;
+                }
+            }
+        } else { // 编辑已有参数 （可能的bug：name整体全部更新变成一个新参数，例如 -Xms 更新为 -Xmx，本质是删除+创建，验证可能不正确）
+            if ("changeToArg".equals(fieldName)) {
+                String validateArg = validateArg(newValue, otherValues, oldValue);
+                if (validateArg != null) {
+                    return validateArg;
+                }
+            }
+        }
+
+        return super.validate(request, fieldName);
+    }*/
+
+    private String validateArg(Request request, String newValue, List<String> otherValues, String oldValue) {
+        for (String managedPrefix : StartupArg.systemManagedPrefix) {
+            if ((newValue != null && !newValue.isEmpty() && newValue.startsWith(managedPrefix)) || (oldValue != null && !oldValue.isEmpty() && oldValue.startsWith(managedPrefix))) {
+                return appContext.getI18n(request.getLang(), "validator.sysmanaged");
+            }
+        }
+
+        if ((newValue == null || newValue.isEmpty())
+                || "-D".equals(newValue)
+                || "-X".equals(newValue)) {
+            return appContext.getI18n(request.getLang(), "validator.require");
+        }
+
+        if (otherValues.contains(newValue)) {
+            return appContext.getI18n(request.getLang(), "validator.exist");
+        }
+
+        //排除一些不能在url中传递的参数
+        for (String s : StartupArgs.invalidChars) {
+            if (newValue.contains(s)) {
+                return appContext.getI18n(request.getLang(), "validator.arg.dataInvalid");
+            }
+        }
+
+        // 1. 验证内存类参数的取值格式
+        List<String> checkValueFormat = new ArrayList<>();
+        checkValueFormat.addAll(Arrays.asList(StartupArg.uniqueMemoryArgKeys));
+        checkValueFormat.addAll(Arrays.asList(StartupArg.uniqueMemoryArgKeyPairs));
+        for (String k : checkValueFormat) {
+            if (newValue.startsWith(k)) {
+                try {
+                    getValueAsByte(newValue, k);
+                } catch (IllegalArgumentException e) {
+                    return appContext.getI18n(request.getLang(), "validator.arg.memory.invalid");
+                }
+                break;
+            }
+        }
+        for (String k : StartupArg.uniqueBooleanArgKeys) {
+            if (newValue.startsWith(k)) {
+                String b = newValue.substring(k.length()).toLowerCase();
+                boolean isBool = "true".equals(b) || "false".equals(b);
+                if (!isBool) {
+                    return String.format(appContext.getI18n(request.getLang(), "validator.optionRange"), "[true, false]");
+                }
+                break;
+            }
+        }
+
+        // 2. 检查 最小-最大 取值比较
+        for (int i = 0; i < StartupArg.uniqueMemoryArgKeyPairs.length; i += 2) {
+            String minKey = StartupArg.uniqueMemoryArgKeyPairs[i];
+            String maxKey = StartupArg.uniqueMemoryArgKeyPairs[i + 1];
+
+            if (newValue.startsWith(minKey)) {
+                for (String test : otherValues) {
+                    if (test.startsWith(maxKey)) {
+                        if (getValueAsByte(newValue, minKey) > getValueAsByte(test, maxKey)) {
+                            String msg = appContext.getI18n(request.getLang(), "validator.larger.cannot");
+                            return String.format(msg, getKeyMsg(maxKey));
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+            if (newValue.startsWith(maxKey)) {
+                for (String test : otherValues) {
+                    if (test.startsWith(minKey)) {
+                        if (getValueAsByte(newValue, maxKey) < getValueAsByte(test, minKey)) {
+                            String msg = appContext.getI18n(request.getLang(), "validator.less.cannot");
+                            return String.format(msg, getKeyMsg(minKey));
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        // 重复性检查
+        for (String k : StartupArg.uniqueArgs) {
+            if (newValue.startsWith(k)) {
+                if (oldValue.isEmpty() || !oldValue.startsWith(k)) { // 兼容编辑
+                    for (String otherValue : otherValues) {
+                        if (otherValue.startsWith(k)) {
+                            return appContext.getI18n(request.getLang(), "validator.exist");
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        boolean check = false;
+        for (String startsWith : mustStartsWithFlags) {
+            if (newValue.startsWith(startsWith)) {
+                check = true;
+                break;
+            }
+        }
+        if (!check) {
+            return String.format(appContext.getI18n(request.getLang(), "validator.mustStartsWith"), Arrays.toString(mustStartsWithFlags));
+        }
+
+        return null;
+    }
+
+    private String getKeyMsg(String key) {
+        return key.endsWith("=") ? key.substring(0, key.length() - 1) : key;
+    }
+
+    private long getValueAsByte(String val, String prefix) throws IllegalArgumentException {
+        String v = val;
+        v = v.substring(prefix.length());
+        if (v.isEmpty()) {
+            throw new IllegalArgumentException(val);
+        }
+        String unit = v.substring(v.length() - 1);
+        if (!unit.isEmpty()) {
+            int level = -1;
+            if (unit.equalsIgnoreCase("M")) {
+                level = 1024;
+            } else if (unit.equalsIgnoreCase("G")) {
+                level = 1024 * 1024;
+            } else {
+                if (Character.isDigit(unit.charAt(0))) {
+                    level = 1;
+                }
+            }
+            if (level < 1) {
+                throw new IllegalArgumentException(val + ":" + level);
+            }
+
+            if (level == 1) {
+                return Long.parseLong(v);
+            } else {
+                return Long.parseLong(v.substring(0, v.length() - 1)) * level;
+            }
+        } else {
+            throw new IllegalArgumentException(val);
+        }
+    }
+
+    static class StartupArg {
+        public static final String[] uniqueMemoryArgKeys = {"-XX:MaxDirectMemorySize="};
+        public static final String[] uniqueMemoryArgKeyPairs = { // 最小 - 最大，须成对
+                "-Xms", "-Xmx", // 最小 - 最大，须成对
+                "-XX:NewSize=", "-XX:MaxNewSize=",  // 最小 - 最大，须成对
+                "-XX:MetaspaceSize=", "-XX:MaxMetaspaceSize=", // 最小 - 最大，须成对
+                "-XX:InitialHeapSize=", "-XX:MaxHeapSize=" // 最小 - 最大，须成对
+        };
+        public static final String[] uniqueBooleanArgKeys = {"-Djava.awt.headless="};
+        public static final String[] uniqueArgKeys = {"-Xloggc:", "-XX:LogFile=", "-Djava.security.policy=", "-Duser.language=", "-Djava.security.egd=", "-agentlib:jdwp=",};
+        public static final String[] uniqueArgVals = {"-XX:+HeapDumpOnOutOfMemoryError", "-XX:+DisableExplicitGC", "-XX:+PrintGCDetails", "-XX:+UnlockDiagnosticVMOptions", "-XX:+LogVMOutput", "-Djava.security.manager", "-server"};
+        // Qingzhou 专用 -D 参数，不允许复写
+        public static final String[] systemManagedPrefix = {"-Dqingzhou.home", "-Dqingzhou.base", "-Djava.util.logging.manager"};
+        public static final Set<String> uniqueArgs = new HashSet<>();
+
+        static {
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueMemoryArgKeys));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueMemoryArgKeyPairs));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueBooleanArgKeys));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueArgKeys));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueArgVals));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.systemManagedPrefix));
+        }
+    }
 }
