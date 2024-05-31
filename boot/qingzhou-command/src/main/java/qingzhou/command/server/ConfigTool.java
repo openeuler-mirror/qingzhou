@@ -83,9 +83,9 @@ class ConfigTool {
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonURL})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
-            Method fromJson = loadedClass.getMethod("fromJsonMember", String.class, String.class, Class.class);
+            Method fromJson = loadedClass.getMethod("fromJsonMember", String.class, Class.class, String[].class);
 
-            return (Jvm) fromJson.invoke(instance, fileContent.toString(), "jvm", Jvm.class);
+            return (Jvm) fromJson.invoke(instance, fileContent.toString(), Jvm.class, new String[]{"jvm"});
         }
     }
 }

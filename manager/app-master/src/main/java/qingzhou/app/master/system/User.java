@@ -1,50 +1,18 @@
 package qingzhou.app.master.system;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import qingzhou.api.AppContext;
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Group;
-import qingzhou.api.Groups;
-import qingzhou.api.Lang;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.ConfigService;
-import qingzhou.config.Console;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.MessageDigest;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Model(code = "user", icon = "user",
@@ -307,21 +275,6 @@ public class User extends ModelBase implements Createable {
 
         rectifyParameters(newUser, new HashMap<>());
         getDataStore().addData(newUser.get(Listable.FIELD_NAME_ID), newUser);
-
-        qingzhou.config.User user = new qingzhou.config.User();
-        user.setId(newUser.get(Listable.FIELD_NAME_ID));
-        user.setInfo(newUser.get("info"));
-        user.setPassword(newUser.get(pwdKey));
-        user.setActive(Boolean.parseBoolean(newUser.getOrDefault("active", "true")));
-        user.setChangeInitPwd(Boolean.parseBoolean(newUser.getOrDefault("changeInitPwd", "true")));
-        user.setPasswordLastModifiedTime(newUser.get("passwordLastModifiedTime"));
-        user.setEnable2FA(Boolean.parseBoolean(newUser.getOrDefault("enable2FA", "false")));
-        user.setKeyFor2FA(newUser.get("keyFor2FA"));
-        Console console = MasterApp.getService(ConfigService.class).getModule().getConsole();
-        qingzhou.config.User[] users = console.getUser();
-        List<qingzhou.config.User> userList = new ArrayList<>(Arrays.asList(users));
-        userList.add(user);
-        console.setUser(userList.toArray(new qingzhou.config.User[0]));
     }
 
     @ModelAction(
@@ -370,12 +323,6 @@ public class User extends ModelBase implements Createable {
         dataStore.updateDataById(userId, newUser);
 
         Map<String, String> newPro = dataStore.getDataById(userId);
-
-        qingzhou.config.User user = MasterApp.getService(ConfigService.class).getModule().getConsole().getUser(userId);
-        user.setPasswordLastModifiedTime(newPro.get("passwordLastModifiedTime"));
-        user.setInfo(newPro.get("info"));
-        user.setActive(Boolean.parseBoolean(newPro.getOrDefault("active", "true")));
-        user.setPassword(newPro.get(User.pwdKey));
 
         // 检查是否要重新登录: 简单设计，只要更新即要求重新登录，这可用于强制踢人
         if (!isSameMap(oldUser, newPro)) {
@@ -502,17 +449,6 @@ public class User extends ModelBase implements Createable {
         String id = request.getId();
         DataStore dataStore = getDataStore();
         dataStore.deleteDataById(id);
-
-        Console console = MasterApp.getService(ConfigService.class).getModule().getConsole();
-        qingzhou.config.User[] users = console.getUser();
-        List<qingzhou.config.User> userList = new ArrayList<>();
-        for (qingzhou.config.User user : users) {
-            if (id.equals(user.getId())) {
-                continue;
-            }
-            userList.add(user);
-        }
-        console.setUser(userList.toArray(new qingzhou.config.User[0]));
     }
 
     public static void insertPasswordModifiedTime(Map<String, String> params) {
@@ -526,126 +462,42 @@ public class User extends ModelBase implements Createable {
 
     @Override
     public DataStore getDataStore() {
-        return userDataStore;
+        return USER_DATA_STORE;
     }
 
-    private final UserDataStore userDataStore = new UserDataStore();
+    public static final DataStore USER_DATA_STORE = new UserDataStore();
 
     private static class UserDataStore implements DataStore {
-        private String configFile;
-
-        private static final Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-
         @Override
         public List<Map<String, String>> getAllData() throws Exception {
-            JsonObject jsonObject = readJsonFile();
-            if (jsonObject != null) {
-                JsonArray userArray = getUserJsonArray(jsonObject);
-                List<Map<String, String>> userList = getUserList(userArray);
-
-                return userList;
+            List<Map<String, String>> users = new ArrayList<>();
+            for (qingzhou.config.User user : MasterApp.getService(ConfigService.class).getConsole().getUser()) {
+                users.add(Utils.getPropertiesFromObj(user));
             }
-
-            return null;
+            return users;
         }
 
         @Override
         public void addData(String id, Map<String, String> user) throws Exception {
-            JsonObject jsonObject = readJsonFile();
-
-            if (jsonObject != null) {
-                JsonArray userArray = getUserJsonArray(jsonObject);
-
-                JsonObject newUserObject = new JsonObject();
-                user.forEach(newUserObject::addProperty);
-                userArray.add(newUserObject);
-
-                writeJsonFile(jsonObject);
-            }
+            qingzhou.config.User u = new qingzhou.config.User();
+            Utils.setPropertiesToObj(u, user);
+            MasterApp.getService(ConfigService.class).addUser(u);
         }
 
         @Override
         public void updateDataById(String id, Map<String, String> data) throws Exception {
-            JsonObject jsonObject = readJsonFile();
-
-            if (jsonObject != null) {
-                JsonArray userArray = getUserJsonArray(jsonObject);
-
-                for (JsonElement userElement : userArray) {
-                    JsonObject userObject = userElement.getAsJsonObject();
-                    if (id.equals(userObject.get("id").getAsString())) {
-                        for (String key : data.keySet()) {
-                            userObject.addProperty(key, data.get(key));
-                        }
-                        break;
-                    }
-                }
-
-                writeJsonFile(jsonObject);
-            }
+            ConfigService configService = MasterApp.getService(ConfigService.class);
+            qingzhou.config.User user = configService.getConsole().getUser(id);
+            configService.deleteUser(user);
+            Utils.setPropertiesToObj(user, data);
+            configService.addUser(user);
         }
 
         @Override
-        public void deleteDataById(String id) throws Exception {
-            if ("qingzhou".equals(id)) {
-                return;
-            }
-
-            JsonObject jsonObject = readJsonFile();
-            if (jsonObject != null) {
-                JsonArray userArray = getUserJsonArray(jsonObject);
-                for (int i = 0; i < userArray.size(); i++) {
-                    JsonObject arg = userArray.get(i).getAsJsonObject();
-                    if (arg.get(Listable.FIELD_NAME_ID).getAsString().equals(id)) {
-                        userArray.remove(i);
-                        break;
-                    }
-                }
-
-                writeJsonFile(jsonObject);
-            }
-        }
-
-        private JsonArray getUserJsonArray(JsonObject jsonObject) {
-            return jsonObject.getAsJsonObject("module").getAsJsonObject("console").getAsJsonArray("user");
-        }
-
-        private static List<Map<String, String>> getUserList(JsonArray userArray) {
-            List<Map<String, String>> userList = new ArrayList<>();
-            for (JsonElement userElement : userArray) {
-                JsonObject userObject = userElement.getAsJsonObject();
-                Map<String, String> userMap = new HashMap<>();
-                for (Map.Entry<String, JsonElement> entry : userObject.entrySet()) {
-                    userMap.put(entry.getKey(), entry.getValue().getAsString());
-                }
-                userList.add(userMap);
-            }
-            return userList;
-        }
-
-        private JsonObject readJsonFile() {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
-                return JsonParser.parseReader(reader).getAsJsonObject();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        private void writeJsonFile(JsonObject jsonObject) {
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
-                gson.toJson(jsonObject, writer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private String getConfigFile() throws IOException {
-            if (configFile == null || configFile.isEmpty()) {
-                configFile = Utils.newFile(MasterApp.getInstanceDir(), "qingzhou.json").getCanonicalPath();
-            }
-
-            return configFile;
+        public void deleteDataById(String id) {
+            qingzhou.config.User user = new qingzhou.config.User();
+            user.setId(id);
+            MasterApp.getService(ConfigService.class).deleteUser(user);
         }
     }
 }

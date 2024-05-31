@@ -4,38 +4,145 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.io.*;
+import java.lang.reflect.Method;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Utils {
+
+    public static void setPropertiesToObj(Object obj, Map<String, String> data) throws Exception {
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            setPropertyToObj(obj, entry.getKey(), entry.getValue());
+        }
+    }
+
+    public static void setPropertyToObj(Object obj, String key, String val) throws Exception {
+        if (obj == null || key == null || val == null) {
+            return;
+        }
+
+        BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
+        for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
+            if (!pd.getName().equals(key)) {
+                continue;
+            }
+            Method writeMethod = pd.getWriteMethod();
+            if (writeMethod == null) {
+                continue;
+            }
+
+            Class<?>[] parameterTypes = writeMethod.getParameterTypes();
+            if (parameterTypes.length == 1) {
+                Object arg = convert(parameterTypes[0], val);
+                writeMethod.invoke(obj, arg);
+            } else {
+                throw new IllegalArgumentException("parameter types error");
+            }
+        }
+    }
+
+    public static Object convert(Class<?> type, String value) throws Exception {
+        if (value == null) {
+            return null;
+        }
+
+        if (type.equals(String.class)) {
+            return value;
+        }
+        if (type.equals(boolean.class) || type.equals(Boolean.class)) {
+            return Boolean.parseBoolean(value);
+        }
+
+        if (type == InetAddress.class) {
+            if (isBlank(value)) {
+                return null; // value=“” 时，会报转化类型异常。
+            }
+            return InetAddress.getByName(value);
+        }
+
+        if (type.equals(int.class) || type.equals(Integer.class)) {
+            if (isBlank(value)) {
+                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
+            }
+            return Integer.parseInt(value);
+        }
+        if (type.equals(long.class) || type.equals(Long.class)) {
+            if (isBlank(value)) {
+                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
+            }
+            return Long.parseLong(value);
+        }
+        if (type.equals(float.class) || type.equals(Float.class)) {
+            if (isBlank(value)) {
+                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
+            }
+            return Float.parseFloat(value);
+        }
+        if (type.equals(double.class) || type.equals(Double.class)) {
+            if (isBlank(value)) {
+                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
+            }
+            return Double.parseDouble(value);
+        }
+
+        // 其它类型是不支持的
+        // throw new IllegalArgumentException();
+        return null;
+    }
+
+    public static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    public static Map<String, String> getPropertiesFromObj(Object obj) throws Exception {
+        Map<String, String> properties = new HashMap<>();
+        BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
+        for (PropertyDescriptor p : beanInfo.getPropertyDescriptors()) {
+            Method readMethod = p.getReadMethod();
+            if (readMethod != null) {
+                Object val = readMethod.invoke(obj);
+                if (val != null) {
+                    if (val instanceof InetAddress) {
+                        val = ((InetAddress) val).getHostAddress();
+                    } else {
+                        Class<?> typeClass = readMethod.getReturnType();
+                        if (typeClass != String.class
+                                && !isPrimitive(typeClass)) {
+                            continue;
+                        }
+                    }
+                    properties.put(p.getName(), String.valueOf(val));
+                }
+            }
+        }
+        return properties;
+    }
+
+    public static boolean isPrimitive(Class<?> clazz) {
+        if (clazz.isPrimitive()) {
+            return true;
+        } else return clazz.equals(Boolean.class) ||
+                clazz.equals(Byte.class) ||
+                clazz.equals(Character.class) ||
+                clazz.equals(Double.class) ||
+                clazz.equals(Float.class) ||
+                clazz.equals(Integer.class) ||
+                clazz.equals(Long.class) ||
+                clazz.equals(Short.class);
+    }
+
     private static Set<String> localIps;
 
     public static Set<String> getLocalIps() {
@@ -286,7 +393,6 @@ public class Utils {
         if (file == null) {
             throw new NullPointerException("File must not be null");
         }
-        //FilenameUtils.isSystemWindows()
         if (File.separatorChar == '\\') {
             return true;
         }

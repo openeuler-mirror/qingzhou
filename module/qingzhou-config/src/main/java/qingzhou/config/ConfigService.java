@@ -1,7 +1,15 @@
 package qingzhou.config;
 
-import java.io.IOException;
-
 public interface ConfigService {
-    Module getModule() throws IOException;
+    Console getConsole();
+
+    Agent getAgent();
+
+    Heartbeat getHeartbeat();
+
+    void addUser(User user);
+
+    void deleteUser(User user);
+
+    void setUser(Jmx jmx);
 }

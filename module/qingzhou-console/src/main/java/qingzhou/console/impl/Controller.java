@@ -48,7 +48,7 @@ public class Controller implements ModuleActivator {
     @Override
     public void start(ModuleContext context) throws Exception {
         moduleContext = context;
-        console = configService.getModule().getConsole();
+        console = configService.getConsole();
 
         if (!console.isEnabled()) return;
 
