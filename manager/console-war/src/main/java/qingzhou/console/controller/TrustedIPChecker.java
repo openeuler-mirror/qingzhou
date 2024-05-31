@@ -24,18 +24,25 @@ public class TrustedIPChecker implements Filter<HttpServletContext> {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
 
-        if (trustedIP(request.getRemoteAddr())) {
-            return true;
+        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
+        if (checkPath.equals(LoginManager.LOGIN_URI) && !trustedIP(request.getRemoteAddr())) {
+            String msgKey = "client.trusted.not";// todo 没有定义?
+            String toJson = JsonView.responseErrorJson(response, ConsoleI18n.getI18n(I18n.getI18nLang(), msgKey));
+            if (I18n.getI18nLang() == Lang.en) { // header里只能英文
+                response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
+            } else {
+                response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
+            }
+            response.sendRedirect(request.getContextPath() + LoginManager.LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + msgKey);
+            return false;
         }
-        String msgKey = "client.trusted.not";// todo 没有定义?
-        String toJson = JsonView.responseErrorJson(response, ConsoleI18n.getI18n(I18n.getI18nLang(), msgKey));
-        if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-            response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
-        } else {
-            response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
+
+        if (checkPath.endsWith(".jsp") || checkPath.endsWith(".jspx")) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return false;
         }
-        response.sendRedirect(request.getContextPath() + LoginManager.LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + msgKey);
-        return false;
+
+        return true;
     }
 
     public static boolean trustedIP(String clientIp) {

@@ -117,6 +117,15 @@ public class Password extends ModelBase implements Editable {
     public void update(Request request, Response response) throws Exception {
         Map<String, String> p = new HashMap<>();
         Map<String, String> paramMap = prepareParameters(request);
+        String validate;
+        for (String name : paramMap.keySet()) {
+            validate = validate(request, name);
+            if (validate != null) {
+                response.setSuccess(false);
+                response.setMsg(validate);
+                return;
+            }
+        }
 
         String loginUser = request.getUser();
         if (Boolean.parseBoolean(p.getOrDefault("update2FA", "false"))) {
@@ -197,7 +206,7 @@ public class Password extends ModelBase implements Editable {
 
                 String pwd = getDataStore().getDataById(loginUser).get(User.pwdKey);
 
-                MessageDigest digest = MasterApp.getService(MessageDigest.class);
+                MessageDigest digest = CryptoServiceFactory.getInstance().getMessageDigest();
                 if (!digest.matches(newValue, pwd)) {
                     return appContext.getI18n(request.getLang(), "password.original.failed");
                 }
@@ -209,13 +218,13 @@ public class Password extends ModelBase implements Editable {
                     return appContext.getI18n(request.getLang(), "validator.require");
                 }
 
-//                String msg = User.checkPwd(newValue, loginUser);
-//                if (msg != null) {
-//                    return msg;
-//                } TODO
+                String msg = User.checkPwd(appContext, request.getLang(), newValue, loginUser);
+                if (msg != null) {
+                    return msg;
+                }
 
                 String pwd = getDataStore().getDataById(loginUser).get(User.pwdKey);
-                MessageDigest digest = MasterApp.getService(MessageDigest.class);
+                MessageDigest digest = CryptoServiceFactory.getInstance().getMessageDigest();
                 boolean matches = digest.matches(newValue, pwd);
                 if (matches) {
                     return appContext.getI18n(request.getLang(), "password.change.not");

@@ -6,10 +6,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import qingzhou.api.AppContext;
 import qingzhou.api.DataStore;
 import qingzhou.api.FieldType;
 import qingzhou.api.Group;
 import qingzhou.api.Groups;
+import qingzhou.api.Lang;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
@@ -43,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 @Model(code = "user", icon = "user",
         menu = "System", order = 1,
@@ -202,6 +205,81 @@ public class User extends ModelBase implements Createable {
         return Groups.of(Group.of("basic", new String[]{"基本属性", "en:Basic"}), Group.of("security", new String[]{"安全", "en:Security"}));
     }
 
+    private String validate(Request request, String fieldName) throws Exception {
+        if (pwdKey.equals(fieldName)) {
+            String password = request.getParameter(pwdKey);
+            if (passwordChanged(password)) {
+                String userName = request.getParameter("name");
+                String msg = checkPwd(appContext, request.getLang(), password, userName);
+                if (msg != null) {
+                    return msg;
+                }
+            }
+        }
+
+        if (confirmPwdKey.equals(fieldName)) {
+            String password = request.getParameter(pwdKey);
+            if (passwordChanged(password)) {
+                // 恢复 ITAIT-5005 的修改
+                if (!Objects.equals(password, request.getParameter(confirmPwdKey))) {
+                    return appContext.getI18n(request.getLang(), "confirmPassword.different");
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static String checkPwd(AppContext appContext, Lang lang, String password, String... infos) {
+        if (PASSWORD_FLAG.equals(password)) {
+            return null;
+        }
+
+        int minLength = 10;
+        int maxLength = 20;
+        if (password.length() < minLength || password.length() > maxLength) {
+            return String.format(appContext.getI18n(lang, "password.lengthBetween"), minLength, maxLength);
+        }
+
+        if (infos != null && infos.length > 0) {
+            if (infos[0] != null) { // for #ITAIT-5014
+                if (password.contains(infos[0])) { // 包含身份信息
+                    return appContext.getI18n(lang, "password.passwordContainsUsername");
+                }
+            }
+        }
+
+        //特殊符号包含下划线
+        String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";
+        if (!Pattern.compile(PASSWORD_REGEX).matcher(password).matches()) {
+            return appContext.getI18n(lang, "password.format");
+        }
+
+        if (isContinuousChar(password)) { // 连续字符校验
+            return appContext.getI18n(lang, "password.continuousChars");
+        }
+
+        return null;
+    }
+
+    private static boolean isContinuousChar(String password) {
+        char[] chars = password.toCharArray();
+        for (int i = 0; i < chars.length - 2; i++) {
+            int n1 = chars[i];
+            int n2 = chars[i + 1];
+            int n3 = chars[i + 2];
+            // 判断重复字符
+            if (n1 == n2 && n1 == n3) {
+                return true;
+            }
+            // 判断连续字符： 正序 + 倒序
+            if ((n1 + 1 == n2 && n1 + 2 == n3) || (n1 - 1 == n2 && n1 - 2 == n3)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @ModelAction(
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
@@ -209,7 +287,24 @@ public class User extends ModelBase implements Createable {
         if (!checkForbidden(request, response)) {
             return;
         }
+
+        if (getDataStore().exists(request.getParameter(Listable.FIELD_NAME_ID))) {
+            response.setSuccess(false);
+            response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
+            return;
+        }
+
         Map<String, String> newUser = request.getParameters();
+        String validate;
+        for (String name : newUser.keySet()) {
+            validate = validate(request, name);
+            if (validate != null) {
+                response.setSuccess(false);
+                response.setMsg(validate);
+                return;
+            }
+        }
+
         rectifyParameters(newUser, new HashMap<>());
         getDataStore().addData(newUser.get(Listable.FIELD_NAME_ID), newUser);
 
@@ -229,6 +324,12 @@ public class User extends ModelBase implements Createable {
         console.setUser(userList.toArray(new qingzhou.config.User[0]));
     }
 
+    @ModelAction(
+            name = {"编辑", "en:Edit"},
+            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
+    public void edit(Request request, Response response) throws Exception {
+        show(request, response);
+    }
 
     @ModelAction(
             name = {"查看", "en:Show"},
@@ -255,6 +356,16 @@ public class User extends ModelBase implements Createable {
         String userId = request.getId();
         Map<String, String> oldUser = dataStore.getDataById(userId);
         Map<String, String> newUser = request.getParameters();
+        String validate;
+        for (String name : newUser.keySet()) {
+            validate = validate(request, name);
+            if (validate != null) {
+                response.setSuccess(false);
+                response.setMsg(validate);
+                return;
+            }
+        }
+
         rectifyParameters(newUser, oldUser);
         dataStore.updateDataById(userId, newUser);
 
@@ -483,17 +594,13 @@ public class User extends ModelBase implements Createable {
             JsonObject jsonObject = readJsonFile();
             if (jsonObject != null) {
                 JsonArray userArray = getUserJsonArray(jsonObject);
-
-                JsonArray newUserArray = new JsonArray();
-                for (JsonElement userElement : userArray) {
-                    JsonObject userObject = userElement.getAsJsonObject();
-                    if (!id.equals(userObject.get("id").getAsString())) {
-                        newUserArray.add(userObject);
+                for (int i = 0; i < userArray.size(); i++) {
+                    JsonObject arg = userArray.get(i).getAsJsonObject();
+                    if (arg.get(Listable.FIELD_NAME_ID).getAsString().equals(id)) {
+                        userArray.remove(i);
+                        break;
                     }
                 }
-
-                jsonObject.getAsJsonObject("module").remove("user");
-                jsonObject.getAsJsonObject("module").add("user", newUserArray);
 
                 writeJsonFile(jsonObject);
             }
