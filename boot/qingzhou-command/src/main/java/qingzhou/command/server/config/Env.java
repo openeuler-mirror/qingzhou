@@ -1,7 +1,7 @@
 package qingzhou.command.server.config;
 
 public class Env {
-    private boolean enabled;
+    private boolean enabled = true;
     private String name;
     private String value;
 
