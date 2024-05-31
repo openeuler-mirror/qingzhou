@@ -41,6 +41,8 @@ import java.util.Set;
 public class StartupArgs extends ModelBase implements Createable {
     private static final String[] mustStartsWithFlags = {"-X", "-D", "-agentlib", "-server", "-client", "-javaagent", "-verbose"}; // 如果直接增加参数 aaa 没有前缀，会重启启动不了
     private static final String IF_GREATER_OR_EQUAL_KEY = "range";
+    private static final String SUPPORTED_JRE_KEY = "supportedJRE";
+
     private static final String PLUS = "+";
     private static final String MINUS = "-";
     private static final String EQUAL = "=";
@@ -65,17 +67,17 @@ public class StartupArgs extends ModelBase implements Createable {
             info = {"该参数将用于 JVM 启动时的进程入参。", "en:This argument will be used for the process entry when the JVM is started."})
     public String id;
 
-    @ModelField(
+    @ModelField(createable = false,
             name = {"更改为", "en:Change to"},
             info = {"将参数更改为此值。", "en:Change the argument to this value."})
     public String changeToArg;
 
-    @ModelField(type = FieldType.bool, list = true,
+    @ModelField(type = FieldType.bool, list = true, required = false,
             name = {"启用", "en:Enabled"},
             info = {"只有启用的参数才会传给 JVM 加载，未启用的则不会。", "en:Only arguments that are enabled are passed to the JVM for loading, those that are not are not."})
     public Boolean enabled = true;
 
-    @ModelField(type = FieldType.bool, list = true,
+    @ModelField(type = FieldType.bool, list = true, required = false,
             name = {"仅 Linux 有效", "en:Only For Linux"},
             info = {"开启后，该参数仅会在 linux 操作系统上启用。", "en:When turned on, this parameter is only enabled on linux operating systems."})
     public Boolean onlyForLinux = false;
@@ -83,7 +85,8 @@ public class StartupArgs extends ModelBase implements Createable {
     /**
      * 支持JRE版本
      */
-    @ModelField(type = FieldType.select, options = {"", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"},
+    @ModelField(type = FieldType.select, required = false,
+            options = {"", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"},
             list = true, name = {"限定 JRE 版本", "en:Limited JRE"},
             info = {"限定该参数支持的 JRE 的版本，限定后，只有限定的 JRE 可以加载到该参数；其它 JRE 则不会，为空表示不限制。", "en:Limit the version of JRE supported by this parameter. After the limitation, only the limited JRE can be loaded into this parameter, and other JREs will not. If it is empty, it means no limitation."})
     private String supportedJRE;
@@ -91,37 +94,35 @@ public class StartupArgs extends ModelBase implements Createable {
     /**
      * 兼容方向
      */
-    @ModelField(list = true, name = {"限定区间", "en:Limited Range"}, info = {"限定支持的 JRE 版本区间，大于、等于或者小于指定的 JRE 版本号。 + 表示大于等于，= 表示等于，- 表示小于等于。", "en:Limit the supported JRE version interval to greater than, equal to or less than the specified JRE version number."})
+    @ModelField(type = FieldType.radio, list = true, required = false,
+            options = {PLUS, EQUAL, MINUS}, show = SUPPORTED_JRE_KEY + "!=",
+            name = {"限定区间", "en:Limited Range"},
+            info = {"限定支持的 JRE 版本区间，大于、等于或者小于指定的 JRE 版本号。 + 表示大于等于，= 表示等于，- 表示小于等于。", "en:Limit the supported JRE version interval to greater than, equal to or less than the specified JRE version number."})
     public String range;
 
     /**
      * 参数
      */
-    @ModelField(name = {"描述", "en:Description"}, info = {"该参数的描述信息。", "en:The descriptive information for this argument."})
+    @ModelField(required = false,
+            name = {"描述", "en:Description"},
+            info = {"该参数的描述信息。", "en:The descriptive information for this argument."})
     public String desc;
 
-
-
-    /*@Override
-    public String validate(Request request, String fieldName) {
-        if (Createable.ACTION_NAME_ADD.equals(request.getActionName())) { // 创建新参数
-            if ("name".equals(fieldName)) {
-                String validateArg = validateArg(newValue, otherValues, oldValue);
-                if (validateArg != null) {
-                    return validateArg;
-                }
-            }
-        } else { // 编辑已有参数 （可能的bug：name整体全部更新变成一个新参数，例如 -Xms 更新为 -Xmx，本质是删除+创建，验证可能不正确）
-            if ("changeToArg".equals(fieldName)) {
-                String validateArg = validateArg(newValue, otherValues, oldValue);
-                if (validateArg != null) {
-                    return validateArg;
-                }
-            }
+    @ModelAction(
+            name = {"添加", "en:Add"},
+            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
+    public void add(Request request, Response response) throws Exception {
+        Map<String, String> newData = request.getParameters();
+        Map<String, String> oldData = getDataStore().getDataById(request.getId());
+        String id = newData.get(Listable.FIELD_NAME_ID);
+        String error = validateArg(request, id, new ArrayList<>(), oldData == null ? null : oldData.get(Listable.FIELD_NAME_ID));
+        if (error != null) {
+            response.setSuccess(false);
+            response.setMsg(error);
+            return;
         }
-
-        return super.validate(request, fieldName);
-    }*/
+        getDataStore().addData(id, newData);
+    }
 
     @ModelAction(
             name = {"更新", "en:Update"},
@@ -130,14 +131,30 @@ public class StartupArgs extends ModelBase implements Createable {
         Map<String, String> newData = request.getParameters();
         Map<String, String> oldData = getDataStore().getDataById(request.getId());
 
-        /*String error = validateArg(request, newData, new ArrayList<>(), oldData);
-        if(error!=null){
+        String error = validateArg(request, newData.get("changeToArg"), new ArrayList<>(), oldData == null ? null : oldData.get(Listable.FIELD_NAME_ID));
+        if (error != null) {
             response.setSuccess(false);
             response.setMsg(error);
             return;
-        }*/
+        }
 
         getDataStore().updateDataById(request.getId(), newData);
+    }
+
+    @ModelAction(batch = true,
+            name = {"删除", "en:Delete"},
+            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
+                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
+    public void delete(Request request, Response response) throws Exception {
+        for (String managedPrefix : StartupArg.systemManagedPrefix) {
+            if (request.getId().startsWith(managedPrefix)) {
+                response.setSuccess(false);
+                response.setMsg(appContext.getI18n(request.getLang(), "validator.sysmanaged"));
+                return;
+            }
+        }
+
+        getDataStore().deleteDataById(request.getId());
     }
 
     private String validateArg(Request request, String newValue, List<String> otherValues, String oldValue) {
@@ -350,17 +367,17 @@ public class StartupArgs extends ModelBase implements Createable {
         private void rectifyModels(List<Map<String, String>> args) {
             for (Map<String, String> arg : args) {
                 arg.put("changeToArg", arg.get(Listable.FIELD_NAME_ID));// 校验 changeToArg 时候的 List<String> otherValues 需要这个
-                String ver = arg.get("supportedJRE");
+                String ver = arg.get(SUPPORTED_JRE_KEY);
                 if (ver != null && !ver.isEmpty()) {
                     String lastFlag = ver.substring(ver.length() - 1);
                     if (PLUS.equals(lastFlag)) {
-                        arg.put("range", PLUS);
-                        arg.put("supportedJRE", ver.substring(0, ver.length() - 1));
+                        arg.put(IF_GREATER_OR_EQUAL_KEY, PLUS);
+                        arg.put(SUPPORTED_JRE_KEY, ver.substring(0, ver.length() - 1));
                     } else if (MINUS.equals(lastFlag)) {
-                        arg.put("range", MINUS);
-                        arg.put("supportedJRE", ver.substring(0, ver.length() - 1));
+                        arg.put(IF_GREATER_OR_EQUAL_KEY, MINUS);
+                        arg.put(SUPPORTED_JRE_KEY, ver.substring(0, ver.length() - 1));
                     } else {
-                        arg.put("range", EQUAL);
+                        arg.put(IF_GREATER_OR_EQUAL_KEY, EQUAL);
                     }
                 }
                 arg.put("enabled", (arg.get("enabled") == null) ? "true" : arg.get("enabled"));
@@ -399,11 +416,12 @@ public class StartupArgs extends ModelBase implements Createable {
                     JsonObject arg = element.getAsJsonObject();
                     if (arg.get("name").getAsString().equals(id)) {
                         for (String name : data.keySet()) {
-                            if (Listable.FIELD_NAME_ID.equals(name)) {
+                            if (Listable.FIELD_NAME_ID.equals(name) || "changeToArg".equals(name)) {
                                 continue;
                             }
                             arg.addProperty(name, data.get(name));
                         }
+                        arg.addProperty("name", data.get("changeToArg"));
                         break;
                     }
                 }

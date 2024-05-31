@@ -25,7 +25,7 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <%-- 快捷搜索 --%>
-                    <li>
+                    <%--<li>
                         <div class="searchBar">
                             <div class="sample">
                                 <input type="text" id="searchText" name="search"
@@ -35,7 +35,7 @@
                                 <div id="searchResult" class="search-list"></div>
                             </div>
                         </div>
-                    </li>
+                    </li>--%>
 
                     <%-- 切换语言 --%>
                     <li id="switch-lang" class="dropdown">

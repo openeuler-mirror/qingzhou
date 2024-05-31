@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @Model(code = "blockedthread", icon = "pause", menu = "Monitor",
-        name = {"阻塞线程", "en:Blocked Thread"},
+        name = {"阻塞线程", "en:Blocked Thread"}, hidden = true,
         info = {"汇总阻塞的线程，可查看阻塞的堆栈及相同堆栈上阻塞的线程。",
                 "en:Summarize blocked threads, and view blocked stacks and blocked threads on the same stack."})
 public class BlockedThread extends ModelBase implements Listable {

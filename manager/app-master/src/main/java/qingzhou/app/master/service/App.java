@@ -151,6 +151,9 @@ public class App extends ModelBase implements Createable {
 
         // 处理本地应用名称
         for (String appName : localAppNames) {
+            if (DeployerConstants.MASTER_APP_NAME.equals(appName) || DeployerConstants.INSTANCE_APP_NAME.equals(appName)) {
+                continue;
+            }
             uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
         }
 

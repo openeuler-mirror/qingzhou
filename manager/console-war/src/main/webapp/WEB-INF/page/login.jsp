@@ -74,14 +74,14 @@
                        class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;"><i
                         class="icon icon-eye-close"></i></label>
             </div>
-            <div class="input-control has-icon-left">
+           <%-- <div class="input-control has-icon-left">
                 <input type="text" id="<%=ConsoleConstants.LOGIN_2FA%>_txt" class="form-control"
                        placeholder="<%=PageBackendService.getMasterAppI18nString( "page.info.2fa")%>"
                        onchange="document.getElementById('<%=ConsoleConstants.LOGIN_2FA%>').value = this.value;">
                 <input type="hidden" id="<%=ConsoleConstants.LOGIN_2FA%>" name="<%=ConsoleConstants.LOGIN_2FA%>">
                 <label for="<%=ConsoleConstants.LOGIN_2FA%>_txt" class="input-control-icon-left"
                        style="line-height: 44px;"><i class="icon icon-shield"></i></label>
-            </div>
+            </div>--%>
 
             <%
                 if (request.getParameter(VerCode.SHOW_CAPTCHA_FLAG) != null) {
