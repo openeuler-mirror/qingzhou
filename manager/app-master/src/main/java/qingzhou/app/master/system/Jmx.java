@@ -14,7 +14,6 @@ import qingzhou.api.ModelField;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.Editable;
-import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.engine.util.Utils;
 
@@ -35,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 @Model(code = "jmx", icon = "exchange",
         menu = "System", order = 3,
         entrance = Editable.ACTION_NAME_EDIT,
-        name = {"JMX", "en:JMX"},
+        name = {"JMX", "en:JMX"}, hidden = true,
         info = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 Qingzhou。",
                 "en:After enabling the JMX interface service, the client can manage Qingzhou through the java jmx protocol."})
 public class Jmx extends ModelBase implements Editable {

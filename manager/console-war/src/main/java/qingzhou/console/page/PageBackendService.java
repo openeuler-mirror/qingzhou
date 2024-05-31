@@ -5,8 +5,10 @@ import qingzhou.api.Lang;
 import qingzhou.api.Request;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Downloadable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
+import qingzhou.api.type.Showable;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.SystemController;
@@ -31,10 +33,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -45,6 +49,16 @@ import java.util.stream.Collectors;
 public class PageBackendService {
 
     private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
+
+    private static final Set<String> ShowToListExcludedActionNames = new HashSet<>(Arrays.asList(
+            Showable.ACTION_NAME_SHOW,
+            Createable.ACTION_NAME_CREATE,
+            Createable.ACTION_NAME_ADD,
+            Listable.ACTION_NAME_LIST,
+            Editable.ACTION_NAME_EDIT,
+            Editable.ACTION_NAME_UPDATE,
+            Downloadable.ACTION_NAME_DOWNLOAD
+    ));
 
     private PageBackendService() {
     }
@@ -94,7 +108,9 @@ public class PageBackendService {
 
     public static String[] getActionNamesShowToList(Request request) {
         ModelInfo modelInfo = getModelInfo(request);
-        return Arrays.stream(modelInfo.getModelActionInfos()).filter(modelActionInfo -> modelActionInfo.getOrder() > 0).sorted(Comparator.comparingInt(ModelActionInfo::getOrder)).map(ModelActionInfo::getCode).toArray(String[]::new);
+        return Arrays.stream(modelInfo.getModelActionInfos()).filter(modelActionInfo -> modelActionInfo.getOrder() >= 0).
+                filter(modelActionInfo -> !ShowToListExcludedActionNames.contains(modelActionInfo.getCode()))
+                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder)).map(ModelActionInfo::getCode).toArray(String[]::new);
     }
 
     public static String getFieldName(Request request, int fieldIndex) {

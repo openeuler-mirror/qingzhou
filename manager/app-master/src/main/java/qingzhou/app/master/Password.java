@@ -45,14 +45,14 @@ public class Password extends ModelBase implements Editable {
             info = {"确认用于登录系统的新密码。", "en:Confirm the new password used to log in to the system."})
     public String confirmPassword;
 
-    @ModelField(
+   /* @ModelField(
             required = false,
             type = FieldType.bool,
             name = {"更新双因子认证密钥", "en:Update Two-factor Authentication Key"},
             info = {"安全起见，建议定期刷新双因子认证密钥。刷新后，需要重新在用户终端的双因子认证客户端设备进行绑定。",
                     "en:For security reasons, it is recommended to periodically refresh the two-factor authentication key. After refreshing, you need to re-bind it on the two-factor authentication client device of the user terminal."}
     )
-    public boolean update2FA = false;
+    public boolean update2FA = false;*/
 
     @Override
     public void start() {

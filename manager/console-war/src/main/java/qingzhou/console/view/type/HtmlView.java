@@ -1,6 +1,11 @@
 package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
+import qingzhou.api.type.Createable;
+import qingzhou.api.type.Editable;
+import qingzhou.api.type.Listable;
+import qingzhou.api.type.Monitorable;
+import qingzhou.api.type.Showable;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
@@ -61,19 +66,19 @@ public class HtmlView implements View {
         }
 
         if ((ConsoleConstants.MODEL_NAME_index.equals(model) || ConsoleConstants.MODEL_NAME_apphome.equals(model))
-                && ConsoleConstants.ACTION_NAME_show.equals(action)) {
+                && Showable.ACTION_NAME_SHOW.equals(action)) {
             return ConsoleConstants.VIEW_RENDER_HOME;
         }
 
         switch (action) {
-            case ConsoleConstants.ACTION_NAME_list:
+            case Listable.ACTION_NAME_LIST:
                 return ConsoleConstants.VIEW_RENDER_LIST;
-            case ConsoleConstants.ACTION_NAME_create:
-            case ConsoleConstants.ACTION_NAME_edit:
+            case Createable.ACTION_NAME_CREATE:
+            case Editable.ACTION_NAME_EDIT:
                 return ConsoleConstants.VIEW_RENDER_FORM;
             case ConsoleConstants.ACTION_NAME_index:
                 return ConsoleConstants.VIEW_RENDER_INDEX;
-            case ConsoleConstants.ACTION_NAME_monitor:
+            case Monitorable.ACTION_NAME_MONITOR:
                 return ConsoleConstants.VIEW_RENDER_INFO;
             case ConsoleConstants.ACTION_NAME_manage:
                 return ConsoleConstants.VIEW_RENDER_MANAGE;

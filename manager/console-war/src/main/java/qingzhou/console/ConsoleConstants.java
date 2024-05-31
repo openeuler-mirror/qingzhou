@@ -22,11 +22,6 @@ public interface ConsoleConstants {
     String DOWNLOAD_BLOCK = "DOWNLOAD_BLOCK";
     // actions
     String ACTION_NAME_index = "index";
-    String ACTION_NAME_list = "list";
-    String ACTION_NAME_show = "show";
-    String ACTION_NAME_create = "create";
-    String ACTION_NAME_edit = "edit";
-    String ACTION_NAME_monitor = "monitor";
     String ACTION_NAME_manage = "manage";
     // view renders
     String VIEW_RENDER_DEFAULT = "default";

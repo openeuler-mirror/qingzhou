@@ -36,13 +36,13 @@
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
     <div class="block-bg">
-        <%
+       <%-- <%
             if (!indexToShow.isEmpty()) {
         %>
         <%@ include file="../fragment/filter_form.jsp" %>
         <%
             }
-        %>
+        %>--%>
 
         <hr style="margin-top: 4px;">
 
