@@ -1,5 +1,12 @@
 package qingzhou.app.master;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import qingzhou.api.DataStore;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
@@ -9,15 +16,28 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.system.User;
+import qingzhou.config.ConfigService;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.MessageDigest;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Model(code = "password", icon = "key",
@@ -103,9 +123,10 @@ public class Password extends ModelBase implements Editable {
             // p.put("keyFor2FA", User.refresh2FA()); TODO
             p.put("bound2FA", "false");
         } else { //ITAIT-4537
-            if (forbidResetInitPwd(request)) {
+            /*if (forbidResetInitPwd(request)) {
+                response.setSuccess(false);
                 return;
-            }
+            }*/
 
             Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
 
@@ -121,7 +142,7 @@ public class Password extends ModelBase implements Editable {
             if (null == iterations || iterations.isEmpty()) {
                 iterations = String.valueOf(User.defIterations);
             }
-            MessageDigest digest = MasterApp.getService(MessageDigest.class);
+            MessageDigest digest = CryptoServiceFactory.getInstance().getMessageDigest();
             p.put(User.pwdKey,
                     digest.digest(
                             paramMap.get("newPassword"),
@@ -142,6 +163,9 @@ public class Password extends ModelBase implements Editable {
         }
 
         getDataStore().updateDataById(loginUser, p);
+        qingzhou.config.User user = MasterApp.getService(ConfigService.class).getModule().getConsole().getUser(loginUser);
+        user.setPassword(p.get(User.pwdKey));
+        user.setChangeInitPwd(Boolean.parseBoolean(p.get("changeInitPwd")));
 
         if (Boolean.parseBoolean(paramMap.getOrDefault("update2FA", "false"))) {
             response.setMsg(appContext.getI18n(request.getLang(), "update2FA.rebind"));
@@ -258,13 +282,12 @@ public class Password extends ModelBase implements Editable {
         String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
         // 首次修改密码，只能在本机进行，因为默认密码是公开的，防止通过公网抢先修改
         if (null == passwordLastModifiedTime || passwordLastModifiedTime.isEmpty()) { // 不要靠 changeInitPwd 来判定，靠 passwordLastModifiedTime，改过一次之后就不必要限制本机了
-            /*if (!ConsoleUtil.trustedIP(request.getClientIp())) {
-                request.setSuccess(false);
-                request.setMsg(getAppContext().getAppMetadata().getI18n("client.trusted.not"));
-                LOGGER.warn("The operation has been forbidden, client is not trusted: " + request.getClientIp());
-                return true;
-            }*/
-            return true;
+//            if (!ConsoleUtil.trustedIP(request.getClientIp())) {
+//                request.setSuccess(false);
+//                request.setMsg(getAppContext().getAppMetadata().getI18n("client.trusted.not"));
+//                LOGGER.warn("The operation has been forbidden, client is not trusted: " + request.getClientIp());
+//                return true;
+//            }
         }
 
         return false;
@@ -327,5 +350,103 @@ public class Password extends ModelBase implements Editable {
             }
         }
         //response.setDirectBody("{\"result\":" + result + "}");
+    }
+
+    @Override
+    public DataStore getDataStore() {
+        return passwordDataStore;
+    }
+
+    private final PasswordDataStore passwordDataStore = new PasswordDataStore();
+
+    private static class PasswordDataStore implements DataStore {
+
+        private String configFile;
+
+        private static final Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+
+        @Override
+        public List<Map<String, String>> getAllData() throws Exception {
+            JsonObject jsonObject = readJsonFile();
+            if (jsonObject != null) {
+                JsonArray userArray = getUserJsonArray(jsonObject);
+                return getUserList(userArray);
+            }
+
+            return null;
+        }
+
+        @Override
+        public void addData(String id, Map<String, String> user) throws Exception {
+            throw new RuntimeException("No Support.");
+        }
+
+        @Override
+        public void updateDataById(String id, Map<String, String> data) throws Exception {
+            JsonObject jsonObject = readJsonFile();
+
+            if (jsonObject != null) {
+                JsonArray userArray = getUserJsonArray(jsonObject);
+
+                for (JsonElement userElement : userArray) {
+                    JsonObject userObject = userElement.getAsJsonObject();
+                    if (id.equals(userObject.get("id").getAsString())) {
+                        for (String key : data.keySet()) {
+                            userObject.addProperty(key, data.get(key));
+                        }
+                        break;
+                    }
+                }
+
+                writeJsonFile(jsonObject);
+            }
+        }
+
+        @Override
+        public void deleteDataById(String id) throws Exception {
+            throw new RuntimeException("No Support.");
+        }
+
+        private JsonArray getUserJsonArray(JsonObject jsonObject) {
+            return jsonObject.getAsJsonObject("module").getAsJsonObject("console").getAsJsonArray("user");
+        }
+
+        private static List<Map<String, String>> getUserList(JsonArray userArray) {
+            List<Map<String, String>> userList = new ArrayList<>();
+            for (JsonElement userElement : userArray) {
+                JsonObject userObject = userElement.getAsJsonObject();
+                Map<String, String> userMap = new HashMap<>();
+                for (Map.Entry<String, JsonElement> entry : userObject.entrySet()) {
+                    userMap.put(entry.getKey(), entry.getValue().getAsString());
+                }
+                userList.add(userMap);
+            }
+            return userList;
+        }
+
+        private JsonObject readJsonFile() {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
+                return JsonParser.parseReader(reader).getAsJsonObject();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        private void writeJsonFile(JsonObject jsonObject) {
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
+                gson.toJson(jsonObject, writer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private String getConfigFile() throws IOException {
+            if (configFile == null || configFile.isEmpty()) {
+                configFile = Utils.newFile(MasterApp.getInstanceDir(), "qingzhou.json").getCanonicalPath();
+            }
+
+            return configFile;
+        }
     }
 }

@@ -21,6 +21,8 @@ import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
+import qingzhou.config.ConfigService;
+import qingzhou.config.Console;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.MessageDigest;
@@ -35,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -209,6 +212,21 @@ public class User extends ModelBase implements Createable {
         Map<String, String> newUser = request.getParameters();
         rectifyParameters(newUser, new HashMap<>());
         getDataStore().addData(newUser.get(Listable.FIELD_NAME_ID), newUser);
+
+        qingzhou.config.User user = new qingzhou.config.User();
+        user.setId(newUser.get(Listable.FIELD_NAME_ID));
+        user.setInfo(newUser.get("info"));
+        user.setPassword(newUser.get(pwdKey));
+        user.setActive(Boolean.parseBoolean(newUser.getOrDefault("active", "true")));
+        user.setChangeInitPwd(Boolean.parseBoolean(newUser.getOrDefault("changeInitPwd", "true")));
+        user.setPasswordLastModifiedTime(newUser.get("passwordLastModifiedTime"));
+        user.setEnable2FA(Boolean.parseBoolean(newUser.getOrDefault("enable2FA", "false")));
+        user.setKeyFor2FA(newUser.get("keyFor2FA"));
+        Console console = MasterApp.getService(ConfigService.class).getModule().getConsole();
+        qingzhou.config.User[] users = console.getUser();
+        List<qingzhou.config.User> userList = new ArrayList<>(Arrays.asList(users));
+        userList.add(user);
+        console.setUser(userList.toArray(new qingzhou.config.User[0]));
     }
 
 
@@ -234,7 +252,6 @@ public class User extends ModelBase implements Createable {
         }
 
         DataStore dataStore = getDataStore();
-        String modelName = request.getModel();
         String userId = request.getId();
         Map<String, String> oldUser = dataStore.getDataById(userId);
         Map<String, String> newUser = request.getParameters();
@@ -242,6 +259,12 @@ public class User extends ModelBase implements Createable {
         dataStore.updateDataById(userId, newUser);
 
         Map<String, String> newPro = dataStore.getDataById(userId);
+
+        qingzhou.config.User user = MasterApp.getService(ConfigService.class).getModule().getConsole().getUser(userId);
+        user.setPasswordLastModifiedTime(newPro.get("passwordLastModifiedTime"));
+        user.setInfo(newPro.get("info"));
+        user.setActive(Boolean.parseBoolean(newPro.getOrDefault("active", "true")));
+        user.setPassword(newPro.get(User.pwdKey));
 
         // 检查是否要重新登录: 简单设计，只要更新即要求重新登录，这可用于强制踢人
         if (!isSameMap(oldUser, newPro)) {
@@ -291,7 +314,7 @@ public class User extends ModelBase implements Createable {
                 limitRepeats = oldUser.get("limitRepeats");
             }
 
-            String cutOldPasswords = cutOldPasswords(oldPasswords, limitRepeats, password);
+            String cutOldPasswords = cutOldPasswords(oldPasswords, limitRepeats, newUser.get(pwdKey));
             newUser.put("oldPasswords", cutOldPasswords);
         } else {
             String oldPassword = oldUser.get("password");
@@ -311,7 +334,7 @@ public class User extends ModelBase implements Createable {
             oldPasswords += (oldPasswords.isEmpty() ? "" : DATA_SEPARATOR) + newPwd;
         }
 
-        if (repeats.isEmpty()) {
+        if (repeats == null || repeats.isEmpty()) {
             repeats = String.valueOf(User.defLimitRepeats);
         }
         int currentLength;
@@ -365,9 +388,20 @@ public class User extends ModelBase implements Createable {
         if (!checkForbidden(request, response)) {
             return;
         }
-
+        String id = request.getId();
         DataStore dataStore = getDataStore();
-        dataStore.deleteDataById(request.getId());
+        dataStore.deleteDataById(id);
+
+        Console console = MasterApp.getService(ConfigService.class).getModule().getConsole();
+        qingzhou.config.User[] users = console.getUser();
+        List<qingzhou.config.User> userList = new ArrayList<>();
+        for (qingzhou.config.User user : users) {
+            if (id.equals(user.getId())) {
+                continue;
+            }
+            userList.add(user);
+        }
+        console.setUser(userList.toArray(new qingzhou.config.User[0]));
     }
 
     public static void insertPasswordModifiedTime(Map<String, String> params) {
@@ -387,9 +421,6 @@ public class User extends ModelBase implements Createable {
     private final UserDataStore userDataStore = new UserDataStore();
 
     private static class UserDataStore implements DataStore {
-        public UserDataStore() {
-        }
-
         private String configFile;
 
         private static final Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();

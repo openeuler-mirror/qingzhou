@@ -1,5 +1,6 @@
 package qingzhou.deployer.impl;
 
+import qingzhou.config.ConfigService;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.Module;
@@ -20,6 +21,9 @@ public class Controller implements ModuleActivator {
 
     @Service
     private Registry registry;
+
+    @Service
+    private ConfigService configService;
 
     static Deployer deployer;
 
