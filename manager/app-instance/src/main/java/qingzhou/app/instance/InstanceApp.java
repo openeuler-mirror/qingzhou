@@ -12,6 +12,8 @@ public class InstanceApp extends QingzhouSystemApp {
     @Override
     public void start(AppContext appContext) {
         MODULECONTEXT = this.moduleContext;
+        appContext.addI18n("validator.exist", new String[]{"已存在", "en:Already exists"});
+
         appContext.addMenu("Monitor", new String[]{"监视", "en:Monitor"}, "server", 1);
         appContext.addMenu("BasicConfig", new String[]{"基础配置", "en:Basic Config"}, "stack", 2);
     }

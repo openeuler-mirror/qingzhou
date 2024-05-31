@@ -112,9 +112,15 @@ public class StartupArgs extends ModelBase implements Createable {
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
+        String id = request.getParameter(Listable.FIELD_NAME_ID);
+        if (getDataStore().exists(id)) {
+            response.setSuccess(false);
+            response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
+            return;
+        }
+
         Map<String, String> newData = request.getParameters();
         Map<String, String> oldData = getDataStore().getDataById(request.getId());
-        String id = newData.get(Listable.FIELD_NAME_ID);
         String error = validateArg(request, id, new ArrayList<>(), oldData == null ? null : oldData.get(Listable.FIELD_NAME_ID));
         if (error != null) {
             response.setSuccess(false);
