@@ -7,11 +7,12 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.pattern.Filter;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class AccessControl implements Filter<HttpServletContext> {
@@ -24,20 +25,22 @@ public class AccessControl implements Filter<HttpServletContext> {
     }};
 
     public static boolean canAccess(String appName, String modelAction, String user) throws Exception {
-        return true;
+        String[] ma = modelAction.split("/");
+        String checkModel = ma[0];
+        String checkAction = ma[1];
+        if (ma.length == 2) {
+            ModelInfo modelInfo = SystemController.getAppInfo(appName).getModelInfo(checkModel);
+            if (modelInfo == null || modelInfo.isHidden()) {
+                return false;
+            }
+            ModelActionInfo actionInfo = modelInfo.getModelActionInfo(checkAction);
+            if (actionInfo == null || actionInfo.isDisable()) {
+                return false;
+            }
+        }
+
+        return true;//nodePermission(appName, user);
     }
-//    public static boolean canAccess(String appName, String modelAction, String user) throws Exception {
-//        String[] ma = modelAction.split("/");
-//        String checkModel = ma[0];
-//        String checkAction = ma[1];
-//        if (ma.length == 2) {
-//            ModelManager modelManager = SystemController.getAppMetadata(appName).getModelManager();
-//            ModelActionData modelAction1 = modelManager.getModelAction(checkModel, checkAction);
-//            return modelAction1 != null;
-//        }
-//
-//        return nodePermission(appName, user);
-//    }
 
 //    public static boolean nodePermission(String appName, String user) throws Exception {
 //        if ("qingzhou".equals(user)) {

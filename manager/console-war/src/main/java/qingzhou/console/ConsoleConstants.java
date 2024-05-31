@@ -29,6 +29,7 @@ public interface ConsoleConstants {
     String VIEW_RENDER_HOME = "home";
     String VIEW_RENDER_LIST = "list";
     String VIEW_RENDER_FORM = "form";
+    String VIEW_RENDER_SHOW = "show";
     String VIEW_RENDER_INFO = "fragment/info";
     String VIEW_RENDER_MANAGE = "sys/manage";
 }
