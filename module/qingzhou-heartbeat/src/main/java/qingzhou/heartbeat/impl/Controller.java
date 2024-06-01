@@ -19,15 +19,7 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
+import java.util.*;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -50,8 +42,8 @@ public class Controller implements ModuleActivator {
     private InstanceInfo thisInstanceInfo;
 
     @Override
-    public void start(ModuleContext context) throws IOException {
-        heartbeat = configService.getModule().getHeartbeat();
+    public void start(ModuleContext context) {
+        heartbeat = configService.getHeartbeat();
         if (!heartbeat.isEnabled()) return;
 
         thisInstanceInfo = thisInstanceInfo();

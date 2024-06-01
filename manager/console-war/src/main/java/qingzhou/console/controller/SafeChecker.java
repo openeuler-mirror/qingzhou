@@ -18,7 +18,7 @@ import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TrustedIPChecker implements Filter<HttpServletContext> {
+public class SafeChecker implements Filter<HttpServletContext> {
     @Override
     public boolean doFilter(HttpServletContext context) throws Exception {
         HttpServletRequest request = context.req;
@@ -26,7 +26,7 @@ public class TrustedIPChecker implements Filter<HttpServletContext> {
 
         String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
         if (checkPath.equals(LoginManager.LOGIN_URI) && !trustedIP(request.getRemoteAddr())) {
-            String msgKey = "client.trusted.not";// todo 没有定义?
+            String msgKey = "client.trusted.not";
             String toJson = JsonView.responseErrorJson(response, ConsoleI18n.getI18n(I18n.getI18nLang(), msgKey));
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
                 response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header

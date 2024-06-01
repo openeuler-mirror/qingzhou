@@ -46,7 +46,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        Agent agent = configService.getModule().getAgent();
+        Agent agent = configService.getAgent();
         agentService = buildAgentService(agent);
         moduleContext.registerService(AgentService.class, agentService);
 

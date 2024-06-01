@@ -79,11 +79,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     public static Console getConsole() {
-        try {
-            return getService(ConfigService.class).getModule().getConsole();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return getService(ConfigService.class).getConsole();
     }
 
     public static String getPublicKeyString() {
@@ -99,7 +95,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     private final Filter<HttpServletContext>[] processors = new Filter[]{
-            new TrustedIPChecker(),
+            new SafeChecker(),
             new JspInterceptor(),
             new SetI18n(),
             new About(),

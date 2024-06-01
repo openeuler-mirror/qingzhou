@@ -7,6 +7,8 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 import qingzhou.json.Json;
 
+import java.io.File;
+
 @Module
 public class Controller implements ModuleActivator {
     @Service
@@ -14,6 +16,8 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) {
-        context.registerService(ConfigService.class, new ConfigServiceImpl(json, context.getInstanceDir()));
+        context.registerService(ConfigService.class,
+                new JsonFileConfigService(json, new File(context.getInstanceDir(), "qingzhou.json"))
+        );
     }
 }

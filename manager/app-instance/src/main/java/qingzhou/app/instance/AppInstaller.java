@@ -13,6 +13,10 @@ import java.io.File;
         info = {"执行管理节点下发的应用安装、卸载等指令。",
                 "en:Execute the commands issued by the management node to install and uninstall applications."})
 public class AppInstaller extends ModelBase {
+    @Override
+    public void start() {
+        appContext.addI18n("app.not.found", new String[]{"应用文件未找到", "en:File Not Found"});
+    }
 
     @ModelAction(
             name = {"安装应用", "en:Install App"},
@@ -26,7 +30,7 @@ public class AppInstaller extends ModelBase {
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
             response.setSuccess(false);
-            response.setMsg("File Not Found.");
+            response.setMsg(appContext.getI18n(request.getLang(), "app.not.found"));
             return;
         }
 

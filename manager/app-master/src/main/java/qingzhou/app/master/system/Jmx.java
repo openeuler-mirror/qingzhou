@@ -1,32 +1,12 @@
 package qingzhou.app.master.system;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.MasterApp;
+import qingzhou.config.ConfigService;
 import qingzhou.engine.util.Utils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -100,34 +80,13 @@ public class Jmx extends ModelBase implements Editable {
     private final JmxDataStore jmxDataStore = new JmxDataStore();
 
     private static class JmxDataStore implements DataStore {
-        public JmxDataStore() {
-        }
-
-        private String configFile;
-
-        private static final Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-
         @Override
         public List<Map<String, String>> getAllData() throws Exception {
-            JsonObject jsonObject = readJsonFile();
-            if (jsonObject != null) {
-                JsonObject jmxObject = getJmxObject(jsonObject);
-                List<Map<String, String>> list = new ArrayList<>();
-                Map<String, String> map = new HashMap<>();
-                for (String key : jmxObject.keySet()) {
-                    JsonElement element = jmxObject.get(key);
-                    if (!element.isJsonNull()) {
-                        map.put(key, element.getAsString());
-                    } else {
-                        map.put(key, "");
-                    }
-                }
-                list.add(map);
-
-                return list;
-            }
-
-            return null;
+            qingzhou.config.Jmx jmx = MasterApp.getService(ConfigService.class).getConsole().getJmx();
+            Map<String, String> propertiesFromObj = Utils.getPropertiesFromObj(jmx);
+            List<Map<String, String>> list = new ArrayList<>();
+            list.add(propertiesFromObj);
+            return list;
         }
 
         @Override
@@ -137,50 +96,15 @@ public class Jmx extends ModelBase implements Editable {
 
         @Override
         public void updateDataById(String id, Map<String, String> data) throws Exception {
-            JsonObject jsonObject = readJsonFile();
-
-            if (jsonObject != null) {
-                JsonObject jmxObject = getJmxObject(jsonObject);
-                for (String key : data.keySet()) {
-                    jmxObject.addProperty(key, data.get(key));
-                }
-
-                writeJsonFile(jsonObject);
-            }
+            ConfigService configService = MasterApp.getService(ConfigService.class);
+            qingzhou.config.Jmx jmx = configService.getConsole().getJmx();
+            Utils.setPropertiesToObj(jmx, data);
+            configService.setUser(jmx);
         }
 
         @Override
-        public void deleteDataById(String id) throws Exception {
+        public void deleteDataById(String id) {
             throw new RuntimeException("No Support.");
-        }
-
-        private JsonObject getJmxObject(JsonObject jsonObject) {
-            return jsonObject.getAsJsonObject("module").getAsJsonObject("console").getAsJsonObject("jmx");
-        }
-
-        private JsonObject readJsonFile() {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
-                return JsonParser.parseReader(reader).getAsJsonObject();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        private void writeJsonFile(JsonObject jsonObject) {
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
-                gson.toJson(jsonObject, writer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private String getConfigFile() throws IOException {
-            if (configFile == null || configFile.isEmpty()) {
-                configFile = Utils.newFile(MasterApp.getInstanceDir(), "qingzhou.json").getCanonicalPath();
-            }
-
-            return configFile;
         }
     }
 }

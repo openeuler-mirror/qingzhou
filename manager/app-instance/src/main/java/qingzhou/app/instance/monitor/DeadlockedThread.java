@@ -8,7 +8,7 @@ import qingzhou.api.ModelField;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.Listable;
-import qingzhou.app.instance.ReadOnlyDataStore;
+import qingzhou.deployer.ReadOnlyDataStore;
 
 import java.util.List;
 import java.util.Map;
