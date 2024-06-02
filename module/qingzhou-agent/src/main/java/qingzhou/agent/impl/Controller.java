@@ -3,7 +3,7 @@ package qingzhou.agent.impl;
 import qingzhou.agent.AgentService;
 import qingzhou.api.Response;
 import qingzhou.config.Agent;
-import qingzhou.config.ConfigService;
+import qingzhou.config.Config;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.deployer.App;
@@ -30,7 +30,7 @@ import java.nio.charset.StandardCharsets;
 @Module
 public class Controller implements ModuleActivator {
     @Service
-    private ConfigService configService;
+    private Config config;
     @Service
     private Json json;
     @Service
@@ -46,7 +46,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        Agent agent = configService.getAgent();
+        Agent agent = config.getAgent();
         agentService = buildAgentService(agent);
         moduleContext.registerService(AgentService.class, agentService);
 

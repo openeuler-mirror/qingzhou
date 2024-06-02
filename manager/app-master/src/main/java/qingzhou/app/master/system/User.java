@@ -6,7 +6,7 @@ import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
-import qingzhou.config.ConfigService;
+import qingzhou.config.Config;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.MessageDigest;
@@ -471,7 +471,7 @@ public class User extends ModelBase implements Createable {
         @Override
         public List<Map<String, String>> getAllData() throws Exception {
             List<Map<String, String>> users = new ArrayList<>();
-            for (qingzhou.config.User user : MasterApp.getService(ConfigService.class).getConsole().getUser()) {
+            for (qingzhou.config.User user : MasterApp.getService(Config.class).getConsole().getUser()) {
                 users.add(Utils.getPropertiesFromObj(user));
             }
             return users;
@@ -481,23 +481,23 @@ public class User extends ModelBase implements Createable {
         public void addData(String id, Map<String, String> user) throws Exception {
             qingzhou.config.User u = new qingzhou.config.User();
             Utils.setPropertiesToObj(u, user);
-            MasterApp.getService(ConfigService.class).addUser(u);
+            MasterApp.getService(Config.class).addUser(u);
         }
 
         @Override
         public void updateDataById(String id, Map<String, String> data) throws Exception {
-            ConfigService configService = MasterApp.getService(ConfigService.class);
-            qingzhou.config.User user = configService.getConsole().getUser(id);
-            configService.deleteUser(user);
+            Config config = MasterApp.getService(Config.class);
+            qingzhou.config.User user = config.getConsole().getUser(id);
+            config.deleteUser(user);
             Utils.setPropertiesToObj(user, data);
-            configService.addUser(user);
+            config.addUser(user);
         }
 
         @Override
-        public void deleteDataById(String id) {
+        public void deleteDataById(String id) throws Exception {
             qingzhou.config.User user = new qingzhou.config.User();
             user.setId(id);
-            MasterApp.getService(ConfigService.class).deleteUser(user);
+            MasterApp.getService(Config.class).deleteUser(user);
         }
     }
 }

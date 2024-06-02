@@ -1,12 +1,11 @@
 package qingzhou.json.impl;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import qingzhou.json.Json;
 
 import java.io.Reader;
+import java.util.Iterator;
+import java.util.Properties;
 
 public class JsonImpl implements Json {
     @Override
@@ -15,29 +14,74 @@ public class JsonImpl implements Json {
     }
 
     @Override
+    public String addJson(String from, Properties properties, String... position) {
+        JsonElement root = JsonParser.parseString(from);
+
+        JsonObject jsonObject = root.getAsJsonObject();
+        for (int i = 0; i < position.length - 1; i++) {
+            jsonObject = jsonObject.get(position[i]).getAsJsonObject();
+        }
+        JsonArray jsonArray = jsonObject.getAsJsonArray(position[position.length - 1]);
+
+        JsonObject addObject = new JsonObject();
+        for (String key : properties.stringPropertyNames()) {
+            addObject.addProperty(key, properties.getProperty(key));
+        }
+        jsonArray.add(addObject);
+
+        return gsonInstance().toJson(root);
+    }
+
+    @Override
+    public String setJson(String from, Properties properties, String... position) {
+        JsonElement root = JsonParser.parseString(from);
+
+        JsonObject jsonObject = root.getAsJsonObject();
+        for (String path : position) {
+            jsonObject = jsonObject.get(path).getAsJsonObject();
+        }
+        for (String key : properties.stringPropertyNames()) {
+            jsonObject.addProperty(key, properties.getProperty(key));
+        }
+
+        return gsonInstance().toJson(root);
+    }
+
+    @Override
+    public String deleteJson(String from, Matcher matcher, String... position) {
+        JsonElement root = JsonParser.parseString(from);
+
+        JsonObject jsonObject = root.getAsJsonObject();
+        for (int i = 0; i < position.length - 1; i++) {
+            jsonObject = jsonObject.get(position[i]).getAsJsonObject();
+        }
+        JsonArray jsonArray = jsonObject.getAsJsonArray(position[position.length - 1]);
+
+        Iterator<JsonElement> iterator = jsonArray.iterator();
+        while (iterator.hasNext()) {
+            Properties properties = new Properties();
+            JsonObject asJsonObject = iterator.next().getAsJsonObject();
+            for (String k : asJsonObject.keySet()) {
+                properties.setProperty(k, asJsonObject.get(k).getAsString());
+            }
+            if (matcher.matches(properties)) {
+                iterator.remove();
+            }
+        }
+
+        return gsonInstance().toJson(root);
+    }
+
+    @Override
     public <T> T fromJson(String json, Class<T> classOfT) {
         return gsonInstance().fromJson(json, classOfT);
     }
 
     @Override
-    public <T> T fromJson(Reader json, Class<T> classOfT) {
-        return gsonInstance().fromJson(json, classOfT);
-    }
-
-    @Override
-    public <T> T fromJsonMember(String json, Class<T> classOfT, String... memberPath) {
-        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
-        return fromJsonObject(jsonObject, classOfT, memberPath);
-    }
-
-    @Override
-    public <T> T fromJsonMember(Reader json, Class<T> classOfT, String... memberPath) {
-        JsonObject jsonObject = JsonParser.parseReader(json).getAsJsonObject();
-        return fromJsonObject(jsonObject, classOfT, memberPath);
-    }
-
-    private <T> T fromJsonObject(JsonObject jsonObject, Class<T> classOfT, String... memberPath) {
-        for (String path : memberPath) {
+    public <T> T fromJson(Reader from, Class<T> classOfT, String... position) {
+        JsonElement root = JsonParser.parseReader(from);
+        JsonObject jsonObject = root.getAsJsonObject();
+        for (String path : position) {
             jsonObject = jsonObject.get(path).getAsJsonObject();
         }
         return gsonInstance().fromJson(jsonObject, classOfT);

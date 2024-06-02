@@ -1,42 +1,12 @@
 package qingzhou.app.instance;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Listable;
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.Utils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Model(code = "startupargs", icon = "file-code",
-        menu = "BasicConfig",
         name = {"启动参数", "en:Startup Args"}, info = {"管理TongWeb的启动参数。", "en:Manage TongWeb start-up arguments."})
 public class StartupArgs extends ModelBase implements Createable {
     private static final String[] mustStartsWithFlags = {"-X", "-D", "-agentlib", "-server", "-client", "-javaagent", "-verbose"}; // 如果直接增加参数 aaa 没有前缀，会重启启动不了
@@ -335,152 +305,123 @@ public class StartupArgs extends ModelBase implements Createable {
 
     @Override
     public DataStore getDataStore() {
-        return startUpArgsDataStore;
+        return null;
     }
 
-    private final StartUpArgsDataStore startUpArgsDataStore = new StartUpArgsDataStore();
+//    private final StartUpArgsDataStore startUpArgsDataStore = new StartUpArgsDataStore();
 
-    private static class StartUpArgsDataStore implements DataStore {
-        public StartUpArgsDataStore() {
-        }
-
-        private String configFile;
-
-        private static final Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-
-        @Override
-        public List<Map<String, String>> getAllData() throws Exception {
-            JsonObject jsonObject = readJsonFile();
-            if (jsonObject != null) {
-                List<Map<String, String>> list = new ArrayList<>();
-                JsonArray args = getArgArray(jsonObject);
-                for (JsonElement arg : args) {
-                    Map map = gson.fromJson(arg, Map.class);
-                    map.put(Listable.FIELD_NAME_ID, map.get("name"));
-                    list.add(map);
-                }
-
-                rectifyModels(list);
-
-                list.sort(Comparator.comparing(o -> o.get("name")));
-
-                return list;
-            }
-
-            return null;
-        }
-
-        private void rectifyModels(List<Map<String, String>> args) {
-            for (Map<String, String> arg : args) {
-                arg.put("changeToArg", arg.get(Listable.FIELD_NAME_ID));// 校验 changeToArg 时候的 List<String> otherValues 需要这个
-                String ver = arg.get(SUPPORTED_JRE_KEY);
-                if (ver != null && !ver.isEmpty()) {
-                    String lastFlag = ver.substring(ver.length() - 1);
-                    if (PLUS.equals(lastFlag)) {
-                        arg.put(IF_GREATER_OR_EQUAL_KEY, PLUS);
-                        arg.put(SUPPORTED_JRE_KEY, ver.substring(0, ver.length() - 1));
-                    } else if (MINUS.equals(lastFlag)) {
-                        arg.put(IF_GREATER_OR_EQUAL_KEY, MINUS);
-                        arg.put(SUPPORTED_JRE_KEY, ver.substring(0, ver.length() - 1));
-                    } else {
-                        arg.put(IF_GREATER_OR_EQUAL_KEY, EQUAL);
-                    }
-                }
-                arg.put("enabled", (arg.get("enabled") == null) ? "true" : arg.get("enabled"));
-                arg.put("onlyForLinux", (arg.get("onlyForLinux") == null) ? "false" : arg.get("onlyForLinux"));
-                arg.put("changeToArg", arg.get("name"));
-            }
-        }
-
-        @Override
-        public void addData(String id, Map<String, String> data) throws Exception {
-            JsonObject jsonObject = readJsonFile();
-
-            if (jsonObject != null) {
-                JsonArray args = getArgArray(jsonObject);
-                JsonObject arg = new JsonObject();
-                for (String name : data.keySet()) {
-                    if (Listable.FIELD_NAME_ID.equals(name)) {
-                        arg.addProperty("name", data.get(name));
-                    } else {
-                        arg.addProperty(name, data.get(name));
-                    }
-                }
-                args.add(arg);
-
-                writeJsonFile(jsonObject);
-            }
-        }
-
-        @Override
-        public void updateDataById(String id, Map<String, String> data) throws Exception {
-            JsonObject jsonObject = readJsonFile();
-
-            if (jsonObject != null) {
-                JsonArray args = getArgArray(jsonObject);
-                for (JsonElement element : args) {
-                    JsonObject arg = element.getAsJsonObject();
-                    if (arg.get("name").getAsString().equals(id)) {
-                        for (String name : data.keySet()) {
-                            if (Listable.FIELD_NAME_ID.equals(name) || "changeToArg".equals(name)) {
-                                continue;
-                            }
-                            arg.addProperty(name, data.get(name));
-                        }
-                        arg.addProperty("name", data.get("changeToArg"));
-                        break;
-                    }
-                }
-
-                writeJsonFile(jsonObject);
-            }
-        }
-
-        @Override
-        public void deleteDataById(String id) throws Exception {
-            JsonObject jsonObject = readJsonFile();
-
-            if (jsonObject != null) {
-                JsonArray args = getArgArray(jsonObject);
-                for (int i = 0; i < args.size(); i++) {
-                    JsonObject arg = args.get(i).getAsJsonObject();
-                    if (arg.get("name").getAsString().equals(id)) {
-                        args.remove(i);
-                        break;
-                    }
-                }
-
-                writeJsonFile(jsonObject);
-            }
-        }
-
-        private JsonArray getArgArray(JsonObject jsonObject) {
-            return jsonObject.getAsJsonObject("jvm").getAsJsonArray("arg");
-        }
-
-        private JsonObject readJsonFile() {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
-                return JsonParser.parseReader(reader).getAsJsonObject();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        private void writeJsonFile(JsonObject jsonObject) {
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
-                gson.toJson(jsonObject, writer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private String getConfigFile() throws IOException {
-            if (configFile == null || configFile.isEmpty()) {
-                configFile = Utils.newFile(InstanceApp.getService(ModuleContext.class).getInstanceDir(), "qingzhou.json").getCanonicalPath();
-            }
-
-            return configFile;
-        }
-    }
+//    private static class StartUpArgsDataStore implements DataStore {
+//        @Override
+//        public List<Map<String, String>> getAllData() throws Exception {
+//            Config config = InstanceApp.getService(Config.class);
+//            Json json = InstanceApp.getService(Json.class);
+//            try (Reader reader = new FileReader(config.getConfigFile())) {
+//
+//                List list = json.fromJson(reader, List.class, "jvm", "arg");
+//            }
+//
+//            JsonObject jsonObject = readJsonFile();
+//            if (jsonObject != null) {
+//                List<Map<String, String>> list = new ArrayList<>();
+//                JsonArray args = getArgArray(jsonObject);
+//                for (JsonElement arg : args) {
+//                    Map map = gson.fromJson(arg, Map.class);
+//                    map.put(Listable.FIELD_NAME_ID, map.get("name"));
+//                    list.add(map);
+//                }
+//
+//                rectifyModels(list);
+//
+//                list.sort(Comparator.comparing(o -> o.get("name")));
+//
+//                return list;
+//            }
+//
+//            return null;
+//        }
+//
+//        private void rectifyModels(List<Map<String, String>> args) {
+//            for (Map<String, String> arg : args) {
+//                arg.put("changeToArg", arg.get(Listable.FIELD_NAME_ID));// 校验 changeToArg 时候的 List<String> otherValues 需要这个
+//                String ver = arg.get(SUPPORTED_JRE_KEY);
+//                if (ver != null && !ver.isEmpty()) {
+//                    String lastFlag = ver.substring(ver.length() - 1);
+//                    if (PLUS.equals(lastFlag)) {
+//                        arg.put(IF_GREATER_OR_EQUAL_KEY, PLUS);
+//                        arg.put(SUPPORTED_JRE_KEY, ver.substring(0, ver.length() - 1));
+//                    } else if (MINUS.equals(lastFlag)) {
+//                        arg.put(IF_GREATER_OR_EQUAL_KEY, MINUS);
+//                        arg.put(SUPPORTED_JRE_KEY, ver.substring(0, ver.length() - 1));
+//                    } else {
+//                        arg.put(IF_GREATER_OR_EQUAL_KEY, EQUAL);
+//                    }
+//                }
+//                arg.put("enabled", (arg.get("enabled") == null) ? "true" : arg.get("enabled"));
+//                arg.put("onlyForLinux", (arg.get("onlyForLinux") == null) ? "false" : arg.get("onlyForLinux"));
+//                arg.put("changeToArg", arg.get("name"));
+//            }
+//        }
+//
+//        @Override
+//        public void addData(String id, Map<String, String> data) throws Exception {
+//            JsonObject jsonObject = readJsonFile();
+//
+//            if (jsonObject != null) {
+//                JsonArray args = getArgArray(jsonObject);
+//                JsonObject arg = new JsonObject();
+//                for (String name : data.keySet()) {
+//                    if (Listable.FIELD_NAME_ID.equals(name)) {
+//                        arg.addProperty("name", data.get(name));
+//                    } else {
+//                        arg.addProperty(name, data.get(name));
+//                    }
+//                }
+//                args.add(arg);
+//
+//                writeJsonFile(jsonObject);
+//            }
+//        }
+//
+//        @Override
+//        public void updateDataById(String id, Map<String, String> data) throws Exception {
+//            JsonObject jsonObject = readJsonFile();
+//
+//            if (jsonObject != null) {
+//                JsonArray args = getArgArray(jsonObject);
+//                for (JsonElement element : args) {
+//                    JsonObject arg = element.getAsJsonObject();
+//                    if (arg.get("name").getAsString().equals(id)) {
+//                        for (String name : data.keySet()) {
+//                            if (Listable.FIELD_NAME_ID.equals(name) || "changeToArg".equals(name)) {
+//                                continue;
+//                            }
+//                            arg.addProperty(name, data.get(name));
+//                        }
+//                        arg.addProperty("name", data.get("changeToArg"));
+//                        break;
+//                    }
+//                }
+//
+//                writeJsonFile(jsonObject);
+//            }
+//        }
+//
+//        @Override
+//        public void deleteDataById(String id) throws Exception {
+//            JsonObject jsonObject = readJsonFile();
+//
+//            if (jsonObject != null) {
+//                JsonArray args = getArgArray(jsonObject);
+//                for (int i = 0; i < args.size(); i++) {
+//                    JsonObject arg = args.get(i).getAsJsonObject();
+//                    if (arg.get("name").getAsString().equals(id)) {
+//                        args.remove(i);
+//                        break;
+//                    }
+//                }
+//
+//                writeJsonFile(jsonObject);
+//            }
+//        }
+//    }
 }

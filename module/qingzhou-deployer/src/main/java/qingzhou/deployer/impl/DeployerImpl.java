@@ -57,6 +57,7 @@ class DeployerImpl implements Deployer {
             Thread.currentThread().setContextClassLoader(classLoader);
         }
 
+
         // 注册完成
         apps.put(appName, app);
     }
@@ -413,11 +414,6 @@ class DeployerImpl implements Deployer {
             appendAppClassPath(appFile, libs);
 
             scanAppFilesCache.add(appFile);
-        }
-
-        if (isSystemApp) {
-            // todo 目前是因为 JVMConfig 和 StartupArgs 依赖了 Gson 的 类 来解析 "qingzhou.json"，后面需要删除！！！
-            libs.add(Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-json.jar"));// dataStore使用Gson库需要
         }
 
         if (!isSystemApp) {

@@ -3,7 +3,7 @@ package qingzhou.app.master.system;
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.MasterApp;
-import qingzhou.config.ConfigService;
+import qingzhou.config.Config;
 import qingzhou.engine.util.Utils;
 
 import java.util.ArrayList;
@@ -82,7 +82,7 @@ public class Jmx extends ModelBase implements Editable {
     private static class JmxDataStore implements DataStore {
         @Override
         public List<Map<String, String>> getAllData() throws Exception {
-            qingzhou.config.Jmx jmx = MasterApp.getService(ConfigService.class).getConsole().getJmx();
+            qingzhou.config.Jmx jmx = MasterApp.getService(Config.class).getConsole().getJmx();
             Map<String, String> propertiesFromObj = Utils.getPropertiesFromObj(jmx);
             List<Map<String, String>> list = new ArrayList<>();
             list.add(propertiesFromObj);
@@ -96,10 +96,10 @@ public class Jmx extends ModelBase implements Editable {
 
         @Override
         public void updateDataById(String id, Map<String, String> data) throws Exception {
-            ConfigService configService = MasterApp.getService(ConfigService.class);
-            qingzhou.config.Jmx jmx = configService.getConsole().getJmx();
+            Config config = MasterApp.getService(Config.class);
+            qingzhou.config.Jmx jmx = config.getConsole().getJmx();
             Utils.setPropertiesToObj(jmx, data);
-            configService.setUser(jmx);
+            config.setJmx(jmx);
         }
 
         @Override

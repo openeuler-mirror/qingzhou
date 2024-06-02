@@ -6,7 +6,7 @@ import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.config.ConfigService;
+import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.console.ContextHelper;
 import qingzhou.console.i18n.SetI18n;
@@ -79,7 +79,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     public static Console getConsole() {
-        return getService(ConfigService.class).getConsole();
+        return getService(Config.class).getConsole();
     }
 
     public static String getPublicKeyString() {

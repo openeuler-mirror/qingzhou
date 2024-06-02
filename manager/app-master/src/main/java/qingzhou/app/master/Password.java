@@ -3,7 +3,7 @@ package qingzhou.app.master;
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.system.User;
-import qingzhou.config.ConfigService;
+import qingzhou.config.Config;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.crypto.CryptoServiceFactory;
@@ -148,7 +148,7 @@ public class Password extends ModelBase implements Editable {
         }
 
         getDataStore().updateDataById(loginUser, p);
-        qingzhou.config.User user = MasterApp.getService(ConfigService.class).getConsole().getUser(loginUser);
+        qingzhou.config.User user = MasterApp.getService(Config.class).getConsole().getUser(loginUser);
         user.setPassword(p.get(User.pwdKey));
         user.setChangeInitPwd(Boolean.parseBoolean(p.get("changeInitPwd")));
 
