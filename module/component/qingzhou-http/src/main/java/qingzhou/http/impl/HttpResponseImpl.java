@@ -16,16 +16,25 @@ public class HttpResponseImpl implements HttpResponse {
     private final String result;
     private final Map<String, List<String>> headers;
 
+    private final HttpURLConnection conn;
+
     public HttpResponseImpl(HttpURLConnection conn) throws IOException {
         code = conn.getResponseCode();
         result = inputStreamToString(conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream());
         headers = new HashMap<>();
+        this.conn = conn;
         conn.getHeaderFields().forEach((s, strings) -> headers.put(s, new ArrayList<>(strings)));
     }
 
     @Override
     public String getResponseBody() {
-        return result;
+        try {
+            return result;
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
     }
 
     @Override

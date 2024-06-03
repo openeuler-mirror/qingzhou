@@ -83,7 +83,7 @@ public class Controller implements ModuleActivator {
     public void stop() {
         if (server != null) {
             server.removeContext(path);
-            server.stop(5000);
+            server.stop(0);
         }
     }
 
