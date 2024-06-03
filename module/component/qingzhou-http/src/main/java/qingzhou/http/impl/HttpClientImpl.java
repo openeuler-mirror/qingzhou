@@ -3,7 +3,12 @@ package qingzhou.http.impl;
 import qingzhou.http.HttpClient;
 import qingzhou.http.HttpResponse;
 
-import javax.net.ssl.*;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -25,7 +30,7 @@ public class HttpClientImpl implements HttpClient {
         conn.setUseCaches(false);
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(10000);
-        conn.setRequestProperty("Connection", "keep-alive");
+        conn.setRequestProperty("Connection", "close");
         conn.setRequestProperty("Charset", "UTF-8");
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setRequestProperty("accept", "*/*");
