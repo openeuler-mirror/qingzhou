@@ -1,6 +1,6 @@
 package qingzhou.console.impl;
 
-import qingzhou.config.ConfigService;
+import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.console.ContextHelper;
 import qingzhou.deployer.Deployer;
@@ -24,7 +24,7 @@ public class Controller implements ModuleActivator {
     @Service
     private Logger logger;
     @Service
-    private ConfigService configService;
+    private Config config;
     @Service
     private ServletService servletService;
     @Service
@@ -48,7 +48,7 @@ public class Controller implements ModuleActivator {
     @Override
     public void start(ModuleContext context) throws Exception {
         moduleContext = context;
-        console = configService.getConsole();
+        console = config.getConsole();
 
         if (!console.isEnabled()) return;
 

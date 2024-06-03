@@ -1,7 +1,7 @@
 package qingzhou.heartbeat.impl;
 
 import qingzhou.agent.AgentService;
-import qingzhou.config.ConfigService;
+import qingzhou.config.Config;
 import qingzhou.config.Heartbeat;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -24,7 +24,7 @@ import java.util.*;
 @Module
 public class Controller implements ModuleActivator {
     @Service
-    private ConfigService configService;
+    private Config config;
     @Service
     private Logger logger;
     @Service
@@ -43,7 +43,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) {
-        heartbeat = configService.getHeartbeat();
+        heartbeat = config.getHeartbeat();
         if (!heartbeat.isEnabled()) return;
 
         thisInstanceInfo = thisInstanceInfo();

@@ -1,41 +1,16 @@
 package qingzhou.app.instance;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Group;
-import qingzhou.api.Groups;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
+import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.Utils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = Editable.ACTION_NAME_EDIT,
-        menu = "BasicConfig",
         name = {"JVM 配置", "en:JVM Configuration"}, info = {"配置运行 Qingzhou 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running Qingzhou applications."})
 public class JVMConfig extends ModelBase implements Editable {
     public static final String MODEL_NAME_jvmconfig = "jvmconfig";
@@ -168,334 +143,298 @@ public class JVMConfig extends ModelBase implements Editable {
 
     @Override
     public DataStore getDataStore() {
-        return jvmDataStore;
+        return null;
     }
 
-    private final JvmDataStore jvmDataStore = new JvmDataStore();
+//    private final JvmDataStore jvmDataStore = new JvmDataStore();
 
-    private static class JvmDataStore implements DataStore {
-        public JvmDataStore() {
-        }
-
-        private String configFile;
-
-        private static final Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-
-        @Override
-        public List<Map<String, String>> getAllData() throws Exception {
-            JsonObject jsonObject = readJsonFile();
-            if (jsonObject != null) {
-                List<Map<String, String>> list = new ArrayList<>();
-                JsonObject jvmObject = getJvmObject(jsonObject);
-                JsonArray args = jvmObject.getAsJsonArray("arg");
-                Map<String, String> map = new HashMap<>();
-                for (JsonElement element : args) {
-                    JsonObject arg = element.getAsJsonObject();
-                    if (parseBoolean(arg.get("enabled"))) {
-                        String argKV = arg.get("name").getAsString();
-                        // 1. -XX:
-                        if (argKV.startsWith("-XX:")) {
-                            String temp = argKV.substring(4);
-                            if (temp.charAt(0) == '+') {
-                                String guessGC = temp.substring(1);
-                                if (guessGC.startsWith("Use")) {
-                                    map.put("useGC", guessGC);
-                                } else {
-                                    map.put(temp.substring(1), "true");
-                                }
-                            } else if (temp.charAt(0) == '-') {
-                                map.put(temp.substring(1), "false");
-                            } else {
-                                int i = temp.indexOf("=");
-                                map.put(temp.substring(0, i), temp.substring(i + 1));
-                            }
-                            continue;
-                        }
-
-                        // 2. -Xms -Xmx -Xmn -Xss
-                        if (argKV.startsWith("-X")) {
-                            if (argKV.startsWith("-Xlog")) { // jdk8: -Xloggc:xx; jdk9: -Xlog:gc:xxxx;
-                                int i = argKV.lastIndexOf(":");
-                                map.put("gcLogEnabled", "true");
-                                map.put("gcLog", argKV.substring(i + 1));
-                            } else {
-                                map.put(argKV.substring(1, 4), argKV.substring(4));
-                            }
-                            continue;
-                        }
-
-                        boolean preferIPv4Stack = false;
-                        if (argKV.startsWith("-D")) {
-                            if (argKV.startsWith("-Djava.net.preferIPv4Stack")) {
-                                int index = argKV.indexOf("=");
-                                preferIPv4Stack = Boolean.parseBoolean(argKV.substring(index + 1));
-                            }
-                        }
-                        map.put("preferIPv4Stack", String.valueOf(preferIPv4Stack));
-                    }
-                }
-
-                // 处理环境变量
-                JsonArray envs = jvmObject.getAsJsonArray("env");
-                Map<String, String> envMap = getEnvMap(envs);
-                map.put("envs", gson.toJson(envMap));
-
-                list.add(map);
-
-                return list;
-            }
-
-            return null;
-        }
-
-        private boolean parseBoolean(JsonElement element) {
-            if (element == null || element.isJsonNull()) {
-                return true;
-            } else {
-                return element.getAsBoolean();
-            }
-        }
-
-        private Map<String, String> getEnvMap(JsonArray envs) {
-            Map<String, String> envMap = new LinkedHashMap<>();
-            for (JsonElement element : envs) {
-                JsonObject env = element.getAsJsonObject();
-                if (parseBoolean(env.get("enabled"))) {
-                    String name = env.get("name").getAsString();
-                    String value = env.get("value").getAsString();
-                    if (JAVA_HOME_KEY.equals(name)) {
-                        envMap.put(JAVA_HOME_KEY, value);
-                    } else {
-                        envMap.put(name, value);
-                    }
-                }
-            }
-            return envMap;
-        }
-
-        @Override
-        public void addData(String id, Map<String, String> data) throws Exception {
-            throw new RuntimeException("No Support.");
-        }
-
-        @Override
-        public void updateDataById(String id, Map<String, String> data) throws Exception {
-            JsonObject jsonObject = readJsonFile();
-
-            if (jsonObject != null) {
-                Map<String, String> dataBackup = new HashMap<>();
-                for (String name : data.keySet()) {
-                    dataBackup.put(name, data.get(name));
-                }
-
-                JsonObject jvmObject = getJvmObject(jsonObject);
-                jvmObject.remove("env");
-                JsonArray args = jvmObject.getAsJsonArray("arg");
-
-                JsonArray envs = new JsonArray();
-                String javaHome = data.remove(JAVA_HOME_KEY);
-                if (javaHome != null && !javaHome.isEmpty()) {
-                    addEnv(envs, JAVA_HOME_KEY, javaHome);
-                }
-
-                String newEnvs = data.remove("envs");
-                if (newEnvs != null && !newEnvs.isEmpty()) {
-                    Map<String, String> map = gson.fromJson(newEnvs, Map.class);
-                    for (Map.Entry<String, String> entry : map.entrySet()) {
-                        addEnv(envs, entry.getKey(), entry.getValue());
-                    }
-                }
-
-                // IP版本属性
-                String preferIPv4Stack = data.remove("preferIPv4Stack");
-                deleteArg(args, "-Djava.net.preferIPv4Stack=");
-                addArg(args, String.format("-Djava.net.preferIPv4Stack=%s", Boolean.parseBoolean(preferIPv4Stack)));
-
-                // . gcLog
-                String gcLogEnabled = data.remove("gcLogEnabled");// 用 remove 是为了防止后面被遍历
-                if (gcLogEnabled == null || Boolean.parseBoolean(gcLogEnabled)) {
-                    String gcLog = data.remove("gcLog");// 用 remove 是为了防止后面被遍历
-                    if (gcLog != null && !gcLog.isEmpty()) {
-                        deleteArg(args, "-Xlog");
-                        JsonObject newPro = new JsonObject();
-                        if (isJdk9OrHigher()) {
-                            newPro.addProperty("supportedJRE", "9+");
-                            newPro.addProperty("name", "-Xlog:gc:" + gcLog);
-                        } else {
-                            newPro.addProperty("supportedJRE", "8");
-                            newPro.addProperty("name", "-Xloggc:" + gcLog);
-
-                        }
-                        args.add(newPro);
-                    }
-                } else {
-                    deleteArg(args, "-Xlog");
-                }
-
-                // . jvmLog 先处理开关
-                boolean disableLog = false;
-                String LogVMOutput = data.remove("LogVMOutput");// 用 remove 是为了防止后面被遍历
-                if (LogVMOutput != null) {
-                    deleteArg(args, "-XX:+UnlockDiagnosticVMOptions");
-                    deleteArg(args, "-XX:-UnlockDiagnosticVMOptions");
-                    deleteArg(args, "-XX:+LogVMOutput");
-                    deleteArg(args, "-XX:-LogVMOutput");
-
-                    if (Boolean.parseBoolean(LogVMOutput)) {
-                        addArg(args, "-XX:+UnlockDiagnosticVMOptions");
-                        addArg(args, "-XX:+LogVMOutput");
-                    } else {
-                        disableLog = true;
-                    }
-                }
-                // . jvmLog 再处理日志文件
-                if (disableLog) {
-                    deleteArg(args, "-XX:LogFile");
-                } else {
-                    String LogFile = data.remove("LogFile");// 用 remove 是为了防止后面被遍历
-                    if (LogFile != null && !LogFile.isEmpty()) {
-                        deleteArg(args, "-XX:LogFile");
-                        addArg(args, "-XX:LogFile=" + LogFile);
-                    }
-                }
-
-                // GC 具有排他性
-                String useGC = data.remove("useGC");
-                if (useGC != null) {
-                    deleteArg(args, "-XX:+Use");
-                    deleteArg(args, "-XX:-Use");
-                    if (!useGC.isEmpty()) {
-                        addArg(args, "-XX:+" + useGC);
-                    }
-                }
-
-                for (String k : data.keySet()) {
-                    String v = data.get(k);
-                    // . -Xms -Xmx -Xmn -Xss
-                    if (k.startsWith("X")) {
-                        deleteArg(args, "-" + k);
-
-                        if (v != null && !v.isEmpty()) {
-                            addArg(args, "-" + k + v);
-                        }
-                        continue;
-                    }
-
-                    // . Print*  Use* 等 ”开关“ 类配置参数
-                    if (k.startsWith("Print") || k.equals("HeapDumpOnOutOfMemoryError") || k.equals("LogVMOutput")) {
-                        deleteArg(args, "-XX:+" + k);
-                        deleteArg(args, "-XX:-" + k);
-
-                        if (Boolean.parseBoolean(v)) {
-                            addArg(args, "-XX:+" + k);
-                        }
-
-                        continue;
-                    }
-
-                    // 剩下的都是带=等号赋值类的
-                    deleteArg(args, "-XX:" + k);
-                    if (v != null && !v.isEmpty()) {
-                        addArg(args, "-XX:" + k + "=" + v);
-                    }
-                }
-
-                jvmObject.add("env", envs);
-
-                writeJsonFile(jsonObject);
-
-                // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
-                enSureFileExists(dataBackup);
-            }
-        }
-
-        // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
-        private void enSureFileExists(Map<String, String> map) {
-            String[] files = {"gcLog", "HeapDumpPath", "LogFile"};
-            for (String s : files) {
-                String f = map.get(s);
-                if (f != null && !f.isEmpty()) {
-                    File file = new File(f);
-                    if (!file.isAbsolute()) {
-                        file = new File(InstanceApp.getService(ModuleContext.class).getInstanceDir(), f);
-                    }
-                    if (!file.exists()) {
-                        file.getParentFile().mkdirs();
-                    }
-                }
-            }
-        }
-
-        private static boolean isJdk9OrHigher() {
-            double javaVerson = Double.parseDouble(System.getProperty("java.specification.version"));
-            return javaVerson > 1.8;
-        }
-
-        private static final Set<String> onlyJava8Config = new HashSet<String>() {{
-            add("-XX:+PrintHeapAtGC");
-            add("-XX:+PrintGCApplicationStoppedTime");
-            add("-XX:+PrintGCApplicationConcurrentTime");
-        }};
-
-        private void deleteArg(JsonArray args, String nameStartsWith) throws Exception {
-            for (int i = 0; i < args.size(); i++) {
-                JsonElement element = args.get(i);
-                JsonObject arg = element.getAsJsonObject();
-                if (arg.get("name").getAsString().startsWith(nameStartsWith)) {
-                    args.remove(i);
-                    break;
-                }
-            }
-        }
-
-        private void addArg(JsonArray args, String name) {
-            JsonObject arg = new JsonObject();
-            arg.addProperty("name", name);
-            if (onlyJava8Config.contains(name)) {
-                arg.addProperty("supportedJRE", "8");
-            }
-            args.add(arg);
-        }
-
-        private void addEnv(JsonArray envs, String name, String value) {
-            JsonObject env = new JsonObject();
-            env.addProperty("name", name);
-            env.addProperty("value", value);
-            envs.add(env);
-        }
-
-        @Override
-        public void deleteDataById(String id) throws Exception {
-            throw new RuntimeException("No Support.");
-        }
-
-        private JsonObject getJvmObject(JsonObject jsonObject) {
-            return jsonObject.getAsJsonObject("jvm");
-        }
-
-        private JsonObject readJsonFile() {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
-                return JsonParser.parseReader(reader).getAsJsonObject();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        private void writeJsonFile(JsonObject jsonObject) {
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(Paths.get(getConfigFile())), StandardCharsets.UTF_8))) {
-                gson.toJson(jsonObject, writer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private String getConfigFile() throws IOException {
-            if (configFile == null || configFile.isEmpty()) {
-                configFile = Utils.newFile(InstanceApp.getService(ModuleContext.class).getInstanceDir(), "qingzhou.json").getCanonicalPath();
-            }
-
-            return configFile;
-        }
-    }
+//    private static class JvmDataStore implements DataStore {
+//        @Override
+//        public List<Map<String, String>> getAllData() throws Exception {
+//            JsonObject jsonObject = readJsonFile();
+//            if (jsonObject != null) {
+//                List<Map<String, String>> list = new ArrayList<>();
+//                JsonObject jvmObject = getJvmObject(jsonObject);
+//                JsonArray args = jvmObject.getAsJsonArray("arg");
+//                Map<String, String> map = new HashMap<>();
+//                for (JsonElement element : args) {
+//                    JsonObject arg = element.getAsJsonObject();
+//                    if (parseBoolean(arg.get("enabled"))) {
+//                        String argKV = arg.get("name").getAsString();
+//                        // 1. -XX:
+//                        if (argKV.startsWith("-XX:")) {
+//                            String temp = argKV.substring(4);
+//                            if (temp.charAt(0) == '+') {
+//                                String guessGC = temp.substring(1);
+//                                if (guessGC.startsWith("Use")) {
+//                                    map.put("useGC", guessGC);
+//                                } else {
+//                                    map.put(temp.substring(1), "true");
+//                                }
+//                            } else if (temp.charAt(0) == '-') {
+//                                map.put(temp.substring(1), "false");
+//                            } else {
+//                                int i = temp.indexOf("=");
+//                                map.put(temp.substring(0, i), temp.substring(i + 1));
+//                            }
+//                            continue;
+//                        }
+//
+//                        // 2. -Xms -Xmx -Xmn -Xss
+//                        if (argKV.startsWith("-X")) {
+//                            if (argKV.startsWith("-Xlog")) { // jdk8: -Xloggc:xx; jdk9: -Xlog:gc:xxxx;
+//                                int i = argKV.lastIndexOf(":");
+//                                map.put("gcLogEnabled", "true");
+//                                map.put("gcLog", argKV.substring(i + 1));
+//                            } else {
+//                                map.put(argKV.substring(1, 4), argKV.substring(4));
+//                            }
+//                            continue;
+//                        }
+//
+//                        boolean preferIPv4Stack = false;
+//                        if (argKV.startsWith("-D")) {
+//                            if (argKV.startsWith("-Djava.net.preferIPv4Stack")) {
+//                                int index = argKV.indexOf("=");
+//                                preferIPv4Stack = Boolean.parseBoolean(argKV.substring(index + 1));
+//                            }
+//                        }
+//                        map.put("preferIPv4Stack", String.valueOf(preferIPv4Stack));
+//                    }
+//                }
+//
+//                // 处理环境变量
+//                JsonArray envs = jvmObject.getAsJsonArray("env");
+//                Map<String, String> envMap = getEnvMap(envs);
+//                map.put("envs", gson.toJson(envMap));
+//
+//                list.add(map);
+//
+//                return list;
+//            }
+//
+//            return null;
+//        }
+//
+//        private boolean parseBoolean(JsonElement element) {
+//            if (element == null || element.isJsonNull()) {
+//                return true;
+//            } else {
+//                return element.getAsBoolean();
+//            }
+//        }
+//
+//        private Map<String, String> getEnvMap(JsonArray envs) {
+//            Map<String, String> envMap = new LinkedHashMap<>();
+//            for (JsonElement element : envs) {
+//                JsonObject env = element.getAsJsonObject();
+//                if (parseBoolean(env.get("enabled"))) {
+//                    String name = env.get("name").getAsString();
+//                    String value = env.get("value").getAsString();
+//                    if (JAVA_HOME_KEY.equals(name)) {
+//                        envMap.put(JAVA_HOME_KEY, value);
+//                    } else {
+//                        envMap.put(name, value);
+//                    }
+//                }
+//            }
+//            return envMap;
+//        }
+//
+//        @Override
+//        public void addData(String id, Map<String, String> data) throws Exception {
+//            throw new RuntimeException("No Support.");
+//        }
+//
+//        @Override
+//        public void updateDataById(String id, Map<String, String> data) throws Exception {
+//            JsonObject jsonObject = readJsonFile();
+//
+//            if (jsonObject != null) {
+//                Map<String, String> dataBackup = new HashMap<>();
+//                for (String name : data.keySet()) {
+//                    dataBackup.put(name, data.get(name));
+//                }
+//
+//                JsonObject jvmObject = getJvmObject(jsonObject);
+//                jvmObject.remove("env");
+//                JsonArray args = jvmObject.getAsJsonArray("arg");
+//
+//                JsonArray envs = new JsonArray();
+//                String javaHome = data.remove(JAVA_HOME_KEY);
+//                if (javaHome != null && !javaHome.isEmpty()) {
+//                    addEnv(envs, JAVA_HOME_KEY, javaHome);
+//                }
+//
+//                String newEnvs = data.remove("envs");
+//                if (newEnvs != null && !newEnvs.isEmpty()) {
+//                    Map<String, String> map = gson.fromJson(newEnvs, Map.class);
+//                    for (Map.Entry<String, String> entry : map.entrySet()) {
+//                        addEnv(envs, entry.getKey(), entry.getValue());
+//                    }
+//                }
+//
+//                // IP版本属性
+//                String preferIPv4Stack = data.remove("preferIPv4Stack");
+//                deleteArg(args, "-Djava.net.preferIPv4Stack=");
+//                addArg(args, String.format("-Djava.net.preferIPv4Stack=%s", Boolean.parseBoolean(preferIPv4Stack)));
+//
+//                // . gcLog
+//                String gcLogEnabled = data.remove("gcLogEnabled");// 用 remove 是为了防止后面被遍历
+//                if (gcLogEnabled == null || Boolean.parseBoolean(gcLogEnabled)) {
+//                    String gcLog = data.remove("gcLog");// 用 remove 是为了防止后面被遍历
+//                    if (gcLog != null && !gcLog.isEmpty()) {
+//                        deleteArg(args, "-Xlog");
+//                        JsonObject newPro = new JsonObject();
+//                        if (isJdk9OrHigher()) {
+//                            newPro.addProperty("supportedJRE", "9+");
+//                            newPro.addProperty("name", "-Xlog:gc:" + gcLog);
+//                        } else {
+//                            newPro.addProperty("supportedJRE", "8");
+//                            newPro.addProperty("name", "-Xloggc:" + gcLog);
+//
+//                        }
+//                        args.add(newPro);
+//                    }
+//                } else {
+//                    deleteArg(args, "-Xlog");
+//                }
+//
+//                // . jvmLog 先处理开关
+//                boolean disableLog = false;
+//                String LogVMOutput = data.remove("LogVMOutput");// 用 remove 是为了防止后面被遍历
+//                if (LogVMOutput != null) {
+//                    deleteArg(args, "-XX:+UnlockDiagnosticVMOptions");
+//                    deleteArg(args, "-XX:-UnlockDiagnosticVMOptions");
+//                    deleteArg(args, "-XX:+LogVMOutput");
+//                    deleteArg(args, "-XX:-LogVMOutput");
+//
+//                    if (Boolean.parseBoolean(LogVMOutput)) {
+//                        addArg(args, "-XX:+UnlockDiagnosticVMOptions");
+//                        addArg(args, "-XX:+LogVMOutput");
+//                    } else {
+//                        disableLog = true;
+//                    }
+//                }
+//                // . jvmLog 再处理日志文件
+//                if (disableLog) {
+//                    deleteArg(args, "-XX:LogFile");
+//                } else {
+//                    String LogFile = data.remove("LogFile");// 用 remove 是为了防止后面被遍历
+//                    if (LogFile != null && !LogFile.isEmpty()) {
+//                        deleteArg(args, "-XX:LogFile");
+//                        addArg(args, "-XX:LogFile=" + LogFile);
+//                    }
+//                }
+//
+//                // GC 具有排他性
+//                String useGC = data.remove("useGC");
+//                if (useGC != null) {
+//                    deleteArg(args, "-XX:+Use");
+//                    deleteArg(args, "-XX:-Use");
+//                    if (!useGC.isEmpty()) {
+//                        addArg(args, "-XX:+" + useGC);
+//                    }
+//                }
+//
+//                for (String k : data.keySet()) {
+//                    String v = data.get(k);
+//                    // . -Xms -Xmx -Xmn -Xss
+//                    if (k.startsWith("X")) {
+//                        deleteArg(args, "-" + k);
+//
+//                        if (v != null && !v.isEmpty()) {
+//                            addArg(args, "-" + k + v);
+//                        }
+//                        continue;
+//                    }
+//
+//                    // . Print*  Use* 等 ”开关“ 类配置参数
+//                    if (k.startsWith("Print") || k.equals("HeapDumpOnOutOfMemoryError") || k.equals("LogVMOutput")) {
+//                        deleteArg(args, "-XX:+" + k);
+//                        deleteArg(args, "-XX:-" + k);
+//
+//                        if (Boolean.parseBoolean(v)) {
+//                            addArg(args, "-XX:+" + k);
+//                        }
+//
+//                        continue;
+//                    }
+//
+//                    // 剩下的都是带=等号赋值类的
+//                    deleteArg(args, "-XX:" + k);
+//                    if (v != null && !v.isEmpty()) {
+//                        addArg(args, "-XX:" + k + "=" + v);
+//                    }
+//                }
+//
+//                jvmObject.add("env", envs);
+//
+//                writeJsonFile(jsonObject);
+//
+//                // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
+//                enSureFileExists(dataBackup);
+//            }
+//        }
+//
+//        // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
+//        private void enSureFileExists(Map<String, String> map) {
+//            String[] files = {"gcLog", "HeapDumpPath", "LogFile"};
+//            for (String s : files) {
+//                String f = map.get(s);
+//                if (f != null && !f.isEmpty()) {
+//                    File file = new File(f);
+//                    if (!file.isAbsolute()) {
+//                        file = new File(InstanceApp.getService(ModuleContext.class).getInstanceDir(), f);
+//                    }
+//                    if (!file.exists()) {
+//                        file.getParentFile().mkdirs();
+//                    }
+//                }
+//            }
+//        }
+//
+//        private static boolean isJdk9OrHigher() {
+//            double javaVerson = Double.parseDouble(System.getProperty("java.specification.version"));
+//            return javaVerson > 1.8;
+//        }
+//
+//        private static final Set<String> onlyJava8Config = new HashSet<String>() {{
+//            add("-XX:+PrintHeapAtGC");
+//            add("-XX:+PrintGCApplicationStoppedTime");
+//            add("-XX:+PrintGCApplicationConcurrentTime");
+//        }};
+//
+//        private void deleteArg(JsonArray args, String nameStartsWith) throws Exception {
+//            for (int i = 0; i < args.size(); i++) {
+//                JsonElement element = args.get(i);
+//                JsonObject arg = element.getAsJsonObject();
+//                if (arg.get("name").getAsString().startsWith(nameStartsWith)) {
+//                    args.remove(i);
+//                    break;
+//                }
+//            }
+//        }
+//
+//        private void addArg(JsonArray args, String name) {
+//            JsonObject arg = new JsonObject();
+//            arg.addProperty("name", name);
+//            if (onlyJava8Config.contains(name)) {
+//                arg.addProperty("supportedJRE", "8");
+//            }
+//            args.add(arg);
+//        }
+//
+//        private void addEnv(JsonArray envs, String name, String value) {
+//            JsonObject env = new JsonObject();
+//            env.addProperty("name", name);
+//            env.addProperty("value", value);
+//            envs.add(env);
+//        }
+//
+//        @Override
+//        public void deleteDataById(String id) throws Exception {
+//            throw new RuntimeException("No Support.");
+//        }
+//    }
 }

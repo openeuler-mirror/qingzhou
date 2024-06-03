@@ -5,10 +5,7 @@ import qingzhou.command.server.config.Arg;
 import qingzhou.command.server.config.Env;
 import qingzhou.command.server.config.Jvm;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -71,21 +68,16 @@ class ConfigTool {
     }
 
     private Jvm parseFileConfig() throws Exception {
-        StringBuilder fileContent = new StringBuilder();
-        try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-            for (String line; (line = reader.readLine()) != null; ) {
-                fileContent.append(line);
-            }
-        }
-
         URL jsonURL = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonURL})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
-            Method fromJson = loadedClass.getMethod("fromJsonMember", String.class, Class.class, String[].class);
+            Method fromJson = loadedClass.getMethod("fromJson", Reader.class, Class.class, String[].class);
 
-            return (Jvm) fromJson.invoke(instance, fileContent.toString(), Jvm.class, new String[]{"jvm"});
+            try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+                return (Jvm) fromJson.invoke(instance, reader, Jvm.class, new String[]{"jvm"});
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 package qingzhou.config.impl;
 
-import qingzhou.config.ConfigService;
+import qingzhou.config.Config;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -16,8 +16,8 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) {
-        context.registerService(ConfigService.class,
-                new JsonFileConfigService(json, new File(context.getInstanceDir(), "qingzhou.json"))
+        context.registerService(Config.class,
+                new JsonFileConfig(json, new File(context.getInstanceDir(), "qingzhou.json"))
         );
     }
 }
