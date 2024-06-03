@@ -71,7 +71,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                     "/" + DeployerConstants.MANAGE_TYPE_APP +
                     "/" + DeployerConstants.MASTER_APP_NAME +
                     "/" + ConsoleConstants.MODEL_NAME_password +
-                    "/edit" +
+                    "/" + Editable.ACTION_NAME_EDIT +
                     "/" + user +
                     "?" + RESTController.MSG_FLAG + "=" + msgI18nKey));
             return false;
@@ -107,6 +107,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
 
         return null;
     }
+
     private static String wrapCheckingPath(String uri) {
         if (!uri.startsWith("/")) {
             uri = "/" + uri;
