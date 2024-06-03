@@ -1,14 +1,32 @@
 package qingzhou.app.instance;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import qingzhou.api.*;
+import qingzhou.api.DataStore;
+import qingzhou.api.FieldType;
+import qingzhou.api.Group;
+import qingzhou.api.Groups;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Editable;
+import qingzhou.config.Arg;
+import qingzhou.config.Config;
+import qingzhou.config.Env;
+import qingzhou.config.Jvm;
 import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.Utils;
+import qingzhou.json.Json;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = Editable.ACTION_NAME_EDIT,
         name = {"JVM 配置", "en:JVM Configuration"}, info = {"配置运行 Qingzhou 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running Qingzhou applications."})
@@ -141,300 +159,339 @@ public class JVMConfig extends ModelBase implements Editable {
         );
     }
 
-    @Override
-    public DataStore getDataStore() {
-        return null;
+
+    @ModelAction(
+            name = {"更新", "en:Update"},
+            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
+    public void update(Request request, Response response) throws Exception {
+        Map<String, String> data = request.getParameters();
+        if (data != null && !data.isEmpty()) {
+            Map<String, String> jvm = new HashMap<>();
+            List<Arg> args = getArgs();
+            List<Env> envs = new ArrayList<>();
+
+            Map<String, String> dataBackup = new HashMap<>();
+            for (String name : data.keySet()) {
+                dataBackup.put(name, data.get(name));
+            }
+
+            String javaHome = data.remove(JAVA_HOME_KEY);
+            if (javaHome != null && !javaHome.isEmpty()) {
+                addEnv(envs, JAVA_HOME_KEY, javaHome);
+            }
+
+            Json json = InstanceApp.getService(Json.class);
+            String newEnvs = data.remove("envs");
+            if (newEnvs != null && !newEnvs.isEmpty()) {
+                Map<String, String> map = json.fromJson(newEnvs, Map.class);
+                for (Map.Entry<String, String> entry : map.entrySet()) {
+                    addEnv(envs, entry.getKey(), entry.getValue());
+                }
+            }
+
+            // IP版本属性
+            String preferIPv4Stack = data.remove("preferIPv4Stack");
+            deleteArg(args, "-Djava.net.preferIPv4Stack=");
+            addArg(args, String.format("-Djava.net.preferIPv4Stack=%s", Boolean.parseBoolean(preferIPv4Stack)));
+
+            // . gcLog
+            String gcLogEnabled = data.remove("gcLogEnabled");// 用 remove 是为了防止后面被遍历
+            if (gcLogEnabled == null || Boolean.parseBoolean(gcLogEnabled)) {
+                String gcLog = data.remove("gcLog");// 用 remove 是为了防止后面被遍历
+                if (gcLog != null && !gcLog.isEmpty()) {
+                    deleteArg(args, "-Xlog");
+                    Arg newPro = new Arg();
+                    if (isJdk9OrHigher()) {
+                        newPro.setSupportedJRE("9+");
+                        newPro.setName("-Xlog:gc:" + gcLog);
+                    } else {
+                        newPro.setSupportedJRE("8");
+                        newPro.setName("-Xloggc:" + gcLog);
+
+                    }
+                    args.add(newPro);
+                }
+            } else {
+                deleteArg(args, "-Xlog");
+            }
+
+            // . jvmLog 先处理开关
+            boolean disableLog = false;
+            String LogVMOutput = data.remove("LogVMOutput");// 用 remove 是为了防止后面被遍历
+            if (LogVMOutput != null) {
+                deleteArg(args, "-XX:+UnlockDiagnosticVMOptions");
+                deleteArg(args, "-XX:-UnlockDiagnosticVMOptions");
+                deleteArg(args, "-XX:+LogVMOutput");
+                deleteArg(args, "-XX:-LogVMOutput");
+                if (Boolean.parseBoolean(LogVMOutput)) {
+                    addArg(args, "-XX:+UnlockDiagnosticVMOptions");
+                    addArg(args, "-XX:+LogVMOutput");
+                } else {
+                    disableLog = true;
+                }
+            }
+            // . jvmLog 再处理日志文件
+            if (disableLog) {
+                deleteArg(args, "-XX:LogFile");
+            } else {
+                String LogFile = data.remove("LogFile");// 用 remove 是为了防止后面被遍历
+                if (LogFile != null && !LogFile.isEmpty()) {
+                    addArg(args, "-XX:LogFile=" + LogFile);
+                }
+            }
+
+            // GC 具有排他性
+            String useGC = data.remove("useGC");
+            if (useGC != null) {
+                deleteArg(args, "-XX:+Use");
+                deleteArg(args, "-XX:-Use");
+                if (!useGC.isEmpty()) {
+                    addArg(args, "-XX:+" + useGC);
+                }
+            }
+
+            for (String k : data.keySet()) {
+                String v = data.get(k);
+                // . -Xms -Xmx -Xmn -Xss
+                if (k.startsWith("X")) {
+                    deleteArg(args, "-" + k);
+                    if (v != null && !v.isEmpty()) {
+                        addArg(args, "-" + k + v);
+                    }
+                    continue;
+                }
+
+                // . Print*  Use* 等 ”开关“ 类配置参数
+                if (k.startsWith("Print") || k.equals("HeapDumpOnOutOfMemoryError") || k.equals("LogVMOutput")) {
+                    deleteArg(args, "-XX:+" + k);
+                    deleteArg(args, "-XX:-" + k);
+                    if (Boolean.parseBoolean(v)) {
+                        addArg(args, "-XX:+" + k);
+                    }
+
+                    continue;
+                }
+
+                // 剩下的都是带=等号赋值类的
+                deleteArg(args, "-XX:" + k);
+                if (v != null && !v.isEmpty()) {
+                    addArg(args, "-XX:" + k + "=" + v);
+                }
+            }
+
+            jvm.put("env", json.toJson(envs));
+            jvm.put("arg", json.toJson(args));
+
+            getDataStore().updateDataById(request.getId(), jvm);
+
+            // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
+            enSureFileExists(dataBackup);
+        }
     }
 
-//    private final JvmDataStore jvmDataStore = new JvmDataStore();
+    private List<Arg> getArgs() throws Exception {
+        List<Arg> args = new ArrayList<>();
+        Json json = InstanceApp.getService(Json.class);
+        for (Map<String, String> data : getDataStore().getAllData()) {
+            if (data.remove("type").equals("arg")) {
+                args.add(json.fromJson(json.toJson(data), Arg.class));
+            }
+        }
+        return args;
+    }
 
-//    private static class JvmDataStore implements DataStore {
-//        @Override
-//        public List<Map<String, String>> getAllData() throws Exception {
-//            JsonObject jsonObject = readJsonFile();
-//            if (jsonObject != null) {
-//                List<Map<String, String>> list = new ArrayList<>();
-//                JsonObject jvmObject = getJvmObject(jsonObject);
-//                JsonArray args = jvmObject.getAsJsonArray("arg");
-//                Map<String, String> map = new HashMap<>();
-//                for (JsonElement element : args) {
-//                    JsonObject arg = element.getAsJsonObject();
-//                    if (parseBoolean(arg.get("enabled"))) {
-//                        String argKV = arg.get("name").getAsString();
-//                        // 1. -XX:
-//                        if (argKV.startsWith("-XX:")) {
-//                            String temp = argKV.substring(4);
-//                            if (temp.charAt(0) == '+') {
-//                                String guessGC = temp.substring(1);
-//                                if (guessGC.startsWith("Use")) {
-//                                    map.put("useGC", guessGC);
-//                                } else {
-//                                    map.put(temp.substring(1), "true");
-//                                }
-//                            } else if (temp.charAt(0) == '-') {
-//                                map.put(temp.substring(1), "false");
-//                            } else {
-//                                int i = temp.indexOf("=");
-//                                map.put(temp.substring(0, i), temp.substring(i + 1));
-//                            }
-//                            continue;
-//                        }
-//
-//                        // 2. -Xms -Xmx -Xmn -Xss
-//                        if (argKV.startsWith("-X")) {
-//                            if (argKV.startsWith("-Xlog")) { // jdk8: -Xloggc:xx; jdk9: -Xlog:gc:xxxx;
-//                                int i = argKV.lastIndexOf(":");
-//                                map.put("gcLogEnabled", "true");
-//                                map.put("gcLog", argKV.substring(i + 1));
-//                            } else {
-//                                map.put(argKV.substring(1, 4), argKV.substring(4));
-//                            }
-//                            continue;
-//                        }
-//
-//                        boolean preferIPv4Stack = false;
-//                        if (argKV.startsWith("-D")) {
-//                            if (argKV.startsWith("-Djava.net.preferIPv4Stack")) {
-//                                int index = argKV.indexOf("=");
-//                                preferIPv4Stack = Boolean.parseBoolean(argKV.substring(index + 1));
-//                            }
-//                        }
-//                        map.put("preferIPv4Stack", String.valueOf(preferIPv4Stack));
-//                    }
-//                }
-//
-//                // 处理环境变量
-//                JsonArray envs = jvmObject.getAsJsonArray("env");
-//                Map<String, String> envMap = getEnvMap(envs);
-//                map.put("envs", gson.toJson(envMap));
-//
-//                list.add(map);
-//
-//                return list;
-//            }
-//
-//            return null;
-//        }
-//
-//        private boolean parseBoolean(JsonElement element) {
-//            if (element == null || element.isJsonNull()) {
-//                return true;
-//            } else {
-//                return element.getAsBoolean();
-//            }
-//        }
-//
-//        private Map<String, String> getEnvMap(JsonArray envs) {
-//            Map<String, String> envMap = new LinkedHashMap<>();
-//            for (JsonElement element : envs) {
-//                JsonObject env = element.getAsJsonObject();
-//                if (parseBoolean(env.get("enabled"))) {
-//                    String name = env.get("name").getAsString();
-//                    String value = env.get("value").getAsString();
-//                    if (JAVA_HOME_KEY.equals(name)) {
-//                        envMap.put(JAVA_HOME_KEY, value);
-//                    } else {
-//                        envMap.put(name, value);
-//                    }
-//                }
-//            }
-//            return envMap;
-//        }
-//
-//        @Override
-//        public void addData(String id, Map<String, String> data) throws Exception {
-//            throw new RuntimeException("No Support.");
-//        }
-//
-//        @Override
-//        public void updateDataById(String id, Map<String, String> data) throws Exception {
-//            JsonObject jsonObject = readJsonFile();
-//
-//            if (jsonObject != null) {
-//                Map<String, String> dataBackup = new HashMap<>();
-//                for (String name : data.keySet()) {
-//                    dataBackup.put(name, data.get(name));
-//                }
-//
-//                JsonObject jvmObject = getJvmObject(jsonObject);
-//                jvmObject.remove("env");
-//                JsonArray args = jvmObject.getAsJsonArray("arg");
-//
-//                JsonArray envs = new JsonArray();
-//                String javaHome = data.remove(JAVA_HOME_KEY);
-//                if (javaHome != null && !javaHome.isEmpty()) {
-//                    addEnv(envs, JAVA_HOME_KEY, javaHome);
-//                }
-//
-//                String newEnvs = data.remove("envs");
-//                if (newEnvs != null && !newEnvs.isEmpty()) {
-//                    Map<String, String> map = gson.fromJson(newEnvs, Map.class);
-//                    for (Map.Entry<String, String> entry : map.entrySet()) {
-//                        addEnv(envs, entry.getKey(), entry.getValue());
-//                    }
-//                }
-//
-//                // IP版本属性
-//                String preferIPv4Stack = data.remove("preferIPv4Stack");
-//                deleteArg(args, "-Djava.net.preferIPv4Stack=");
-//                addArg(args, String.format("-Djava.net.preferIPv4Stack=%s", Boolean.parseBoolean(preferIPv4Stack)));
-//
-//                // . gcLog
-//                String gcLogEnabled = data.remove("gcLogEnabled");// 用 remove 是为了防止后面被遍历
-//                if (gcLogEnabled == null || Boolean.parseBoolean(gcLogEnabled)) {
-//                    String gcLog = data.remove("gcLog");// 用 remove 是为了防止后面被遍历
-//                    if (gcLog != null && !gcLog.isEmpty()) {
-//                        deleteArg(args, "-Xlog");
-//                        JsonObject newPro = new JsonObject();
-//                        if (isJdk9OrHigher()) {
-//                            newPro.addProperty("supportedJRE", "9+");
-//                            newPro.addProperty("name", "-Xlog:gc:" + gcLog);
-//                        } else {
-//                            newPro.addProperty("supportedJRE", "8");
-//                            newPro.addProperty("name", "-Xloggc:" + gcLog);
-//
-//                        }
-//                        args.add(newPro);
-//                    }
-//                } else {
-//                    deleteArg(args, "-Xlog");
-//                }
-//
-//                // . jvmLog 先处理开关
-//                boolean disableLog = false;
-//                String LogVMOutput = data.remove("LogVMOutput");// 用 remove 是为了防止后面被遍历
-//                if (LogVMOutput != null) {
-//                    deleteArg(args, "-XX:+UnlockDiagnosticVMOptions");
-//                    deleteArg(args, "-XX:-UnlockDiagnosticVMOptions");
-//                    deleteArg(args, "-XX:+LogVMOutput");
-//                    deleteArg(args, "-XX:-LogVMOutput");
-//
-//                    if (Boolean.parseBoolean(LogVMOutput)) {
-//                        addArg(args, "-XX:+UnlockDiagnosticVMOptions");
-//                        addArg(args, "-XX:+LogVMOutput");
-//                    } else {
-//                        disableLog = true;
-//                    }
-//                }
-//                // . jvmLog 再处理日志文件
-//                if (disableLog) {
-//                    deleteArg(args, "-XX:LogFile");
-//                } else {
-//                    String LogFile = data.remove("LogFile");// 用 remove 是为了防止后面被遍历
-//                    if (LogFile != null && !LogFile.isEmpty()) {
-//                        deleteArg(args, "-XX:LogFile");
-//                        addArg(args, "-XX:LogFile=" + LogFile);
-//                    }
-//                }
-//
-//                // GC 具有排他性
-//                String useGC = data.remove("useGC");
-//                if (useGC != null) {
-//                    deleteArg(args, "-XX:+Use");
-//                    deleteArg(args, "-XX:-Use");
-//                    if (!useGC.isEmpty()) {
-//                        addArg(args, "-XX:+" + useGC);
-//                    }
-//                }
-//
-//                for (String k : data.keySet()) {
-//                    String v = data.get(k);
-//                    // . -Xms -Xmx -Xmn -Xss
-//                    if (k.startsWith("X")) {
-//                        deleteArg(args, "-" + k);
-//
-//                        if (v != null && !v.isEmpty()) {
-//                            addArg(args, "-" + k + v);
-//                        }
-//                        continue;
-//                    }
-//
-//                    // . Print*  Use* 等 ”开关“ 类配置参数
-//                    if (k.startsWith("Print") || k.equals("HeapDumpOnOutOfMemoryError") || k.equals("LogVMOutput")) {
-//                        deleteArg(args, "-XX:+" + k);
-//                        deleteArg(args, "-XX:-" + k);
-//
-//                        if (Boolean.parseBoolean(v)) {
-//                            addArg(args, "-XX:+" + k);
-//                        }
-//
-//                        continue;
-//                    }
-//
-//                    // 剩下的都是带=等号赋值类的
-//                    deleteArg(args, "-XX:" + k);
-//                    if (v != null && !v.isEmpty()) {
-//                        addArg(args, "-XX:" + k + "=" + v);
-//                    }
-//                }
-//
-//                jvmObject.add("env", envs);
-//
-//                writeJsonFile(jsonObject);
-//
-//                // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
-//                enSureFileExists(dataBackup);
-//            }
-//        }
-//
-//        // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
-//        private void enSureFileExists(Map<String, String> map) {
-//            String[] files = {"gcLog", "HeapDumpPath", "LogFile"};
-//            for (String s : files) {
-//                String f = map.get(s);
-//                if (f != null && !f.isEmpty()) {
-//                    File file = new File(f);
-//                    if (!file.isAbsolute()) {
-//                        file = new File(InstanceApp.getService(ModuleContext.class).getInstanceDir(), f);
-//                    }
-//                    if (!file.exists()) {
-//                        file.getParentFile().mkdirs();
-//                    }
-//                }
-//            }
-//        }
-//
-//        private static boolean isJdk9OrHigher() {
-//            double javaVerson = Double.parseDouble(System.getProperty("java.specification.version"));
-//            return javaVerson > 1.8;
-//        }
-//
-//        private static final Set<String> onlyJava8Config = new HashSet<String>() {{
-//            add("-XX:+PrintHeapAtGC");
-//            add("-XX:+PrintGCApplicationStoppedTime");
-//            add("-XX:+PrintGCApplicationConcurrentTime");
-//        }};
-//
-//        private void deleteArg(JsonArray args, String nameStartsWith) throws Exception {
-//            for (int i = 0; i < args.size(); i++) {
-//                JsonElement element = args.get(i);
-//                JsonObject arg = element.getAsJsonObject();
-//                if (arg.get("name").getAsString().startsWith(nameStartsWith)) {
-//                    args.remove(i);
-//                    break;
-//                }
-//            }
-//        }
-//
-//        private void addArg(JsonArray args, String name) {
-//            JsonObject arg = new JsonObject();
-//            arg.addProperty("name", name);
-//            if (onlyJava8Config.contains(name)) {
-//                arg.addProperty("supportedJRE", "8");
-//            }
-//            args.add(arg);
-//        }
-//
-//        private void addEnv(JsonArray envs, String name, String value) {
-//            JsonObject env = new JsonObject();
-//            env.addProperty("name", name);
-//            env.addProperty("value", value);
-//            envs.add(env);
-//        }
-//
-//        @Override
-//        public void deleteDataById(String id) throws Exception {
-//            throw new RuntimeException("No Support.");
-//        }
-//    }
+    // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
+    private void enSureFileExists(Map<String, String> map) {
+        String[] files = {"gcLog", "HeapDumpPath", "LogFile"};
+        for (String s : files) {
+            String f = map.get(s);
+            if (f != null && !f.isEmpty()) {
+                File file = new File(f);
+                if (!file.isAbsolute()) {
+                    file = new File(InstanceApp.getService(ModuleContext.class).getInstanceDir(), f);
+                }
+                if (!file.exists()) {
+                    file.getParentFile().mkdirs();
+                }
+            }
+        }
+    }
+
+    private static boolean isJdk9OrHigher() {
+        double javaVerson = Double.parseDouble(System.getProperty("java.specification.version"));
+        return javaVerson > 1.8;
+    }
+
+    private static final Set<String> onlyJava8Config = new HashSet<String>() {{
+        add("-XX:+PrintHeapAtGC");
+        add("-XX:+PrintGCApplicationStoppedTime");
+        add("-XX:+PrintGCApplicationConcurrentTime");
+    }};
+
+    private void deleteArg(List<Arg> args, String nameStartsWith) throws Exception {
+        for (int i = 0; i < args.size(); i++) {
+            Arg arg = args.get(i);
+            if (arg.getName().startsWith(nameStartsWith)) {
+                args.remove(i);
+                break;
+            }
+        }
+    }
+
+    private void addArg(List<Arg> args, String name) {
+        Arg arg = new Arg();
+        arg.setName(name);
+        if (onlyJava8Config.contains(name)) {
+            arg.setSupportedJRE("8");
+        }
+        args.add(arg);
+    }
+
+    private void addEnv(List<Env> envs, String name, String value) {
+        Env env = new Env();
+        env.setName(name);
+        env.setValue(value);
+        envs.add(env);
+    }
+
+    @ModelAction(
+            name = {"编辑", "en:Edit"},
+            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
+    public void edit(Request request, Response response) throws Exception {
+        show(request, response);
+    }
+
+    @ModelAction(
+            name = {"查看", "en:Show"},
+            info = {"查看该组件的相关信息。", "en:View the information of this model."})
+    public void show(Request request, Response response) throws Exception {
+        Map<String, String> jvm = new HashMap<>();
+        Map<String, String> envMap = new LinkedHashMap<>();
+        for (Map<String, String> element : getDataStore().getAllData()) {
+            String type = element.remove("type");
+            if ("arg".equals(type) && Boolean.parseBoolean(element.getOrDefault("enabled", "true"))) {
+                String argKV = element.get("name");
+                // 1. -XX:
+                if (argKV.startsWith("-XX:")) {
+                    String temp = argKV.substring(4);
+                    if (temp.charAt(0) == '+') {
+                        String guessGC = temp.substring(1);
+                        if (guessGC.startsWith("Use")) {
+                            jvm.put("useGC", guessGC);
+                        } else {
+                            jvm.put(temp.substring(1), "true");
+                        }
+                    } else if (temp.charAt(0) == '-') {
+                        jvm.put(temp.substring(1), "false");
+                    } else {
+                        int i = temp.indexOf("=");
+                        jvm.put(temp.substring(0, i), temp.substring(i + 1));
+                    }
+                    continue;
+                }
+
+                // 2. -Xms -Xmx -Xmn -Xss
+                if (argKV.startsWith("-X")) {
+                    if (argKV.startsWith("-Xlog")) { // jdk8: -Xloggc:xx; jdk9: -Xlog:gc:xxxx;
+                        int i = argKV.lastIndexOf(":");
+                        jvm.put("gcLogEnabled", "true");
+                        jvm.put("gcLog", argKV.substring(i + 1));
+                    } else {
+                        jvm.put(argKV.substring(1, 4), argKV.substring(4));
+                    }
+                    continue;
+                }
+
+                boolean preferIPv4Stack = false;
+                if (argKV.startsWith("-D")) {
+                    if (argKV.startsWith("-Djava.net.preferIPv4Stack")) {
+                        int index = argKV.indexOf("=");
+                        preferIPv4Stack = Boolean.parseBoolean(argKV.substring(index + 1));
+                    }
+                }
+                jvm.put("preferIPv4Stack", String.valueOf(preferIPv4Stack));
+            }
+
+            if (Boolean.parseBoolean(element.getOrDefault("enabled", "true"))) {
+                String name = element.get("name");
+                String value = element.get("value");
+                if (JAVA_HOME_KEY.equals(name)) {
+                    envMap.put(JAVA_HOME_KEY, value);
+                } else {
+                    envMap.put(name, value);
+                }
+            }
+        }
+
+        Json json = InstanceApp.getService(Json.class);
+        // 处理环境变量
+        jvm.put("envs", json.toJson(envMap));
+        response.addData(jvm);
+    }
+
+    @Override
+    public DataStore getDataStore() {
+        return jvmDataStore;
+    }
+
+    private final JvmDataStore jvmDataStore = new JvmDataStore();
+
+    private static class JvmDataStore implements DataStore {
+        @Override
+        public List<Map<String, String>> getAllData() throws Exception {
+            Jvm jvm = InstanceApp.getService(Config.class).getJvm();
+            if (jvm == null) {
+                return null;
+            }
+            List<Arg> args = jvm.getArg();
+            List<Map<String, String>> dataList = new ArrayList<>();
+            for (Arg arg : args) {
+                Map<String, String> argMap = Utils.getPropertiesFromObj(arg);
+                argMap.put("type", "arg");
+                dataList.add(argMap);
+            }
+            List<Env> envs = jvm.getEnv();
+            for (Env env : envs) {
+                Map<String, String> envMap = Utils.getPropertiesFromObj(env);
+                envMap.put("type", "env");
+                dataList.add(envMap);
+            }
+
+            return dataList;
+        }
+
+        @Override
+        public void addData(String id, Map<String, String> data) throws Exception {
+            throw new RuntimeException("No Support.");
+        }
+
+        @Override
+        public void updateDataById(String id, Map<String, String> data) throws Exception {
+            Json json = InstanceApp.getService(Json.class);
+            Config config = InstanceApp.getService(Config.class);
+            config.deleteJvm("env");
+            config.deleteJvm("arg");
+            Jvm jvm = new Jvm();
+            List<Map<String, String>> args = json.fromJson(data.get("arg"), List.class);
+            List<Arg> argList = new ArrayList<>();
+            for (Object arg : args) {
+                argList.add(json.fromJson(json.toJson(arg), Arg.class));
+            }
+            jvm.setArg(argList);
+
+            List<Map<String, String>> envs = json.fromJson(data.get("env"), List.class);
+            List<Env> envList = new ArrayList<>();
+            for (Object env : envs) {
+                envList.add(json.fromJson(json.toJson(env), Env.class));
+            }
+            jvm.setEnv(envList);
+
+            config.setJvm(jvm);
+        }
+
+        @Override
+        public void deleteDataById(String id) throws Exception {
+            throw new RuntimeException("No Support.");
+        }
+    }
 }
