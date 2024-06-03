@@ -1,6 +1,7 @@
 package qingzhou.console.login;
 
 import qingzhou.api.Lang;
+import qingzhou.api.type.Editable;
 import qingzhou.config.Security;
 import qingzhou.config.User;
 import qingzhou.console.ConsoleConstants;
@@ -50,8 +51,8 @@ public class ResetPassword implements Filter<HttpServletContext> {
         String msgI18nKey = user == null ? null : needReset(user);
         if (user != null && msgI18nKey != null) { // 例如加密工具不需要登录时候 user == null
             if (ConsoleConstants.MODEL_NAME_password.equals(model)) {
-                if ("edit".equals(action)
-                        || "update".equals(action)) { // 允许访问重置密码的 uri
+                if (Editable.ACTION_NAME_EDIT.equals(action)
+                        || Editable.ACTION_NAME_UPDATE.equals(action)) { // 允许访问重置密码的 uri
                     return true;
                 }
             }
@@ -70,7 +71,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
                     "/" + DeployerConstants.MANAGE_TYPE_APP +
                     "/" + DeployerConstants.MASTER_APP_NAME +
                     "/" + ConsoleConstants.MODEL_NAME_password +
-                    "/edit" +
+                    "/" + Editable.ACTION_NAME_EDIT +
                     "/" + user +
                     "?" + RESTController.MSG_FLAG + "=" + msgI18nKey));
             return false;
@@ -106,6 +107,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
 
         return null;
     }
+
     private static String wrapCheckingPath(String uri) {
         if (!uri.startsWith("/")) {
             uri = "/" + uri;
