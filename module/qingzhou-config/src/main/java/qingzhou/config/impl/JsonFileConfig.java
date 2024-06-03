@@ -1,6 +1,14 @@
 package qingzhou.config.impl;
 
-import qingzhou.config.*;
+import qingzhou.config.Agent;
+import qingzhou.config.Arg;
+import qingzhou.config.Config;
+import qingzhou.config.Console;
+import qingzhou.config.Env;
+import qingzhou.config.Heartbeat;
+import qingzhou.config.Jmx;
+import qingzhou.config.Jvm;
+import qingzhou.config.User;
 import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
 
@@ -52,12 +60,35 @@ public class JsonFileConfig implements Config {
                 p -> p.getProperty("id").equals(user.getId()),
                 "module", "console", "user");
         Utils.writeFile(jsonFile, result);
-
     }
 
     @Override
     public void setJmx(Jmx jmx) throws Exception {
         newJson(jmx, false, "module", "console", "jmx");
+    }
+
+    @Override
+    public void setJvm(Jvm jvm) throws Exception {
+        for (Env env : jvm.getEnv()) {
+            newJson(env, true, "jvm", "env");
+        }
+        for (Arg arg : jvm.getArg()) {
+            newJson(arg, true, "jvm", "arg");
+        }
+    }
+
+    @Override
+    public void deleteJvm(String position) throws Exception {
+        String jsonAll = Utils.read(jsonFile);
+        String result = json.deleteJson(jsonAll,
+                p -> true,
+                "jvm", position);
+        Utils.writeFile(jsonFile, result);
+    }
+
+    @Override
+    public Jvm getJvm() {
+        return readJsonFile(reader -> json.fromJson(reader, Jvm.class, "jvm"));
     }
 
     private void newJson(Object obj, boolean isInArray, String... position) throws Exception {

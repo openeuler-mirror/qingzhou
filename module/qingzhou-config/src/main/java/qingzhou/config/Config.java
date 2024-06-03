@@ -16,4 +16,10 @@ public interface Config {
     void deleteUser(User user) throws Exception;
 
     void setJmx(Jmx jmx) throws Exception;
+
+    void setJvm(Jvm jvm) throws Exception;
+
+    void deleteJvm(String position) throws Exception;
+
+    Jvm getJvm();
 }

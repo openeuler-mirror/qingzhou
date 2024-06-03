@@ -8,6 +8,7 @@ import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 import qingzhou.engine.util.Utils;
+import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 
@@ -24,6 +25,9 @@ public class Controller implements ModuleActivator {
 
     @Service
     private Config config;
+
+    @Service
+    private Json json;
 
     static Deployer deployer;
 
