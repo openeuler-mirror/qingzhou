@@ -6,14 +6,9 @@ public class Arg {
     private String name;
     private String desc;
     private boolean forLinux = false;
-
     private String supportedJRE;
 
     public Arg() {
-    }
-
-    public Arg(String name) {
-        this.name = name;
     }
 
     public boolean isEnabled() {

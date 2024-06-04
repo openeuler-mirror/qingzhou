@@ -1,25 +1,25 @@
 package qingzhou.config;
 
-import java.io.File;
-
 public interface Config {
-    File getConfigFile();
-
     Console getConsole();
 
     Agent getAgent();
 
     Heartbeat getHeartbeat();
 
-    void addUser(User user) throws Exception;
-
-    void deleteUser(User user) throws Exception;
+    Jvm getJvm();
 
     void setJmx(Jmx jmx) throws Exception;
 
-    void setJvm(Jvm jvm) throws Exception;
+    void addUser(User user) throws Exception;
 
-    void deleteJvm(String position) throws Exception;
+    void deleteUser(String id) throws Exception;
 
-    Jvm getJvm();
+    void addEnv(Env env) throws Exception;
+
+    void deleteEnv(String id) throws Exception;
+
+    void addArg(Arg arg) throws Exception;
+
+    void deleteArg(String id) throws Exception;
 }
