@@ -30,7 +30,7 @@ public class Utils {
 
     public static void setPropertiesToObj(Object obj, Map<String, String> data) throws Exception {
         for (Map.Entry<String, String> entry : data.entrySet()) {
-            setPropertyToObj(obj, entry.getKey(), entry.getValue());
+            setPropertyToObj(obj, entry.getKey(), String.valueOf(entry.getValue()));
         }
     }
 

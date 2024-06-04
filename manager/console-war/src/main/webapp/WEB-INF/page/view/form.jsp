@@ -114,7 +114,7 @@
                             valueFrom = "valueFrom='" + valueFrom.trim() + "'";
                         }
 
-                        String fieldValue = model.get(fieldName);// 需要在 isFieldReadOnly 之后，原因是 license 限制的 5 个并发会在其中被修改，总之最后读取值是最新的最准确的
+                        String fieldValue = String.valueOf(model.get(fieldName));// 需要在 isFieldReadOnly 之后，原因是 license 限制的 5 个并发会在其中被修改，总之最后读取值是最新的最准确的
                         List<String> fieldValues = fieldValue == null ? new ArrayList<>() : Arrays.asList(fieldValue.split(","));
                         if (fieldValue == null || fieldValue.equals("null")) {
                             fieldValue = "";
