@@ -181,7 +181,7 @@
                     }
                     boolean isFirst = true;
                     for (Integer i : indexToShow) {
-                        String value = modelBase.get(PageBackendService.getFieldName(qzRequest, i));
+                        String value = String.valueOf(modelBase.get(PageBackendService.getFieldName(qzRequest, i)));
                         if (value == null) {
                             value = "";
                         }
