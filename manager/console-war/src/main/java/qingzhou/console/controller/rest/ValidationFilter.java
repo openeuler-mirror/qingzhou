@@ -53,10 +53,11 @@ public class ValidationFilter implements Filter<RestContext> {
             AppInfo appInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request));
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
             clipParameter(request, modelInfo);
+            Map<String, String> paramMap = request.getParameters();
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                 String parameterVal = request.getParameter(field);
-                ValidationContext vc = new ValidationContext(fieldInfo, parameterVal, isAddAction, isUpdateAction);
+                ValidationContext vc = new ValidationContext(paramMap, fieldInfo, parameterVal, isAddAction, isUpdateAction);
                 String[] error = validate(vc);
                 if (error != null) {
                     String[] params = Arrays.copyOfRange(error, 1, error.length);
@@ -87,6 +88,7 @@ public class ValidationFilter implements Filter<RestContext> {
     };
 
     private String[] validate(ValidationContext context) throws Exception {
+        Map<String, String> paramMap = context.params;
         ModelFieldInfo fieldInfo = context.fieldInfo;
         String parameterVal = context.parameterVal;
         if (parameterVal == null || parameterVal.isEmpty()) {
@@ -96,7 +98,7 @@ public class ValidationFilter implements Filter<RestContext> {
             if (context.isUpdateAction && !fieldInfo.isEditable()) {
                 return null;
             }
-            if (fieldInfo.isRequired() && PageBackendService.isShow(o -> parameterVal, fieldInfo.getShow())) {
+            if (fieldInfo.isRequired() && PageBackendService.isShow(o -> paramMap.containsKey(o) ? paramMap.get(o).trim() : null, fieldInfo.getShow())) {
                 return new String[]{validation_required};
             }
         }
@@ -118,8 +120,10 @@ public class ValidationFilter implements Filter<RestContext> {
         final String parameterVal;
         final boolean isAddAction;
         final boolean isUpdateAction;
+        final Map<String, String> params;
 
-        ValidationContext(ModelFieldInfo fieldInfo, String parameterVal, boolean isAddAction, boolean isUpdateAction) {
+        ValidationContext(Map<String, String> params, ModelFieldInfo fieldInfo, String parameterVal, boolean isAddAction, boolean isUpdateAction) {
+            this.params = params;
             this.fieldInfo = fieldInfo;
             this.parameterVal = parameterVal;
             this.isAddAction = isAddAction;

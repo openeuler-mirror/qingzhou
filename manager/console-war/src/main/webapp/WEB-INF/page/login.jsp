@@ -37,7 +37,7 @@
 
 <body class="login_body" onload="escapeFrame();">
 <header class="login-header">
-    <img src="<%=contextPath%>/static/images/login/top_logo.png" class="login-top-logo" alt="">
+    <!-- <img src="<%=contextPath%>/static/images/login/top_logo.png" class="login-top-logo" alt=""> -->
     <div class="login-right-lang"></div>
 </header>
 <main class="page page-login text-center">
@@ -52,27 +52,24 @@
               action="<%=PageBackendService.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>"
               class="form-group" autocomplete="off">
             <div class="input-control has-icon-left">
-                <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>"
-                       name="<%=LoginManager.LOGIN_USER%>" class="form-control"
-                       placeholder="name<%=PageBackendService.getMasterAppI18nString( "model.field.user.name")%>"
-                       autofocus required>
-                <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;"><i
-                        class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("user").getIcon()%> "></i></label>
+                <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" 
+                       class="form-control" placeholder="<%=PageBackendService.getMasterAppI18nString( "model.field.user.name")%>" autofocus>
+                <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;">
+                    <i class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("user").getIcon()%> "></i>
+                </label>
             </div>
             <div class="input-control has-icon-left">
-                <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt"
-                       data-type="password" class="form-control"
-                       placeholder="password<%=PageBackendService.getMasterAppI18nString( "model.field.user.password")%>"
-                       dotted
-                       onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;">
-                <input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>"
-                       name="<%=LoginManager.LOGIN_PASSWORD%>">
-                <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left"
-                       style="line-height: 44px;"><i
-                        class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("password").getIcon()%>"></i></label>
+                <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control"
+                       placeholder="<%=PageBackendService.getMasterAppI18nString( "model.field.user.password")%>"
+                       onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;" dotted>
+                <input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>" name="<%=LoginManager.LOGIN_PASSWORD%>">
+                <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left" style="line-height: 44px;">
+                    <i class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("password").getIcon()%>"></i>
+                </label>
                 <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt"
-                       class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;"><i
-                        class="icon icon-eye-close"></i></label>
+                       class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;">
+                    <i class="icon icon-eye-close"></i>
+                </label>
             </div>
            <%-- <div class="input-control has-icon-left">
                 <input type="text" id="<%=ConsoleConstants.LOGIN_2FA%>_txt" class="form-control"
@@ -87,24 +84,21 @@
                 if (request.getParameter(VerCode.SHOW_CAPTCHA_FLAG) != null) {
             %>
             <div class="input-control has-icon-left">
-                <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control" required
+                <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control"
                        style="width:250px;display:inline-block;float:left;"
                        placeholder="<%=PageBackendService.getMasterAppI18nString( "page.vercode")%>">
-                <label class="input-control-icon-left" style="line-height: 44px;"><i
-                        class="icon icon-shield"></i></label>
-                <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>"
-                     class="captcha"
+                <label class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
+                <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>" class="captcha"
                      onclick="this.src = '<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
             </div>
             <%
                 }
             %>
 
-            <input type="submit" value='<%=PageBackendService.getMasterAppI18nString( "page.login")%>'
-                   class="login_btn">
+            <input type="submit" value='<%=PageBackendService.getMasterAppI18nString( "page.login")%>' class="login_btn">
             <textarea id="pubkey" rows="3" style="display:none;">
-                        <%=AsymmetricDecryptor.getPublicKeyString()%>
-                    </textarea>
+                <%=AsymmetricDecryptor.getPublicKeyString()%>
+            </textarea>
         </form>
     </section>
 </main>
@@ -179,14 +173,14 @@
     $(document).ready(function () {
         window.setTimeout(function () {
             var common_msgIndex = showError("<%=common_msg%>");
-                            // 记录最后一次通知弹窗
-                            try {
-                                $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
-                            } catch (e) {
-                                // login.jsp
-                            }
-                        }, 350);
-                    });
+                // 记录最后一次通知弹窗
+                try {
+                    $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
+                } catch (e) {
+                    // login.jsp
+                }
+            }, 350);
+        });
 </script>
 <%
     }

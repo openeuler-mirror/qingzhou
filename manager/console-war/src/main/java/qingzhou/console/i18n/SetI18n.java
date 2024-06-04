@@ -128,5 +128,7 @@ public class SetI18n implements Filter<HttpServletContext> {
         ConsoleI18n.addI18n("page.info.kv.value", new String[]{"值", "en:Value"});
         ConsoleI18n.addI18n("page.password.changed", new String[]{"密码修改成功，请重新登录", "en:Password changed successfully, please login again"});
         ConsoleI18n.addI18n("page.lang.switch", new String[]{"切换语言", "en:Switch The Language"});
+        ConsoleI18n.addI18n("model.field.user.name", new String[]{"用户名", "en:User Name"});
+        ConsoleI18n.addI18n("model.field.user.password", new String[]{"密码", "en:Password"});
     }
 }
