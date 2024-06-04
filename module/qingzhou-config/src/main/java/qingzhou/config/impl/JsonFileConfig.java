@@ -1,14 +1,6 @@
 package qingzhou.config.impl;
 
-import qingzhou.config.Agent;
-import qingzhou.config.Arg;
-import qingzhou.config.Config;
-import qingzhou.config.Console;
-import qingzhou.config.Env;
-import qingzhou.config.Heartbeat;
-import qingzhou.config.Jmx;
-import qingzhou.config.Jvm;
-import qingzhou.config.User;
+import qingzhou.config.*;
 import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
 
@@ -29,11 +21,6 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
-    public File getConfigFile() {
-        return jsonFile;
-    }
-
-    @Override
     public Console getConsole() {
         return readJsonFile(reader -> json.fromJson(reader, Console.class, "module", "console"));
     }
@@ -50,40 +37,37 @@ public class JsonFileConfig implements Config {
 
     @Override
     public void addUser(User user) throws Exception {
-        newJson(user, true, "module", "console", "user");
+        writeJson(user, true, "module", "console", "user");
     }
 
     @Override
-    public void deleteUser(User user) throws IOException {
-        String jsonAll = Utils.read(jsonFile);
-        String result = json.deleteJson(jsonAll,
-                p -> p.getProperty("id").equals(user.getId()),
-                "module", "console", "user");
-        Utils.writeFile(jsonFile, result);
+    public void deleteUser(String id) throws IOException {
+        deleteJson("id", id, "module", "console", "user");
+    }
+
+    @Override
+    public void addEnv(Env env) throws Exception {
+        writeJson(env, true, "jvm", "env");
+    }
+
+    @Override
+    public void deleteEnv(String id) throws Exception {
+        deleteJson("name", id, "jvm", "env");
+    }
+
+    @Override
+    public void addArg(Arg arg) throws Exception {
+        writeJson(arg, true, "jvm", "arg");
+    }
+
+    @Override
+    public void deleteArg(String id) throws Exception {
+        deleteJson("name", id, "jvm", "arg");
     }
 
     @Override
     public void setJmx(Jmx jmx) throws Exception {
-        newJson(jmx, false, "module", "console", "jmx");
-    }
-
-    @Override
-    public void setJvm(Jvm jvm) throws Exception {
-        for (Env env : jvm.getEnv()) {
-            newJson(env, true, "jvm", "env");
-        }
-        for (Arg arg : jvm.getArg()) {
-            newJson(arg, true, "jvm", "arg");
-        }
-    }
-
-    @Override
-    public void deleteJvm(String position) throws Exception {
-        String jsonAll = Utils.read(jsonFile);
-        String result = json.deleteJson(jsonAll,
-                p -> true,
-                "jvm", position);
-        Utils.writeFile(jsonFile, result);
+        writeJson(jmx, false, "module", "console", "jmx");
     }
 
     @Override
@@ -91,7 +75,15 @@ public class JsonFileConfig implements Config {
         return readJsonFile(reader -> json.fromJson(reader, Jvm.class, "jvm"));
     }
 
-    private void newJson(Object obj, boolean isInArray, String... position) throws Exception {
+    public void deleteJson(String idKey, String idVal, String... position) throws IOException {
+        String jsonAll = Utils.read(jsonFile);
+        String result = json.deleteJson(jsonAll,
+                p -> p.getProperty(idKey).equals(idVal),
+                position);
+        writeFile(result);
+    }
+
+    private void writeJson(Object obj, boolean isInArray, String... position) throws Exception {
         Properties properties = this.json.fromJson(this.json.toJson(obj), Properties.class);
 
         String result;
@@ -102,6 +94,10 @@ public class JsonFileConfig implements Config {
             result = this.json.setJson(json, properties, position);
         }
 
+        writeFile(result);
+    }
+
+    private void writeFile(String result) throws IOException {
         Utils.writeFile(jsonFile, result);
     }
 

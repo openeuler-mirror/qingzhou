@@ -487,17 +487,15 @@ public class User extends ModelBase implements Createable {
         @Override
         public void updateDataById(String id, Map<String, String> data) throws Exception {
             Config config = MasterApp.getService(Config.class);
+            config.deleteUser(id);
             qingzhou.config.User user = config.getConsole().getUser(id);
-            config.deleteUser(user);
             Utils.setPropertiesToObj(user, data);
             config.addUser(user);
         }
 
         @Override
         public void deleteDataById(String id) throws Exception {
-            qingzhou.config.User user = new qingzhou.config.User();
-            user.setId(id);
-            MasterApp.getService(Config.class).deleteUser(user);
+            MasterApp.getService(Config.class).deleteUser(id);
         }
     }
 }

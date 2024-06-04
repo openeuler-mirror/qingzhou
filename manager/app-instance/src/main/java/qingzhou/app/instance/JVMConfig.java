@@ -1,15 +1,6 @@
 package qingzhou.app.instance;
 
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Group;
-import qingzhou.api.Groups;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.config.Arg;
 import qingzhou.config.Config;
@@ -20,13 +11,7 @@ import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = Editable.ACTION_NAME_EDIT,
         name = {"JVM 配置", "en:JVM Configuration"}, info = {"配置运行 Qingzhou 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running Qingzhou applications."})
@@ -469,8 +454,8 @@ public class JVMConfig extends ModelBase implements Editable {
         public void updateDataById(String id, Map<String, String> data) throws Exception {
             Json json = InstanceApp.getService(Json.class);
             Config config = InstanceApp.getService(Config.class);
-            config.deleteJvm("env");
-            config.deleteJvm("arg");
+//            config.deleteJvm("env");// todo
+//            config.deleteJvm("arg");// todo
             Jvm jvm = new Jvm();
             List<Map<String, String>> args = json.fromJson(data.get("arg"), List.class);
             List<Arg> argList = new ArrayList<>();
@@ -486,7 +471,7 @@ public class JVMConfig extends ModelBase implements Editable {
             }
             jvm.setEnv(envList);
 
-            config.setJvm(jvm);
+//            config.addJvm(jvm); todo
         }
 
         @Override
