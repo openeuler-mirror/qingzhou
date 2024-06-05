@@ -33,7 +33,7 @@ public class About implements Filter<HttpServletContext> {
             String begin = "![";
             String end = ")";
             fileLines.forEach(line -> {
-                if (line.startsWith(begin) && line.endsWith(end)) {
+                if (line.trim().startsWith(begin) && line.trim().endsWith(end)) {
                     int index = line.indexOf("](") + 2;
                     String imgName = line.substring(index, line.lastIndexOf(end));
                     imgName = imgName.replace("doc/readme/", readmeDir);
