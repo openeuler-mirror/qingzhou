@@ -358,7 +358,7 @@ public class StartupArgs extends ModelBase implements Createable {
         }
         response.setPageNum(pageNum);
 
-        String[] dataIdInPage = dataStore.getDataIdInPage(response.getPageSize(), pageNum).toArray(String[]::new);
+        String[] dataIdInPage = dataStore.getDataIdInPage(response.getPageSize(), pageNum).toArray(new String[0]);
         String[] fieldNamesToList = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(modelName).getFormFieldList();
         List<Map<String, String>> result = dataStore.getDataFieldByIds(dataIdInPage, fieldNamesToList);
         rectifyModels(result);
