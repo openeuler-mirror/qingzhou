@@ -161,7 +161,7 @@ public interface DataStore {
             dataList.add(item);
         });
         return dataList.stream().filter((data) -> {
-            for (String k : data.keySet().toArray(String[]::new)) {
+            for (String k : data.keySet().toArray(new String[0])) {
                 if (!listToShow.contains(k)) {
                     data.remove(k);
                 }
