@@ -26,18 +26,19 @@ public class About implements Filter<HttpServletContext> {
         ServletOutputStream out = response.getOutputStream();
 
         if (byteCache == null) {
-            String pathPrefix = "/static/readme/";
-            String readmePath = context.req.getServletContext().getRealPath(pathPrefix + "/README.md");
+            String readmeDir = "static/readme/";
+            String readmePath = context.req.getServletContext().getRealPath("/" + readmeDir + "/README.md");
             List<String> fileLines = FileUtil.fileToLines(new File(readmePath));
             StringBuilder result = new StringBuilder();
-            String begin = "![](doc/readme/";
+            String begin = "![";
             String end = ")";
             fileLines.forEach(line -> {
                 if (line.startsWith(begin) && line.endsWith(end)) {
-                    String imgName = line.substring(begin.length(), line.lastIndexOf(end));
+                    int index = line.indexOf("](") + 2;
+                    String imgName = line.substring(index, line.lastIndexOf(end));
+                    imgName = imgName.replace("doc/readme/", readmeDir);
                     result.append("![](")
                             .append(context.req.getContextPath())
-                            .append(pathPrefix)
                             .append("/").append(imgName)
                             .append(")");
                 } else {
