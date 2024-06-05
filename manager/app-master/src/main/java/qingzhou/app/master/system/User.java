@@ -1,6 +1,17 @@
 package qingzhou.app.master.system;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.DataStore;
+import qingzhou.api.FieldType;
+import qingzhou.api.Group;
+import qingzhou.api.Groups;
+import qingzhou.api.Lang;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
@@ -12,7 +23,12 @@ import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.MessageDigest;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 @Model(code = "user", icon = "user",
@@ -356,9 +372,9 @@ public class User extends ModelBase implements Createable {
         newUser.remove(confirmPwdKey);
         boolean passwordChanged = passwordChanged(password);
         if (passwordChanged) {
-            String digestAlg = newUser.get("digestAlg");
-            String saltLength = newUser.get("saltLength");
-            String iterations = newUser.get("iterations");
+            String digestAlg = newUser.getOrDefault("digestAlg", "SHA-256");
+            String saltLength = newUser.getOrDefault("saltLength", String.valueOf(defSaltLength));
+            String iterations = newUser.getOrDefault("iterations", String.valueOf(defIterations));
             MessageDigest messageDigest = CryptoServiceFactory.getInstance().getMessageDigest();
             newUser.put(pwdKey, messageDigest.digest(password,
                     digestAlg,
@@ -369,7 +385,7 @@ public class User extends ModelBase implements Createable {
             String oldPasswords = oldUser.get("oldPasswords");
             String limitRepeats = newUser.get("limitRepeats");
             if (limitRepeats == null) {
-                limitRepeats = oldUser.get("limitRepeats");
+                limitRepeats = oldUser.getOrDefault("limitRepeats", String.valueOf(defLimitRepeats));
             }
 
             String cutOldPasswords = cutOldPasswords(oldPasswords, limitRepeats, newUser.get(pwdKey));
@@ -487,8 +503,8 @@ public class User extends ModelBase implements Createable {
         @Override
         public void updateDataById(String id, Map<String, String> data) throws Exception {
             Config config = MasterApp.getService(Config.class);
-            config.deleteUser(id);
             qingzhou.config.User user = config.getConsole().getUser(id);
+            config.deleteUser(id);
             Utils.setPropertiesToObj(user, data);
             config.addUser(user);
         }
