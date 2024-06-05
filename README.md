@@ -141,8 +141,6 @@ JDK >= 1.8
 + Listable接口：提供了列表和查看功能。
 + Showable接口：提供了查看功能。
 + Editable接口：提供了修改、更新、展示功能。
-+ Downloadable接口：提供了下载功能。
-+ Monitorable接口：提供了监控功能。
   <br>
 
 7. 模块类中需要复写DataStore 接口中的方法，来实现数据的增删改查，接口中定义了对数据进行存储、获取、更新和删除的方法规范。
@@ -202,15 +200,7 @@ public class User extends ModelBase implements Createable {
   <br>
    1. zip包下需要放项目所需的资源文件。
   <br>
-   2. 需要在MANIFEST.MF 中配置 Class-Path 加入资源文件目录,`MANIFEST.MF 内容：Class-Path: lib/resource.jar`。
-  <br><br>
-   目录结构如下：
-  - app.zip
-    - lib
-       - resource.jar
-    - app.jar
-       - MANIFEST.MF
-
+   2. 需要在MANIFEST.MF 中配置 Class-Path 加入资源文件目录,MANIFEST.MF 配置内容如：`Class-Path: lib/resource.jar`。
 ```xml
  <!-- pom.xml文件配置参考 -->
 <plugins>
