@@ -37,11 +37,6 @@ public class SafeChecker implements Filter<HttpServletContext> {
             return false;
         }
 
-        if (checkPath.endsWith(".jsp") || checkPath.endsWith(".jspx")) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return false;
-        }
-
         return true;
     }
 
