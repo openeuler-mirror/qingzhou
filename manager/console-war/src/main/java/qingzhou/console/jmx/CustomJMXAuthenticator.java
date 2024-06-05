@@ -1,7 +1,7 @@
 package qingzhou.console.jmx;
 
 import qingzhou.console.ConsoleConstants;
-import qingzhou.console.controller.SafeChecker;
+import qingzhou.console.controller.TrustIpCheck;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
@@ -36,7 +36,7 @@ public class CustomJMXAuthenticator implements JMXAuthenticator {
         } catch (ServerNotActiveException e) {
             throw new RuntimeException(e);
         }
-        if (!SafeChecker.trustedIP(clientHost)) {
+        if (TrustIpCheck.notTrustedIp(clientHost)) {
             authenticationFailure(ConsoleI18n.getI18n(I18n.getI18nLang(), "client.trusted.not"));
         }
 

@@ -9,8 +9,6 @@ public interface Config {
 
     Jvm getJvm();
 
-    void setJmx(Jmx jmx) throws Exception;
-
     void addUser(User user) throws Exception;
 
     void deleteUser(String id) throws Exception;
@@ -23,7 +21,7 @@ public interface Config {
 
     void deleteArg(String id) throws Exception;
 
-    Security getSecurity();
+    void setJmx(Jmx jmx) throws Exception;
 
     void setSecurity(Security security) throws Exception;
 }
