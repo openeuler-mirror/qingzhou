@@ -26,7 +26,7 @@
             .append("svg {position:absolute;top:50%;left:50%;margin-top:-250px;margin-left:-400px;}")
             .append(".msg-box {height: 200px;width: 380px;position: absolute;top: 50%;left: 50%;margin-top: -180px;margin-left: 50px;font-family: Roboto;font-weight: 300;}")
             .append(".msg-box h1 {font-size: 180px;line-height: 46px;margin-bottom: 40px;}")
-            .append("#hexagon-1 , #hexagon-2 , #hexagon-3 , #hexagon-4 , #hexagon-4, #hexagon-5 {animation: float 1s infinite ease-in-out alternate;}")
+            .append("#hexagon-1 , #hexagon-2 , #hexagon-3 , #hexagon-4 , #hexagon-5 {animation: float 1s infinite ease-in-out alternate;}")
             .append("#hexagon-2 {animation-delay: .2s;}#hexagon-3 {animation-delay: .4s;}#hexagon-4 {animation-delay: .6s;}#hexagon-5 {animation-delay: .8s;}")
             .append("@keyframes float {100% {transform: translateY(20px);}}")
             .append("@media (max-width: 450px) {")
