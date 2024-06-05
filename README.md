@@ -208,7 +208,12 @@ zip包目录结构示意：
 8. 访问轻舟的可视化管理平台，在`应用`模块下，安装上述应用的 jar 包或者 zip 包，至此，已完成应用的开发和部署。
 9. 后续，可通过轻舟的可视化管理平台对应用进行管理。
 10. 页面展示
-    ![](./doc/readme/showcase.png)
+ 
+   ![](./doc/readme/app.png)
+
+   ![](./doc/readme/form.png)
+
+   ![](./doc/readme/list.png)
 
 ## 鸣谢
 
