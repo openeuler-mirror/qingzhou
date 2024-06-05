@@ -1,17 +1,6 @@
 package qingzhou.app.master.system;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Group;
-import qingzhou.api.Groups;
-import qingzhou.api.Lang;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
@@ -23,12 +12,7 @@ import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.MessageDigest;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Model(code = "user", icon = "user",
@@ -38,11 +22,12 @@ import java.util.regex.Pattern;
 public class User extends ModelBase implements Createable {
     public static final String pwdKey = "password";
     public static final String confirmPwdKey = "confirmPassword";
-    public static final int defSaltLength = 4;
-    public static final int defIterations = 5;
-    public static final int defLimitRepeats = 5;
     public static final String DATA_SEPARATOR = ",";
     public static final String PASSWORD_FLAG = "***************";
+
+    private static final int defSaltLength = 4;
+    private static final int defIterations = 5;
+    private static final int defLimitRepeats = 5;
 
     @Override
     public void start() {
@@ -114,32 +99,13 @@ public class User extends ModelBase implements Createable {
     public Boolean changeInitPwd = true;
 
     @ModelField(
-            group = "security", type = FieldType.bool,
-            required = false,
-            name = {"密码期限", "en:Password Age"},
-            info = {"开启该功能，可限制密码的使用期限。",// 内部：0 表示可以永久不更新。
-                    "en:Enable this feature to limit the expiration date of the password."}
-    )
-    public Boolean enablePasswordAge = true;
-
-    @ModelField(
-            group = "security", show = "enablePasswordAge=true",
-            required = false, type = FieldType.number, min = 1, max = 90,
+            group = "security",
+            required = false, type = FieldType.number, min = 0, max = 90,
             name = {"密码最长使用期限", "en:Maximum Password Age"},
             info = {"用户登录系统的密码距离上次修改超过该期限（单位为天）后，需首先更新密码才能继续登录系统。",// 内部：0 表示可以永久不更新。
                     "en:After the password of the user logging in to the system has been last modified beyond this period (in days), the user must first update the password before continuing to log in to the system."}
     )
-    public Integer passwordMaxAge = 90;
-
-    @ModelField(
-            group = "security",
-            required = false, type = FieldType.number,
-            min = 0,
-            name = {"密码最短使用期限", "en:Minimum Password Age"},
-            info = {"用户登录系统的密码距离上次修改未达到该期限（单位为天），则不能进行更新。0 表示可以随时更新。",
-                    "en:If the user password for logging in to the system has not reached this period (in days) since the last modification, it cannot be updated. 0 means that it can be updated at any time."}
-    )
-    public Integer passwordMinAge = 0;
+    public Integer passwordMaxAge;
 
     /*@ModelField(
             group = "security",
@@ -166,23 +132,7 @@ public class User extends ModelBase implements Createable {
             name = {"密码最后修改时间", "en:Password Last Modified"},
             info = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}
     )
-    public String passwordLastModifiedTime;
-
-    @ModelField(
-            group = "security",
-            required = false, type = FieldType.number, min = 1, max = 10,
-            name = {"不与最近密码重复", "en:Recent Password Restrictions"},
-            info = {"限制本次更新的密码不能和最近几次使用过的密码重复。注：设置为 “1” 表示只要不与当前密码重复即可。",
-                    "en:Restrict this update password to not be duplicated by the last few times you have used. Note: A setting of 1 means as long as it does not duplicate the current password."})
-    public Integer limitRepeats = defLimitRepeats;
-
-    @ModelField(
-            group = "security",
-            createable = false, editable = false,
-            required = false,
-            name = {"历史密码", "en:Historical Passwords"},
-            info = {"记录最近几次使用过的密码。", "en:Keep a record of the last few passwords you have used."})
-    public String oldPasswords;
+    public String passwordLastModified;
 
     @Override
     public Groups groups() {
@@ -382,14 +332,10 @@ public class User extends ModelBase implements Createable {
                     Integer.parseInt(iterations)));
             insertPasswordModifiedTime(newUser);
 
-            String oldPasswords = oldUser.get("oldPasswords");
-            String limitRepeats = newUser.get("limitRepeats");
-            if (limitRepeats == null) {
-                limitRepeats = oldUser.getOrDefault("limitRepeats", String.valueOf(defLimitRepeats));
-            }
-
-            String cutOldPasswords = cutOldPasswords(oldPasswords, limitRepeats, newUser.get(pwdKey));
-            newUser.put("oldPasswords", cutOldPasswords);
+            String historyPasswords = oldUser.get("historyPasswords");
+            int limitRepeats = MasterApp.getService(Config.class).getConsole().getSecurity().getPasswordLimitRepeats();
+            String cutOldPasswords = cutOldPasswords(historyPasswords, limitRepeats, newUser.get(pwdKey));
+            newUser.put("historyPasswords", cutOldPasswords);
         } else {
             String oldPassword = oldUser.get("password");
             if (oldPassword != null) {
@@ -400,34 +346,30 @@ public class User extends ModelBase implements Createable {
         return newUser;
     }
 
-    public static String cutOldPasswords(String oldPasswords, String repeats, String newPwd) {
-        if (oldPasswords == null) {
-            oldPasswords = "";
+    public static String cutOldPasswords(String historyPasswords, int limitRepeats, String newPwd) {
+        if (historyPasswords == null) {
+            historyPasswords = "";
         }
         if (!newPwd.isEmpty()) {
-            oldPasswords += (oldPasswords.isEmpty() ? "" : DATA_SEPARATOR) + newPwd;
+            historyPasswords += (historyPasswords.isEmpty() ? "" : DATA_SEPARATOR) + newPwd;
         }
 
-        if (repeats == null || repeats.isEmpty()) {
-            repeats = String.valueOf(User.defLimitRepeats);
-        }
         int currentLength;
-        if (!oldPasswords.contains(DATA_SEPARATOR)) {
+        if (!historyPasswords.contains(DATA_SEPARATOR)) {
             currentLength = 1;
         } else {
-            currentLength = oldPasswords.split(DATA_SEPARATOR).length;
+            currentLength = historyPasswords.split(DATA_SEPARATOR).length;
         }
-        int limitRepeats = Integer.parseInt(repeats);
         int cutCount = currentLength - limitRepeats;
         if (cutCount > 0) {
             for (int i = 0; i < cutCount; i++) {
-                int found = oldPasswords.indexOf(DATA_SEPARATOR);
+                int found = historyPasswords.indexOf(DATA_SEPARATOR);
                 if (found != -1) {
-                    oldPasswords = oldPasswords.substring(found + DATA_SEPARATOR.length());
+                    historyPasswords = historyPasswords.substring(found + DATA_SEPARATOR.length());
                 }
             }
         }
-        return oldPasswords;
+        return historyPasswords;
     }
 
     private boolean checkForbidden(Request request, Response response) {
@@ -469,7 +411,7 @@ public class User extends ModelBase implements Createable {
 
     public static void insertPasswordModifiedTime(Map<String, String> params) {
         String value = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        params.put("passwordLastModifiedTime", value);
+        params.put("passwordLastModified", value);
     }
 
     private boolean passwordChanged(String password) {
