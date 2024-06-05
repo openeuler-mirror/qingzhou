@@ -4,15 +4,13 @@ import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.system.User;
 import qingzhou.config.Config;
+import qingzhou.config.Console;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.MessageDigest;
-import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +21,21 @@ import java.util.Map;
         name = {"修改密码", "en:Change Password"},
         info = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
 public class Password extends ModelBase implements Editable {
+    public static String[] splitPwd(String storedCredentials) {
+        String SP = "$";
+        String[] pwdArray = new String[4];
+        int lastIndexOf = storedCredentials.lastIndexOf(SP);
+
+        String digestAlg = storedCredentials.substring(lastIndexOf + 1);
+        pwdArray[pwdArray.length - 1] = digestAlg;
+
+        storedCredentials = storedCredentials.substring(0, lastIndexOf);
+        String[] oldPwdDigestStyle = storedCredentials.split("\\" + SP);
+        System.arraycopy(oldPwdDigestStyle, 0, pwdArray, 0, pwdArray.length - 1);
+
+        return pwdArray;
+    }
+
     @ModelField(
             type = FieldType.password,
             name = {"原始密码", "en:Original Password"},
@@ -57,7 +70,6 @@ public class Password extends ModelBase implements Editable {
         appContext.addI18n("password.confirm.failed", new String[]{"确认密码与新密码不一致", "en:Confirm that the password does not match the new password"});
         appContext.addI18n("password.original.failed", new String[]{"原始密码错误", "en:The original password is wrong"});
         appContext.addI18n("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变", "en:The new password is the same as the original password and has not changed"});
-        appContext.addI18n("password.min", new String[]{"未达到密码最短使用期限 %s 天，上次修改时间为：%s", "en:The minimum password age of %s days has not been reached, last modified: %s"});
         appContext.addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，禁止使用最近 %s 次使用过的旧密码",
                 "en:For security reasons, the use of old passwords that have been used last %s is prohibited"});
     }
@@ -103,52 +115,44 @@ public class Password extends ModelBase implements Editable {
             }
         }
 
+        Console console = MasterApp.getService(Config.class).getConsole();
         String loginUser = request.getUser();
         if (Boolean.parseBoolean(p.getOrDefault("update2FA", "false"))) {
             // p.put("keyFor2FA", User.refresh2FA()); TODO
             p.put("bound2FA", "false");
-        } else { //ITAIT-4537
-            /*if (forbidResetInitPwd(request)) {
+        } else {
+            if (forbidResetInitPwd(request)) {
                 response.setSuccess(false);
                 return;
-            }*/
+            }
 
             Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
 
-            String digestAlg = loginUserPro.get("digestAlg");
-            if (null == digestAlg || digestAlg.isEmpty()) {
-                digestAlg = "SHA-256";
-            }
-            String saltLength = loginUserPro.get("saltLength");
-            if (null == saltLength || saltLength.isEmpty()) {
-                saltLength = String.valueOf(User.defSaltLength);
-            }
-            String iterations = loginUserPro.get("iterations");
-            if (null == iterations || iterations.isEmpty()) {
-                iterations = String.valueOf(User.defIterations);
-            }
+            String[] passwords = splitPwd(loginUserPro.get("password"));
+            String digestAlg = passwords[0];
+            int saltLength = Integer.parseInt(passwords[1]) / 2;
+            int iterations = Integer.parseInt(passwords[2]);
+
             MessageDigest digest = CryptoServiceFactory.getInstance().getMessageDigest();
             p.put(User.pwdKey,
                     digest.digest(
                             paramMap.get("newPassword"),
                             digestAlg,
-                            Integer.parseInt(saltLength),
-                            Integer.parseInt(iterations)));
+                            saltLength,
+                            iterations));
             p.put("changeInitPwd", "false");
-
-            MasterApp.getService(Logger.class).info(String.format("encrypted password with, digestAlg: %s, saltLength: %s, iterations: %s", digestAlg, saltLength, iterations));
 
             User.insertPasswordModifiedTime(p);
 
-            String oldPasswords = User.cutOldPasswords(
-                    loginUserPro.remove("oldPasswords"),
-                    loginUserPro.get("limitRepeats"),
+            String historyPasswords = User.cutOldPasswords(
+                    loginUserPro.remove("historyPasswords"),
+                    console.getSecurity().getPasswordLimitRepeats(),
                     p.get(User.pwdKey));
-            p.put("oldPasswords", oldPasswords);
+            p.put("historyPasswords", historyPasswords);
         }
 
         getDataStore().updateDataById(loginUser, p);
-        qingzhou.config.User user = MasterApp.getService(Config.class).getConsole().getUser(loginUser);
+        qingzhou.config.User user = console.getUser(loginUser);
         user.setPassword(p.get(User.pwdKey));
         user.setChangeInitPwd(Boolean.parseBoolean(p.get("changeInitPwd")));
 
@@ -206,36 +210,13 @@ public class Password extends ModelBase implements Editable {
                     return appContext.getI18n(request.getLang(), "password.change.not");
                 }
 
-                Map<String, String> userP = getDataStore().getDataById(loginUser);
-                if (!Boolean.parseBoolean(userP.getOrDefault("changeInitPwd", "false"))) {
-                    String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
-                    if (null != passwordLastModifiedTime && !"".equals(passwordLastModifiedTime)) {
-                        try {
-                            long time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(passwordLastModifiedTime).getTime();
-                            if (Boolean.parseBoolean(userP.get("enablePasswordAge"))) {
-                                String minAge = userP.get("passwordMinAge");
-                                if (minAge != null && !minAge.equals("0")) {
-                                    long min = time + (long) Integer.parseInt(minAge) * 24 * 60 * 60 * 1000;
-                                    if (System.currentTimeMillis() < min) {
-                                        return String.format(appContext.getI18n(request.getLang(), "password.min"), minAge, passwordLastModifiedTime);
-                                    }
-                                }
-                            }
-                        } catch (ParseException ignored) {
-                        }
-                    }
-                }
-
                 Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
                 if (loginUserPro != null) {
-                    String oldPasswords = loginUserPro.get("oldPasswords");
-                    if (null != oldPasswords && !oldPasswords.isEmpty()) {
-                        for (String oldPass : oldPasswords.split(",")) {
+                    String historyPasswords = loginUserPro.get("historyPasswords");
+                    if (null != historyPasswords && !historyPasswords.isEmpty()) {
+                        for (String oldPass : historyPasswords.split(",")) {
                             if (!oldPass.isEmpty() && digest.matches(newValue, oldPass)) {
-                                String limitRepeats = loginUserPro.get("limitRepeats");
-                                if (null == limitRepeats || limitRepeats.isEmpty()) {
-                                    limitRepeats = String.valueOf(User.defLimitRepeats);
-                                }
+                                String limitRepeats = loginUserPro.get("passwordLimitRepeats");
                                 return String.format(appContext.getI18n(request.getLang(), "password.doNotUseOldPasswords"), limitRepeats);
                             }
                         }
@@ -262,19 +243,6 @@ public class Password extends ModelBase implements Editable {
         if (!"qingzhou".equals(loginUser)) { // 非三员或特殊用户不必限制
             return false;
         }
-
-        Map<String, String> userP = getDataStore().getDataById(loginUser);
-        String passwordLastModifiedTime = userP.get("passwordLastModifiedTime");
-        // 首次修改密码，只能在本机进行，因为默认密码是公开的，防止通过公网抢先修改
-        if (null == passwordLastModifiedTime || passwordLastModifiedTime.isEmpty()) { // 不要靠 changeInitPwd 来判定，靠 passwordLastModifiedTime，改过一次之后就不必要限制本机了
-//            if (!ConsoleUtil.trustedIP(request.getClientIp())) {
-//                request.setSuccess(false);
-//                request.setMsg(getAppContext().getAppMetadata().getI18n("client.trusted.not"));
-//                LOGGER.warn("The operation has been forbidden, client is not trusted: " + request.getClientIp());
-//                return true;
-//            }
-        }
-
         return false;
     }
 

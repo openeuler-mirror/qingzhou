@@ -7,9 +7,8 @@ public class Security {
     private boolean verCodeEnabled;
     private int lockOutTime;
     private int failureCount;
-    private boolean enablePasswordAge;
     private int passwordMaxAge;
-    private int passwordMinAge;
+    private int passwordLimitRepeats;
 
     public String getPublicKey() {
         return publicKey;
@@ -27,14 +26,6 @@ public class Security {
         this.privateKey = privateKey;
     }
 
-    public boolean isEnablePasswordAge() {
-        return enablePasswordAge;
-    }
-
-    public void setEnablePasswordAge(boolean enablePasswordAge) {
-        this.enablePasswordAge = enablePasswordAge;
-    }
-
     public int getPasswordMaxAge() {
         return passwordMaxAge;
     }
@@ -43,12 +34,12 @@ public class Security {
         this.passwordMaxAge = passwordMaxAge;
     }
 
-    public int getPasswordMinAge() {
-        return passwordMinAge;
+    public int getPasswordLimitRepeats() {
+        return passwordLimitRepeats;
     }
 
-    public void setPasswordMinAge(int passwordMinAge) {
-        this.passwordMinAge = passwordMinAge;
+    public void setPasswordLimitRepeats(int passwordLimitRepeats) {
+        this.passwordLimitRepeats = passwordLimitRepeats;
     }
 
     public int getFailureCount() {

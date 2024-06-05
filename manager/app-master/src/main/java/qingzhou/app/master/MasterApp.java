@@ -22,9 +22,7 @@ public class MasterApp extends QingzhouSystemApp {
         appContext.addI18n("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
         appContext.addI18n("password.lengthBetween", new String[]{"密码长度必须介于%s - %s之间", "en:Password length must be between %s and %s"});
         appContext.addI18n("validator.master.system", new String[]{"为保障系统安全可用，请勿修改此配置", "en:To ensure the security and availability of the system, do not modify this configuration"});
-        appContext.addI18n("client.trusted.not", new String[]{"该操作仅限于在服务器本机或受信任的IP上执行，受信任IP的设置方式请参考产品手册", "en:This operation can only be performed on the local server or on a trusted IP. Please refer to the product manual for the setting method of the trusted IP"});
         appContext.addI18n("app.delete.notlocal", new String[]{"不能卸载其他实例上部署的应用", "en:You can't uninstall apps deployed on other instances"});
-
         appContext.addMenu("Service", new String[]{"服务管理", "en:Service"}, "th-large", 1);
         appContext.addMenu("System", new String[]{"系统管理", "en:System"}, "cog", 2);
     }
