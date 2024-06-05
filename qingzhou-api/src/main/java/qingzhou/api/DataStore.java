@@ -4,6 +4,7 @@ import qingzhou.api.type.Listable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -150,18 +151,22 @@ public interface DataStore {
      * @throws Exception 操作失败时抛出的异常
      */
     default List<Map<String, String>> getDataFieldByIds(String[] ids, String[] fields) throws Exception {
-        return getDataByIds(ids).stream().filter(new Predicate<Map<String, String>>() {
-            private final List<String> listToShow = Arrays.asList(fields);
-
-            @Override
-            public boolean test(Map<String, String> data) {
-                for (String k : data.keySet().toArray(new String[0])) {
-                    if (!listToShow.contains(k)) {
-                        data.remove(k);
-                    }
+        final List<String> listToShow = Arrays.asList(fields);
+        final List<Map<String, String>> dataList = new ArrayList<>();
+        List<?> list = getDataByIds(ids);
+        list.forEach(o -> {
+            Map<String, Object> map = (Map<String, Object>) o;
+            Map<String, String> item = new HashMap<>();
+            map.forEach((k, v) -> item.put(k, String.valueOf(v)));
+            dataList.add(item);
+        });
+        return dataList.stream().filter((data) -> {
+            for (String k : data.keySet().toArray(String[]::new)) {
+                if (!listToShow.contains(k)) {
+                    data.remove(k);
                 }
-                return true;
             }
+            return true;
         }).collect(Collectors.toList());
     }
 }
