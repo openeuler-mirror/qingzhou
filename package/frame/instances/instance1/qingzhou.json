@@ -56,9 +56,8 @@
         "verCodeEnabled": "true",
         "lockOutTime": "300",
         "failureCount": "5",
-        "enablePasswordAge": "true",
-        "passwordMaxAge": "90",
-        "passwordMinAge": "0"
+        "passwordLimitRepeats": "0",
+        "passwordMaxAge": "0"
       },
       "user": [
         {
@@ -69,7 +68,7 @@
           "changeInitPwd": "false",
           "enable2FA": "false",
           "keyFor2FA": "",
-          "passwordLastModifiedTime": ""
+          "passwordLastModified": ""
         }
       ],
       "jmx": {

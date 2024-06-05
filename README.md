@@ -15,18 +15,18 @@ JDK >= 1.8
 ## 安装使用
 
 1. **获取安装包**
-   
+
    在项目根目录执行 `mvn clean package` 命令，即可在 `package/target/qingzhou` 中获取到安装包。
 
 
 2. **启动平台服务**
-   
+
    方式一：
-   >+ 进入安装包根目录。
-   >+  在 bin 目录下，根据操作系统平台执行对应的 `start` 脚本即开始启动。
+   > + 进入安装包根目录。
+   >+ 在 bin 目录下，根据操作系统平台执行对应的 `start` 脚本即开始启动。
 
    方式二：选择执行与平台无关的 java 命令来启动，如下所示。
-   >+ 找到 `qingzhou-launcher.jar`所在目录
+   > + 找到 `qingzhou-launcher.jar`所在目录
    >+ 执行命令`java -jar ./qingzhou-launcher.jar server start`
 
 3. **启动成功标识**
@@ -37,9 +37,9 @@ JDK >= 1.8
    ```
 
 4. **访问控制台**
-   
+
    平台服务启动完成后，可打开浏览器访问轻舟的可视化管理平台：
-   
+
    [http://localhost:9000/console](http://localhost:9000/console)
 
 ## 应用开发
@@ -47,16 +47,22 @@ JDK >= 1.8
 基于轻舟开发应用，只需简单的几步：
 
 1. 在 IDE 中建立一个 Java 项目工程。
-2. 在工程里引入轻舟的开发工具包。
+2. 在工程里引入轻舟的 qingzhou-api.jar，对于 maven 项目，可通过如下方式：
 
    ```xml
-      <dependency>
+    <dependency>
          <groupId>qingzhou</groupId>
          <artifactId>qingzhou-api</artifactId>
-      </dependency>
+         <version>x</version>
+         <scope>system</scope>
+         <systemPath>/path/to/qingzhou/lib/versionx/qingzhou-api.jar</systemPath>
+     </dependency>
    ```
+
 ---   
-#### 入口类 
+
+#### 入口类
+
 3. 创建一个类作为应用的入口，使其实现 `qingzhou.api.QingzhouApp` 接口。
 
    该类在 `qingzhou-api` 内，后文提到的轻舟的类也都在其内。
@@ -71,10 +77,9 @@ JDK >= 1.8
     
        @Override
        public void start(AppContext appContext) throws Exception {
-          //应用启动逻辑
-   
+          //添加父级菜单
           appContext.addMenu("User", 
-            new String[]{"用户管理", "en:User"}, "cog", 1);//添加父级菜单
+            new String[]{"用户管理", "en:User"}, "cog", 1);
        }
 
        @Override
@@ -83,19 +88,30 @@ JDK >= 1.8
        }
    }
    ```
----   
-#### 模块类
-5. 创建应用的模块类，使其继承自 `qingzhou.api.ModelBase`。
 
-   对该类添加 `@Model` 注解以设置模块的名称、图标、菜单、国际化等信息。
-   
-   在该类内部创建 **public** 的属性（自动对应到页面上的表单元素），并对其添加 `@ModelField`
-   注解以设置属性的相关信息。
-   
-   在该类内部创建方法（自动对应到页面上的按钮或链接），并对其添加 `@ModelAction`
-   注解以设置方法的相关信息。
-   
-   关于配置的具体接口，可查看对应的Javadoc。
+---   
+
+#### 模块类
+
+5. 创建应用的模块类，使其继承自 `qingzhou.api.ModelBase`，根据需要实现不同的接口。
+
+```
+Createable接口：提供了创建、添加、删除、修改、更新、列表以及查看功能。
+Deletable接口：提供了删除、列表、查看功能。
+Listable接口：提供了列表和查看功能。
+Showable接口：提供了查看功能。
+Editable接口：提供了修改、更新、展示功能。
+```
+
+对该类添加 `@Model` 注解以设置模块的名称、图标、菜单、国际化等信息。
+
+在该类内部创建 **public** 的属性（自动对应到页面上的表单元素），并对其添加 `@ModelField`
+注解以设置属性的相关信息。
+
+在该类内部创建方法（自动对应到页面上的按钮或链接），并对其添加 `@ModelAction`
+注解以设置方法的相关信息。
+
+关于配置的具体接口，可查看对应的Javadoc。
 
    ```java
     @Model(code = "user",//模块名称
@@ -134,15 +150,8 @@ JDK >= 1.8
    }
    ```
 
-6. 模块类根据需要实现不同的接口。
+6. 模块类中需要复写DataStore 接口中的方法，来实现数据的增删改查，接口中定义了对数据进行存储、获取、更新和删除的方法规范。
 
-+ Createable接口：提供了创建、添加、删除、修改、更新、列表以及查看功能。
-+ Deletable接口：提供了删除、列表、查看功能。
-+ Listable接口：提供了列表和查看功能。
-+ Showable接口：提供了查看功能。
-+ Editable接口：提供了修改、更新、展示功能。
-
-7. 模块类中需要复写DataStore 接口中的方法，来实现数据的增删改查，接口中定义了对数据进行存储、获取、更新和删除的方法规范。
   ```java
 public class User extends ModelBase implements Createable {
     @Override
@@ -180,137 +189,26 @@ public class User extends ModelBase implements Createable {
     }
 }
    ```
-8. 禁用页面的某个按钮，不在页面显示。
 
-   需要在对应按钮`@ModelAction`中添加`disable=true`。
+7. 打包工程。
 
-   ```java
-   public class App extends ModelBase implements Createable {
-      @ModelAction(
-            disable = true,
-            name = {"更新", "en:Update"},
-            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-      public void update(Request request, Response response) throws Exception {}
-   }   
-   ```
----
-9. 打包工程。
-+ 把项目打成zip包。
-   1. zip包下需要放项目所需的资源文件。
-   2. 需要在MANIFEST.MF 中配置 Class-Path 加入资源文件目录,MANIFEST.MF 配置内容如：`Class-Path: lib/resource.jar`。
+根据项目工程结构需要，可选择jar包或zip两种格式。 
 
-   目录结构如下：
++ 打成jar包需要将项目依赖打包到一起为一个jar包即可；
++ 打成zip包，则需要将上述注解标注的类所在的jar（如app.jar）放入zip包根目录，其依赖的其它资源包， 可在MANIFEST.MF 中配置 Class-Path 加入资源文件目录,MANIFEST.MF 配置内容如：`Class-Path: lib/resource.jar`。
+```
+zip包目录结构示意：
   - app.zip
-    - lib
-       - resource.jar
-    - app.jar
-       - MANIFEST.MF
-
-```xml
- <!-- pom.xml文件配置参考 -->
-<plugins>
-    <!-- 项目jar包不包含依赖jar包 -->
-    <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <configuration>
-            <excludes>
-                <exclude>
-                    <groupId>org.projectlombok</groupId>
-                    <artifactId>lombok</artifactId>
-                </exclude>
-            </excludes>
-            <includes>
-                <include>
-                    <groupId>nothing</groupId>
-                    <artifactId>nothing</artifactId>
-                </include>
-            </includes>
-        </configuration>
-    </plugin>
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-            <!-- 把target/classes/下的文件导入到jar内 -->
-            <classesDirectory>target/classes/</classesDirectory>
-            <archive>
-                <manifest>
-                    <!-- 指定程序入口 -->
-                    <mainClass>xx.xx.xx</mainClass>
-                    <!-- 打包时 MANIFEST.MF文件不记录的时间戳版本 -->
-                    <useUniqueVersions>false</useUniqueVersions>
-                    <addClasspath>true</addClasspath>
-                    <!-- 服务依赖的jar包放在lib目录下 -->
-                    <classpathPrefix>lib/</classpathPrefix>
-                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                </manifest>
-                <manifestEntries>
-                    <!--MANIFEST.MF 中 Class-Path 加入资源文件目录 -->
-                    <Class-Path>./config/</Class-Path>
-                </manifestEntries>
-            </archive>
-            <outputDirectory>${project.build.directory}</outputDirectory>
-        </configuration>
-    </plugin>
-
-    <!-- 分离打包关键代码 maven-dependency-plugin -->
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-            <execution>
-                <id>copy-dependencies</id>
-                <phase>package</phase>
-                <goals>
-                    <goal>copy-dependencies</goal>
-                </goals>
-                <configuration>
-                    <type>jar</type>
-                    <includeTypes>jar</includeTypes>
-                    <!-- 存放服务依赖的jar包，存放在服务相同目录的lib文件夹下 -->
-                    <outputDirectory>
-                        ${project.build.directory}/lib
-                    </outputDirectory>
-                </configuration>
-            </execution>
-        </executions>
-    </plugin>        
-</plugins>
+      - lib
+          - resource.jar
+      - app.jar
+          - MANIFEST.MF
 ```
 
-+ 把项目打成jar包。
-   1. 所依赖的包需要打到当前项目的jar中。
-```xml
- <!-- pom.xml文件配置参考 -->
-<plugin>
-    <artifactId>maven-assembly-plugin</artifactId>
-    <configuration>
-        <archive>
-            <manifest>
-                <mainClass>xx.xx.xx</mainClass><!--程序入口-->
-            </manifest>
-        </archive>
-        <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-        </descriptorRefs>
-    </configuration>
-    <executions>
-        <execution>
-            <id>make-assembly</id>
-            <phase>package</phase>
-            <goals>
-                <goal>single</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
-```
-
-10. 访问轻舟的可视化管理平台，在`应用`模块下，安装上述应用的 jar 包或者 zip 包，至此，已完成应用的开发和部署。
-11. 后续，可通过轻舟的可视化管理平台对应用进行管理。 
-12. 页面展示
-![](./doc/readme/showcase.png)
+8. 访问轻舟的可视化管理平台，在`应用`模块下，安装上述应用的 jar 包或者 zip 包，至此，已完成应用的开发和部署。
+9. 后续，可通过轻舟的可视化管理平台对应用进行管理。
+10. 页面展示
+    ![](./doc/readme/showcase.png)
 
 ## 鸣谢
 
@@ -336,10 +234,10 @@ public class User extends ModelBase implements Createable {
 + Apache Tomcat ([https://tomcat.apache.org](https://tomcat.apache.org))
 
 ## 参与贡献
+
 贡献让开源社区成为一个非常适合学习、启发和创新的地方。您所作出的任何贡献都是**受人尊敬**的。
 
-如果您有好的建议，请复刻（fork）本仓库并且创建一个拉取请求（pull request）。你也可以简单的创建一个议题（issue），并且添加标签『enhancement』。
-不要忘记给项目点一个star！再次感谢！
+如果您有好的建议，请复刻（fork）本仓库并且创建一个拉取请求（pull request）。你也可以简单的创建一个议题（issue），并且添加标签『enhancement』。 不要忘记给项目点一个star！再次感谢！
 
 1. Fork [本仓库](https://gitee.com/openeuler/qingzhou)
 2. 新建您的 Feature 分支(`git checkout -b feature/AmazingFeature`)
