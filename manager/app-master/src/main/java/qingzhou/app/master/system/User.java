@@ -1,18 +1,35 @@
 package qingzhou.app.master.system;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.DataStore;
+import qingzhou.api.FieldType;
+import qingzhou.api.Group;
+import qingzhou.api.Groups;
+import qingzhou.api.Lang;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
+import qingzhou.app.master.Password;
 import qingzhou.config.Config;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.engine.util.crypto.MessageDigest;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 @Model(code = "user", icon = "user",
@@ -27,7 +44,6 @@ public class User extends ModelBase implements Createable {
 
     private static final int defSaltLength = 4;
     private static final int defIterations = 5;
-    private static final int defLimitRepeats = 5;
 
     @Override
     public void start() {
@@ -97,15 +113,6 @@ public class User extends ModelBase implements Createable {
             info = {"安全起见，开启该功能后，初始密码须修改以后才能登录系统。",
                     "en:For security reasons, the initial password must be changed before you can log in to the system once this function is enabled."})
     public Boolean changeInitPwd = true;
-
-    @ModelField(
-            group = "security",
-            required = false, type = FieldType.number, min = 0, max = 90,
-            name = {"密码最长使用期限", "en:Maximum Password Age"},
-            info = {"用户登录系统的密码距离上次修改超过该期限（单位为天）后，需首先更新密码才能继续登录系统。",// 内部：0 表示可以永久不更新。
-                    "en:After the password of the user logging in to the system has been last modified beyond this period (in days), the user must first update the password before continuing to log in to the system."}
-    )
-    public Integer passwordMaxAge;
 
     /*@ModelField(
             group = "security",
@@ -257,6 +264,13 @@ public class User extends ModelBase implements Createable {
         DataStore dataStore = getDataStore();
         Map<String, String> data = dataStore.getDataById(request.getId());
         if (Editable.ACTION_NAME_EDIT.equals(request.getAction())) {
+            String[] passwords = Password.splitPwd(data.get("password"));
+            String digestAlg = passwords[0];
+            int saltLength = Integer.parseInt(passwords[1]) / 2;
+            int iterations = Integer.parseInt(passwords[2]);
+            data.put("digestAlg", digestAlg);
+            data.put("saltLength", String.valueOf(saltLength));
+            data.put("iterations", String.valueOf(iterations));
             data.put("password", PASSWORD_FLAG);
             data.put("confirmPassword", PASSWORD_FLAG);
         }

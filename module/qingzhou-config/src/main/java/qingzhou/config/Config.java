@@ -22,4 +22,8 @@ public interface Config {
     void addArg(Arg arg) throws Exception;
 
     void deleteArg(String id) throws Exception;
+
+    Security getSecurity();
+
+    void setSecurity(Security security) throws Exception;
 }

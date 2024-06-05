@@ -104,15 +104,4 @@ public class ResetPassword implements Filter<HttpServletContext> {
         }
         return null;
     }
-
-    private static String wrapCheckingPath(String uri) {
-        if (!uri.startsWith("/")) {
-            uri = "/" + uri;
-        }
-        if (!uri.endsWith("/")) {
-            uri = uri + "/";
-        }
-        return uri;
-    }
-
 }
