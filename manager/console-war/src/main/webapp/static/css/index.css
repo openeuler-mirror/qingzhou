@@ -468,7 +468,7 @@ tw-tooltip-bottom-left:before {
 .tw-list-operate{margin-top: 15px; margin-bottom: 15px;}
 .tw-action-link {color:#4C638F; border: none; font-size:14px; text-decoration: none;display: inline-block; padding-left: 6px; padding-right: 6px;}
 .tw-action-link:hover {text-decoration: none !important;}
-.list-table th, .list-table td {padding-left: 16px;}
+.list-table th, .list-table td {padding-left: 16px;word-wrap: break-word;}
 .list-table {table-layout: fixed;}
 .custom-checkbox {width: 50px;}
 .sequence {width: 100px;}

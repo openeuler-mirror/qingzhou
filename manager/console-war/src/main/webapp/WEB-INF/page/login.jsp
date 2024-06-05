@@ -36,10 +36,10 @@
 </head>
 
 <body class="login_body" onload="escapeFrame();">
-<header class="login-header">
-    <!-- <img src="<%=contextPath%>/static/images/login/top_logo.png" class="login-top-logo" alt=""> -->
+<!-- <header class="login-header">
+    <img src="<%=contextPath%>/static/images/login/top_logo.png" class="login-top-logo" alt="">
     <div class="login-right-lang"></div>
-</header>
+</header> -->
 <main class="page page-login text-center">
     <section class="body_left">
         <div class="body_logo"></div>
@@ -52,7 +52,7 @@
               action="<%=PageBackendService.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>"
               class="form-group" autocomplete="off">
             <div class="input-control has-icon-left">
-                <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" 
+                <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" required
                        class="form-control" placeholder="<%=PageBackendService.getMasterAppI18nString( "model.field.user.name")%>" autofocus>
                 <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;">
                     <i class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("user").getIcon()%> "></i>
@@ -60,7 +60,7 @@
             </div>
             <div class="input-control has-icon-left">
                 <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control"
-                       placeholder="<%=PageBackendService.getMasterAppI18nString( "model.field.user.password")%>"
+                       placeholder="<%=PageBackendService.getMasterAppI18nString( "model.field.user.password")%>" required
                        onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;" dotted>
                 <input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>" name="<%=LoginManager.LOGIN_PASSWORD%>">
                 <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left" style="line-height: 44px;">

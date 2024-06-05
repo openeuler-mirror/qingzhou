@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import qingzhou.api.FieldType;
 
 public class ValidationFilter implements Filter<RestContext> {
     public static String validation_required = "validation_required";
@@ -24,6 +25,7 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String validation_lengthMin = "validation_lengthMin";
     public static String validation_lengthMax = "validation_lengthMax";
     public static String validation_port = "validation_port";
+    public static String validation_password = "validation_password";
     public static String validation_port_valueBetween = "validation_port_valueBetween";
     public static String unsupportedCharacters = "unsupportedCharacters";
     public static String unsupportedStrings = "unsupportedStrings";
@@ -37,6 +39,7 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n(validation_lengthMin, new String[]{"字符串长度不能小于%s", "en:The length of the string cannot be less than %s"});
         ConsoleI18n.addI18n(validation_lengthMax, new String[]{"字符串长度不能大于%s", "en:The length of the string cannot be greater than %s"});
         ConsoleI18n.addI18n(validation_port, new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
+        ConsoleI18n.addI18n(validation_password, new String[]{"密码校验异常", "en:Validate password exception"});
         ConsoleI18n.addI18n(validation_port_valueBetween, new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         ConsoleI18n.addI18n(unsupportedStrings, new String[]{"不能包含字串%s", "en:Cannot contain the string %s"});
         ConsoleI18n.addI18n(createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
@@ -82,7 +85,7 @@ public class ValidationFilter implements Filter<RestContext> {
     Validator[] validators = {
             new min(), new max(),
             new lengthMin(), new lengthMax(),
-            new port(),
+            new port(), new Password(),
             new unsupportedCharacters(), new unsupportedStrings(),
             new createable(), new editable()
     };
@@ -201,6 +204,25 @@ public class ValidationFilter implements Filter<RestContext> {
                 }
             } catch (Exception e) {
                 return new String[]{validation_port};
+            }
+
+            return null;
+        }
+    }
+    
+    static class Password implements Validator {
+
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            if (!FieldType.password.name().equals(fieldInfo.getType())) return null;
+            try {
+                String pwdText = AsymmetricDecryptor.decryptWithConsolePrivateKey(context.parameterVal);
+                if ("".equals(pwdText.trim())) {
+                    return new String[]{validation_required};
+                }
+            } catch (Exception e) {
+                return new String[]{validation_password};
             }
 
             return null;

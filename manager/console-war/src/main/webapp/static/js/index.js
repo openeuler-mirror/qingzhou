@@ -356,7 +356,7 @@ $(document).ready(function () {
             $(menuItemLink).parent().addClass("active");
             $(menuItemLink).parents(".sidebar.sidebar-scroll").animate({scrollTop: $(menuItemLink).parents(".sidebar.sidebar-scroll").scrollTop() + $(menuItemLink).parent().offset().top - $(menuItemLink).parents(".sidebar.sidebar-scroll").offset().top}, 1000);
         }
-        tw.fill( matchPart, {}, ".main-body", false);
+        tw.fill(matchPart, {}, ".main-body", false);
         return false;
     });
 });
@@ -1083,7 +1083,7 @@ function bindEventForListPage() {
     });
     // 搜索
     tw.bindFill(".search-btn a", ".main-body", false, false);
-    //列表搜索框回车
+    // 列表搜索框回车
     $("form[name='filterForm']").unbind("keypress").bind("keypress", function (e) {
         if (e.keyCode === 13) {
             e.preventDefault();

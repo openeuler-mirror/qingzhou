@@ -191,7 +191,7 @@
                 <td>
                     <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.getCode() + "/" + encodedId)%>'
                        class="dataid tooltips"
-                       record-action-id="<%=targetAction.getIcon()%>"
+                       record-action-id="<%=targetAction.getCode()%>"
                        data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + targetAction.getCode())%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
