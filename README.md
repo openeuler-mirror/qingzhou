@@ -46,7 +46,7 @@ JDK >= 1.8
 
 基于轻舟开发应用，只需简单的几步：
 
-1. 在 IDE 中建立一个 Java 项目工程。<br><br>
+1. 在 IDE 中建立一个 Java 项目工程。
 2. 在工程里引入轻舟的开发工具包。
 
    ```xml
@@ -61,7 +61,7 @@ JDK >= 1.8
 
    该类在 `qingzhou-api` 内，后文提到的轻舟的类也都在其内。
 
-   实现 `start` 方法以定制应用的启动逻辑。`start` 方法会接收一个 `qingzhou.api.AppContext` 的实例对象，应用通过该对象与平台交互。<br><br>
+   实现 `start` 方法以定制应用的启动逻辑。`start` 方法会接收一个 `qingzhou.api.AppContext` 的实例对象，应用通过该对象与平台交互。
 
 4. 给入口类添加 `@App` 注解，以使得轻舟可以识别到它。
 
@@ -141,9 +141,6 @@ JDK >= 1.8
 + Listable接口：提供了列表和查看功能。
 + Showable接口：提供了查看功能。
 + Editable接口：提供了修改、更新、展示功能。
-+ Downloadable接口：提供了下载功能。
-+ Monitorable接口：提供了监控功能。
-  <br>
 
 7. 模块类中需要复写DataStore 接口中的方法，来实现数据的增删改查，接口中定义了对数据进行存储、获取、更新和删除的方法规范。
   ```java
@@ -199,11 +196,9 @@ public class User extends ModelBase implements Createable {
 ---
 9. 打包工程。
 + 把项目打成zip包。
-  <br>
    1. zip包下需要放项目所需的资源文件。
-  <br>
-   2. 需要在MANIFEST.MF 中配置 Class-Path 加入资源文件目录,`MANIFEST.MF 内容：Class-Path: lib/resource.jar`。
-  <br><br>
+   2. 需要在MANIFEST.MF 中配置 Class-Path 加入资源文件目录,MANIFEST.MF 配置内容如：`Class-Path: lib/resource.jar`。
+
    目录结构如下：
   - app.zip
     - lib
@@ -285,7 +280,6 @@ public class User extends ModelBase implements Createable {
 ```
 
 + 把项目打成jar包。
-   <br>
    1. 所依赖的包需要打到当前项目的jar中。
 ```xml
  <!-- pom.xml文件配置参考 -->
@@ -314,9 +308,7 @@ public class User extends ModelBase implements Createable {
 ```
 
 10. 访问轻舟的可视化管理平台，在`应用`模块下，安装上述应用的 jar 包或者 zip 包，至此，已完成应用的开发和部署。
-<br><br>
 11. 后续，可通过轻舟的可视化管理平台对应用进行管理。 
-<br><br>
 12. 页面展示
 ![](./doc/readme/showcase.png)
 
