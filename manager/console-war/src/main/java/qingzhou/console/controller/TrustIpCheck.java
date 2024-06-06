@@ -18,14 +18,14 @@ import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SafeChecker implements Filter<HttpServletContext> {
+public class TrustIpCheck implements Filter<HttpServletContext> {
     @Override
     public boolean doFilter(HttpServletContext context) throws Exception {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
 
         String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
-        if (checkPath.equals(LoginManager.LOGIN_URI) && !trustedIP(request.getRemoteAddr())) {
+        if (checkPath.equals(LoginManager.LOGIN_URI) && notTrustedIp(request.getRemoteAddr())) {
             String msgKey = "client.trusted.not";
             String toJson = JsonView.responseErrorJson(response, ConsoleI18n.getI18n(I18n.getI18nLang(), msgKey));
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
@@ -40,13 +40,13 @@ public class SafeChecker implements Filter<HttpServletContext> {
         return true;
     }
 
-    public static boolean trustedIP(String clientIp) {
+    public static boolean notTrustedIp(String clientIp) {
         if (IPUtil.isLocalIp(clientIp)) {
-            return true;
+            return false;
         }
         try {
             String trustedIP = SystemController.getConsole().getSecurity().getTrustedIP();
-            return validateIps(trustedIP, clientIp);
+            return !validateIps(trustedIP, clientIp);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
