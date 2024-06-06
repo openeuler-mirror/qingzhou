@@ -37,7 +37,7 @@
 
 <body class="login_body" onload="escapeFrame();">
 <header class="login-header">
-    <!--<img src="<%=contextPath%>/static/images/login/top_logo.png" class="login-top-logo" alt="">-->
+    <img src="<%=contextPath%>/static/images/login/top_logo.svg" class="login-top-logo" alt="">
     <div class="login-right-lang"></div>
 </header>
 <main class="page page-login text-center">

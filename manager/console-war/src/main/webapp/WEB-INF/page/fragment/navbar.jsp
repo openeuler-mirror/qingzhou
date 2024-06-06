@@ -5,11 +5,10 @@
     <nav class="navbar navbar-fixed-top">
         <%-- 顶部 左侧 logo --%>
         <div class="navbar-header">
-            <a class="navbar-toggle" href="javascript:void(0);" data-toggle="collapse" data-target=".navbar-collapse"><i
-                    class="icon icon-th-large"></i></a>
+            <a class="navbar-toggle" href="javascript:void(0);" data-toggle="collapse" data-target=".navbar-collapse"><i class="icon icon-th-large"></i></a>
             <a class="sidebar-toggle" href="javascript:void(0);" data-toggle="push-menu"><i class="icon icon-sliders"></i></a>
             <a class="navbar-brand" href="javascript:void(0);">
-                <!-- <img src="<%=contextPath%>/static/images/login/top_logo.png" class="logo" alt=""> -->
+                <img src="<%=contextPath%>/static/images/login/top_logo.svg" class="logo" alt="">
                 <span class="logo-mini" data-toggle="push-menu" style="display: none;">
                     <i class="icon icon-sliders"></i>
                 </span>
