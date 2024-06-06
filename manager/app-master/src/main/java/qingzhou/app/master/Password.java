@@ -1,6 +1,13 @@
 package qingzhou.app.master;
 
-import qingzhou.api.*;
+import qingzhou.api.DataStore;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.system.User;
 import qingzhou.config.Config;
@@ -128,12 +135,13 @@ public class Password extends ModelBase implements Editable {
 
             Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
 
+            MessageDigest digest = CryptoServiceFactory.getInstance().getMessageDigest();
+
             String[] passwords = splitPwd(loginUserPro.get("password"));
             String digestAlg = passwords[0];
-            int saltLength = Integer.parseInt(passwords[1]) / 2;
+            int saltLength = passwords[1].length() / 2;
             int iterations = Integer.parseInt(passwords[2]);
 
-            MessageDigest digest = CryptoServiceFactory.getInstance().getMessageDigest();
             p.put(User.pwdKey,
                     digest.digest(
                             paramMap.get("newPassword"),

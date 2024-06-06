@@ -266,7 +266,7 @@ public class User extends ModelBase implements Createable {
         if (Editable.ACTION_NAME_EDIT.equals(request.getAction())) {
             String[] passwords = Password.splitPwd(data.get("password"));
             String digestAlg = passwords[0];
-            int saltLength = Integer.parseInt(passwords[1]) / 2;
+            int saltLength = passwords[1].length() / 2;
             int iterations = Integer.parseInt(passwords[2]);
             data.put("digestAlg", digestAlg);
             data.put("saltLength", String.valueOf(saltLength));
