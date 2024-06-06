@@ -36,10 +36,10 @@
 </head>
 
 <body class="login_body" onload="escapeFrame();">
-<!-- <header class="login-header">
-    <img src="<%=contextPath%>/static/images/login/top_logo.png" class="login-top-logo" alt="">
+<header class="login-header">
+    <!--<img src="<%=contextPath%>/static/images/login/top_logo.png" class="login-top-logo" alt="">-->
     <div class="login-right-lang"></div>
-</header> -->
+</header>
 <main class="page page-login text-center">
     <section class="body_left">
         <div class="body_logo"></div>

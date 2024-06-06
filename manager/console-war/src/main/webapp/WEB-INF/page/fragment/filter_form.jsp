@@ -3,7 +3,7 @@
 
 <form name="filterForm" id="filterForm" method="POST"
       action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getApp() + "/" + qzRequest.getModel() + "/" + Listable.ACTION_NAME_LIST)%>">
-    <div class="row filterForm" style="margin-top: 10px;">
+    <div class="row filterForm" style="margin-top: 10px; display: none;">
         <%
             for (Integer i : indexToShow) {
                 String fieldName = PageBackendService.getFieldName(qzRequest, i);

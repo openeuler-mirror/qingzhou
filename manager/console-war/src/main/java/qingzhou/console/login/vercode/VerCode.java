@@ -52,7 +52,7 @@ public class VerCode implements Filter<HttpServletContext> {
     }
 
     public static boolean isVerCodeDisabled() {
-        return SystemController.getConsole().getSecurity().isVerCodeEnabled();
+        return !SystemController.getConsole().getSecurity().isVerCodeEnabled();
     }
 
     public static LoginManager.LoginFailedMsg checkVerCode(HttpServletRequest request) {
