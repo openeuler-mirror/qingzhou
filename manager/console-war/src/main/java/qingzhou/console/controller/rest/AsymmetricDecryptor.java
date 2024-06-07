@@ -35,13 +35,19 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
     }
 
     public static String decryptWithConsolePrivateKey(String input) {
+        return decryptWithConsolePrivateKey(input, false);
+    }
+
+    public static String decryptWithConsolePrivateKey(String input, boolean ignoredEx) {
         if (input == null || input.isEmpty()) {
             return input;
         }
         try {
             return SystemController.keyPairCipher.decryptWithPrivateKey(input);
         } catch (Exception e) {
-            SystemController.getService(Logger.class).warn("Decryption error", e);
+            if (!ignoredEx) {
+                SystemController.getService(Logger.class).warn("Decryption error", e);
+            }
             return input;
         }
     }

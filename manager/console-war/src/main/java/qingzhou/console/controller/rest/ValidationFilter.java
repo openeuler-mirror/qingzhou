@@ -215,7 +215,7 @@ public class ValidationFilter implements Filter<RestContext> {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             if (!FieldType.password.name().equals(fieldInfo.getType())) return null;
             try {
-                String pwdText = AsymmetricDecryptor.decryptWithConsolePrivateKey(context.parameterVal);
+                String pwdText = AsymmetricDecryptor.decryptWithConsolePrivateKey(context.parameterVal, true);
                 if (pwdText.trim().isEmpty()) {
                     return new String[]{validation_required};
                 }
