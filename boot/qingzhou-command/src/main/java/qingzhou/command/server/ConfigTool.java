@@ -2,14 +2,23 @@ package qingzhou.command.server;
 
 import qingzhou.command.CommandUtil;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 class ConfigTool {
@@ -37,7 +46,7 @@ class ConfigTool {
     private void initConfig() throws Exception {
         Map jvm = parseFileConfig();
 
-        Map[] envs = (Map[]) jvm.get("arg");
+        List<Map> envs = (List<Map>) jvm.get("arg");
         for (Map env : envs) {
             if (Boolean.parseBoolean(String.valueOf(env.get("enabled")))) {
                 this.envs.put(String.valueOf(env.get("name")),
@@ -45,7 +54,7 @@ class ConfigTool {
             }
         }
 
-        Map[] args = (Map[]) jvm.get("arg");
+        List<Map> args = (List<Map>) jvm.get("arg");
         for (Map arg : args) {
             if (!Boolean.parseBoolean(String.valueOf(arg.get("enabled")))) continue;
             if (CommandUtil.isWindows()) {
