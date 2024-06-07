@@ -80,7 +80,7 @@ public class VerCode implements Filter<HttpServletContext> {
      * 校验用户输入的验证码是否正确
      */
     public static boolean validate(HttpServletRequest request) {
-        String clientCode = AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA));
+        String clientCode = AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA), true);
         if (clientCode == null) {
             return false;
         }
