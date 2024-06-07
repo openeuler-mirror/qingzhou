@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.api.FieldType;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Editable;
 import qingzhou.console.RequestImpl;
@@ -16,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import qingzhou.api.FieldType;
 
 public class ValidationFilter implements Filter<RestContext> {
     public static String validation_required = "validation_required";
@@ -30,7 +30,6 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String unsupportedCharacters = "unsupportedCharacters";
     public static String unsupportedStrings = "unsupportedStrings";
     public static String createable = "createable";
-    public static String editable = "editable";
 
     static {
         ConsoleI18n.addI18n(validation_required, new String[]{"内容不能为空白", "en:The content cannot be blank"});
@@ -43,7 +42,6 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n(validation_port_valueBetween, new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         ConsoleI18n.addI18n(unsupportedStrings, new String[]{"不能包含字串%s", "en:Cannot contain the string %s"});
         ConsoleI18n.addI18n(createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
-        ConsoleI18n.addI18n(editable, new String[]{"编辑时不支持写入该属性", "en:Writing this property is not supported during editing"});
     }
 
     @Override
@@ -209,7 +207,7 @@ public class ValidationFilter implements Filter<RestContext> {
             return null;
         }
     }
-    
+
     static class Password implements Validator {
 
         @Override
@@ -283,7 +281,8 @@ public class ValidationFilter implements Filter<RestContext> {
 
             if (!context.isUpdateAction) return null;
 
-            return new String[]{editable};
+            context.params.remove(fieldInfo.getCode());
+            return null;
         }
     }
 

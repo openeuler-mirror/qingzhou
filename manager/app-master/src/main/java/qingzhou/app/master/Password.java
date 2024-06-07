@@ -38,6 +38,8 @@ public class Password extends ModelBase implements Editable {
 
         storedCredentials = storedCredentials.substring(0, lastIndexOf);
         String[] oldPwdDigestStyle = storedCredentials.split("\\" + SP);
+
+        oldPwdDigestStyle[1] = String.valueOf(oldPwdDigestStyle[1].length() / 2);
         System.arraycopy(oldPwdDigestStyle, 0, pwdArray, 0, pwdArray.length - 1);
 
         return pwdArray;
@@ -139,7 +141,7 @@ public class Password extends ModelBase implements Editable {
 
             String[] passwords = splitPwd(loginUserPro.get("password"));
             String digestAlg = passwords[0];
-            int saltLength = passwords[1].length() / 2;
+            int saltLength = Integer.parseInt(passwords[1]);
             int iterations = Integer.parseInt(passwords[2]);
 
             p.put(User.pwdKey,
