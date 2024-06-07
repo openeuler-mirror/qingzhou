@@ -38,7 +38,7 @@ label.checkbox-inline, label.radio-inline {padding-left: 0px; padding-right: 20p
     background: #272E3D;
     border-bottom: 1px solid #272E3D;
 }
-.main-header .navbar-brand .logo {width: 100px;height: 30px;margin-left: 16px;margin-top: 3px;display: inline-block;}
+.main-header .navbar-brand .logo {width: 100px;height: 40px;margin-left: 16px;margin-top: -3px;display: inline-block;}
 .main-header .navbar-brand .logo-mini {width: 50px; padding-left: 8px; padding-right: 3px;}
 .main-header .navbar-brand .logo-mini i {font-size: 18px;}
 .sidebar-collapse .navbar-brand .logo {display: none;}

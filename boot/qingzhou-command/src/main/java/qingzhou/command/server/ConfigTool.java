@@ -1,9 +1,6 @@
 package qingzhou.command.server;
 
 import qingzhou.command.CommandUtil;
-import qingzhou.command.server.config.Arg;
-import qingzhou.command.server.config.Env;
-import qingzhou.command.server.config.Jvm;
 
 import java.io.*;
 import java.lang.reflect.Method;
@@ -17,7 +14,8 @@ import java.util.stream.Collectors;
 
 class ConfigTool {
     private final File instanceDir;
-    private Jvm jvm;
+    private final List<String> commands = new ArrayList<>();
+    private final Map<String, String> envs = new HashMap<>();
 
     ConfigTool(File instanceDir) throws Exception {
         this.instanceDir = instanceDir;
@@ -25,49 +23,103 @@ class ConfigTool {
     }
 
     String getJavaHomeEnv() {
-        for (Env env : this.jvm.getEnv()) {
-            if (env.isEnabled() && env.getName().equals("JAVA_HOME")) {
-                return env.getValue();
-            }
-        }
-        return null;
+        return envs.get("JAVA_HOME");
     }
 
     Map<String, String> environment() {
-        Map<String, String> environment = new HashMap<>();
-        this.jvm.getEnv().forEach(env -> {
-            if (env.isEnabled()) {
-                environment.put(env.getName(), env.getValue());
-            }
-        });
-        return environment;
+        return envs;
     }
 
     List<String> command() {
-        List<String> cmd = new ArrayList<>();
-        this.jvm.getArg().forEach(arg -> {
-            if (arg.isEnabled()) {
-                if (arg.isForLinux() && CommandUtil.isWindows()) return;
-                cmd.add(arg.getName());
-            }
-        });
-        return cmd;
+        return commands;
     }
 
     private void initConfig() throws Exception {
-        Jvm jvm = parseFileConfig();
+        Map jvm = parseFileConfig();
+
+        Map[] envs = (Map[]) jvm.get("arg");
+        for (Map env : envs) {
+            if (Boolean.parseBoolean(String.valueOf(env.get("enabled")))) {
+                this.envs.put(String.valueOf(env.get("name")),
+                        String.valueOf(env.get("value")));
+            }
+        }
+
+        Map[] args = (Map[]) jvm.get("arg");
+        for (Map arg : args) {
+            if (!Boolean.parseBoolean(String.valueOf(arg.get("enabled")))) continue;
+            if (CommandUtil.isWindows()) {
+                if (Boolean.parseBoolean(String.valueOf(arg.get("forLinux")))) continue;
+            }
+
+            if (arg.get("supportedJRE") != null) {
+                String supportedJRE = String.valueOf(arg.get("supportedJRE"));
+                if (!supportedJRE.isEmpty()) {
+                    if (!isVerMatches(supportedJRE)) {
+                        continue;
+                    }
+                }
+            }
+
+            commands.add(String.valueOf(arg.get("name")));
+        }
 
         String classpath = Arrays.stream(Objects.requireNonNull(new File(CommandUtil.getLibDir(), "engine").listFiles()))
                 .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
-        jvm.getArg().add(new Arg("-Dqingzhou.instance=" + instanceDir.getAbsolutePath().replace("\\", "/")));
-        jvm.getArg().add(new Arg("-classpath"));
-        jvm.getArg().add(new Arg(classpath));
-        jvm.getArg().add(new Arg("qingzhou.engine.impl.Main"));
 
-        this.jvm = jvm;
+        commands.add("-Dqingzhou.instance=" + instanceDir.getAbsolutePath().replace("\\", "/"));
+        commands.add("-classpath");
+        commands.add(classpath);
+        commands.add("qingzhou.engine.impl.Main");
     }
 
-    private Jvm parseFileConfig() throws Exception {
+    private static boolean isVerMatches(String supportedJRE) {
+        int jreVer;
+        boolean minus = supportedJRE.endsWith("-");
+        boolean plus = supportedJRE.endsWith("+");
+        if (minus || plus) {
+            jreVer = Integer.parseInt(supportedJRE.substring(0, supportedJRE.length() - 1));
+        } else {
+            jreVer = Integer.parseInt(supportedJRE);
+        }
+
+        String ver = System.getProperty("java.specification.version");
+        if (ver != null && !ver.isEmpty()) {
+            int currentJreVer = parseJavaVersion(ver);
+            if (minus) {
+                if (currentJreVer > jreVer) {
+                    return false;
+                }
+            }
+            if (plus) {
+                if (currentJreVer < jreVer) {
+                    return false;
+                }
+            }
+            if (!minus && !plus) {
+                return currentJreVer == jreVer;
+            }
+        }
+
+        return true;
+    }
+
+    private static int parseJavaVersion(String ver) {
+        try {
+            if (ver.startsWith("1.")) {
+                ver = ver.substring(2);
+            }
+            int firstVer = ver.indexOf(".");
+            if (firstVer > 0) {
+                ver = ver.substring(0, firstVer);
+            }
+            return Integer.parseInt(ver);
+        } catch (Exception e) {
+            return 8;
+        }
+    }
+
+    private Map parseFileConfig() throws Exception {
         URL jsonURL = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
         try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonURL})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
@@ -76,7 +128,7 @@ class ConfigTool {
 
             try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-                return (Jvm) fromJson.invoke(instance, reader, Jvm.class, new String[]{"jvm"});
+                return (Map) fromJson.invoke(instance, reader, Map.class, new String[]{"jvm"});
             }
         }
     }
