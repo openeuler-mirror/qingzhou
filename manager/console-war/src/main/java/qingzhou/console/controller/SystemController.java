@@ -8,6 +8,7 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
+import qingzhou.config.Security;
 import qingzhou.console.ContextHelper;
 import qingzhou.console.i18n.SetI18n;
 import qingzhou.console.jmx.JMXServerHolder;
@@ -47,8 +48,9 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         contextHelper = ContextHelper.GetInstance.get();
 
         CryptoService cryptoService = CryptoServiceFactory.getInstance();
-        publicKey = getConsole().getSecurity().getPublicKey();
-        privateKey = getConsole().getSecurity().getPrivateKey();
+        Security security = getConsole().getSecurity();
+        publicKey = security.getPublicKey();
+        privateKey = security.getPrivateKey();
         if (StringUtil.isBlank(publicKey) || StringUtil.isBlank(privateKey)) {
             String[] keyPair = cryptoService.generateKeyPair(UUID.randomUUID().toString().replace("-", ""));
             publicKey = keyPair[0];

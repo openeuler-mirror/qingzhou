@@ -16,12 +16,12 @@ import qingzhou.engine.ModuleContext;
 public class Index extends ModelBase implements Showable {
     @ModelField(
             name = {"产品名称", "en:Product Name"},
-            info = {"此 Qingzhou 平台的名称。", "en:The name of  this Qingzhou platform."})
+            info = {"Qingzhou 平台的名称。", "en:The name of Qingzhou platform."})
     public String name;
 
     @ModelField(
             name = {"产品版本", "en:Product Version"},
-            info = {"此 Qingzhou 平台的版本。", "en:This version of this Qingzhou platform."})
+            info = {"Qingzhou 平台的版本。", "en:This version of this Qingzhou platform."})
     public String version;
 
     @ModelAction(

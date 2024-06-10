@@ -74,13 +74,13 @@
       "jmx": {
         "enabled": "false",
         "host": "",
-        "port": "7200"
+        "port": "7000"
       }
     },
     "agent": {
       "enabled": "false",
       "host": "",
-      "port": "7000",
+      "port": "9000",
       "key": ""
     },
     "heartbeat": {
