@@ -22,7 +22,7 @@ public class Version extends ModelBase implements Listable {
     @ModelField(
             list = true,
             name = {"版本号", "en:ID"},
-            info = {"此 Qingzhou 的版本号。", "en:The version number of this Qingzhou."})
+            info = {"Qingzhou 的版本号。", "en:The version number of Qingzhou."})
     public String id;
 
 //    @ModelField(
