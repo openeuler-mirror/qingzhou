@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.api.FieldType;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
@@ -14,6 +15,8 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -25,9 +28,16 @@ import java.io.IOException;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
@@ -152,9 +162,9 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        String[] actions = PageBackendService.getAppInfo(PageBackendService.getAppName(request))
-                .getModelInfo(request.getModel())
-                .getActionNames();
+        ModelInfo modelInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request))
+                .getModelInfo(request.getModel());
+        String[] actions = modelInfo.getActionNames();
         for (String name : actions) {
             if (name.equals(request.getAction())) {
                 actionFound = true;
@@ -175,6 +185,17 @@ public class RESTController extends HttpServlet {
             String k = parameterNames.nextElement();
             String[] v = req.getParameterValues(k);
             if (v != null) {
+                ModelFieldInfo modelFieldInfo = modelInfo.getModelFieldInfo(k);
+                if (modelFieldInfo != null && FieldType.kv.name().equals(modelFieldInfo.getType())) {
+                    for (int i = 0; i < v.length; i++) {// 前端页面的 kv 组件会对此进行 Base64加密，在这里进行解密，解密异常不处理，传递原始数据
+                        v[i] = v[i].trim();
+                        try {
+                            v[i] = new String(Base64.getDecoder().decode(v[i].getBytes(StandardCharsets.ISO_8859_1)), StandardCharsets.UTF_8);
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+
                 data.put(k, String.join(",", v));
             }
         }
