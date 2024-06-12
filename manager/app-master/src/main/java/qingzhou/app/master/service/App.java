@@ -131,6 +131,21 @@ public class App extends ModelBase implements Createable {
     }
 
     @ModelAction(
+            name = {"更新", "en:Update"},
+            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
+    public void update(Request request, Response response) throws Exception {
+        try {
+            delete(request, response);
+            add(request, response);
+        } finally {
+            ((RequestImpl) request).setManageType(DeployerConstants.MANAGE_TYPE_APP);
+            ((RequestImpl) request).setAppName(DeployerConstants.MASTER_APP_NAME);
+            ((RequestImpl) request).setModelName(DeployerConstants.MASTER_APP_APP_MODEL_NAME);
+            ((RequestImpl) request).setActionName(Editable.ACTION_NAME_UPDATE);
+        }
+    }
+
+    @ModelAction(
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request, Response response) throws Exception {
