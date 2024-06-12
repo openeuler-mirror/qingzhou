@@ -30,7 +30,13 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.Registry;
 
-import javax.servlet.*;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -98,6 +104,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
     private final Filter<HttpServletContext>[] processors = new Filter[]{
             new TrustIpCheck(),
+            new XSSCheck(),
             new JspInterceptor(),
             new SetI18n(),
             new About(),
