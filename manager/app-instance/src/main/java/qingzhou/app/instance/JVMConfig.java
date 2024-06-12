@@ -27,6 +27,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
+import java.util.StringTokenizer;
 
 @Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = Editable.ACTION_NAME_EDIT,
         name = {"JVM 配置", "en:JVM Configuration"}, info = {"配置运行 Qingzhou 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running Qingzhou applications."})
@@ -180,12 +182,23 @@ public class JVMConfig extends ModelBase implements Editable {
                 addEnv(envs, JAVA_HOME_KEY, javaHome);
             }
 
-            Json json = InstanceApp.getService(Json.class);
             String newEnvs = data.remove("envs");
             if (newEnvs != null && !newEnvs.isEmpty()) {
-                Map<String, String> map = json.fromJson(newEnvs, Map.class);
-                for (Map.Entry<String, String> entry : map.entrySet()) {
-                    addEnv(envs, entry.getKey(), entry.getValue());
+                StringTokenizer tokenizer = new StringTokenizer(newEnvs, ",");
+                while (tokenizer.hasMoreTokens()) {
+                    String env = tokenizer.nextToken();
+                    int i = env.indexOf("=");
+                    if (i > -1) {
+                        String name = env.substring(0, i).trim();
+                        if (name.isEmpty()) {
+                            continue;
+                        }
+                        if (JAVA_HOME_KEY.equals(name) && javaHome != null && !javaHome.isEmpty()) {
+                            continue;// 修改过Java_home这里不再添加，否正会重复
+                        }
+
+                        addEnv(envs, name, env.substring(i + 1).trim());
+                    }
                 }
             }
 
@@ -279,6 +292,7 @@ public class JVMConfig extends ModelBase implements Editable {
                 }
             }
 
+            Json json = InstanceApp.getService(Json.class);
             jvm.put("env", json.toJson(envs));
             jvm.put("arg", json.toJson(args));
 
@@ -423,9 +437,14 @@ public class JVMConfig extends ModelBase implements Editable {
             }
         }
 
-        Json json = InstanceApp.getService(Json.class);
         // 处理环境变量
-        jvm.put("envs", json.toJson(envMap));
+        StringJoiner sj = new StringJoiner(",");
+
+        for (Map.Entry<String, String> entry : envMap.entrySet()) {
+            sj.add(entry.getKey() + "=" + entry.getValue());
+        }
+
+        jvm.put("envs", sj.toString());
         response.addData(jvm);
     }
 
