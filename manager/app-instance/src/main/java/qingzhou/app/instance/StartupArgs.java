@@ -16,7 +16,6 @@ import qingzhou.config.Jvm;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
-import qingzhou.json.Json;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -418,11 +417,10 @@ public class StartupArgs extends ModelBase implements Createable {
         @Override
         public List<Map<String, String>> getAllData() throws Exception {
             Config config = InstanceApp.getService(Config.class);
-            Json json = InstanceApp.getService(Json.class);
             Jvm jvm = config.getJvm();
             List<Map<String, String>> list = new ArrayList<>();
             for (Arg arg : jvm.getArg()) {
-                Map map = json.fromJson(json.toJson(arg), Map.class);
+                Map<String, String> map = Utils.getPropertiesFromObj(arg); //for #ITAIT-6324
                 map.put(Listable.FIELD_NAME_ID, map.get("name"));
                 list.add(map);
             }
