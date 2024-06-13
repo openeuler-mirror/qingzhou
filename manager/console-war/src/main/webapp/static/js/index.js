@@ -356,7 +356,7 @@ $(document).ready(function () {
             $(menuItemLink).parent().addClass("active");
             $(menuItemLink).parents(".sidebar.sidebar-scroll").animate({scrollTop: $(menuItemLink).parents(".sidebar.sidebar-scroll").scrollTop() + $(menuItemLink).parent().offset().top - $(menuItemLink).parents(".sidebar.sidebar-scroll").offset().top}, 1000);
         }
-        tw.fill(matchPart, {}, ".main-body", false);
+        tw.fill(matchPart, {}, ".main-body", false, this);
         return false;
     });
 });
@@ -572,7 +572,7 @@ function gotoTarget(model, action, group, field) {
             if (action && action !== null && action !== "") {
                 if (action === "create") {
                     var container = $("div.bodyDiv", getRestrictedArea());
-                    tw.fill("/console/rest/html/" + model + "/" + action + searchUrl.substring(searchUrl.indexOf("?")), {}, ($(container).length > 0 ? container : $(".main-body", getRestrictedArea())), false);
+                    tw.fill("/console/rest/html/" + model + "/" + action + searchUrl.substring(searchUrl.indexOf("?")), {}, ($(container).length > 0 ? container : $(".main-body", getRestrictedArea())), false, menuItemLink);
                 }
             }
             $(".nav-tabs a[tabGroup='" + group + "']", getRestrictedArea()).click();
@@ -874,7 +874,11 @@ function bindFormEvent() {
                 }
             },
             error: function (e) {
-                handleError(e);
+                handleError(e, $("input[type='submit'][fallbackAct]", thisForm));
+                for (var i = 0; i < passwordFields.length; i++) {
+                    var pwdEle = $("input[name='" + passwordFields[i] + "']", thisForm);
+                    $(pwdEle).val($(pwdEle).attr("originVal")).removeAttr("originVal");
+                }
             }
         });
     });
@@ -1093,7 +1097,7 @@ function bindEventForListPage() {
             var url = element.href;
             var data = tw.formToJson($("form[name='filterForm']", getRestrictedArea()));
             var targetContainer = $this.attr("fill") || $(".main-body", getRestrictedArea());
-            tw.fill(url, data, targetContainer, false);
+            tw.fill(url, data, targetContainer, false, this);
         }
     });
     // 表格顶部操作按钮
@@ -1141,7 +1145,7 @@ function bindEventForListPage() {
         $(".content-box>ul").append("<li></li>");
         bindTabEvent();
         $(".tab-box>ul>li").last().click();
-        tw.fill(url, {}, $(".content-box>ul>li").last(), false);
+        tw.fill(url, {}, $(".content-box>ul>li").last(), false, this);
         tw.bindFill("ul.sidebar-menu a", ".main-body", false, true);
         $("ul[data-widget='tree']", $(".content-box>ul>li").last()).menuTree();
         $("[data-toggle='push-menu']", $(".content-box>ul>li").last()).pushMenu({});
