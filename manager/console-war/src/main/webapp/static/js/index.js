@@ -786,7 +786,7 @@ function bindFormEvent() {
                 $("#mask-loading").show();
                 $("input[data-type='password']").attr("type", "password");
                 $("input[data-type='password']").next().find("i").removeClass("icon-eye-open").addClass("icon-eye-close");
-                $(".btn", thisForm).attr("disabled", true);
+                $(".form-btn .btn", thisForm).attr("disabled", true);
                 if ($("input[type='file']", thisForm).length > 0) {
                     $(thisForm).attr("enctype", "multipart/form-data");
                 } else {
@@ -799,7 +799,7 @@ function bindFormEvent() {
             },
             success: function (data) {
                 $("#mask-loading").hide();
-                $(".btn", thisForm).removeAttr("disabled");
+                $(".form-btn .btn", thisForm).removeAttr("disabled");
                 if (data.success === "true" || data.success === true) {
                     if ($(".form-btn a[btn-type='goback']", thisForm).length > 0) {
                         $(".form-btn a[btn-type='goback']", thisForm).click();
@@ -874,7 +874,8 @@ function bindFormEvent() {
                 }
             },
             error: function (e) {
-                handleError(e, $("input[type='submit'][fallbackAct]", thisForm));
+                handleError(e);
+                $(".form-btn .btn", thisForm).removeAttr("disabled");
                 for (var i = 0; i < passwordFields.length; i++) {
                     var pwdEle = $("input[name='" + passwordFields[i] + "']", thisForm);
                     $(pwdEle).val($(pwdEle).attr("originVal")).removeAttr("originVal");
