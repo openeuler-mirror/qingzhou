@@ -41,6 +41,16 @@ JDK >= 1.8
    平台服务启动完成后，可打开浏览器访问轻舟的可视化管理平台：
 
    [http://localhost:9000/console](http://localhost:9000/console)
+  
+   ```
+   用户名：qingzhou
+   密码：qingzhou123.com
+   ```
+   注意：
+   >+ 针对本机客户端：安装轻舟后，默认仅本机受信任，本机操作不受限制。
+   >+ 针对远程客户端：当您把访问轻舟控制台的客户端所在IP设置信任IP后，远程客户端才有权限执行相关操作。
+   >+ 设置受信任IP：修改package/target/qingzhou/instances/instance1/qingzhou.json文件，trustedIP值设置为受信任客户端的IP地址。
+   
 
 ## 应用开发
 
