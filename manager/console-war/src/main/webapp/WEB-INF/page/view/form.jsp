@@ -26,11 +26,10 @@
 <%-- 面包屑分级导航 --%>
 <%@ include file="../fragment/breadcrumb.jsp" %>
 
-<form name="pageForm"
-      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, submitActionName+"/"+encodedId)%>"
-      method="post" class="form-horizontal">
+<form name="pageForm"method="post" class="form-horizontal"
+      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, submitActionName+"/"+encodedId)%>">
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
-            <%
+        <%
         Map<String, String> model;
         List<Map<String, String>> models = qzResponse.getDataList();
         if (!models.isEmpty()) {
@@ -272,7 +271,7 @@
                     if (submitPermission && (formCreateAction !=null && !formCreateAction.isDisable())) {
                 %>
                 <input type="submit" class="btn"
-                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + submitActionName)%>'>
+                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + submitActionName)%>' fallbackAct="enableButton">
                 <%
                     }
 
@@ -292,7 +291,7 @@
         <div id="tempZone" style="display:none;"></div>
         <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
         <%=AsymmetricDecryptor.getPublicKeyString()%>
-    </textarea>
+        </textarea>
 
         <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">
         <%
@@ -311,7 +310,7 @@
             conditionBuilder.append("}");
             out.print(conditionBuilder.toString());
         %>
-    </textarea>
+        </textarea>
         <textarea name="passwordFields" rows="3" disabled="disabled" style="display:none;">
         <%
             for (int i = 0; i < passwordFields.size(); i++) {
@@ -321,6 +320,7 @@
                 out.print(passwordFields.get(i));
             }
         %>
-    </textarea>
+        </textarea>
+    </div>
 </form>
 <%-- </div> --%>

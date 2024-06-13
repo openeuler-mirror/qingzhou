@@ -538,7 +538,7 @@ var tw = {
      * ajax 填充 html 片段
      * container 参数支持任意 jquery 选择器语法，例如："#id"、".content-box .edit-profile"
      */
-    fill: function (url, data, container, append) {
+    fill: function (url, data, container, append, element) {
         $("#mask-loading").show();
         $.ajax({
             url: url,
@@ -548,7 +548,7 @@ var tw = {
             dataType: "html",
             type: (data && data != {} ? "POST" : "GET"),
             error: function (e) {
-                handleError(e);
+                handleError(e, element);
             },
             complete: function () {
                 $("#mask-loading").hide();
@@ -615,7 +615,7 @@ var tw = {
             var data = resetData ? {} : tw.formToJson($("form[name='filterForm']", getRestrictedArea()));
             // 优先使用 a 标签上 fill 属性值指定的 container
             var targetContainer = $this.attr("fill") || $(container, getRestrictedArea());
-            tw.fill(url, data, targetContainer, append);
+            tw.fill(url, data, targetContainer, append, $this);
         });
     }
 };
@@ -750,11 +750,16 @@ function getSetting(key) {
  * 统一处理ajax异常
  * @param {*} e 
  */
-function handleError(e) {
+function handleError(e, element) {
     if (e.status === 0) {
         showError(getSetting("networkError"));
     } else if (e.status === 403) {
         showError("403, Access denied !");
+        $("#mask-loading").hide();
+        if ($(element).length > 0 && $(element).attr("fallbackAct") !== undefined) {
+            var fallback = fallbackActions[$(element).attr("fallbackAct")];
+            fallback && fallback.call(null, element);
+        }
     } else {
         if (e.status === 200 && e.responseText.indexOf("<!DOCTYPE html>") >= 0 && e.responseText.indexOf("loginForm") > 0) {
             $("#mask-loading").hide();
@@ -770,6 +775,11 @@ function handleError(e) {
         } else {
             showError(e.status + ":" + getSetting("pageErrorMsg"));
         }
+    }
+};
+var fallbackActions = {
+    "enableButton": function(element) {
+        $(element).removeAttr("disabled");
     }
 };
 /**
