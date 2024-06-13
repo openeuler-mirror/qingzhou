@@ -12,6 +12,7 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String unsupportedCharacters = "unsupportedCharacters";
     public static String unsupportedStrings = "unsupportedStrings";
     public static String createable = "createable";
+    public static String validation_file = "validation_file";
 
     static {
         ConsoleI18n.addI18n(validation_required, new String[]{"内容不能为空白", "en:The content cannot be blank"});
@@ -42,6 +44,7 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n(validation_port_valueBetween, new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         ConsoleI18n.addI18n(unsupportedStrings, new String[]{"不能包含字串%s", "en:Cannot contain the string %s"});
         ConsoleI18n.addI18n(createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
+        ConsoleI18n.addI18n(validation_file, new String[]{"须是一个合法的文件路径", "en:Must be a legal file path"});
     }
 
     @Override
@@ -85,7 +88,7 @@ public class ValidationFilter implements Filter<RestContext> {
             new lengthMin(), new lengthMax(),
             new port(), new Password(),
             new unsupportedCharacters(), new unsupportedStrings(),
-            new createable(), new editable()
+            new createable(), new editable(), new checkFile()
     };
 
     private String[] validate(ValidationContext context) throws Exception {
@@ -282,6 +285,27 @@ public class ValidationFilter implements Filter<RestContext> {
             if (!context.isUpdateAction) return null;
 
             context.params.remove(fieldInfo.getCode());
+            return null;
+        }
+    }
+
+    static class checkFile implements Validator {
+
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
+            if (parameterVal == null || parameterVal.isEmpty()) {
+                return null;
+            }
+            if (FieldType.file.name().equals(fieldInfo.getType())) {
+                try {
+                    new File(parameterVal);
+                    return null;
+                } catch (NullPointerException e) {
+                    return new String[]{validation_file};
+                }
+            }
             return null;
         }
     }

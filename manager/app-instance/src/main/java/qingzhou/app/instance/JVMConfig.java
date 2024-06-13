@@ -15,12 +15,18 @@ import qingzhou.config.Arg;
 import qingzhou.config.Config;
 import qingzhou.config.Env;
 import qingzhou.config.Jvm;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -52,9 +58,9 @@ public class JVMConfig extends ModelBase implements Editable {
 
     @Override
     public void start() {
-        appContext.addI18n("validator.javaHome.notDir", new String[]{"Java 路径不是一个有效的目录", "en:The Java path is not a valid directory"});
-        appContext.addI18n("validator.javaHome.notValid", new String[]{"Java 路径无效", "en:Invalid Java path"});
-        appContext.addI18n("validator.javaHome.version.notSupport", new String[]{"Java 版本不支持, 需要 Java 8 或以上版本", "en:Java version is not supported and requires Java 8 or later"});
+        appContext.addI18n("validator.arg.memory.invalid", new String[]{"参数【%s】不合法，此参数应以数字加单位(m/M、g/G)构成", "en:The parameter [%s] is not legal, this parameter should be composed of numbers plus units (m/M, g/G)."});
+        appContext.addI18n("validator.larger.cannot", new String[]{"%s不支持大于%s", "en:Cannot be larger than %s"});
+        appContext.addI18n("validator.arg.memory.union.invalid", new String[]{"联合校验参数【%s】不合法，该参数应以数字加单位(m/M、g/G)构成", "en:The joint verification parameter [%s] is illegal, and the parameter should be composed of numbers plus units (m/m, g/g)."});
 
         appContext.addI18n("validator.env.notJava", new String[]{"请不要通过这里设置 JAVA_HOME 环境变量，您可使用”Java 路径“参数来设置",
                 "en:Please do not set the JAVA_HOME environment variable here, you can set it using \"JAVA_HOME\" Parameter"});
@@ -166,6 +172,10 @@ public class JVMConfig extends ModelBase implements Editable {
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
+        if (!validate(request, response)) {
+            return;
+        }
+
         Map<String, String> data = request.getParameters();
         if (data != null && !data.isEmpty()) {
             Map<String, String> jvm = new HashMap<>();
@@ -429,7 +439,7 @@ public class JVMConfig extends ModelBase implements Editable {
                     String name = element.get("name");
                     String value = element.get("value");
                     if (JAVA_HOME_KEY.equals(name)) {
-                        envMap.put(JAVA_HOME_KEY, value);
+                        jvm.put(JAVA_HOME_KEY, value);
                     } else {
                         envMap.put(name, value);
                     }
@@ -447,6 +457,146 @@ public class JVMConfig extends ModelBase implements Editable {
         jvm.put("envs", sj.toString());
         response.addData(jvm);
     }
+
+    private boolean validate(Request request, Response response) throws Exception {
+        Map<String, String> parameters = request.getParameters();
+        for (String fieldName : parameters.keySet()) {
+            String newValue = parameters.get(fieldName);
+            if (newValue != null && !newValue.isEmpty()) {
+                String[] SIZE_KEYS = {"Xms", "Xmx", "MetaspaceSize", "MaxMetaspaceSize", "Xss", "MaxDirectMemorySize", "Xmn"};
+                for (String key : SIZE_KEYS) {
+                    if (key.equals(fieldName)) {
+                        if (!newValue.matches("\\d+([mMgG])")) {
+                            ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
+                            response.setSuccess(false);
+                            response.setMsg(String.format(this.appContext.getI18n(request.getLang(), "validator.arg.memory.invalid"), I18nTool.retrieveI18n(modelFieldInfo.getName()).get(request.getLang())));
+                            return false;
+                        }
+                    }
+                }
+
+                for (int i = 0; i < sizeKeyPairs.length; i += 2) {
+                    if (fieldName.equals(sizeKeyPairs[i])) {
+                        String msg = checkSize(fieldName, newValue, sizeKeyPairs[i + 1], request);
+                        if (msg != null) {
+                            response.setSuccess(false);
+                            response.setMsg(msg);
+                            return false;
+                        }
+                    }
+                }
+
+                List<String> validateFields = Arrays.asList("HeapDumpPath", "LogFile", "gcLog");
+                for (String field : validateFields) {
+                    if (field.equals(fieldName)) {
+                        if (field.equals("HeapDumpPath")) {
+                            if (!newValue.endsWith(".hprof")) {
+                                response.setSuccess(false);
+                                response.setMsg(this.appContext.getI18n(request.getLang(), "validator.check.heapDumpPath"));
+                                return false;
+                            }
+                        } else {
+                            if (!(newValue.endsWith(".log") || newValue.endsWith(".txt"))) {
+                                response.setSuccess(false);
+                                response.setMsg(this.appContext.getI18n(request.getLang(), "validator.check.logFile"));
+                                return false;
+                            }
+                        }
+
+                        String flag = "${QZ_TimeStamp}";
+                        if (newValue.contains(flag)) {
+                            String[] split = newValue.replace("\\", "/").split("/");
+                            for (int i = 0; i < split.length - 1; i++) {
+                                if (split[i].contains(flag)) {
+                                    response.setSuccess(false);
+                                    response.setMsg(this.appContext.getI18n(request.getLang(), "validator.check.timeFlag"));
+                                    return false;
+                                }
+                            }
+
+                            newValue = newValue.replace(flag, "");
+                        }
+                        if (!checkFilePath(newValue)) {
+                            response.setSuccess(false);
+                            response.setMsg(this.appContext.getI18n(request.getLang(), "validator.check.filePath"));
+                            return false;
+                        }
+                    }
+                }
+
+                if ("envs".equals(fieldName)) {
+                    String[] envArr = newValue.split(DATA_SEPARATOR);
+                    for (String env : envArr) {
+                        String[] kv = env.split("=");
+                        if (kv[0].equals(JAVA_HOME_KEY)) {
+                            response.setSuccess(false);
+                            response.setMsg(this.appContext.getI18n(request.getLang(), "validator.env.notJava"));
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean checkFilePath(String newValue) {
+        String[] illegalCollections = {"|", "&", "~", "../", "./", ":", "*", "?", "\"", "'", "<", ">", "(", ")", "[", "]", "{", "}", "^", " "};
+        for (String illegalCollection : illegalCollections) {
+            if (newValue.contains(illegalCollection)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String checkSize(String key, String newValue, String maxKey, Request request) {
+        String max = request.getParameter(maxKey);
+        if (max != null && !max.isEmpty()) {
+            if (!max.matches("\\d+([mMgG])")) {
+                ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(maxKey);
+                return String.format(this.appContext.getI18n(request.getLang(), "validator.arg.memory.union.invalid"), I18nTool.retrieveI18n(modelFieldInfo.getName()).get(request.getLang()));
+            }
+
+            if (getValueAsByte(newValue) > getValueAsByte(max)) {
+                String msg = this.appContext.getI18n(request.getLang(), "validator.larger.cannot");
+                ModelInfo modelInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(request.getModel());
+                ModelFieldInfo keyFieldInfo = modelInfo.getModelFieldInfo(key);
+                ModelFieldInfo maxKeyFieldInfo = modelInfo.getModelFieldInfo(maxKey);
+                String keyName = I18nTool.retrieveI18n(keyFieldInfo.getName()).get(request.getLang());
+                String maxKeyName = I18nTool.retrieveI18n(maxKeyFieldInfo.getName()).get(request.getLang());
+                return String.format(msg, keyName, maxKeyName);
+            }
+        }
+        return null;
+    }
+
+    private long getValueAsByte(String val) {
+        String unit = val.substring(val.length() - 1);
+        int level = -1;
+        if (unit.equalsIgnoreCase("K")) {
+            level = 1024;
+        } else if (unit.equalsIgnoreCase("M")) {
+            level = 1024 * 1024;
+        } else if (unit.equalsIgnoreCase("G")) {
+            level = 1024 * 1024 * 1024;
+        } else {
+            if (Character.isDigit(unit.charAt(0))) {
+                level = 1;
+            }
+        }
+        if (level < 1) {
+            throw new IllegalArgumentException(val + ":" + level);
+        }
+
+        if (level == 1) {
+            return Long.parseLong(val);
+        } else {
+            return Long.parseLong(val.substring(0, val.length() - 1)) * level;
+        }
+    }
+
 
     @Override
     public DataStore getDataStore() {
