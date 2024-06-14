@@ -1,6 +1,10 @@
 package qingzhou.app.instance;
 
-import qingzhou.api.*;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -36,18 +40,19 @@ public class AppInstaller extends ModelBase {
 
         String srcFileName = srcFile.getName();
         File app;
+        String id = request.getId();
         if (srcFile.isDirectory()) {
-            app = Utils.newFile(getAppsDir(), srcFileName);
+            app = Utils.newFile(getAppsDir(), id == null ? srcFileName : id);
             Utils.copyFileOrDirectory(srcFile, app);
         } else if (srcFileName.endsWith(".jar")) {
             int index = srcFileName.lastIndexOf(".");
             String appName = srcFileName.substring(0, index);
-            app = Utils.newFile(getAppsDir(), appName);
+            app = Utils.newFile(getAppsDir(), id == null ? appName : id);
             Utils.copyFileOrDirectory(srcFile, Utils.newFile(app, srcFileName));
         } else if (srcFileName.endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             String appName = srcFileName.substring(0, index);
-            app = Utils.newFile(getAppsDir(), appName);
+            app = Utils.newFile(getAppsDir(), id == null ? appName : id);
             Utils.unZipToDir(srcFile, app);
         } else {
             throw new IllegalArgumentException("unknown app type");
