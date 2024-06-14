@@ -104,7 +104,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
     private final Filter<HttpServletContext>[] processors = new Filter[]{
             new TrustIpCheck(),
-            new XSSCheck(),
             new JspInterceptor(),
             new SetI18n(),
             new About(),

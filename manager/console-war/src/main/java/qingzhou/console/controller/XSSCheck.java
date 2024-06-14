@@ -57,7 +57,7 @@ public class XSSCheck implements Filter<HttpServletContext> {
         return true;
     }
 
-    static class XSSChecker {
+    public static class XSSChecker {
         private static final Pattern scriptPattern1 = Pattern.compile("vbscript:", 2);
 
         public XSSChecker() {
