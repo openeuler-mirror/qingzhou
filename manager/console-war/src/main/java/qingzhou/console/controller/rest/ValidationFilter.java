@@ -5,7 +5,6 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Editable;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
-import qingzhou.console.controller.XSSCheck;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.engine.util.pattern.Filter;
@@ -14,10 +13,8 @@ import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ValidationFilter implements Filter<RestContext> {
@@ -322,11 +319,58 @@ public class ValidationFilter implements Filter<RestContext> {
                 return null;
             }
 
-            if (XSSCheck.XSSChecker.checkIsXSS(parameterVal)) {
+            if (checkIsXSS(parameterVal)) {
                 return new String[]{validation_xss};
             }
 
             return null;
+        }
+
+        final Pattern scriptPattern1 = Pattern.compile("vbscript:", 2);
+
+        boolean checkIsXSS(String check) {
+            return !checkXssOk(check);
+        }
+
+        boolean checkXssLevel1(String check) {
+            if (check == null || check.trim().isEmpty()) {
+                return true;
+            } else {
+                String resultUrl = check.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+                if (!resultUrl.equals(check)) {
+                    return false;
+                } else {
+                    resultUrl = resultUrl.replaceAll("eval\\((.*)\\)", "");
+                    if (!resultUrl.equals(check)) {
+                        return false;
+                    } else {
+                        List<String> onXXEventPrefixList = new ArrayList();
+                        onXXEventPrefixList.addAll(Arrays.asList("%20", "&nbsp;", "\"", "'", "/", "\\+"));
+                        resultUrl = scriptPattern1.matcher(resultUrl).replaceAll("");
+                        if (!resultUrl.equals(check)) {
+                            return false;
+                        } else {
+                            return !resultUrl.contains("'") && !resultUrl.contains("\"") || resultUrl.indexOf(")") <= resultUrl.indexOf("(");
+                        }
+                    }
+                }
+            }
+        }
+
+        boolean checkXssOk(String check) {
+            if (check == null || check.trim().isEmpty()) {
+                return true;
+            } else if (!checkXssLevel1(check)) {
+                return false;
+            } else {
+                String resultUrl = check.replaceAll("\\(", "&#40").replaceAll("\\)", "&#41");
+                if (!resultUrl.equals(check)) {
+                    return false;
+                } else {
+                    resultUrl = resultUrl.replaceAll("\\[", "&#91").replaceAll("\\]", "&#93");
+                    return resultUrl.equals(check);
+                }
+            }
         }
     }
 }
