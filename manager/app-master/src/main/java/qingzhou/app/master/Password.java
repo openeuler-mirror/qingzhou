@@ -226,7 +226,7 @@ public class Password extends ModelBase implements Editable {
                     if (null != historyPasswords && !historyPasswords.isEmpty()) {
                         for (String oldPass : historyPasswords.split(",")) {
                             if (!oldPass.isEmpty() && digest.matches(newValue, oldPass)) {
-                                String limitRepeats = loginUserPro.get("passwordLimitRepeats");
+                                int limitRepeats = MasterApp.getService(Config.class).getConsole().getSecurity().getPasswordLimitRepeats();
                                 return String.format(appContext.getI18n(request.getLang(), "password.doNotUseOldPasswords"), limitRepeats);
                             }
                         }
