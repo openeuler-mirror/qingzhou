@@ -56,7 +56,7 @@
         "verCodeEnabled": "true",
         "lockOutTime": "300",
         "failureCount": "5",
-        "passwordLimitRepeats": "0",
+        "passwordLimitRepeats": "1",
         "passwordMaxAge": "0"
       },
       "user": [
