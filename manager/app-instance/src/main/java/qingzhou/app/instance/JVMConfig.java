@@ -455,6 +455,16 @@ public class JVMConfig extends ModelBase implements Editable {
             sj.add(entry.getKey() + "=" + entry.getValue());
         }
 
+        if (Boolean.parseBoolean(jvm.getOrDefault("LogVMOutput", "false"))) {
+            jvm.put("LogFile", jvm.getOrDefault("LogFile", "logs/jvm/jvm.log"));
+        }
+        if (Boolean.parseBoolean(jvm.getOrDefault("gcLogEnabled", "false"))) {
+            jvm.put("gcLog", jvm.getOrDefault("gcLog", "logs/gc/gc.log"));
+        }
+        if (Boolean.parseBoolean(jvm.getOrDefault("HeapDumpOnOutOfMemoryError", "false"))) {
+            jvm.put("HeapDumpPath", jvm.getOrDefault("HeapDumpPath", "logs/heap_${QZ_TimeStamp}.hprof"));
+        }
+
         jvm.put("envs", sj.toString());
         response.addData(jvm);
     }
