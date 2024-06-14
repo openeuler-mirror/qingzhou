@@ -2,14 +2,25 @@ package qingzhou.command.server;
 
 import qingzhou.command.CommandUtil;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 class ConfigTool {
@@ -62,7 +73,7 @@ class ConfigTool {
                 }
             }
 
-            commands.add(String.valueOf(arg.get("name")));
+            commands.add(convertArg(String.valueOf(arg.get("name"))));
         }
 
         String classpath = Arrays.stream(Objects.requireNonNull(new File(CommandUtil.getLibDir(), "engine").listFiles()))
@@ -132,5 +143,50 @@ class ConfigTool {
                 return (Map) fromJson.invoke(instance, reader, Map.class, new String[]{"jvm"});
             }
         }
+    }
+
+    public static String convertArg(String str) {
+        if (str == null) {
+            return null;
+        }
+
+        String convertBegin = "${";
+        String convertEnd = "}";
+
+        int begin = str.indexOf(convertBegin);
+        if (begin < 0) {
+            return str;
+        }
+
+        int end = str.indexOf(convertEnd, begin);
+        if (end < 0) {
+            return str;
+        }
+
+        String key = str.substring(begin + convertBegin.length(), end);
+        String replacement = convert(key);
+
+        String newStr = str.replace(convertBegin + key + convertEnd, replacement);
+        return convertArg(newStr);
+    }
+
+    private static String convert(String origin) {
+        String replacement = System.getProperty(origin);
+
+        if (replacement == null) {
+            if ("QZ_TimeStamp".equals(origin)) {
+                replacement = new SimpleDateFormat("yyyy-MM-dd'T'HHmmss").format(new Date());
+            }
+        }
+
+        if (replacement == null) {
+            replacement = System.getenv(origin);
+        }
+
+        if (replacement == null) {
+            return "";
+        }
+
+        return replacement;
     }
 }
