@@ -5,6 +5,7 @@ import qingzhou.api.type.Createable;
 import qingzhou.api.type.Editable;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
+import qingzhou.console.controller.XSSCheck;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.engine.util.pattern.Filter;
@@ -32,6 +33,7 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String unsupportedStrings = "unsupportedStrings";
     public static String createable = "createable";
     public static String validation_file = "validation_file";
+    public static String validation_xss = "validation_xss";
 
     static {
         ConsoleI18n.addI18n(validation_required, new String[]{"内容不能为空白", "en:The content cannot be blank"});
@@ -45,6 +47,7 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n(unsupportedStrings, new String[]{"不能包含字串%s", "en:Cannot contain the string %s"});
         ConsoleI18n.addI18n(createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
         ConsoleI18n.addI18n(validation_file, new String[]{"须是一个合法的文件路径", "en:Must be a legal file path"});
+        ConsoleI18n.addI18n(validation_xss, new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
     }
 
     @Override
@@ -88,7 +91,7 @@ public class ValidationFilter implements Filter<RestContext> {
             new lengthMin(), new lengthMax(),
             new port(), new Password(),
             new unsupportedCharacters(), new unsupportedStrings(),
-            new createable(), new editable(), new checkFile()
+            new createable(), new editable(), new checkFile(), new checkXSS()
     };
 
     private String[] validate(ValidationContext context) throws Exception {
@@ -310,4 +313,20 @@ public class ValidationFilter implements Filter<RestContext> {
         }
     }
 
+    static class checkXSS implements Validator {
+
+        @Override
+        public String[] validate(ValidationContext context) {
+            String parameterVal = context.parameterVal;
+            if (parameterVal == null || parameterVal.isEmpty()) {
+                return null;
+            }
+
+            if (XSSCheck.XSSChecker.checkIsXSS(parameterVal)) {
+                return new String[]{validation_xss};
+            }
+
+            return null;
+        }
+    }
 }
