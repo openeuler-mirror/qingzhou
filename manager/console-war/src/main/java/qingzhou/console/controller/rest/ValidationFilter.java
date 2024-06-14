@@ -31,9 +31,11 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String createable = "createable";
     public static String validation_file = "validation_file";
     public static String validation_xss = "validation_xss";
+    public static String validation_number = "validation_number";
 
     static {
         ConsoleI18n.addI18n(validation_required, new String[]{"内容不能为空白", "en:The content cannot be blank"});
+        ConsoleI18n.addI18n(validation_number, new String[]{"须是数字类型", "en:Must be a numeric type"});
         ConsoleI18n.addI18n(validation_min, new String[]{"数字不能小于%s", "en:The number cannot be less than %s"});
         ConsoleI18n.addI18n(validation_max, new String[]{"数字不能大于%s", "en:The number cannot be greater than %s"});
         ConsoleI18n.addI18n(validation_lengthMin, new String[]{"字符串长度不能小于%s", "en:The length of the string cannot be less than %s"});
@@ -95,7 +97,7 @@ public class ValidationFilter implements Filter<RestContext> {
         Map<String, String> paramMap = context.params;
         ModelFieldInfo fieldInfo = context.fieldInfo;
         String parameterVal = context.parameterVal;
-        if (parameterVal == null || parameterVal.isEmpty()) {
+        if (parameterVal == null || parameterVal.trim().isEmpty()) {
             if (context.isAddAction && !fieldInfo.isCreateable()) {
                 return null;
             }
@@ -140,13 +142,14 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
-            if (parameterVal == null || parameterVal.isEmpty()) {
-                return null;
+            try {
+                if (fieldInfo.getMin() == Long.MIN_VALUE) return null;
+                long parameterLong = Long.parseLong(context.parameterVal);
+                if (parameterLong >= fieldInfo.getMin()) return null;
+                return new String[]{validation_min, String.valueOf(fieldInfo.getMin())};
+            } catch (Exception e) {
+                return new String[]{validation_number};
             }
-            if (fieldInfo.getMin() == Long.MIN_VALUE) return null;
-            if (Long.parseLong(parameterVal) >= fieldInfo.getMin()) return null;
-            return new String[]{validation_min, String.valueOf(fieldInfo.getMin())};
         }
     }
 
@@ -155,13 +158,14 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
-            if (parameterVal == null || parameterVal.isEmpty()) {
-                return null;
+            try {
+                if (fieldInfo.getMax() == Long.MAX_VALUE) return null;
+                long parameterLong = Long.parseLong(context.parameterVal);
+                if (parameterLong <= fieldInfo.getMax()) return null;
+                return new String[]{validation_max, String.valueOf(fieldInfo.getMax())};
+            } catch (Exception e) {
+                return new String[]{validation_number};
             }
-            if (fieldInfo.getMax() == Long.MAX_VALUE) return null;
-            if (Long.parseLong(parameterVal) <= fieldInfo.getMax()) return null;
-            return new String[]{validation_max, String.valueOf(fieldInfo.getMax())};
         }
     }
 
