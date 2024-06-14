@@ -259,6 +259,7 @@ public class JVMConfig extends ModelBase implements Editable {
             } else {
                 String LogFile = data.remove("LogFile");// 用 remove 是为了防止后面被遍历
                 if (LogFile != null && !LogFile.isEmpty()) {
+                    deleteArg(args, "-XX:LogFile");
                     addArg(args, "-XX:LogFile=" + LogFile);
                 }
             }
