@@ -146,8 +146,19 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             try {
+                if (!FieldType.number.name().equals(fieldInfo.getType())) {
+                    return null;
+                }
+                String parameterVal = context.parameterVal;
+                if (parameterVal == null || parameterVal.trim().isEmpty()) {
+                    if (fieldInfo.isRequired() && PageBackendService.isShow(o -> context.params.containsKey(o) ? context.params.get(o).trim() : null, fieldInfo.getShow())) {
+                        return new String[]{validation_number};
+                    } else {
+                        return null;
+                    }
+                }
                 if (fieldInfo.getMin() == Long.MIN_VALUE) return null;
-                long parameterLong = Long.parseLong(context.parameterVal);
+                long parameterLong = Long.parseLong(parameterVal);
                 if (parameterLong >= fieldInfo.getMin()) return null;
                 return new String[]{validation_min, String.valueOf(fieldInfo.getMin())};
             } catch (Exception e) {
@@ -162,8 +173,19 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             try {
+                if (!FieldType.number.name().equals(fieldInfo.getType())) {
+                    return null;
+                }
+                String parameterVal = context.parameterVal;
+                if (parameterVal == null || parameterVal.trim().isEmpty()) {
+                    if (fieldInfo.isRequired() && PageBackendService.isShow(o -> context.params.containsKey(o) ? context.params.get(o).trim() : null, fieldInfo.getShow())) {
+                        return new String[]{validation_number};
+                    } else {
+                        return null;
+                    }
+                }
                 if (fieldInfo.getMax() == Long.MAX_VALUE) return null;
-                long parameterLong = Long.parseLong(context.parameterVal);
+                long parameterLong = Long.parseLong(parameterVal);
                 if (parameterLong <= fieldInfo.getMax()) return null;
                 return new String[]{validation_max, String.valueOf(fieldInfo.getMax())};
             } catch (Exception e) {
