@@ -250,7 +250,7 @@ public class StartupArgs extends ModelBase implements Createable {
         // 重复性检查
         for (String k : StartupArg.uniqueArgs) {
             if (newValue.startsWith(k)) {
-                if (oldValue.isEmpty() || !oldValue.startsWith(k)) { // 兼容编辑
+                if (oldValue == null || oldValue.isEmpty() || !oldValue.startsWith(k)) { // 兼容编辑
                     for (String otherValue : otherValues) {
                         if (otherValue.startsWith(k)) {
                             return appContext.getI18n(request.getLang(), "validator.exist");
