@@ -121,23 +121,23 @@ public class JVMConfig extends ModelBase implements Editable {
     @ModelField(required = false, group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录堆信息", "en:Print Heap"}, info = {"是否在 GC 日志中记录堆信息，仅适用于java8 (-XX:+PrintHeapAtGC)。", "en:Whether heap information is recorded in the GC log, only available for java8 (-XX:+PrintHeapAtGC)."})
     public boolean PrintHeapAtGC;
     @ModelField(group = group_gc, show = "gcLogEnabled=true", name = {"GC 日志文件", "en:GC Log Path"},
-            info = {"设置 GC 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 Qingzhou 实例目录的相对路径，同时可使用 ${TW_TimeStamp} 变量添加 Qingzhou 启动时间戳 (-Xlog)。",
-                    "en:Set the storage location for GC logs. Note: The path can be absolute or relative to the Qingzhou instance directory, and the Qingzhou startup timestamp can be added using the ${TW_TimeStamp} variable (-Xlog)."})
+            info = {"设置 GC 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 Qingzhou 实例目录的相对路径，同时可使用 ${QZ_TimeStamp} 变量添加 Qingzhou 启动时间戳 (-Xlog)。",
+                    "en:Set the storage location for GC logs. Note: The path can be absolute or relative to the Qingzhou instance directory, and the Qingzhou startup timestamp can be added using the ${QZ_TimeStamp} variable (-Xlog)."})
     public String gcLog = "logs/gc/gc.log";
 
     @ModelField(required = false, group = group_heapDump, type = FieldType.bool, name = {"开启堆转储", "en:Heap Dump"}, info = {"当 JVM 发生 OOM 时，自动生成 DUMP 文件，文件位置由【堆转储文件】选项指定 (-XX:+HeapDumpOnOutOfMemoryError)。", "en:When OOM occurs in JVM, a dump file is automatically generated, and the file location is specified by the [Heap Dump Path] option (-XX:+HeapDumpOnOutOfMemoryError)."})
     public boolean HeapDumpOnOutOfMemoryError;
     @ModelField(group = group_heapDump, show = "HeapDumpOnOutOfMemoryError=true",
-            name = {"堆转储文件", "en:Heap Dump Path"}, info = {"设置 JVM 发生 OOM 时，自动生成 DUMP 文件的路径。注：路径可以是绝对路径，也可以是相对于 Qingzhou 域目录的相对路径，同时可使用 ${TW_TimeStamp} 变量添加 Qingzhou 启动时间戳 (-XX:HeapDumpPath)。",
-            "en:Set the path to the JVM to automatically generate a dump file when OOM occurs. Note: The path can be absolute or relative to the Qingzhou instance directory, and the Qingzhou startup timestamp can be added using the ${TW_TimeStamp} variable (-XX:HeapDumpPath)."})
-    public String HeapDumpPath = "logs/heap_${TW_TimeStamp}.hprof";
+            name = {"堆转储文件", "en:Heap Dump Path"}, info = {"设置 JVM 发生 OOM 时，自动生成 DUMP 文件的路径。注：路径可以是绝对路径，也可以是相对于 Qingzhou 域目录的相对路径，同时可使用 ${QZ_TimeStamp} 变量添加 Qingzhou 启动时间戳 (-XX:HeapDumpPath)。",
+            "en:Set the path to the JVM to automatically generate a dump file when OOM occurs. Note: The path can be absolute or relative to the Qingzhou instance directory, and the Qingzhou startup timestamp can be added using the ${QZ_TimeStamp} variable (-XX:HeapDumpPath)."})
+    public String HeapDumpPath = "logs/heap_${QZ_TimeStamp}.hprof";
 
     @ModelField(required = false, group = group_jvmLog, type = FieldType.bool, name = {"记录 JVM 日志", "en:Log VM Output"}, info = {"设置是否记录 JVM 日志 (-XX:+LogVMOutput)。", "en:Set whether to log JVM logs (-XX:+LogVMOutput)."})
     public boolean LogVMOutput;
     @ModelField(group = group_jvmLog, show = "LogVMOutput=true",
             name = {"JVM 日志文件", "en:JVM Log Path"},
-            info = {"设置 JVM 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 Qingzhou 域目录的相对路径，同时可使用 ${TW_TimeStamp} 变量添加 Qingzhou 启动时间戳 (-XX:LogFile)。",
-                    "en:Set the location where JVM logs are stored. Note: The path can be absolute or relative to the Qingzhou instance directory, and the Qingzhou startup timestamp can be added using the ${TW_TimeStamp} variable (-XX:LogFile)."})
+            info = {"设置 JVM 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 Qingzhou 域目录的相对路径，同时可使用 ${QZ_TimeStamp} 变量添加 Qingzhou 启动时间戳 (-XX:LogFile)。",
+                    "en:Set the location where JVM logs are stored. Note: The path can be absolute or relative to the Qingzhou instance directory, and the Qingzhou startup timestamp can be added using the ${QZ_TimeStamp} variable (-XX:LogFile)."})
     public String LogFile = "logs/jvm/jvm.log";
 
     @ModelField(required = false, group = group_environment,
