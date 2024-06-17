@@ -283,31 +283,26 @@ public class StartupArgs extends ModelBase implements Createable {
         String v = val;
         v = v.substring(prefix.length());
         if (v.isEmpty()) {
-            throw new IllegalArgumentException(val);
+            throw new IllegalArgumentException("Value is empty: " + val);
         }
         String unit = v.substring(v.length() - 1);
         if (!unit.isEmpty()) {
             int level = -1;
+            if (Character.isDigit(unit.charAt(0))) {
+                return Long.parseLong(v);
+            }
             if (unit.equalsIgnoreCase("M")) {
                 level = 1024;
             } else if (unit.equalsIgnoreCase("G")) {
                 level = 1024 * 1024;
-            } else {
-                if (Character.isDigit(unit.charAt(0))) {
-                    level = 1;
-                }
-            }
-            if (level < 1) {
-                throw new IllegalArgumentException(val + ":" + level);
-            }
-
-            if (level == 1) {
-                return Long.parseLong(v);
-            } else {
+            } 
+            if(level != -1){
                 return Long.parseLong(v.substring(0, v.length() - 1)) * level;
+            }else{
+                throw new IllegalArgumentException("Invalid value format, "+ val + ":" + level);
             }
         } else {
-            throw new IllegalArgumentException(val);
+            throw new IllegalArgumentException("Unit is empty" + val);
         }
     }
 
