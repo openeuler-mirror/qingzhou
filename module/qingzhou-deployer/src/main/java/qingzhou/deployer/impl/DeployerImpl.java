@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class DeployerImpl implements Deployer {
+    
     private final Map<Method, ModelActionInfo> presetMethodActionInfos;
 
     private final Map<String, App> apps = new HashMap<>();
@@ -41,25 +42,29 @@ class DeployerImpl implements Deployer {
     @Override
     public void installApp(File appDir) throws Exception {
         String appName = appDir.getName();
-        if (apps.containsKey(appName)) {
-            throw new IllegalArgumentException("The app already exists: " + appName);
-        }
-        boolean isSystemApp = DeployerConstants.MASTER_APP_NAME.equals(appName) || DeployerConstants.INSTANCE_APP_NAME.equals(appName);
-        AppImpl app = buildApp(appName, appDir, isSystemApp);
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        // 启动应用
         try {
-            Thread.currentThread().setContextClassLoader(app.getLoader());
-            startApp(app);
-            // 初始化各模块
-            startModel(app);
-        } finally {
-            Thread.currentThread().setContextClassLoader(classLoader);
+            if (apps.containsKey(appName)) {
+                throw new IllegalArgumentException("The app already exists: " + appName);
+            }
+            boolean isSystemApp = DeployerConstants.MASTER_APP_NAME.equals(appName) || DeployerConstants.INSTANCE_APP_NAME.equals(appName);
+            AppImpl app = buildApp(appName, appDir, isSystemApp);
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            // 启动应用
+            try {
+                Thread.currentThread().setContextClassLoader(app.getLoader());
+                startApp(app);
+                // 初始化各模块
+                startModel(app);
+            } finally {
+                Thread.currentThread().setContextClassLoader(classLoader);
+            }
+
+            // 注册完成
+            apps.put(appName, app);
+        } catch (Exception e) {
+            //new Exception("failed to install app " + appName, e).printStackTrace();
+            throw e;
         }
-
-
-        // 注册完成
-        apps.put(appName, app);
     }
 
     private void startModel(AppImpl app) throws Exception {
