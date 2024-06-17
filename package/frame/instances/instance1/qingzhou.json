@@ -19,6 +19,9 @@
       {
         "name": "-XX:+HeapDumpOnOutOfMemoryError",
         "desc": "开启堆转储"
+      },{
+        "name": "-XX:HeapDumpPath=logs/heap_${QZ_TimeStamp}.hprof",
+        "desc": "堆转储文件路径"
       },
       {
         "name": "-server"
