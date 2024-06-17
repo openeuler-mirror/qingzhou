@@ -51,8 +51,11 @@ public class Controller implements ModuleActivator {
         if (files != null) {
             for (File file : files) {
                 if (!file.isDirectory()) continue;
-
-                deployer.installApp(file);
+                try {
+                    deployer.installApp(file);
+                } catch(Exception e) {
+                    logger.error("failed to install app " + file.getName(), e);
+                }
             }
         }
     }

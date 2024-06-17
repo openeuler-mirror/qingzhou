@@ -1,5 +1,6 @@
 package qingzhou.app.master.service;
 
+import java.lang.reflect.InvocationTargetException;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
@@ -236,8 +237,11 @@ public class App extends ModelBase implements Createable {
                     }
                 } catch (Exception e) { // todo 部分失败，如何显示到页面？
                     response.setSuccess(false);
-                    response.setMsg(e.getMessage());
-                    return;
+                    if (e instanceof InvocationTargetException) {
+                        response.setMsg(((InvocationTargetException)e).getTargetException().getMessage());
+                    } else {
+                        response.setMsg(e.getMessage());
+                    }
                 }
             }
         } finally {
