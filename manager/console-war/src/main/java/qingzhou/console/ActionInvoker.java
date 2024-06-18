@@ -21,7 +21,13 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ActionInvoker {
     private static final ActionInvoker instance = new ActionInvoker();
@@ -184,9 +190,7 @@ public class ActionInvoker {
                         .invoke(request, responseOnNode);
             } else {
                 InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(instance);
-                String remoteUrl = String.format("http://%s:%s",
-                        instanceInfo.getHost(), //todo: 多网卡的 agent 会注册多个 ip 地址，考虑优化为 被动模式 使得master不依赖agent的ip？（ps:agent在docker容器里，master可能无法放到到agent的ip）
-                        instanceInfo.getPort());
+                String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
 
                 String remoteKey = CryptoServiceFactory.getInstance().getKeyPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
