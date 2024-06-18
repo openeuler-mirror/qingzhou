@@ -21,6 +21,7 @@ import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
+import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
@@ -176,8 +177,16 @@ public class JVMConfig extends ModelBase implements Editable {
             return;
         }
 
-        Map<String, String> data = request.getParameters();
-        if (data != null && !data.isEmpty()) {
+        Map<String, String> data = new HashMap<>();
+        AppInfo appInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo();
+        for (String fieldName : appInfo.getModelInfo(request.getModel()).getFormFieldNames()) {
+            String value = request.getParameter(fieldName);
+            if (value != null) {
+                data.put(fieldName, value);
+            }
+        }
+
+        if (!data.isEmpty()) {
             Map<String, String> jvm = new HashMap<>();
             List<Arg> args = getArgs();
             List<Env> envs = new ArrayList<>();
