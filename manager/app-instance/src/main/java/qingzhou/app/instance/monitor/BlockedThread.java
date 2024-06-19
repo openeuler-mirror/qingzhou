@@ -63,9 +63,9 @@ public class BlockedThread extends ModelBase implements Listable {
             name = {"查看", "en:Show"},
             info = {"查看该阻塞线程的信息，包括其调用的堆栈等。", "en:View the information of the blocking thread, including the stack of its calls."})
     public void show(Request request, Response response) throws Exception {
-        List<Map<String, String>> dataList = getDataStore().getDataByIds(new String[]{request.getId()});
-        if (!dataList.isEmpty()) {
-            response.addData(dataList.get(0));
+        Map<String, String> data = getDataStore().getDataById(request.getId());
+        if (!data.isEmpty()) {
+            response.addData(data);
         }
     }
 

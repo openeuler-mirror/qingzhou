@@ -66,9 +66,9 @@ public class DeadlockedThread extends ModelBase implements Listable {
             info = {"查看该死锁线程的信息，包括其死锁的堆栈等。", "en:View information about the deadlocked thread, including its deadlocked stack, etc."})
     public void show(Request request, Response response) throws Exception {
         // show 方法已经在 qingzhou.app.ActionMethod.show 中定义，此处的逻辑会被忽略
-        List<Map<String, String>> dataList = getDataStore().getDataByIds(new String[]{request.getId()});
-        if (!dataList.isEmpty()) {
-            response.addData(dataList.get(0));
+        Map<String, String> data = getDataStore().getDataById(request.getId());
+        if (!data.isEmpty()) {
+            response.addData(data);
         }
     }
 
