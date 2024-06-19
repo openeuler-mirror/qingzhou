@@ -42,29 +42,24 @@ class DeployerImpl implements Deployer {
     @Override
     public void installApp(File appDir) throws Exception {
         String appName = appDir.getName();
-        try {
-            if (apps.containsKey(appName)) {
-                throw new IllegalArgumentException("The app already exists: " + appName);
-            }
-            boolean isSystemApp = DeployerConstants.MASTER_APP_NAME.equals(appName) || DeployerConstants.INSTANCE_APP_NAME.equals(appName);
-            AppImpl app = buildApp(appName, appDir, isSystemApp);
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            // 启动应用
-            try {
-                Thread.currentThread().setContextClassLoader(app.getLoader());
-                startApp(app);
-                // 初始化各模块
-                startModel(app);
-            } finally {
-                Thread.currentThread().setContextClassLoader(classLoader);
-            }
-
-            // 注册完成
-            apps.put(appName, app);
-        } catch (Exception e) {
-            //new Exception("failed to install app " + appName, e).printStackTrace();
-            throw e;
+        if (apps.containsKey(appName)) {
+            throw new IllegalArgumentException("The app already exists: " + appName);
         }
+        boolean isSystemApp = DeployerConstants.MASTER_APP_NAME.equals(appName) || DeployerConstants.INSTANCE_APP_NAME.equals(appName);
+        AppImpl app = buildApp(appName, appDir, isSystemApp);
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        // 启动应用
+        try {
+            Thread.currentThread().setContextClassLoader(app.getLoader());
+            startApp(app);
+            // 初始化各模块
+            startModel(app);
+        } finally {
+            Thread.currentThread().setContextClassLoader(classLoader);
+        }
+
+        // 注册完成
+        apps.put(appName, app);
     }
 
     private void startModel(AppImpl app) throws Exception {
@@ -416,11 +411,12 @@ class DeployerImpl implements Deployer {
                 continue;
             }
             libs.add(appFile);
+            appendAppClassPath(appFile, libs);
+
             scanAppFilesCache.add(appFile);
         }
 
-        addLib(appDir, libs);
-        addConfig(appDir, libs);
+        forYunJian(appDir, libs);// todo 云鉴的定制需求？
 
         if (!isSystemApp) {
             File[] commonFiles = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
@@ -435,21 +431,43 @@ class DeployerImpl implements Deployer {
         return libs.toArray(new File[0]);
     }
 
-    private void addConfig(File appDir, List<File> libs) {
+    private void forYunJian(File appDir, List<File> libs) {
         File config = Utils.newFile(appDir, "config");
-        if (!config.exists()) {
-            return;
+        if (config.exists()) {
+            libs.add(config);
         }
-        libs.add(config);
+
+        File lib = Utils.newFile(appDir, "lib");
+        if (lib.isDirectory()) {
+            File[] files = lib.listFiles();
+            if (files != null) {
+                libs.addAll(Arrays.asList(files));
+            }
+        }
     }
 
-    private void addLib(File appDir, List<File> libs) {
-        File lib = Utils.newFile(appDir, "lib");
-        if (!lib.exists()) {
-            return;
-        }
-        for (String fileName : lib.list()) {
-            libs.add(new File(lib, fileName));
+    private void appendAppClassPath(File appFile, List<File> libs) throws IOException {
+        try (JarFile jarFile = new JarFile(appFile)) {
+            Manifest manifest = jarFile.getManifest();
+            Attributes mainAttributes = manifest.getMainAttributes();
+            String classPathValue = mainAttributes.getValue(Attributes.Name.CLASS_PATH);
+            if (classPathValue == null || classPathValue.isEmpty()) {
+                return;
+            }
+
+            String[] classPathEntries = classPathValue.split(" ");
+            File parentFile = appFile.getParentFile();
+            for (String entry : classPathEntries) {
+                File file = new File(entry);
+                if (!file.isAbsolute()) {
+                    if (entry.startsWith("./")) {
+                        file = new File(parentFile, entry.substring(2));
+                    } else {
+                        file = new File(parentFile, entry);
+                    }
+                }
+                libs.add(file);
+            }
         }
     }
 

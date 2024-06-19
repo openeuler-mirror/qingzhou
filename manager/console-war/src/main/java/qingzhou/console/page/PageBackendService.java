@@ -15,7 +15,7 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
-import qingzhou.console.util.Base32Util;
+import qingzhou.engine.util.Base32Util;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.Deployer;

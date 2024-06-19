@@ -1,5 +1,6 @@
 package qingzhou.engine.util.crypto.impl;
 
+import qingzhou.engine.util.HexUtil;
 import qingzhou.engine.util.crypto.CryptoService;
 import qingzhou.engine.util.crypto.KeyCipher;
 import qingzhou.engine.util.crypto.KeyPairCipher;

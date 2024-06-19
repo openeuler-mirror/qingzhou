@@ -1,7 +1,7 @@
-package qingzhou.console.login;
+package qingzhou.console;
 
-import qingzhou.console.util.Base32Util;
-import qingzhou.console.util.HexUtil;
+import qingzhou.engine.util.Base32Util;
+import qingzhou.engine.util.HexUtil;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
