@@ -77,7 +77,7 @@
                         </td>
                         <td style="word-break: break-all" field-val="<%=fieldValue%>">
                             <%
-                                if (fieldValue.startsWith("http")) {
+                                if (fieldValue.startsWith("http") && !fieldValue.startsWith("http-")) {
                             %>
                             <a target="_blank" href="<%=fieldValue%>">
                                 <%=fieldValue%>
