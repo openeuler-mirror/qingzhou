@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "os", icon = "desktop", menu = "Monitor",
-        name = {"操作系统", "en:Operating System"}, hidden = true,
+        name = {"操作系统", "en:Operating System"}, entrance = Monitorable.ACTION_NAME_MONITOR,
         info = {"操作系统的基本信息。", "en:Basic information about the operating system."})
 public class OS extends ModelBase implements Monitorable {
 
@@ -21,10 +21,10 @@ public class OS extends ModelBase implements Monitorable {
     public String Name;
 
     @ModelField(name = {"版本", "en:Operating System Version"}, info = {"操作系统的版本号。", "en:Operating system version."})
-    private String Version;
+    public String Version;
 
     @ModelField(name = {"架构", "en:Operating System Architecture"}, info = {"操作系统所基于的硬件架构。", "en:Operating system architecture."})
-    private String Arch;
+    public String Arch;
 
     @ModelField(name = {"CPU 个数", "en:The Number Of Cpus"}, info = {"虚拟机可用的处理器数量。", "en:The number of processors available to the virtual machine."})
     public int AvailableProcessors;
@@ -49,7 +49,7 @@ public class OS extends ModelBase implements Monitorable {
     public Double FreeSwapSpaceSize;
 
     @ModelField(monitor = true, numeric = true, name = {"当前虚拟内存（GB）", "en:Current Virtual Memory (GB)"}, info = {"操作系统的当前虚拟内存，单位GB。", "en:Current virtual memory of operating system, in GB."})
-    private Double CommittedVirtualMemorySize;
+    public Double CommittedVirtualMemorySize;
 
     @ModelField(monitor = true, numeric = true, name = {"磁盘分区总量（GB）", "en:File Total Space (GB)"},
             info = {"TongWeb 所在的磁盘分区总空间大小，单位GB。", "en:The total space of the disk partition where TongWeb is located, in GB."})

@@ -55,9 +55,15 @@ class PresetAction {
 
             if (monitorField.isNumeric()) {
                 monitorData.put(fieldName, value);
-            } else {
-                infoData.put(fieldName, value);
             }
+        }
+
+        String[] infoFieldNames = getAppInfo().getModelInfo(request.getModel()).getFormFieldNames();
+        for (String infoFieldName : infoFieldNames) {
+            String value = p.get(infoFieldName);
+            if (value == null) continue;
+
+            infoData.put(infoFieldName, value);
         }
 
         response.addData(monitorData);
