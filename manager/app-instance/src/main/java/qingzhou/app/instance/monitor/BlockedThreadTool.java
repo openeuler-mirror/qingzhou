@@ -6,14 +6,20 @@ import qingzhou.engine.util.Utils;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class BlockedThreadTool {
 
     private static final Set<String> HIDDEN_THREAD = new HashSet<>();
     private static final String[] IGNORED_THREADS_PREFIX = {
-            "WebSocketConnectReadThread", "WebSocketWriteThread" // license server连接线程
+            "WebSocketConnectReadThread", "WebSocketWriteThread", // license server连接线程
+            "Catalina-", "http-nio-"
     };
 
     private static final String[] JAVA_STACKS = {"com.sun.", "sun.", "java.", "jdk.", "javax.", "jakarta.", "com.mysql"};

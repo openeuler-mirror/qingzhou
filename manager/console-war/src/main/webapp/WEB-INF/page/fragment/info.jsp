@@ -65,9 +65,7 @@
                             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
                             String fieldValue = allData.get(fieldName);
                             fieldValue = fieldValue != null ? fieldValue : "";
-                            if (modelField == null || modelField.getType().equals(FieldType.markdown.name())) {
-                                fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
-                            }
+                            fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
                     %>
                     <tr row-item="<%=fieldName%>">
                         <td class="home-field-info" field="<%=fieldName%>">

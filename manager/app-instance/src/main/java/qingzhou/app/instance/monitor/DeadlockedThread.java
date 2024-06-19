@@ -1,6 +1,7 @@
 package qingzhou.app.instance.monitor;
 
 import qingzhou.api.DataStore;
+import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
@@ -10,6 +11,7 @@ import qingzhou.api.Response;
 import qingzhou.api.type.Listable;
 import qingzhou.deployer.ReadOnlyDataStore;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,13 +20,14 @@ import java.util.Map;
         info = {"汇总死锁的线程，可查看死锁等待对象监视器或同步器的线程栈。",
                 "en:To summarize the deadlocked threads, you can view the thread stacks of the deadlock waiting object monitor or synchronizer."})
 public class DeadlockedThread extends ModelBase implements Listable {
-    @ModelField(name = {"线程ID", "en:Thread Id"},
-            list = true,
+    @ModelField(list = true,
+            name = {"线程ID", "en:Thread Id"},
             info = {"死锁线程的ID。", "en:The ID of the deadlocked thread."})
     public String name;
 
-    @ModelField(name = {"线程名", "en:Thread Name"},
+    @ModelField(
             list = true,
+            name = {"线程名", "en:Thread Name"},
             info = {"死锁线程的名称。", "en:The name of the deadlocked thread."})
     public String threadName;
 
@@ -34,20 +37,20 @@ public class DeadlockedThread extends ModelBase implements Listable {
             info = {"死锁线程的当前状态。", "en:The current state of the deadlocked thread."})
     public String threadState;
 
-    @ModelField(name = {"等待的锁", "en:Lock Name"},
-            list = true,
-            info = {"该死锁线程正在等待的锁名称。",
-                    "en:An object for which the thread is blocked waiting."})
+    @ModelField(list = true,
+            name = {"等待的锁", "en:Lock Name"},
+            info = {"该死锁线程正在等待的锁名称。", "en:An object for which the thread is blocked waiting."})
     public String lockName;
 
-    @ModelField(name = {"锁占有线程ID", "en:Lock Owner Id"},
-            list = true,
+    @ModelField(
+            type = FieldType.number, list = true,
+            name = {"锁占有线程ID", "en:Lock Owner Id"},
             info = {"该死锁线程等待的锁正在被其它线程占有，此处给出占有线程的ID。-1 表示该死锁线程没有在等待锁，或锁没有被其它线程占有。",
                     "en:The ID of the thread which owns the object for which the thread associated with this thread is blocked waiting. This will be -1 if this thread is not blocked waiting for any object or if the object is not owned by any thread."})
     public long lockOwnerId;
 
-    @ModelField(name = {"锁占有线程名", "en:Lock Owner Name"},
-            list = true,
+    @ModelField(list = true,
+            name = {"锁占有线程名", "en:Lock Owner Name"},
             info = {"该死锁线程等待的锁正在被其它线程占有，此处给出占有线程的名称。空表示该死锁线程没有在等待锁，或锁没有被其它线程占有。",
                     "en:The name of the thread which owns the object for which the thread associated with this thread is blocked waiting. This will be empty if this thread is not blocked waiting for any object or if the object is not owned by any thread."})
     public String lockOwnerName;
@@ -57,6 +60,7 @@ public class DeadlockedThread extends ModelBase implements Listable {
     public String deadlockedStack;
 
     @ModelField(
+            type = FieldType.bool,
             name = {"支持强停", "en:Can Be Killed"},
             info = {"标记该线程是否支持强制终止。",
                     "en:Marks whether the thread supports forced termination."})
@@ -65,9 +69,8 @@ public class DeadlockedThread extends ModelBase implements Listable {
     @ModelAction(name = {"查看", "en:Show"},
             info = {"查看该死锁线程的信息，包括其死锁的堆栈等。", "en:View information about the deadlocked thread, including its deadlocked stack, etc."})
     public void show(Request request, Response response) throws Exception {
-        // show 方法已经在 qingzhou.app.ActionMethod.show 中定义，此处的逻辑会被忽略
         Map<String, String> data = getDataStore().getDataById(request.getId());
-        if (!data.isEmpty()) {
+        if (data != null && !data.isEmpty()) {
             response.addData(data);
         }
     }
@@ -104,6 +107,23 @@ public class DeadlockedThread extends ModelBase implements Listable {
         @Override
         public Map<String, String> getDataById(String id) {
             return tool.show(id);
+        }
+
+        @Override
+        public List<Map<String, String>> getDataByIds(String[] ids) throws Exception {
+            List<Map<String, String>> datas = new ArrayList<>();
+            for (String id : ids) {
+                Map<String, String> data = getDataById(id);
+                if (data != null && !data.isEmpty()) {
+                    datas.add(data);
+                }
+            }
+            return datas;
+        }
+
+        @Override
+        public List<Map<String, String>> getDataFieldByIds(String[] ids, String[] fields) throws Exception {
+            return getDataByIds(ids);
         }
     };
 
