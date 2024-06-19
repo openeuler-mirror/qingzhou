@@ -22,16 +22,6 @@ import java.util.Map;
         info = {"实例是轻舟提供的运行应用的实际环境，即应用的运行时。",
                 "en:The instance is the actual environment for running the application provided by Qingzhou, that is, the runtime of the application."})
 public class Instance extends ModelBase implements Createable {
-    private static final Map<String, String> local = new HashMap<>();
-
-    static {
-        local.put("id", DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
-        Agent agent = MasterApp.getService(Config.class).getAgent();
-        local.put("ip", agent.getHost());
-        local.put("port", String.valueOf(agent.getPort()));
-        local.put("running", Boolean.TRUE.toString());
-    }
-
     @ModelField(
             list = true,
             name = {"名称", "en:Name"},
@@ -77,7 +67,7 @@ public class Instance extends ModelBase implements Createable {
     public void show(Request request, Response response) throws Exception {
         String id = request.getId();
         if (DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID.equals(id)) {
-            response.addData(local);
+            response.addData(localInstance());
             return;
         }
         Registry registry = MasterApp.getService(Registry.class);
@@ -146,7 +136,7 @@ public class Instance extends ModelBase implements Createable {
         int endIndex = pageNum * pageSize;
 
         if (startIndex == 0) {
-            response.addData(local);
+            response.addData(localInstance());
             totalSize = 1;
         }
 
@@ -174,5 +164,15 @@ public class Instance extends ModelBase implements Createable {
         }
         totalSize += allInstanceId.size();
         response.setTotalSize(totalSize);
+    }
+
+    private Map<String, String> localInstance() {
+        Map<String, String> local = new HashMap<>();
+        local.put("id", DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
+        Agent agent = MasterApp.getService(Config.class).getAgent();
+        local.put("ip", agent.getHost());
+        local.put("port", String.valueOf(agent.getPort()));
+        local.put("running", Boolean.TRUE.toString());
+        return local;
     }
 }
