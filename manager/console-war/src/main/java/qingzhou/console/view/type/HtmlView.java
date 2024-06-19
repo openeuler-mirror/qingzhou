@@ -78,11 +78,10 @@ public class HtmlView implements View {
                 return ConsoleConstants.VIEW_RENDER_FORM;
             case ConsoleConstants.ACTION_NAME_index:
                 return ConsoleConstants.VIEW_RENDER_INDEX;
-            case Monitorable.ACTION_NAME_MONITOR:
-                return ConsoleConstants.VIEW_RENDER_INFO;
             case ConsoleConstants.ACTION_NAME_manage:
                 return ConsoleConstants.VIEW_RENDER_MANAGE;
             case Showable.ACTION_NAME_SHOW:
+            case Monitorable.ACTION_NAME_MONITOR:
                 return ConsoleConstants.VIEW_RENDER_SHOW;
         }
         return ConsoleConstants.VIEW_RENDER_DEFAULT;

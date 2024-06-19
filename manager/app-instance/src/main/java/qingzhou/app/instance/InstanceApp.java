@@ -13,6 +13,8 @@ public class InstanceApp extends QingzhouSystemApp {
     public void start(AppContext appContext) {
         MODULECONTEXT = this.moduleContext;
         appContext.addI18n("validator.exist", new String[]{"已存在", "en:Already exists"});
+
+        appContext.addMenu("Monitor", new String[]{"监视", "en:Monitor"}, "server", 1);
     }
 
     public static <T> T getService(Class<T> type) {
