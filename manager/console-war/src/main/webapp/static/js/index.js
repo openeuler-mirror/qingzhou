@@ -1802,7 +1802,7 @@ function addData(chartObj, option, models, keys, restrictedArea) {
         option.yAxis.minInterval = 1;
     }
     // 更新数据展示
-    chartObj.setOption(option, true);
+    chartObj.setOption(option, false);
     chartObj.resize();
     panelUpdate(models, restrictedArea);
 };
