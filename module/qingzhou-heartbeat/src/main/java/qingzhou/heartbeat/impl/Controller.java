@@ -19,7 +19,13 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -118,7 +124,7 @@ public class Controller implements ModuleActivator {
         InstanceInfo instanceInfo = new InstanceInfo();
         instanceInfo.setId(UUID.randomUUID().toString().replace("-", ""));
         instanceInfo.setHost(agentService.getAgentHost().equals("0.0.0.0")
-                ? Arrays.toString(Utils.getLocalIps().toArray(new String[0]))
+                ? Utils.getLocalIps().iterator().next()
                 : agentService.getAgentHost());
         instanceInfo.setPort(agentService.getAgentPort());
 
