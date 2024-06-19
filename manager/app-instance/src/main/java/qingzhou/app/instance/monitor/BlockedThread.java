@@ -1,6 +1,7 @@
 package qingzhou.app.instance.monitor;
 
 import qingzhou.api.DataStore;
+import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
@@ -10,6 +11,7 @@ import qingzhou.api.Response;
 import qingzhou.api.type.Listable;
 import qingzhou.deployer.ReadOnlyDataStore;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +21,8 @@ import java.util.Map;
                 "en:Summarize blocked threads, and view blocked stacks and blocked threads on the same stack."})
 public class BlockedThread extends ModelBase implements Listable {
 
-    @ModelField(name = {"线程ID", "en:Thread Id"},
-            list = true,
+    @ModelField(list = true,
+            name = {"线程ID", "en:Thread Id"},
             info = {"阻塞线程的ID。", "en:The ID of the blocked thread."})
     public String id;
 
@@ -29,8 +31,8 @@ public class BlockedThread extends ModelBase implements Listable {
             info = {"阻塞线程的名称。", "en:The name of the blocked thread."})
     public String threadName;
 
-    @ModelField(name = {"线程状态", "en:Thread State"},
-            list = true,
+    @ModelField(list = true,
+            name = {"线程状态", "en:Thread State"},
             options = {"BLOCKED", "WAITING", "TIMED_WAITING"},
             info = {"阻塞线程的当前状态。", "en:The current state of the blocked thread."})
     public String threadState;
@@ -39,13 +41,14 @@ public class BlockedThread extends ModelBase implements Listable {
             info = {"阻塞线程栈。", "en:Blocking thread stack."})
     public String blockedStack;
 
-    @ModelField(name = {"阻塞方法", "en:Blocked Method"},
-            list = true,
+    @ModelField(list = true,
+            name = {"阻塞方法", "en:Blocked Method"},
             info = {"线程阻塞的类方法。", "en:Thread blocking class method."})
     public String blockedMethod;
 
-    @ModelField(name = {"相同阻塞线程数", "en:Same Blocked Thread Count"},
-            list = true,
+    @ModelField(
+            type = FieldType.number, list = true,
+            name = {"相同阻塞线程数", "en:Same Blocked Thread Count"},
             info = {"阻塞的线程栈相同的线程数量。", "en:Blocked thread stacks are equal to the number of threads."})
     public Integer sameStackThreadCount;
 
@@ -54,6 +57,7 @@ public class BlockedThread extends ModelBase implements Listable {
     public String sameStackThreads;
 
     @ModelField(
+            type = FieldType.bool,
             name = {"支持强停", "en:Can Be Killed"},
             info = {"标记该线程是否支持强制终止。",
                     "en:Marks whether the thread supports forced termination."})
@@ -64,7 +68,7 @@ public class BlockedThread extends ModelBase implements Listable {
             info = {"查看该阻塞线程的信息，包括其调用的堆栈等。", "en:View the information of the blocking thread, including the stack of its calls."})
     public void show(Request request, Response response) throws Exception {
         Map<String, String> data = getDataStore().getDataById(request.getId());
-        if (!data.isEmpty()) {
+        if (data != null && !data.isEmpty()) {
             response.addData(data);
         }
     }
@@ -160,7 +164,22 @@ public class BlockedThread extends ModelBase implements Listable {
             return blockedThreadTool.show(id);
         }
 
+        @Override
+        public List<Map<String, String>> getDataByIds(String[] ids) throws Exception {
+            List<Map<String, String>> datas = new ArrayList<>();
+            for (String id : ids) {
+                Map<String, String> data = getDataById(id);
+                if (data != null && !data.isEmpty()) {
+                    datas.add(data);
+                }
+            }
+            return datas;
+        }
 
+        @Override
+        public List<Map<String, String>> getDataFieldByIds(String[] ids, String[] fields) throws Exception {
+            return getDataByIds(ids);
+        }
     };
 
     @Override
