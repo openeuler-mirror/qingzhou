@@ -1,17 +1,11 @@
 package qingzhou.app.master;
 
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.system.User;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
+import qingzhou.console.Totp;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.crypto.CryptoServiceFactory;
@@ -303,7 +297,7 @@ public class Password extends ModelBase implements Editable {
             Map<String, String> attributes = getDataStore().getDataById(loginUser);
             String keyFor2FA = attributes.get("keyFor2FA");
             try {
-                //result = Totp.verify(keyFor2FA, reqCode); TODO
+                result = Totp.verify(keyFor2FA, reqCode);
             } catch (Exception e) {
                 e.printStackTrace();
             }

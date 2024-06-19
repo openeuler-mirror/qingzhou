@@ -1,9 +1,13 @@
 package qingzhou.engine.util.crypto.impl;
 
+import qingzhou.engine.util.HexUtil;
 import qingzhou.engine.util.crypto.KeyPairCipher;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -93,22 +97,7 @@ class KeyPairCipherImpl implements KeyPairCipher {
         Cipher cipher = Cipher.getInstance(ALG);
         cipher.init(Cipher.ENCRYPT_MODE, key);
         //分段加密
-        int encryptLen = encryptBytes.length;
-        int offLen = 0;//偏移量
-        int i = 0;
-        ByteArrayOutputStream bops = new ByteArrayOutputStream();
-        while (offLen < encryptLen) {
-            byte[] cache;
-            if (encryptLen - offLen > ENCRYPT_BLOCK) {
-                cache = cipher.doFinal(encryptBytes, offLen, ENCRYPT_BLOCK);
-            } else {
-                cache = cipher.doFinal(encryptBytes, offLen, encryptLen - offLen);
-            }
-            bops.write(cache);
-            i++;
-            offLen = ENCRYPT_BLOCK * i;
-        }
-        return bops.toByteArray();
+        return cipherBytes(encryptBytes, cipher, ENCRYPT_BLOCK);
     }
 
     private String decryptWithKey(Key key, String input) throws Exception {
@@ -132,20 +121,24 @@ class KeyPairCipherImpl implements KeyPairCipher {
         Cipher cipher = Cipher.getInstance(ALG);
         cipher.init(Cipher.DECRYPT_MODE, key);
 
+        return cipherBytes(decryptBytes, cipher, DECRYPT_BLOCK);
+    }
+
+    private byte[] cipherBytes(byte[] decryptBytes, Cipher cipher, int decryptBlock) throws IllegalBlockSizeException, BadPaddingException, IOException {
         int decryptLen = decryptBytes.length;
         int offLen = 0;
         int i = 0;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         while (offLen < decryptLen) {
             byte[] cache;
-            if (decryptLen - offLen > DECRYPT_BLOCK) {
-                cache = cipher.doFinal(decryptBytes, offLen, DECRYPT_BLOCK);
+            if (decryptLen - offLen > decryptBlock) {
+                cache = cipher.doFinal(decryptBytes, offLen, decryptBlock);
             } else {
                 cache = cipher.doFinal(decryptBytes, offLen, decryptLen - offLen);
             }
             bos.write(cache);
             i++;
-            offLen = DECRYPT_BLOCK * i;
+            offLen = decryptBlock * i;
         }
 
         return bos.toByteArray();

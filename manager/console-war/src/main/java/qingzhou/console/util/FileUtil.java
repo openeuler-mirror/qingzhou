@@ -4,12 +4,9 @@ import qingzhou.engine.util.Utils;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -17,21 +14,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
-    public static String getFileMD5(File file) throws Exception {
-        MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-        byte[] fileDigest = getFileDigest(file, messageDigest);
-        return HexUtil.bytesToHex(fileDigest);
-    }
-
-    public static byte[] getFileDigest(File file, MessageDigest messageDigest) throws IOException {
-        try (FileInputStream in = new FileInputStream(file)) {
-            FileChannel ch = in.getChannel();
-            MappedByteBuffer byteBuffer = ch.map(FileChannel.MapMode.READ_ONLY, 0, file.length());
-            messageDigest.update(byteBuffer);
-            return messageDigest.digest();
-        }
-    }
-
     public static boolean delete(File f) {
         if (f == null)
             return false;

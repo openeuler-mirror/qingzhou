@@ -1,17 +1,31 @@
-package qingzhou.console.util;
+package qingzhou.engine.util;
 
 public class HexUtil {
+    /**
+     * 字节数组转16进制
+     */
+    public static String bytesToHex(byte[] bytes) {
+        return encodeHexString(bytes);
+    }
+
+    /**
+     * hex字符串转byte数组
+     */
+    public static byte[] hexToBytes(String inHex) {
+        return decodeHex(inHex);
+    }
+
     private static final char[] DIGITS_LOWER = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
             'e', 'f'};
 
     private static final char[] DIGITS_UPPER = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D',
             'E', 'F'};
 
-    public static String encodeHexString(byte[] data, boolean toLowerCase) {
-        return new String(encodeHex(data, toLowerCase));
+    private static String encodeHexString(byte[] data) {
+        return new String(encodeHex(data, false));
     }
 
-    public static char[] encodeHex(byte[] data, boolean toLowerCase) {
+    private static char[] encodeHex(byte[] data, boolean toLowerCase) {
         return encodeHex(data, toLowerCase ? DIGITS_LOWER : DIGITS_UPPER);
     }
 
@@ -27,11 +41,11 @@ public class HexUtil {
     }
 
 
-    public static byte[] decodeHex(String data) {
+    private static byte[] decodeHex(String data) {
         return decodeHex(data.toCharArray());
     }
 
-    public static byte[] decodeHex(char[] data) {
+    private static byte[] decodeHex(char[] data) {
 
         int len = data.length;
 
@@ -59,19 +73,5 @@ public class HexUtil {
             throw new IllegalStateException("Illegal hexadecimal character " + ch + " at index " + index);
         }
         return digit;
-    }
-
-    /**
-     * 字节数组转16进制
-     */
-    public static String bytesToHex(byte[] bytes) {
-        return encodeHexString(bytes, false);
-    }
-
-    /**
-     * hex字符串转byte数组
-     */
-    public static byte[] hexToBytes(String inHex) {
-        return decodeHex(inHex);
     }
 }

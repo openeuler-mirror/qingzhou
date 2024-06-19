@@ -8,6 +8,7 @@ import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
@@ -31,7 +32,7 @@ public class AccessControl implements Filter<HttpServletContext> {
         String checkModel = ma[0];
         String checkAction = ma[1];
         if (ma.length == 2) {
-            if (ConsoleConstants.MODEL_NAME_password.equals(checkModel)) {
+            if (DeployerConstants.MASTER_APP_PASSWORD_MODEL_NAME.equals(checkModel)) {
                 if (Editable.ACTION_NAME_EDIT.equals(checkAction)
                         || Editable.ACTION_NAME_UPDATE.equals(checkAction)) { // 允许访问重置密码的 uri
                     return true;

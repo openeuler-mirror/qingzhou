@@ -1,5 +1,6 @@
 package qingzhou.engine.util.crypto.impl;
 
+import qingzhou.engine.util.HexUtil;
 import qingzhou.engine.util.crypto.MessageDigest;
 
 import java.nio.charset.StandardCharsets;
@@ -29,7 +30,8 @@ class MessageDigestImpl implements MessageDigest {
             return false;
         }
 
-        String[] splitPwd = splitPwd(msgDigest);
+        String[] splitPwd = msgDigest.split("\\" + SP);
+
         String algorithm = splitPwd[0];
         byte[] salt = decode(splitPwd[1]);
         int iterations = Integer.parseInt(splitPwd[2]);
@@ -55,20 +57,6 @@ class MessageDigestImpl implements MessageDigest {
     private String encode(byte[] bytes) {
         if (bytes == null || bytes.length == 0) return "";
         return HexUtil.bytesToHex(bytes);
-    }
-
-    private String[] splitPwd(String storedCredentials) {
-        String[] pwdArray = new String[4];
-        int lastIndexOf = storedCredentials.lastIndexOf(SP);
-
-        String digestAlg = storedCredentials.substring(lastIndexOf + 1);
-        pwdArray[pwdArray.length - 1] = digestAlg;
-
-        storedCredentials = storedCredentials.substring(0, lastIndexOf);
-        String[] oldPwdDigestStyle = storedCredentials.split("\\" + SP);
-        System.arraycopy(oldPwdDigestStyle, 0, pwdArray, 0, pwdArray.length - 1);
-
-        return pwdArray;
     }
 
     private byte[] digest(String algorithm, int iterations, byte[]... input) {
