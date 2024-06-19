@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class DeployerImpl implements Deployer {
-    
+
     private final Map<Method, ModelActionInfo> presetMethodActionInfos;
 
     private final Map<String, App> apps = new HashMap<>();
@@ -416,10 +416,11 @@ class DeployerImpl implements Deployer {
                 continue;
             }
             libs.add(appFile);
-            appendAppClassPath(appFile, libs);
-
             scanAppFilesCache.add(appFile);
         }
+
+        addLib(appDir, libs);
+        addConfig(appDir, libs);
 
         if (!isSystemApp) {
             File[] commonFiles = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
@@ -434,28 +435,21 @@ class DeployerImpl implements Deployer {
         return libs.toArray(new File[0]);
     }
 
-    private void appendAppClassPath(File appFile, List<File> libs) throws IOException {
-        try (JarFile jarFile = new JarFile(appFile)) {
-            Manifest manifest = jarFile.getManifest();
-            Attributes mainAttributes = manifest.getMainAttributes();
-            String classPathValue = mainAttributes.getValue(Attributes.Name.CLASS_PATH);
-            if (classPathValue == null || classPathValue.isEmpty()) {
-                return;
-            }
+    private void addConfig(File appDir, List<File> libs) {
+        File config = Utils.newFile(appDir, "config");
+        if (!config.exists()) {
+            return;
+        }
+        libs.add(config);
+    }
 
-            String[] classPathEntries = classPathValue.split(" ");
-            File parentFile = appFile.getParentFile();
-            for (String entry : classPathEntries) {
-                File file = new File(entry);
-                if (!file.isAbsolute()) {
-                    if (entry.startsWith("./")) {
-                        file = new File(parentFile, entry.substring(2));
-                    } else {
-                        file = new File(parentFile, entry);
-                    }
-                }
-                libs.add(file);
-            }
+    private void addLib(File appDir, List<File> libs) {
+        File lib = Utils.newFile(appDir, "lib");
+        if (!lib.exists()) {
+            return;
+        }
+        for (String fileName : lib.list()) {
+            libs.add(new File(lib, fileName));
         }
     }
 
