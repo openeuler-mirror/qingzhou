@@ -634,7 +634,7 @@ function bindEventForFormPage() {
     // 列表页及form页面下载(日志、快照等)
     tw.bindFill(".form-btn a[btn-type='monitor']", ".main-body", true, false);
     // form页面(修改密码双因子认证二维码加载)
-    $(".form-btn a[btn-type='key']").unbind("click").bind("click", function (e) {
+    $(".form-btn a[btn-type='qr2fa']").unbind("click").bind("click", function (e) {
         e.preventDefault();
         var keyUrl = $(this).attr("href");
         var urlSP = "&";
@@ -643,8 +643,8 @@ function bindEventForFormPage() {
         }
         var imgSrc = keyUrl + urlSP + new Date().getTime();// 有时候会缓存二维码，刷不到最新的
         var html = "<div style='text-align:center;'>"
-                + "<img src='" + imgSrc + "' style='width:200px; height:200px; margin-top:20px;' onerror='this.src=\"./static/images/data-empty.svg\"'>"
-                + "<br><div class=\"input-control\" style=\"width: 200px;text-align: center;margin-left: 28%;\">"
+                + "<img src='" + imgSrc + "' style='width:200px; height:200px; margin-top:20px; padding:6px;' onerror='this.src=\"./static/images/data-empty.svg\"'>"
+                + "<br><div class=\"input-control\" style=\"width: 200px;text-align: center;margin-left: 26%;\">"
                 + "<input id=\"randCode-2FA\" type=\"text\" class=\"form-control\" placeholder=\"" + getSetting("placeholder2FA") + "\"></div>"
                 + "<label id='verifyCode2FAError' class=\"tw-error-info\" style=\"position:relative; margin-left:-68px; color:red;\"></label>"
                 + "</div>";
@@ -652,12 +652,12 @@ function bindEventForFormPage() {
                 var params = {};
                 params[getSetting("check2FA")] = $.trim($("#randCode-2FA").val());
                 $.ajax({
-                    url: imgSrc.replace("/key", "/validate").replace("/html/", "/json/"),
+                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/"))  + "/validate").replace("/image/", "/json/"),
                     async: true,
                     data: params,
                     dataType: "json",
                     success: function (data) {
-                        if (data.result) {
+                        if (data.success) {
                             closeLayer(index);
                             showSuccess(getSetting("bindSuccess2FA"));
                         } else {

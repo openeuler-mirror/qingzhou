@@ -30,10 +30,10 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -109,7 +109,7 @@ public class RESTController extends HttpServlet {
             if (request == null) {
                 return;
             }
-
+            
             RestContext context = new RestContext(req, resp, request, new ResponseImpl());
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
             viewManager.render(context); // 最后作出响应
@@ -235,8 +235,7 @@ public class RESTController extends HttpServlet {
                     }
                 }
 
-                SimpleDateFormat DF = new SimpleDateFormat("yyyyMMddHHmmss");
-                String time = DF.format(new Date());
+                String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
                 String fileName = Utils.newFile(part.getSubmittedFileName()).getName();
                 File targetFile = Utils.newFile(TEMP_BASE_PATH, time, fileName);
                 Utils.mkdirs(targetFile.getParentFile());

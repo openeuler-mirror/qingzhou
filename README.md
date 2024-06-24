@@ -247,6 +247,7 @@ zip包目录结构示意：
 + Apache MINA SSHD ([https://mina.apache.org/sshd-project/](https://mina.apache.org/sshd-project/))
 + tinylog ([https://tinylog.org](https://tinylog.org))
 + Apache Tomcat ([https://tomcat.apache.org](https://tomcat.apache.org))
++ QR-Code-generator ([https://github.com/nayuki/QR-Code-generator](https://github.com/nayuki/QR-Code-generator))
 
 ## 参与贡献
 

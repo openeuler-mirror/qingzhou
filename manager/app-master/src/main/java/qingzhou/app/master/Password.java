@@ -1,5 +1,7 @@
 package qingzhou.app.master;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.system.User;
@@ -14,6 +16,8 @@ import qingzhou.registry.AppInfo;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.imageio.ImageIO;
+import qingzhou.console.QrGenerator;
 
 @Model(code = "password", icon = "key",
         order = 99,
@@ -22,6 +26,7 @@ import java.util.Map;
         name = {"修改密码", "en:Change Password"},
         info = {"用于修改当前登录用户的密码。", "en:Used to change the password of the currently logged-in user."})
 public class Password extends ModelBase implements Editable {
+    
     public static String[] splitPwd(String storedCredentials) {
         String SP = "$";
         String[] pwdArray = new String[4];
@@ -40,31 +45,31 @@ public class Password extends ModelBase implements Editable {
     }
 
     @ModelField(
-            type = FieldType.password,
+            type = FieldType.password, show = "update2FA=false",
             name = {"原始密码", "en:Original Password"},
             info = {"登录系统的原始密码。", "en:The original password to log in to the system."})
     public String originalPassword;
 
     @ModelField(
-            type = FieldType.password,
+            type = FieldType.password, show = "update2FA=false",
             name = {"新密码", "en:Password"},
             info = {"用于登录系统的新密码。", "en:The new password used to log in to the system."})
     public String newPassword;
 
     @ModelField(
-            type = FieldType.password,
+            type = FieldType.password, show = "update2FA=false",
             name = {"确认密码", "en:Confirm Password"},
             info = {"确认用于登录系统的新密码。", "en:Confirm the new password used to log in to the system."})
     public String confirmPassword;
 
-   /* @ModelField(
+   @ModelField(
             required = false,
             type = FieldType.bool,
             name = {"更新双因子认证密钥", "en:Update Two-factor Authentication Key"},
             info = {"安全起见，建议定期刷新双因子认证密钥。刷新后，需要重新在用户终端的双因子认证客户端设备进行绑定。",
                     "en:For security reasons, it is recommended to periodically refresh the two-factor authentication key. After refreshing, you need to re-bind it on the two-factor authentication client device of the user terminal."}
     )
-    public boolean update2FA = false;*/
+    public boolean update2FA = false;
 
     @Override
     public void start() {
@@ -106,7 +111,6 @@ public class Password extends ModelBase implements Editable {
             name = {"更新", "en:Update"},
             info = {"更新密码。", "en:Update the password."})
     public void update(Request request, Response response) throws Exception {
-        Map<String, String> p = new HashMap<>();
         Map<String, String> paramMap = prepareParameters(request);
         String validate;
         for (String name : paramMap.keySet()) {
@@ -120,45 +124,38 @@ public class Password extends ModelBase implements Editable {
 
         Console console = MasterApp.getService(Config.class).getConsole();
         String loginUser = request.getUser();
-        if (Boolean.parseBoolean(p.getOrDefault("update2FA", "false"))) {
-            // p.put("keyFor2FA", User.refresh2FA()); TODO
-            p.put("bound2FA", "false");
+        Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
+        if (Boolean.parseBoolean(paramMap.getOrDefault("update2FA", "false"))) {
+            loginUserPro.put("keyFor2FA", User.refresh2FA());
+            loginUserPro.put("enable2FA", "false");
         } else {
             if (forbidResetInitPwd(request)) {
                 response.setSuccess(false);
                 return;
             }
 
-            Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
-
             MessageDigest digest = CryptoServiceFactory.getInstance().getMessageDigest();
-
             String[] passwords = splitPwd(loginUserPro.get("password"));
             String digestAlg = passwords[0];
             int saltLength = Integer.parseInt(passwords[1]);
             int iterations = Integer.parseInt(passwords[2]);
 
-            p.put(User.pwdKey,
-                    digest.digest(
-                            paramMap.get("newPassword"),
-                            digestAlg,
-                            saltLength,
-                            iterations));
-            p.put("changeInitPwd", "false");
+            loginUserPro.put(User.pwdKey, digest.digest(paramMap.get("newPassword"), digestAlg, saltLength, iterations));
+            loginUserPro.put("changeInitPwd", "false");
 
-            User.insertPasswordModifiedTime(p);
+            User.insertPasswordModifiedTime(loginUserPro);
 
             String historyPasswords = User.cutOldPasswords(
                     loginUserPro.remove("historyPasswords"),
-                    console.getSecurity().getPasswordLimitRepeats(),
-                    p.get(User.pwdKey));
-            p.put("historyPasswords", historyPasswords);
+                    console.getSecurity().getPasswordLimitRepeats(), loginUserPro.get(User.pwdKey));
+            loginUserPro.put("historyPasswords", historyPasswords);
         }
 
-        getDataStore().updateDataById(loginUser, p);
+        getDataStore().updateDataById(loginUser, loginUserPro);
+        
         qingzhou.config.User user = console.getUser(loginUser);
-        user.setPassword(p.get(User.pwdKey));
-        user.setChangeInitPwd(Boolean.parseBoolean(p.get("changeInitPwd")));
+        user.setPassword(loginUserPro.get(User.pwdKey));
+        user.setChangeInitPwd(Boolean.parseBoolean(loginUserPro.get("changeInitPwd")));
 
         if (Boolean.parseBoolean(paramMap.getOrDefault("update2FA", "false"))) {
             response.setMsg(appContext.getI18n(request.getLang(), "update2FA.rebind"));
@@ -253,37 +250,25 @@ public class Password extends ModelBase implements Editable {
     @ModelAction(icon = "shield", name = {"二维码", "en:QR Code"},
             info = {"获取当前用户的双因子认证密钥，以二维码形式提供给用户。", "en:Obtain the current user two-factor authentication key and provide it to the user in the form of a QR code."})
     public void showKeyFor2FA(Request request, Response response) throws Exception {
-        /*String loginUser = request.getLoginUser();
-        Map<String,String> attributes = ConsoleXml.get().user(loginUser);
+        String loginUser = request.getUser();
+        Map<String,String> attributes = getDataStore().getDataById(loginUser);
         String key = "keyFor2FA";
         String keyFor2FA = attributes.get(key);
-        if (StringUtil.isBlank(keyFor2FA)) {
-            //keyFor2FA = User.refresh2FA();
-            User.updateXmlProperty(loginUser, key, keyFor2FA);
+        if (keyFor2FA == null || keyFor2FA.isEmpty()) {
+            keyFor2FA = User.refresh2FA();
+            Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
+            loginUserPro.put(key, keyFor2FA);
+            getDataStore().updateDataById(loginUser, loginUserPro);
         }
-        String qrCode = Totp.generateTotpString(loginUser, keyFor2FA);
-
-        request.setResponseHeader("Pragma", "no-cache");
-        request.setResponseHeader("Cache-Control", "no-cache");
+        String qrCode = Totp.buildTotpLink(loginUser, keyFor2FA);
         String format = "PNG";
-        request.setResponseContentType("image/" + format);
-        // 请求来自内部命令行调用
-        if (StringUtil.notBlank(request.getHeader(LoginManager.HEADER_CLIENT_TYPE))) {
-            request.setResponseHeader("Content-disposition", "attachment; filename=" + key + ".png");
-        }
-
+        response.setContentType("image/" + format);
+        
+        BufferedImage qrImage = QrGenerator.genQrImage(qrCode, 9, 4, 0xE0F0FF, 0x404040);//QrGenerator.genQrImage(qrCode, 8, 6, 0xE0FFE0, 0x206020);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        TWQRCodeConfig twqrCodeConfig = new TWQRCodeConfig();
-        twqrCodeConfig.setText(qrCode)
-                .setWidth(300)
-                .setHeight(300)
-                .setFormat(format)
-                .setOutputStream(bos);
-        QRCodeGenerator.generateImage(twqrCodeConfig);
-
+        ImageIO.write(qrImage, format, bos);
         // 二维码返回到浏览器
-        request.getResponseOutputStream().write(bos.toByteArray());
-        request.getResponseOutputStream().flush();*/
+        response.setOutputStream(bos);
     }
 
     @ModelAction(
@@ -302,11 +287,11 @@ public class Password extends ModelBase implements Editable {
                 e.printStackTrace();
             }
             if (result) {
-                attributes.put("bound2FA", "true");
+                attributes.put("enable2FA", "true");
                 getDataStore().updateDataById(loginUser, attributes);
             }
         }
-        //response.setDirectBody("{\"result\":" + result + "}");
+        response.setSuccess(result);
     }
 
     @Override

@@ -9,7 +9,7 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.FileView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.deployer.DeployerConstants;
+import qingzhou.console.view.type.ImageView;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,12 +19,14 @@ public class ViewManager {
     public static final String htmlView = "html";
     public static final String jsonView = "json";
     public static final String fileView = "file";
+    public static final String imageView = "image";
     private final Map<String, View> views = new HashMap<>();
 
     public ViewManager() {
         views.put(htmlView, new HtmlView());
         views.put(jsonView, new JsonView());
         views.put(fileView, new FileView());
+        views.put(imageView, new ImageView());
     }
 
     public void render(RestContext restContext) throws Exception {
@@ -47,8 +49,8 @@ public class ViewManager {
             throw new IllegalArgumentException("View not found: " + request.getView());
         }
 
-        restContext.servletResponse.setContentType(view.getContentType());
+        String contentType = response.getContentType();
+        restContext.servletResponse.setContentType((contentType == null || contentType.isEmpty()) ? view.getContentType() : contentType);
         view.render(restContext);
-
     }
 }
