@@ -271,7 +271,7 @@
                     if (submitPermission && (formCreateAction !=null && !formCreateAction.isDisable())) {
                 %>
                 <input type="submit" class="btn"
-                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + submitActionName)%>' fallbackAct="enableButton">
+                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + submitActionName)%>'>
                 <%
                     }
 
@@ -281,6 +281,15 @@
                 <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_NAME_LIST)%>"
                    btn-type="goback" class="btn">
                     <%=PageBackendService.getMasterAppI18nString("page.cancel")%>
+                </a>
+                <%
+                    }
+                    boolean b2faPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Listable.ACTION_NAME_2FA, LoginManager.getLoginUser(session));
+                    if (b2faPermission) {
+                %>
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, Listable.ACTION_NAME_2FA)%>"
+                    btn-type="qr2fa" class="btn">
+                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + Listable.ACTION_NAME_2FA)%>
                 </a>
                 <%
                     }

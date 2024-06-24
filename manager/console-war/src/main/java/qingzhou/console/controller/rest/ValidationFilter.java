@@ -245,8 +245,16 @@ public class ValidationFilter implements Filter<RestContext> {
             if (!FieldType.password.name().equals(fieldInfo.getType())) return null;
             try {
                 String pwdText = AsymmetricDecryptor.decryptWithConsolePrivateKey(context.parameterVal, true);
-                if (pwdText.trim().isEmpty()) {
-                    return new String[]{validation_required};
+                if (pwdText == null || pwdText.trim().isEmpty()) {
+                    if (context.isAddAction && !fieldInfo.isCreateable()) {
+                        return null;
+                    }
+                    if (context.isUpdateAction && !fieldInfo.isEditable()) {
+                        return null;
+                    }
+                    if (fieldInfo.isRequired() && PageBackendService.isShow(o -> context.params.containsKey(o) ? context.params.get(o).trim() : null, fieldInfo.getShow())) {
+                        return new String[]{validation_required};
+                    }
                 }
             } catch (Exception e) {
                 return new String[]{validation_password};

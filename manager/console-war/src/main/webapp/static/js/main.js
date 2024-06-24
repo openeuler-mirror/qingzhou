@@ -756,10 +756,6 @@ function handleError(e, element) {
     } else if (e.status === 403) {
         showError("403, Access denied !");
         $("#mask-loading").hide();
-        if ($(element).length > 0 && $(element).attr("fallbackAct") !== undefined) {
-            var fallback = fallbackActions[$(element).attr("fallbackAct")];
-            fallback && fallback.call(null, element);
-        }
     } else {
         if (e.status === 200 && e.responseText.indexOf("<!DOCTYPE html>") >= 0 && e.responseText.indexOf("loginForm") > 0) {
             $("#mask-loading").hide();
@@ -775,11 +771,6 @@ function handleError(e, element) {
         } else {
             showError(e.status + ":" + getSetting("pageErrorMsg"));
         }
-    }
-};
-var fallbackActions = {
-    "enableButton": function(element) {
-        $(element).removeAttr("disabled");
     }
 };
 /**

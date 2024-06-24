@@ -1,5 +1,6 @@
 package qingzhou.api;
 
+import java.io.OutputStream;
 import java.util.Map;
 
 /**
@@ -58,4 +59,22 @@ public interface Response {
      * @throws Exception 如果添加过程中发生错误，则抛出异常。
      */
     void addModelData(ModelBase data) throws Exception;
+    
+    /**
+     * 设置响应类型
+     * @param contentType 
+     */
+    void setContentType(String contentType);
+    
+    /**
+     * 获取输出流
+     * @return 
+     */
+    OutputStream getOutputStream();
+    
+    /**
+     * 设置输出流
+     * @param outputStream 
+     */
+    void setOutputStream(OutputStream outputStream);
 }

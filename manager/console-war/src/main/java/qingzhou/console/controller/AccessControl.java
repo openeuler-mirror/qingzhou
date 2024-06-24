@@ -1,7 +1,6 @@
 package qingzhou.console.controller;
 
 import qingzhou.api.type.Editable;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
@@ -17,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
+import qingzhou.api.type.Listable;
 
 public class AccessControl implements Filter<HttpServletContext> {
     static {
@@ -33,8 +33,8 @@ public class AccessControl implements Filter<HttpServletContext> {
         String checkAction = ma[1];
         if (ma.length == 2) {
             if (DeployerConstants.MASTER_APP_PASSWORD_MODEL_NAME.equals(checkModel)) {
-                if (Editable.ACTION_NAME_EDIT.equals(checkAction)
-                        || Editable.ACTION_NAME_UPDATE.equals(checkAction)) { // 允许访问重置密码的 uri
+                if (Editable.ACTION_NAME_EDIT.equals(checkAction) || Editable.ACTION_NAME_UPDATE.equals(checkAction) 
+                        || Listable.ACTION_NAME_2FA.equals(checkAction) || Listable.ACTION_NAME_2FA_VALIDATE.equals(checkAction)) { // 允许访问重置密码的 uri
                     return true;
                 }
             }
