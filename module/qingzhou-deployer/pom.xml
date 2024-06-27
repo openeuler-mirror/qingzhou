@@ -32,5 +32,10 @@
             <artifactId>qingzhou-config</artifactId>
             <version>x</version>
         </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-ssh</artifactId>
+            <version>x</version>
+        </dependency>
     </dependencies>
 </project>

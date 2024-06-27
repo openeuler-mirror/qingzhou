@@ -27,6 +27,11 @@ public class JsonImpl implements Json {
         for (String key : properties.stringPropertyNames()) {
             addObject.addProperty(key, properties.getProperty(key));
         }
+
+        if (jsonArray == null) {
+            jsonArray = new JsonArray();
+            jsonObject.add(position[position.length - 1], jsonArray);
+        }
         jsonArray.add(addObject);
 
         return gsonInstance().toJson(root);
@@ -81,8 +86,19 @@ public class JsonImpl implements Json {
     public <T> T fromJson(Reader from, Class<T> classOfT, String... position) {
         JsonElement root = JsonParser.parseReader(from);
         JsonObject jsonObject = root.getAsJsonObject();
+        JsonArray jsonArray = new JsonArray();
         for (String path : position) {
-            jsonObject = jsonObject.get(path).getAsJsonObject();
+            JsonElement jsonElement = jsonObject.get(path);
+            if (jsonElement == null) return null;
+            if (jsonElement.isJsonArray()){
+                jsonArray = jsonElement.getAsJsonArray();
+            }else {
+                jsonObject = jsonElement.getAsJsonObject();
+            }
+        }
+
+        if (classOfT.isArray()){
+            return gsonInstance().fromJson(jsonArray, classOfT);
         }
         return gsonInstance().fromJson(jsonObject, classOfT);
     }
