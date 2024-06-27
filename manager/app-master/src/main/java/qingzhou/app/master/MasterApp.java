@@ -15,6 +15,7 @@ public class MasterApp extends QingzhouSystemApp {
         masterApp = this;
 
         appContext.addI18n("validator.exist", new String[]{"已存在", "en:Already exists"});
+        appContext.addI18n("validator.fail", new String[]{"连接失败，请检查配置信息是否正确", "en:The connection fails. Please check whether the configuration information is correct"});
         appContext.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
         appContext.addI18n("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
         appContext.addI18n("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少 10 位。", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});

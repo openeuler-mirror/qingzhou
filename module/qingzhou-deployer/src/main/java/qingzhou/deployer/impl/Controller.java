@@ -11,6 +11,7 @@ import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
+import qingzhou.ssh.SSHService;
 
 import java.io.File;
 import java.util.Arrays;
@@ -28,6 +29,9 @@ public class Controller implements ModuleActivator {
 
     @Service
     private Json json;
+
+    @Service
+    private SSHService sshService;
 
     static Deployer deployer;
 

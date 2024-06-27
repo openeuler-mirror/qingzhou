@@ -76,8 +76,23 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
+    public Node[] getNode() {
+        return readJsonFile(reader -> json.fromJson(reader, Node[].class, "module", "node"));
+    }
+
+    @Override
     public void setSecurity(Security security) throws Exception {
         writeJson(security, false, "module", "console", "security");
+    }
+
+    @Override
+    public void addNode(Node node) throws Exception {
+        writeJson(node, true, "module", "node");
+    }
+
+    @Override
+    public void deleteNode(String id) throws Exception {
+        deleteJson("id", id, "module", "node");
     }
 
     public void deleteJson(String idKey, String idVal, String... position) throws IOException {
