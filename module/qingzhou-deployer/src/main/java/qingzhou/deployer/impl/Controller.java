@@ -12,6 +12,7 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.qr.QrGenerator;
 import qingzhou.registry.Registry;
+import qingzhou.ssh.SSHService;
 
 import java.io.File;
 import java.util.Arrays;
@@ -32,6 +33,9 @@ public class Controller implements ModuleActivator {
 
     @Service
     private QrGenerator qrGenerator;
+
+    @Service
+    private SSHService sshService;
 
     static Deployer deployer;
 
