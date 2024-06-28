@@ -80,7 +80,7 @@
                             } else {
                                 titleStr = "data-tip='" + I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey) + "'";
                             }
-                            boolean isAjaxAction = PageBackendService.isAjaxAction(actionKey);
+                            boolean isAjaxAction = action.isAjax();
                             String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                 %>
                 <a id="<%=actionKey%>"
@@ -254,7 +254,7 @@
                                 titleStr = "data-tip='" + I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey) + "'";
                             }
 
-                            boolean isAjaxAction = PageBackendService.isAjaxAction(actionName);
+                            boolean isAjaxAction = action.isAjax();
                             String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
                     %>
                     <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>

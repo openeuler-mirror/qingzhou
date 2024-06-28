@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "heartservice", icon = "heart",
-        menu = "Service", order = 3,
+        menu = "Service", order = 4,
         hidden = true,
         entrance = Editable.ACTION_NAME_EDIT,
         name = {"心跳服务", "en:Heartbeat Service"},

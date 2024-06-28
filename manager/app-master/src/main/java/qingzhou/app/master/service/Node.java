@@ -30,21 +30,24 @@ public class Node extends ModelBase implements Createable {
     public String id;
 
     @ModelField(list = true,
-            name = {"SSH 地址", "en:SSH Address"},
+            name = {"SSH 主机", "en:SSH Address"},
             info = {"连接节点的 IP 地址。", "en:The IP address of the connected node."})
     public String host;
 
     @ModelField(list = true,
+            type = FieldType.number,
+            port = true,
             name = {"SSH 端口", "en:SSH Port"},
             info = {"连接节点的 IP 地址的ssh服务使用的端口。", "en:Port used by the SSH service to connect the IP address of the node."})
     public int sshPort = 22;
 
-    @ModelField(list = true,
+    @ModelField(
             name = {"SSH 用户名", "en:SSH User Name "},
             info = {"SSH 登录使用的用户名。", "en:User name for SSH login"})
     public String sshUserName;
 
-    @ModelField(list = true,
+    @ModelField(
+            type = FieldType.password,
             name = {"SSH 密码", "en:SSH Password"},
             info = {"SSH 登录使用的密码", "en:Password or certificate."})
     public String sshPassword;
@@ -98,8 +101,8 @@ public class Node extends ModelBase implements Createable {
     }
 
     @ModelAction(
+            ajax = true,
             name = {"测试", "en:Validate"},
-
             info = {"验证远程服务器连接配置的有效性。", "en:Validate the remote server connection configuration."})
     public void validate(Request request, Response response) throws Exception {
         Map<String, String> data = getDataStore().getDataById(request.getId());

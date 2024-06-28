@@ -346,13 +346,6 @@ public class PageBackendService {
         return !modelField.isCreateable() && !modelField.isEditable();
     }
 
-    public static boolean isAjaxAction(String actionName) {
-        return Editable.ACTION_NAME_UPDATE.equals(actionName) ||
-                Createable.ACTION_NAME_ADD.equals(actionName) ||
-                Deletable.ACTION_NAME_DELETE.equals(actionName)||
-                "validate".equals(actionName);
-    }
-
     /********************* 批量操作 start ************************/
     public static ModelActionInfo[] listCommonOps(Request request, ResponseImpl response) {
         List<ModelActionInfo> actions = visitActions(request, response.getDataList());
