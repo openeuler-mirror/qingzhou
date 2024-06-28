@@ -1,6 +1,5 @@
 package qingzhou.console;
 
-import java.io.OutputStream;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Response;
 
@@ -18,8 +17,8 @@ public class ResponseImpl implements Response {
     private int totalSize = -1;
     private int pageSize = -1;
     private int pageNum = -1;
-    private String contentType = "";
-    private OutputStream outputStream;
+    private String contentType;
+    private final Map<String, String> parametersInSession = new HashMap<>();
 
     @Override
     public void setSuccess(boolean success) {
@@ -48,7 +47,6 @@ public class ResponseImpl implements Response {
         this.totalSize = totalSize;
     }
 
-    @Override
     public int getPageSize() {
         return pageSize;
     }
@@ -99,19 +97,12 @@ public class ResponseImpl implements Response {
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
-    
+
     public String getContentType() {
         return contentType;
     }
-    
-    @Override
-    public void setOutputStream(OutputStream outputStream) {
-        this.outputStream = outputStream;
-    }
 
-    @Override
-    public OutputStream getOutputStream() {
-        return outputStream;
+    public Map<String, String> getParametersInSession() {
+        return parametersInSession;
     }
-    
 }

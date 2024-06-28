@@ -284,12 +284,12 @@
                 </a>
                 <%
                     }
-                    boolean b2faPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Listable.ACTION_NAME_2FA, LoginManager.getLoginUser(session));
+                    boolean b2faPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + ConsoleConstants.ACTION_NAME_2FA, LoginManager.getLoginUser(session));
                     if (b2faPermission) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, Listable.ACTION_NAME_2FA)%>"
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, ConsoleConstants.ACTION_NAME_2FA)%>"
                     btn-type="qr2fa" class="btn">
-                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + Listable.ACTION_NAME_2FA)%>
+                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + ConsoleConstants.ACTION_NAME_2FA)%>
                 </a>
                 <%
                     }

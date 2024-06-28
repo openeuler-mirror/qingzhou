@@ -1,4 +1,4 @@
-package qingzhou.app.master.system;
+package qingzhou.app.master.service;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
@@ -13,7 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "heartservice", icon = "heart",
-        order = 4, hidden = true,
+        menu = "Service", order = 3,
+        hidden = true,
         entrance = Editable.ACTION_NAME_EDIT,
         name = {"心跳服务", "en:Heartbeat Service"},
         info = {"用于接收实例上报的心跳及已部署的应用信息。", "en:It is used to receive the heartbeat and deployed application information reported by the instance."})

@@ -1,7 +1,6 @@
 package qingzhou.agent.impl;
 
 import qingzhou.agent.AgentService;
-import qingzhou.api.Response;
 import qingzhou.config.Agent;
 import qingzhou.config.Config;
 import qingzhou.console.RequestImpl;
@@ -103,13 +102,16 @@ public class Controller implements ModuleActivator {
         RequestImpl request = json.fromJson(new String(decryptedData, StandardCharsets.UTF_8), RequestImpl.class);
 
         // 4. 处理
-        Response response = new ResponseImpl();
+        ResponseImpl response = new ResponseImpl();
         String appName = request.getApp();
         if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(request.getManageType())) {
             appName = DeployerConstants.INSTANCE_APP_NAME;
         }
         App app = deployer.getApp(appName);
         app.invoke(request, response);
+
+        // 将 request 收集的 session 参数，通过 response 回传到调用端
+        response.getParametersInSession().putAll(request.getParametersInSession());
 
         // 5. 响应数据
         byte[] responseData = json.toJson(response).getBytes(StandardCharsets.UTF_8);

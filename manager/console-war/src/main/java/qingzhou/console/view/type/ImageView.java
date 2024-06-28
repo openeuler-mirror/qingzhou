@@ -1,21 +1,23 @@
 package qingzhou.console.view.type;
 
-import java.io.ByteArrayOutputStream;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
+import qingzhou.engine.util.HexUtil;
+
+import java.util.List;
+import java.util.Map;
 
 public class ImageView implements View {
     public static final String CONTENT_TYPE = "image/png";
 
     @Override
     public void render(RestContext restContext) throws Exception {
-        String contentType = restContext.response.getContentType();
-        if (contentType != null && !contentType.isEmpty()) {
-            restContext.servletResponse.setContentType(contentType);
-        } else {
-            restContext.servletResponse.setContentType(CONTENT_TYPE);
-        }
-        restContext.servletResponse.getOutputStream().write(((ByteArrayOutputStream)restContext.response.getOutputStream()).toByteArray());
+        List<Map<String, String>> dataList = restContext.response.getDataList();
+        if (dataList.isEmpty()) return;
+
+        Map<String, String> map = dataList.get(0);
+        String value = map.entrySet().iterator().next().getValue();
+        restContext.servletResponse.getOutputStream().write(HexUtil.hexToBytes(value));
     }
 
     @Override

@@ -18,6 +18,7 @@
         <module>qingzhou-json</module>
         <module>qingzhou-ssh</module>
         <module>qingzhou-servlet</module>
+        <module>qingzhou-qr</module>
     </modules>
 
 </project>

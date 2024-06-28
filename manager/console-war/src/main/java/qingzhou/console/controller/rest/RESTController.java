@@ -19,10 +19,7 @@ import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
+import javax.servlet.http.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -32,12 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
@@ -109,7 +101,7 @@ public class RESTController extends HttpServlet {
             if (request == null) {
                 return;
             }
-            
+
             RestContext context = new RestContext(req, resp, request, new ResponseImpl());
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
             viewManager.render(context); // 最后作出响应
@@ -145,6 +137,7 @@ public class RESTController extends HttpServlet {
         }
 
         RequestImpl request = new RequestImpl();
+        request.setSessionParameterListener((key, val) -> req.getSession().setAttribute(key, val));
         request.setViewName(rest.get(0));
         request.setManageType(rest.get(1));
         request.setAppName(rest.get(2));
@@ -205,6 +198,17 @@ public class RESTController extends HttpServlet {
         }
 
         request.setParameters(data);
+
+        HttpSession session = req.getSession(false);
+        if (session != null) {
+            Map<String, String> paramsInSession = new HashMap<>();
+            Enumeration<String> attributeNames = session.getAttributeNames();
+            while (attributeNames.hasMoreElements()) {
+                String key = attributeNames.nextElement();
+                paramsInSession.put(key, String.valueOf(session.getAttribute(key)));
+            }
+            request.getParametersInSession().putAll(paramsInSession);
+        }
 
         return request;
     }

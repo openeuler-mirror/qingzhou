@@ -30,4 +30,7 @@ public interface ConsoleConstants {
     String VIEW_RENDER_FORM = "form";
     String VIEW_RENDER_SHOW = "show";
     String VIEW_RENDER_MANAGE = "sys/manage";
+
+    // 双因素认证
+    String ACTION_NAME_2FA = "refreshKey";
 }

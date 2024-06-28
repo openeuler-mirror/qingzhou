@@ -86,7 +86,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
             return null;
         }
 
-        if (u.isChangeInitPwd()) {
+        if (u.isChangePwd()) {
             return setPasswordMsg;
         }
 

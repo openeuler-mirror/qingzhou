@@ -1,10 +1,6 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.DataStore;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Monitorable;
 import qingzhou.registry.AppInfo;
@@ -290,7 +286,6 @@ class PresetAction {
             info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
-
         DataStore dataStore = instance.getDataStore();
         dataStore.deleteDataById(request.getId());
     }

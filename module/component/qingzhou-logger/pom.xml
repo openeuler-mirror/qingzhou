@@ -13,13 +13,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-engine</artifactId>
-            <version>x</version>
-            <scope>provided</scope> <!-- ssh & logger & json & servlet: 不要一起打包进去-->
-        </dependency>
-
-        <dependency>
             <groupId>org.tinylog</groupId>
             <artifactId>tinylog-api</artifactId>
             <version>2.6.2</version>

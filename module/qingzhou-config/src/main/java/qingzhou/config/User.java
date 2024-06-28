@@ -5,7 +5,7 @@ public class User {
     private String info;
     private String password;
     private boolean active;
-    private boolean changeInitPwd;
+    private boolean changePwd;
     private boolean enable2FA;
     private String keyFor2FA;
     private String passwordLastModified;
@@ -43,12 +43,12 @@ public class User {
         this.active = active;
     }
 
-    public boolean isChangeInitPwd() {
-        return changeInitPwd;
+    public boolean isChangePwd() {
+        return changePwd;
     }
 
-    public void setChangeInitPwd(boolean changeInitPwd) {
-        this.changeInitPwd = changeInitPwd;
+    public void setChangePwd(boolean changePwd) {
+        this.changePwd = changePwd;
     }
 
     public boolean isEnable2FA() {

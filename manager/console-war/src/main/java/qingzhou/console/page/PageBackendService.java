@@ -3,42 +3,23 @@ package qingzhou.console.page;
 import qingzhou.api.FieldType;
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
-import qingzhou.api.type.Createable;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Downloadable;
-import qingzhou.api.type.Editable;
-import qingzhou.api.type.Listable;
-import qingzhou.api.type.Showable;
+import qingzhou.api.type.*;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
-import qingzhou.engine.util.Base32Util;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
-import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
+import qingzhou.engine.util.Base32Util;
+import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -65,32 +46,7 @@ public class PageBackendService {
 
     public static String[] getFieldOptions(String userName, String app, String model, String field) {
         ModelInfo modelInfo = getAppInfo(app).getModelInfo(model);
-        String refModel = modelInfo.getModelFieldInfo(field).getRefModel();
-        if (refModel == null || refModel.isEmpty()) {
-            return modelInfo.getFieldOptions(field);
-        } else {
-            // todo 包含 refModel 的这里需要获取对应model的所有id
-            RequestImpl request = new RequestImpl();
-            request.setViewName(ViewManager.jsonView);
-            request.setManageType(DeployerConstants.MANAGE_TYPE_APP);
-            request.setAppName(app);
-            request.setModelName(refModel);
-            request.setActionName(Listable.ACTION_NAME_LIST);
-            request.setUserName(userName);
-            request.setI18nLang(I18n.getI18nLang());
-            ResponseImpl response = new ResponseImpl();
-            try {
-                SystemController.getService(Deployer.class).getApp(app).invoke(request, response);
-                List<Map<String, String>> dataList = response.getDataList();
-                List<String> idList = new ArrayList<>();
-                for (Map<String, String> data : dataList) {
-                    idList.add(data.get("id"));
-                }
-                return idList.toArray(new String[0]);
-            } catch (Exception ignored) {
-            }
-            return null;
-        }
+        return modelInfo.getFieldOptions(field);
     }
 
     public static AppInfo getAppInfo(String appName) {

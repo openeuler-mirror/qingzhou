@@ -242,12 +242,12 @@ zip包目录结构示意：
 
 【后端】
 
-+ Javassist ([http://www.javassist.org](http://www.javassist.org))
-+ Gson ([https://github.com/google/gson](https://github.com/google/gson))
-+ Apache MINA SSHD ([https://mina.apache.org/sshd-project/](https://mina.apache.org/sshd-project/))
-+ tinylog ([https://tinylog.org](https://tinylog.org))
++ QR-Code-generator ([https://www.nayuki.io/page/qr-code-generator-library](https://www.nayuki.io/page/qr-code-generator-library))
 + Apache Tomcat ([https://tomcat.apache.org](https://tomcat.apache.org))
-+ QR-Code-generator ([https://github.com/nayuki/QR-Code-generator](https://github.com/nayuki/QR-Code-generator))
++ Apache MINA SSHD ([https://mina.apache.org/sshd-project/](https://mina.apache.org/sshd-project/))
++ Gson ([https://github.com/google/gson](https://github.com/google/gson))
++ tinylog ([https://tinylog.org](https://tinylog.org))
++ Javassist ([http://www.javassist.org](http://www.javassist.org))
 
 ## 参与贡献
 

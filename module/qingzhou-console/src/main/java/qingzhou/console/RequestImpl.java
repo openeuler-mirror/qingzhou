@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RequestImpl implements Request, Cloneable {
+    private transient SessionParameterListener sessionParameterListener;
     private String manageType;
     private String appName;
     private String modelName;
@@ -15,11 +16,8 @@ public class RequestImpl implements Request, Cloneable {
     private String id;
     private String userName;
     private Lang lang;
-
-    /**
-     * The request parameters for this request.
-     */
-    protected Map<String, String> parameters = new HashMap<>();
+    private final Map<String, String> parameters = new HashMap<>();
+    private final Map<String, String> parametersInSession = new HashMap<>();
 
     @Override
     public String getApp() {
@@ -54,6 +52,24 @@ public class RequestImpl implements Request, Cloneable {
     @Override
     public Map<String, String> getParameters() {
         return parameters;
+    }
+
+    @Override
+    public String getParameterInSession(String name) {
+        return parametersInSession.get(name);
+    }
+
+    @Override
+    public void setParameterInSession(String key, String val) {
+        if (key == null) return;
+        if (val == null) {
+            parametersInSession.remove(key);
+        }
+        parametersInSession.put(key, val);
+
+        if (sessionParameterListener != null) {
+            sessionParameterListener.onParameterSet(key, val);
+        }
     }
 
     public void setId(String id) {
@@ -108,12 +124,20 @@ public class RequestImpl implements Request, Cloneable {
         RequestImpl.this.parameters.putAll(parameters);
     }
 
+    public Map<String, String> getParametersInSession() {
+        return parametersInSession;
+    }
+
     public String getManageType() {
         return manageType;
     }
 
     public void setManageType(String manageType) {
         this.manageType = manageType;
+    }
+
+    public void setSessionParameterListener(SessionParameterListener sessionParameterListener) {
+        this.sessionParameterListener = sessionParameterListener;
     }
 
     @Override
