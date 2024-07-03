@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Model(code = "security", icon = "shield",
         menu = "System", order = 1, entrance = Editable.ACTION_NAME_EDIT,
-        name = {"控制台安全", "en:Console Security"},
+        name = {"平台安全", "en:Security"},
         info = {"配置 轻舟 管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
 public class Security extends ModelBase implements Editable {
     @ModelField(

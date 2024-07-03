@@ -118,9 +118,9 @@ public class SetI18n implements Filter<HttpServletContext> {
         ConsoleI18n.addI18n("page.download.checkall", new String[]{"全选", "en:Check all"});
         ConsoleI18n.addI18n("page.download.tasktip", new String[]{"开始下载", "en:Start downloading"});
         ConsoleI18n.addI18n("page.layertitle.2fa", new String[]{"扫描二维码绑定双因子认证密钥", "en:Scan the QR code to bind the two-factor authentication key"});
-        ConsoleI18n.addI18n("page.placeholder.2fa", new String[]{"请扫描二维码保存后输入验证码完成绑定", "en:Please scan the QR code to save and enter the verification code to complete the binding"});
+        ConsoleI18n.addI18n("page.placeholder.2fa", new String[]{"使用TOTP工具扫码后输入密码", "en:Use the TOTP tool to scan the QR code and enter the password"});
         ConsoleI18n.addI18n("page.bindsuccess.2fa", new String[]{"绑定成功", "en:Bind success"});
-        ConsoleI18n.addI18n("page.bindfail.2fa", new String[]{"绑定失败", "en:Bind error"});
+        ConsoleI18n.addI18n("page.bindfail.2fa", new String[]{"密码不匹配", "en:The passwords don't match"});
         ConsoleI18n.addI18n("page.info.2fa", new String[]{"双因子认证密码，选填", "en:Two-factor authentication password, optional"});
         ConsoleI18n.addI18n("page.error.network", new String[]{"服务器连接错误，请确认服务器已启动或检查网络是否通畅", "en:Server connection error, please confirm that the server has been started or check whether the network is smooth"});
         ConsoleI18n.addI18n("page.info.add", new String[]{"添加", "en:Add"});
