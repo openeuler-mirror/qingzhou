@@ -182,8 +182,10 @@ public class ActionInvoker {
         List<String> appInstances = new ArrayList<>();
         String manageType = request.getManageType();
         String appName = request.getApp();
+        String uploadFileAppName = appName;
         if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
             appInstances.add(appName);
+            uploadFileAppName = DeployerConstants.INSTANCE_APP_NAME;
         } else if (DeployerConstants.MANAGE_TYPE_APP.equals(manageType)) {
             appInstances = getAppInstances(appName);
         }
@@ -196,14 +198,13 @@ public class ActionInvoker {
                         .getApp(PageBackendService.getAppName(request))
                         .invoke(request, responseOnNode);
             } else {
-                Registry registry = SystemController.getService(Registry.class);
-                InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
+                InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(instance);
 
                 String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
                 String remoteKey = CryptoServiceFactory.getInstance().getKeyPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
 
                 // 远程实例文件上传
-                uploadFile(registry, request, appName, remoteUrl, remoteKey);
+                uploadFile(request, uploadFileAppName, remoteUrl, remoteKey);
 
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
                 // 将 response 回传的 session 参数，同步给 request
@@ -217,9 +218,14 @@ public class ActionInvoker {
 
     private static final int FILE_SIZE = 1024 * 1024 * 10; // 集中管控文件分割传输大小，10M
 
-    private void uploadFile(Registry registry, RequestImpl request, String appName, String remoteUrl, String remoteKey) throws Exception {
+    private void uploadFile(RequestImpl request, String appName, String remoteUrl, String remoteKey) throws Exception {
         // 文件上传
-        AppInfo appInfo = registry.getAppInfo(appName);
+        AppInfo appInfo;
+        if (DeployerConstants.INSTANCE_APP_NAME.equals(appName)) {
+            appInfo = SystemController.getAppInfo(appName);
+        } else {
+            appInfo = SystemController.getService(Registry.class).getAppInfo(appName);
+        }
         if (appInfo != null) {
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
             if (modelInfo != null) {
