@@ -39,4 +39,6 @@ public @interface ModelAction {
      * 可用于禁用继承的 action
      */
     boolean disable() default false;
+
+    boolean ajax() default false;
 }

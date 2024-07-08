@@ -21,13 +21,7 @@ import javax.naming.NameNotFoundException;
 import java.net.SocketException;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ActionInvoker {
     private static final ActionInvoker instance = new ActionInvoker();
@@ -39,7 +33,7 @@ public class ActionInvoker {
     private ActionInvoker() {
     }
 
-    public ResponseImpl invokeAction(Request request) {
+    public ResponseImpl invokeAction(RequestImpl request) {
         if (isBatchAction(request)) {
             return invokeBatch(request);
         } else {
@@ -60,7 +54,7 @@ public class ActionInvoker {
         return false;
     }
 
-    private ResponseImpl invokeBatch(Request request) {
+    private ResponseImpl invokeBatch(RequestImpl request) {
         ResponseImpl response = new ResponseImpl();
         int suc = 0;
         int fail = 0;
@@ -70,7 +64,7 @@ public class ActionInvoker {
         for (String id : oid.split(",")) {
             if (!id.isEmpty()) {
                 id = PageBackendService.decodeId(id);
-                ((RequestImpl) request).setId(id);
+                request.setId(id);
                 response = invoke(request);
                 if (response.isSuccess()) {
                     suc++;
@@ -89,7 +83,7 @@ public class ActionInvoker {
                 }
             }
         }
-        ((RequestImpl) request).setId(oid);
+        request.setId(oid);
         String appName = PageBackendService.getAppName(request);
         String model = I18n.getString(appName, "model." + request.getModel());
         String action = I18n.getString(appName, "model.action." + request.getModel() + "." + request.getAction());
@@ -111,7 +105,7 @@ public class ActionInvoker {
         return response;
     }
 
-    private ResponseImpl invoke(Request request) {
+    private ResponseImpl invoke(RequestImpl request) {
         try {
             Map<String, ResponseImpl> responseOnNode = processRequest(request);
             for (Map.Entry<String, ResponseImpl> entry : responseOnNode.entrySet()) {
@@ -170,10 +164,10 @@ public class ActionInvoker {
         }
     }
 
-    private Map<String, ResponseImpl> processRequest(Request request) throws Exception {
+    private Map<String, ResponseImpl> processRequest(RequestImpl request) throws Exception {
         Map<String, ResponseImpl> resultOnNode = new HashMap<>();
         List<String> appInstances = new ArrayList<>();
-        String manageType = ((RequestImpl) request).getManageType();
+        String manageType = request.getManageType();
         String appName = request.getApp();
         if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
             appInstances.add(appName);
@@ -194,6 +188,8 @@ public class ActionInvoker {
 
                 String remoteKey = CryptoServiceFactory.getInstance().getKeyPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
+                // 将 response 回传的 session 参数，同步给 request
+                request.getParametersInSession().putAll(responseOnNode.getParametersInSession());
             }
             resultOnNode.put(instance, responseOnNode);
         }
@@ -201,7 +197,7 @@ public class ActionInvoker {
         return resultOnNode;
     }
 
-    private List<String> getAppInstances(String appName) throws Exception {
+    private List<String> getAppInstances(String appName) {
         List<String> instances = new ArrayList<>();
         Deployer deployer = SystemController.getService(Deployer.class);
         App app = deployer.getApp(appName);

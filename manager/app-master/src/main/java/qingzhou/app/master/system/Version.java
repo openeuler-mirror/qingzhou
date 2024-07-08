@@ -13,7 +13,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @Model(code = "version", icon = "upload-alt",
-        menu = "System", order = 2,
+        menu = "System", order = 5,
         name = {"系统版本", "en:System Version"},
         info = {"展示系统的版本信息，可将系统升级到一个新的版本上。",
                 "en:Displays the version information of the system and can upgrade the system to a new version."})

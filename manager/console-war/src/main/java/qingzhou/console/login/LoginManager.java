@@ -166,10 +166,6 @@ public class LoginManager implements Filter<HttpServletContext> {
 
             // 登录成功，注册信息
             setLoginUser(session, user);
-
-            // 注销在其它机器上忘记注销的会话: 命令行类似小型浏览器，登录一样要踢走浏览器用户，这是安全规则
-            // ConsoleUtil.invalidateAllSessionAsAttribute(request, LOGIN_USER, (String) request.getSession().getAttribute(LOGIN_USER));todo
-
             return null;
         } else {
             String msgKey = LOGIN_ERROR_MSG_KEY;

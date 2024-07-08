@@ -9,6 +9,7 @@ public class ModelActionInfo {
     private String show;
     private boolean batch;
     private boolean disable;
+    private boolean ajax;
 
     public String getCode() {
         return code;
@@ -61,7 +62,7 @@ public class ModelActionInfo {
     public int getOrder() {
         return order;
     }
-    
+
     public void setOrder(int order) {
         this.order = order;
     }
@@ -72,5 +73,13 @@ public class ModelActionInfo {
 
     public void setDisable(boolean disable) {
         this.disable = disable;
+    }
+
+    public boolean isAjax() {
+        return ajax;
+    }
+
+    public void setAjax(boolean ajax) {
+        this.ajax = ajax;
     }
 }

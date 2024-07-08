@@ -1,30 +1,42 @@
-package qingzhou.console;
+package qingzhou.qr.impl;
 
+import io.nayuki.qrcodegen.QrCode;
+import io.nayuki.qrcodegen.QrSegment;
+import qingzhou.qr.QrGenerator;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
-import qingzhou.console.qrcode.QrCode;
-import qingzhou.console.qrcode.QrSegment;
 
-public class QrGenerator {
-    
+public class QrGeneratorImpl implements QrGenerator {
+    @Override
+    public byte[] generateQrImage(String qrCode, String format, int scale, int border, int lightColor, int darkColor) throws IOException {
+        BufferedImage qrImage = genQrImage(qrCode, scale, border, lightColor, darkColor);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ImageIO.write(qrImage, format, bos);
+        return bos.toByteArray();
+    }
+
     /**
      * Returns a raster image depicting the specified QR Code, with the specified module scale, border modules, and module colors.
      * <p>
      * For example, scale=10 and border=4 means to pad the QR Code with 4 light border modules on all four sides, and use 10&#xD7;10 pixels to represent each
      * module.
      *
-     * @param qrCode the QR Code to render (not {@code null})
-     * @param scale the side length (measured in pixels, must be positive) of each module
-     * @param border the number of border modules to add, which must be non-negative
+     * @param qrCode     the QR Code to render (not {@code null})
+     * @param scale      the side length (measured in pixels, must be positive) of each module
+     * @param border     the number of border modules to add, which must be non-negative
      * @param lightColor the color to use for light modules, in 0xRRGGBB format
-     * @param darkColor the color to use for dark modules, in 0xRRGGBB format
+     * @param darkColor  the color to use for dark modules, in 0xRRGGBB format
      * @return a new image representing the QR Code, with padding and scaling
-     * @throws NullPointerException if the QR Code is {@code null}
+     * @throws NullPointerException     if the QR Code is {@code null}
      * @throws IllegalArgumentException if the scale or border is out of range, or if {scale, border, size} cause the image dimensions to exceed
-     * Integer.MAX_VALUE
+     *                                  Integer.MAX_VALUE
      */
-    public static BufferedImage genQrImage(String qrCode, int scale, int border, int lightColor, int darkColor) {
+    private BufferedImage genQrImage(String qrCode, int scale, int border, int lightColor, int darkColor) {
         List<QrSegment> segs = QrSegment.makeSegments(qrCode);
         QrCode qr = QrCode.encodeSegments(segs, QrCode.Ecc.HIGH, QrCode.MIN_VERSION, QrCode.MAX_VERSION, -1, true);  // Automatic mask
         Objects.requireNonNull(qr);

@@ -7,10 +7,6 @@ public interface Listable extends Showable {
     // 定义列表操作的常量名称
     String ACTION_NAME_LIST = "list";
 
-    // 双因素认证
-    String ACTION_NAME_2FA = "showKeyFor2FA";
-    String ACTION_NAME_2FA_VALIDATE = "validate";
-
     // 定义用于表示ID字段的常量名称
     String FIELD_NAME_ID = "id";
 

@@ -10,6 +10,7 @@ import qingzhou.engine.Service;
 import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.qr.QrGenerator;
 import qingzhou.registry.Registry;
 import qingzhou.ssh.SSHService;
 
@@ -29,6 +30,9 @@ public class Controller implements ModuleActivator {
 
     @Service
     private Json json;
+
+    @Service
+    private QrGenerator qrGenerator;
 
     @Service
     private SSHService sshService;
@@ -57,7 +61,7 @@ public class Controller implements ModuleActivator {
                 if (!file.isDirectory()) continue;
                 try {
                     deployer.installApp(file);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     logger.error("failed to install app " + file.getName(), e);
                 }
             }

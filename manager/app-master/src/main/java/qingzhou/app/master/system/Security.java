@@ -1,10 +1,6 @@
 package qingzhou.app.master.system;
 
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
+import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
@@ -14,21 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Model(code = "security", icon = "newspaper-o",
+@Model(code = "security", icon = "shield",
         menu = "System", order = 1, entrance = Editable.ACTION_NAME_EDIT,
-        name = {"控制台安全", "en:Console Security"},
+        name = {"平台安全", "en:Security"},
         info = {"配置 轻舟 管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
 public class Security extends ModelBase implements Editable {
-
-    @ModelField(
-            required = false, type = FieldType.textarea,
-            editable = false, createable = false,
-            lengthMax = 1000,
-            name = {"加密公钥", "en:Public Key"},
-            info = {"为了能够管理远端的实例，需要将此密钥在远端的实例进行保存。此外，客户端通过 REST、JMX 等接口管理轻舟实例时，也需要使用此密钥对敏感数据进行加密后再传输。",
-                    "en:In order to manage the remote instance, you need to save the key in the remote instance. In addition, when clients manage Qingzhou instances through interfaces such as REST and JMX, they also need to use this key to encrypt sensitive data before transmission."})
-    public String publicKey;
-
     @ModelField(
             required = false,
             name = {"信任 IP", "en:Trusted IP"},
@@ -67,6 +53,15 @@ public class Security extends ModelBase implements Editable {
             info = {"限制本次更新的密码不能和最近几次使用过的密码重复。注：设置为 “1” 表示只要不与当前密码重复即可。",
                     "en:Restrict this update password to not be duplicated by the last few times you have used. Note: A setting of 1 means as long as it does not duplicate the current password."})
     public Integer passwordLimitRepeats = 1;
+
+    @ModelField(
+            required = false, type = FieldType.textarea,
+            editable = false, createable = false,
+            lengthMax = 1000,
+            name = {"加密公钥", "en:Public Key"},
+            info = {"为了能够管理远端的实例，需要将此密钥在远端的实例进行保存。此外，客户端通过 REST、JMX 等接口管理轻舟实例时，也需要使用此密钥对敏感数据进行加密后再传输。",
+                    "en:In order to manage the remote instance, you need to save the key in the remote instance. In addition, when clients manage Qingzhou instances through interfaces such as REST and JMX, they also need to use this key to encrypt sensitive data before transmission."})
+    public String publicKey;
 
     @Override
     public DataStore getDataStore() {

@@ -652,12 +652,12 @@ function bindEventForFormPage() {
                 var params = {};
                 params[getSetting("check2FA")] = $.trim($("#randCode-2FA").val());
                 $.ajax({
-                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/"))  + "/validate").replace("/image/", "/json/"),
+                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/"))  + "/confirmKey").replace("/image/", "/json/"),
                     async: true,
                     data: params,
                     dataType: "json",
                     success: function (data) {
-                        if (data.success) {
+                        if (data.success === "true" || data.success === true) {
                             closeLayer(index);
                             showSuccess(getSetting("bindSuccess2FA"));
                         } else {

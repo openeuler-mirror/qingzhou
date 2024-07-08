@@ -51,6 +51,10 @@ public interface Request {
 
     Map<String, String> getParameters();
 
+    String getParameterInSession(String name);
+
+    void setParameterInSession(String key, String val);
+
     /**
      * 获取用户名。
      *

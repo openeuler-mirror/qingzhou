@@ -7,16 +7,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 class FilterLoading {
-    
-    private static final Map<String, String[]> LOADED_PACKAGE_MAP = new HashMap<String, String[]>(){{
-        put("qingzhou-console.jar", new String[] {"qrcode"});
-    }};
-    
     void setModuleLoader(List<ModuleInfo> moduleInfoList, ClassLoader parentLoader) throws Exception {
         // 模块 api
         FilterClassLoader moduleApiLoader = new FilterClassLoader(new URL[0], parentLoader);
@@ -24,17 +17,14 @@ class FilterLoading {
             moduleApiLoader.addClassPathFile(moduleInfo.getFile());
             FileFilter fileFilter = new FileFilter();
             fileFilter.includePackages.add(getApiPkg(moduleInfo.getFile()));
-            if (LOADED_PACKAGE_MAP.containsKey(moduleInfo.getFile().getName())) {
-                for (String packageName : LOADED_PACKAGE_MAP.get(moduleInfo.getFile().getName())) {
-                    fileFilter.includePackages.add(getApiPkg(moduleInfo.getFile()) + "." + packageName);
-                }
-            }
             moduleApiLoader.addFileFilter(fileFilter);
         }
 
         // 各个模块
         for (ModuleInfo moduleInfo : moduleInfoList) {
-            FilterClassLoader loader = new FilterClassLoader(new URL[]{moduleInfo.getFile().toURI().toURL()}, moduleApiLoader);
+            FilterClassLoader loader = new FilterClassLoader(
+                    new URL[]{moduleInfo.getFile().toURI().toURL()},
+                    moduleApiLoader);
             FileFilter fileFilter = new FileFilter();
             fileFilter.excludePackages.add(getApiPkg(moduleInfo.getFile()));
             loader.addFileFilter(fileFilter);

@@ -90,14 +90,14 @@ public class JsonImpl implements Json {
         for (String path : position) {
             JsonElement jsonElement = jsonObject.get(path);
             if (jsonElement == null) return null;
-            if (jsonElement.isJsonArray()){
+            if (jsonElement.isJsonArray()) {
                 jsonArray = jsonElement.getAsJsonArray();
-            }else {
+            } else {
                 jsonObject = jsonElement.getAsJsonObject();
             }
         }
 
-        if (classOfT.isArray()){
+        if (classOfT.isArray()) {
             return gsonInstance().fromJson(jsonArray, classOfT);
         }
         return gsonInstance().fromJson(jsonObject, classOfT);

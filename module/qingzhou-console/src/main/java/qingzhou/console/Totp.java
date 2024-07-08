@@ -50,7 +50,7 @@ public class Totp {
      * <p>
      * secureKey base32编码格式的密钥
      */
-    public static String generateDynamicCode(String secureKey) throws Exception {
+    private static String generateDynamicCode(String secureKey) throws Exception {
 
         String secretHex = HexUtil.bytesToHex(Base32Util.decode(secureKey));
 
