@@ -8,8 +8,12 @@ import qingzhou.api.Response;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.crypto.CryptoServiceFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Model(code = "appinstaller",
         hidden = true,
@@ -20,6 +24,7 @@ public class AppInstaller extends ModelBase {
     @Override
     public void start() {
         appContext.addI18n("app.not.found", new String[]{"应用文件未找到", "en:File Not Found"});
+        appContext.addI18n("file.upload.fail", new String[]{"文件上传失败", "en:File upload failed"});
     }
 
     @ModelAction(
@@ -71,5 +76,33 @@ public class AppInstaller extends ModelBase {
 
     private File getAppsDir() {
         return Utils.newFile(InstanceApp.getService(ModuleContext.class).getInstanceDir(), "apps");
+    }
+
+    @ModelAction(
+            name = {"上传文件", "en:Upload File"},
+            info = {"应用模块表单文件上传。", "en:Upload the application module form file."})
+    public void uploadFile(Request request, Response response) throws IOException {
+        String fileName = request.getParameter("fileName");
+        String fileBytes = request.getParameter("fileBytes");
+        boolean isStart = Boolean.parseBoolean(request.getParameter("isStart"));
+        boolean isEnd = Boolean.parseBoolean(request.getParameter("isEnd"));
+        int len = Integer.parseInt(request.getParameter("len"));
+        String timestamp = request.getParameter("timestamp");
+        File tempDir = Utils.newFile(InstanceApp.getInstanceDir(), "temp", request.getModel());
+        File destFile = Utils.newFile(tempDir, timestamp, fileName);
+        try {
+            Utils.writeFile(destFile, CryptoServiceFactory.getInstance().getMessageDigest().hexToBytes(fileBytes), len, isStart);
+        } catch (IOException e) {
+            response.setSuccess(false);
+            response.setMsg(appContext.getI18n(request.getLang(), "file.upload.fail"));
+            Utils.forceDelete(destFile);
+            return;
+        }
+
+        if (isEnd) {
+            Map<String, String> data = new HashMap<>();
+            data.put("fileName", destFile.getCanonicalPath());
+            response.addData(data);
+        }
     }
 }

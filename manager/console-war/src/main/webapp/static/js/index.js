@@ -1204,11 +1204,11 @@ function downloadFiles(fileListUrl, downloadUrl) {
         success: function (data) {
             var randId = new Date().getTime();
             var html = "<form id='downloadForm-" + randId + "' action='' method='post'>";
-            if (data.attachment && !$.isEmptyObject(data.attachment)) {
+            if (data.data && !$.isEmptyObject(data.data)) {
                 var keys = [];
                 var groups = {};
                 var defGroup = "defaultGroup-" + randId;
-                var attachmentData = data.attachment[0];
+                var attachmentData = data.data[0];
                 for (var key in attachmentData) {
                     var separaIndex = key.indexOf(getSetting("downdloadGroupSepara"));
                     var group = separaIndex > 0 ? key.substring(0, separaIndex) : defGroup;

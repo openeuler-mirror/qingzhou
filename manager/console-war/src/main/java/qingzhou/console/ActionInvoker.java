@@ -1,5 +1,6 @@
 package qingzhou.console;
 
+import qingzhou.api.FieldType;
 import qingzhou.api.Request;
 import qingzhou.api.type.Listable;
 import qingzhou.console.controller.SystemController;
@@ -14,14 +15,26 @@ import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
+import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 import qingzhou.registry.Registry;
 
 import javax.naming.NameNotFoundException;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.SocketException;
+import java.nio.file.Files;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ActionInvoker {
     private static final ActionInvoker instance = new ActionInvoker();
@@ -183,10 +196,15 @@ public class ActionInvoker {
                         .getApp(PageBackendService.getAppName(request))
                         .invoke(request, responseOnNode);
             } else {
-                InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(instance);
-                String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
+                Registry registry = SystemController.getService(Registry.class);
+                InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
 
+                String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
                 String remoteKey = CryptoServiceFactory.getInstance().getKeyPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
+
+                // 远程实例文件上传
+                uploadFile(registry, request, appName, remoteUrl, remoteKey);
+
                 responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
                 // 将 response 回传的 session 参数，同步给 request
                 request.getParametersInSession().putAll(responseOnNode.getParametersInSession());
@@ -197,7 +215,96 @@ public class ActionInvoker {
         return resultOnNode;
     }
 
-    private List<String> getAppInstances(String appName) {
+    private static final int FILE_SIZE = 1024 * 1024 * 10; // 集中管控文件分割传输大小，10M
+
+    private void uploadFile(Registry registry, RequestImpl request, String appName, String remoteUrl, String remoteKey) throws Exception {
+        // 文件上传
+        AppInfo appInfo = registry.getAppInfo(appName);
+        if (appInfo != null) {
+            ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+            if (modelInfo != null) {
+                ModelFieldInfo[] modelFieldInfos = modelInfo.getModelFieldInfos();
+                if (modelFieldInfos != null) {
+                    for (ModelFieldInfo modelFieldInfo : modelFieldInfos) {
+                        if (FieldType.file.name().equals(modelFieldInfo.getType())) {
+                            String code = modelFieldInfo.getCode();
+                            String fileName = request.getParameter(code);
+                            if (fileName != null && !fileName.isEmpty()) {
+                                String remoteFilePath = uploadTempFile(fileName, remoteUrl, remoteKey);
+                                request.setParameter(code, remoteFilePath);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private String uploadTempFile(String filePath, String remoteUrl, String remoteKey) throws Exception {
+        File tempFile = new File(filePath);
+        if (!tempFile.exists()
+        ) {
+            return null;
+        }
+        InputStream in = null;
+        BufferedInputStream bis = null;
+        try {
+            String fileName = tempFile.getName();
+            String timestamp = String.valueOf(System.currentTimeMillis()); // 文件标识
+            long size = tempFile.length();
+            int readSize = (int) size;
+            int count = 1;
+            if (size > FILE_SIZE) {
+                readSize = FILE_SIZE;
+                count = (int) (size / readSize);
+                count = size % readSize == 0 ? count : count + 1; // 文件分片数
+            }
+            byte[] bytes = new byte[readSize];
+            in = Files.newInputStream(tempFile.toPath());
+            bis = new BufferedInputStream(in);
+            int len;
+            for (int i = 0; i < count; i++) {
+                len = bis.read(bytes);
+                RequestImpl req = new RequestImpl();
+                req.setAppName(DeployerConstants.INSTANCE_APP_NAME);
+                req.setModelName("appinstaller");
+                req.setActionName("uploadFile");
+                req.setManageType(DeployerConstants.MANAGE_TYPE_APP);
+
+                Map<String, String> parameters = new HashMap<>();
+                parameters.put("fileName", fileName);
+                parameters.put("fileBytes", CryptoServiceFactory.getInstance().getMessageDigest().bytesToHex(bytes));
+                parameters.put("len", String.valueOf(len));
+                parameters.put("isStart", String.valueOf(i == 0));
+                parameters.put("isEnd", String.valueOf(i == count - 1));
+                parameters.put("timestamp", timestamp);
+                req.setParameters(parameters);
+
+                ResponseImpl response = RemoteClient.sendReq(remoteUrl, req, remoteKey);
+                if (response.isSuccess()) {
+                    List<Map<String, String>> dataList = response.getDataList();
+                    if (!dataList.isEmpty()) {
+                        return dataList.get(0).get("fileName");
+                    }
+                } else {
+                    break;
+                }
+            }
+        } finally {
+            try {
+                if (bis != null) {
+                    bis.close();
+                }
+                if (in != null) {
+                    in.close();
+                }
+            } catch (IOException ignored) {
+            }
+        }
+        return null;
+    }
+
+    private List<String> getAppInstances(String appName) throws Exception {
         List<String> instances = new ArrayList<>();
         Deployer deployer = SystemController.getService(Deployer.class);
         App app = deployer.getApp(appName);

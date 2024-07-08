@@ -293,6 +293,21 @@
                 </a>
                 <%
                     }
+
+                    boolean downloadPermission = (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Downloadable.ACTION_NAME_FILES, LoginManager.getLoginUser(session))
+                            && AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Downloadable.ACTION_NAME_DOWNLOAD, LoginManager.getLoginUser(session)));
+                    if (downloadPermission) {
+                    %>
+                    <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, Downloadable.ACTION_NAME_FILES + "/" + encodedId)%>'
+                            <%
+                                out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_NAME_DOWNLOAD + "/" + encodedId) + "'");
+                            %>
+                       data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + Downloadable.ACTION_NAME_FILES)%>' data-tip-arrow="top"
+                       btn-type="<%=Downloadable.ACTION_NAME_FILES%>" class="btn tooltips">
+                        <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + Downloadable.ACTION_NAME_FILES)%>
+                    </a>
+                    <%
+                    }
                 %>
             </div>
         </div>
