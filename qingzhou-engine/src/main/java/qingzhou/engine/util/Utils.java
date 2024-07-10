@@ -7,20 +7,66 @@ import javassist.LoaderClassPath;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
-import java.net.*;
+import java.math.BigDecimal;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 public class Utils {
+    public static void writeFile(File file, byte[] fileBytes, int len, boolean isStart) throws IOException {
+        if (isStart) {
+            if (file.exists()) {
+                try {
+                    Utils.forceDelete(file);
+                } catch (Exception ignored) {
+                }
+            }
+            Utils.mkdirs(file.getParentFile());
+            file.createNewFile();
+        }
+        try (OutputStream out = new FileOutputStream(file, true); BufferedOutputStream bos = new BufferedOutputStream(out)) {
+            bos.write(fileBytes, 0, len);
+            bos.flush();
+        } catch (IOException e) {
+            Utils.forceDelete(file);
+            throw e;
+        }
+    }
+
     public static void writeFile(File file, String context) throws IOException {
         mkdirs(file.getParentFile());
         try (FileOutputStream fos = new FileOutputStream(file); BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8))) {
@@ -224,6 +270,46 @@ public class Utils {
             localIps.add("127.0.0.1");
         }
         return localIps;
+    }
+
+    // 压缩一个文件或文件夹
+    public static void zipFiles(File srcFile, File zipFile, boolean containsBaseDir) throws IOException {
+        zipFiles(new File[]{srcFile}, zipFile, containsBaseDir);
+    }
+
+    // 指定的多个文件压入到一个文件里
+    public static void zipFiles(File[] srcFiles, File zipFile, boolean containsBaseDir) throws IOException {
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipFile.toPath()))) {
+            for (File srcFile : srcFiles) {
+                if (!srcFile.isDirectory() || containsBaseDir) {
+                    zipFile(srcFile, zos, srcFile.getName());
+                } else {
+                    File[] listFiles = srcFile.listFiles();
+                    if (listFiles != null) {
+                        for (File sub : listFiles) {
+                            zipFile(sub, zos, sub.getName());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void zipFile(File srcFile, ZipOutputStream zos, String toZipName) throws IOException {
+        if (srcFile.isDirectory()) {
+            zos.putNextEntry(new ZipEntry(toZipName + "/"));
+            File[] listFiles = srcFile.listFiles();
+            if (listFiles != null) {
+                for (File file : listFiles) {
+                    zipFile(file, zos, toZipName + "/" + file.getName());
+                }
+            }
+        } else {
+            zos.putNextEntry(new ZipEntry(toZipName));
+            try (InputStream in = Files.newInputStream(srcFile.toPath())) {
+                copyStream(in, zos);
+            }
+        }
     }
 
     public static void unZipToDir(File srcFile, File unZipDir) throws IOException {
@@ -561,6 +647,47 @@ public class Utils {
                 }
             }
             return Paths.get(first, more).normalize().toFile();
+        }
+    }
+
+    /**
+     * 获取文件大小
+     *
+     * @param file
+     * @return xx B、xx K、xx M、xx G、xx T
+     */
+    public static String getFileSize(File file) {
+        long fileLength = file.exists() ? getFileLength(file) : 0L;
+        String fileSize = fileLength + " B";
+        long kb = 1024;
+        long mb = kb * 1024;
+        long gb = mb * 1024;
+        long tb = gb * 1024;
+        long eb = tb * 1024;
+        if (fileLength >= kb && fileLength < mb) {
+            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(kb)).setScale(1, BigDecimal.ROUND_UP) + "K";
+        } else if (fileLength >= mb && fileLength < gb) {
+            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(mb)).setScale(1, BigDecimal.ROUND_DOWN) + "M";
+        } else if (fileLength >= gb && fileLength < tb) {
+            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(gb)).setScale(2, BigDecimal.ROUND_DOWN) + "G";
+        } else if (fileLength >= tb && fileLength < eb) {
+            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(tb)).setScale(2, BigDecimal.ROUND_DOWN) + "T";
+        }
+        return fileSize;
+    }
+
+    public static long getFileLength(File file) {
+        if (file.isDirectory()) {
+            long length = 0;
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    length += getFileLength(f);
+                }
+            }
+            return length;
+        } else {
+            return file.length();
         }
     }
 

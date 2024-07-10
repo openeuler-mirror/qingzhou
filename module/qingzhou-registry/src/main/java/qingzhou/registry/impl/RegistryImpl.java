@@ -7,15 +7,17 @@ import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RegistryImpl implements Registry {
     private final Json json;
-    private final Map<String, InstanceInfo> instanceInfos = new HashMap<>();
-    private final Map<String, String> instanceFingerprints = new HashMap<>();
-    private final Map<String, Long> instanceRegisterTimes = new HashMap<>();
+    private final Map<String, InstanceInfo> instanceInfos = new ConcurrentHashMap<>();
+    private final Map<String, String> instanceFingerprints = new ConcurrentHashMap<>();
+    private final Map<String, Long> instanceRegisterTimes = new ConcurrentHashMap<>();
+
+    private static final Object LOCK = new Object();
 
     public RegistryImpl(Json json) {
         this.json = json;
@@ -23,12 +25,13 @@ public class RegistryImpl implements Registry {
 
     @Override
     public boolean checkRegistered(String dataFingerprint) {
-        boolean registered = instanceFingerprints.containsKey(dataFingerprint);
-        if (registered) {
-            instanceRegisterTimes.put(dataFingerprint, System.currentTimeMillis());
+        synchronized (LOCK) {
+            boolean registered = instanceFingerprints.containsKey(dataFingerprint);
+            if (registered) {
+                instanceRegisterTimes.put(dataFingerprint, System.currentTimeMillis());
+            }
+            return registered;
         }
-
-        return registered;
     }
 
     @Override
@@ -38,23 +41,42 @@ public class RegistryImpl implements Registry {
     }
 
     private void register(InstanceInfo instanceInfo, String id, String fingerprint) {
-        instanceInfos.put(id, instanceInfo);
-        instanceFingerprints.put(fingerprint, id);
-        instanceRegisterTimes.put(fingerprint, System.currentTimeMillis());
+        synchronized (LOCK) {
+            // 查找旧指纹
+            String oldFingerprint = null;
+            for (Map.Entry<String, String> entry : instanceFingerprints.entrySet()) {
+                if (entry.getValue().equals(id)) {
+                    oldFingerprint = entry.getKey();
+                    break;
+                }
+            }
+
+            // 如果存在旧指纹，移除旧指纹相关的信息
+            if (oldFingerprint != null) {
+                instanceFingerprints.remove(oldFingerprint);
+                instanceRegisterTimes.remove(oldFingerprint);
+            }
+
+            instanceInfos.put(id, instanceInfo);
+            instanceFingerprints.put(fingerprint, id);
+            instanceRegisterTimes.put(fingerprint, System.currentTimeMillis());
+        }
     }
 
     public void clearTimeoutInstances(long timeout) {
-        long time = System.currentTimeMillis() - timeout;
-        Iterator<Map.Entry<String, Long>> iterator = instanceRegisterTimes.entrySet().iterator();
+        synchronized (LOCK) {
+            long time = System.currentTimeMillis() - timeout;
+            Iterator<Map.Entry<String, Long>> iterator = instanceRegisterTimes.entrySet().iterator();
 
-        while (iterator.hasNext()) {
-            Map.Entry<String, Long> entry = iterator.next();
-            if (entry.getValue() < time) {
-                instanceInfos.remove(instanceFingerprints.remove(entry.getKey()));
-                iterator.remove(); // 使用迭代器的remove方法来安全删除元素
+            while (iterator.hasNext()) {
+                Map.Entry<String, Long> entry = iterator.next();
+                if (entry.getValue() < time) {
+                    String id = instanceFingerprints.remove(entry.getKey());
+                    instanceInfos.remove(id);
+                    iterator.remove(); // 使用迭代器的remove方法来安全删除元素
+                }
             }
         }
-
     }
 
     @Override

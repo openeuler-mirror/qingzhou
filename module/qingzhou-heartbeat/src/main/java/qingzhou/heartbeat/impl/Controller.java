@@ -106,13 +106,13 @@ public class Controller implements ModuleActivator {
                 List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get("data");
                 if (dataList != null && !dataList.isEmpty()) {
                     String checkResult = dataList.get(0).get(fingerprint);
-                    doRegister = !Boolean.parseBoolean(checkResult);
+                    doRegister = Boolean.parseBoolean(checkResult);
                 }
             }
         } catch (Throwable e) {
             logger.warn("An exception occurred during the registration process", e);
         }
-        if (!doRegister) return;
+        if (doRegister) return;
 
         String registerUrl = masterUrl + "/rest/json/app/master/heartservice/register";
         http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
