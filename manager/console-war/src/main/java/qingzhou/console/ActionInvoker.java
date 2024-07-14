@@ -206,8 +206,6 @@ public class ActionInvoker {
         return resultOnNode;
     }
 
-    private static final int FILE_SIZE = 1024 * 1024 * 10; // 集中管控文件分割传输大小，10M
-
     private void uploadFile(RequestImpl request, String appName, String remoteUrl, String remoteKey) throws Exception {
         // 文件上传
         AppInfo appInfo;
@@ -250,6 +248,7 @@ public class ActionInvoker {
             long size = tempFile.length();
             int readSize = (int) size;
             int count = 1;
+            int FILE_SIZE = 1024 * 1024 * 10; // 集中管控文件分割传输大小，10M
             if (size > FILE_SIZE) {
                 readSize = FILE_SIZE;
                 count = (int) (size / readSize);

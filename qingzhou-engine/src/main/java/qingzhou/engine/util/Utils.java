@@ -23,26 +23,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 public class Utils {
-    public static void writeFile(File file, byte[] fileBytes, int len, boolean isStart) throws IOException {
-        if (isStart) {
-            if (file.exists()) {
-                try {
-                    Utils.forceDelete(file);
-                } catch (Exception ignored) {
-                }
-            }
-            Utils.mkdirs(file.getParentFile());
-            file.createNewFile();
-        }
-        try (OutputStream out = new FileOutputStream(file, true); BufferedOutputStream bos = new BufferedOutputStream(out)) {
-            bos.write(fileBytes, 0, len);
-            bos.flush();
-        } catch (IOException e) {
-            Utils.forceDelete(file);
-            throw e;
-        }
-    }
-
     public static void writeFile(File file, String context) throws IOException {
         mkdirs(file.getParentFile());
         try (FileOutputStream fos = new FileOutputStream(file); BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8))) {
