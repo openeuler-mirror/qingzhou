@@ -1,41 +1,35 @@
-package qingzhou.engine.util;
+package qingzhou.crypto.impl;
 
-public class HexUtil {
+class HexUtil {
     /**
      * 字节数组转16进制
      */
-    public static String bytesToHex(byte[] bytes) {
+    static String bytesToHex(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) return "";
         return encodeHexString(bytes);
     }
 
     /**
      * hex字符串转byte数组
      */
-    public static byte[] hexToBytes(String inHex) {
+    static byte[] hexToBytes(String inHex) {
         return decodeHex(inHex);
     }
-
-    private static final char[] DIGITS_LOWER = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
-            'e', 'f'};
 
     private static final char[] DIGITS_UPPER = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D',
             'E', 'F'};
 
     private static String encodeHexString(byte[] data) {
-        return new String(encodeHex(data, false));
+        return new String(encodeHex(data));
     }
 
-    private static char[] encodeHex(byte[] data, boolean toLowerCase) {
-        return encodeHex(data, toLowerCase ? DIGITS_LOWER : DIGITS_UPPER);
-    }
-
-    private static char[] encodeHex(byte[] data, char[] toDigits) {
+    private static char[] encodeHex(byte[] data) {
         int l = data.length;
         char[] out = new char[l << 1];
         // two characters form the hex value.
         for (int i = 0, j = 0; i < l; i++) {
-            out[j++] = toDigits[(0xF0 & data[i]) >>> 4];
-            out[j++] = toDigits[0x0F & data[i]];
+            out[j++] = DIGITS_UPPER[(0xF0 & data[i]) >>> 4];
+            out[j++] = DIGITS_UPPER[0x0F & data[i]];
         }
         return out;
     }

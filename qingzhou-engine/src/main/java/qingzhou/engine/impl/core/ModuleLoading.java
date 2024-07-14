@@ -120,7 +120,7 @@ public class ModuleLoading implements Process {
 
                 if (missingServiceModule.size() == toStartList.size()) {
                     StringBuilder error = new StringBuilder();
-                    missingServiceModule.forEach((key, value) -> error.append("Service [").append(key).append("] fails to start because it is missing Service: ").append(value).append(System.lineSeparator()));
+                    missingServiceModule.forEach((key, value) -> error.append(key.getName()).append(" fails to start, missing Service: ").append(value).append(System.lineSeparator()));
                     throw new IllegalStateException(error.toString());
                 }
 
@@ -154,7 +154,14 @@ public class ModuleLoading implements Process {
 
         Class<?> injectRequiredService(ModuleInfo moduleInfo) throws Exception {
             for (ModuleActivator moduleActivator : moduleInfo.getModuleActivators()) {
-                for (Field field : moduleActivator.getClass().getDeclaredFields()) {
+                Field[] fields;
+                try {
+                    fields = moduleActivator.getClass().getDeclaredFields();
+                } catch (Throwable e) {
+                    System.err.println("module getDeclaredFields error, " + moduleInfo.getName() + ": " + e.getMessage());
+                    throw e;
+                }
+                for (Field field : fields) {
                     Service service = field.getAnnotation(Service.class);
                     if (service == null) continue;
 

@@ -1,7 +1,6 @@
-package qingzhou.engine.util.crypto.impl;
+package qingzhou.crypto.impl;
 
-import qingzhou.engine.util.HexUtil;
-import qingzhou.engine.util.crypto.KeyCipher;
+import qingzhou.crypto.KeyCipher;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;

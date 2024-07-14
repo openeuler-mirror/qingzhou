@@ -1,12 +1,6 @@
 package qingzhou.app.master.service;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Editable;
@@ -16,31 +10,16 @@ import qingzhou.config.Config;
 import qingzhou.config.Security;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.KeyCipher;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
-import qingzhou.engine.util.crypto.KeyCipher;
 import qingzhou.json.Json;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.InstanceInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import javax.net.ssl.*;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -48,13 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Model(code = DeployerConstants.MASTER_APP_APP_MODEL_NAME, icon = "cube-alt",
         menu = "Service", order = 1,
@@ -266,7 +239,7 @@ public class App extends ModelBase implements Createable {
                     } else {
                         InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
                         String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
-                        String remoteKey = CryptoServiceFactory.getInstance().getKeyPairCipher(security.getPublicKey(), security.getPrivateKey()).decryptWithPrivateKey(instanceInfo.getKey());
+                        String remoteKey = appContext.getService(CryptoService.class).getKeyPairCipher(security.getPublicKey(), security.getPrivateKey()).decryptWithPrivateKey(instanceInfo.getKey());
 
                         uploadFile((RequestImpl) request, remoteUrl, remoteKey);
 
@@ -349,7 +322,7 @@ public class App extends ModelBase implements Createable {
 
                 Map<String, String> parameters = new HashMap<>();
                 parameters.put("fileName", fileName);
-                parameters.put("fileBytes", CryptoServiceFactory.getInstance().getMessageDigest().bytesToHex(bytes));
+                parameters.put("fileBytes", appContext.getService(CryptoService.class).getHexCoder().bytesToHex(bytes));
                 parameters.put("len", String.valueOf(len));
                 parameters.put("isStart", String.valueOf(i == 0));
                 parameters.put("isEnd", String.valueOf(i == count - 1));
@@ -418,7 +391,7 @@ public class App extends ModelBase implements Createable {
                         if (appName.equals(info.getName())) {
                             ((RequestImpl) request).setAppName(instanceId);
                             String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
-                            String remoteKey = CryptoServiceFactory.getInstance().getKeyPairCipher(security.getPublicKey(), security.getPrivateKey()).decryptWithPrivateKey(instanceInfo.getKey());
+                            String remoteKey = appContext.getService(CryptoService.class).getKeyPairCipher(security.getPublicKey(), security.getPrivateKey()).decryptWithPrivateKey(instanceInfo.getKey());
                             ResponseImpl responseImpl = sendReq(remoteUrl, request, remoteKey);
                             if (!responseImpl.isSuccess()) {
                                 System.out.println(responseImpl.getMsg());
@@ -442,15 +415,15 @@ public class App extends ModelBase implements Createable {
         }
     }
 
-    private static ResponseImpl sendReq(String url, Request request, String remoteKey) throws Exception {
+    private ResponseImpl sendReq(String url, Request request, String remoteKey) throws Exception {
         HttpURLConnection connection = null;
         try {
-            Json jsonService = MasterApp.getService(Json.class);
+            Json jsonService = appContext.getService(Json.class);
             String json = jsonService.toJson(request);
 
             KeyCipher cipher;
             try {
-                cipher = CryptoServiceFactory.getInstance().getKeyCipher(remoteKey);
+                cipher = appContext.getService(CryptoService.class).getKeyCipher(remoteKey);
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }
@@ -538,6 +511,6 @@ public class App extends ModelBase implements Createable {
         conn.setRequestProperty("Charset", "UTF-8");
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");// 设置文件类型
         conn.setRequestProperty("accept", "*/*");// 设置接收类型否则返回415错误
-        conn.setInstanceFollowRedirects(false);// 不处理重定向，否则“双因子密钥需要刷新”提示信息收不到。。。
+        conn.setInstanceFollowRedirects(false);// 不处理重定向，否则“动态密钥需要刷新”提示信息收不到。。。
     }
 }

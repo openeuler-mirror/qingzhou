@@ -1,14 +1,10 @@
 package qingzhou.app.instance;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,7 +87,7 @@ public class AppInstaller extends ModelBase {
         File tempDir = Utils.newFile(InstanceApp.getInstanceDir(), "temp", request.getModel());
         File destFile = Utils.newFile(tempDir, timestamp, fileName);
         try {
-            Utils.writeFile(destFile, CryptoServiceFactory.getInstance().getMessageDigest().hexToBytes(fileBytes), len, isStart);
+            Utils.writeFile(destFile, appContext.getService(CryptoService.class).getHexCoder().hexToBytes(fileBytes), len, isStart);
         } catch (IOException e) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "file.upload.fail"));

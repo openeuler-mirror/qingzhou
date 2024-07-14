@@ -1,10 +1,7 @@
-package qingzhou.engine.util.crypto.impl;
+package qingzhou.crypto.impl;
 
-import qingzhou.engine.util.HexUtil;
-import qingzhou.engine.util.crypto.CryptoService;
-import qingzhou.engine.util.crypto.KeyCipher;
-import qingzhou.engine.util.crypto.KeyPairCipher;
-import qingzhou.engine.util.crypto.MessageDigest;
+import qingzhou.crypto.MessageDigest;
+import qingzhou.crypto.*;
 
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -12,6 +9,7 @@ import java.util.UUID;
 
 public class CryptoServiceImpl implements CryptoService {
     private final MessageDigest messageDigest = new MessageDigestImpl();
+    private final HexCoder hexCoder = new HexCoderImpl();
 
     @Override
     public String generateKey() {
@@ -37,8 +35,8 @@ public class CryptoServiceImpl implements CryptoService {
         PrivateKey privateKey = keyPair.getPrivate();
 
         String[] keyPairArray = new String[2];
-        keyPairArray[0] = HexUtil.bytesToHex(publicKey.getEncoded());
-        keyPairArray[1] = HexUtil.bytesToHex(privateKey.getEncoded());
+        keyPairArray[0] = hexCoder.bytesToHex(publicKey.getEncoded());
+        keyPairArray[1] = hexCoder.bytesToHex(privateKey.getEncoded());
         return keyPairArray;
     }
 
@@ -50,6 +48,11 @@ public class CryptoServiceImpl implements CryptoService {
     @Override
     public MessageDigest getMessageDigest() {
         return messageDigest;
+    }
+
+    @Override
+    public HexCoder getHexCoder() {
+        return hexCoder;
     }
 
     private KeyPair genKeyPair(String seedKey) throws Exception {

@@ -1,10 +1,6 @@
 package qingzhou.app.master.service;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.registry.Registry;
@@ -22,7 +18,7 @@ public class HeartBeat extends ModelBase {
     @ModelAction(
             name = {"心跳", "en:Heatbeat"},
             info = {"用于接收实例心跳信息。", "en:Used to receive the heartbeat information of the instance."})
-    public void heatbeat(Request request, Response response) throws Exception {
+    public void heatbeat(Request request, Response response) {
         String fingerprint = request.getParameter("fingerprint");
         if (fingerprint != null) {
             Map<String, String> result = new HashMap<>();
@@ -42,6 +38,4 @@ public class HeartBeat extends ModelBase {
             registry.register(doRegister);
         }
     }
-
-
 }

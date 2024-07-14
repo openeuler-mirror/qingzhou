@@ -1,4 +1,4 @@
-package qingzhou.engine.util.crypto;
+package qingzhou.crypto;
 
 public interface KeyCipher {
     String encrypt(String s) throws Exception;

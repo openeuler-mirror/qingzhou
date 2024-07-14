@@ -16,7 +16,7 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
+import qingzhou.crypto.CryptoService;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,7 +39,6 @@ public class LoginManager implements Filter<HttpServletContext> {
     public static final String LOGOUT_FLAG = "invalidate";
     public static final String LOGIN_ERROR_MSG_KEY = "page.login.invalid";
     public static final String LOCKED_MSG_KEY = "page.login.locked";
-    public static final String TWO_FA_MSG_KEY = "page.login.2fa";
 
     public static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
     public static final String[] noLoginCheckUris = {LOGIN_PATH, VerCode.CAPTCHA_URI, ConsoleConstants.REGISTER_URI};
@@ -131,9 +130,6 @@ public class LoginManager implements Filter<HttpServletContext> {
     public static LoginFailedMsg login(HttpServletRequest request) throws Exception {
         String user = request.getParameter(LOGIN_USER);
         String password = request.getParameter(LOGIN_PASSWORD);
-        if (user == null || password == null) {
-            return new LoginFailedMsg("jmx.credentials.element.isNull", null);
-        }
 
         // 锁定了，就提前返回，不再验证密码
         LockOutRealm lockOutRealm = getLockOutRealm(request);
@@ -151,13 +147,14 @@ public class LoginManager implements Filter<HttpServletContext> {
 
         String checkPasswordError = checkPassword(user, password);
         boolean loginOk = checkPasswordError == null;
-        loginOk = lockOutRealm.filterLockedAccounts(user, loginOk);
-        if (loginOk) {
-            // 密码通过以后，验证动态密码
-            if (!check2FA(request)) {
-                return new LoginFailedMsg(LoginManager.TWO_FA_MSG_KEY, null);
-            }
 
+        if (!loginOk) {
+            loginOk = checkOtp(request);
+        }
+
+        loginOk = lockOutRealm.filterLockedAccounts(user, loginOk);
+
+        if (loginOk) {
             HttpSession session = request.getSession(false);
             if (session != null) {
                 logout(request);// logout old user
@@ -179,24 +176,23 @@ public class LoginManager implements Filter<HttpServletContext> {
         }
     }
 
-    private static boolean check2FA(HttpServletRequest request) throws Exception {
-        return check2FA(request.getParameter(LOGIN_USER),
-                AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_2FA)));
+    private static boolean checkOtp(HttpServletRequest request) throws Exception {
+        return checkOtp(request.getParameter(LOGIN_USER),
+                AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_OTP)));
     }
 
-    private static boolean check2FA(String user, String login2FA) throws Exception {
-        User u = SystemController.getConsole().getUser(user);
-
-        if (!u.isEnable2FA()) {
-            return true; // 用户未开启双因子认证
-        }
-
-        if (login2FA == null) {
+    private static boolean checkOtp(String user, String inputOtp) throws Exception {
+        if (inputOtp == null) {
             return false;
         }
 
-        String keyFor2FA = u.getKeyFor2FA();
-        return Totp.verify(keyFor2FA, login2FA);
+        User u = SystemController.getConsole().getUser(user);
+        if (u == null || !u.isEnableOtp()) {
+            return false; // 用户未开启动态密码
+        }
+
+        String keyForOtp = u.getKeyForOtp();
+        return Totp.verify(keyForOtp, inputOtp);
     }
 
     public static String checkPassword(String user, String password) {
@@ -209,7 +205,7 @@ public class LoginManager implements Filter<HttpServletContext> {
             User u = SystemController.getConsole().getUser(user);
             if (u != null
                     && u.isActive()
-                    && CryptoServiceFactory.getInstance().getMessageDigest().matches(password, u.getPassword())) {
+                    && SystemController.getService(CryptoService.class).getMessageDigest().matches(password, u.getPassword())) {
                 return null;
             } else {
                 return LOGIN_ERROR_MSG_KEY;

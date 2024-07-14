@@ -8,16 +8,12 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.InstanceInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
 import javax.naming.NameNotFoundException;
 import java.io.BufferedInputStream;
@@ -28,13 +24,7 @@ import java.net.SocketException;
 import java.nio.file.Files;
 import java.security.UnrecoverableKeyException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ActionInvoker {
     private static final ActionInvoker instance = new ActionInvoker();
@@ -201,7 +191,7 @@ public class ActionInvoker {
                 InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(instance);
 
                 String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
-                String remoteKey = CryptoServiceFactory.getInstance().getKeyPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
+                String remoteKey = SystemController.getService(CryptoService.class).getKeyPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
 
                 // 远程实例文件上传
                 uploadFile(request, uploadFileAppName, remoteUrl, remoteKey);
@@ -279,7 +269,7 @@ public class ActionInvoker {
 
                 Map<String, String> parameters = new HashMap<>();
                 parameters.put("fileName", fileName);
-                parameters.put("fileBytes", CryptoServiceFactory.getInstance().getMessageDigest().bytesToHex(bytes));
+                parameters.put("fileBytes", SystemController.getService(CryptoService.class).getHexCoder().bytesToHex(bytes));
                 parameters.put("len", String.valueOf(len));
                 parameters.put("isStart", String.valueOf(i == 0));
                 parameters.put("isEnd", String.valueOf(i == count - 1));
@@ -310,7 +300,7 @@ public class ActionInvoker {
         return null;
     }
 
-    private List<String> getAppInstances(String appName) throws Exception {
+    private List<String> getAppInstances(String appName) {
         List<String> instances = new ArrayList<>();
         Deployer deployer = SystemController.getService(Deployer.class);
         App app = deployer.getApp(appName);

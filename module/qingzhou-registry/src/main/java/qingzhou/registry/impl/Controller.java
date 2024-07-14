@@ -1,5 +1,6 @@
 package qingzhou.registry.impl;
 
+import qingzhou.crypto.CryptoService;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -19,6 +20,9 @@ public class Controller implements ModuleActivator {
     @Service
     private Logger logger;
 
+    @Service
+    private CryptoService cryptoService;
+
     // 定时清理超时的自动注册实例
     private Timer timer;
 
@@ -26,7 +30,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) {
-        registry = new RegistryImpl(json);
+        registry = new RegistryImpl(json, cryptoService);
         context.registerService(Registry.class, registry);
 
         timer = new Timer();

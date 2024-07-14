@@ -1,15 +1,6 @@
 package qingzhou.app.instance;
 
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Group;
-import qingzhou.api.Groups;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Editable;
 import qingzhou.config.Arg;
 import qingzhou.config.Config;
@@ -26,16 +17,7 @@ import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
-import java.util.StringTokenizer;
+import java.util.*;
 
 @Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = Editable.ACTION_NAME_EDIT,
         name = {"JVM 配置", "en:JVM Configuration"}, info = {"配置运行 Qingzhou 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running Qingzhou applications."})
@@ -312,7 +294,7 @@ public class JVMConfig extends ModelBase implements Editable {
                 }
             }
 
-            Json json = InstanceApp.getService(Json.class);
+            Json json = appContext.getService(Json.class);
             jvm.put("env", json.toJson(envs));
             jvm.put("arg", json.toJson(args));
 
@@ -325,7 +307,7 @@ public class JVMConfig extends ModelBase implements Editable {
 
     private List<Arg> getArgs() throws Exception {
         List<Arg> args = new ArrayList<>();
-        Json json = InstanceApp.getService(Json.class);
+        Json json = appContext.getService(Json.class);
         for (Map<String, String> data : getDataStore().getAllData()) {
             if (data.remove("type").equals("arg")) {
                 args.add(json.fromJson(json.toJson(data), Arg.class));
@@ -625,7 +607,7 @@ public class JVMConfig extends ModelBase implements Editable {
 
     private final JvmDataStore jvmDataStore = new JvmDataStore();
 
-    private static class JvmDataStore implements DataStore {
+    private class JvmDataStore implements DataStore {
         @Override
         public List<Map<String, String>> getAllData() throws Exception {
             Jvm jvm = InstanceApp.getService(Config.class).getJvm();
@@ -656,7 +638,7 @@ public class JVMConfig extends ModelBase implements Editable {
 
         @Override
         public void updateDataById(String id, Map<String, String> data) throws Exception {
-            Json json = InstanceApp.getService(Json.class);
+            Json json = appContext.getService(Json.class);
             Config config = InstanceApp.getService(Config.class);
             Jvm jvm = config.getJvm();
             List<Arg> oldArgs = jvm.getArg();

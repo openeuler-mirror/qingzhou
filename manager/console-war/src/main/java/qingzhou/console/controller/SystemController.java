@@ -18,25 +18,18 @@ import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.StringUtil;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.KeyPairCipher;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.crypto.CryptoService;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
-import qingzhou.engine.util.crypto.KeyPairCipher;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.Registry;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -53,7 +46,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     static {
         contextHelper = ContextHelper.GetInstance.get();
 
-        CryptoService cryptoService = CryptoServiceFactory.getInstance();
+        CryptoService cryptoService = SystemController.getService(CryptoService.class);
         Security security = getConsole().getSecurity();
         publicKey = security.getPublicKey();
         privateKey = security.getPrivateKey();

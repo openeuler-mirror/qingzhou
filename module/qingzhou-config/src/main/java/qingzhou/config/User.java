@@ -6,8 +6,8 @@ public class User {
     private String password;
     private boolean active;
     private boolean changePwd;
-    private boolean enable2FA;
-    private String keyFor2FA;
+    private boolean enableOtp;
+    private String keyForOtp;
     private String passwordLastModified;
     private String historyPasswords;
 
@@ -51,20 +51,20 @@ public class User {
         this.changePwd = changePwd;
     }
 
-    public boolean isEnable2FA() {
-        return enable2FA;
+    public boolean isEnableOtp() {
+        return enableOtp;
     }
 
-    public void setEnable2FA(boolean enable2FA) {
-        this.enable2FA = enable2FA;
+    public void setEnableOtp(boolean enableOtp) {
+        this.enableOtp = enableOtp;
     }
 
-    public String getKeyFor2FA() {
-        return keyFor2FA;
+    public String getKeyForOtp() {
+        return keyForOtp;
     }
 
-    public void setKeyFor2FA(String keyFor2FA) {
-        this.keyFor2FA = keyFor2FA;
+    public void setKeyForOtp(String keyForOtp) {
+        this.keyForOtp = keyForOtp;
     }
 
     public String getHistoryPasswords() {

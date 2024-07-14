@@ -1,8 +1,9 @@
 package qingzhou.console.view.type;
 
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
-import qingzhou.engine.util.HexUtil;
+import qingzhou.crypto.CryptoService;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,8 @@ public class ImageView implements View {
 
         Map<String, String> map = dataList.get(0);
         String value = map.entrySet().iterator().next().getValue();
-        restContext.servletResponse.getOutputStream().write(HexUtil.hexToBytes(value));
+        CryptoService cryptoService = SystemController.getService(CryptoService.class);
+        restContext.servletResponse.getOutputStream().write(cryptoService.getHexCoder().hexToBytes(value));
     }
 
     @Override

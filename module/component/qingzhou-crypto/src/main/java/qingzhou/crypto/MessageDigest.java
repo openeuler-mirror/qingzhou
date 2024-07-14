@@ -1,4 +1,4 @@
-package qingzhou.engine.util.crypto;
+package qingzhou.crypto;
 
 
 public interface MessageDigest {
@@ -7,8 +7,4 @@ public interface MessageDigest {
     boolean matches(String text, String msgDigest);
 
     String fingerprint(String data);
-
-    byte[] hexToBytes(String encode);
-
-    String bytesToHex(byte[] bytes);
 }

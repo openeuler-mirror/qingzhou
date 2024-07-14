@@ -1,7 +1,7 @@
 package qingzhou.console;
 
 public interface ConsoleConstants {
-    String LOGIN_2FA = "password2fa";
+    String LOGIN_OTP = "otp";
     String OPTION_GROUP_SEPARATOR = "/";
     long DAY_MILLIS_VALUE = 24 * 60 * 60 * 1000; // 一天的毫秒值
     String MODEL_NAME_index = "index";
@@ -31,6 +31,5 @@ public interface ConsoleConstants {
     String VIEW_RENDER_SHOW = "show";
     String VIEW_RENDER_MANAGE = "sys/manage";
 
-    // 双因素认证
-    String ACTION_NAME_2FA = "refreshKey";
+    String ACTION_NAME_REFRESH_KEY = "refreshKey";
 }

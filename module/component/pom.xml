@@ -19,6 +19,7 @@
         <module>qingzhou-ssh</module>
         <module>qingzhou-servlet</module>
         <module>qingzhou-qr</module>
+        <module>qingzhou-crypto</module>
     </modules>
 
 </project>

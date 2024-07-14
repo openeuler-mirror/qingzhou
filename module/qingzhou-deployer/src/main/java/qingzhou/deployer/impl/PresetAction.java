@@ -1,16 +1,10 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.api.DataStore;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
 import qingzhou.api.type.Downloadable;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Monitorable;
 import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 
@@ -18,11 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 class PresetAction {
     private final AppImpl app;
@@ -137,7 +127,6 @@ class PresetAction {
         return properties;
     }
 
-    //// todo：实现移动到内部?
     @ModelAction(
             ajax = true,
             order = 98,
@@ -231,7 +220,7 @@ class PresetAction {
                     System.arraycopy(block, 0, byteRead, 0, read);
                 }
 
-                result.put(Downloadable.DOWNLOAD_BLOCK, CryptoServiceFactory.getInstance().getMessageDigest().bytesToHex(byteRead));
+                result.put(Downloadable.DOWNLOAD_BLOCK, Controller.cryptoService.getHexCoder().bytesToHex(byteRead));
                 offset = raf.getFilePointer();
             }
         }

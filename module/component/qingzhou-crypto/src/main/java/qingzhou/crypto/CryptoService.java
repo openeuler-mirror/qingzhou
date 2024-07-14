@@ -1,4 +1,4 @@
-package qingzhou.engine.util.crypto;
+package qingzhou.crypto;
 
 public interface CryptoService {
     String generateKey();
@@ -10,4 +10,6 @@ public interface CryptoService {
     KeyPairCipher getKeyPairCipher(String publicKey, String privateKey) throws Exception;
 
     MessageDigest getMessageDigest();
+
+    HexCoder getHexCoder();
 }

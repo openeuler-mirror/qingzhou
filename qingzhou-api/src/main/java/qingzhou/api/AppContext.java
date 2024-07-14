@@ -1,6 +1,7 @@
 package qingzhou.api;
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * 应用上下文接口，提供应用元数据、平台信息获取，以及服务定位、临时文件管理、国际化信息、菜单管理和动作过滤器管理等功能。
@@ -46,4 +47,11 @@ public interface AppContext {
      * @param order 菜单项的顺序。
      */
     void addMenu(String name, String[] i18n, String icon, int order);
+
+    /**
+     * 获取本Module开放的Service，以及从其它Module注入的Service
+     */
+    <T> T getService(Class<T> clazz);
+
+    Collection<Class<?>> getServiceTypes();
 }

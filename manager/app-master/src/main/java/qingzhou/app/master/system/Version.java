@@ -97,7 +97,7 @@ public class Version extends ModelBase implements Listable {
                         }
                     }
                 } catch (Exception e) {
-                    MasterApp.getService(Logger.class).warn("Failed to parse fileName: " + fileName);
+                    appContext.getService(Logger.class).warn("Failed to parse fileName: " + fileName);
                 }
             }
         } else if (file.isDirectory()) {

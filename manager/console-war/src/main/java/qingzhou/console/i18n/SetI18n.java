@@ -80,9 +80,6 @@ public class SetI18n implements Filter<HttpServletContext> {
     static {
         ConsoleI18n.addI18n(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
         ConsoleI18n.addI18n(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
-        ConsoleI18n.addI18n(TWO_FA_MSG_KEY, new String[]{"双因子认证认证失败：动态密码错误", "en:Two-factor authentication authentication failed: dynamic password error"});
-        ConsoleI18n.addI18n("jmx.credentials.element.isNull", new String[]{"用户名或密码不能为空", "en:The user name or password cannot be empty"});
-
         ConsoleI18n.addI18n("page.index", new String[]{" Qingzhou 平台", "en:Qingzhou Platform"});
         ConsoleI18n.addI18n("page.index.centralized", new String[]{"集中管理", "en:Centralized Management"});
         ConsoleI18n.addI18n("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
@@ -117,18 +114,18 @@ public class SetI18n implements Filter<HttpServletContext> {
         ConsoleI18n.addI18n("page.download.log.tip", new String[]{"请选择需要下载的文件", "en:Please select the file to download"});
         ConsoleI18n.addI18n("page.download.checkall", new String[]{"全选", "en:Check all"});
         ConsoleI18n.addI18n("page.download.tasktip", new String[]{"开始下载", "en:Start downloading"});
-        ConsoleI18n.addI18n("page.layertitle.2fa", new String[]{"扫描二维码绑定双因子认证密钥", "en:Scan the QR code to bind the two-factor authentication key"});
-        ConsoleI18n.addI18n("page.placeholder.2fa", new String[]{"使用TOTP工具扫码后输入密码", "en:Use the TOTP tool to scan the QR code and enter the password"});
-        ConsoleI18n.addI18n("page.bindsuccess.2fa", new String[]{"绑定成功", "en:Bind success"});
-        ConsoleI18n.addI18n("page.bindfail.2fa", new String[]{"密码不匹配", "en:The passwords don't match"});
-        ConsoleI18n.addI18n("page.info.2fa", new String[]{"双因子认证密码，选填", "en:Two-factor authentication password, optional"});
+        ConsoleI18n.addI18n("page.layertitle.otp", new String[]{"请使用TOTP客户端扫描二维码", "en:Please use the TOTP client to scan the QR code"});
+        ConsoleI18n.addI18n("page.placeholder.otp", new String[]{"使用TOTP工具扫码后输入密码", "en:Use the TOTP tool to scan the QR code and enter the password"});
+        ConsoleI18n.addI18n("page.bindsuccess.otp", new String[]{"绑定成功", "en:Bind success"});
+        ConsoleI18n.addI18n("page.bindfail.otp", new String[]{"密码不匹配", "en:The passwords don't match"});
+        ConsoleI18n.addI18n("page.info.otp", new String[]{"动态密码，选填", "en:OTP, optional"});
         ConsoleI18n.addI18n("page.error.network", new String[]{"服务器连接错误，请确认服务器已启动或检查网络是否通畅", "en:Server connection error, please confirm that the server has been started or check whether the network is smooth"});
         ConsoleI18n.addI18n("page.info.add", new String[]{"添加", "en:Add"});
         ConsoleI18n.addI18n("page.info.kv.name", new String[]{"变量名", "en:Name"});
         ConsoleI18n.addI18n("page.info.kv.value", new String[]{"值", "en:Value"});
         ConsoleI18n.addI18n("page.password.changed", new String[]{"密码修改成功，请重新登录", "en:Password changed successfully, please login again"});
         ConsoleI18n.addI18n("page.lang.switch", new String[]{"切换语言", "en:Switch The Language"});
-        ConsoleI18n.addI18n("model.field.user.name", new String[]{"用户名", "en:User Name"});
-        ConsoleI18n.addI18n("model.field.user.password", new String[]{"密码", "en:Password"});
+        ConsoleI18n.addI18n("page.login.user", new String[]{"账户名称", "en:User"});
+        ConsoleI18n.addI18n("page.login.password", new String[]{"账户密码", "en:Password"});
     }
 }
