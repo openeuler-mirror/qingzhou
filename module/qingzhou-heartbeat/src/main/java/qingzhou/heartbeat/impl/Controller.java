@@ -84,6 +84,7 @@ public class Controller implements ModuleActivator {
             appInfos.add(deployer.getApp(a).getAppInfo());
         }
         thisInstanceInfo.setAppInfos(appInfos.toArray(new AppInfo[0]));
+        thisInstanceInfo.setClusterId(config.getAgent().getClusterId());
 
         String registerData = json.toJson(thisInstanceInfo);
 

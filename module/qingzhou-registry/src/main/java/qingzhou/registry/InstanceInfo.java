@@ -2,6 +2,7 @@ package qingzhou.registry;
 
 public class InstanceInfo {
     private String id;
+    private String clusterId;
     private String host;
     private int port;
     private String key;
@@ -13,6 +14,14 @@ public class InstanceInfo {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getClusterId() {
+        return clusterId;
+    }
+
+    public void setClusterId(String clusterId) {
+        this.clusterId = clusterId;
     }
 
     public String getHost() {
