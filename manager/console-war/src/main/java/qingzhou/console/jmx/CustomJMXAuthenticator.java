@@ -64,7 +64,7 @@ public class CustomJMXAuthenticator implements JMXAuthenticator {
             jmxProperties.setProperty(LoginManager.LOGIN_USER, username);
             jmxProperties.setProperty(LoginManager.LOGIN_PASSWORD, password);
             if (aCredentials.length >= 3 && StringUtil.notBlank(aCredentials[2])) {
-                jmxProperties.setProperty(ConsoleConstants.LOGIN_2FA, aCredentials[2]);
+                jmxProperties.setProperty(ConsoleConstants.LOGIN_OTP, aCredentials[2]);
             }
 
             request = new JmxHttpServletRequest("", "", "", jmxProperties);

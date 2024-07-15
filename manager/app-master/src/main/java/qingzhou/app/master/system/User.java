@@ -7,9 +7,9 @@ import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.MessageDigest;
 import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
-import qingzhou.engine.util.crypto.MessageDigest;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -36,20 +36,20 @@ public class User extends ModelBase implements Createable {
 
     @ModelField(
             list = true,
-            name = {"用户名", "en:User Name"},
+            name = {"账户名称", "en:User Name"},
             info = {"用于登录系统的用户名。", "en:The username used to log in to the system."})
     public String id;
 
     @ModelField(
             list = true, required = false,
             name = {"描述", "en:Description"},
-            info = {"描述信息。", "en:Description information."})
+            info = {"此账户的说明信息。", "en:Description of this account."})
     public String info = "";
 
     @ModelField(
             type = FieldType.password, lengthMax = 2048,
-            name = {"密码", "en:Password"},
-            info = {"密码", "en:Password"})
+            name = {"账户密码", "en:Password"},
+            info = {"用于登录系统的账户密码。", "en:The account password used to log in to the system."})
     public String password;
 
     @ModelField(
@@ -273,7 +273,7 @@ public class User extends ModelBase implements Createable {
             String digestAlg = newUser.getOrDefault("digestAlg", "SHA-256");
             String saltLength = newUser.getOrDefault("saltLength", String.valueOf(defSaltLength));
             String iterations = newUser.getOrDefault("iterations", String.valueOf(defIterations));
-            MessageDigest messageDigest = CryptoServiceFactory.getInstance().getMessageDigest();
+            MessageDigest messageDigest = appContext.getService(CryptoService.class).getMessageDigest();
             newUser.put(pwdKey, messageDigest.digest(password,
                     digestAlg,
                     Integer.parseInt(saltLength),

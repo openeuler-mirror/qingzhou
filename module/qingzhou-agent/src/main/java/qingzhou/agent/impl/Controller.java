@@ -5,6 +5,8 @@ import qingzhou.config.Agent;
 import qingzhou.config.Config;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.KeyCipher;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -13,8 +15,6 @@ import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
-import qingzhou.engine.util.crypto.KeyCipher;
 import qingzhou.http.Http;
 import qingzhou.http.HttpContext;
 import qingzhou.http.HttpServer;
@@ -38,6 +38,8 @@ public class Controller implements ModuleActivator {
     private Logger logger;
     @Service
     private Deployer deployer;
+    @Service
+    private CryptoService cryptoService;
 
     private String path;
     private HttpServer server;
@@ -95,7 +97,7 @@ public class Controller implements ModuleActivator {
 
         // 2. 数据解密，带认证
         String remoteKey = agentService.getAgentKey();
-        KeyCipher keyCipher = CryptoServiceFactory.getInstance().getKeyCipher(remoteKey);
+        KeyCipher keyCipher = cryptoService.getKeyCipher(remoteKey);
         byte[] decryptedData = keyCipher.decrypt(requestData);
 
         // 3. 得到请求对象
@@ -135,7 +137,7 @@ public class Controller implements ModuleActivator {
             public String getAgentKey() {
                 if (agentKey == null) {
                     agentKey = agent.getKey() == null || agent.getKey().isEmpty()
-                            ? CryptoServiceFactory.getInstance().generateKey()
+                            ? cryptoService.generateKey()
                             : agent.getKey();
                 }
                 return agentKey;

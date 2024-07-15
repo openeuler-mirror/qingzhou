@@ -26,19 +26,19 @@
 <%-- 面包屑分级导航 --%>
 <%@ include file="../fragment/breadcrumb.jsp" %>
 
-<form name="pageForm"method="post" class="form-horizontal"
+<form name="pageForm" method="post" class="form-horizontal"
       action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, submitActionName+"/"+encodedId)%>">
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
-        Map<String, String> model;
-        List<Map<String, String>> models = qzResponse.getDataList();
-        if (!models.isEmpty()) {
-            model = models.get(0);
-            Map<String, Map<String, ModelFieldInfo>> fieldMapWithGroup = PageBackendService.getGroupedModelFieldMap(qzRequest);
-            Set<String> groups = fieldMapWithGroup.keySet();
-            long suffixId = System.currentTimeMillis();
-            if (groups.size() > 1) {
-                %>
+            Map<String, String> model;
+            List<Map<String, String>> models = qzResponse.getDataList();
+            if (!models.isEmpty()) {
+                model = models.get(0);
+                Map<String, Map<String, ModelFieldInfo>> fieldMapWithGroup = PageBackendService.getGroupedModelFieldMap(qzRequest);
+                Set<String> groups = fieldMapWithGroup.keySet();
+                long suffixId = System.currentTimeMillis();
+                if (groups.size() > 1) {
+        %>
         <ul class="nav nav-tabs">
             <%
                 boolean isFirst = true;
@@ -138,129 +138,129 @@
                         <%
                             if (!readonly.isEmpty()) {
                                 if (FieldType.textarea.name().equals(modelField.getType())) {
-                                    %>
-                                    <textarea rows="3" disabled="disabled" name="<%=fieldName%>" <%=valueFrom%> class="form-control"
-                                              readonly="readonly"><%=fieldValue%></textarea>
-                                    <%
-                                } else {
-                                    %>
-                                    <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%>
-                                           class="form-control" readonly="readonly">
-                                    <%
-                                }
-                            } else {
-                                FieldType fieldType = FieldType.valueOf(modelField.getType());
-                                switch (fieldType) {
-                                    case text:
-                                    %>
-                                    <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%>
-                                           class="form-control">
-                                    <%
-                                    break;
-                                case number:
-                                    %>
-                                    <input type="number" min="<%=modelField.getMin()%>"
-                                           max="<%=(modelField.isPort()?"65535":modelField.getMax())%>"
-                                           name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%> class="form-control">
-                                    <%
-                                    break;
-                                case decimal:%>
-                                    <%@ include file="field_type/decimal.jsp" %>
-                                    <%
-                                    break;
-                                case password:
-                                    passwordFields.add(fieldName);
-                                    %>
-                                    <input type="password" name="<%=fieldName%>" value='<%=fieldValue%>' data-type="password"
-                                           class="form-control">
-                                    <label password_label_right="<%=fieldName%>_eye" class="input-control-icon-right"
-                                           style="margin-right: 10px; cursor: pointer;"><i class="icon icon-eye-close"></i></label>
-                                    <%
-                                    break;
-                                case textarea:
-                                    %>
-                                    <textarea name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%> class="form-control"
-                                              rows="3"><%=fieldValue%></textarea>
-                                    <%
-                                    break;
-                                case markdown:
-                                    %>
-                                    <div class="markedview"></div>
-                                    <textarea name="<%=fieldName%>" class="markedviewText" rows="3"><%=fieldValue%></textarea>
-                                    <%
-                                    break;
-                                case radio:%>
-                                    <%@ include file="field_type/radio.jsp" %>
-                                    <%
-                                    break;
-                                case bool:
-                                    %>
-                                    <%@ include file="field_type/bool.jsp" %>
-                                    <%
-                                    break;
-                                case select:
-                                    %>
-                                    <%@ include file="field_type/select.jsp" %>
-                                    <%
-                                    break;
-                                case multiselect:
-                                    %>
-                                    <%@ include file="field_type/multiselect.jsp" %>
-                                    <%
-                                    break;
-                                case groupmultiselect:
-                                    %>
-                                    <%@ include file="field_type/groupmultiselect.jsp" %>
-                                    <%
-                                    break;
-                                case checkbox:
-                                    %>
-                                    <%@ include file="field_type/checkbox.jsp" %>
-                                    <%
-                                    break;
-                                case sortablecheckbox:
-                                    %>
-                                    <%@ include file="field_type/sortablecheckbox.jsp" %>
-                                    <%
-                                    break;
-                                case file:
-                                    %>
-                                    <%@ include file="field_type/file.jsp" %>
-                                    <%
-                                    break;
-                                case sortable:
-                                    %>
-                                    <%@ include file="field_type/sortable.jsp" %>
-                                    <%
-                                    break;
-                                case kv:
-                                    %>
-                                    <%@ include file="field_type/kv.jsp" %>
-                                    <%
-                                    break;
-                                case datetime:
-                                    %>
-                                    <%@ include file="field_type/datetime.jsp" %>
-                                    <%
-                                    break;
-                                default:
-                                    throw new IllegalStateException(modelField.getType() + ".jsp not found.");
+                        %>
+                        <textarea rows="3" disabled="disabled" name="<%=fieldName%>" <%=valueFrom%> class="form-control"
+                                  readonly="readonly"><%=fieldValue%></textarea>
+                        <%
+                        } else {
+                        %>
+                        <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%>
+                               class="form-control" readonly="readonly">
+                        <%
                             }
-                        }
+                        } else {
+                            FieldType fieldType = FieldType.valueOf(modelField.getType());
+                            switch (fieldType) {
+                                case text:
+                        %>
+                        <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%>
+                               class="form-control">
+                        <%
+                                break;
+                            case number:
+                        %>
+                        <input type="number" min="<%=modelField.getMin()%>"
+                               max="<%=(modelField.isPort()?"65535":modelField.getMax())%>"
+                               name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%> class="form-control">
+                        <%
+                                break;
+                            case decimal:%>
+                        <%@ include file="field_type/decimal.jsp" %>
+                        <%
+                                break;
+                            case password:
+                                passwordFields.add(fieldName);
+                        %>
+                        <input type="password" name="<%=fieldName%>" value='<%=fieldValue%>' data-type="password"
+                               class="form-control">
+                        <label password_label_right="<%=fieldName%>_eye" class="input-control-icon-right"
+                               style="margin-right: 10px; cursor: pointer;"><i class="icon icon-eye-close"></i></label>
+                        <%
+                                break;
+                            case textarea:
+                        %>
+                        <textarea name="<%=fieldName%>" value='<%=fieldValue%>' <%=valueFrom%> class="form-control"
+                                  rows="3"><%=fieldValue%></textarea>
+                        <%
+                                break;
+                            case markdown:
+                        %>
+                        <div class="markedview"></div>
+                        <textarea name="<%=fieldName%>" class="markedviewText" rows="3"><%=fieldValue%></textarea>
+                        <%
+                                break;
+                            case radio:%>
+                        <%@ include file="field_type/radio.jsp" %>
+                        <%
+                                break;
+                            case bool:
+                        %>
+                        <%@ include file="field_type/bool.jsp" %>
+                        <%
+                                break;
+                            case select:
+                        %>
+                        <%@ include file="field_type/select.jsp" %>
+                        <%
+                                break;
+                            case multiselect:
+                        %>
+                        <%@ include file="field_type/multiselect.jsp" %>
+                        <%
+                                break;
+                            case groupmultiselect:
+                        %>
+                        <%@ include file="field_type/groupmultiselect.jsp" %>
+                        <%
+                                break;
+                            case checkbox:
+                        %>
+                        <%@ include file="field_type/checkbox.jsp" %>
+                        <%
+                                break;
+                            case sortablecheckbox:
+                        %>
+                        <%@ include file="field_type/sortablecheckbox.jsp" %>
+                        <%
+                                break;
+                            case file:
+                        %>
+                        <%@ include file="field_type/file.jsp" %>
+                        <%
+                                break;
+                            case sortable:
+                        %>
+                        <%@ include file="field_type/sortable.jsp" %>
+                        <%
+                                break;
+                            case kv:
+                        %>
+                        <%@ include file="field_type/kv.jsp" %>
+                        <%
+                                break;
+                            case datetime:
+                        %>
+                        <%@ include file="field_type/datetime.jsp" %>
+                        <%
+                                        break;
+                                    default:
+                                        throw new IllegalStateException(modelField.getType() + ".jsp not found.");
+                                }
+                            }
                         %>
                         <label class="tw-error-info"></label>
                     </div>
                 </div>
                 <%
-                }
-                if (groups.size() > 1) {
+                    }
+                    if (groups.size() > 1) {
                 %>
             </div>
             <%
+                        }
+                    }
                 }
-            }
-        }
-        %>
+            %>
         </div>
 
         <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
@@ -268,7 +268,7 @@
                 <%
                     boolean submitPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + submitActionName, LoginManager.getLoginUser(session));
                     ModelActionInfo formCreateAction = modelInfo.getModelActionInfo(submitActionName);
-                    if (submitPermission && (formCreateAction !=null && !formCreateAction.isDisable())) {
+                    if (submitPermission && (formCreateAction != null && !formCreateAction.isDisable())) {
                 %>
                 <input type="submit" class="btn"
                        value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + submitActionName)%>'>
@@ -284,12 +284,12 @@
                 </a>
                 <%
                     }
-                    boolean b2faPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + ConsoleConstants.ACTION_NAME_2FA, LoginManager.getLoginUser(session));
-                    if (b2faPermission) {
+                    boolean bOtpPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + ConsoleConstants.ACTION_NAME_REFRESH_KEY, LoginManager.getLoginUser(session));
+                    if (bOtpPermission) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, ConsoleConstants.ACTION_NAME_2FA)%>"
-                    btn-type="qr2fa" class="btn">
-                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + ConsoleConstants.ACTION_NAME_2FA)%>
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, ConsoleConstants.ACTION_NAME_REFRESH_KEY)%>"
+                   btn-type="qrOtp" class="btn">
+                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + ConsoleConstants.ACTION_NAME_REFRESH_KEY)%>
                 </a>
                 <%
                     }
@@ -297,16 +297,17 @@
                     boolean downloadPermission = (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Downloadable.ACTION_NAME_FILES, LoginManager.getLoginUser(session))
                             && AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Downloadable.ACTION_NAME_DOWNLOAD, LoginManager.getLoginUser(session)));
                     if (downloadPermission) {
-                    %>
-                    <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, Downloadable.ACTION_NAME_FILES + "/" + encodedId)%>'
-                            <%
-                                out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_NAME_DOWNLOAD + "/" + encodedId) + "'");
-                            %>
-                       data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + Downloadable.ACTION_NAME_FILES)%>' data-tip-arrow="top"
-                       btn-type="<%=Downloadable.ACTION_NAME_FILES%>" class="btn tooltips">
-                        <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + Downloadable.ACTION_NAME_FILES)%>
-                    </a>
-                    <%
+                %>
+                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, Downloadable.ACTION_NAME_FILES + "/" + encodedId)%>'
+                        <%
+                            out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_NAME_DOWNLOAD + "/" + encodedId) + "'");
+                        %>
+                   data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + Downloadable.ACTION_NAME_FILES)%>'
+                   data-tip-arrow="top"
+                   btn-type="<%=Downloadable.ACTION_NAME_FILES%>" class="btn tooltips">
+                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + Downloadable.ACTION_NAME_FILES)%>
+                </a>
+                <%
                     }
                 %>
             </div>

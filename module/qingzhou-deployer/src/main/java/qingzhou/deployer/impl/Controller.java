@@ -1,6 +1,7 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.config.Config;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.Module;
@@ -8,10 +9,12 @@ import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 import qingzhou.engine.util.Utils;
+import qingzhou.http.Http;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.qr.QrGenerator;
 import qingzhou.registry.Registry;
+import qingzhou.servlet.ServletService;
 import qingzhou.ssh.SSHService;
 
 import java.io.File;
@@ -36,6 +39,15 @@ public class Controller implements ModuleActivator {
 
     @Service
     private SSHService sshService;
+
+    @Service
+    private Http http;
+
+    @Service
+    private ServletService servletService;
+
+    @Service
+    static CryptoService cryptoService;
 
     static Deployer deployer;
 

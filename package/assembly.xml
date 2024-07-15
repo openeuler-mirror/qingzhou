@@ -78,6 +78,7 @@
                 <include>${project.groupId}:qingzhou-http</include>
                 <include>${project.groupId}:qingzhou-ssh</include>
                 <include>${project.groupId}:qingzhou-qr</include>
+                <include>${project.groupId}:qingzhou-crypto</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

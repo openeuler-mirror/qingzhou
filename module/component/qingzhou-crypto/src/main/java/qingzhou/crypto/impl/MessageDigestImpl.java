@@ -1,7 +1,6 @@
-package qingzhou.engine.util.crypto.impl;
+package qingzhou.crypto.impl;
 
-import qingzhou.engine.util.HexUtil;
-import qingzhou.engine.util.crypto.MessageDigest;
+import qingzhou.crypto.MessageDigest;
 
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -44,17 +43,6 @@ class MessageDigestImpl implements MessageDigest {
         return digest(data, "MD5", 0, 1);
     }
 
-    @Override
-    public byte[] hexToBytes(String encode) {
-        return HexUtil.hexToBytes(encode);
-    }
-
-    @Override
-    public String bytesToHex(byte[] bytes) {
-        if (bytes == null || bytes.length == 0) return "";
-        return HexUtil.bytesToHex(bytes);
-    }
-
     private String digest(String inputCredentials, String algorithm, byte[] salt, int iterations) {
         byte[] digest = digest(algorithm, iterations, salt, inputCredentials.getBytes(StandardCharsets.UTF_8));
         String pwd = encode(digest);
@@ -62,12 +50,11 @@ class MessageDigestImpl implements MessageDigest {
     }
 
     private byte[] decode(String encode) {
-        return hexToBytes(encode);
+        return HexUtil.hexToBytes(encode);
     }
 
     private String encode(byte[] bytes) {
-        if (bytes == null || bytes.length == 0) return "";
-        return bytesToHex(bytes);
+        return HexUtil.bytesToHex(bytes);
     }
 
     private byte[] digest(String algorithm, int iterations, byte[]... input) {

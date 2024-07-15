@@ -3,6 +3,8 @@ package qingzhou.heartbeat.impl;
 import qingzhou.agent.AgentService;
 import qingzhou.config.Config;
 import qingzhou.config.Heartbeat;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.KeyPairCipher;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.Module;
@@ -10,8 +12,6 @@ import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
-import qingzhou.engine.util.crypto.KeyPairCipher;
 import qingzhou.http.Http;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
@@ -19,13 +19,7 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
+import java.util.*;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -41,6 +35,8 @@ public class Controller implements ModuleActivator {
     private Deployer deployer;
     @Service
     private AgentService agentService;
+    @Service
+    private CryptoService cryptoService;
 
     // 定时器设计目的：解决 master 未启动或者宕机重启等引起的注册失效问题
     private Timer timer;
@@ -91,13 +87,13 @@ public class Controller implements ModuleActivator {
 
         String registerData = json.toJson(thisInstanceInfo);
 
-        boolean doRegister = false;
+        boolean registered = false;
         try {
             if (masterUrl.endsWith("/")) {
                 masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
             }
-            String fingerprintUrl = masterUrl + "/rest/json/app/master/heartservice/heatbeat";
-            String fingerprint = CryptoServiceFactory.getInstance().getMessageDigest().fingerprint(registerData);
+            String fingerprintUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/heartservice/heatbeat";
+            String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
             HttpResponse response = http.buildHttpClient().send(fingerprintUrl, new HashMap<String, String>() {{
                 put("fingerprint", fingerprint);
             }});
@@ -106,15 +102,15 @@ public class Controller implements ModuleActivator {
                 List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get("data");
                 if (dataList != null && !dataList.isEmpty()) {
                     String checkResult = dataList.get(0).get(fingerprint);
-                    doRegister = Boolean.parseBoolean(checkResult);
+                    registered = Boolean.parseBoolean(checkResult);
                 }
             }
         } catch (Throwable e) {
             logger.warn("An exception occurred during the registration process", e);
         }
-        if (doRegister) return;
+        if (registered) return;
 
-        String registerUrl = masterUrl + "/rest/json/app/master/heartservice/register";
+        String registerUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/heartservice/register";
         http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
             put("doRegister", registerData);
         }});
@@ -130,7 +126,7 @@ public class Controller implements ModuleActivator {
 
         KeyPairCipher keyPairCipher;
         try {
-            keyPairCipher = CryptoServiceFactory.getInstance().getKeyPairCipher(heartbeat.getMasterKey(), null);
+            keyPairCipher = cryptoService.getKeyPairCipher(heartbeat.getMasterKey(), null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

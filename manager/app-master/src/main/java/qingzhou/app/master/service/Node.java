@@ -113,7 +113,7 @@ public class Node extends ModelBase implements Createable {
                 .setPassword(data.get("sshPassword"));
 
         try {
-            MasterApp.getService(SSHService.class).createSSHClient(sshConfig).execCmd("echo");
+            appContext.getService(SSHService.class).createSSHClient(sshConfig).execCmd("echo");
         } catch (Exception e) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "validator.fail"));

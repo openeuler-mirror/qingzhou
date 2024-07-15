@@ -1,17 +1,12 @@
 package qingzhou.app.instance;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,7 +86,7 @@ public class AppInstaller extends ModelBase {
         File tempDir = Utils.newFile(InstanceApp.getInstanceDir(), "temp", request.getModel());
         File destFile = Utils.newFile(tempDir, timestamp, fileName);
         try {
-            Utils.writeFile(destFile, CryptoServiceFactory.getInstance().getMessageDigest().hexToBytes(fileBytes), len, isStart);
+            writeFile(destFile, appContext.getService(CryptoService.class).getHexCoder().hexToBytes(fileBytes), len, isStart);
         } catch (IOException e) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "file.upload.fail"));
@@ -103,6 +98,26 @@ public class AppInstaller extends ModelBase {
             Map<String, String> data = new HashMap<>();
             data.put("fileName", destFile.getCanonicalPath());
             response.addData(data);
+        }
+    }
+
+    private void writeFile(File file, byte[] fileBytes, int len, boolean isStart) throws IOException {
+        if (isStart) {
+            if (file.exists()) {
+                try {
+                    Utils.forceDelete(file);
+                } catch (Exception ignored) {
+                }
+            }
+            Utils.mkdirs(file.getParentFile());
+            file.createNewFile();
+        }
+        try (OutputStream out = new FileOutputStream(file, true); BufferedOutputStream bos = new BufferedOutputStream(out)) {
+            bos.write(fileBytes, 0, len);
+            bos.flush();
+        } catch (IOException e) {
+            Utils.forceDelete(file);
+            throw e;
         }
     }
 }

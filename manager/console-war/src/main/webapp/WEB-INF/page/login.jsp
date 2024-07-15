@@ -53,14 +53,14 @@
               class="form-group" autocomplete="off">
             <div class="input-control has-icon-left">
                 <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" required
-                       class="form-control" placeholder="<%=PageBackendService.getMasterAppI18nString( "model.field.user.name")%>" autofocus>
+                       class="form-control" placeholder="<%=PageBackendService.getMasterAppI18nString( "page.login.user")%>" autofocus>
                 <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;">
                     <i class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("user").getIcon()%> "></i>
                 </label>
             </div>
             <div class="input-control has-icon-left">
                 <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control"
-                       placeholder="<%=PageBackendService.getMasterAppI18nString( "model.field.user.password")%>" required
+                       placeholder="<%=PageBackendService.getMasterAppI18nString( "page.login.password")%>"
                        onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;" dotted>
                 <input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>" name="<%=LoginManager.LOGIN_PASSWORD%>">
                 <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left" style="line-height: 44px;">
@@ -72,11 +72,11 @@
                 </label>
             </div>
             <div class="input-control has-icon-left">
-                <input type="text" id="<%=ConsoleConstants.LOGIN_2FA%>_txt" class="form-control"
-                       placeholder="<%=PageBackendService.getMasterAppI18nString( "page.info.2fa")%>"
-                       onchange="document.getElementById('<%=ConsoleConstants.LOGIN_2FA%>').value = this.value;">
-                <input type="hidden" id="<%=ConsoleConstants.LOGIN_2FA%>" name="<%=ConsoleConstants.LOGIN_2FA%>">
-                <label for="<%=ConsoleConstants.LOGIN_2FA%>_txt" class="input-control-icon-left"
+                <input type="text" id="<%=ConsoleConstants.LOGIN_OTP%>_txt" class="form-control"
+                       placeholder="<%=PageBackendService.getMasterAppI18nString( "page.info.otp")%>"
+                       onchange="document.getElementById('<%=ConsoleConstants.LOGIN_OTP%>').value = this.value;">
+                <input type="hidden" id="<%=ConsoleConstants.LOGIN_OTP%>" name="<%=ConsoleConstants.LOGIN_OTP%>">
+                <label for="<%=ConsoleConstants.LOGIN_OTP%>_txt" class="input-control-icon-left"
                        style="line-height: 44px;"><i class="icon icon-shield"></i></label>
             </div>
 
@@ -133,7 +133,7 @@
         for (var i = 0; i < inputs.length; i++) {
             var input = inputs[i];
             $(input).change();
-            if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=ConsoleConstants.LOGIN_2FA%>") {
+            if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=ConsoleConstants.LOGIN_OTP%>") {
                 $(input).val(encrypt.encryptLong2($(input).val()));
             }
         }

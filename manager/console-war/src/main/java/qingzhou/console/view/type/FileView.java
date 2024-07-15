@@ -4,9 +4,10 @@ import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
-import qingzhou.engine.util.HexUtil;
+import qingzhou.crypto.CryptoService;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -33,7 +34,7 @@ public class FileView implements View {
         String key = result.get(ConsoleConstants.DOWNLOAD_KEY);
         long offset = Long.parseLong(result.get(ConsoleConstants.DOWNLOAD_OFFSET));
         while (true) {
-            byte[] content = HexUtil.hexToBytes(result.get(ConsoleConstants.DOWNLOAD_BLOCK));
+            byte[] content = SystemController.getService(CryptoService.class).getHexCoder().hexToBytes(result.get(ConsoleConstants.DOWNLOAD_BLOCK));
 
             ServletOutputStream outputStream = servletResponse.getOutputStream();
             outputStream.write(content);

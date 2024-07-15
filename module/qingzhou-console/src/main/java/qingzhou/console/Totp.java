@@ -1,7 +1,7 @@
 package qingzhou.console;
 
+import qingzhou.crypto.HexCoder;
 import qingzhou.engine.util.Base32Util;
-import qingzhou.engine.util.HexUtil;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -14,6 +14,7 @@ import java.security.SecureRandom;
  *
  */
 public class Totp {
+    public static HexCoder hexCoder;
     private static final int[] DIGITS_POWER
             // 0 1  2   3    4     5      6       7        8
             = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
@@ -52,7 +53,7 @@ public class Totp {
      */
     private static String generateDynamicCode(String secureKey) throws Exception {
 
-        String secretHex = HexUtil.bytesToHex(Base32Util.decode(secureKey));
+        String secretHex = hexCoder.bytesToHex(Base32Util.decode(secureKey));
 
         long X = 30;
 

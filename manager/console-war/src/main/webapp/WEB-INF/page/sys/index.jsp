@@ -293,7 +293,7 @@
 
 <script>
     var global_setting = {
-        check2FA: '<%=ConsoleConstants.LOGIN_2FA%>',
+        checkOtp: '<%=ConsoleConstants.LOGIN_OTP%>',
         separa: ',',
         downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
         locale: '<%=(I18n.isZH() ? "zh-CN":"en-US")%>',
@@ -315,13 +315,12 @@
         showAction: '<%=Showable.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18nString("page.download.checkall")%>',
         downloadTaskTip: '<%=PageBackendService.getMasterAppI18nString("page.download.tasktip")%>',
-        layerTitle2FA: '<%=PageBackendService.getMasterAppI18nString("page.layertitle.2fa")%>',
+        layerTitleOtp: '<%=PageBackendService.getMasterAppI18nString("page.layertitle.otp")%>',
         networkError: '<%=PageBackendService.getMasterAppI18nString("page.error.network")%>',
-        placeholder2FA: '<%=PageBackendService.getMasterAppI18nString("page.placeholder.2fa")%>',
-        bindSuccess2FA: '<%=PageBackendService.getMasterAppI18nString("page.bindsuccess.2fa")%>',
-        bindFail2FA: '<%=PageBackendService.getMasterAppI18nString("page.bindfail.2fa")%>',
+        placeholderOtp: '<%=PageBackendService.getMasterAppI18nString("page.placeholder.otp")%>',
+        bindSuccessOtp: '<%=PageBackendService.getMasterAppI18nString("page.bindsuccess.otp")%>',
+        bindFailOtp: '<%=PageBackendService.getMasterAppI18nString("page.bindfail.otp")%>',
         passwordChangedMsg: '<%=PageBackendService.getMasterAppI18nString("page.password.changed")%>',
-        resetPasswordUrl: '<%="/password/update"%>',
         searchHiddenTip: '<%=PageBackendService.getMasterAppI18nString("page.search.hidden")%>',
         passwordConfirmFailed: '<%=PageBackendService.getMasterAppI18nString("password.confirm.notequal")%>'
     };

@@ -111,6 +111,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-crypto</artifactId>
+            <version>x</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-agent</artifactId>
             <version>x</version>
         </dependency>

@@ -3,6 +3,8 @@ package qingzhou.console.impl;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.console.ContextHelper;
+import qingzhou.console.Totp;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -31,7 +33,8 @@ public class Controller implements ModuleActivator {
     private Deployer deployer;
     @Service
     private Registry registry;
-
+    @Service
+    private CryptoService cryptoService;
     @Service
     private Json json;// RemoteClient会用到
 
@@ -39,10 +42,8 @@ public class Controller implements ModuleActivator {
     private ProcessSequence sequence;
     private ServletContainer servletContainer;
     public ModuleContext moduleContext;
-    private Controller instance;
 
     public Controller() {
-        instance = this;
     }
 
     @Override
@@ -51,6 +52,7 @@ public class Controller implements ModuleActivator {
         console = config.getConsole();
 
         if (!console.isEnabled()) return;
+        Totp.hexCoder = cryptoService.getHexCoder();
 
         sequence = new ProcessSequence(
                 new StartServletContainer(),

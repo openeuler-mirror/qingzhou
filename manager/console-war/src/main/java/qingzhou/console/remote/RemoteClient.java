@@ -3,18 +3,12 @@ package qingzhou.console.remote;
 import qingzhou.api.Request;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.SystemController;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.KeyCipher;
 import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.crypto.CryptoServiceFactory;
-import qingzhou.engine.util.crypto.KeyCipher;
 import qingzhou.json.Json;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -51,7 +45,7 @@ public class RemoteClient {
 
             KeyCipher cipher;
             try {
-                cipher = CryptoServiceFactory.getInstance().getKeyCipher(remoteKey);
+                cipher = SystemController.getService(CryptoService.class).getKeyCipher(remoteKey);
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }
@@ -116,6 +110,6 @@ public class RemoteClient {
         conn.setRequestProperty("Charset", "UTF-8");
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");// 设置文件类型
         conn.setRequestProperty("accept", "*/*");// 设置接收类型否则返回415错误
-        conn.setInstanceFollowRedirects(false);// 不处理重定向，否则“双因子密钥需要刷新”提示信息收不到。。。
+        conn.setInstanceFollowRedirects(false);// 不处理重定向，否则“动态密码需要刷新”提示信息收不到。。。
     }
 }

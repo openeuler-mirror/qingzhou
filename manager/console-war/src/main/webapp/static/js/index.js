@@ -633,8 +633,8 @@ function bindEventForFormPage() {
 
     // 列表页及form页面下载(日志、快照等)
     tw.bindFill(".form-btn a[btn-type='monitor']", ".main-body", true, false);
-    // form页面(修改密码双因子认证二维码加载)
-    $(".form-btn a[btn-type='qr2fa']").unbind("click").bind("click", function (e) {
+    // form页面(修改密码动态密码二维码加载)
+    $(".form-btn a[btn-type='qrOtp']").unbind("click").bind("click", function (e) {
         e.preventDefault();
         var keyUrl = $(this).attr("href");
         var urlSP = "&";
@@ -645,12 +645,12 @@ function bindEventForFormPage() {
         var html = "<div style='text-align:center;'>"
                 + "<img src='" + imgSrc + "' style='width:200px; height:200px; margin-top:20px; padding:6px;' onerror='this.src=\"./static/images/data-empty.svg\"'>"
                 + "<br><div class=\"input-control\" style=\"width: 200px;text-align: center;margin-left: 26%;\">"
-                + "<input id=\"randCode-2FA\" type=\"text\" class=\"form-control\" placeholder=\"" + getSetting("placeholder2FA") + "\"></div>"
-                + "<label id='verifyCode2FAError' class=\"tw-error-info\" style=\"position:relative; margin-left:-68px; color:red;\"></label>"
+                + "<input id=\"randCode-OTP\" type=\"text\" class=\"form-control\" placeholder=\"" + getSetting("placeholderOtp") + "\"></div>"
+                + "<label id='verifyCodeOtpError' class=\"tw-error-info\" style=\"position:relative; margin-left:-68px; color:red;\"></label>"
                 + "</div>";
-        openLayer({area: ["450px", "400px"], shadeClose: true, title: getSetting("layerTitle2FA"), content: html, yes: function (index) {
+        openLayer({area: ["450px", "400px"], shadeClose: true, title: getSetting("layerTitleOtp"), content: html, yes: function (index) {
                 var params = {};
-                params[getSetting("check2FA")] = $.trim($("#randCode-2FA").val());
+                params[getSetting("checkOtp")] = $.trim($("#randCode-OTP").val());
                 $.ajax({
                     url: (imgSrc.substring(0, imgSrc.lastIndexOf("/"))  + "/confirmKey").replace("/image/", "/json/"),
                     async: true,
@@ -659,9 +659,9 @@ function bindEventForFormPage() {
                     success: function (data) {
                         if (data.success === "true" || data.success === true) {
                             closeLayer(index);
-                            showSuccess(getSetting("bindSuccess2FA"));
+                            showSuccess(getSetting("bindSuccessOtp"));
                         } else {
-                            $("#verifyCode2FAError").html(getSetting("bindFail2FA"));
+                            $("#verifyCodeOtpError").html(getSetting("bindFailOtp"));
                         }
                     },
                     error: function (e) {
@@ -804,26 +804,11 @@ function bindFormEvent() {
                     if ($(".form-btn a[btn-type='goback']", thisForm).length > 0) {
                         $(".form-btn a[btn-type='goback']", thisForm).click();
                     } else {
-                        var backToMenuPage = function () {
-                            $(".sidebar-menu li.active", getRestrictedArea()).each(function () {
-                                if (!$(this).hasClass("menu-open")) {
-                                    $("a", this).click();
-                                }
-                            });
-                        };
-                        // for NC-2367
-                        if ($(thisForm).attr("action").indexOf(getSetting("resetPasswordUrl")) > 0) {
-                            showConfirm(getSetting("passwordChangedMsg"), {
-                                "title": getSetting("pageConfirmTitle"),
-                                "btn": [getSetting("reloginBtnText"), getSetting("iknowBtnText")]
-                            }, function () {
-                                var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname)) + $("#logout-btn").attr("href");
-                                window.location.href = loginUrl;
-                            }, function () {});
-                            return;
-                        } else {
-                            backToMenuPage();
-                        }
+                        $(".sidebar-menu li.active", getRestrictedArea()).each(function () {
+                            if (!$(this).hasClass("menu-open")) {
+                                $("a", this).click();
+                            }
+                        });
                     }
 
                     if (data.redirectURL !== "" && data.redirectURL !== undefined) {
