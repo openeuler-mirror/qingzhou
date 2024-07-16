@@ -11,10 +11,10 @@ import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.console.ResponseImpl;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -101,31 +101,26 @@ public class Cluster extends ModelBase implements Listable {
         // 获取注册表中的所有实例
         Registry registry = MasterApp.getService(Registry.class);
         Collection<String> allInstanceId = registry.getAllInstanceId();
-        List<Map<String, String>> instances = allInstanceId.stream()
+
+        // 过滤、分组并进行分页处理
+        Map<String, Long> clusterCounts = allInstanceId.stream()
                 .map(registry::getInstanceInfo)
                 .filter(Objects::nonNull)
-                .map(instanceInfo -> {
-                    Map<String, String> data = new HashMap<>();
-                    data.put("id", instanceInfo.getId());
-                    data.put("autoClusterId", instanceInfo.getClusterId());
-                    return data;
-                })
-                .collect(Collectors.toList());
+                .filter(instanceInfo -> instanceInfo.getClusterId() != null && !instanceInfo.getClusterId().isEmpty())
+                .collect(Collectors.groupingBy(
+                        InstanceInfo::getClusterId,
+                        Collectors.counting()
+                ));
 
-        // 按照Cluster ID进行分组
-        Map<String, List<Map<String, String>>> groupByCluster = instances.stream()
-                .filter(props -> props.containsKey("autoClusterId") && !props.get("autoClusterId").isEmpty())
-                .collect(Collectors.groupingBy(props -> props.get("autoClusterId")));
-
-        // 分页处理并添加到响应
-        List<Cluster> clusters = groupByCluster.entrySet().stream()
+        // 获取分页后的cluster
+        List<Cluster> clusters = clusterCounts.entrySet().stream()
                 .skip(startIndex)
                 .limit(pageSize)
                 .map(entry -> {
                     Cluster cluster = new Cluster();
                     cluster.id = entry.getKey();
                     cluster.alias = entry.getKey();
-                    cluster.instanceCount = entry.getValue().size();
+                    cluster.instanceCount = entry.getValue().intValue();
                     return cluster;
                 })
                 .collect(Collectors.toList());
@@ -134,6 +129,6 @@ public class Cluster extends ModelBase implements Listable {
             response.addModelData(cluster);
         }
 
-        response.setTotalSize(groupByCluster.size());
+        response.setTotalSize(clusterCounts.size());
     }
 }
