@@ -84,7 +84,8 @@
       "enabled": "false",
       "host": "",
       "port": "9000",
-      "key": ""
+      "key": "",
+      "clusterId": ""
     },
     "heartbeat": {
       "enabled": "false",

@@ -5,6 +5,7 @@ public class Agent {
     private String host;
     private int port;
     private String key;
+    private String clusterId;
 
     public boolean isEnabled() {
         return enabled;
@@ -36,5 +37,13 @@ public class Agent {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public String getClusterId() {
+        return clusterId;
+    }
+
+    public void setClusterId(String clusterId) {
+        this.clusterId = clusterId;
     }
 }
