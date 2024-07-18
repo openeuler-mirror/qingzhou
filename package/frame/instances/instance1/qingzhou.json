@@ -74,6 +74,16 @@
           "passwordLastModified": ""
         }
       ],
+      "department": [
+        {
+          "id": "default",
+          "name": "系统默认部门",
+          "parent": "",
+          "manager": "qingzhou",
+          "phone": "",
+          "email": ""
+        }
+      ],
       "jmx": {
         "enabled": "false",
         "host": "",

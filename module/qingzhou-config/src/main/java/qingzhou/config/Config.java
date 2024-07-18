@@ -15,6 +15,10 @@ public interface Config {
 
     void deleteUser(String id) throws Exception;
 
+    void addDepartment(Department department) throws Exception;
+
+    void deleteDepartment(String id) throws Exception;
+
     void addEnv(Env env) throws Exception;
 
     void deleteEnv(String id) throws Exception;
