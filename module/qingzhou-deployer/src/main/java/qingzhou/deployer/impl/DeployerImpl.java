@@ -442,6 +442,7 @@ class DeployerImpl implements Deployer {
         if (lib.isDirectory()) {
             File[] files = lib.listFiles();
             if (files != null) {
+                Arrays.sort(files);// 排序A-Za-z
                 libs.addAll(Arrays.asList(files));
             }
         }
