@@ -67,7 +67,7 @@ public class App extends ModelBase implements Createable {
             list = true, //refModel = Instance.class,
             name = {"实例", "en:Instance"},
             info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
-    public String instances;
+    public String instances = "local";
 
     @Override
     public void start() {
