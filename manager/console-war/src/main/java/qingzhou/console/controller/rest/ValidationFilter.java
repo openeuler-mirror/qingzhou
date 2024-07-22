@@ -7,6 +7,7 @@ import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.page.PageBackendService;
+import qingzhou.console.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
@@ -14,6 +15,7 @@ import qingzhou.registry.ModelInfo;
 
 import java.io.File;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,7 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String validation_max = "validation_max";
     public static String validation_lengthMin = "validation_lengthMin";
     public static String validation_lengthMax = "validation_lengthMax";
+    public static String validation_regularExpression = "validation_regularExpression";
     public static String validation_port = "validation_port";
     public static String validation_password = "validation_password";
     public static String validation_port_valueBetween = "validation_port_valueBetween";
@@ -47,6 +50,7 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n(createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
         ConsoleI18n.addI18n(validation_file, new String[]{"须是一个合法的文件路径", "en:Must be a legal file path"});
         ConsoleI18n.addI18n(validation_xss, new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
+        ConsoleI18n.addI18n(validation_regularExpression, new String[]{"内容不满足规则", "en:The content does not meet the rules"});
     }
 
     @Override
@@ -90,7 +94,8 @@ public class ValidationFilter implements Filter<RestContext> {
             new lengthMin(), new lengthMax(),
             new port(), new Password(),
             new unsupportedCharacters(), new unsupportedStrings(),
-            new createable(), new editable(), new checkFile(), new checkXSS()
+            new createable(), new editable(), new checkFile(), new checkXSS(),
+            new regularExpression()
     };
 
     private String[] validate(ValidationContext context) throws Exception {
@@ -212,6 +217,24 @@ public class ValidationFilter implements Filter<RestContext> {
             if (fieldInfo.getLengthMax() == Integer.MAX_VALUE) return null;
             if (parameterVal.length() <= fieldInfo.getLengthMax()) return null;
             return new String[]{validation_lengthMax, String.valueOf(fieldInfo.getLengthMax())};
+        }
+    }
+
+    static class regularExpression implements Validator {
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
+
+            if (StringUtil.isBlank(fieldInfo.getRegularExpression())) {
+                return null;
+            }
+            Pattern pattern = Pattern.compile(fieldInfo.getRegularExpression());
+            Matcher matcher = pattern.matcher(parameterVal);
+            if (matcher.matches()) {
+                return null;
+            }
+            return new String[]{validation_regularExpression};
         }
     }
 
