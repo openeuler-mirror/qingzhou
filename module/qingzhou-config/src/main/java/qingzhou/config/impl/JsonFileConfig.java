@@ -132,4 +132,14 @@ public class JsonFileConfig implements Config {
     private interface UseReaderCallback<T> {
         T accept(Reader reader) throws Exception;
     }
+
+    @Override
+    public void addDepartment(Department department) throws Exception {
+        writeJson(department, true, "module", "console", "department");
+    }
+
+    @Override
+    public void deleteDepartment(String id) throws Exception {
+        deleteJson("id", id, "module", "console", "department");
+    }
 }
