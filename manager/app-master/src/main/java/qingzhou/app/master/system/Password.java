@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "password", icon = "key",
-        menu = "System", order = 3, entrance = Editable.ACTION_NAME_EDIT,
+        menu = "System", order = 4, entrance = Editable.ACTION_NAME_EDIT,
         name = {"密码管理", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})

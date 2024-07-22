@@ -1,17 +1,6 @@
 package qingzhou.app.master.system;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
-import qingzhou.api.DataStore;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Createable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
@@ -20,59 +9,56 @@ import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.engine.util.Utils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
 @Model(code = "department", icon = "sitemap",
-        menu = "System", order = 1,
-        name = {"部门管理", "en:Department Manage"},
+        menu = "System", order = 3,
+        name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
 public class Department extends ModelBase implements Createable {
     public static final String parentKey = "parent";
     public static final String parentNameKey = "parentName";
-    public static final String emailKey = "email";
 
     @ModelField(
-            group = "basic",
             list = true,
             name = {"部门标识符", "en:Department Name"},
             info = {"该部门在系统中的唯一标识符。", "en:Unique identifier of the department in the system."})
     public String id;
 
     @ModelField(
-            group = "basic",
             list = true,
             name = {"部门名称", "en:Department Name"},
             info = {"该部门的详细名称。", "en:The name of the department."})
     public String name;
 
     @ModelField(
-            group = "basic",
-            list = false, required = false,
+            required = false,
             name = {"上级部门标识符", "en:Parent Department"},
             info = {"该部门所属的上级部门标识符。", "en:The parent department to which the department belongs."})
     public String parent = "";
 
     @ModelField(
-            group = "basic",
             list = true, required = false, editable = false, createable = false,
             name = {"上级部门", "en:Parent Department"},
             info = {"该部门所属的上级部门名称。", "en:The parent department to which the department belongs."})
     public String parentName = "";
 
     @ModelField(
-            group = "basic",
             list = true,
             name = {"负责人", "en:Department Manager"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
     public String manager;
 
     @ModelField(
-            group = "basic",
             list = true, required = false,
             name = {"联系电话", "en:Department Contact Number"},
             info = {"该部门的联系电话。", "en:The department's contact number."})
     public String phone;
 
     @ModelField(
-            group = "basic",
             list = true, required = false,
             name = {"电子邮箱", "en:Department Contact Email"},
             info = {"可以与该部门取得联系的电子邮箱。", "en:An E-mail address where the department can be contacted."})
@@ -80,19 +66,14 @@ public class Department extends ModelBase implements Createable {
 
     @Override
     public void start() {
-        appContext.addI18n("operate.system.departments.not", new String[]{"为安全起见，请勿操作系统默认部门", "en:For security reasons, do not operate the system default department."});
-        appContext.addI18n("department.parent.not.exist", new String[]{"您输入的上级部门不存在，请检查部门标识符是否输入正确", "en:The parent department you have entered does not exist, please check if the department identifier is entered correctly."});
-        appContext.addI18n("email.incorrect", new String[]{"您输入的邮箱地址格式不正确，请检查后重新输入", "en:The e-mail address you have entered is not in the correct format, please check and re-enter it."});
+        appContext.addI18n("department.parent.not.exist", new String[]{"您输入的上级部门不存在，请检查部门标识符是否输入正确", "en:The parent department you have entered does not exist, please check if the department identifier is entered correctly"});
+        appContext.addI18n("email.incorrect", new String[]{"您输入的邮箱地址格式不正确，请检查后重新输入", "en:The e-mail address you have entered is not in the correct format, please check and re-enter it"});
     }
 
     @ModelAction(
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
-        if (!checkForbidden(request, response)) {
-            return;
-        }
-
         if (getDataStore().exists(request.getParameter(Listable.FIELD_NAME_ID))) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
@@ -121,19 +102,16 @@ public class Department extends ModelBase implements Createable {
     }
 
     @ModelAction(
-        show = "id!=default", 
-        name = { "删除", "en:Delete" }, 
-        info = { "删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。", "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion." })
+            show = "id!=default",
+            name = {"删除", "en:Delete"},
+            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。", "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
-        if (!checkForbidden(request, response)) {
-            return;
-        }
         String id = request.getId();
         DataStore dataStore = getDataStore();
         dataStore.deleteDataById(id);
     }
 
-    @ModelAction(name = { "查看", "en:Show" }, info = { "查看该组件的相关信息。", "en:View the information of this model." })
+    @ModelAction(name = {"查看", "en:Show"}, info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
         Map<String, String> data = dataStore.getDataById(request.getId());
@@ -144,10 +122,6 @@ public class Department extends ModelBase implements Createable {
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
-        if (!checkForbidden(request, response)) {
-            return;
-        }
-
         Map<String, String> newDepartment = request.getParameters();
         String validate;
         for (String name : newDepartment.keySet()) {
@@ -169,8 +143,8 @@ public class Department extends ModelBase implements Createable {
             }
         }
 
-        if (emailKey.equals(fieldName)) {
-            String emailVal = request.getParameter(emailKey);
+        if ("email".equals(fieldName)) {
+            String emailVal = request.getParameter("email");
             Pattern regex = Pattern.compile("^(.+)@(\\S+)$");
             if (!emailVal.isEmpty() && !regex.matcher(emailVal).matches()) {
                 return appContext.getI18n(request.getLang(), "email.incorrect");
@@ -192,10 +166,10 @@ public class Department extends ModelBase implements Createable {
         public List<Map<String, String>> getAllData() throws Exception {
             List<Map<String, String>> departments = new ArrayList<>();
             Console console = MasterApp.getService(Config.class).getConsole();
-            for (qingzhou.config.Department department : console.getDepartments()) {
+            for (qingzhou.config.Department department : console.getDepartment()) {
                 Map<String, String> departmentMap = Utils.getPropertiesFromObj(department);
                 String parentName = "";
-                if(!department.getParent().isEmpty()) {
+                if (!department.getParent().isEmpty()) {
                     parentName = console.getDepartment(department.getParent()).getName();
                 }
                 departmentMap.put(parentNameKey, parentName);
@@ -224,20 +198,5 @@ public class Department extends ModelBase implements Createable {
         public void deleteDataById(String id) throws Exception {
             MasterApp.getService(Config.class).deleteDepartment(id);
         }
-    }
-
-    private boolean checkForbidden(Request request, Response response) {
-        String id = request.getId();
-        if (id != null) {
-            if ("default".contains(id)) {
-                if (Createable.ACTION_NAME_ADD.equals(request.getAction())
-                        || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
-                    response.setSuccess(false);
-                    response.setMsg(this.appContext.getI18n(request.getLang(), "operate.system.departments.not"));
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 }
