@@ -90,4 +90,6 @@ public @interface ModelField {
     String unsupportedCharacters() default "";
 
     String[] unsupportedStrings() default {};
+
+    String regularExpression() default "";
 }

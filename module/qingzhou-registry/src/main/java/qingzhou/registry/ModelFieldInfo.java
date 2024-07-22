@@ -24,7 +24,17 @@ public class ModelFieldInfo {
     private String unsupportedCharacters;
     private String[] unsupportedStrings;
 
+    private String regularExpression;
+
     private String show;
+
+    public String getRegularExpression() {
+        return regularExpression;
+    }
+
+    public void setRegularExpression(String regularExpression) {
+        this.regularExpression = regularExpression;
+    }
 
     public String getCode() {
         return code;
