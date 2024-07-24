@@ -73,7 +73,7 @@ public class Department extends ModelBase implements Createable {
 
     @ModelField(
             group = "basic",
-            list = true, required = false,
+            list = true, required = false, email = true,
             name = {"电子邮箱", "en:Department Contact Email"},
             info = {"可以与该部门取得联系的电子邮箱。", "en:An E-mail address where the department can be contacted."})
     public String email;

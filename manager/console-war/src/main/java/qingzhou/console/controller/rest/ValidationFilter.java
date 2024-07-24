@@ -35,6 +35,7 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String validation_file = "validation_file";
     public static String validation_xss = "validation_xss";
     public static String validation_number = "validation_number";
+    public static String validation_email = "validation_email";
 
     static {
         ConsoleI18n.addI18n(validation_required, new String[]{"内容不能为空白", "en:The content cannot be blank"});
@@ -51,6 +52,7 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n(validation_file, new String[]{"须是一个合法的文件路径", "en:Must be a legal file path"});
         ConsoleI18n.addI18n(validation_xss, new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
         ConsoleI18n.addI18n(validation_regularExpression, new String[]{"内容不满足规则", "en:The content does not meet the rules"});
+        ConsoleI18n.addI18n(validation_email, new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
     }
 
     @Override
@@ -95,7 +97,8 @@ public class ValidationFilter implements Filter<RestContext> {
             new port(), new Password(),
             new unsupportedCharacters(), new unsupportedStrings(),
             new createable(), new editable(), new checkFile(), new checkXSS(),
-            new regularExpression()
+            new regularExpression(),
+            new checkEmail()
     };
 
     private String[] validate(ValidationContext context) throws Exception {
@@ -428,6 +431,29 @@ public class ValidationFilter implements Filter<RestContext> {
                     return resultUrl.equals(check);
                 }
             }
+        }
+    }
+
+    static class checkEmail implements Validator {
+        // 邮箱正则表达式
+        private static final String EMAIL_PATTERN =
+                "^[A-Za-z0-9]+([-._][A-Za-z0-9]+)*@[A-Za-z0-9]+(-[A-Za-z0-9]+)*(\\.[A-Za-z]{2,6}|[A-Za-z]{2,4}\\.[A-Za-z]{2,3})$";
+        private static final Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
+            if (parameterVal == null || parameterVal.isEmpty()) {
+                return null;
+            }
+            if (fieldInfo.getEmail()) {
+                Matcher matcher = pattern.matcher(parameterVal);
+                if (!matcher.matches()) {
+                    return new String[]{ValidationFilter.validation_email};
+                }
+            }
+            return null;
         }
     }
 }

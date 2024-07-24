@@ -28,6 +28,8 @@ public class ModelFieldInfo {
 
     private String show;
 
+    private boolean email;
+
     public String getRegularExpression() {
         return regularExpression;
     }
@@ -218,5 +220,13 @@ public class ModelFieldInfo {
 
     public void setShow(String show) {
         this.show = show;
+    }
+
+    public boolean getEmail() {
+        return email;
+    }
+
+    public void setEmail(boolean email) {
+        this.email = email;
     }
 }
