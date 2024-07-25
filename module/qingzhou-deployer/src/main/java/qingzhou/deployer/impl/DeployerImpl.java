@@ -355,6 +355,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setUnsupportedCharacters(modelField.unsupportedCharacters());
             modelFieldInfo.setUnsupportedStrings(modelField.unsupportedStrings());
             modelFieldInfo.setShow(modelField.show());
+            modelFieldInfo.setEmail(modelField.email());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);
