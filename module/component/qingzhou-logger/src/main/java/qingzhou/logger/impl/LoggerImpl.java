@@ -63,8 +63,7 @@ class LoggerImpl implements Logger {
         org.tinylog.Logger.error(t, msg);
     }
 
-    @Override
-    public void shutdown() {
+    void shutdown() {
         try {
             org.tinylog.provider.ProviderRegistry.getLoggingProvider().shutdown();
         } catch (InterruptedException e) {

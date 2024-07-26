@@ -20,6 +20,7 @@ import java.util.*;
 public class ModuleLoading implements Process {
     private final EngineContext engineContext;
     private final List<ModuleInfo> moduleInfoList = new ArrayList<>();
+    private final List<ModuleInfo> moduleStartedOrder = new ArrayList<>();
     private final ProcessSequence sequence;
 
     public ModuleLoading(EngineContext engineContext) {
@@ -130,20 +131,12 @@ public class ModuleLoading implements Process {
 
         @Override
         public void undo() {
-            // Qingzhou Loggoer module must be the last one to stop.
-            moduleInfoList.forEach(moduleInfo -> {
-                if(moduleInfo.getName().endsWith("qingzhou-logger.jar")) {
-                    return;
-                }
+            Collections.reverse(moduleStartedOrder); // Qingzhou Loggoer module must be the last one to stop.
+            moduleStartedOrder.forEach(moduleInfo -> {
                 moduleInfo.setStarted(false);
                 moduleInfo.getModuleActivators().forEach(ModuleActivator::stop);
             });
-            moduleInfoList.forEach(moduleInfo -> {
-                if(moduleInfo.isStarted()) {
-                    moduleInfo.setStarted(false);
-                    moduleInfo.getModuleActivators().forEach(ModuleActivator::stop);
-                }
-            });
+            moduleStartedOrder.clear();
         }
 
         Map<ModuleInfo, Class<?>> startModule(Collection<ModuleInfo> toStartList) throws Exception {
@@ -155,6 +148,7 @@ public class ModuleLoading implements Process {
                         moduleActivator.start(moduleInfo.getModuleContext());
                     }
                     moduleInfo.setStarted(true);
+                    moduleStartedOrder.add(moduleInfo);
                 } else {
                     missingServiceModule.put(moduleInfo, missing);
                 }
