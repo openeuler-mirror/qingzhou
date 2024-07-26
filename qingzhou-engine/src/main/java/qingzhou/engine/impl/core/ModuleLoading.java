@@ -130,9 +130,19 @@ public class ModuleLoading implements Process {
 
         @Override
         public void undo() {
+            // Qingzhou Loggoer module must be the last one to stop.
             moduleInfoList.forEach(moduleInfo -> {
+                if(moduleInfo.getName().endsWith("qingzhou-logger.jar")) {
+                    return;
+                }
                 moduleInfo.setStarted(false);
                 moduleInfo.getModuleActivators().forEach(ModuleActivator::stop);
+            });
+            moduleInfoList.forEach(moduleInfo -> {
+                if(moduleInfo.isStarted()) {
+                    moduleInfo.setStarted(false);
+                    moduleInfo.getModuleActivators().forEach(ModuleActivator::stop);
+                }
             });
         }
 
