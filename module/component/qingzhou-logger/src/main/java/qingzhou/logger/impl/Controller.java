@@ -26,6 +26,7 @@ public class Controller implements ModuleActivator {
     @Override
     public void stop() {
         stopInfo();
+        logger.shutdown();
     }
 
     private void startInfo() {
