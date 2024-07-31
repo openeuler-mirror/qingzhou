@@ -23,19 +23,16 @@ public class ModelFieldInfo {
     private boolean port;
     private String unsupportedCharacters;
     private String[] unsupportedStrings;
-
-    private String regularExpression;
-
+    private String pattern;
     private String show;
-
     private boolean email;
 
-    public String getRegularExpression() {
-        return regularExpression;
+    public String getPattern() {
+        return pattern;
     }
 
-    public void setRegularExpression(String regularExpression) {
-        this.regularExpression = regularExpression;
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
     }
 
     public String getCode() {
@@ -222,7 +219,7 @@ public class ModelFieldInfo {
         this.show = show;
     }
 
-    public boolean getEmail() {
+    public boolean isEmail() {
         return email;
     }
 

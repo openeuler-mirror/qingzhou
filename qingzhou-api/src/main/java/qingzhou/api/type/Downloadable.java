@@ -31,22 +31,12 @@ public interface Downloadable {
     /**
      * 获取下载列表
      * Map<String, List<String[]>> key: 文件组名, value: 文件列表，每个数组元素包含两个元素，第一个元素是文件名，第二个元素是文件大小
-     *
-     * @param request
-     * @param response
-     * @return
-     * @throws Exception
      */
     Map<String, List<String[]>> downloadlist(Request request, Response response) throws Exception;
 
     /**
      * 获取下载文件
      * File[] 待下载的文件全路径列表
-     *
-     * @param request
-     * @param downloadFileNames 下载文件名列表，元素格式：分组+“/”+文件名
-     * @return
-     * @throws Exception
      */
     File[] downloadfile(Request request, String[] downloadFileNames) throws Exception;
 }

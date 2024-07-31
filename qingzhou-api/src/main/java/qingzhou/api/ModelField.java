@@ -91,7 +91,7 @@ public @interface ModelField {
 
     String[] unsupportedStrings() default {};
 
-    String regularExpression() default "";
+    String pattern() default "";
 
     boolean email() default false;
 }
