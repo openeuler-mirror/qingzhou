@@ -23,8 +23,17 @@ public class ModelFieldInfo {
     private boolean port;
     private String unsupportedCharacters;
     private String[] unsupportedStrings;
-
+    private String pattern;
     private String show;
+    private boolean email;
+
+    public String getPattern() {
+        return pattern;
+    }
+
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
+    }
 
     public String getCode() {
         return code;
@@ -208,5 +217,13 @@ public class ModelFieldInfo {
 
     public void setShow(String show) {
         this.show = show;
+    }
+
+    public boolean isEmail() {
+        return email;
+    }
+
+    public void setEmail(boolean email) {
+        this.email = email;
     }
 }

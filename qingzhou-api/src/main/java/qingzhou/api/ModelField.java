@@ -90,4 +90,8 @@ public @interface ModelField {
     String unsupportedCharacters() default "";
 
     String[] unsupportedStrings() default {};
+
+    String pattern() default "";
+
+    boolean email() default false;
 }

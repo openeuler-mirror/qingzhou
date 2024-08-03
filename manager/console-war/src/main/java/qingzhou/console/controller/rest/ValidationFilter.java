@@ -7,6 +7,7 @@ import qingzhou.console.RequestImpl;
 import qingzhou.console.ResponseImpl;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.page.PageBackendService;
+import qingzhou.console.util.StringUtil;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
@@ -14,6 +15,7 @@ import qingzhou.registry.ModelInfo;
 
 import java.io.File;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -23,15 +25,17 @@ public class ValidationFilter implements Filter<RestContext> {
     public static String validation_max = "validation_max";
     public static String validation_lengthMin = "validation_lengthMin";
     public static String validation_lengthMax = "validation_lengthMax";
+    public static String validation_pattern = "validation_pattern";
     public static String validation_port = "validation_port";
     public static String validation_password = "validation_password";
     public static String validation_port_valueBetween = "validation_port_valueBetween";
-    public static String unsupportedCharacters = "unsupportedCharacters";
-    public static String unsupportedStrings = "unsupportedStrings";
-    public static String createable = "createable";
+    public static String validation_unsupportedCharacters = "validation_unsupportedCharacters";
+    public static String validation_unsupportedStrings = "validation_unsupportedStrings";
+    public static String validation_createable = "validation_createable";
     public static String validation_file = "validation_file";
     public static String validation_xss = "validation_xss";
     public static String validation_number = "validation_number";
+    public static String validation_email = "validation_email";
 
     static {
         ConsoleI18n.addI18n(validation_required, new String[]{"内容不能为空白", "en:The content cannot be blank"});
@@ -43,10 +47,13 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n(validation_port, new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
         ConsoleI18n.addI18n(validation_password, new String[]{"密码校验异常", "en:Validate password exception"});
         ConsoleI18n.addI18n(validation_port_valueBetween, new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
-        ConsoleI18n.addI18n(unsupportedStrings, new String[]{"不能包含字串%s", "en:Cannot contain the string %s"});
-        ConsoleI18n.addI18n(createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
+        ConsoleI18n.addI18n(validation_unsupportedCharacters, new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
+        ConsoleI18n.addI18n(validation_unsupportedStrings, new String[]{"不能包含字符串：%s", "en:Cannot contain the string: %s"});
+        ConsoleI18n.addI18n(validation_createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
         ConsoleI18n.addI18n(validation_file, new String[]{"须是一个合法的文件路径", "en:Must be a legal file path"});
         ConsoleI18n.addI18n(validation_xss, new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
+        ConsoleI18n.addI18n(validation_pattern, new String[]{"内容不满足规则", "en:The content does not meet the rules"});
+        ConsoleI18n.addI18n(validation_email, new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
     }
 
     @Override
@@ -90,7 +97,9 @@ public class ValidationFilter implements Filter<RestContext> {
             new lengthMin(), new lengthMax(),
             new port(), new Password(),
             new unsupportedCharacters(), new unsupportedStrings(),
-            new createable(), new editable(), new checkFile(), new checkXSS()
+            new createable(), new editable(), new checkFile(), new checkXSS(),
+            new regularExpression(),
+            new checkEmail()
     };
 
     private String[] validate(ValidationContext context) throws Exception {
@@ -215,6 +224,24 @@ public class ValidationFilter implements Filter<RestContext> {
         }
     }
 
+    static class regularExpression implements Validator {
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
+
+            if (StringUtil.isBlank(fieldInfo.getPattern())) {
+                return null;
+            }
+            Pattern pattern = Pattern.compile(fieldInfo.getPattern());
+            Matcher matcher = pattern.matcher(parameterVal);
+            if (matcher.matches()) {
+                return null;
+            }
+            return new String[]{validation_pattern};
+        }
+    }
+
     static class port implements Validator {
 
         @Override
@@ -274,7 +301,7 @@ public class ValidationFilter implements Filter<RestContext> {
             for (char c : fieldInfo.getUnsupportedCharacters().toCharArray()) {
                 String s = String.valueOf(c);
                 if (parameterVal.contains(s)) {
-                    return new String[]{unsupportedCharacters, s};
+                    return new String[]{validation_unsupportedCharacters, s};
                 }
             }
             return null;
@@ -289,7 +316,7 @@ public class ValidationFilter implements Filter<RestContext> {
             String parameterVal = context.parameterVal;
             for (String unsupportedString : fieldInfo.getUnsupportedStrings()) {
                 if (parameterVal.contains(unsupportedString)) {
-                    return new String[]{unsupportedStrings, unsupportedString};
+                    return new String[]{validation_unsupportedStrings, unsupportedString};
                 }
             }
             return null;
@@ -305,7 +332,7 @@ public class ValidationFilter implements Filter<RestContext> {
 
             if (!context.isAddAction) return null;
 
-            return new String[]{createable};
+            return new String[]{validation_createable};
         }
     }
 
@@ -405,6 +432,29 @@ public class ValidationFilter implements Filter<RestContext> {
                     return resultUrl.equals(check);
                 }
             }
+        }
+    }
+
+    static class checkEmail implements Validator {
+        // 邮箱正则表达式
+        private static final String EMAIL_PATTERN =
+                "^[A-Za-z0-9]+([-._][A-Za-z0-9]+)*@[A-Za-z0-9]+(-[A-Za-z0-9]+)*(\\.[A-Za-z]{2,6}|[A-Za-z]{2,4}\\.[A-Za-z]{2,3})$";
+        private static final Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            String parameterVal = context.parameterVal;
+            if (parameterVal == null || parameterVal.isEmpty()) {
+                return null;
+            }
+            if (fieldInfo.isEmail()) {
+                Matcher matcher = pattern.matcher(parameterVal);
+                if (!matcher.matches()) {
+                    return new String[]{ValidationFilter.validation_email};
+                }
+            }
+            return null;
         }
     }
 }

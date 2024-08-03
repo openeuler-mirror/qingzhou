@@ -12,7 +12,7 @@ import java.util.Date;
 
 @Module
 public class Controller implements ModuleActivator {
-    private Logger logger;
+    private LoggerImpl logger;
     private long startTime;
 
     @Override
@@ -26,6 +26,7 @@ public class Controller implements ModuleActivator {
     @Override
     public void stop() {
         stopInfo();
+        logger.shutdown();
     }
 
     private void startInfo() {

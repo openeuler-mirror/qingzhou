@@ -350,10 +350,12 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setMax(modelField.max());
             modelFieldInfo.setLengthMin(modelField.lengthMin());
             modelFieldInfo.setLengthMax(modelField.lengthMax());
+            modelFieldInfo.setPattern(modelField.pattern());
             modelFieldInfo.setPort(modelField.port());
             modelFieldInfo.setUnsupportedCharacters(modelField.unsupportedCharacters());
             modelFieldInfo.setUnsupportedStrings(modelField.unsupportedStrings());
             modelFieldInfo.setShow(modelField.show());
+            modelFieldInfo.setEmail(modelField.email());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);

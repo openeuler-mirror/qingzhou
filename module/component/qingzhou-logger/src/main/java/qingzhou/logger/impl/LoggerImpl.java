@@ -62,4 +62,12 @@ class LoggerImpl implements Logger {
     public void error(String msg, Throwable t) {
         org.tinylog.Logger.error(t, msg);
     }
+
+    void shutdown() {
+        try {
+            org.tinylog.provider.ProviderRegistry.getLoggingProvider().shutdown();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }
