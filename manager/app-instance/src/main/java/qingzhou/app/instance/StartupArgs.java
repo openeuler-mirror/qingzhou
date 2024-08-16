@@ -317,7 +317,7 @@ public class StartupArgs extends ModelBase implements Createable {
         public static final String[] uniqueBooleanArgKeys = {"-Djava.awt.headless="};
         public static final String[] uniqueArgKeys = {"-Xloggc:", "-XX:LogFile=", "-Djava.security.policy=", "-Duser.language=", "-Djava.security.egd=", "-agentlib:jdwp=",};
         public static final String[] uniqueArgVals = {"-XX:+HeapDumpOnOutOfMemoryError", "-XX:+DisableExplicitGC", "-XX:+PrintGCDetails", "-XX:+UnlockDiagnosticVMOptions", "-XX:+LogVMOutput", "-Djava.security.manager", "-server"};
-        // Qingzhou 专用 -D 参数，不允许复写
+        // QingZhou 专用 -D 参数，不允许复写
         public static final String[] systemManagedPrefix = {"-Dqingzhou.home", "-Dqingzhou.base", "-Djava.util.logging.manager"};
         public static final Set<String> uniqueArgs = new HashSet<>();
 

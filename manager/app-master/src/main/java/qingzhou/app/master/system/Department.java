@@ -2,7 +2,6 @@ package qingzhou.app.master.system;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
-import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
@@ -15,7 +14,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 @Model(code = "department", icon = "sitemap",
-        menu = "System", order = 3,
+        menu = "System", order = 2,
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
 public class Department extends ModelBase implements Createable {
@@ -60,6 +59,7 @@ public class Department extends ModelBase implements Createable {
 
     @ModelField(
             list = true, required = false,
+            email = true,
             name = {"电子邮箱", "en:Department Contact Email"},
             info = {"可以与该部门取得联系的电子邮箱。", "en:An E-mail address where the department can be contacted."})
     public String email;

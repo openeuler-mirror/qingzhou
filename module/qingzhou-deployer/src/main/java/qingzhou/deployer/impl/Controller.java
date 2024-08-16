@@ -53,7 +53,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        deployer = new DeployerImpl(moduleContext);
+        deployer = new DeployerImpl(moduleContext, logger);
 
         moduleContext.registerService(Deployer.class, deployer);
 

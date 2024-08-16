@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @Model(code = "node", icon = "node",
-        menu = "Service", order = 3,
+        menu = "Service", order = 4,
         name = {"节点", "en:Node"},
         info = {"节点是对物理环境的抽象，是 TongWeb 集中管理得以实施的基础设施，一台物理设备（准确的说是一个IP）只需要安装一个节点即可，在节点之上可以构建集群、实例、会话服务器、负载均衡器等逻辑组件。" +
                 "在逻辑上，节点只做管理使用，不会参与用户应用的部署和运行（应用由 TongWeb 实例管理）。",

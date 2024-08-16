@@ -31,11 +31,6 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
-    public Heartbeat getHeartbeat() {
-        return readJsonFile(reader -> json.fromJson(reader, Heartbeat.class, "module", "heartbeat"));
-    }
-
-    @Override
     public void addUser(User user) throws Exception {
         writeJson(user, true, "module", "console", "user");
     }

@@ -14,16 +14,16 @@ import java.util.concurrent.TimeUnit;
 @Model(code = "jmx", icon = "exchange",
         menu = "System", order = 5, entrance = Editable.ACTION_NAME_EDIT,
         name = {"JMX", "en:JMX"}, hidden = true,
-        info = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 Qingzhou。",
-                "en:After enabling the JMX interface service, the client can manage Qingzhou through the java jmx protocol."})
+        info = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 QingZhou。",
+                "en:After enabling the JMX interface service, the client can manage QingZhou through the java jmx protocol."})
 public class Jmx extends ModelBase implements Editable {
     private static final String DEFAULT_ID = "jmx_0";
 
     @ModelField(
             type = FieldType.bool,
             name = {"启用", "en:Enabled"},
-            info = {"功能开关，配置是否开启 Qingzhou 的 JMX 接口服务。",
-                    "en:Function switch, configure whether to enable Qingzhou JMX interface service."})
+            info = {"功能开关，配置是否开启 QingZhou 的 JMX 接口服务。",
+                    "en:Function switch, configure whether to enable QingZhou JMX interface service."})
     public Boolean enabled = false;
 
     @ModelField(

@@ -14,62 +14,19 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Model {
+    String code(); // 获取模型的基础名称
 
-    /**
-     * 获取模型的基础名称。
-     *
-     * @return 模型名称字符串
-     */
-    String code();
+    String icon() default ""; // 获取模型在UI中显示的图标名称。
 
-    /**
-     * 获取模型名称的国际化数组，支持多语言版本。
-     *
-     * @return 包含多个语言版本名称的字符串数组
-     */
-    String[] name();
+    String menu() default ""; // 模型所属的菜单名
 
-    /**
-     * 获取模型描述信息的国际化数组，支持多语言版本。
-     *
-     * @return 包含多个语言版本描述信息的字符串数组
-     */
-    String[] info();
+    int order() default 0; // 模型在菜单中的排序顺序，数值越小越靠前
 
-    /**
-     * 获取模型在UI中显示的图标名称。
-     *
-     * @return 图标名称字符串
-     */
-    String icon() default "";
+    String entrance() default Listable.ACTION_NAME_LIST; // 模型的入口操作，即在菜单上的链接，默认为列表
 
-    /**
-     * 获取模型所属的菜单名称。
-     *
-     * @return 模型所属的菜单名称
-     */
-    String menu() default "";
+    boolean hidden() default false; // 是否在页面菜单中隐藏，隐藏后其 REST 等接口依然有效。非人机交换的接口一般需要此设置。
 
-    /**
-     * 获取模型在菜单中的排序顺序，数值越小越靠前，默认为0。
-     *
-     * @return 菜单排序顺序整数值
-     */
-    int order() default 0;
+    String[] name(); // 模型名称的国际化数组
 
-    /**
-     * 获取模型的入口操作，默认为列表动作。
-     *
-     * @return 入口操作名称
-     * @see Listable#ACTION_NAME_LIST
-     */
-    String entrance() default Listable.ACTION_NAME_LIST;
-
-    /**
-     * 判断模型是否应在菜单中显示，默认为true。
-     *
-     * @return 如果模型应显示在菜单中，则返回true，否则返回false
-     */
-    boolean hidden() default false;
+    String[] info(); // 模型描述信息的国际化数组
 }
-

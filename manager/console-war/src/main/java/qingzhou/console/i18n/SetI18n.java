@@ -80,7 +80,7 @@ public class SetI18n implements Filter<HttpServletContext> {
     static {
         ConsoleI18n.addI18n(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
         ConsoleI18n.addI18n(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
-        ConsoleI18n.addI18n("page.index", new String[]{" Qingzhou 平台", "en:Qingzhou Platform"});
+        ConsoleI18n.addI18n("page.index", new String[]{" QingZhou 平台", "en:QingZhou Platform"});
         ConsoleI18n.addI18n("page.index.centralized", new String[]{"集中管理", "en:Centralized Management"});
         ConsoleI18n.addI18n("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
         ConsoleI18n.addI18n("page.action", new String[]{"操作", "en:Action"});

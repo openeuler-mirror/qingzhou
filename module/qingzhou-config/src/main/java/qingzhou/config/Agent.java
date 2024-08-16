@@ -2,9 +2,11 @@ package qingzhou.config;
 
 public class Agent {
     private boolean enabled;
-    private String host;
-    private int port;
-    private String key;
+    private String masterUrl;
+    private String masterKey;
+    private String agentHost;
+    private int agentPort;
+    private String agentKey;
     private String clusterId;
 
     public boolean isEnabled() {
@@ -15,28 +17,44 @@ public class Agent {
         this.enabled = enabled;
     }
 
-    public String getHost() {
-        return host;
+    public String getMasterUrl() {
+        return masterUrl;
     }
 
-    public void setHost(String host) {
-        this.host = host;
+    public void setMasterUrl(String masterUrl) {
+        this.masterUrl = masterUrl;
     }
 
-    public int getPort() {
-        return port;
+    public String getMasterKey() {
+        return masterKey;
     }
 
-    public void setPort(int port) {
-        this.port = port;
+    public void setMasterKey(String masterKey) {
+        this.masterKey = masterKey;
     }
 
-    public String getKey() {
-        return key;
+    public String getAgentHost() {
+        return agentHost;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setAgentHost(String agentHost) {
+        this.agentHost = agentHost;
+    }
+
+    public int getAgentPort() {
+        return agentPort;
+    }
+
+    public void setAgentPort(int agentPort) {
+        this.agentPort = agentPort;
+    }
+
+    public String getAgentKey() {
+        return agentKey;
+    }
+
+    public void setAgentKey(String agentKey) {
+        this.agentKey = agentKey;
     }
 
     public String getClusterId() {

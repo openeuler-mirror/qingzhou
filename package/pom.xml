@@ -101,11 +101,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-heartbeat</artifactId>
-            <version>x</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-http</artifactId>
             <version>x</version>
         </dependency>

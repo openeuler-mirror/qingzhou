@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Model(code = DeployerConstants.MASTER_APP_CLUSTER_MODEL_NAME, icon = "sitemap",
-        menu = "Service", order = 2,
+        menu = "Service", order = 3,
         name = {"集群", "en:Cluster"},
         info = {"注册到集中管理的 QingZhou 实例集群。",
                 "en:Register with a centrally managed QingZhou instance cluster."})

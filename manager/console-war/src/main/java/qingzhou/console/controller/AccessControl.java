@@ -97,12 +97,8 @@ public class AccessControl implements Filter<HttpServletContext> {
         }
 
         // 远程实例注册
-        if (path.startsWith("/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/heartservice/heatbeat") ||
-                path.startsWith("/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/heartservice/register")) {
-            return true;
-        }
-
-        return false;
+        return path.startsWith("/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/" + DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME + "/checkRegistry") ||
+                path.startsWith("/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/" + DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME + "/register");
     }
 
     private static String wrapCheckingPath(String uri) {

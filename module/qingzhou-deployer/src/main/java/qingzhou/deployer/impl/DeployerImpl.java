@@ -8,6 +8,7 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
+import qingzhou.logger.Logger;
 import qingzhou.registry.*;
 
 import java.io.File;
@@ -32,10 +33,12 @@ class DeployerImpl implements Deployer {
 
     private final Map<String, App> apps = new HashMap<>();
     private final ModuleContext moduleContext;
+    private final Logger logger;
 
 
-    DeployerImpl(ModuleContext moduleContext) {
+    DeployerImpl(ModuleContext moduleContext, Logger logger) {
         this.moduleContext = moduleContext;
+        this.logger = logger;
         this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(PresetAction.class));
     }
 
@@ -60,6 +63,8 @@ class DeployerImpl implements Deployer {
 
         // 注册完成
         apps.put(appName, app);
+
+        logger.info("The app has been successfully installed: " + appName);
     }
 
     private void startModel(AppImpl app) throws Exception {

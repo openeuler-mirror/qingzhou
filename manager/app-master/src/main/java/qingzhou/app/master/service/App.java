@@ -58,7 +58,7 @@ public class App extends ModelBase implements Createable {
     @ModelField(
             type = FieldType.file, show = "appFrom=true",
             name = {"上传应用", "en:Upload Application"},
-            info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
+            info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 QingZhou 应用文件，否则可能会导致安装失败。",
                     "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
     public String fromUpload;
 

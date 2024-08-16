@@ -70,6 +70,7 @@ public class Console {
     }
 
     public Department[] getDepartment() {
+        if (department == null) return new Department[0];
         return department;
     }
 

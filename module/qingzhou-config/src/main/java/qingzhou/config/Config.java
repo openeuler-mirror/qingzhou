@@ -5,8 +5,6 @@ public interface Config {
 
     Agent getAgent();
 
-    Heartbeat getHeartbeat();
-
     Jvm getJvm();
 
     Node[] getNode();

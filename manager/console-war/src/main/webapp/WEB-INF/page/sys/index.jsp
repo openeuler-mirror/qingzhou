@@ -13,7 +13,7 @@
     <meta name="renderer" content="webkit|ie-comp|ie-stand">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5,shrink-to-fit=no,user-scalable=yes">
     <meta name="author" content="https://gitee.com/openeuler/qingzhou">
-    <title>Qingzhou Console</title>
+    <title>QingZhou Console</title>
     <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
     <link rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
     <link rel="stylesheet" href="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.css">

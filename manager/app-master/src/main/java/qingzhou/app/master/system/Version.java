@@ -13,7 +13,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @Model(code = "version", icon = "upload-alt",
-        menu = "System", order = 6,
+        menu = "System", order = 5,
         name = {"系统版本", "en:System Version"},
         info = {"展示系统的版本信息，可将系统升级到一个新的版本上。",
                 "en:Displays the version information of the system and can upgrade the system to a new version."})
@@ -22,7 +22,7 @@ public class Version extends ModelBase implements Listable {
     @ModelField(
             list = true,
             name = {"版本号", "en:ID"},
-            info = {"Qingzhou 的版本号。", "en:The version number of Qingzhou."})
+            info = {"QingZhou 的版本号。", "en:The version number of QingZhou."})
     public String id;
 
 //    @ModelField(
@@ -41,7 +41,7 @@ public class Version extends ModelBase implements Listable {
 //    @ModelField(
 //            show = "fileFrom=true",
 //            name = {"上传版本", "en:Upload Version"},
-//            info = {"上传一个版本文件到服务器，文件须是 *.zip 类型的 Qingzhou 版本文件。",
+//            info = {"上传一个版本文件到服务器，文件须是 *.zip 类型的 QingZhou 版本文件。",
 //                    "en:Upload an version file to the server, the file must be a *.zip type qingzhou version file."})
 //    public String fromUpload;
 

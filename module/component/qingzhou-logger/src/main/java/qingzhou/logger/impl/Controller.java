@@ -33,7 +33,7 @@ public class Controller implements ModuleActivator {
         startTime = System.currentTimeMillis();
 
         String[] banner = {"",
-                " Qingzhou        |~",
+                " QingZhou        |~",
                 "              |/ w",
                 "             / ((| \\",
                 "            /((/ |)|\\",
@@ -51,7 +51,7 @@ public class Controller implements ModuleActivator {
     private void stopInfo() {
         long stopTime = System.currentTimeMillis();
         String time = calculateTimeDifference(startTime, stopTime);
-        logger.info("Qingzhou has been successfully stopped, duration of this runtime: " + time);
+        logger.info("QingZhou has been successfully stopped, duration of this runtime: " + time);
     }
 
 
