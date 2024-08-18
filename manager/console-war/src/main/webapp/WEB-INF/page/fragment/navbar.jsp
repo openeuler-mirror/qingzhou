@@ -35,7 +35,16 @@
                             </div>
                         </div>
                     </li>--%>
-
+                    <%-- 明暗主题切换 --%>
+                    <li id="switch-mode" class="switch-btn">
+                        <a id="switch-mode-btn"
+                           href="javascript:void(0);"
+                           class="tooltips" data-tip='switch to dark theme' data-tip-arrow="bottom">
+                        <span class="circle-bg">
+                            <i class="icon icon-moon"></i>
+                        </span>
+                        </a>
+                    </li>
                     <%-- 切换语言 --%>
                     <li id="switch-lang" class="dropdown">
                         <a href="javascript:void(0);" class="tooltips" data-toggle="dropdown" data-tip-arrow="bottom"
