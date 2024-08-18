@@ -1,5 +1,33 @@
 @charset "utf-8";
 html,body {height: 100%;}
+body.dark-mode{
+
+}
+@keyframes FadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+@keyframes FadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+.rotate-fade-out {
+    animation: FadeOut 0.3s ease-out;
+}
+.rotate-fade-in {
+    animation: FadeIn 0.3s ease-in;
+}
+.rotate-fade-out, .rotate-fade-in {
+    animation-fill-mode: forwards;
+}
 ul,li {list-style: none; margin: 0; padding: 0;}
 a:focus {outline:none; -moz-outline:none;}
 /* reset style*/
