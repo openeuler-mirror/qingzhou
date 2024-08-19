@@ -15,7 +15,7 @@
     %>
     <div class="panel" style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
         <div class="panel-body" style="word-break: break-all">
-            <div class="block-bg" container="chart" style="height: 600px;width: 100%"></div>
+            <div class="block-bg" container="chart" style="height: 600px;width: 100%;background-color: #1a1a1a"></div>
         </div>
     </div>
     <%
@@ -48,7 +48,7 @@
     %>
     <div class="block-bg">
         <div class="panel"
-             style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF; border: 0px;">
+             style="border-radius: 2px; border-color:#EFEEEE;  border: 0px;">
             <div class="panel-body" style="word-break: break-all;">
                 <table class="table home-table" style="margin-bottom: 1px;">
                     <%
