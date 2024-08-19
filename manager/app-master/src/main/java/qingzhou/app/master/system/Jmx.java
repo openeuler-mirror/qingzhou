@@ -1,7 +1,7 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Editable;
+import qingzhou.api.type.Updatable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.engine.util.Utils;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
         name = {"JMX", "en:JMX"}, hidden = true,
         info = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 QingZhou。",
                 "en:After enabling the JMX interface service, the client can manage QingZhou through the java jmx protocol."})
-public class Jmx extends ModelBase implements Editable {
+public class Jmx extends ModelBase implements Updatable {
     private static final String DEFAULT_ID = "jmx_0";
 
     @ModelField(

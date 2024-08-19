@@ -1,7 +1,7 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Createable;
+import qingzhou.api.type.Addable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
         menu = "System", order = 1,
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
-public class User extends ModelBase implements Createable {
+public class User extends ModelBase implements Addable {
     public static final String pwdKey = "password";
     public static final String confirmPwdKey = "confirmPassword";
     public static final String DATA_SEPARATOR = ",";

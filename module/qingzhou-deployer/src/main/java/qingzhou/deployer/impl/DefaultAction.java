@@ -108,7 +108,7 @@ class DefaultAction {
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
         Map<String, String> properties = prepareParameters(request);
-        ((Editable) instance).updateData(properties);
+        ((Updatable) instance).updateData(properties);
     }
 
     Map<String, String> prepareParameters(Request request) {
@@ -139,30 +139,21 @@ class DefaultAction {
         File[] files = fileBase.listFiles();
         if (files == null) return;
 
-        for (File file : files) {
-            if (file.isDirectory()) {
-
-            } else if (file.isFile()) {
-
-            }
-        }
-
-        if (result != null && !result.isEmpty()) {
-            HashMap<String, String> map = new HashMap<>();
-            if (result.size() == 1) {
-                for (String[] file : result.values().iterator().next()) {
-                    map.put(file[0], file[0] + " (" + file[1] + ")");
-                }
-            } else {
-                for (Map.Entry<String, List<String[]>> entry : result.entrySet()) {
-                    String group = entry.getKey();
-                    for (String[] file : entry.getValue()) {
-                        map.put(group + "/" + file[0], file[0] + " (" + file[1] + ")");
+        HashMap<String, String> map = new HashMap<>();
+        for (File rootFile : files) {
+            String downloadItem = rootFile.getName();
+            if (rootFile.isDirectory()) {
+                File[] subFiles = rootFile.listFiles();
+                if (subFiles != null) {
+                    for (File subFile : subFiles) {
+                        map.put(downloadItem + "/" + subFile.getName(), subFile.getName() + " (" + Utils.getFileSize(subFile) + ")");
                     }
                 }
+            } else if (rootFile.isFile()) {
+                map.put(downloadItem, downloadItem + " (" + Utils.getFileSize(rootFile) + ")");
             }
-            response.addData(map);
         }
+        response.addData(map);
     }
 
     @ModelAction(icon = "download-alt",
@@ -182,8 +173,13 @@ class DefaultAction {
                 response.setSuccess(false);
                 return;
             }
+            if (downloadFileNames.contains("..")) throw new IllegalArgumentException();
 
-            File[] downloadFiles = ((Downloadable) instance).downloadfile(request, downloadFileNames.split("/"));
+            File fileBase = ((Downloadable) instance).downloadData(request.getId());
+            List<File> downloadFiles = new ArrayList<>();
+            for (String s : downloadFileNames.split(",")) {
+                downloadFiles.add(Utils.newFile(fileBase, s));//防止路径穿越：Utils.newFile
+            }
             downloadKey = buildDownloadKey(downloadFiles, keyDir);
         }
 
@@ -243,7 +239,7 @@ class DefaultAction {
     }
 
     // 为支持大文件续传，下载必需有 key
-    static String buildDownloadKey(File[] downloadFiles, File keyDir) throws IOException {
+    private String buildDownloadKey(List<File> downloadFiles, File keyDir) throws IOException {
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
         String keySP = "-";
 
@@ -271,17 +267,20 @@ class DefaultAction {
         String key = format.format(new Date()) + keySP + UUID.randomUUID().toString().replace("-", "");
         File zipTo = Utils.newFile(keyDir, key);
         File tempDir = Utils.newFile(keyDir, UUID.randomUUID().toString());// 保障压缩文件的层次结构
-        for (File file : downloadFiles) {
-            if (file.exists()) {
-                File copyTo = new File(tempDir, file.getName());
-                if (file.isDirectory()) {
-                    Utils.mkdirs(copyTo);
+        try {
+            for (File file : downloadFiles) {
+                if (file.exists()) {
+                    File copyTo = new File(tempDir, file.getName());
+                    if (file.isDirectory()) {
+                        Utils.mkdirs(copyTo);
+                    }
+                    Utils.copyFileOrDirectory(file, copyTo);
                 }
-                Utils.copyFileOrDirectory(file, copyTo);
             }
+            Utils.zipFiles(tempDir, zipTo, false);
+        } finally {
+            Utils.forceDelete(tempDir);
         }
-        Utils.zipFiles(tempDir, zipTo, false);
-        Utils.forceDelete(tempDir);
         return key;
     }
 
@@ -290,8 +289,7 @@ class DefaultAction {
             info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
-        DataStore dataStore = instance.getDataStore();
-        dataStore.deleteDataById(request.getId());
+        ((Deletable) instance).deleteData(request.getId());
     }
 
     @ModelAction(
@@ -308,8 +306,6 @@ class DefaultAction {
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
         Map<String, String> properties = prepareParameters(request);
-        String id = properties.get(Listable.FIELD_NAME_ID);
-        DataStore dataStore = instance.getDataStore();
-        dataStore.addData(id, properties);
+        ((Addable) instance).addData(properties);
     }
 }

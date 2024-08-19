@@ -1,17 +1,22 @@
 package qingzhou.app.instance;
 
-import qingzhou.api.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
 import qingzhou.api.type.Downloadable;
-import qingzhou.api.type.Editable;
+import qingzhou.api.type.Updatable;
 import qingzhou.engine.util.Utils;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Model(code = "serverlog", icon = "file-text", entrance = "edit",
         name = {"服务器日志", "en:Server Log"}, order = 3,
         info = {"QingZhou 实例的日志配置。", "en:The logging configuration of the QingZhou instance."})
-public class ServerLog extends ModelBase implements Editable, Downloadable {
+public class ServerLog extends ModelBase implements Updatable, Downloadable {
     public static final String LOG_PATTERN_DEFAULT = "simple";
     public static final String LOG_PATTERN_RICH = "rich";
 
@@ -110,28 +115,17 @@ public class ServerLog extends ModelBase implements Editable, Downloadable {
     private String logLevel = "info";
 
     @Override
-    public File downloadData() {
-        List<String[]> logs = new ArrayList<>();
-        File serverLogDir = Utils.newFile(InstanceApp.getInstanceDir(), "logs");
-        for (File file : serverLogDir.listFiles()) {
-            String path = file.getCanonicalPath().substring((serverLogDir.getCanonicalPath() + File.separator).length());
-            logs.add(new String[]{path, Utils.getFileSize(file)});
-        }
-        HashMap<String, List<String[]>> result = new HashMap<>();
-        result.put("server", logs);
-        return result;
+    public File downloadData(String id) {
+        return Utils.newFile(InstanceApp.getInstanceDir(), "logs");
     }
 
     @Override
-    public File[] downloadfile(Request request, String[] downloadFileNames) throws Exception {
-        List<File> downloadFiles = new ArrayList<>();
-        File groupDir = Utils.newFile(InstanceApp.getInstanceDir(), "logs");
-        for (String file : downloadFileNames) {
-            for (String s : file.split(",")) {
-                downloadFiles.add(Utils.newFile(groupDir, s));//防止路径穿越：Utils.newFile
-            }
-        }
+    public void updateData(Map<String, String> data) throws Exception {
+        // todo 写入配置到日志模块配置文件里，并立即生效
+    }
 
-        return downloadFiles.toArray(new File[0]);
+    @Override
+    public Map<String, String> showData(String id) {
+        return Collections.emptyMap();// todo 日志模块获取
     }
 }

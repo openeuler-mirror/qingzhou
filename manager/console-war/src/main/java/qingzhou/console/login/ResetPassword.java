@@ -1,7 +1,6 @@
 package qingzhou.console.login;
 
 import qingzhou.api.Lang;
-import qingzhou.api.type.Editable;
 import qingzhou.config.Security;
 import qingzhou.config.User;
 import qingzhou.console.ConsoleConstants;

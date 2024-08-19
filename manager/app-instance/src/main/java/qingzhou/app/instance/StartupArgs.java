@@ -1,7 +1,7 @@
 package qingzhou.app.instance;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Createable;
+import qingzhou.api.type.Addable;
 import qingzhou.config.Arg;
 import qingzhou.config.Config;
 import qingzhou.config.Jvm;
@@ -13,7 +13,7 @@ import java.util.*;
 
 @Model(code = "startupargs", icon = "file-code",
         name = {"启动参数", "en:Startup Args"}, info = {"管理TongWeb的启动参数。", "en:Manage TongWeb start-up arguments."})
-public class StartupArgs extends ModelBase implements Createable {
+public class StartupArgs extends ModelBase implements Addable {
     private static final String[] mustStartsWithFlags = {"-X", "-D", "-agentlib", "-server", "-client", "-javaagent", "-verbose"}; // 如果直接增加参数 aaa 没有前缀，会重启启动不了
     private static final String IF_GREATER_OR_EQUAL_KEY = "range";
     private static final String SUPPORTED_JRE_KEY = "supportedJRE";

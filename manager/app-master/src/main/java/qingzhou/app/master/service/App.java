@@ -1,7 +1,7 @@
 package qingzhou.app.master.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Createable;
+import qingzhou.api.type.Addable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.config.Security;
@@ -31,7 +31,7 @@ import java.util.*;
         name = {"应用", "en:App"},
         info = {"应用。",
                 "en:App Management."})
-public class App extends ModelBase implements Createable {
+public class App extends ModelBase implements Addable {
     @ModelField(
             list = true, editable = false, createable = false,
             name = {"名称", "en:Name"},

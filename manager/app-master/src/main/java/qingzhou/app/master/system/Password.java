@@ -1,7 +1,7 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Editable;
+import qingzhou.api.type.Updatable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
@@ -19,7 +19,7 @@ import java.util.Map;
         name = {"密码管理", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
-public class Password extends ModelBase implements Editable {
+public class Password extends ModelBase implements Updatable {
     private static final String KEY_IN_SESSION_FLAG = "keyForOtp";
 
     public static String[] splitPwd(String storedCredentials) {

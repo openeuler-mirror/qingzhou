@@ -1,7 +1,7 @@
 package qingzhou.app.master.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Createable;
+import qingzhou.api.type.Addable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.engine.util.Utils;
@@ -21,7 +21,7 @@ import java.util.Map;
                         "A physical device (to be precise, an IP) only needs to install a node, and a cluster, instance, and session server can be built on the node. , " +
                         "load balancer and other logical components. Logically, the node is only used for management, and will not participate in the deployment and " +
                         "operation of the user application (the application is managed by the TongWeb instance)."})
-public class Node extends ModelBase implements Createable {
+public class Node extends ModelBase implements Addable {
     @ModelField(
             list = true,
             name = {"名称", "en:Name"},

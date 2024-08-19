@@ -1,7 +1,7 @@
 package qingzhou.app.instance;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Editable;
+import qingzhou.api.type.Updatable;
 import qingzhou.config.Arg;
 import qingzhou.config.Config;
 import qingzhou.config.Env;
@@ -21,7 +21,7 @@ import java.util.*;
 
 @Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = "edit",
         name = {"JVM 配置", "en:JVM Configuration"}, info = {"配置运行 QingZhou 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running QingZhou applications."})
-public class JVMConfig extends ModelBase implements Editable {
+public class JVMConfig extends ModelBase implements Updatable {
     public static final String MODEL_NAME_jvmconfig = "jvmconfig";
     public static final String DATA_SEPARATOR = ",";
     public static final String JAVA_HOME_KEY = "JAVA_HOME";

@@ -1,7 +1,7 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Editable;
+import qingzhou.api.type.Updatable;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
 import qingzhou.deployer.App;
@@ -308,7 +308,7 @@ class DeployerImpl implements Deployer {
 
     private GroupInfo[] getGroupInfo(ModelBase instance) {
         List<GroupInfo> groupInfoList = new ArrayList<>();
-        Groups groups = ((Editable) instance).groups();
+        Groups groups = ((Updatable) instance).groups();
         if (groups != null) {
             groups.groups().forEach(group -> {
                 GroupInfo groupInfo = new GroupInfo();

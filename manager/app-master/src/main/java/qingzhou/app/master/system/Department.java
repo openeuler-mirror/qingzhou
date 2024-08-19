@@ -1,7 +1,7 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Createable;
+import qingzhou.api.type.Addable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
         menu = "System", order = 2,
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
-public class Department extends ModelBase implements Createable {
+public class Department extends ModelBase implements Addable {
     public static final String parentKey = "parent";
     public static final String parentNameKey = "parentName";
 

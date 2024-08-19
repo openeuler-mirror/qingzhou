@@ -4,7 +4,7 @@ import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Editable;
+import qingzhou.api.type.Updatable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.engine.util.Utils;
@@ -17,7 +17,7 @@ import java.util.Map;
         menu = "System", order = 4, entrance = "edit",
         name = {"平台安全", "en:Security"},
         info = {"配置 轻舟 管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
-public class Security extends ModelBase implements Editable {
+public class Security extends ModelBase implements Updatable {
     @ModelField(
             required = false,
             name = {"信任 IP", "en:Trusted IP"},

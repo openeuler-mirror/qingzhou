@@ -1,7 +1,7 @@
 package qingzhou.console.controller;
 
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.ServletOutputStream;
@@ -28,7 +28,7 @@ public class About implements Filter<HttpServletContext> {
         if (byteCache == null) {
             String readmeDir = "static/readme/";
             String readmePath = context.req.getServletContext().getRealPath("/" + readmeDir + "/README.md");
-            List<String> fileLines = FileUtil.fileToLines(new File(readmePath));
+            List<String> fileLines = Utils.fileToLines(new File(readmePath));
             StringBuilder result = new StringBuilder();
             String begin = "![";
             String end = ")";
