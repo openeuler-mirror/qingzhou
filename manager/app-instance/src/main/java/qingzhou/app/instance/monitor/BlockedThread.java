@@ -1,18 +1,8 @@
 package qingzhou.app.instance.monitor;
 
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Listable;
-import qingzhou.deployer.ReadOnlyDataStore;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @Model(code = "blockedthread", icon = "pause", menu = "Monitor",
@@ -63,6 +53,11 @@ public class BlockedThread extends ModelBase implements Listable {
                     "en:Marks whether the thread supports forced termination."})
     public boolean canBeKilled = false;
 
+    @Override
+    public String idFieldName() {
+        return BlockedThreadTool.idFieldName;
+    }
+
     @ModelAction(
             name = {"查看", "en:Show"},
             info = {"查看该阻塞线程的信息，包括其调用的堆栈等。", "en:View the information of the blocking thread, including the stack of its calls."})
@@ -82,7 +77,7 @@ public class BlockedThread extends ModelBase implements Listable {
         String tid = request.getId();
         // 确保是自己的线程才能去 kill
         for (Map<String, String> data : getDataStore().getAllData()) {
-            if (data.get(Listable.FIELD_NAME_ID).equals(tid)) {
+            if (data.get(idFieldName()).equals(tid)) {
                 killThread(Long.parseLong(tid));
                 try {
                     Thread.sleep(2000);// 等待线程真正结束，有短暂的存活时间
@@ -149,41 +144,5 @@ public class BlockedThread extends ModelBase implements Listable {
             thread.stop();
         } catch (Throwable ignored) {
         }
-    }
-
-    private final ReadOnlyDataStore dataStore = new ReadOnlyDataStore() {
-        private final BlockedThreadTool blockedThreadTool = new BlockedThreadTool();
-
-        @Override
-        public List<Map<String, String>> getAllData() {
-            return blockedThreadTool.list();
-        }
-
-        @Override
-        public Map<String, String> getDataById(String id) {
-            return blockedThreadTool.show(id);
-        }
-
-        @Override
-        public List<Map<String, String>> getDataByIds(String[] ids) throws Exception {
-            List<Map<String, String>> datas = new ArrayList<>();
-            for (String id : ids) {
-                Map<String, String> data = getDataById(id);
-                if (data != null && !data.isEmpty()) {
-                    datas.add(data);
-                }
-            }
-            return datas;
-        }
-
-        @Override
-        public List<Map<String, String>> getDataFieldByIds(String[] ids, String[] fields) throws Exception {
-            return getDataByIds(ids);
-        }
-    };
-
-    @Override
-    public DataStore getDataStore() {
-        return dataStore;
     }
 }

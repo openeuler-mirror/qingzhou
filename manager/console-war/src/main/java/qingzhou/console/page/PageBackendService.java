@@ -3,9 +3,9 @@ package qingzhou.console.page;
 import qingzhou.api.FieldType;
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
-import qingzhou.api.type.*;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
+import qingzhou.api.type.Showable;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
@@ -15,12 +15,6 @@ import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Base32Util;
 import qingzhou.registry.*;
-import qingzhou.engine.util.Base32Util;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,12 +33,12 @@ public class PageBackendService {
 
     private static final Set<String> ShowToListExcludedActionNames = new HashSet<>(Arrays.asList(
             Showable.ACTION_NAME_SHOW,
-            Createable.ACTION_NAME_CREATE,
-            Createable.ACTION_NAME_ADD,
-            Listable.ACTION_NAME_LIST,
-            Editable.ACTION_NAME_EDIT,
-            Editable.ACTION_NAME_UPDATE,
-            Downloadable.ACTION_NAME_DOWNLOAD
+            "create",
+            "add",
+            "list",
+            "edit",
+            "update",
+            "download"
     ));
 
     private PageBackendService() {
@@ -263,20 +257,20 @@ public class PageBackendService {
         if (modelInfo == null) {
             return null;
         }
-        boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, request.getAction());
+        boolean isEdit = Objects.equals("edit", request.getAction());
         for (String actionName : modelInfo.getActionNames()) {
-            if (actionName.equals(Editable.ACTION_NAME_UPDATE)) {
+            if (actionName.equals("update")) {
                 if (isEdit) {
-                    return Editable.ACTION_NAME_UPDATE;
+                    return "update";
                 }
-            } else if (actionName.equals(Createable.ACTION_NAME_ADD)) {
+            } else if (actionName.equals("add")) {
                 if (!isEdit) {
-                    return Createable.ACTION_NAME_ADD;
+                    return "add";
                 }
             }
         }
 
-        return isEdit ? Editable.ACTION_NAME_UPDATE : Createable.ACTION_NAME_ADD;// 兜底
+        return isEdit ? "update" : "add";// 兜底
     }
 
     public static boolean hasIDField(Request request) {
@@ -284,8 +278,8 @@ public class PageBackendService {
         if (modelInfo == null) {
             return false;
         }
-        ModelActionInfo listAction = modelInfo.getModelActionInfo(Listable.ACTION_NAME_LIST);
-        ModelFieldInfo idField = modelInfo.getModelFieldInfo(Listable.FIELD_NAME_ID);
+        ModelActionInfo listAction = modelInfo.getModelActionInfo("list");
+        ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
         return listAction != null && idField != null;
     }
 
@@ -379,7 +373,7 @@ public class PageBackendService {
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
-                        if (isActionShow(request, data, action) != null || Editable.ACTION_NAME_EDIT.equals(actionName)) {
+                        if (isActionShow(request, data, action) != null || "edit".equals(actionName)) {
                             isShow = false;
                             break;
                         }

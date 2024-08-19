@@ -1,15 +1,7 @@
 package qingzhou.app.instance;
 
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Createable;
-import qingzhou.api.type.Listable;
 import qingzhou.config.Arg;
 import qingzhou.config.Config;
 import qingzhou.config.Jvm;
@@ -17,14 +9,7 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Model(code = "startupargs", icon = "file-code",
         name = {"启动参数", "en:Startup Args"}, info = {"管理TongWeb的启动参数。", "en:Manage TongWeb start-up arguments."})
@@ -102,7 +87,7 @@ public class StartupArgs extends ModelBase implements Createable {
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
-        String id = request.getParameter(Listable.FIELD_NAME_ID);
+        String id = request.getParameter(idFieldName());
         if (getDataStore().exists(id)) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
@@ -111,7 +96,7 @@ public class StartupArgs extends ModelBase implements Createable {
 
         Map<String, String> newData = request.getParameters();
         Map<String, String> oldData = getDataStore().getDataById(request.getId());
-        String error = validateArg(request, id, new ArrayList<>(), oldData == null ? null : oldData.get(Listable.FIELD_NAME_ID));
+        String error = validateArg(request, id, new ArrayList<>(), oldData == null ? null : oldData.get(idFieldName()));
         if (error != null) {
             response.setSuccess(false);
             response.setMsg(error);
@@ -130,7 +115,7 @@ public class StartupArgs extends ModelBase implements Createable {
         Map<String, String> newData = request.getParameters();
         Map<String, String> oldData = getDataStore().getDataById(request.getId());
 
-        String error = validateArg(request, newData.get("changeToArg"), new ArrayList<>(), oldData == null ? null : oldData.get(Listable.FIELD_NAME_ID));
+        String error = validateArg(request, newData.get("changeToArg"), new ArrayList<>(), oldData == null ? null : oldData.get(idFieldName()));
         if (error != null) {
             response.setSuccess(false);
             response.setMsg(error);
@@ -143,7 +128,7 @@ public class StartupArgs extends ModelBase implements Createable {
     }
 
     private void processData(Map<String, String> newData) {
-        newData.put("name", newData.getOrDefault("changeToArg", newData.get(Listable.FIELD_NAME_ID)));
+        newData.put("name", newData.getOrDefault("changeToArg", newData.get(idFieldName())));
         String supportedJre = newData.getOrDefault(SUPPORTED_JRE_KEY, "");
         if (!supportedJre.trim().isEmpty()) {
             supportedJre = supportedJre + newData.getOrDefault(IF_GREATER_OR_EQUAL_KEY, "");
@@ -295,11 +280,11 @@ public class StartupArgs extends ModelBase implements Createable {
                 level = 1024;
             } else if (unit.equalsIgnoreCase("G")) {
                 level = 1024 * 1024;
-            } 
-            if(level != -1){
+            }
+            if (level != -1) {
                 return Long.parseLong(v.substring(0, v.length() - 1)) * level;
-            }else{
-                throw new IllegalArgumentException("Invalid value format, "+ val + ":" + level);
+            } else {
+                throw new IllegalArgumentException("Invalid value format, " + val + ":" + level);
             }
         } else {
             throw new IllegalArgumentException("Unit is empty" + val);
@@ -347,7 +332,7 @@ public class StartupArgs extends ModelBase implements Createable {
 
         int pageNum = 1;
         try {
-            pageNum = Integer.parseInt(request.getParameter(Listable.PARAMETER_PAGE_NUM));
+            pageNum = Integer.parseInt(request.getParameter("pageNum"));
         } catch (NumberFormatException ignored) {
         }
         response.setPageNum(pageNum);
@@ -379,7 +364,7 @@ public class StartupArgs extends ModelBase implements Createable {
 
     private void rectifyModels(List<Map<String, String>> args) {
         for (Map<String, String> arg : args) {
-            arg.put("changeToArg", arg.get(Listable.FIELD_NAME_ID));// 校验 changeToArg 时候的 List<String> otherValues 需要这个
+            arg.put("changeToArg", arg.get(idFieldName()));// 校验 changeToArg 时候的 List<String> otherValues 需要这个
             String ver = arg.get(SUPPORTED_JRE_KEY);
             if (ver != null && !ver.isEmpty()) {
                 String lastFlag = ver.substring(ver.length() - 1);
@@ -401,14 +386,7 @@ public class StartupArgs extends ModelBase implements Createable {
         }
     }
 
-    @Override
-    public DataStore getDataStore() {
-        return startUpArgsDataStore;
-    }
-
-    private final StartUpArgsDataStore startUpArgsDataStore = new StartUpArgsDataStore();
-
-    private static class StartUpArgsDataStore implements DataStore {
+    private class StartUpArgsDataStore implements DataStore {
         @Override
         public List<Map<String, String>> getAllData() throws Exception {
             Config config = InstanceApp.getService(Config.class);
@@ -416,7 +394,7 @@ public class StartupArgs extends ModelBase implements Createable {
             List<Map<String, String>> list = new ArrayList<>();
             for (Arg arg : jvm.getArg()) {
                 Map<String, String> map = Utils.getPropertiesFromObj(arg); //for #ITAIT-6324
-                map.put(Listable.FIELD_NAME_ID, map.get("name"));
+                map.put(idFieldName(), map.get("name"));
                 list.add(map);
             }
 
@@ -431,7 +409,7 @@ public class StartupArgs extends ModelBase implements Createable {
             Config config = InstanceApp.getService(Config.class);
             Arg arg = new Arg();
             Utils.setPropertiesToObj(arg, data);
-            arg.setName(data.get(Listable.FIELD_NAME_ID));
+            arg.setName(data.get(idFieldName()));
             config.addArg(arg);
         }
 

@@ -2,8 +2,8 @@ package qingzhou.agent.impl;
 
 import qingzhou.config.Agent;
 import qingzhou.config.Config;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
 import qingzhou.crypto.KeyPairCipher;

@@ -2,9 +2,6 @@ package qingzhou.app.master.system;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Editable;
-import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
@@ -191,7 +188,7 @@ public class User extends ModelBase implements Createable {
             return;
         }
 
-        if (getDataStore().exists(request.getParameter(Listable.FIELD_NAME_ID))) {
+        if (getDataStore().exists(request.getParameter(idFieldName()))) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
             return;
@@ -209,7 +206,7 @@ public class User extends ModelBase implements Createable {
         }
 
         rectifyParameters(newUser, new HashMap<>());
-        getDataStore().addData(newUser.get(Listable.FIELD_NAME_ID), newUser);
+        getDataStore().addData(newUser.get(idFieldName()), newUser);
     }
 
     @ModelAction(
@@ -225,7 +222,7 @@ public class User extends ModelBase implements Createable {
     public void show(Request request, Response response) throws Exception {
         DataStore dataStore = getDataStore();
         Map<String, String> data = dataStore.getDataById(request.getId());
-        if (Editable.ACTION_NAME_EDIT.equals(request.getAction())) {
+        if ("edit".equals(request.getAction())) {
             String[] passwords = Password.splitPwd(data.get("password"));
             String digestAlg = passwords[0];
             int saltLength = Integer.parseInt(passwords[1]);
@@ -323,14 +320,14 @@ public class User extends ModelBase implements Createable {
         String id = request.getId();
         if (id != null) {
             if ("qingzhou".contains(id)) {
-                if (Createable.ACTION_NAME_ADD.equals(request.getAction())
-                        || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
+                if ("add".equals(request.getAction())
+                        || "delete".equals(request.getAction())) {
                     response.setSuccess(false);
                     response.setMsg(this.appContext.getI18n(request.getLang(), "operate.system.users.not"));
                     return false;
                 }
 
-                if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())) {
+                if ("update".equals(request.getAction())) {
                     if (!Boolean.parseBoolean(request.getParameter("active"))) {
                         response.setSuccess(false);
                         response.setMsg(this.appContext.getI18n(request.getLang(), "System.users.keep.active"));
@@ -364,13 +361,6 @@ public class User extends ModelBase implements Createable {
     private boolean passwordChanged(String password) {
         return password != null && !PASSWORD_FLAG.equals(password);
     }
-
-    @Override
-    public DataStore getDataStore() {
-        return USER_DATA_STORE;
-    }
-
-    public static final DataStore USER_DATA_STORE = new UserDataStore();
 
     private static class UserDataStore implements DataStore {
         @Override

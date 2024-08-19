@@ -1,14 +1,17 @@
 package qingzhou.api.type;
 
+import qingzhou.api.Groups;
+
+import java.util.Map;
+
 /**
- * 可编辑接口，继承自可展示接口Showable。
  * 提供与编辑和更新操作相关的功能定义。
  */
 public interface Editable extends Showable {
-    // 定义编辑操作的常量名称
-    String ACTION_NAME_EDIT = "edit";
+    // 页面表单字段分组信息
+    default Groups groups() {
+        return null;
+    }
 
-    // 定义更新操作的常量名称
-    String ACTION_NAME_UPDATE = "update";
+    void updateData(Map<String, String> data) throws Exception;
 }
-

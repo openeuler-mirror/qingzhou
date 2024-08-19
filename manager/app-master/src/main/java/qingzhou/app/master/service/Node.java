@@ -2,7 +2,6 @@ package qingzhou.app.master.service;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
-import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.engine.util.Utils;
@@ -56,13 +55,13 @@ public class Node extends ModelBase implements Createable {
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
-        if (getDataStore().exists(request.getParameter(Listable.FIELD_NAME_ID))) {
+        if (getDataStore().exists(request.getParameter(idFieldName()))) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
             return;
         }
         Map<String, String> newNode = request.getParameters();
-        getDataStore().addData(newNode.get(Listable.FIELD_NAME_ID), newNode);
+        getDataStore().addData(newNode.get(idFieldName()), newNode);
     }
 
     @ModelAction(
@@ -128,7 +127,7 @@ public class Node extends ModelBase implements Createable {
         int pageNum = 1;
         int totalSize = 0;
 
-        String pageNumParam = request.getParameter(Listable.PARAMETER_PAGE_NUM);
+        String pageNumParam = request.getParameter("pageNum");
         if (pageNumParam != null && !pageNumParam.isEmpty()) {
             try {
                 pageNum = Integer.parseInt(pageNumParam);
@@ -157,13 +156,6 @@ public class Node extends ModelBase implements Createable {
         totalSize += allData.size();
         response.setTotalSize(totalSize);
     }
-
-    @Override
-    public DataStore getDataStore() {
-        return NODE_DATA_STORE;
-    }
-
-    public static final DataStore NODE_DATA_STORE = new Node.NodeDataStore();
 
     private static class NodeDataStore implements DataStore {
 

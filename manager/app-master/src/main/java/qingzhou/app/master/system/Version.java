@@ -1,9 +1,11 @@
 package qingzhou.app.master.system;
 
-import qingzhou.api.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
-import qingzhou.deployer.ReadOnlyDataStore;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 
@@ -50,11 +52,6 @@ public class Version extends ModelBase implements Listable {
             name = {"生效中", "en:effecting"}, info = {"是否是当前正在运行的版本。", "en:Is it the currently running version."})
     public boolean running;
 
-    @Override
-    public DataStore getDataStore() {
-        return dataStore;
-    }
-
     private final String versionFlag = "version";
     private final DataStore dataStore = new ReadOnlyDataStore() {
         @Override
@@ -69,11 +66,11 @@ public class Version extends ModelBase implements Listable {
             }
             for (String v : versionList) {
                 Map<String, String> p = new HashMap<>();
-                p.put(Listable.FIELD_NAME_ID, v);
+                p.put(idFieldName(), v);
                 p.put("running", String.valueOf(MasterApp.getLibDir().getName().equals(versionFlag + v)));
                 list.add(p);
             }
-            list.sort((o1, o2) -> isLaterVersion(o2.get(Listable.FIELD_NAME_ID), o1.get(Listable.FIELD_NAME_ID)) ? 1 : -1);
+            list.sort((o1, o2) -> isLaterVersion(o2.get(idFieldName()), o1.get(idFieldName())) ? 1 : -1);
 
             return list;
         }

@@ -1,7 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
-import qingzhou.console.RequestImpl;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.StringUtil;

@@ -2,7 +2,6 @@ package qingzhou.app.master.system;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
-import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
@@ -74,7 +73,7 @@ public class Department extends ModelBase implements Createable {
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
-        if (getDataStore().exists(request.getParameter(Listable.FIELD_NAME_ID))) {
+        if (getDataStore().exists(request.getParameter(idFieldName()))) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
             return;
@@ -91,7 +90,7 @@ public class Department extends ModelBase implements Createable {
             }
         }
 
-        getDataStore().addData(newDepartment.get(Listable.FIELD_NAME_ID), newDepartment);
+        getDataStore().addData(newDepartment.get(idFieldName()), newDepartment);
     }
 
     @ModelAction(
@@ -152,13 +151,6 @@ public class Department extends ModelBase implements Createable {
         }
 
         return null;
-    }
-
-    public static final DataStore DEPARTMENT_DATA_STORE = new DepartmentDataStore();
-
-    @Override
-    public DataStore getDataStore() {
-        return DEPARTMENT_DATA_STORE;
     }
 
     private static class DepartmentDataStore implements DataStore {

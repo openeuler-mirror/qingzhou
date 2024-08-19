@@ -19,7 +19,7 @@ import qingzhou.registry.ModelInfo;
 import java.io.File;
 import java.util.*;
 
-@Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = Editable.ACTION_NAME_EDIT,
+@Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = "edit",
         name = {"JVM 配置", "en:JVM Configuration"}, info = {"配置运行 QingZhou 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running QingZhou applications."})
 public class JVMConfig extends ModelBase implements Editable {
     public static final String MODEL_NAME_jvmconfig = "jvmconfig";
@@ -150,6 +150,33 @@ public class JVMConfig extends ModelBase implements Editable {
         );
     }
 
+    @Override
+    public void updateData(Map<String, String> data) throws Exception {
+        Json json = appContext.getService(Json.class);
+        Config config = InstanceApp.getService(Config.class);
+        Jvm jvm = config.getJvm();
+        List<Arg> oldArgs = jvm.getArg();
+        for (Arg oldArg : oldArgs) {
+            config.deleteArg(oldArg.getName());
+        }
+        List<Map<String, String>> args = json.fromJson(data.get("arg"), List.class);
+        for (Map<String, String> map : args) {
+            Arg arg = new Arg();
+            Utils.setPropertiesToObj(arg, map);
+            config.addArg(arg);
+        }
+
+        List<Env> oldEnvs = jvm.getEnv();
+        for (Env oldEnv : oldEnvs) {
+            config.deleteEnv(oldEnv.getName());
+        }
+        List<Map<String, String>> envs = json.fromJson(data.get("env"), List.class);
+        for (Map<String, String> map : envs) {
+            Env env = new Env();
+            Utils.setPropertiesToObj(env, map);
+            config.addEnv(env);
+        }
+    }
 
     @ModelAction(
             name = {"更新", "en:Update"},
@@ -460,7 +487,7 @@ public class JVMConfig extends ModelBase implements Editable {
         response.addData(jvm);
     }
 
-    private boolean validate(Request request, Response response) throws Exception {
+    private boolean validate(Request request, Response response) {
         Map<String, String> parameters = request.getParameters();
         for (String fieldName : parameters.keySet()) {
             String newValue = parameters.get(fieldName);
@@ -599,14 +626,6 @@ public class JVMConfig extends ModelBase implements Editable {
         }
     }
 
-
-    @Override
-    public DataStore getDataStore() {
-        return jvmDataStore;
-    }
-
-    private final JvmDataStore jvmDataStore = new JvmDataStore();
-
     private class JvmDataStore implements DataStore {
         @Override
         public List<Map<String, String>> getAllData() throws Exception {
@@ -629,44 +648,6 @@ public class JVMConfig extends ModelBase implements Editable {
             }
 
             return dataList;
-        }
-
-        @Override
-        public void addData(String id, Map<String, String> data) throws Exception {
-            throw new RuntimeException("No Support.");
-        }
-
-        @Override
-        public void updateDataById(String id, Map<String, String> data) throws Exception {
-            Json json = appContext.getService(Json.class);
-            Config config = InstanceApp.getService(Config.class);
-            Jvm jvm = config.getJvm();
-            List<Arg> oldArgs = jvm.getArg();
-            for (Arg oldArg : oldArgs) {
-                config.deleteArg(oldArg.getName());
-            }
-            List<Map<String, String>> args = json.fromJson(data.get("arg"), List.class);
-            for (Map<String, String> map : args) {
-                Arg arg = new Arg();
-                Utils.setPropertiesToObj(arg, map);
-                config.addArg(arg);
-            }
-
-            List<Env> oldEnvs = jvm.getEnv();
-            for (Env oldEnv : oldEnvs) {
-                config.deleteEnv(oldEnv.getName());
-            }
-            List<Map<String, String>> envs = json.fromJson(data.get("env"), List.class);
-            for (Map<String, String> map : envs) {
-                Env env = new Env();
-                Utils.setPropertiesToObj(env, map);
-                config.addEnv(env);
-            }
-        }
-
-        @Override
-        public void deleteDataById(String id) throws Exception {
-            throw new RuntimeException("No Support.");
         }
     }
 }

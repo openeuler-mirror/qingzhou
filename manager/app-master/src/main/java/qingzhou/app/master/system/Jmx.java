@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Model(code = "jmx", icon = "exchange",
-        menu = "System", order = 5, entrance = Editable.ACTION_NAME_EDIT,
+        menu = "System", order = 5, entrance = "edit",
         name = {"JMX", "en:JMX"}, hidden = true,
         info = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 QingZhou。",
                 "en:After enabling the JMX interface service, the client can manage QingZhou through the java jmx protocol."})
@@ -70,13 +70,6 @@ public class Jmx extends ModelBase implements Editable {
             throw e;
         }
     }
-
-    @Override
-    public DataStore getDataStore() {
-        return jmxDataStore;
-    }
-
-    private final JmxDataStore jmxDataStore = new JmxDataStore();
 
     private static class JmxDataStore implements DataStore {
         @Override

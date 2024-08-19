@@ -1,6 +1,9 @@
 package qingzhou.app.master.system;
 
-import qingzhou.api.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
 import qingzhou.api.type.Editable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
@@ -11,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @Model(code = "security", icon = "shield",
-        menu = "System", order = 4, entrance = Editable.ACTION_NAME_EDIT,
+        menu = "System", order = 4, entrance = "edit",
         name = {"平台安全", "en:Security"},
         info = {"配置 轻舟 管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
 public class Security extends ModelBase implements Editable {
@@ -62,13 +65,6 @@ public class Security extends ModelBase implements Editable {
             info = {"为了能够管理远端的实例，需要将此密钥在远端的实例进行保存。此外，客户端通过 REST、JMX 等接口管理轻舟实例时，也需要使用此密钥对敏感数据进行加密后再传输。",
                     "en:In order to manage the remote instance, you need to save the key in the remote instance. In addition, when clients manage QingZhou instances through interfaces such as REST and JMX, they also need to use this key to encrypt sensitive data before transmission."})
     public String publicKey;
-
-    @Override
-    public DataStore getDataStore() {
-        return securityDataStore;
-    }
-
-    private final SecurityDataStore securityDataStore = new SecurityDataStore();
 
     private static class SecurityDataStore implements DataStore {
         @Override

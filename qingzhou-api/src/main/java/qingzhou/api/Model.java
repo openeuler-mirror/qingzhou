@@ -22,7 +22,7 @@ public @interface Model {
 
     int order() default 0; // 模型在菜单中的排序顺序，数值越小越靠前
 
-    String entrance() default Listable.ACTION_NAME_LIST; // 模型的入口操作，即在菜单上的链接，默认为列表
+    String entrance() default "list"; // 模型的入口操作，即在菜单上的链接，默认为列表
 
     boolean hidden() default false; // 是否在页面菜单中隐藏，隐藏后其 REST 等接口依然有效。非人机交换的接口一般需要此设置。
 

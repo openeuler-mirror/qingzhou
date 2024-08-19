@@ -1,4 +1,4 @@
-package qingzhou.console;
+package qingzhou.deployer;
 
 import qingzhou.api.ModelBase;
 import qingzhou.api.Response;
@@ -42,7 +42,6 @@ public class ResponseImpl implements Response {
         return totalSize;
     }
 
-    @Override
     public void setTotalSize(int totalSize) {
         this.totalSize = totalSize;
     }
@@ -51,7 +50,6 @@ public class ResponseImpl implements Response {
         return pageSize;
     }
 
-    @Override
     public void setPageSize(int pageSize) {
         this.pageSize = pageSize;
     }
@@ -60,7 +58,6 @@ public class ResponseImpl implements Response {
         return pageNum;
     }
 
-    @Override
     public void setPageNum(int pageNum) {
         this.pageNum = pageNum;
     }

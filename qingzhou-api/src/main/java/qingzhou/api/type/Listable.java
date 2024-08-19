@@ -1,16 +1,19 @@
 package qingzhou.api.type;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 提供列表展示功能的接口，继承自Showable接口。
  */
 public interface Listable extends Showable {
-    // 定义列表操作的常量名称
-    String ACTION_NAME_LIST = "list";
+    default String idFieldName() {
+        return "id";
+    }
 
-    // 定义用于表示ID字段的常量名称
-    String FIELD_NAME_ID = "id";
+    List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames);
 
-    // 定义分页参数页码的常量名称
-    String PARAMETER_PAGE_NUM = "pageNum";
+    default int totalSize() {
+        return -1; // 负数表示此模块数据不支持分页
+    }
 }
-

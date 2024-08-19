@@ -308,7 +308,7 @@
         iknowBtnText: '<%=PageBackendService.getMasterAppI18nString("page.gotit")%>',
         switchLang: '<%=PageBackendService.getMasterAppI18nString("page.lang.switch.confirm")%>',
         logout: '<%=PageBackendService.getMasterAppI18nString("page.logout.confirm")%>',
-        filesName: '<%=Downloadable.ACTION_NAME_FILES%>',
+        filesName: 'files',
         downloadTip: '<%=PageBackendService.getMasterAppI18nString("page.download.log.tip")%>',
         actionName_target: '<%=ConsoleConstants.ACTION_NAME_manage%>',
         downloadFileNames: '<%=ConsoleConstants.PARAMETER_DOWNLOAD_FILE_NAMES%>',

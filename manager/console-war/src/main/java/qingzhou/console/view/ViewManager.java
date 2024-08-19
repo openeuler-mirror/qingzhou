@@ -1,7 +1,7 @@
 package qingzhou.console.view;
 
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;

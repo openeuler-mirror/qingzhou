@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "jvm", icon = "coffee", menu = "Monitor",
-        order = 1, entrance = Monitorable.ACTION_NAME_MONITOR,
+        order = 1, entrance = "monitor",
         name = {"JVM", "en:JVM"},
         info = {"描述 Java 虚拟机（JVM）的版本、厂商等基本信息，以及Java进程的堆内存、非堆内存等使用情况。",
                 "en:Describes basic information such as the version and manufacturer of the Java Virtual Machine (JVM), as well as the usage of heap memory and non-heap memory of the Java process."})

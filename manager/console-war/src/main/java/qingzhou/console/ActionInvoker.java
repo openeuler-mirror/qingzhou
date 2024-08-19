@@ -2,16 +2,13 @@ package qingzhou.console;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.Request;
-import qingzhou.api.type.Listable;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.*;
 import qingzhou.logger.Logger;
 import qingzhou.registry.*;
 
@@ -45,15 +42,15 @@ public class ActionInvoker {
     }
 
     private boolean isBatchAction(Request request) {
-        String ids = request.getParameter(Listable.FIELD_NAME_ID);
+        AppInfo appInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request));
+        if (appInfo == null) return false;
+        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+        String ids = request.getParameter(modelInfo.getIdFieldName());
         if (ids == null) return false;
-
-        ModelInfo modelInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request)).getModelInfo(request.getModel());
         String[] actionNamesSupportBatch = modelInfo.getBatchActionNames();
         for (String batch : actionNamesSupportBatch) {
             if (batch.equals(request.getAction())) return true;
         }
-
         return false;
     }
 
@@ -63,7 +60,9 @@ public class ActionInvoker {
         int fail = 0;
         StringBuilder errbuilder = new StringBuilder();
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
-        String oid = request.getParameter(Listable.FIELD_NAME_ID);
+        AppInfo appInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request));
+        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+        String oid = request.getParameter(modelInfo.getIdFieldName());
         for (String id : oid.split(",")) {
             if (!id.isEmpty()) {
                 id = PageBackendService.decodeId(id);

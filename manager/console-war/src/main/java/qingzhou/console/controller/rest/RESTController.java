@@ -2,8 +2,8 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
 import qingzhou.console.ActionInvoker;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;

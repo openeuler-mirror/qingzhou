@@ -2,7 +2,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <form name="filterForm" id="filterForm" method="POST"
-      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getApp() + "/" + qzRequest.getModel() + "/" + Listable.ACTION_NAME_LIST)%>">
+      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getApp() + "/" + qzRequest.getModel() + "/" + "list")%>">
     <div class="row filterForm" style="margin-top: 10px; display: none;">
         <%
             for (Integer i : indexToShow) {
@@ -44,7 +44,7 @@
         <div class="col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
                         <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
                             <a class="btn"
-                               href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,Listable.ACTION_NAME_LIST)%>"
+                               href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,"list")%>"
                                form="filterForm">
                                 <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18nString("page.filter")%>
                             </a>

@@ -164,39 +164,6 @@ Editable接口：提供了修改、更新、展示功能。
 
   ```java
 public class User extends ModelBase implements Createable {
-    @Override
-    public DataStore getDataStore() {
-        return dataStore;
-    }
-
-    private final DataStore dataStore = new AppDatastore();
-
-    private static class AppDatastore implements DataStore {
-        private List<Map<String, String>> users = new ArrayList<>();
-
-        @Override
-        public List<Map<String, String>> getAllData() {
-            return users;//获取所有数据
-        }
-
-        @Override
-        public void addData(String s, Map<String, String> map) {
-            users.add(map);//添加数据
-        }
-
-        @Override
-        public void updateDataById(String s, Map<String, String> map) {
-            users.stream() //根据id更新数据
-                    .filter(user -> user.get("id").equals(s))
-                    .findFirst()
-                    .ifPresent(user -> user.putAll(map));
-        }
-
-        @Override
-        public void deleteDataById(String s) { //根据id删除数据
-            users.removeIf(user -> user.get("id").equals(s));
-        }
-    }
 }
    ```
 

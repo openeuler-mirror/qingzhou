@@ -13,6 +13,7 @@ public class ModelInfo {
     private int order;
     private String entrance;
     private boolean hidden;
+    private String idFieldName;
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
@@ -111,6 +112,14 @@ public class ModelInfo {
 
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
+    }
+
+    public String getIdFieldName() {
+        return idFieldName;
+    }
+
+    public void setIdFieldName(String idFieldName) {
+        this.idFieldName = idFieldName;
     }
 
     public String getMenu() {

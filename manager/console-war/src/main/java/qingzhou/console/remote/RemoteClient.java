@@ -1,7 +1,7 @@
 package qingzhou.console.remote;
 
 import qingzhou.api.Request;
-import qingzhou.console.ResponseImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;

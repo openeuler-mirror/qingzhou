@@ -1,8 +1,6 @@
 package qingzhou.app.master.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Editable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Agent;
@@ -43,10 +41,10 @@ public class Instance extends ModelBase implements Listable {
 
     @Override
     public void start() {
-        actionFilters.add((request, response) -> {
+        appContext.addActionFilter((request, response) -> {
             if (request.getId().equals(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID)) {
-                if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())
-                        || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
+                if ("update".equals(request.getAction())
+                        || "delete".equals(request.getAction())) {
                     return appContext.getI18n(request.getLang(), "validator.master.system");
                 }
             }
@@ -113,7 +111,7 @@ public class Instance extends ModelBase implements Listable {
         int pageNum = 1;
         int totalSize = 0;
 
-        String pageNumParam = request.getParameter(Listable.PARAMETER_PAGE_NUM);
+        String pageNumParam = request.getParameter("pageNum");
         if (pageNumParam != null && !pageNumParam.isEmpty()) {
             try {
                 pageNum = Integer.parseInt(pageNumParam);

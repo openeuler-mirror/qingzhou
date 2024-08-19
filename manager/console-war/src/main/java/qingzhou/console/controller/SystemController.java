@@ -72,7 +72,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     public static <T> T getService(Class<T> type) {
-        return contextHelper.getService(type);
+        return getModuleContext().getService(type);
     }
 
     public static ModuleContext getModuleContext() {

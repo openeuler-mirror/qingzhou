@@ -88,18 +88,7 @@ public class Controller implements ModuleActivator {
         @Override
         public void exec() {
             try {
-                ContextHelper.GetInstance.set(new ContextHelper() {
-                    @Override
-                    public <T> T getService(Class<T> type) {
-                        return moduleContext.getService(type);
-                    }
-
-                    @Override
-                    public ModuleContext getModuleContext() {
-                        return Controller.this.moduleContext;
-                    }
-                });
-
+                ContextHelper.GetInstance.set(() -> Controller.this.moduleContext);
                 exec0();
             } finally {
                 ContextHelper.GetInstance.remove();

@@ -49,17 +49,17 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    boolean canAccess = (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Createable.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
-                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo(Createable.ACTION_NAME_CREATE);
-                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo(Createable.ACTION_NAME_ADD);
+                    boolean canAccess = (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + "add", LoginManager.getLoginUser(session)));
+                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo("create");
+                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo("add");
                     if (canAccess
                             && (listCreateAction != null && !listCreateAction.isDisable())
                             && (listAddAction != null && !listAddAction.isDisable())
                     ) {
                         %>
-                        <a class="btn" href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Createable.ACTION_NAME_CREATE)%>">
+                        <a class="btn" href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "create")%>">
                             <i class="icon icon-plus-sign"></i>
-                            <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + Createable.ACTION_NAME_CREATE)%>
+                            <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + "create")%>
                         </a>
                         <%
                     }
@@ -150,7 +150,7 @@
                         Map<String, String> modelBase = modelDataList.get(idx);
                         String modelIcon = modelInfo.getIcon();
 
-                        String originUnEncodedId = modelBase.get(Listable.FIELD_NAME_ID);
+                        String originUnEncodedId = modelBase.get(modelInfo.getIdFieldName());
                         String encodedId = PageBackendService.encodeId(originUnEncodedId);
             %>
             <tr>
@@ -160,8 +160,8 @@
                 %>
                 <td class="custom-checkbox">
                     <input type="checkbox"
-                           value="<%= PageBackendService.encodeId(modelBase.get(Listable.FIELD_NAME_ID))%>"
-                           name="<%=Listable.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
+                           value="<%= PageBackendService.encodeId(modelBase.get(modelInfo.getIdFieldName()))%>"
+                           name="<%=modelInfo.getIdFieldName()%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
                 </td>
                 <%
                     }
@@ -170,9 +170,9 @@
                 </td>
                 <%
                     ModelActionInfo targetAction = null;
-                    if (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Editable.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Editable.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
-                        targetAction = modelInfo.getModelActionInfo(Editable.ACTION_NAME_EDIT);
+                    if (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + "update", LoginManager.getLoginUser(session))
+                            && AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + "edit", LoginManager.getLoginUser(session))) {
+                        targetAction = modelInfo.getModelActionInfo("edit");
                     }
                     if (targetAction == null) {
                         if (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Showable.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
@@ -204,7 +204,7 @@
                     String linkField = /*modelInfo.getModelFieldInfo(fieldName).linkModel()*/null;
                     if (linkField != null && !linkField.isEmpty()) {
                         String[] split = linkField.split("\\.");
-                        String idFieldValue = modelBase.get(Listable.FIELD_NAME_ID);
+                        String idFieldValue = modelBase.get(modelInfo.getIdFieldName());
                 %>
                 <td>
                     <a href='<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
@@ -239,7 +239,7 @@
                                 continue;
                             }
                             String actionKey = action.getCode();
-                            if (actionKey.equals(Editable.ACTION_NAME_EDIT)) {
+                            if (actionKey.equals("edit")) {
                                 continue;
                             }
 
@@ -262,8 +262,8 @@
                        model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzRequest.getModel() + "|" + encodedId)%>"
                             <%
-                                if (actionKey.equals(Downloadable.ACTION_NAME_FILES)) {
-                                    out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_NAME_DOWNLOAD + "/" + encodedId) + "'");
+                                if (actionKey.equals("files")) {
+                                    out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                                 }
                                 if (isAjaxAction) {
                                     out.print(" act-ajax='true' act-confirm='"
@@ -297,7 +297,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_NAME_LIST + "?markForAddCsrf")%>&<%=Listable.PARAMETER_PAGE_NUM%>="
+                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "list" + "?markForAddCsrf")%>&<%="pageNum"%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>
@@ -378,9 +378,9 @@
         params = params.substring(0, params.length - 1);
         var str = url;
         if (str.indexOf("?") > -1) {
-            url = str + "&<%=Listable.FIELD_NAME_ID%>=" + params;
+            url = str + "&<%=modelInfo.getIdFieldName()%>=" + params;
         } else {
-            url = str + "?<%=Listable.FIELD_NAME_ID%>=" + params;
+            url = str + "?<%=modelInfo.getIdFieldName()%>=" + params;
         }
         $("#" + action, getRestrictedArea()).attr("href", url);
     }

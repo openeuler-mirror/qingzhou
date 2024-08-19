@@ -1,6 +1,8 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Editable;
+import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
@@ -39,7 +41,7 @@ class DeployerImpl implements Deployer {
     DeployerImpl(ModuleContext moduleContext, Logger logger) {
         this.moduleContext = moduleContext;
         this.logger = logger;
-        this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(PresetAction.class));
+        this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(DefaultAction.class));
     }
 
     @Override
@@ -147,12 +149,12 @@ class DeployerImpl implements Deployer {
         // 构建 Action 执行器
         modelInfos.forEach((modelBase, modelInfo) -> initActionMap(app, modelInfo.getCode(), modelInfo.getModelActionInfos(), modelBase));
         // 构建 Action 执行器
-        Map<String, Collection<ModelActionInfo>> addPresetAction = addPresetAction(modelInfos);// 追加系统预置的 action
-        addPresetAction.forEach((modelName, addedModelActions) -> {
+        Map<String, Collection<ModelActionInfo>> addDefaultAction = addDefaultAction(modelInfos);// 追加系统预置的 action
+        addDefaultAction.forEach((modelName, addedModelActions) -> {
             final ModelBase[] modelBase = new ModelBase[1];
             modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> modelBase[0] = entry.getKey());
-            PresetAction presetAction = new PresetAction(app, modelBase[0]);
-            initActionMap(app, modelName, addedModelActions.toArray(new ModelActionInfo[0]), presetAction);
+            DefaultAction defaultAction = new DefaultAction(app, modelBase[0]);
+            initActionMap(app, modelName, addedModelActions.toArray(new ModelActionInfo[0]), defaultAction);
         });
 
         return app;
@@ -184,7 +186,7 @@ class DeployerImpl implements Deployer {
         };
     }
 
-    private Map<String, Collection<ModelActionInfo>> addPresetAction(Map<ModelBase, ModelInfo> modelSelfInfos) {
+    private Map<String, Collection<ModelActionInfo>> addDefaultAction(Map<ModelBase, ModelInfo> modelSelfInfos) {
         Map<String, Collection<ModelActionInfo>> addedModelActions = new HashMap<>();
 
         for (Map.Entry<ModelBase, ModelInfo> entry : modelSelfInfos.entrySet()) {
@@ -274,6 +276,9 @@ class DeployerImpl implements Deployer {
             } catch (InstantiationException e) {
                 throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
             }
+            if (instance instanceof Listable) {
+                modelInfo.setIdFieldName(((Listable) instance).idFieldName());
+            }
             modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
             modelInfo.setModelActionInfos(parseModelActionInfos(annotation).values().toArray(new ModelActionInfo[0]));
             modelInfo.setGroupInfos(getGroupInfo(instance));
@@ -303,7 +308,7 @@ class DeployerImpl implements Deployer {
 
     private GroupInfo[] getGroupInfo(ModelBase instance) {
         List<GroupInfo> groupInfoList = new ArrayList<>();
-        Groups groups = instance.groups();
+        Groups groups = ((Editable) instance).groups();
         if (groups != null) {
             groups.groups().forEach(group -> {
                 GroupInfo groupInfo = new GroupInfo();

@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "password", icon = "key",
-        menu = "System", order = 3, entrance = Editable.ACTION_NAME_EDIT,
+        menu = "System", order = 3, entrance = "edit",
         name = {"密码管理", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
@@ -140,7 +140,7 @@ public class Password extends ModelBase implements Editable {
             String keyForOtp = loginUserPro.get("keyForOtp");
             if (parsedBoolean && Utils.isBlank(keyForOtp)) {
                 response.setSuccess(false);
-                response.setMsg(appContext.getI18n(request.getLang(),"keyForOtp.bind"));
+                response.setMsg(appContext.getI18n(request.getLang(), "keyForOtp.bind"));
                 return;
             }
         }
@@ -234,8 +234,4 @@ public class Password extends ModelBase implements Editable {
         response.setSuccess(result);
     }
 
-    @Override
-    public DataStore getDataStore() {
-        return User.USER_DATA_STORE;
-    }
 }

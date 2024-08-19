@@ -2,14 +2,11 @@ package qingzhou.app.master.service;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Createable;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Editable;
-import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.config.Security;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
 import qingzhou.deployer.Deployer;
@@ -74,11 +71,11 @@ public class App extends ModelBase implements Createable {
         appContext.addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
         appContext.addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
 
-        actionFilters.add((request, response) -> {
+        appContext.addActionFilter((request, response) -> {
             if (request.getId().equals(DeployerConstants.MASTER_APP_NAME)
                     || request.getId().equals(DeployerConstants.INSTANCE_APP_NAME)) {
-                if (Editable.ACTION_NAME_UPDATE.equals(request.getAction())
-                        || Deletable.ACTION_NAME_DELETE.equals(request.getAction())) {
+                if ("update".equals(request.getAction())
+                        || "delete".equals(request.getAction())) {
                     return appContext.getI18n(request.getLang(), "validator.master.system");
                 }
             }
@@ -143,7 +140,7 @@ public class App extends ModelBase implements Createable {
             ((RequestImpl) request).setManageType(DeployerConstants.MANAGE_TYPE_APP);
             ((RequestImpl) request).setAppName(DeployerConstants.MASTER_APP_NAME);
             ((RequestImpl) request).setModelName(DeployerConstants.MASTER_APP_APP_MODEL_NAME);
-            ((RequestImpl) request).setActionName(Editable.ACTION_NAME_UPDATE);
+            ((RequestImpl) request).setActionName("update");
         }
     }
 
@@ -153,7 +150,7 @@ public class App extends ModelBase implements Createable {
     public void list(Request request, Response response) throws Exception {
         int pageNum = 1;
         try {
-            pageNum = Integer.parseInt(request.getParameter(Listable.PARAMETER_PAGE_NUM));
+            pageNum = Integer.parseInt(request.getParameter("pageNum"));
         } catch (NumberFormatException ignored) {
         }
 
@@ -260,7 +257,7 @@ public class App extends ModelBase implements Createable {
         } finally {
             ((RequestImpl) request).setAppName(DeployerConstants.MASTER_APP_NAME);
             ((RequestImpl) request).setModelName(DeployerConstants.MASTER_APP_APP_MODEL_NAME);
-            ((RequestImpl) request).setActionName(Createable.ACTION_NAME_ADD);
+            ((RequestImpl) request).setActionName("add");
         }
     }
 
@@ -411,7 +408,7 @@ public class App extends ModelBase implements Createable {
             ((RequestImpl) request).setManageType(DeployerConstants.MANAGE_TYPE_APP);
             ((RequestImpl) request).setAppName(DeployerConstants.MASTER_APP_NAME);
             ((RequestImpl) request).setModelName(DeployerConstants.MASTER_APP_APP_MODEL_NAME);
-            ((RequestImpl) request).setActionName(Deletable.ACTION_NAME_DELETE);
+            ((RequestImpl) request).setActionName("delete");
         }
     }
 

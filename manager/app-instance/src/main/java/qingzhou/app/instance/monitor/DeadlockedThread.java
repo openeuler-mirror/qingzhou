@@ -1,15 +1,7 @@
 package qingzhou.app.instance.monitor;
 
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Listable;
-import qingzhou.deployer.ReadOnlyDataStore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,7 +76,7 @@ public class DeadlockedThread extends ModelBase implements Listable {
         String tid = request.getId();
         // 确保是自己的线程才能去 kill
         for (Map<String, String> data : getDataStore().getAllData()) {
-            if (data.get(Listable.FIELD_NAME_ID).equals(tid)) {
+            if (data.get(idFieldName()).equals(tid)) {
                 BlockedThread.killThread(Long.parseLong(tid));
                 try {
                     Thread.sleep(2000);// 等待线程真正结束，有短暂的存活时间
@@ -94,41 +86,5 @@ public class DeadlockedThread extends ModelBase implements Listable {
             }
         }
         getDataStore().deleteDataById(request.getId());
-    }
-
-    private final ReadOnlyDataStore dataStore = new ReadOnlyDataStore() {
-        private final DeadlockedThreadTool tool = new DeadlockedThreadTool();
-
-        @Override
-        public List<Map<String, String>> getAllData() {
-            return tool.list();
-        }
-
-        @Override
-        public Map<String, String> getDataById(String id) {
-            return tool.show(id);
-        }
-
-        @Override
-        public List<Map<String, String>> getDataByIds(String[] ids) throws Exception {
-            List<Map<String, String>> datas = new ArrayList<>();
-            for (String id : ids) {
-                Map<String, String> data = getDataById(id);
-                if (data != null && !data.isEmpty()) {
-                    datas.add(data);
-                }
-            }
-            return datas;
-        }
-
-        @Override
-        public List<Map<String, String>> getDataFieldByIds(String[] ids, String[] fields) throws Exception {
-            return getDataByIds(ids);
-        }
-    };
-
-    @Override
-    public DataStore getDataStore() {
-        return dataStore;
     }
 }

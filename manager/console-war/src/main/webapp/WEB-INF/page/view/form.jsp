@@ -8,10 +8,9 @@
         return; // for 静态源码漏洞扫描
     }
 
-    boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, qzRequest.getAction());
+    boolean isEdit = Objects.equals("edit", qzRequest.getAction());
     String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
-    String idFieldName = Listable.FIELD_NAME_ID;
-    ModelFieldInfo idField = modelInfo.getModelFieldInfo(idFieldName);
+    ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
     final boolean hasId = idField != null;
     List<String> passwordFields = new ArrayList<>();
     String id = qzRequest.getId();
@@ -275,10 +274,10 @@
                 <%
                     }
 
-                    boolean listPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Listable.ACTION_NAME_LIST, LoginManager.getLoginUser(session));
+                    boolean listPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + "list", LoginManager.getLoginUser(session));
                     if (hasId && listPermission) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_NAME_LIST)%>"
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "list")%>"
                    btn-type="goback" class="btn">
                     <%=PageBackendService.getMasterAppI18nString("page.cancel")%>
                 </a>
@@ -294,18 +293,18 @@
                 <%
                     }
 
-                    boolean downloadPermission = (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Downloadable.ACTION_NAME_FILES, LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Downloadable.ACTION_NAME_DOWNLOAD, LoginManager.getLoginUser(session)));
+                    boolean downloadPermission = (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + "files", LoginManager.getLoginUser(session))
+                            && AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/download", LoginManager.getLoginUser(session)));
                     if (downloadPermission) {
                 %>
-                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, Downloadable.ACTION_NAME_FILES + "/" + encodedId)%>'
+                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, "files" + "/" + encodedId)%>'
                         <%
-                            out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_NAME_DOWNLOAD + "/" + encodedId) + "'");
+                            out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                         %>
-                   data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + Downloadable.ACTION_NAME_FILES)%>'
+                   data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + "files")%>'
                    data-tip-arrow="top"
-                   btn-type="<%=Downloadable.ACTION_NAME_FILES%>" class="btn tooltips">
-                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + Downloadable.ACTION_NAME_FILES)%>
+                   btn-type="<%="files"%>" class="btn tooltips">
+                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + "files")%>
                 </a>
                 <%
                     }

@@ -9,7 +9,7 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.Listable;
 import qingzhou.app.master.MasterApp;
-import qingzhou.console.ResponseImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
@@ -65,7 +65,7 @@ public class Cluster extends ModelBase implements Listable {
             info = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
     public void show(Request request, Response response) throws Exception {
         list(request, response);
-        ((ResponseImpl) response).getDataList().removeIf(cluster -> !cluster.get(Listable.FIELD_NAME_ID).equals(request.getId()));
+        ((ResponseImpl) response).getDataList().removeIf(cluster -> !cluster.get(idFieldName()).equals(request.getId()));
     }
 
     @ModelAction(disable = true,
@@ -82,7 +82,7 @@ public class Cluster extends ModelBase implements Listable {
         int pageSize = 10;
         int pageNum = 1;
 
-        String pageNumParam = request.getParameter(Listable.PARAMETER_PAGE_NUM);
+        String pageNumParam = request.getParameter("pageNum");
         if (pageNumParam != null && !pageNumParam.isEmpty()) {
             try {
                 pageNum = Integer.parseInt(pageNumParam);

@@ -1,10 +1,8 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
-import qingzhou.api.type.Createable;
-import qingzhou.api.type.Editable;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.StringUtil;
@@ -60,8 +58,8 @@ public class ValidationFilter implements Filter<RestContext> {
     public boolean doFilter(RestContext context) throws Exception {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
-        boolean isAddAction = Createable.ACTION_NAME_ADD.equals(request.getAction());
-        boolean isUpdateAction = Editable.ACTION_NAME_UPDATE.equals(request.getAction());
+        boolean isAddAction = "add".equals(request.getAction());
+        boolean isUpdateAction = "update".equals(request.getAction());
         if (isAddAction || isUpdateAction) {
             AppInfo appInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request));
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());

@@ -1,9 +1,11 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
-import qingzhou.api.type.Downloadable;
-import qingzhou.api.type.Listable;
-import qingzhou.api.type.Monitorable;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
+import qingzhou.api.type.*;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
@@ -14,11 +16,12 @@ import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-class PresetAction {
+class DefaultAction {
+    private final int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));
     private final AppImpl app;
     private final ModelBase instance;
 
-    PresetAction(AppImpl app, ModelBase instance) {
+    DefaultAction(AppImpl app, ModelBase instance) {
         this.app = app;
         this.instance = instance;
     }
@@ -31,7 +34,7 @@ class PresetAction {
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request, Response response) throws Exception {
-        Map<String, String> data = instance.getDataStore().getDataById(request.getId());
+        Map<String, String> data = ((Showable) instance).showData(request.getId());
         response.addData(data);
     }
 
@@ -74,26 +77,19 @@ class PresetAction {
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request, Response response) throws Exception {
-        String modelName = request.getModel();
-        DataStore dataStore = instance.getDataStore();
-        if (dataStore == null) {
-            return;
-        }
-        int totalSize = dataStore.getTotalSize();
-        response.setTotalSize(totalSize);
-
-        response.setPageSize(10);
+        ResponseImpl responseImpl = (ResponseImpl) response;
+        responseImpl.setTotalSize(((Listable) instance).totalSize());
+        responseImpl.setPageSize(10);
 
         int pageNum = 1;
         try {
-            pageNum = Integer.parseInt(request.getParameter(Listable.PARAMETER_PAGE_NUM));
+            pageNum = Integer.parseInt(request.getParameter("pageNum"));
         } catch (NumberFormatException ignored) {
         }
-        response.setPageNum(pageNum);
+        responseImpl.setPageNum(pageNum);
 
-        String[] dataIdInPage = dataStore.getDataIdInPage(response.getPageSize(), pageNum).toArray(new String[0]);
-        String[] fieldNamesToList = getAppInfo().getModelInfo(modelName).getFormFieldList();
-        List<Map<String, String>> result = dataStore.getDataFieldByIds(dataIdInPage, fieldNamesToList);
+        String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFormFieldList();
+        List<Map<String, String>> result = ((Listable) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList);
         for (Map<String, String> data : result) {
             response.addData(data);
         }
@@ -111,9 +107,8 @@ class PresetAction {
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
-        DataStore dataStore = instance.getDataStore();
         Map<String, String> properties = prepareParameters(request);
-        dataStore.updateDataById(request.getId(), properties);
+        ((Editable) instance).updateData(properties);
     }
 
     Map<String, String> prepareParameters(Request request) {
@@ -135,7 +130,23 @@ class PresetAction {
             info = {"获取该组件可下载文件的列表。",
                     "en:Gets a list of downloadable files for this component."})
     public void files(Request request, Response response) throws Exception {
-        Map<String, List<String[]>> result = ((Downloadable) instance).downloadlist(request, response);
+        String id = request.getId();
+        if (id.contains("..")) {
+            throw new IllegalArgumentException();
+        }
+        File fileBase = ((Downloadable) instance).downloadData(id);
+        if (!fileBase.isDirectory()) return;
+        File[] files = fileBase.listFiles();
+        if (files == null) return;
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+
+            } else if (file.isFile()) {
+
+            }
+        }
+
         if (result != null && !result.isEmpty()) {
             HashMap<String, String> map = new HashMap<>();
             if (result.size() == 1) {
@@ -146,7 +157,7 @@ class PresetAction {
                 for (Map.Entry<String, List<String[]>> entry : result.entrySet()) {
                     String group = entry.getKey();
                     for (String[] file : entry.getValue()) {
-                        map.put(group + Downloadable.DOWNLOAD_FILE_GROUP_NAME_SEPARATOR + file[0], file[0] + " (" + file[1] + ")");
+                        map.put(group + "/" + file[0], file[0] + " (" + file[1] + ")");
                     }
                 }
             }
@@ -156,14 +167,14 @@ class PresetAction {
 
     @ModelAction(icon = "download-alt",
             name = {"下载文件", "en:Download File"},
-            info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。注：指定的文件集合须以 " + Downloadable.PARAMETER_DOWNLOAD_FILE_NAMES + " 参数传递给服务器，多个文件之间用英文逗号分隔。",
-                    "en:Downloads the specified set of files that are in the component list of downloadable files. Note: The specified file set must be passed to the server with the " + Downloadable.PARAMETER_DOWNLOAD_FILE_NAMES + " parameter, and multiple files are separated by commas."})
+            info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。注：指定的文件集合须以 downloadFileNames 参数传递给服务器，多个文件之间用英文逗号分隔。",
+                    "en:Downloads the specified set of files that are in the component list of downloadable files. Note: The specified file set must be passed to the server with the downloadFileNames parameter, and multiple files are separated by commas."})
     public void download(Request request, Response response) throws Exception {
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 
-        String downloadKey = request.getParameter(Downloadable.DOWNLOAD_KEY);
+        String downloadKey = request.getParameter("DOWNLOAD_KEY");
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
-            String downloadFileNames = request.getParameter(Downloadable.PARAMETER_DOWNLOAD_FILE_NAMES);
+            String downloadFileNames = request.getParameter("downloadFileNames");
 
             // check
             if (downloadFileNames == null || downloadFileNames.trim().isEmpty()) {
@@ -172,12 +183,12 @@ class PresetAction {
                 return;
             }
 
-            File[] downloadFiles = ((Downloadable) instance).downloadfile(request, downloadFileNames.split(Downloadable.DOWNLOAD_FILE_GROUP_NAME_SEPARATOR));
+            File[] downloadFiles = ((Downloadable) instance).downloadfile(request, downloadFileNames.split("/"));
             downloadKey = buildDownloadKey(downloadFiles, keyDir);
         }
 
         long downloadOffset = 0;
-        String downloadOffsetParameter = request.getParameter(Downloadable.DOWNLOAD_OFFSET);
+        String downloadOffsetParameter = request.getParameter("DOWNLOAD_OFFSET");
         if (downloadOffsetParameter != null && !downloadOffsetParameter.trim().isEmpty()) {
             downloadOffset = Long.parseLong(downloadOffsetParameter.trim());
         }
@@ -189,23 +200,18 @@ class PresetAction {
     }
 
     // 为支持大文件续传，下载必需有 key
-    Map<String, String> downloadFile(String key, long offset, File keyDir) throws Exception {
-        if (key == null || key.trim().isEmpty() || !new File(keyDir, key).exists()) {
-            return null;
-        }
-        if (offset < 0) {
-            return null;
-        }
-        Map<String, String> result = new HashMap<>();
+    private Map<String, String> downloadFile(String key, long offset, File baseDir) throws Exception {
+        if (key == null || key.trim().isEmpty() || !new File(baseDir, key).exists()) return null;
+        if (offset < 0) return null;
 
-        File downloadFile = new File(keyDir, key);
-        result.put(Downloadable.DOWNLOAD_KEY, key);
+        Map<String, String> result = new HashMap<>();
+        File downloadFile = new File(baseDir, key);
+        result.put("DOWNLOAD_KEY", key);
 
         byte[] byteRead;
         boolean hasMore = false;
         try (RandomAccessFile raf = new RandomAccessFile(downloadFile, "r")) {
             raf.seek(offset);
-            int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));
             byte[] block = new byte[DOWNLOAD_BLOCK_SIZE];
             int read = raf.read(block);
             if (read > 0) { // ==0 表示上次正好读取到结尾
@@ -220,16 +226,16 @@ class PresetAction {
                     System.arraycopy(block, 0, byteRead, 0, read);
                 }
 
-                result.put(Downloadable.DOWNLOAD_BLOCK, Controller.cryptoService.getHexCoder().bytesToHex(byteRead));
+                result.put("DOWNLOAD_BLOCK", Controller.cryptoService.getHexCoder().bytesToHex(byteRead));
                 offset = raf.getFilePointer();
             }
         }
 
         if (hasMore) {
-            result.put(Downloadable.DOWNLOAD_OFFSET, String.valueOf(offset));
+            result.put("DOWNLOAD_OFFSET", String.valueOf(offset));
         } else {
-            result.put(Downloadable.DOWNLOAD_OFFSET, String.valueOf(-1L));
-            File temp = Utils.newFile(keyDir, key);
+            result.put("DOWNLOAD_OFFSET", String.valueOf(-1L));
+            File temp = Utils.newFile(baseDir, key);
             Utils.forceDelete(temp);
         }
 
