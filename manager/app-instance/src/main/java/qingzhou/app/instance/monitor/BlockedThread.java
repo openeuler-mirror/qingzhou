@@ -3,6 +3,8 @@ package qingzhou.app.instance.monitor;
 import qingzhou.api.*;
 import qingzhou.api.type.Listable;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @Model(code = "blockedthread", icon = "pause", menu = "Monitor",
@@ -58,14 +60,20 @@ public class BlockedThread extends ModelBase implements Listable {
         return BlockedThreadTool.idFieldName;
     }
 
+    @Override
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
+        return Collections.emptyList();
+    }
+
     @ModelAction(
             name = {"查看", "en:Show"},
             info = {"查看该阻塞线程的信息，包括其调用的堆栈等。", "en:View the information of the blocking thread, including the stack of its calls."})
     public void show(Request request, Response response) throws Exception {
-        Map<String, String> data = getDataStore().getDataById(request.getId());
-        if (data != null && !data.isEmpty()) {
-            response.addData(data);
-        }
+        // todo 考虑使用覆写 showData 来实现
+//        Map<String, String> data = getDataStore().getDataById(request.getId());
+//        if (data != null && !data.isEmpty()) {
+//            response.addData(data);
+//        }
     }
 
     @ModelAction(
@@ -74,19 +82,20 @@ public class BlockedThread extends ModelBase implements Listable {
             info = {"尝试强制终止该线程的运行。注：该操作可能具有一定的危险，请在确保业务安全的前提下进行。此外，该操作不一定能够成功终止死锁的线程。",
                     "en:Attempts to forcibly terminate the thread may not always succeed for threads in a state such as \"BLOCKED\". Note: This operation may be dangerous, please do it under the premise of ensuring business safety. Also, the operation does not necessarily successfully terminate the deadlocked thread."})
     public void delete(Request request, Response response) throws Exception {
-        String tid = request.getId();
-        // 确保是自己的线程才能去 kill
-        for (Map<String, String> data : getDataStore().getAllData()) {
-            if (data.get(idFieldName()).equals(tid)) {
-                killThread(Long.parseLong(tid));
-                try {
-                    Thread.sleep(2000);// 等待线程真正结束，有短暂的存活时间
-                } catch (InterruptedException ignored) {
-                }
-                return;
-            }
-        }
-        getDataStore().deleteDataById(request.getId());
+        // todo 考虑使用覆写 deleteData 来实现
+//        String tid = request.getId();
+//        // 确保是自己的线程才能去 kill
+//        for (Map<String, String> data : getDataStore().getAllData()) {
+//            if (data.get(idFieldName()).equals(tid)) {
+//                killThread(Long.parseLong(tid));
+//                try {
+//                    Thread.sleep(2000);// 等待线程真正结束，有短暂的存活时间
+//                } catch (InterruptedException ignored) {
+//                }
+//                return;
+//            }
+//        }
+//        getDataStore().deleteDataById(request.getId());
     }
 
     public static void killThread(long id) {
@@ -144,5 +153,10 @@ public class BlockedThread extends ModelBase implements Listable {
             thread.stop();
         } catch (Throwable ignored) {
         }
+    }
+
+    @Override
+    public Map<String, String> showData(String id) throws Exception {
+        return Collections.emptyMap();
     }
 }

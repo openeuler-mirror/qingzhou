@@ -325,7 +325,7 @@ public class JVMConfig extends ModelBase implements Updatable {
             jvm.put("env", json.toJson(envs));
             jvm.put("arg", json.toJson(args));
 
-            getDataStore().updateDataById(request.getId(), jvm);
+            updateDataById(request.getId(), jvm);
 
             // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
             enSureFileExists(dataBackup);
@@ -335,7 +335,7 @@ public class JVMConfig extends ModelBase implements Updatable {
     private List<Arg> getArgs() throws Exception {
         List<Arg> args = new ArrayList<>();
         Json json = appContext.getService(Json.class);
-        for (Map<String, String> data : getDataStore().getAllData()) {
+        for (Map<String, String> data : getAllData()) {
             if (data.remove("type").equals("arg")) {
                 args.add(json.fromJson(json.toJson(data), Arg.class));
             }
@@ -410,7 +410,7 @@ public class JVMConfig extends ModelBase implements Updatable {
     public void show(Request request, Response response) throws Exception {
         Map<String, String> jvm = new HashMap<>();
         Map<String, String> envMap = new LinkedHashMap<>();
-        for (Map<String, String> element : getDataStore().getAllData()) {
+        for (Map<String, String> element : getAllData()) {
             String type = element.remove("type");
             if ("arg".equals(type) && Boolean.parseBoolean(element.getOrDefault("enabled", "true"))) {
                 String argKV = element.get("name");
@@ -626,28 +626,61 @@ public class JVMConfig extends ModelBase implements Updatable {
         }
     }
 
-    private class JvmDataStore implements DataStore {
-        @Override
-        public List<Map<String, String>> getAllData() throws Exception {
-            Jvm jvm = InstanceApp.getService(Config.class).getJvm();
-            if (jvm == null) {
-                return null;
-            }
-            List<Arg> args = jvm.getArg();
-            List<Map<String, String>> dataList = new ArrayList<>();
-            for (Arg arg : args) {
-                Map<String, String> argMap = Utils.getPropertiesFromObj(arg);
-                argMap.put("type", "arg");
-                dataList.add(argMap);
-            }
-            List<Env> envs = jvm.getEnv();
-            for (Env env : envs) {
-                Map<String, String> envMap = Utils.getPropertiesFromObj(env);
-                envMap.put("type", "env");
-                dataList.add(envMap);
-            }
+    @Override
+    public Map<String, String> showData(String id) {
+        throw new IllegalStateException("覆写了 show 方法后，不应该进入此方法");
+    }
 
-            return dataList;
+    public List<Map<String, String>> getAllData() throws Exception {
+        Jvm jvm = InstanceApp.getService(Config.class).getJvm();
+        if (jvm == null) {
+            return null;
+        }
+        List<Arg> args = jvm.getArg();
+        List<Map<String, String>> dataList = new ArrayList<>();
+        for (Arg arg : args) {
+            Map<String, String> argMap = Utils.getPropertiesFromObj(arg);
+            argMap.put("type", "arg");
+            dataList.add(argMap);
+        }
+        List<Env> envs = jvm.getEnv();
+        for (Env env : envs) {
+            Map<String, String> envMap = Utils.getPropertiesFromObj(env);
+            envMap.put("type", "env");
+            dataList.add(envMap);
+        }
+
+        return dataList;
+    }
+
+    public void addData(String id, Map<String, String> data) throws Exception {
+        throw new RuntimeException("No Support.");
+    }
+
+    public void updateDataById(String id, Map<String, String> data) throws Exception {
+        Json json = appContext.getService(Json.class);
+        Config config = InstanceApp.getService(Config.class);
+        Jvm jvm = config.getJvm();
+        List<Arg> oldArgs = jvm.getArg();
+        for (Arg oldArg : oldArgs) {
+            config.deleteArg(oldArg.getName());
+        }
+        List<Map<String, String>> args = json.fromJson(data.get("arg"), List.class);
+        for (Map<String, String> map : args) {
+            Arg arg = new Arg();
+            Utils.setPropertiesToObj(arg, map);
+            config.addArg(arg);
+        }
+
+        List<Env> oldEnvs = jvm.getEnv();
+        for (Env oldEnv : oldEnvs) {
+            config.deleteEnv(oldEnv.getName());
+        }
+        List<Map<String, String>> envs = json.fromJson(data.get("env"), List.class);
+        for (Map<String, String> map : envs) {
+            Env env = new Env();
+            Utils.setPropertiesToObj(env, map);
+            config.addEnv(env);
         }
     }
 }

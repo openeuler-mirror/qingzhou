@@ -11,7 +11,7 @@ public interface Listable extends Showable {
         return "id";
     }
 
-    List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames);
+    List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception;
 
     default int totalSize() {
         return -1; // 负数表示此模块数据不支持分页

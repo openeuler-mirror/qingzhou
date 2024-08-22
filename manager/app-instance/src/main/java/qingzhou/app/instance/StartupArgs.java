@@ -5,8 +5,6 @@ import qingzhou.api.type.Addable;
 import qingzhou.config.Arg;
 import qingzhou.config.Config;
 import qingzhou.config.Jvm;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 
 import java.util.*;
@@ -24,6 +22,31 @@ public class StartupArgs extends ModelBase implements Addable {
     private static final String STARTUP_ARGS_SKIP_CHARACTER_CHECK = "%${};";
 
     private static final String[] invalidChars = {"#", "?", "&", " ", "`", "|", "(", ")", "@", "!", "^", "*"};// for #ITAIT-4940 replenish for NC-3285
+
+    static class StartupArg {
+        public static final String[] uniqueMemoryArgKeys = {"-XX:MaxDirectMemorySize="};
+        public static final String[] uniqueMemoryArgKeyPairs = { // 最小 - 最大，须成对
+                "-Xms", "-Xmx", // 最小 - 最大，须成对
+                "-XX:NewSize=", "-XX:MaxNewSize=",  // 最小 - 最大，须成对
+                "-XX:MetaspaceSize=", "-XX:MaxMetaspaceSize=", // 最小 - 最大，须成对
+                "-XX:InitialHeapSize=", "-XX:MaxHeapSize=" // 最小 - 最大，须成对
+        };
+        public static final String[] uniqueBooleanArgKeys = {"-Djava.awt.headless="};
+        public static final String[] uniqueArgKeys = {"-Xloggc:", "-XX:LogFile=", "-Djava.security.policy=", "-Duser.language=", "-Djava.security.egd=", "-agentlib:jdwp=",};
+        public static final String[] uniqueArgVals = {"-XX:+HeapDumpOnOutOfMemoryError", "-XX:+DisableExplicitGC", "-XX:+PrintGCDetails", "-XX:+UnlockDiagnosticVMOptions", "-XX:+LogVMOutput", "-Djava.security.manager", "-server"};
+        // QingZhou 专用 -D 参数，不允许复写
+        public static final String[] systemManagedPrefix = {"-Dqingzhou.home", "-Dqingzhou.base", "-Djava.util.logging.manager"};
+        public static final Set<String> uniqueArgs = new HashSet<>();
+
+        static {
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueMemoryArgKeys));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueMemoryArgKeyPairs));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueBooleanArgKeys));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueArgKeys));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueArgVals));
+            uniqueArgs.addAll(Arrays.asList(StartupArg.systemManagedPrefix));
+        }
+    }
 
     @Override
     public void start() {
@@ -88,14 +111,14 @@ public class StartupArgs extends ModelBase implements Addable {
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
         String id = request.getParameter(idFieldName());
-        if (getDataStore().exists(id)) {
+        if (exists(id)) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
             return;
         }
 
         Map<String, String> newData = request.getParameters();
-        Map<String, String> oldData = getDataStore().getDataById(request.getId());
+        Map<String, String> oldData = showData(request.getId());
         String error = validateArg(request, id, new ArrayList<>(), oldData == null ? null : oldData.get(idFieldName()));
         if (error != null) {
             response.setSuccess(false);
@@ -105,7 +128,7 @@ public class StartupArgs extends ModelBase implements Addable {
 
         processData(newData);
 
-        getDataStore().addData(id, newData);
+        addData(newData);
     }
 
     @ModelAction(
@@ -113,7 +136,7 @@ public class StartupArgs extends ModelBase implements Addable {
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request, Response response) throws Exception {
         Map<String, String> newData = request.getParameters();
-        Map<String, String> oldData = getDataStore().getDataById(request.getId());
+        Map<String, String> oldData = showData(request.getId());
 
         String error = validateArg(request, newData.get("changeToArg"), new ArrayList<>(), oldData == null ? null : oldData.get(idFieldName()));
         if (error != null) {
@@ -124,7 +147,7 @@ public class StartupArgs extends ModelBase implements Addable {
 
         processData(newData);
 
-        getDataStore().updateDataById(request.getId(), newData);
+        updateData(newData);
     }
 
     private void processData(Map<String, String> newData) {
@@ -149,7 +172,7 @@ public class StartupArgs extends ModelBase implements Addable {
             }
         }
 
-        getDataStore().deleteDataById(request.getId());
+        deleteData(request.getId());
     }
 
     private String validateArg(Request request, String newValue, List<String> otherValues, String oldValue) {
@@ -291,77 +314,58 @@ public class StartupArgs extends ModelBase implements Addable {
         }
     }
 
-    static class StartupArg {
-        public static final String[] uniqueMemoryArgKeys = {"-XX:MaxDirectMemorySize="};
-        public static final String[] uniqueMemoryArgKeyPairs = { // 最小 - 最大，须成对
-                "-Xms", "-Xmx", // 最小 - 最大，须成对
-                "-XX:NewSize=", "-XX:MaxNewSize=",  // 最小 - 最大，须成对
-                "-XX:MetaspaceSize=", "-XX:MaxMetaspaceSize=", // 最小 - 最大，须成对
-                "-XX:InitialHeapSize=", "-XX:MaxHeapSize=" // 最小 - 最大，须成对
-        };
-        public static final String[] uniqueBooleanArgKeys = {"-Djava.awt.headless="};
-        public static final String[] uniqueArgKeys = {"-Xloggc:", "-XX:LogFile=", "-Djava.security.policy=", "-Duser.language=", "-Djava.security.egd=", "-agentlib:jdwp=",};
-        public static final String[] uniqueArgVals = {"-XX:+HeapDumpOnOutOfMemoryError", "-XX:+DisableExplicitGC", "-XX:+PrintGCDetails", "-XX:+UnlockDiagnosticVMOptions", "-XX:+LogVMOutput", "-Djava.security.manager", "-server"};
-        // QingZhou 专用 -D 参数，不允许复写
-        public static final String[] systemManagedPrefix = {"-Dqingzhou.home", "-Dqingzhou.base", "-Djava.util.logging.manager"};
-        public static final Set<String> uniqueArgs = new HashSet<>();
-
-        static {
-            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueMemoryArgKeys));
-            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueMemoryArgKeyPairs));
-            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueBooleanArgKeys));
-            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueArgKeys));
-            uniqueArgs.addAll(Arrays.asList(StartupArg.uniqueArgVals));
-            uniqueArgs.addAll(Arrays.asList(StartupArg.systemManagedPrefix));
-        }
+    @Override
+    public void addData(Map<String, String> data) throws Exception {
+        Config config = InstanceApp.getService(Config.class);
+        Arg arg = new Arg();
+        Utils.setPropertiesToObj(arg, data);
+        arg.setName(data.get(idFieldName()));
+        config.addArg(arg);
     }
 
-    @ModelAction(
-            name = {"列表", "en:List"},
-            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    public void list(Request request, Response response) throws Exception {
-        String modelName = request.getModel();
-        DataStore dataStore = getDataStore();
-        if (dataStore == null) {
-            return;
-        }
-        int totalSize = dataStore.getTotalSize();
-        response.setTotalSize(totalSize);
-
-        response.setPageSize(10);
-
-        int pageNum = 1;
-        try {
-            pageNum = Integer.parseInt(request.getParameter("pageNum"));
-        } catch (NumberFormatException ignored) {
-        }
-        response.setPageNum(pageNum);
-
-        String[] dataIdInPage = dataStore.getDataIdInPage(response.getPageSize(), pageNum).toArray(new String[0]);
-        String[] fieldNamesToList = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(modelName).getFormFieldList();
-        List<Map<String, String>> result = dataStore.getDataFieldByIds(dataIdInPage, fieldNamesToList);
-        rectifyModels(result);
-        for (Map<String, String> data : result) {
-            response.addData(data);
-        }
+    @Override
+    public void deleteData(String id) throws Exception {
+        InstanceApp.getService(Config.class).deleteArg(id);
     }
 
-    @ModelAction(
-            name = {"查看", "en:Show"},
-            info = {"查看该组件的相关信息。", "en:View the information of this model."})
-    public void show(Request request, Response response) throws Exception {
-        Map<String, String> data = getDataStore().getDataById(request.getId());
-        rectifyModels(Collections.singletonList(data));
-        response.addData(data);
+    @Override
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
+        Config config = InstanceApp.getService(Config.class);
+        Jvm jvm = config.getJvm();
+        List<Map<String, String>> list = new ArrayList<>();
+        for (Arg arg : jvm.getArg()) {
+            Map<String, String> map = Utils.getPropertiesFromObj(arg); //for #ITAIT-6324
+            map.put(idFieldName(), map.get("name"));
+            list.add(map);
+        }
+
+        list.sort(Comparator.comparing(o -> o.get("name")));
+
+        return list;
     }
 
-    @ModelAction(
-            name = {"编辑", "en:Edit"},
-            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
-    public void edit(Request request, Response response) throws Exception {
-        show(request, response);
+    @Override
+    public void updateData(Map<String, String> data) throws Exception {
+        Config config = InstanceApp.getService(Config.class);
+        Arg arg = new Arg();
+        Utils.setPropertiesToObj(arg, data);
+        config.deleteArg(data.get(idFieldName()));
+        config.addArg(arg);
     }
 
+    @Override
+    public Map<String, String> showData(String id) throws Exception {
+        Config config = InstanceApp.getService(Config.class);
+        Jvm jvm = config.getJvm();
+        List<Map<String, String>> list = new ArrayList<>();
+        for (Arg arg : jvm.getArg()) {
+            Map<String, String> map = Utils.getPropertiesFromObj(arg); //for #ITAIT-6324
+            if (map.get("name").equals(id)) return map;
+        }
+        return null;
+    }
+
+    // todo： 需有统一的 参数矫正机制来作用到 list和show 方法的数据上？
     private void rectifyModels(List<Map<String, String>> args) {
         for (Map<String, String> arg : args) {
             arg.put("changeToArg", arg.get(idFieldName()));// 校验 changeToArg 时候的 List<String> otherValues 需要这个
@@ -383,48 +387,6 @@ public class StartupArgs extends ModelBase implements Addable {
             arg.put("changeToArg", arg.get("name"));
             arg.put(IF_GREATER_OR_EQUAL_KEY, arg.getOrDefault(IF_GREATER_OR_EQUAL_KEY, ""));
             arg.put(SUPPORTED_JRE_KEY, arg.getOrDefault(SUPPORTED_JRE_KEY, ""));
-        }
-    }
-
-    private class StartUpArgsDataStore implements DataStore {
-        @Override
-        public List<Map<String, String>> getAllData() throws Exception {
-            Config config = InstanceApp.getService(Config.class);
-            Jvm jvm = config.getJvm();
-            List<Map<String, String>> list = new ArrayList<>();
-            for (Arg arg : jvm.getArg()) {
-                Map<String, String> map = Utils.getPropertiesFromObj(arg); //for #ITAIT-6324
-                map.put(idFieldName(), map.get("name"));
-                list.add(map);
-            }
-
-            list.sort(Comparator.comparing(o -> o.get("name")));
-
-            return list;
-
-        }
-
-        @Override
-        public void addData(String id, Map<String, String> data) throws Exception {
-            Config config = InstanceApp.getService(Config.class);
-            Arg arg = new Arg();
-            Utils.setPropertiesToObj(arg, data);
-            arg.setName(data.get(idFieldName()));
-            config.addArg(arg);
-        }
-
-        @Override
-        public void updateDataById(String id, Map<String, String> data) throws Exception {
-            Config config = InstanceApp.getService(Config.class);
-            Arg arg = new Arg();
-            Utils.setPropertiesToObj(arg, data);
-            config.deleteArg(id);
-            config.addArg(arg);
-        }
-
-        @Override
-        public void deleteDataById(String id) throws Exception {
-            InstanceApp.getService(Config.class).deleteArg(id);
         }
     }
 }
