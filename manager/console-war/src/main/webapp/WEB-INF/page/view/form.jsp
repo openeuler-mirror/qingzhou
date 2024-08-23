@@ -1,5 +1,3 @@
-<%@ page import="qingzhou.registry.ModelFieldInfo" %>
-<%@ page import="qingzhou.registry.ModelActionInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -8,9 +6,9 @@
         return; // for 静态源码漏洞扫描
     }
 
-    boolean isEdit = Objects.equals("edit", qzRequest.getAction());
+    boolean isEdit = Objects.equals("edit", qzAction);
     String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
-    ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
+    ModelFieldInfo idField = modelInfo.getModelFieldInfo(idFieldName);
     final boolean hasId = idField != null;
     List<String> passwordFields = new ArrayList<>();
     String id = qzRequest.getId();
@@ -88,11 +86,10 @@
                         }*/
 
                         String readonly = "";
-                        boolean required = false;
                         if (!modelField.isEditable() && isEdit) {
                             readonly = "readonly";
                         }
-                        if (idFieldName.equals(fieldName)) {
+                        if (fieldName.equals(idFieldName)) {
                             if (isEdit) {
                                 readonly = "readonly";
                             }
@@ -101,11 +98,7 @@
                             readonly = "readonly";
                         }
 
-                        if (fieldName.equals(idFieldName)) {
-                            required = true;
-                        } else {
-                            required = modelField.isRequired();
-                        }
+                        boolean required = fieldName.equals(idFieldName) || modelField.isRequired();
 
                         String valueFrom = /*modelField.valueFrom()*/"";
                         if (!"".equals(valueFrom)) {
@@ -121,9 +114,9 @@
                 <div class="form-group" id="form-item-<%=fieldName%>">
                     <label for="<%=fieldName%>" class="col-sm-4">
                         <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
-                        <%=I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + fieldName)%>
+                        <%=I18n.getString(qzApp, "model.field." + qzModel + "." + fieldName)%>
                         <%
-                            String fieldInfo = I18n.getString(menuAppName, "model.field.info." + qzRequest.getModel() + "." + fieldName);
+                            String fieldInfo = I18n.getString(qzApp, "model.field.info." + qzModel + "." + fieldName);
                             if (fieldInfo != null) {
                                 // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
                                 fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
@@ -265,17 +258,16 @@
         <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
             <div class="form-btn">
                 <%
-                    boolean submitPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + submitActionName, LoginManager.getLoginUser(session));
                     ModelActionInfo formCreateAction = modelInfo.getModelActionInfo(submitActionName);
-                    if (submitPermission && (formCreateAction != null && !formCreateAction.isDisable())) {
+                    if (formCreateAction != null) {
                 %>
                 <input type="submit" class="btn"
-                       value='<%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + submitActionName)%>'>
+                       value='<%=I18n.getString(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
                 <%
                     }
 
-                    boolean listPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + "list", LoginManager.getLoginUser(session));
-                    if (hasId && listPermission) {
+                    ModelActionInfo listActionInfo = PageBackendService.renderModelAction(qzApp, qzModel, "list", qzRequest);
+                    if (hasId && listActionInfo != null) {
                 %>
                 <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "list")%>"
                    btn-type="goback" class="btn">
@@ -283,28 +275,30 @@
                 </a>
                 <%
                     }
-                    boolean bOtpPermission = AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + ConsoleConstants.ACTION_NAME_REFRESH_KEY, LoginManager.getLoginUser(session));
-                    if (bOtpPermission) {
+                    ModelActionInfo refreshKeyActionInfo = PageBackendService.renderModelAction(qzApp, qzModel, "refreshKey", qzRequest);
+                    if (refreshKeyActionInfo != null) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, ConsoleConstants.ACTION_NAME_REFRESH_KEY)%>"
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, "refreshKey")%>"
                    btn-type="qrOtp" class="btn">
-                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + ConsoleConstants.ACTION_NAME_REFRESH_KEY)%>
+                    <%=I18n.getString(qzApp, "model.action." + qzModel + ".refreshKey")%>
                 </a>
                 <%
                     }
 
-                    boolean downloadPermission = (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + "files", LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/download", LoginManager.getLoginUser(session)));
-                    if (downloadPermission) {
+                    boolean hasPermission =
+                            PageBackendService.renderModelAction(qzApp, qzModel, "files", qzRequest) != null
+                                    &&
+                                    PageBackendService.renderModelAction(qzApp, qzModel, "download", qzRequest) != null;
+                    if (hasPermission) {
                 %>
                 <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, "files" + "/" + encodedId)%>'
                         <%
                             out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                         %>
-                   data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + "files")%>'
+                   data-tip='<%=I18n.getString(qzApp, "model.action.info." + qzModel + "." + "files")%>'
                    data-tip-arrow="top"
                    btn-type="<%="files"%>" class="btn tooltips">
-                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + "files")%>
+                    <%=I18n.getString(qzApp, "model.action." + qzModel + "." + "files")%>
                 </a>
                 <%
                     }

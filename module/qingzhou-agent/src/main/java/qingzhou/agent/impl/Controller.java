@@ -2,14 +2,13 @@ package qingzhou.agent.impl;
 
 import qingzhou.config.Agent;
 import qingzhou.config.Config;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
 import qingzhou.crypto.KeyPairCipher;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -109,10 +108,9 @@ public class Controller implements ModuleActivator {
 
         @Override
         public void undo() {
-            if (server != null) {
-                server.removeContext(path);
-                server.stop(0);
-            }
+            if (server == null) return;
+            server.removeContext(path);
+            server.stop(0);
         }
 
         byte[] process(InputStream in) throws Exception {
@@ -139,8 +137,8 @@ public class Controller implements ModuleActivator {
             // 4. 处理
             ResponseImpl response = new ResponseImpl();
             String appName = request.getApp();
-            if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(request.getManageType())) {
-                appName = DeployerConstants.INSTANCE_APP_NAME;
+            if ("instance".equals(request.getManageType())) {
+                appName = "instance";
             }
             App app = deployer.getApp(appName);
             app.invoke(request, response);
@@ -196,7 +194,7 @@ public class Controller implements ModuleActivator {
 
             List<AppInfo> appInfos = new ArrayList<>();
             for (String a : deployer.getAllApp()) {
-                if (DeployerConstants.INSTANCE_APP_NAME.equals(a) || DeployerConstants.MASTER_APP_NAME.equals(a)) {
+                if ("instance".equals(a) || "master".equals(a)) {
                     continue;
                 }
                 appInfos.add(deployer.getApp(a).getAppInfo());
@@ -210,7 +208,7 @@ public class Controller implements ModuleActivator {
                 if (masterUrl.endsWith("/")) {
                     masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
                 }
-                String fingerprintUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/" + DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME + "/checkRegistry";
+                String fingerprintUrl = masterUrl + "/rest/json/app/" + "master" + "/" + "instance" + "/checkRegistry";
                 String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
                 HttpResponse response = http.buildHttpClient().send(fingerprintUrl, new HashMap<String, String>() {{
                     put("fingerprint", fingerprint);
@@ -228,7 +226,7 @@ public class Controller implements ModuleActivator {
             }
             if (registered) return;
 
-            String registerUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/" + DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME + "/register";
+            String registerUrl = masterUrl + "/rest/json/app/" + "master" + "/" + "instance" + "/register";
             http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
                 put("doRegister", registerData);
             }});
@@ -238,7 +236,7 @@ public class Controller implements ModuleActivator {
             InstanceInfo instanceInfo = new InstanceInfo();
             instanceInfo.setId(UUID.randomUUID().toString().replace("-", ""));
             Agent agent = config.getAgent();
-            instanceInfo.setClusterId(agent.getClusterId());
+            instanceInfo.setClusterId(agent.getAttachments().get("clusterId"));
             instanceInfo.setHost(agentHost.equals("0.0.0.0")
                     ? Utils.getLocalIps().iterator().next()
                     : agentHost);

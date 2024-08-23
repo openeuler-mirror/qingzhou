@@ -312,7 +312,7 @@
         downloadTip: '<%=PageBackendService.getMasterAppI18nString("page.download.log.tip")%>',
         actionName_target: '<%=ConsoleConstants.ACTION_NAME_manage%>',
         downloadFileNames: '<%=ConsoleConstants.PARAMETER_DOWNLOAD_FILE_NAMES%>',
-        showAction: '<%=Showable.ACTION_NAME_SHOW%>',
+        showAction: '<%=ConsoleConstants.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18nString("page.download.checkall")%>',
         downloadTaskTip: '<%=PageBackendService.getMasterAppI18nString("page.download.tasktip")%>',
         layerTitleOtp: '<%=PageBackendService.getMasterAppI18nString("page.layertitle.otp")%>',

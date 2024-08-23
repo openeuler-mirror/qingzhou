@@ -1,13 +1,11 @@
 package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
-import qingzhou.api.type.Showable;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.deployer.RequestImpl;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
-import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -24,10 +22,10 @@ public class HtmlView implements View {
         String modelName = request.getModel();
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
-            if (DeployerConstants.MASTER_APP_APP_MODEL_NAME.equals(modelName)) {
-                request.setManageType(DeployerConstants.MANAGE_TYPE_APP);
-            } else if (DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME.equals(modelName)) {
-                request.setManageType(DeployerConstants.MANAGE_TYPE_INSTANCE);
+            if ("app".equals(modelName)) {
+                request.setManageType("app");
+            } else if ("instance".equals(modelName)) {
+                request.setManageType("instance");
             }
             request.setAppName(request.getId());
             request.setModelName("home");
@@ -45,10 +43,10 @@ public class HtmlView implements View {
     private boolean isManageAction(Request request) {
         if (!ConsoleConstants.ACTION_NAME_manage.equals(request.getAction())) return false;
 
-        if (!DeployerConstants.MASTER_APP_NAME.equals(request.getApp())) return false;
+        if (!"master".equals(request.getApp())) return false;
 
-        return DeployerConstants.MASTER_APP_APP_MODEL_NAME.equals(request.getModel())
-                || DeployerConstants.MASTER_APP_INSTANCE_MODEL_NAME.equals(request.getModel());
+        return "app".equals(request.getModel())
+                || "instance".equals(request.getModel());
     }
 
     @Override
@@ -62,7 +60,7 @@ public class HtmlView implements View {
         }
 
         if ((ConsoleConstants.MODEL_NAME_index.equals(model) || ConsoleConstants.MODEL_NAME_apphome.equals(model))
-                && Showable.ACTION_NAME_SHOW.equals(action)) {
+                && ConsoleConstants.ACTION_NAME_SHOW.equals(action)) {
             return ConsoleConstants.VIEW_RENDER_HOME;
         }
 
@@ -72,11 +70,11 @@ public class HtmlView implements View {
             case "create":
             case "edit":
                 return ConsoleConstants.VIEW_RENDER_FORM;
-            case ConsoleConstants.ACTION_NAME_index:
+            case "index":
                 return ConsoleConstants.VIEW_RENDER_INDEX;
             case ConsoleConstants.ACTION_NAME_manage:
                 return ConsoleConstants.VIEW_RENDER_MANAGE;
-            case Showable.ACTION_NAME_SHOW:
+            case ConsoleConstants.ACTION_NAME_SHOW:
             case "monitor":
                 return ConsoleConstants.VIEW_RENDER_SHOW;
         }

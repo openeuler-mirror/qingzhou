@@ -1,12 +1,9 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Updatable;
-import qingzhou.api.type.Listable;
-import qingzhou.api.type.Showable;
+import qingzhou.api.type.*;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -21,13 +18,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class DeployerImpl implements Deployer {
 
@@ -50,7 +45,7 @@ class DeployerImpl implements Deployer {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-        boolean isSystemApp = DeployerConstants.MASTER_APP_NAME.equals(appName) || DeployerConstants.INSTANCE_APP_NAME.equals(appName);
+        boolean isSystemApp = "master".equals(appName) || "instance".equals(appName);
         AppImpl app = buildApp(appName, appDir, isSystemApp);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
@@ -195,14 +190,10 @@ class DeployerImpl implements Deployer {
             Set<ModelActionInfo> actions = Arrays.stream(entry.getValue().getModelActionInfos()).collect(Collectors.toSet());
             ModelBase modelBase = entry.getKey();
 
-            // 1. 添加预设的 Action
-            Arrays.stream(modelBase.getClass().getInterfaces()).filter(aClass -> aClass.getPackage() == Showable.class.getPackage()).distinct().flatMap((Function<Class<?>, Stream<String>>) aClass -> Arrays.stream(aClass.getFields()).filter(field -> field.getName().startsWith("ACTION_NAME_")).map(field -> {
-                try {
-                    return field.get(null).toString();
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            })).forEach(addAction -> {
+            // 添加预设的 Action
+            Set<String> defaultActions = new HashSet<>();
+            findDefaultAction(modelBase.getClass(), defaultActions);
+            defaultActions.forEach(addAction -> {
                 ModelActionInfo actionInfo = null;
                 for (ModelActionInfo action : actions) {
                     if (addAction.equals(action.getCode())) {
@@ -240,6 +231,31 @@ class DeployerImpl implements Deployer {
         }
 
         return addedModelActions;
+    }
+
+    private void findDefaultAction(Class<?> checkClass, Set<String> defaultActions) {
+        if (checkClass == Addable.class) {
+            defaultActions.add("create");
+            defaultActions.add("add");
+        } else if (checkClass == Deletable.class) {
+            defaultActions.add("delete");
+        } else if (checkClass == Downloadable.class) {
+            defaultActions.add("files");
+            defaultActions.add("download");
+        } else if (checkClass == Listable.class) {
+            defaultActions.add("list");
+        } else if (checkClass == Monitorable.class) {
+            defaultActions.add("monitor");
+        } else if (checkClass == Showable.class) {
+            defaultActions.add("show");
+        } else if (checkClass == Updatable.class) {
+            defaultActions.add("edit");
+            defaultActions.add("update");
+        }
+
+        for (Class<?> c : checkClass.getInterfaces()) {
+            findDefaultAction(c, defaultActions);
+        }
     }
 
     private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader) throws Exception {
@@ -281,7 +297,9 @@ class DeployerImpl implements Deployer {
             }
             modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
             modelInfo.setModelActionInfos(parseModelActionInfos(annotation).values().toArray(new ModelActionInfo[0]));
-            modelInfo.setGroupInfos(getGroupInfo(instance));
+            if (instance instanceof Updatable) {
+                modelInfo.setGroupInfos(getGroupInfo(instance));
+            }
             modelInfos.put(instance, modelInfo);
         }
 

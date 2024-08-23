@@ -1,5 +1,8 @@
 package qingzhou.config;
 
+import java.util.Collections;
+import java.util.Map;
+
 public class Agent {
     private boolean enabled;
     private String masterUrl;
@@ -7,7 +10,7 @@ public class Agent {
     private String agentHost;
     private int agentPort;
     private String agentKey;
-    private String clusterId;
+    private Map<String, String> attachments;
 
     public boolean isEnabled() {
         return enabled;
@@ -57,11 +60,12 @@ public class Agent {
         this.agentKey = agentKey;
     }
 
-    public String getClusterId() {
-        return clusterId;
+    public Map<String, String> getAttachments() {
+        if (attachments == null) return Collections.emptyMap();
+        return attachments;
     }
 
-    public void setClusterId(String clusterId) {
-        this.clusterId = clusterId;
+    public void setAttachments(Map<String, String> attachments) {
+        this.attachments = attachments;
     }
 }

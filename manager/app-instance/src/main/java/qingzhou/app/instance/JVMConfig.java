@@ -7,7 +7,6 @@ import qingzhou.config.Config;
 import qingzhou.config.Env;
 import qingzhou.config.Jvm;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -187,7 +186,7 @@ public class JVMConfig extends ModelBase implements Updatable {
         }
 
         Map<String, String> data = new HashMap<>();
-        AppInfo appInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo();
+        AppInfo appInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo();
         for (String fieldName : appInfo.getModelInfo(request.getModel()).getFormFieldNames()) {
             String value = request.getParameter(fieldName);
             if (value != null) {
@@ -496,7 +495,7 @@ public class JVMConfig extends ModelBase implements Updatable {
                 for (String key : SIZE_KEYS) {
                     if (key.equals(fieldName)) {
                         if (!newValue.matches("\\d+([mMgG])")) {
-                            ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
+                            ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
                             response.setSuccess(false);
                             response.setMsg(String.format(this.appContext.getI18n(request.getLang(), "validator.arg.memory.invalid"), I18nTool.retrieveI18n(modelFieldInfo.getName()).get(request.getLang())));
                             return false;
@@ -584,13 +583,13 @@ public class JVMConfig extends ModelBase implements Updatable {
         String max = request.getParameter(maxKey);
         if (max != null && !max.isEmpty()) {
             if (!max.matches("\\d+([mMgG])")) {
-                ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(maxKey);
+                ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(maxKey);
                 return String.format(this.appContext.getI18n(request.getLang(), "validator.arg.memory.union.invalid"), I18nTool.retrieveI18n(modelFieldInfo.getName()).get(request.getLang()));
             }
 
             if (getValueAsByte(newValue) > getValueAsByte(max)) {
                 String msg = this.appContext.getI18n(request.getLang(), "validator.larger.cannot");
-                ModelInfo modelInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(request.getModel());
+                ModelInfo modelInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo().getModelInfo(request.getModel());
                 ModelFieldInfo keyFieldInfo = modelInfo.getModelFieldInfo(key);
                 ModelFieldInfo maxKeyFieldInfo = modelInfo.getModelFieldInfo(maxKey);
                 String keyName = I18nTool.retrieveI18n(keyFieldInfo.getName()).get(request.getLang());

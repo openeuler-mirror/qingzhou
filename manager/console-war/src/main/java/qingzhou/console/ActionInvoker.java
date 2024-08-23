@@ -172,16 +172,16 @@ public class ActionInvoker {
         String manageType = request.getManageType();
         String appName = request.getApp();
         String uploadFileAppName = appName;
-        if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
+        if ("instance".equals(manageType)) {
             appInstances.add(appName);
-            uploadFileAppName = DeployerConstants.INSTANCE_APP_NAME;
-        } else if (DeployerConstants.MANAGE_TYPE_APP.equals(manageType)) {
+            uploadFileAppName = "instance";
+        } else if ("app".equals(manageType)) {
             appInstances = getAppInstances(appName);
         }
 
         for (String instance : appInstances) {
             ResponseImpl responseOnNode;
-            if (instance.equals(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID)) {
+            if (instance.equals("local")) {
                 responseOnNode = new ResponseImpl();
                 SystemController.getService(Deployer.class)
                         .getApp(PageBackendService.getAppName(request))
@@ -208,7 +208,7 @@ public class ActionInvoker {
     private void uploadFile(RequestImpl request, String appName, String remoteUrl, String remoteKey) throws Exception {
         // 文件上传
         AppInfo appInfo;
-        if (DeployerConstants.INSTANCE_APP_NAME.equals(appName)) {
+        if ("instance".equals(appName)) {
             appInfo = SystemController.getAppInfo(appName);
         } else {
             appInfo = SystemController.getService(Registry.class).getAppInfo(appName);
@@ -260,10 +260,10 @@ public class ActionInvoker {
             for (int i = 0; i < count; i++) {
                 len = bis.read(bytes);
                 RequestImpl req = new RequestImpl();
-                req.setAppName(DeployerConstants.INSTANCE_APP_NAME);
+                req.setAppName("instance");
                 req.setModelName("appinstaller");
                 req.setActionName("uploadFile");
-                req.setManageType(DeployerConstants.MANAGE_TYPE_APP);
+                req.setManageType("app");
 
                 Map<String, String> parameters = new HashMap<>();
                 parameters.put("fileName", fileName);
@@ -303,9 +303,9 @@ public class ActionInvoker {
         Deployer deployer = SystemController.getService(Deployer.class);
         App app = deployer.getApp(appName);
         if (app != null) {
-            instances.add(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
+            instances.add("local");
         }
-        if (!DeployerConstants.INSTANCE_APP_NAME.equals(appName) && !DeployerConstants.MASTER_APP_NAME.equals(appName)) {
+        if (!"instance".equals(appName) && !"master".equals(appName)) {
             try {
                 Registry registry = SystemController.getService(Registry.class);
                 AppInfo appInfo = registry.getAppInfo(appName);

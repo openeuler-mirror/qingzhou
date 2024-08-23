@@ -1,8 +1,7 @@
-<%@ page import="java.util.stream.Collectors" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <form name="filterForm" id="filterForm" method="POST"
-      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getApp() + "/" + qzRequest.getModel() + "/" + "list")%>">
+      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + qzRequest.getManageType() + "/" + qzRequest.getApp() + "/" + qzModel + "/" + "list")%>">
     <div class="row filterForm" style="margin-top: 10px; display: none;">
         <%
             for (Integer i : indexToShow) {
@@ -32,7 +31,7 @@
                     }
                 %>
                 <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control"
-                       placeholder="<%=I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + fieldName)%>">
+                       placeholder="<%=I18n.getString(qzApp, "model.field." + qzModel + "." + fieldName)%>">
                 <%
                     }
                 %>

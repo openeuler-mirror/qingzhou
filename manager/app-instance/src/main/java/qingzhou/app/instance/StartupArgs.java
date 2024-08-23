@@ -110,16 +110,15 @@ public class StartupArgs extends ModelBase implements Addable {
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request, Response response) throws Exception {
-        String id = request.getParameter(idFieldName());
-        if (exists(id)) {
+        Map<String, String> oldData = showData(request.getId());
+        if (oldData != null) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
             return;
         }
 
         Map<String, String> newData = request.getParameters();
-        Map<String, String> oldData = showData(request.getId());
-        String error = validateArg(request, id, new ArrayList<>(), oldData == null ? null : oldData.get(idFieldName()));
+        String error = validateArg(request, request.getId(), new ArrayList<>(), null);
         if (error != null) {
             response.setSuccess(false);
             response.setMsg(error);

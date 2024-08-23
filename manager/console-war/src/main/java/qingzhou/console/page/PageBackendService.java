@@ -3,16 +3,17 @@ package qingzhou.console.page;
 import qingzhou.api.FieldType;
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
-import qingzhou.api.type.Showable;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
+import qingzhou.console.login.LoginManager;
 import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
-import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Base32Util;
 import qingzhou.registry.*;
 
@@ -32,7 +33,7 @@ public class PageBackendService {
     private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
 
     private static final Set<String> ShowToListExcludedActionNames = new HashSet<>(Arrays.asList(
-            Showable.ACTION_NAME_SHOW,
+            ConsoleConstants.ACTION_NAME_SHOW,
             "create",
             "add",
             "list",
@@ -42,6 +43,17 @@ public class PageBackendService {
     ));
 
     private PageBackendService() {
+    }
+
+    public static ModelActionInfo renderModelAction(String app, String model, String action, Request request) {
+        ModelInfo modelInfo = getModelInfo(app, model);
+        if (modelInfo == null) return null;
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
+        if (actionInfo == null) return null;
+
+        String user = request.getParameterInSession(LoginManager.LOGIN_USER);
+        boolean canAccess = AccessControl.canAccess(app, model + "/" + action, user);
+        return canAccess ? actionInfo : null;
     }
 
     public static String[] getFieldOptions(String userName, String app, String model, String field) {
@@ -76,19 +88,19 @@ public class PageBackendService {
 
     public static String getAppName(Request request) {
         if (request == null) {
-            return DeployerConstants.MASTER_APP_NAME;
+            return "master";
         }
 
-        if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(((RequestImpl) request).getManageType())) {
-            return DeployerConstants.INSTANCE_APP_NAME;
+        if ("instance".equals(((RequestImpl) request).getManageType())) {
+            return "instance";
         }
 
         return request.getApp();
     }
 
     public static String getAppName(String manageType, String appName) {
-        if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
-            return DeployerConstants.INSTANCE_APP_NAME;
+        if ("instance".equals(manageType)) {
+            return "instance";
         }
 
         return appName;

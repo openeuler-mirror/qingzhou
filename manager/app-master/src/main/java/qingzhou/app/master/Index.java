@@ -1,16 +1,12 @@
 package qingzhou.app.master;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Showable;
-import qingzhou.engine.ModuleContext;
+
+import java.util.Map;
 
 @Model(code = "index", icon = "home",
-        entrance = Showable.ACTION_NAME_SHOW,
+        entrance = "show",
         name = {"主页", "en:Home"},
         info = {"查看 QingZhou 产品的相关信息。", "en:Check out the relevant information of QingZhou products."})
 public class Index extends ModelBase implements Showable {
@@ -42,5 +38,10 @@ public class Index extends ModelBase implements Showable {
                     "en:View QingZhou product information."})
     public void index(Request request, Response response) throws Exception {
         show(request, response);
+    }
+
+    @Override
+    public Map<String, String> showData(String id) {
+        throw new IllegalStateException();
     }
 }

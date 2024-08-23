@@ -12,7 +12,6 @@ import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -49,7 +48,7 @@ public class ResetPassword implements Filter<HttpServletContext> {
 
         String msgI18nKey = user == null ? null : needReset(user);
         if (user != null && msgI18nKey != null) { // 例如加密工具不需要登录时候 user == null
-            if (DeployerConstants.MASTER_APP_PASSWORD_MODEL_NAME.equals(model)) {
+            if ("password".equals(model)) {
                 if ("edit".equals(action)
                         || "update".equals(action)) { // 允许访问重置密码的 uri
                     return true;
@@ -67,9 +66,9 @@ public class ResetPassword implements Filter<HttpServletContext> {
             httpServletResponse.sendRedirect(PageBackendService.encodeURL(httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
-                    "/" + DeployerConstants.MANAGE_TYPE_APP +
-                    "/" + DeployerConstants.MASTER_APP_NAME +
-                    "/" + DeployerConstants.MASTER_APP_PASSWORD_MODEL_NAME +
+                    "/" + "app" +
+                    "/" + "master" +
+                    "/" + "password" +
                     "/" + "edit" +
                     "/" + user +
                     "?" + RESTController.MSG_FLAG + "=" + msgI18nKey));

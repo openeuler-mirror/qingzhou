@@ -34,7 +34,6 @@ public class ModelInfo {
 
     public String[] getBatchActionNames() {
         return Arrays.stream(modelActionInfos).filter(ModelActionInfo::isBatch).map(ModelActionInfo::getCode).toArray(String[]::new);
-
     }
 
     public String[] getActionNames() {

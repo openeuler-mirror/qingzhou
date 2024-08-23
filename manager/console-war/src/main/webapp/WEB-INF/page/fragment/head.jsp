@@ -1,6 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ page import="java.util.*" %>
+<%@ page import="java.util.stream.*" %>
 <%@ page import="qingzhou.api.*" %>
 <%@ page import="qingzhou.api.type.*" %>
 <%@ page import="qingzhou.console.*" %>
@@ -12,19 +13,19 @@
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.page.*" %>
-<%@ page import="qingzhou.registry.ModelInfo" %>
-<%@ page import="qingzhou.registry.AppInfo" %>
-<%@ page import="qingzhou.registry.ModelFieldInfo" %>
-<%@ page import="qingzhou.deployer.ResponseImpl" %>
-<%@ page import="qingzhou.deployer.RequestImpl" %>
+<%@ page import="qingzhou.registry.*" %>
+<%@ page import="qingzhou.deployer.*" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
-    ResponseImpl qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
-    String menuAppName = PageBackendService.getAppName(qzRequest);
-    AppInfo appInfo = PageBackendService.getAppInfo(menuAppName);
+    String qzApp = PageBackendService.getAppName(qzRequest);
+    String qzModel = qzRequest.getModel();
+    String qzAction = qzRequest.getAction();
+    AppInfo appInfo = PageBackendService.getAppInfo(qzApp);
     ModelInfo modelInfo = PageBackendService.getModelInfo(qzRequest);
+    String idFieldName = modelInfo.getIdFieldName();
+    ResponseImpl qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
 %>
 
 <script type="text/javascript">
