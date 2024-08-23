@@ -4,19 +4,23 @@ body.dark-mode{
     color: #9e9e9e;
     --dark-white: #fff;
     --dark-black: #000;
-    --bg-color-tab-box: #222222;
-    --bg-color-main-sidebar: #222222;
-    --bg-color-block: #222222;
+    --bg-color-tab-box: #222;
+    --bg-color-main-sidebar: #222;
+    --bg-color-block: #222;
     --color-main-sidebar: #9e9e9e;
-    --bg-color-main-body: #333333;
-    --bg-color-btn :#333333;
+    --bg-color-main-body: #333;
+    --bg-color-btn :#333;
     --color-btn :#9e9e9e;
-    --bg-color-panel: #222222;
+    --bg-color-panel: #222;
     --bg-color-th: #323131;
     --color-th :#9e9e9e;
-    --bg-color-pager-item: #333333;
+    --bg-color-pager-item: #333;
     --color-pager-label: #9e9e9e;
-
+    --bg-color-nice-select: #333;
+    --bg-color-form-control: #333;
+    --color-kv-a: #9e9e9e;
+    --bg-color-kv-narrow:#444;
+    --bg-color-kv-tr-td:#222;
 }
 @keyframes FadeOut {
     from {
@@ -65,7 +69,7 @@ tr th{
     border:1px solid #ddd
 }
 .form-control{
-    background-color: var(--dark-black,#fff);
+    background-color: var(--bg-color-form-control,#fff);
     color: var(--dark-white,#000);
 }
 ul,li {list-style: none; margin: 0; padding: 0;}
@@ -523,11 +527,12 @@ tw-tooltip-bottom-left:before {
 }
 
 /*ZUI 样式覆写及自定义样式*/
-.nav-tabs {background: #FFFFFF; opacity:0.9;border-radius:0px; border: 1px solid #EFEEEE;}
+.nav-tabs {/*background: var(--dark-black,#FFFFFF); */opacity:0.9;border-radius:0px; border: 1px solid #EFEEEE;}
 .nav.nav-tabs li{border-left:0px; border-right: 1px solid #EFEEEE;border-bottom:0px; min-width: 100px;text-align:center;}
-.nav.nav-tabs li a{color: black; text-decoration:none;}
+.nav.nav-tabs li a{color: var(--dark-white,black); text-decoration:none;}
 .nav.nav-tabs li a:hover{color: #D6000F; text-decoration:none; background:#FFFFFF;}
 .nav.nav-tabs li.active a{color: #D6000F; border-bottom:2px solid #DF2525;border-radius:0px;margin-right:0px;}
+.nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover {background-color: var(--dark-black,#fff);}
 .has-error>label{color:black !important;}
 .has-error>label.tw-error-info{color:#ea644a !important;}
 #filterForm label.input-control-label-left{width:68px !important;white-space:nowrap !important;}

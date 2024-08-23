@@ -165,7 +165,7 @@
             color: #222;
             font-size: 13px;
             line-height: 1.53846154;
-            background-color: #fff;
+            /*background-color: #fff;*/
             -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
             -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
             transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
@@ -185,6 +185,7 @@
 
         .kv tr td {
             padding: 5px !important;
+            background-color: var(--bg-color-kv-tr-td,#ffffff);
         }
 
         .kv td.edit-kv {
@@ -197,12 +198,12 @@
         .kv .narrow {
             width: 32px !important;
             text-align: center;
-            background: #F9FAFB;
+            background: var(--bg-color-kv-narrow,#F9FAFB);
             border: 1px solid #DCDCDC;
         }
 
         .kv a {
-            color: black;
+            color: var(--color-kv-a,black);
             text-decoration: none;
         }
 
