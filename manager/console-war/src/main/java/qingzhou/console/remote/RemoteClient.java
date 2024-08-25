@@ -1,11 +1,11 @@
 package qingzhou.console.remote;
 
 import qingzhou.api.Request;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyCipher;
-import qingzhou.engine.util.Utils;
+import qingzhou.deployer.ResponseImpl;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.json.Json;
 
 import javax.net.ssl.*;
@@ -59,7 +59,7 @@ public class RemoteClient {
 
             try (InputStream inputStream = connection.getInputStream();
                  ByteArrayOutputStream bos = new ByteArrayOutputStream(inputStream.available())) {
-                Utils.copyStream(inputStream, bos);
+                FileUtil.copyStream(inputStream, bos);
                 byte[] decryptedData = cipher.decrypt(bos.toByteArray());
                 return jsonService.fromJson(new String(decryptedData, StandardCharsets.UTF_8), ResponseImpl.class);
             }

@@ -6,6 +6,7 @@ import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 import qingzhou.registry.*;
@@ -450,7 +451,7 @@ class DeployerImpl implements Deployer {
         forYunJian(appDir, libs);// todo 云鉴的定制需求？
 
         if (!isSystemApp) {
-            File[] commonFiles = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
+            File[] commonFiles = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
             if (commonFiles != null && commonFiles.length > 0) {
                 List<File> commonModels = Arrays.asList(commonFiles);
                 libs.addAll(commonModels);
@@ -463,12 +464,12 @@ class DeployerImpl implements Deployer {
     }
 
     private void forYunJian(File appDir, List<File> libs) {
-        File config = Utils.newFile(appDir, "config");
+        File config = FileUtil.newFile(appDir, "config");
         if (config.exists()) {
             libs.add(config);
         }
 
-        File lib = Utils.newFile(appDir, "lib");
+        File lib = FileUtil.newFile(appDir, "lib");
         if (lib.isDirectory()) {
             File[] files = lib.listFiles();
             if (files != null) {

@@ -13,6 +13,7 @@ import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
@@ -115,7 +116,7 @@ public class Controller implements ModuleActivator {
 
         byte[] process(InputStream in) throws Exception {
             ByteArrayOutputStream bos = new ByteArrayOutputStream(in.available());
-            Utils.copyStream(in, bos);
+            FileUtil.copyStream(in, bos);
 
             // 1. 获得请求的数据
             byte[] requestData = bos.toByteArray();

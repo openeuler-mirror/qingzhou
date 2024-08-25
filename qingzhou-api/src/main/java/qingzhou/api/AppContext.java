@@ -54,4 +54,6 @@ public interface AppContext {
     <T> T getService(Class<T> clazz);
 
     Collection<Class<?>> getServiceTypes();
+
+    void callDefaultAction(String model, String action, Request request, Response response) throws Exception;
 }

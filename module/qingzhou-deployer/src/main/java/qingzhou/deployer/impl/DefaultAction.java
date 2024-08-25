@@ -6,7 +6,7 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.*;
 import qingzhou.deployer.ResponseImpl;
-import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 
@@ -146,11 +146,11 @@ class DefaultAction {
                 File[] subFiles = rootFile.listFiles();
                 if (subFiles != null) {
                     for (File subFile : subFiles) {
-                        map.put(downloadItem + "/" + subFile.getName(), subFile.getName() + " (" + Utils.getFileSize(subFile) + ")");
+                        map.put(downloadItem + "/" + subFile.getName(), subFile.getName() + " (" + FileUtil.getFileSize(subFile) + ")");
                     }
                 }
             } else if (rootFile.isFile()) {
-                map.put(downloadItem, downloadItem + " (" + Utils.getFileSize(rootFile) + ")");
+                map.put(downloadItem, downloadItem + " (" + FileUtil.getFileSize(rootFile) + ")");
             }
         }
         response.addData(map);
@@ -178,7 +178,7 @@ class DefaultAction {
             File fileBase = ((Downloadable) instance).downloadData(request.getId());
             List<File> downloadFiles = new ArrayList<>();
             for (String s : downloadFileNames.split(",")) {
-                downloadFiles.add(Utils.newFile(fileBase, s));//防止路径穿越：Utils.newFile
+                downloadFiles.add(FileUtil.newFile(fileBase, s));//防止路径穿越：FileUtil.newFile
             }
             downloadKey = buildDownloadKey(downloadFiles, keyDir);
         }
@@ -231,8 +231,8 @@ class DefaultAction {
             result.put("DOWNLOAD_OFFSET", String.valueOf(offset));
         } else {
             result.put("DOWNLOAD_OFFSET", String.valueOf(-1L));
-            File temp = Utils.newFile(baseDir, key);
-            Utils.forceDelete(temp);
+            File temp = FileUtil.newFile(baseDir, key);
+            FileUtil.forceDelete(temp);
         }
 
         return result;
@@ -258,28 +258,28 @@ class DefaultAction {
                     System.err.println("failed to parse time: " + historicalKey);
                 }
                 if (delete) {
-                    File temp = Utils.newFile(keyDir, historicalKey);
-                    Utils.forceDelete(temp);
+                    File temp = FileUtil.newFile(keyDir, historicalKey);
+                    FileUtil.forceDelete(temp);
                 }
             }
         }
 
         String key = format.format(new Date()) + keySP + UUID.randomUUID().toString().replace("-", "");
-        File zipTo = Utils.newFile(keyDir, key);
-        File tempDir = Utils.newFile(keyDir, UUID.randomUUID().toString());// 保障压缩文件的层次结构
+        File zipTo = FileUtil.newFile(keyDir, key);
+        File tempDir = FileUtil.newFile(keyDir, UUID.randomUUID().toString());// 保障压缩文件的层次结构
         try {
             for (File file : downloadFiles) {
                 if (file.exists()) {
                     File copyTo = new File(tempDir, file.getName());
                     if (file.isDirectory()) {
-                        Utils.mkdirs(copyTo);
+                        FileUtil.mkdirs(copyTo);
                     }
-                    Utils.copyFileOrDirectory(file, copyTo);
+                    FileUtil.copyFileOrDirectory(file, copyTo);
                 }
             }
-            Utils.zipFiles(tempDir, zipTo, false);
+            FileUtil.zipFiles(tempDir, zipTo, false);
         } finally {
-            Utils.forceDelete(tempDir);
+            FileUtil.forceDelete(tempDir);
         }
         return key;
     }

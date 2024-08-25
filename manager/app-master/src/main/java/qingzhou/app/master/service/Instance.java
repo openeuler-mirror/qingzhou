@@ -5,7 +5,6 @@
 //import qingzhou.app.master.MasterApp;
 //import qingzhou.config.Agent;
 //import qingzhou.config.Config;
-//import qingzhou.deployer.DeployerConstants;
 //import qingzhou.registry.InstanceInfo;
 //import qingzhou.registry.Registry;
 //
@@ -42,7 +41,7 @@
 //    @Override
 //    public void start() {
 //        appContext.addActionFilter((request, response) -> {
-//            if (request.getId().equals(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID)) {
+//            if (request.getId().equals("local")) {
 //                if ("update".equals(request.getAction())
 //                        || "delete".equals(request.getAction())) {
 //                    return appContext.getI18n(request.getLang(), "validator.master.system");
@@ -89,7 +88,7 @@
 //            info = {"查看该组件的相关信息。", "en:View the information of this model."})
 //    public void show(Request request, Response response) {
 //        String id = request.getId();
-//        if (DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID.equals(id)) {
+//        if ("local".equals(id)) {
 //            response.addData(localInstance());
 //            return;
 //        }
@@ -159,7 +158,7 @@
 //
 //    private Map<String, String> localInstance() {
 //        Map<String, String> local = new HashMap<>();
-//        local.put("id", DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
+//        local.put("id", "local");
 //        Agent agent = MasterApp.getService(Config.class).getAgent();
 //        local.put("ip", agent.getAgentHost());
 //        local.put("port", String.valueOf(agent.getAgentPort()));

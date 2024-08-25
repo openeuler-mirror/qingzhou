@@ -62,6 +62,7 @@ public class ResponseImpl implements Response {
         this.pageNum = pageNum;
     }
 
+    @Override
     public List<Map<String, String>> getDataList() {
         return dataList;
     }

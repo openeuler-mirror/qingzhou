@@ -98,7 +98,7 @@
 //                }
 //            }
 //        } else if (file.isDirectory()) {
-//            if (Utils.newFile(file, "engine", "qingzhou-engine.jar").exists()) {
+//            if (FileUtil.newFile(file, "engine", "qingzhou-engine.jar").exists()) {
 //                return fileName.substring(versionFlag.length());// 解压后的版本文件
 //            }
 //        }

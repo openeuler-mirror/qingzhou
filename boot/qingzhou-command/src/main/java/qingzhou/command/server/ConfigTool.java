@@ -2,11 +2,7 @@ package qingzhou.command.server;
 
 import qingzhou.command.CommandUtil;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -14,13 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 class ConfigTool {
@@ -138,7 +128,7 @@ class ConfigTool {
             Object instance = loadedClass.newInstance();
             Method fromJson = loadedClass.getMethod("fromJson", Reader.class, Class.class, String[].class);
 
-            try (InputStream inputStream = Files.newInputStream(new File(instanceDir, "qingzhou.json").toPath())) {
+            try (InputStream inputStream = Files.newInputStream(new File(new File(instanceDir, "conf"), "qingzhou.json").toPath())) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
                 return (Map) fromJson.invoke(instance, reader, Map.class, new String[]{"jvm"});
             }

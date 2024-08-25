@@ -6,7 +6,7 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Downloadable;
 import qingzhou.api.type.Updatable;
-import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.util.Collections;
@@ -116,7 +116,7 @@ public class ServerLog extends ModelBase implements Updatable, Downloadable {
 
     @Override
     public File downloadData(String id) {
-        return Utils.newFile(InstanceApp.getInstanceDir(), "logs");
+        return FileUtil.newFile(InstanceApp.getInstanceDir(), "logs");
     }
 
     @Override

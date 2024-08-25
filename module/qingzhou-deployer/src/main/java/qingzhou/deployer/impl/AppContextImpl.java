@@ -1,8 +1,6 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.ActionFilter;
-import qingzhou.api.AppContext;
-import qingzhou.api.Lang;
+import qingzhou.api.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
@@ -80,6 +78,11 @@ class AppContextImpl implements AppContext {
     @Override
     public Collection<Class<?>> getServiceTypes() {
         return new ArrayList<>(Arrays.asList(serviceTypes));
+    }
+
+    @Override
+    public void callDefaultAction(String model, String action, Request request, Response response) {
+        throw new UnsupportedOperationException("等待实现");
     }
 
     @Override

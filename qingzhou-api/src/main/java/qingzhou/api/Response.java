@@ -1,5 +1,6 @@
 package qingzhou.api;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,6 +27,11 @@ public interface Response {
      * 以对象形式添加数据到响应。
      */
     void addModelData(ModelBase data) throws Exception;
+
+    /**
+     * 获得数据列表引用，以便进行清理等操作
+     */
+    List<Map<String, String>> getDataList();
 
     /**
      * 设置响应类型

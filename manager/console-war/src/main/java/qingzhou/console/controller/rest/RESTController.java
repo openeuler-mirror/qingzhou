@@ -11,6 +11,7 @@ import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
@@ -110,12 +111,12 @@ public class RESTController extends HttpServlet {
             if (fileAttachments != null) {
                 for (String fa : fileAttachments.values()) {
                     try {
-                        File f = Utils.newFile(fa);
+                        File f = FileUtil.newFile(fa);
                         if (f.exists()) {
                             File parentFile = f.getParentFile();
                             if (parentFile.exists()
                                     && parentFile.getCanonicalPath().startsWith(TEMP_BASE_PATH.getCanonicalPath())) {
-                                Utils.forceDelete(parentFile);
+                                FileUtil.forceDelete(parentFile);
                             }
                         }
                     } catch (Exception ignored) {
@@ -239,9 +240,9 @@ public class RESTController extends HttpServlet {
                 }
 
                 String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-                String fileName = Utils.newFile(part.getSubmittedFileName()).getName();
-                File targetFile = Utils.newFile(TEMP_BASE_PATH, time, fileName);
-                Utils.mkdirs(targetFile.getParentFile());
+                String fileName = FileUtil.newFile(part.getSubmittedFileName()).getName();
+                File targetFile = FileUtil.newFile(TEMP_BASE_PATH, time, fileName);
+                FileUtil.mkdirs(targetFile.getParentFile());
 
                 try (ReadableByteChannel readChannel = Channels.newChannel(part.getInputStream());
                      FileChannel writeChannel = FileChannel.open(targetFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {

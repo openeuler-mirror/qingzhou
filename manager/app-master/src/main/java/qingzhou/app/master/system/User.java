@@ -12,12 +12,13 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
-@Model(code = "user", icon = "user",
+@Model(code = User.MODEL_NAME, icon = "user",
         menu = "System", order = 1,
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements Addable {
-    private final String PASSWORD_FLAG = "***************";
+    public static final String MODEL_NAME = "user";
+    private static final String PASSWORD_FLAG = "***************";
 
     private static final String idKey = "id";
 
@@ -106,81 +107,6 @@ public class User extends ModelBase implements Addable {
             info = {"若未启用，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
     public Boolean active = true;
 
-    private String validate(Request request, String fieldName) throws Exception {
-        if ("password".equals(fieldName)) {
-            String password = request.getParameter("password");
-            if (passwordChanged(password)) {
-                String userName = request.getParameter("name");
-                String msg = checkPwd(appContext, request.getLang(), password, userName);
-                if (msg != null) {
-                    return msg;
-                }
-            }
-        }
-
-        if ("confirmPassword".equals(fieldName)) {
-            String password = request.getParameter("password");
-            if (passwordChanged(password)) {
-                // 恢复 ITAIT-5005 的修改
-                if (!Objects.equals(password, request.getParameter("confirmPassword"))) {
-                    return appContext.getI18n(request.getLang(), "confirmPassword.different");
-                }
-            }
-        }
-
-        return null;
-    }
-
-    static String checkPwd(AppContext appContext, Lang lang, String password, String... infos) {
-        if (PASSWORD_FLAG.equals(password)) {
-            return null;
-        }
-
-        int minLength = 10;
-        int maxLength = 20;
-        if (password.length() < minLength || password.length() > maxLength) {
-            return String.format(appContext.getI18n(lang, "password.lengthBetween"), minLength, maxLength);
-        }
-
-        if (infos != null && infos.length > 0) {
-            if (infos[0] != null) { // for #ITAIT-5014
-                if (password.contains(infos[0])) { // 包含身份信息
-                    return appContext.getI18n(lang, "password.passwordContainsUsername");
-                }
-            }
-        }
-
-        //特殊符号包含下划线
-        String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";
-        if (!Pattern.compile(PASSWORD_REGEX).matcher(password).matches()) {
-            return appContext.getI18n(lang, "password.format");
-        }
-
-        if (isContinuousChar(password)) { // 连续字符校验
-            return appContext.getI18n(lang, "password.continuousChars");
-        }
-
-        return null;
-    }
-
-    private static boolean isContinuousChar(String password) {
-        char[] chars = password.toCharArray();
-        for (int i = 0; i < chars.length - 2; i++) {
-            int n1 = chars[i];
-            int n2 = chars[i + 1];
-            int n3 = chars[i + 2];
-            // 判断重复字符
-            if (n1 == n2 && n1 == n3) {
-                return true;
-            }
-            // 判断连续字符： 正序 + 倒序
-            if ((n1 + 1 == n2 && n1 + 2 == n3) || (n1 - 1 == n2 && n1 - 2 == n3)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @ModelAction(
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
@@ -206,25 +132,6 @@ public class User extends ModelBase implements Addable {
 
         rectifyParameters(newUser, new HashMap<>());
         addData(newUser);
-    }
-
-    @ModelAction(
-            name = {"查看", "en:Show"},
-            info = {"查看该组件的相关信息。", "en:View the information of this model."})
-    public void show(Request request, Response response) throws Exception {
-        Map<String, String> data = showData(request.getId());
-        if ("edit".equals(request.getAction())) {
-            String[] passwords = Password.splitPwd(data.get("password"));
-            String digestAlg = passwords[0];
-            int saltLength = Integer.parseInt(passwords[1]);
-            int iterations = Integer.parseInt(passwords[2]);
-            data.put("digestAlg", digestAlg);
-            data.put("saltLength", String.valueOf(saltLength));
-            data.put("iterations", String.valueOf(iterations));
-            data.put("password", PASSWORD_FLAG);
-            data.put("confirmPassword", PASSWORD_FLAG);
-        }
-        response.addData(data);
     }
 
     @ModelAction(
@@ -278,6 +185,157 @@ public class User extends ModelBase implements Addable {
         }
     }
 
+    @ModelAction(
+            show = "id!=qingzhou",
+            name = {"删除", "en:Delete"},
+            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
+                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
+    public void delete(Request request, Response response) throws Exception {
+        appContext.callDefaultAction(MODEL_NAME, "delete", request, response);
+    }
+
+    @Override
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
+        List<Map<String, String>> users = new ArrayList<>();
+        for (qingzhou.config.User user : MasterApp.getService(Config.class).getConsole().getUser()) {
+            users.add(Utils.getPropertiesFromObj(user));
+        }
+        return users;
+    }
+
+    @Override
+    public void addData(Map<String, String> data) throws Exception {
+        qingzhou.config.User u = new qingzhou.config.User();
+        Utils.setPropertiesToObj(u, data);
+        MasterApp.getService(Config.class).addUser(u);
+    }
+
+    @Override
+    public void updateData(Map<String, String> data) throws Exception {
+        updateDataForUser(data);
+    }
+
+    @Override
+    public void deleteData(String id) throws Exception {
+        MasterApp.getService(Config.class).deleteUser(id);
+    }
+
+    @Override
+    public Map<String, String> showData(String id) throws Exception {
+        return showDataForUser(id);
+    }
+
+    private boolean forbidden(Request request, Response response) {
+        String id = request.getId();
+        if ("qingzhou".equals(id)) {
+            if ("add".equals(request.getAction())
+                    || "delete".equals(request.getAction())) {
+                response.setSuccess(false);
+                response.setMsg(this.appContext.getI18n(request.getLang(), "operate.system.users.not"));
+                return true;
+            }
+
+            if ("update".equals(request.getAction())) {
+                if (!Boolean.parseBoolean(request.getParameter("active"))) {
+                    response.setSuccess(false);
+                    response.setMsg(this.appContext.getI18n(request.getLang(), "System.users.keep.active"));
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private String validate(Request request, String fieldName) {
+        if ("password".equals(fieldName)) {
+            String password = request.getParameter("password");
+            if (passwordChanged(password)) {
+                String userName = request.getParameter("name");
+                String msg = checkPwd(appContext, request.getLang(), password, userName);
+                if (msg != null) {
+                    return msg;
+                }
+            }
+        }
+
+        if ("confirmPassword".equals(fieldName)) {
+            String password = request.getParameter("password");
+            if (passwordChanged(password)) {
+                // 恢复 ITAIT-5005 的修改
+                if (!Objects.equals(password, request.getParameter("confirmPassword"))) {
+                    return appContext.getI18n(request.getLang(), "confirmPassword.different");
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private boolean passwordChanged(String password) {
+        return password != null && !PASSWORD_FLAG.equals(password);
+    }
+
+    static Map<String, String> showDataForUser(String id) throws Exception {
+        for (qingzhou.config.User user : MasterApp.getService(Config.class).getConsole().getUser()) {
+            if (user.getId().equals(id)) {
+                Map<String, String> data = Utils.getPropertiesFromObj(user);
+                String[] passwords = Password.splitPwd(data.get("password"));
+                String digestAlg = passwords[0];
+                int saltLength = Integer.parseInt(passwords[1]);
+                int iterations = Integer.parseInt(passwords[2]);
+                data.put("digestAlg", digestAlg);
+                data.put("saltLength", String.valueOf(saltLength));
+                data.put("iterations", String.valueOf(iterations));
+                data.put("password", PASSWORD_FLAG);
+                data.put("confirmPassword", PASSWORD_FLAG);
+                return data;
+            }
+        }
+        return null;
+    }
+
+    static void updateDataForUser(Map<String, String> data) throws Exception {
+        Config config = MasterApp.getService(Config.class);
+        String id = data.get(idKey);
+        qingzhou.config.User user = config.getConsole().getUser(id);
+        config.deleteUser(id);
+        Utils.setPropertiesToObj(user, data);
+        config.addUser(user);
+    }
+
+    static String checkPwd(AppContext appContext, Lang lang, String password, String... infos) {
+        if (PASSWORD_FLAG.equals(password)) {
+            return null;
+        }
+
+        int minLength = 10;
+        int maxLength = 20;
+        if (password.length() < minLength || password.length() > maxLength) {
+            return String.format(appContext.getI18n(lang, "password.lengthBetween"), minLength, maxLength);
+        }
+
+        if (infos != null && infos.length > 0) {
+            if (infos[0] != null) { // for #ITAIT-5014
+                if (password.contains(infos[0])) { // 包含身份信息
+                    return appContext.getI18n(lang, "password.passwordContainsUsername");
+                }
+            }
+        }
+
+        //特殊符号包含下划线
+        String PASSWORD_REGEX = "^(?![A-Za-z0-9]+$)(?![a-z0-9_\\W]+$)(?![A-Za-z_\\W]+$)(?![A-Z0-9_\\W]+$)(?![A-Z0-9\\W]+$)[\\w\\W]{10,}$";
+        if (!Pattern.compile(PASSWORD_REGEX).matcher(password).matches()) {
+            return appContext.getI18n(lang, "password.format");
+        }
+
+        if (isContinuousChar(password)) { // 连续字符校验
+            return appContext.getI18n(lang, "password.continuousChars");
+        }
+
+        return null;
+    }
+
     static String cutOldPasswords(String historyPasswords, int limitRepeats, String newPwd) {
         String DATA_SEPARATOR = ",";
 
@@ -306,94 +364,26 @@ public class User extends ModelBase implements Addable {
         return historyPasswords;
     }
 
-    private boolean forbidden(Request request, Response response) {
-        String id = request.getId();
-        if (id != null) {
-            if ("qingzhou".contains(id)) {
-                if ("add".equals(request.getAction())
-                        || "delete".equals(request.getAction())) {
-                    response.setSuccess(false);
-                    response.setMsg(this.appContext.getI18n(request.getLang(), "operate.system.users.not"));
-                    return true;
-                }
-
-                if ("update".equals(request.getAction())) {
-                    if (!Boolean.parseBoolean(request.getParameter("active"))) {
-                        response.setSuccess(false);
-                        response.setMsg(this.appContext.getI18n(request.getLang(), "System.users.keep.active"));
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    @ModelAction(
-            show = "id!=qingzhou",
-            name = {"删除", "en:Delete"},
-            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
-                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
-    public void delete(Request request, Response response) throws Exception {
-        if (forbidden(request, response)) return;
-        deleteData(request.getId());
-    }
-
-    public static void insertPasswordModifiedTime(Map<String, String> params) {
+    static void insertPasswordModifiedTime(Map<String, String> params) {
         String value = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         params.put("passwordLastModified", value);
     }
 
-    private boolean passwordChanged(String password) {
-        return password != null && !PASSWORD_FLAG.equals(password);
-    }
-
-    @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
-        List<Map<String, String>> users = new ArrayList<>();
-        for (qingzhou.config.User user : MasterApp.getService(Config.class).getConsole().getUser()) {
-            users.add(Utils.getPropertiesFromObj(user));
-        }
-        return users;
-    }
-
-    @Override
-    public void addData(Map<String, String> data) throws Exception {
-        qingzhou.config.User u = new qingzhou.config.User();
-        Utils.setPropertiesToObj(u, data);
-        MasterApp.getService(Config.class).addUser(u);
-    }
-
-    @Override
-    public void updateData(Map<String, String> data) throws Exception {
-        updateDataForUser(data);
-    }
-
-    static void updateDataForUser(Map<String, String> data) throws Exception {
-        Config config = MasterApp.getService(Config.class);
-        String id = data.get(idKey);
-        qingzhou.config.User user = config.getConsole().getUser(id);
-        config.deleteUser(id);
-        Utils.setPropertiesToObj(user, data);
-        config.addUser(user);
-    }
-
-    @Override
-    public void deleteData(String id) throws Exception {
-        MasterApp.getService(Config.class).deleteUser(id);
-    }
-
-    @Override
-    public Map<String, String> showData(String id) throws Exception {
-        return showDataForUser(id);
-    }
-
-    static Map<String, String> showDataForUser(String id) throws Exception {
-        for (qingzhou.config.User user : MasterApp.getService(Config.class).getConsole().getUser()) {
-            if (user.getId().equals(id)) {
-                return Utils.getPropertiesFromObj(user);
+    private static boolean isContinuousChar(String password) {
+        char[] chars = password.toCharArray();
+        for (int i = 0; i < chars.length - 2; i++) {
+            int n1 = chars[i];
+            int n2 = chars[i + 1];
+            int n3 = chars[i + 2];
+            // 判断重复字符
+            if (n1 == n2 && n1 == n3) {
+                return true;
+            }
+            // 判断连续字符： 正序 + 倒序
+            if ((n1 + 1 == n2 && n1 + 2 == n3) || (n1 - 1 == n2 && n1 - 2 == n3)) {
+                return true;
             }
         }
-        return null;
+        return false;
     }
 }

@@ -5,24 +5,22 @@
 //import qingzhou.app.master.MasterApp;
 //import qingzhou.config.Config;
 //import qingzhou.config.Security;
-//import qingzhou.deployer.RequestImpl;
-//import qingzhou.deployer.ResponseImpl;
 //import qingzhou.crypto.CryptoService;
 //import qingzhou.crypto.KeyCipher;
 //import qingzhou.deployer.Deployer;
-//import qingzhou.deployer.DeployerConstants;
-//import qingzhou.engine.util.Utils;
+//import qingzhou.deployer.RequestImpl;
+//import qingzhou.deployer.ResponseImpl;
+//import qingzhou.engine.util.FileUtil;
 //import qingzhou.json.Json;
 //import qingzhou.registry.*;
 //
-//import javax.net.ssl.*;
+//import javax.net.ssl.SSLSocketFactory;
+//import javax.net.ssl.X509TrustManager;
 //import java.io.*;
 //import java.lang.reflect.InvocationTargetException;
 //import java.net.HttpURLConnection;
-//import java.net.URL;
 //import java.nio.charset.StandardCharsets;
 //import java.nio.file.Files;
-//import java.security.SecureRandom;
 //import java.security.cert.X509Certificate;
 //import java.util.*;
 //
@@ -61,10 +59,10 @@
 //
 //    @ModelField(
 //            //type = FieldType.multiselect,
-//            list = true, //refModel = Instance.class,
+//            list = true, //refModel = Instance.class, todo 远程获取引用model的列表
 //            name = {"实例", "en:Instance"},
 //            info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
-//    public String instances = DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID;
+//    public String instances = "local";
 //
 //    @Override
 //    public void start() {
@@ -92,7 +90,7 @@
 //        qingzhou.deployer.App app = MasterApp.getService(Deployer.class).getApp(id);
 //        if (app != null) {
 //            appMap.put("id", id);
-//            appMap.put("instances", DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
+//            appMap.put("instances", "local");
 //            appMap.put("filename", ""); // ToDo
 //            response.addData(appMap);
 //            return;
@@ -145,75 +143,11 @@
 //    }
 //
 //    @ModelAction(
-//            name = {"列表", "en:List"},
-//            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-//    public void list(Request request, Response response) throws Exception {
-//        int pageNum = 1;
-//        try {
-//            pageNum = Integer.parseInt(request.getParameter("pageNum"));
-//        } catch (NumberFormatException ignored) {
-//        }
-//
-//        int pageSize = response.getPageSize();
-//        if (pageSize == -1) {
-//            pageSize = 10;
-//        }
-//
-//        Deployer deployer = MasterApp.getService(Deployer.class);
-//        Collection<String> localAppNames = deployer.getAllApp();
-//        Map<String, Set<String>> uniqueApps = new HashMap<>();
-//
-//        // 处理本地应用名称
-//        for (String appName : localAppNames) {
-//            if ("master".equals(appName) || "instance".equals(appName)) {
-//                continue;
-//            }
-//            uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add(DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID);
-//        }
-//
-//        try {
-//            // 处理远程实例的应用信息
-//            Registry registry = MasterApp.getService(Registry.class);
-//            for (String instanceId : registry.getAllInstanceId()) {
-//                InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
-//                for (AppInfo appInfo : instanceInfo.getAppInfos()) {
-//                    String appName = appInfo.getName();
-//                    uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add(instanceId);
-//                }
-//            }
-//        } catch (Exception ignored) {
-//        }
-//
-//        List<Map<String, String>> finalAppList = new ArrayList<>();
-//        for (Map.Entry<String, Set<String>> entry : uniqueApps.entrySet()) {
-//            String appName = entry.getKey();
-//            Set<String> instances = entry.getValue();
-//            Map<String, String> appMap = new HashMap<>();
-//            appMap.put("id", appName);
-//            appMap.put("instances", String.join(",", instances));
-//            appMap.put("filename", !("instance".equals(appName) || "master".equals(appName)) ? "apps/" + appName : "");
-//            finalAppList.add(appMap);
-//        }
-//
-//        int totalSize = finalAppList.size();
-//        int startIndex = (pageNum - 1) * pageSize;
-//        int endIndex = Math.min(startIndex + pageSize, totalSize);
-//
-//        List<Map<String, String>> pagedApps = finalAppList.subList(startIndex, endIndex);
-//        for (Map<String, String> app : pagedApps) {
-//            response.addData(app);
-//        }
-//
-//        response.setTotalSize(totalSize);
-//        response.setPageSize(pageSize);
-//        response.setPageNum(pageNum);
-//    }
-//
-//    @ModelAction(
 //            name = {"部署", "en:Deploy"},
-//            info = {"部署应用到本地实例。", "en:Deploy the app to an on-premises instance."})
+//            info = {"部署应用到指定的实例上。",
+//                    "en:Deploy the application to the specified instance."})
 //    public void create(Request request, Response response) throws Exception {
-//        response.addModelData(new App());
+//        appContext.callDefaultAction("app", "create", request, response);
 //    }
 //
 //    @ModelAction(
@@ -231,7 +165,7 @@
 //            Security security = MasterApp.getService(Config.class).getConsole().getSecurity();
 //            for (String instance : instances) {
 //                try {
-//                    if (DeployerConstants.MASTER_APP_DEFAULT_INSTANCE_ID.equals(instance)) { // 安装到本地节点
+//                    if ("local".equals(instance)) { // 安装到本地节点
 //                        MasterApp.getService(Deployer.class).getApp("instance").invokeDirectly(request, response);
 //                    } else {
 //                        InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
@@ -434,7 +368,7 @@
 //
 //            try (InputStream inputStream = connection.getInputStream();
 //                 ByteArrayOutputStream bos = new ByteArrayOutputStream(inputStream.available())) {
-//                Utils.copyStream(inputStream, bos);
+//                FileUtil.copyStream(inputStream, bos);
 //                byte[] decryptedData = cipher.decrypt(bos.toByteArray());
 //                return jsonService.fromJson(new String(decryptedData, StandardCharsets.UTF_8), ResponseImpl.class);
 //            }
@@ -456,6 +390,51 @@
 //    private static SSLSocketFactory ssf;
 //    public static final X509TrustManager TRUST_ALL_MANAGER = new X509TrustManagerInternal();
 //
+//    @Override
+//    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
+//        Deployer deployer = MasterApp.getService(Deployer.class);
+//        Collection<String> localAppNames = deployer.getAllApp();
+//        Map<String, Set<String>> uniqueApps = new HashMap<>();
+//
+//        // 处理本地应用名称
+//        for (String appName : localAppNames) {
+//            if ("master".equals(appName) || "instance".equals(appName)) {
+//                continue;
+//            }
+//            uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add("local");
+//        }
+//
+//        try {
+//            // 处理远程实例的应用信息
+//            Registry registry = MasterApp.getService(Registry.class);
+//            for (String instanceId : registry.getAllInstanceId()) {
+//                InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
+//                for (AppInfo appInfo : instanceInfo.getAppInfos()) {
+//                    String appName = appInfo.getName();
+//                    uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add(instanceId);
+//                }
+//            }
+//        } catch (Exception ignored) {
+//        }
+//
+//        List<Map<String, String>> finalAppList = new ArrayList<>();
+//        for (Map.Entry<String, Set<String>> entry : uniqueApps.entrySet()) {
+//            String appName = entry.getKey();
+//            Set<String> instances = entry.getValue();
+//            Map<String, String> appMap = new HashMap<>();
+//            appMap.put("id", appName);
+//            appMap.put("instances", String.join(",", instances));
+//            appMap.put("filename", !("instance".equals(appName) || "master".equals(appName)) ? "apps/" + appName : "");
+//            finalAppList.add(appMap);
+//        }
+//
+//        int totalSize = finalAppList.size();
+//        int startIndex = (pageNum - 1) * pageSize;
+//        int endIndex = Math.min(startIndex + pageSize, totalSize);
+//
+//        List<Map<String, String>> pagedApps = finalAppList.subList(startIndex, endIndex);
+//    }
+//
 //    static class X509TrustManagerInternal implements X509TrustManager {
 //        //返回受信任的X509证书数组。
 //        @Override
@@ -474,28 +453,6 @@
 //        @Override
 //        public void checkClientTrusted(X509Certificate[] chain, String authType) {
 //        }
-//    }
-//
-//    private static HttpURLConnection buildConnection(String url) throws Exception {
-//        HttpURLConnection conn;
-//        URL http = new URL(url);
-//        if (url.startsWith("https:")) {
-//            if (ssf == null) {
-//                SSLContext sslContext = SSLContext.getInstance("TLS");
-//                sslContext.init(new KeyManager[0], new TrustManager[]{TRUST_ALL_MANAGER}, new SecureRandom());
-//                ssf = sslContext.getSocketFactory();
-//            }
-//            HttpsURLConnection httpsConn = (HttpsURLConnection) http.openConnection();
-//            httpsConn.setSSLSocketFactory(ssf);
-//            httpsConn.setHostnameVerifier((hostname, session) -> true);
-//            conn = httpsConn;
-//        } else {
-//            conn = (HttpURLConnection) http.openConnection();
-//        }
-//
-//        setConnectionProperties(conn);
-//
-//        return conn;
 //    }
 //
 //    private static void setConnectionProperties(HttpURLConnection conn) throws Exception {

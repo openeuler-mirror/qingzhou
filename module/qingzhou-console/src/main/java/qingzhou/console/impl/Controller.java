@@ -10,7 +10,7 @@ import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
-import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.json.Json;
@@ -96,7 +96,7 @@ public class Controller implements ModuleActivator {
         }
 
         private void exec0() {
-            File consoleApp = Utils.newFile(moduleContext.getLibDir(), "module", "console");
+            File consoleApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "console");
             String docBase = consoleApp.getAbsolutePath();
             contextPath = console.getContextRoot();
             servletContainer.addWebapp(contextPath, docBase);
