@@ -22,6 +22,7 @@
 //public class Version extends ModelBase implements Listable {
 //
 //    @ModelField(
+//            required = true,
 //            list = true,
 //            name = {"版本号", "en:ID"},
 //            info = {"QingZhou 的版本号。", "en:The version number of QingZhou."})

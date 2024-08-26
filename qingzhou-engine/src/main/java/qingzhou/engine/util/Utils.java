@@ -40,7 +40,7 @@ public class Utils {
 
             Class<?>[] parameterTypes = writeMethod.getParameterTypes();
             if (parameterTypes.length == 1) {
-                Object arg = convert(parameterTypes[0], val);
+                Object arg = stringToType(val, parameterTypes[0]);
                 writeMethod.invoke(obj, arg);
             } else {
                 throw new IllegalArgumentException("parameter types error");
@@ -48,7 +48,7 @@ public class Utils {
         }
     }
 
-    public static Object convert(Class<?> type, String value) throws Exception {
+    public static Object stringToType(String value, Class<?> type) throws Exception {
         if (value == null) {
             return null;
         }
@@ -95,6 +95,10 @@ public class Utils {
         // 其它类型是不支持的
         // throw new IllegalArgumentException();
         return null;
+    }
+
+    public static boolean notBlank(String value) {
+        return !isBlank(value);
     }
 
     public static boolean isBlank(String value) {

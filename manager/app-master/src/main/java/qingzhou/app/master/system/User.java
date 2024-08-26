@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements Addable {
     public static final String MODEL_NAME = "user";
-    private static final String PASSWORD_FLAG = "***************";
+    static final String PASSWORD_FLAG = "***************";
 
     private static final String idKey = "id";
 
@@ -31,28 +31,37 @@ public class User extends ModelBase implements Addable {
     public void start() {
         appContext.addI18n("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
         appContext.addI18n("operate.system.users.not", new String[]{"为安全起见，请勿操作系统内置用户", "en:For security reasons, do not operate the system built-in users"});
+        appContext.addI18n("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
+        appContext.addI18n("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少 10 位。", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
+        appContext.addI18n("password.passwordContainsUsername", new String[]{"密码不能包含用户名", "en:A weak password, the password cannot contain the username"});
+        appContext.addI18n("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
     }
 
     @ModelField(
+            required = true,
             list = true,
             name = {"账户名称", "en:User Name"},
             info = {"用于登录系统的用户名。", "en:The username used to log in to the system."})
     public String id;
 
     @ModelField(
-            list = true, required = false,
+            list = true,
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
-    public String info = "";
+    public String info;
 
     @ModelField(
-            type = FieldType.password, lengthMax = 2048,
+            type = FieldType.password,
+            required = true,
+            lengthMin = 10, lengthMax = 20,
             name = {"账户密码", "en:Password"},
             info = {"用于登录系统的账户密码。", "en:The account password used to log in to the system."})
     public String password;
 
     @ModelField(
-            type = FieldType.password, lengthMax = 2048,
+            type = FieldType.password,
+            required = true,
+            lengthMin = 10, lengthMax = 20,
             name = {"确认密码", "en:Confirm Password"},
             info = {"确认登录系统的新密码。", "en:Confirm the new password for logging in to the system."})
     public String confirmPassword;
@@ -66,7 +75,7 @@ public class User extends ModelBase implements Addable {
     public String digestAlg = "SHA-256";
 
     @ModelField(
-            required = false, type = FieldType.number,
+            type = FieldType.number,
             min = 1,
             max = 128,
             name = {"加盐长度", "en:Salt Length"},
@@ -75,7 +84,7 @@ public class User extends ModelBase implements Addable {
     public Integer saltLength = 4;
 
     @ModelField(
-            required = false, type = FieldType.number,
+            type = FieldType.number,
             min = 1,
             max = 128,
             name = {"迭代次数", "en:Iterations"},
@@ -85,7 +94,6 @@ public class User extends ModelBase implements Addable {
 
     @ModelField(
             type = FieldType.bool,
-            required = false,
             name = {"下次登录须改密码", "en:Change Initial Password"},
             info = {"标记该用户下次登录系统后，须首先修改其登录密码，否则不能进行其它操作。",
                     "en:After marking the user to log in to the system next time, he or she must first change his login password, otherwise no other operations can be performed."})
@@ -93,7 +101,6 @@ public class User extends ModelBase implements Addable {
 
     @ModelField(
             createable = false, editable = false,
-            required = false,
             list = true,
             name = {"密码最后修改时间", "en:Password Last Modified"},
             info = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}
@@ -102,7 +109,7 @@ public class User extends ModelBase implements Addable {
 
     @ModelField(
             type = FieldType.bool,
-            required = false, list = true,
+            list = true,
             name = {"启用", "en:Active"},
             info = {"若未启用，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
     public Boolean active = true;
@@ -191,7 +198,7 @@ public class User extends ModelBase implements Addable {
             info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
     public void delete(Request request, Response response) throws Exception {
-        appContext.callDefaultAction(MODEL_NAME, "delete", request, response);
+        appContext.callDefaultAction(request, response);
     }
 
     @Override
@@ -300,6 +307,9 @@ public class User extends ModelBase implements Addable {
         String id = data.get(idKey);
         qingzhou.config.User user = config.getConsole().getUser(id);
         config.deleteUser(id);
+        if (data.get("password").equals(PASSWORD_FLAG)) {
+            data.remove("password");
+        }
         Utils.setPropertiesToObj(user, data);
         config.addUser(user);
     }
@@ -307,12 +317,6 @@ public class User extends ModelBase implements Addable {
     static String checkPwd(AppContext appContext, Lang lang, String password, String... infos) {
         if (PASSWORD_FLAG.equals(password)) {
             return null;
-        }
-
-        int minLength = 10;
-        int maxLength = 20;
-        if (password.length() < minLength || password.length() > maxLength) {
-            return String.format(appContext.getI18n(lang, "password.lengthBetween"), minLength, maxLength);
         }
 
         if (infos != null && infos.length > 0) {

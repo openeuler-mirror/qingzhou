@@ -8,7 +8,6 @@ import qingzhou.http.Http;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.qr.QrGenerator;
-import qingzhou.registry.AppInfo;
 import qingzhou.registry.MenuInfo;
 import qingzhou.servlet.ServletService;
 import qingzhou.ssh.SSHService;
@@ -19,16 +18,16 @@ import java.util.*;
 class AppContextImpl implements AppContext {
     private final Class<?>[] serviceTypes = {CryptoService.class, Http.class, Json.class, Logger.class, QrGenerator.class, ServletService.class, SSHService.class};
     private final ModuleContext moduleContext;
-    private final AppInfo appInfo;
     private final List<ActionFilter> actionFilters = new ArrayList<>();
     private final I18nTool i18nTool = new I18nTool();
+    private final AppImpl app;
 
     private File appTemp;
     private File appDir;
 
-    AppContextImpl(ModuleContext moduleContext, AppInfo appInfo) {
+    AppContextImpl(ModuleContext moduleContext, AppImpl app) {
         this.moduleContext = moduleContext;
-        this.appInfo = appInfo;
+        this.app = app;
     }
 
     @Override
@@ -43,7 +42,7 @@ class AppContextImpl implements AppContext {
     @Override
     public synchronized File getTemp() {
         if (appTemp == null) {
-            appTemp = new File(moduleContext.getTemp(), appInfo.getName());
+            appTemp = new File(moduleContext.getTemp(), app.getAppInfo().getName());
         }
         return appTemp;
     }
@@ -59,10 +58,10 @@ class AppContextImpl implements AppContext {
 
     @Override
     public void addMenu(String name, String[] i18n, String icon, int order) {
-        Collection<MenuInfo> menuInfos = this.appInfo.getMenuInfos();
+        Collection<MenuInfo> menuInfos = this.app.getAppInfo().getMenuInfos();
         if (menuInfos == null) {
             menuInfos = new HashSet<>();
-            this.appInfo.setMenuInfos(menuInfos);
+            this.app.getAppInfo().setMenuInfos(menuInfos);
         }
         menuInfos.add(new MenuInfo(name, i18n, icon, order));
     }
@@ -81,8 +80,8 @@ class AppContextImpl implements AppContext {
     }
 
     @Override
-    public void callDefaultAction(String model, String action, Request request, Response response) {
-        throw new UnsupportedOperationException("等待实现");
+    public void callDefaultAction(Request request, Response response) throws Exception {
+        app.invokeDefault(request, response);
     }
 
     @Override

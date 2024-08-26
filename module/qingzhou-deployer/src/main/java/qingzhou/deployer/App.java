@@ -16,4 +16,6 @@ public interface App {
     void invoke(Request request, Response response) throws Exception;
 
     void invokeDirectly(Request request, Response response) throws Exception;
+
+    void invokeDefault(Request request, Response response) throws Exception;
 }

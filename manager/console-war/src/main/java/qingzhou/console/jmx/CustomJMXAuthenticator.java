@@ -5,7 +5,7 @@ import qingzhou.console.controller.TrustIpCheck;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.util.StringUtil;
+import qingzhou.engine.util.Utils;
 
 import javax.management.remote.JMXAuthenticator;
 import javax.management.remote.JMXPrincipal;
@@ -53,7 +53,7 @@ public class CustomJMXAuthenticator implements JMXAuthenticator {
         }
         String username = aCredentials[0];
         String password = aCredentials[1];
-        if (StringUtil.isBlank(username) || StringUtil.isBlank(password)) {
+        if (Utils.isBlank(username) || Utils.isBlank(password)) {
             authenticationFailure(ConsoleI18n.getI18n(I18n.getI18nLang(), "jmx.credentials.element.isNull"));
         }
 
@@ -63,7 +63,7 @@ public class CustomJMXAuthenticator implements JMXAuthenticator {
             Properties jmxProperties = new Properties();
             jmxProperties.setProperty(LoginManager.LOGIN_USER, username);
             jmxProperties.setProperty(LoginManager.LOGIN_PASSWORD, password);
-            if (aCredentials.length >= 3 && StringUtil.notBlank(aCredentials[2])) {
+            if (aCredentials.length >= 3 && Utils.notBlank(aCredentials[2])) {
                 jmxProperties.setProperty(ConsoleConstants.LOGIN_OTP, aCredentials[2]);
             }
 

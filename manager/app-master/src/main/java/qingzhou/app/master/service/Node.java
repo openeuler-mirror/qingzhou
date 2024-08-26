@@ -23,6 +23,7 @@
 //                        "operation of the user application (the application is managed by the TongWeb instance)."})
 //public class Node extends ModelBase implements Addable {
 //    @ModelField(
+//            required = true,
 //            list = true,
 //            name = {"名称", "en:Name"},
 //            info = {"唯一标识。", "en:Unique identifier."})
@@ -50,6 +51,11 @@
 //            name = {"SSH 密码", "en:SSH Password"},
 //            info = {"SSH 登录使用的密码", "en:Password or certificate."})
 //    public String sshPassword;
+//
+//    @Override
+//    public void start() {
+//        appContext.addI18n("validator.fail", new String[]{"连接失败，请检查配置信息是否正确", "en:The connection fails. Please check whether the configuration information is correct"});
+//    }
 //
 //    @ModelAction(
 //            name = {"添加", "en:Add"},

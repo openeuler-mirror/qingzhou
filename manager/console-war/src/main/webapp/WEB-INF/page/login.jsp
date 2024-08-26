@@ -6,7 +6,7 @@
 <%@ page import="qingzhou.console.ConsoleConstants" %>
 <%@ page import="qingzhou.console.login.vercode.VerCode" %>
 <%@ page import="qingzhou.console.controller.About" %>
-<%@ page import="qingzhou.console.controller.rest.AsymmetricDecryptor" %>
+<%@ page import="qingzhou.console.controller.rest.ParameterReset" %>
 <%@ page import="qingzhou.console.controller.rest.RESTController" %>
 
 <%
@@ -107,7 +107,7 @@
             <input type="submit" value='<%=PageBackendService.getMasterAppI18nString( "page.login")%>'
                    class="login_btn">
             <textarea id="pubkey" rows="3" style="display:none;">
-                <%=AsymmetricDecryptor.getPublicKeyString()%>
+                <%=ParameterReset.getPublicKeyString()%>
             </textarea>
         </form>
     </section>
@@ -137,7 +137,7 @@
         }
     });
     $("#loginForm").submit(function (e) {
-        var encrypt = new JSEncrypt({"default_key_size":<%=AsymmetricDecryptor.getKeySize()%>});
+        var encrypt = new JSEncrypt({"default_key_size":<%=ParameterReset.getKeySize()%>});
         encrypt.setPublicKey($('#pubkey').val());
         var inputs = $("#loginForm").find("input");
         for (var i = 0; i < inputs.length; i++) {

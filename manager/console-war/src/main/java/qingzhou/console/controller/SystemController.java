@@ -17,12 +17,12 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.util.StringUtil;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyPairCipher;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
@@ -50,7 +50,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         Security security = getConsole().getSecurity();
         publicKey = security.getPublicKey();
         privateKey = security.getPrivateKey();
-        if (StringUtil.isBlank(publicKey) || StringUtil.isBlank(privateKey)) {
+        if (Utils.isBlank(publicKey) || Utils.isBlank(privateKey)) {
             String[] keyPair = cryptoService.generateKeyPair(UUID.randomUUID().toString().replace("-", ""));
             publicKey = keyPair[0];
             privateKey = keyPair[1];

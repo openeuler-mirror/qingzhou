@@ -6,7 +6,6 @@ import qingzhou.registry.AppInfo;
 
 import java.net.URLClassLoader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 class AppImpl implements App {
@@ -15,9 +14,8 @@ class AppImpl implements App {
     private AppContextImpl appContext;
     private QingzhouApp qingzhouApp;
     private final Map<String, ModelBase> modelBaseMap = new HashMap<>();
-
-    private final Map<String, Map<String, ActionMethod>> actionMap = new HashMap<>();
-    private final Map<String, List<ActionFilter>> actionFilters = new HashMap<>();
+    private final Map<String, Map<String, ActionMethod>> modelActionMap = new HashMap<>();
+    private final Map<String, Map<String, ActionMethod>> addedDefaultActions = new HashMap<>();
 
     @Override
     public AppContextImpl getAppContext() {
@@ -40,25 +38,13 @@ class AppImpl implements App {
             }
         }
 
-        List<ActionFilter> modelActionFilters = actionFilters.get(request.getModel());
-        if (modelActionFilters != null) {
-            for (ActionFilter filter : modelActionFilters) {
-                String msg = filter.doFilter(request, response);
-                if (msg != null) {
-                    response.setSuccess(false);
-                    response.setMsg(msg);
-                    return;
-                }
-            }
-        }
-
         invokeDirectly(request, response);
     }
 
     @Override
     public void invokeDirectly(Request request, Response response) throws Exception {
         String modelName = request.getModel();
-        Map<String, ActionMethod> methodMap = actionMap.get(modelName);
+        Map<String, ActionMethod> methodMap = modelActionMap.get(modelName);
         if (methodMap == null) return;
 
         String actionName = request.getAction();
@@ -68,8 +54,16 @@ class AppImpl implements App {
         actionMethod.invoke(request, response);
     }
 
-    Map<String, Map<String, ActionMethod>> getActionMap() {
-        return actionMap;
+    @Override
+    public void invokeDefault(Request request, Response response) throws Exception {
+        String modelName = request.getModel();
+        Map<String, ActionMethod> actionMethodMap = addedDefaultActions.computeIfAbsent(modelName, k -> new HashMap<>());
+        ActionMethod actionMethod = actionMethodMap.computeIfAbsent(request.getAction(), s -> ActionMethod.buildActionMethod(s, new DefaultAction(AppImpl.this, modelBaseMap.get(modelName))));
+        actionMethod.invoke(request, response);
+    }
+
+    Map<String, Map<String, ActionMethod>> getModelActionMap() {
+        return modelActionMap;
     }
 
     void setAppContext(AppContextImpl appContext) {

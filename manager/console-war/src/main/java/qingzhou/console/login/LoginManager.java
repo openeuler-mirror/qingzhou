@@ -7,7 +7,7 @@ import qingzhou.console.Totp;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.rest.AsymmetricDecryptor;
+import qingzhou.console.controller.rest.ParameterReset;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
@@ -178,7 +178,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     private static boolean checkOtp(HttpServletRequest request) throws Exception {
         return checkOtp(request.getParameter(LOGIN_USER),
-                AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_OTP)));
+                ParameterReset.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_OTP)));
     }
 
     private static boolean checkOtp(String user, String inputOtp) throws Exception {
@@ -197,7 +197,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     public static String checkPassword(String user, String password) {
         try {
-            password = AsymmetricDecryptor.decryptWithConsolePrivateKey(password);
+            password = ParameterReset.decryptWithConsolePrivateKey(password);
         } catch (Exception ignored) {
         }
 

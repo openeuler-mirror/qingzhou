@@ -20,7 +20,6 @@ import java.security.Principal;
 import java.util.*;
 
 public class JmxHttpServletRequest implements HttpServletRequest {
-
     private final String appName;
     private final String modelName;
     private final String actionName;

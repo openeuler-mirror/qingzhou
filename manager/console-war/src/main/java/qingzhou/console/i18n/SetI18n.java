@@ -4,15 +4,16 @@ import qingzhou.api.Lang;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import static qingzhou.console.login.LoginManager.*;
+import static qingzhou.console.login.LoginManager.LOCKED_MSG_KEY;
+import static qingzhou.console.login.LoginManager.LOGIN_ERROR_MSG_KEY;
 
 public class SetI18n implements Filter<HttpServletContext> {
     public static final String LANG_SWITCH_URI = "/lang";
@@ -46,7 +47,7 @@ public class SetI18n implements Filter<HttpServletContext> {
                 s.setAttribute(SESSION_LANG_FLAG, lang);
 
                 String lastUri = (String) s.getAttribute(lastUriKey);
-                if (StringUtil.isBlank(lastUri)) {
+                if (Utils.isBlank(lastUri)) {
                     lastUri = request.getContextPath() + RESTController.INDEX_PATH;
                 }
                 response.sendRedirect(PageBackendService.encodeURL(response, lastUri)); // to welcome page

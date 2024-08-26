@@ -10,11 +10,11 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Base32Util;
+import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -446,7 +446,7 @@ public class PageBackendService {
 
     public static Map<String, String> stringToMap(String str) {
         Map<String, String> map = new LinkedHashMap<>();
-        if (StringUtil.isBlank(str)) {
+        if (Utils.isBlank(str)) {
             return map;
         }
         String[] envArr = str.split(",");
@@ -464,7 +464,7 @@ public class PageBackendService {
     }
 
     public static boolean isShow(FieldValueRetriever retriever, String show) throws Exception {
-        if (StringUtil.isBlank(show)) {
+        if (Utils.isBlank(show)) {
             return true;
         }
 

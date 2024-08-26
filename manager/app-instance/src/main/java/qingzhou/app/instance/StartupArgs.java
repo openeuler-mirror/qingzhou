@@ -60,22 +60,25 @@ public class StartupArgs extends ModelBase implements Addable {
      * 参数
      */
     @ModelField(
+            required = true,
             list = true,
             name = {"参数", "en:Argument"},
             info = {"该参数将用于 JVM 启动时的进程入参。", "en:This argument will be used for the process entry when the JVM is started."})
     public String id;
 
-    @ModelField(createable = false,
+    @ModelField(
+            required = true,
+            createable = false,
             name = {"更改为", "en:Change to"},
             info = {"将参数更改为此值。", "en:Change the argument to this value."})
     public String changeToArg;
 
-    @ModelField(type = FieldType.bool, list = true, required = false,
+    @ModelField(type = FieldType.bool, list = true,
             name = {"启用", "en:Enabled"},
             info = {"只有启用的参数才会传给 JVM 加载，未启用的则不会。", "en:Only arguments that are enabled are passed to the JVM for loading, those that are not are not."})
     public Boolean enabled = true;
 
-    @ModelField(type = FieldType.bool, list = true, required = false,
+    @ModelField(type = FieldType.bool, list = true,
             name = {"仅 Linux 有效", "en:Only For Linux"},
             info = {"开启后，该参数仅会在 linux 操作系统上启用。", "en:When turned on, this parameter is only enabled on linux operating systems."})
     public Boolean forLinux = false;
@@ -83,7 +86,7 @@ public class StartupArgs extends ModelBase implements Addable {
     /**
      * 支持JRE版本
      */
-    @ModelField(type = FieldType.select, required = false,
+    @ModelField(type = FieldType.select,
             options = {"", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"},
             list = true, name = {"限定 JRE 版本", "en:Limited JRE"},
             info = {"限定该参数支持的 JRE 的版本，限定后，只有限定的 JRE 可以加载到该参数；其它 JRE 则不会，为空表示不限制。", "en:Limit the version of JRE supported by this parameter. After the limitation, only the limited JRE can be loaded into this parameter, and other JREs will not. If it is empty, it means no limitation."})
@@ -92,7 +95,7 @@ public class StartupArgs extends ModelBase implements Addable {
     /**
      * 兼容方向
      */
-    @ModelField(type = FieldType.radio, list = true, required = false,
+    @ModelField(type = FieldType.radio, list = true,
             options = {PLUS, EQUAL, MINUS}, show = SUPPORTED_JRE_KEY + "!=",
             name = {"限定区间", "en:Limited Range"},
             info = {"限定支持的 JRE 版本区间，大于、等于或者小于指定的 JRE 版本号。 + 表示大于等于，= 表示等于，- 表示小于等于。", "en:Limit the supported JRE version interval to greater than, equal to or less than the specified JRE version number."})
@@ -101,7 +104,7 @@ public class StartupArgs extends ModelBase implements Addable {
     /**
      * 参数
      */
-    @ModelField(required = false,
+    @ModelField(
             name = {"描述", "en:Description"},
             info = {"该参数的描述信息。", "en:The descriptive information for this argument."})
     public String desc;

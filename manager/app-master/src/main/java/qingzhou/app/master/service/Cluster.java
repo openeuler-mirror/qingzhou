@@ -27,6 +27,7 @@
 //                "en:Register with a centrally managed QingZhou instance cluster."})
 //public class Cluster extends ModelBase implements Listable {
 //    @ModelField(
+//            required = true,
 //            list = true,
 //            editable = false,
 //            name = {"名称", "en:Name"},

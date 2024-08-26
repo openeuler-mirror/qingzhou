@@ -13,7 +13,9 @@ import java.util.Map;
                 "en:Summarize blocked threads, and view blocked stacks and blocked threads on the same stack."})
 public class BlockedThread extends ModelBase implements Listable {
 
-    @ModelField(list = true,
+    @ModelField(
+            required = true,
+            list = true,
             name = {"线程ID", "en:Thread Id"},
             info = {"阻塞线程的ID。", "en:The ID of the blocked thread."})
     public String id;

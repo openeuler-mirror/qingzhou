@@ -131,6 +131,7 @@ Editable接口：提供了修改、更新、展示功能。
     info = {"这是一个用户模块。", "en:Menu description."})//菜单描述
     public class User extends ModelBase implements Createable {
           @ModelField(
+            required = true,
             list = true,
             name = {"用户ID", "en:User ID"},
             info = {"用户ID。", "en:User ID."})

@@ -308,7 +308,7 @@
 
         <div id="tempZone" style="display:none;"></div>
         <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-        <%=AsymmetricDecryptor.getPublicKeyString()%>
+        <%=ParameterReset.getPublicKeyString()%>
         </textarea>
 
         <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">

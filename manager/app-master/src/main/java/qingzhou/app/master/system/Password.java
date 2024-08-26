@@ -67,7 +67,7 @@ public class Password extends ModelBase implements Updatable {
     public String confirmPassword;
 
     @ModelField(
-            required = false, type = FieldType.bool,
+            type = FieldType.bool,
             list = true,
             name = {"动态密码", "en:One-time password"},
             info = {"用户开启动态密码，在登录系统时，输入动态密码，可免输入账户密码。",
@@ -109,7 +109,8 @@ public class Password extends ModelBase implements Updatable {
         String loginUser = request.getUser();
         Map<String, String> loginUserPro = showData(loginUser);
 
-        if (Boolean.parseBoolean(request.getParameter("changePwd"))) {
+        if (Boolean.parseBoolean(request.getParameter("changePwd"))
+                && !loginUserPro.get("password").equals(User.PASSWORD_FLAG)) {
             String error = checkPwdParam(request, loginUserPro);
             if (error != null) {
                 response.setSuccess(false);

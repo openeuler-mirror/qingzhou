@@ -31,7 +31,9 @@
 //                "en:App Management."})
 //public class App extends ModelBase implements Addable {
 //    @ModelField(
-//            list = true, editable = false, createable = false,
+//            required = true,
+//            editable = false, createable = false,
+//            list = true,
 //            name = {"名称", "en:Name"},
 //            info = {"应用名称。", "en:App Name"})
 //    public String id;

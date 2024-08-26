@@ -16,19 +16,19 @@ import java.lang.annotation.Target;
 public @interface ModelField {
     String group() default ""; // 设置字段所属的页面表单展示分组，默认为空字符串表示“其它”分组。
 
+    String show() default ""; // 标识此字段有效的条件
+
     FieldType type() default FieldType.text; // 字段的显示类型
 
     String[] options() default ""; // 字段的取值范围
 
     Class<? extends ModelBase> refModel() default ModelBase.class; // 若 refModel 有，则 options() 会列出指定 model 的所有 id
 
-    boolean required() default true;
+    boolean required() default false;
 
     boolean createable() default true; // 允许创建时指定值
 
     boolean editable() default true; // 允许编辑此字段
-
-    String show() default ""; // 标识此字段有效的条件
 
     long min() default Long.MIN_VALUE;
 

@@ -6,7 +6,6 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.deployer.RequestImpl;
@@ -48,7 +47,7 @@ public class RESTController extends HttpServlet {
         if (uri != null) {
             String[] restTemp = uri.split("/");
             for (String r : restTemp) {
-                if (StringUtil.notBlank(r)) {
+                if (Utils.notBlank(r)) {
                     result.add(r);
                 }
             }
@@ -59,7 +58,7 @@ public class RESTController extends HttpServlet {
 
     private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
-            new AsymmetricDecryptor(), // 解密前端的 password 类型的表单域
+            new ParameterReset(), // 解密前端的 password 类型的表单域
             new ValidationFilter(), // 参数校验
 
             // 执行具体的业务逻辑

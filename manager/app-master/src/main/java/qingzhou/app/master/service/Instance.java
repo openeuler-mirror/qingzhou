@@ -19,11 +19,12 @@
 //                "en:The instance is the actual environment for running the application provided by QingZhou, that is, the runtime of the application."})
 //public class Instance extends ModelBase implements Listable {
 //    @ModelField(
+//            required = true,
 //            list = true,
 //            name = {"名称", "en:Name"},
 //            info = {"唯一标识。", "en:Unique identifier."})
 //    public String id;
-//
+
 //    @ModelField(list = true,
 //            name = {"IP", "en:IP"},
 //            info = {"连接实例的 IP 地址。", "en:The IP address of the connected instance."})

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 class DeployerImpl implements Deployer {
 
-    private final Map<Method, ModelActionInfo> presetMethodActionInfos;
+    private final Map<Method, ModelActionInfo> allDefaultActionCache;
 
     private final Map<String, App> apps = new HashMap<>();
     private final ModuleContext moduleContext;
@@ -37,7 +37,7 @@ class DeployerImpl implements Deployer {
     DeployerImpl(ModuleContext moduleContext, Logger logger) {
         this.moduleContext = moduleContext;
         this.logger = logger;
-        this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(DefaultAction.class));
+        this.allDefaultActionCache = parseModelActionInfos(new AnnotationReader(DefaultAction.class));
     }
 
     @Override
@@ -136,102 +136,87 @@ class DeployerImpl implements Deployer {
         appInfo.setModelInfos(modelInfos.values());
         app.setAppInfo(appInfo);
 
-        AppContextImpl appContext = buildAppContext(appInfo);
+        AppContextImpl appContext = buildAppContext(app);
         appContext.setAppDir(appDir);
         app.setAppContext(appContext);
 
         modelInfos.forEach((key, value) -> app.getModelBaseMap().put(value.getCode(), key));
 
         // 构建 Action 执行器
-        modelInfos.forEach((modelBase, modelInfo) -> initActionMap(app, modelInfo.getCode(), modelInfo.getModelActionInfos(), modelBase));
+        modelInfos.forEach((modelBase, modelInfo) -> {
+            Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelInfo.getCode(), model -> new HashMap<>());
+            for (ModelActionInfo action : modelInfo.getModelActionInfos()) {
+                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getCode(), modelBase);
+                moelMap.put(action.getCode(), actionMethod);
+            }
+        });
+
         // 构建 Action 执行器
-        Map<String, Collection<ModelActionInfo>> addDefaultAction = addDefaultAction(modelInfos);// 追加系统预置的 action
-        addDefaultAction.forEach((modelName, addedModelActions) -> {
-            final ModelBase[] modelBase = new ModelBase[1];
-            modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> modelBase[0] = entry.getKey());
-            DefaultAction defaultAction = new DefaultAction(app, modelBase[0]);
-            initActionMap(app, modelName, addedModelActions.toArray(new ModelActionInfo[0]), defaultAction);
+        Map<String, Collection<ModelActionInfo>> addedDefaultActions = addDefaultAction(modelInfos);// 追加系统预置的 action
+        addedDefaultActions.forEach((modelName, addedModelActions) -> {
+            ModelBase[] findModelBase = new ModelBase[1];
+            modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> findModelBase[0] = entry.getKey());
+            DefaultAction defaultAction = new DefaultAction(app, findModelBase[0]);
+            Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelName, model -> new HashMap<>());
+            for (ModelActionInfo action : addedModelActions) {
+                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getCode(), defaultAction);
+                moelMap.put(action.getCode(), actionMethod);
+            }
         });
 
         return app;
     }
 
-    private void initActionMap(AppImpl app, String modelName, ModelActionInfo[] modelActionInfos, Object instance) {
-        Arrays.stream(modelActionInfos).forEach(modelActionInfo -> {
-            Map<String, ActionMethod> actionMap = app.getActionMap().computeIfAbsent(modelName, s -> new HashMap<>());
-            actionMap.computeIfAbsent(modelActionInfo.getCode(), s -> buildActionMethod(instance, s));
-        });
+    private Map<String, Collection<ModelActionInfo>> addDefaultAction(Map<ModelBase, ModelInfo> modelInfos) {
+        Map<String, Collection<ModelActionInfo>> addActionToModels = detectActionsToAdd(modelInfos);
+        mergeDefaultActions(modelInfos, addActionToModels);
+        return addActionToModels;
     }
 
-    private ActionMethod buildActionMethod(Object instance, String methodName) {
-        return new ActionMethod() {
-            private final Method method;
-
-            {
-                try {
-                    method = instance.getClass().getMethod(methodName, Request.class, Response.class);
-                } catch (NoSuchMethodException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            @Override
-            public void invoke(Request request, Response response) throws Exception {
-                method.invoke(instance, request, response);
-            }
-        };
-    }
-
-    private Map<String, Collection<ModelActionInfo>> addDefaultAction(Map<ModelBase, ModelInfo> modelSelfInfos) {
-        Map<String, Collection<ModelActionInfo>> addedModelActions = new HashMap<>();
-
-        for (Map.Entry<ModelBase, ModelInfo> entry : modelSelfInfos.entrySet()) {
+    private Map<String, Collection<ModelActionInfo>> detectActionsToAdd(Map<ModelBase, ModelInfo> forModels) {
+        Map<String, Collection<ModelActionInfo>> addActionToModels = new HashMap<>();
+        for (Map.Entry<ModelBase, ModelInfo> entry : forModels.entrySet()) {
             List<ModelActionInfo> added = new ArrayList<>();
-
-            Set<ModelActionInfo> actions = Arrays.stream(entry.getValue().getModelActionInfos()).collect(Collectors.toSet());
+            Set<ModelActionInfo> selfActions = Arrays.stream(entry.getValue().getModelActionInfos()).collect(Collectors.toSet());
             ModelBase modelBase = entry.getKey();
-
-            // 添加预设的 Action
-            Set<String> defaultActions = new HashSet<>();
-            findDefaultAction(modelBase.getClass(), defaultActions);
-            defaultActions.forEach(addAction -> {
-                ModelActionInfo actionInfo = null;
-                for (ModelActionInfo action : actions) {
-                    if (addAction.equals(action.getCode())) {
-                        actionInfo = action;
+            Set<String> detectedActions = new HashSet<>();
+            findDefaultAction(modelBase.getClass(), detectedActions);
+            detectedActions.forEach(addAction -> {
+                boolean exists = false;
+                for (ModelActionInfo self : selfActions) {
+                    if (addAction.equals(self.getCode())) {
+                        exists = true;
                         break;
                     }
                 }
-
-                for (Map.Entry<Method, ModelActionInfo> ma : presetMethodActionInfos.entrySet()) {
-                    if (addAction.equals(ma.getValue().getCode())) {
-                        if (actionInfo == null) {
+                if (!exists) {
+                    for (Map.Entry<Method, ModelActionInfo> ma : allDefaultActionCache.entrySet()) {
+                        if (addAction.equals(ma.getValue().getCode())) {
                             added.add(ma.getValue());
+                            break;
                         }
-                        break;
                     }
                 }
             });
 
-            addedModelActions.put(entry.getValue().getCode(), added);
+            addActionToModels.put(entry.getValue().getCode(), added);
         }
+        return addActionToModels;
+    }
 
-        for (Map.Entry<String, Collection<ModelActionInfo>> addedModelActionInfos : addedModelActions.entrySet()) {
+    private void mergeDefaultActions(Map<ModelBase, ModelInfo> modelInfos, Map<String, Collection<ModelActionInfo>> addActionToModels) {
+        for (Map.Entry<String, Collection<ModelActionInfo>> addedModelActionInfos : addActionToModels.entrySet()) {
             ModelInfo addedToModel = null;
-            for (ModelInfo value : modelSelfInfos.values()) {
+            for (ModelInfo value : modelInfos.values()) {
                 if (value.getCode().equals(addedModelActionInfos.getKey())) {
                     addedToModel = value;
                     break;
                 }
             }
-            if (addedToModel != null) {
-                List<ModelActionInfo> modelActionInfoList = new ArrayList<>(Arrays.asList(addedToModel.getModelActionInfos()));
-                modelActionInfoList.addAll(addedModelActionInfos.getValue());
-                addedToModel.setModelActionInfos(modelActionInfoList.toArray(new ModelActionInfo[0]));
-            }
+            List<ModelActionInfo> modelActionInfoList = new ArrayList<>(Arrays.asList(Objects.requireNonNull(addedToModel).getModelActionInfos()));
+            modelActionInfoList.addAll(addedModelActionInfos.getValue());
+            addedToModel.setModelActionInfos(modelActionInfoList.toArray(new ModelActionInfo[0]));
         }
-
-        return addedModelActions;
     }
 
     private void findDefaultAction(Class<?> checkClass, Set<String> defaultActions) {
@@ -422,10 +407,9 @@ class DeployerImpl implements Deployer {
         }
     }
 
-    private AppContextImpl buildAppContext(AppInfo appInfo) {
-        AppContextImpl appContext = new AppContextImpl(moduleContext, appInfo);
+    private AppContextImpl buildAppContext(AppImpl app) {
         //        appContext.addActionFilter(new UniqueFilter(appContext));
-        return appContext;
+        return new AppContextImpl(moduleContext, app);
     }
 
     private File[] buildLib(File appDir, boolean isSystemApp, List<File> scanAppFilesCache) throws IOException {

@@ -303,7 +303,7 @@
         confirmBtnText: '<%=PageBackendService.getMasterAppI18nString("page.confirm")%>',
         cancelBtnText: '<%=PageBackendService.getMasterAppI18nString("page.cancel")%>',
         notLogin: '<%=PageBackendService.getMasterAppI18nString("page.login.need")%>',
-        encrypt_key_size: '<%=AsymmetricDecryptor.getKeySize()%>',
+        encrypt_key_size: '<%=ParameterReset.getKeySize()%>',
         reloginBtnText: '<%=PageBackendService.getMasterAppI18nString("page.relogin")%>',
         iknowBtnText: '<%=PageBackendService.getMasterAppI18nString("page.gotit")%>',
         switchLang: '<%=PageBackendService.getMasterAppI18nString("page.lang.switch.confirm")%>',

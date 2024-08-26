@@ -13,27 +13,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Model(code = Department.MODEL_NAME, icon = "sitemap",
+@Model(code = "department", icon = "sitemap",
         menu = "System", order = 2,
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
 public class Department extends ModelBase implements Addable {
-    public static final String MODEL_NAME = "department";
-
     @ModelField(
+            required = true,
             list = true,
-            name = {"部门标识符", "en:Department Name"},
+            name = {"部门编号", "en:Department Code"},
             info = {"该部门在系统中的唯一标识符。", "en:Unique identifier of the department in the system."})
     public String id;
 
     @ModelField(
+            required = true,
             list = true,
             name = {"部门名称", "en:Department Name"},
             info = {"该部门的详细名称。", "en:The name of the department."})
     public String name;
 
     @ModelField(
-            list = true, required = false,
+            list = true,
             name = {"上级部门", "en:Superior Department"},
             info = {"该部门所属的上级部门。",
                     "en:The superior department to which the department belongs."})
@@ -46,13 +46,13 @@ public class Department extends ModelBase implements Addable {
     public String manager;
 
     @ModelField(
-            list = true, required = false,
+            list = true,
             name = {"联系电话", "en:Department Contact Number"},
             info = {"该部门的联系电话。", "en:The department's contact number."})
     public String phone;
 
     @ModelField(
-            list = true, required = false,
+            list = true,
             email = true,
             name = {"电子邮箱", "en:Department Contact Email"},
             info = {"可以与该部门取得联系的电子邮箱。", "en:An E-mail address where the department can be contacted."})

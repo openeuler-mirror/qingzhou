@@ -1,16 +1,15 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
-import qingzhou.deployer.RequestImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.util.StringUtil;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.logger.Logger;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
-public class AsymmetricDecryptor implements Filter<RestContext> {
+public class ParameterReset implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
@@ -18,15 +17,19 @@ public class AsymmetricDecryptor implements Filter<RestContext> {
         for (String fieldName : modelInfo.getFormFieldNames()) {
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField.getType().equals(FieldType.password.name())) {
-                String val = request.getParameter(fieldName);
-                if (!StringUtil.isBlank(val)) {
-                    try {
-                        String result = decryptWithConsolePrivateKey(val);
-                        if (StringUtil.notBlank(result)) {
-                            request.setParameter(fieldName, result);
-                        }
-                    } catch (Exception ignored) {
+                try {
+                    String val = request.getParameter(fieldName);
+                    String result = decryptWithConsolePrivateKey(val);
+                    if (result != null) { // 可能是空串
+                        request.setParameter(fieldName, result.trim());
                     }
+                } catch (Exception ignored) {
+                }
+            } else {
+                // 其它字段，自动trim
+                String val = request.getParameter(fieldName);
+                if (val != null) {
+                    request.setParameter(fieldName, val.trim());
                 }
             }
         }
