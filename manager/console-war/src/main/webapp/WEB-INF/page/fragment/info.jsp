@@ -3,10 +3,10 @@
 <%
     boolean existId = PageBackendService.hasIDField(qzRequest);
     boolean chartEnabled = !qzResponse.getDataList().isEmpty();
-    boolean isMonitor = Monitorable.ACTION_NAME_MONITOR.equals(qzRequest.getAction());
+    boolean isMonitor = "monitor".equals(qzAction);
 
     String encodedId = PageBackendService.encodeId(qzRequest.getId());
-    String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, Monitorable.ACTION_NAME_MONITOR + (existId ? "/" + encodedId : ""));
+    String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, "monitor" + (existId ? "/" + encodedId : ""));
 %>
 
 <div class="infoPage" chartMonitor="<%=isMonitor && chartEnabled%>" data-url="<%=url%>">
@@ -57,7 +57,7 @@
                                 continue;
                             }
 
-                            String msg = I18n.getString(menuAppName, "model.field.info." + qzRequest.getModel() + "." + fieldName);
+                            String msg = I18n.getString(qzApp, "model.field.info." + qzModel + "." + fieldName);
                             String info = "";
                             if (msg != null && !msg.startsWith("model.field.")) {
                                 info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-question-sign' data-tip-arrow=\"right\"></i></span>";
@@ -70,7 +70,7 @@
                     <tr row-item="<%=fieldName%>">
                         <td class="home-field-info" field="<%=fieldName%>">
                             <label for="<%=fieldName%>"><%=info%>&nbsp;
-                                <%=I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + fieldName)%>
+                                <%=I18n.getString(qzApp, "model.field." + qzModel + "." + fieldName)%>
                             </label>
                         </td>
                         <td style="word-break: break-all" field-val="<%=fieldValue%>">
@@ -111,7 +111,7 @@
                 keysBuilder.append("{");
                 for (Map.Entry<String, String> e : models.get(0).entrySet()) {
                     String key = e.getKey();
-                    String i18n = I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + key);
+                    String i18n = I18n.getString(qzApp, "model.field." + qzModel + "." + key);
                     keysBuilder.append("\"").append(key).append("\":\"").append(i18n).append("\",");
                 }
                 if (keysBuilder.indexOf(",") > 0) {

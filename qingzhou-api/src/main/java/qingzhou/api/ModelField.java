@@ -14,68 +14,21 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ModelField {
-    /**
-     * 获取字段的国际化名称数组，用于多语言环境下展示在用户界面。
-     *
-     * @return 字段国际化名称数组
-     */
-    String[] name();
+    String group() default ""; // 设置字段所属的页面表单展示分组，默认为空字符串表示“其它”分组。
 
-    /**
-     * 获取字段的国际化描述信息数组，用于提供字段的详细说明信息。
-     *
-     * @return 字段国际化描述信息数组
-     */
-    String[] info();
+    String show() default ""; // 标识此字段有效的条件
 
-    /**
-     * 设置字段所属的页面表单展示分组，默认为空字符串表示“其它”分组。
-     */
-    String group() default "";
+    FieldType type() default FieldType.text; // 字段的显示类型
 
-    /**
-     * 字段的显示类型
-     */
-    FieldType type() default FieldType.text;
+    String[] options() default ""; // 字段的取值范围
 
-    /**
-     * 字段的取值范围
-     */
-    String[] options() default "";
+    Class<? extends ModelBase> refModel() default ModelBase.class; // 若 refModel 有，则 options() 会列出指定 model 的所有 id
 
-    // 若 refModel 有，则 options() 会列出指定 model 的所有 id
-    Class<? extends ModelBase> refModel() default ModelBase.class;
+    boolean required() default false;
 
-    /**
-     * 定义可见性条件的函数。
-     * 该函数用于指定一个条件，根据该条件确定某个元素是否可见。
-     * 默认情况下，如果没有指定条件，则元素总是可见的。
-     *
-     * @return 返回一个字符串，表示可见性的条件。如果条件为空字符串，则表示元素总是可见的。
-     */
-    String show() default "";
-
-    /**
-     * 是否显示在列表中。
-     */
-    boolean list() default false;
-
-    /**
-     * 仅用于数据监视
-     */
-    boolean monitor() default false;
-
-    /**
-     * 用于数据监视时，其值是否是数字类型的，数字类型的值可用于绘制折线图、统计分析等
-     */
-    boolean numeric() default false;
-
-    /*********** 校验信息 ***********/
     boolean createable() default true; // 允许创建时指定值
 
     boolean editable() default true; // 允许编辑此字段
-
-    boolean required() default true;
 
     long min() default Long.MIN_VALUE;
 
@@ -94,4 +47,20 @@ public @interface ModelField {
     String pattern() default "";
 
     boolean email() default false;
+
+    boolean monitor() default false; // 标识该属性为监视类型，而非表单项
+
+    boolean numeric() default false;  // 标识该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
+
+    boolean list() default false; // 是否显示在列表中。
+
+    /**
+     * 获取字段的国际化名称数组，用于多语言环境下展示在用户界面。
+     */
+    String[] name();
+
+    /**
+     * 获取字段的国际化描述信息数组，用于提供字段的详细说明信息。
+     */
+    String[] info();
 }

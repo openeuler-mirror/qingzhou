@@ -23,7 +23,7 @@ public class RegistryImpl implements Registry {
     }
 
     @Override
-    public synchronized boolean checkRegistered(String dataFingerprint) {
+    public synchronized boolean checkRegistry(String dataFingerprint) {
         RegisteredInfo found = null;
         for (RegisteredInfo registeredInfo : registryInfo.values()) {
             if (registeredInfo.dataFingerprint.equals(dataFingerprint)) {

@@ -1,7 +1,7 @@
 package qingzhou.config.impl;
 
 import qingzhou.config.*;
-import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.json.Json;
 
 import java.io.BufferedReader;
@@ -28,11 +28,6 @@ public class JsonFileConfig implements Config {
     @Override
     public Agent getAgent() {
         return readJsonFile(reader -> json.fromJson(reader, Agent.class, "module", "agent"));
-    }
-
-    @Override
-    public Heartbeat getHeartbeat() {
-        return readJsonFile(reader -> json.fromJson(reader, Heartbeat.class, "module", "heartbeat"));
     }
 
     @Override
@@ -96,7 +91,7 @@ public class JsonFileConfig implements Config {
     }
 
     public void deleteJson(String idKey, String idVal, String... position) throws IOException {
-        String jsonAll = Utils.read(jsonFile);
+        String jsonAll = FileUtil.fileToString(jsonFile);
         String result = json.deleteJson(jsonAll,
                 p -> p.getProperty(idKey).equals(idVal),
                 position);
@@ -107,7 +102,7 @@ public class JsonFileConfig implements Config {
         Properties properties = this.json.fromJson(this.json.toJson(obj), Properties.class);
 
         String result;
-        String json = Utils.read(jsonFile);
+        String json = FileUtil.fileToString(jsonFile);
         if (isInArray) {
             result = this.json.addJson(json, properties, position);
         } else {
@@ -118,7 +113,7 @@ public class JsonFileConfig implements Config {
     }
 
     private void writeFile(String result) throws IOException {
-        Utils.writeFile(jsonFile, result);
+        FileUtil.writeFile(jsonFile, result);
     }
 
     private <T> T readJsonFile(UseReaderCallback<T> callback) {

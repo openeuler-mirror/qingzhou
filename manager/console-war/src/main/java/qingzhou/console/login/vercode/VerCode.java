@@ -2,7 +2,7 @@ package qingzhou.console.login.vercode;
 
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.rest.AsymmetricDecryptor;
+import qingzhou.console.controller.rest.ParameterReset;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.login.LockOutRealm;
@@ -80,7 +80,7 @@ public class VerCode implements Filter<HttpServletContext> {
      * 校验用户输入的验证码是否正确
      */
     public static boolean validate(HttpServletRequest request) {
-        String clientCode = AsymmetricDecryptor.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA), true);
+        String clientCode = ParameterReset.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA), true);
         if (clientCode == null) {
             return false;
         }

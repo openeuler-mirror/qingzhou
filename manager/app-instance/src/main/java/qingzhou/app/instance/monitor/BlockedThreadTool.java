@@ -1,20 +1,16 @@
 package qingzhou.app.instance.monitor;
 
-import qingzhou.api.type.Listable;
 import qingzhou.engine.util.Utils;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class BlockedThreadTool {
+
+    static String idFieldName = "id";
 
     private static final Set<String> HIDDEN_THREAD = new HashSet<>();
     private static final String[] IGNORED_THREADS_PREFIX = {
@@ -166,7 +162,7 @@ class BlockedThreadTool {
     private Map<String, String> build(Info info) {
         Map<String, String> p = new HashMap<>();
         ThreadInfo threadInfo = info.getThreadInfo();
-        p.put(Listable.FIELD_NAME_ID, String.valueOf(threadInfo.getThreadId()));
+        p.put(idFieldName, String.valueOf(threadInfo.getThreadId()));
         p.put("threadName", threadInfo.getThreadName());
         p.put("threadState", threadInfo.getThreadState().name());
         p.put("blockedMethod", threadInfo.getStackTrace()[0].toString());

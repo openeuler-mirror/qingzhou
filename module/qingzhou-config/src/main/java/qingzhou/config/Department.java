@@ -3,7 +3,7 @@ package qingzhou.config;
 public class Department {
     private String id;
     private String name;
-    private String parent;
+    private String superior;
     private String manager;
     private String phone;
     private String email;
@@ -24,12 +24,12 @@ public class Department {
         this.name = name;
     }
 
-    public String getParent() {
-        return parent;
+    public String getSuperior() {
+        return superior;
     }
 
-    public void setParent(String id) {
-        this.parent = id;
+    public void setSuperior(String id) {
+        this.superior = id;
     }
 
     public String getManager() {

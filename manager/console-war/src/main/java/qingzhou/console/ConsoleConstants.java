@@ -20,7 +20,6 @@ public interface ConsoleConstants {
     // 过程出参
     String DOWNLOAD_BLOCK = "DOWNLOAD_BLOCK";
     // actions
-    String ACTION_NAME_index = "index";
     String ACTION_NAME_manage = "manage";
     // view renders
     String VIEW_RENDER_DEFAULT = "default";
@@ -30,6 +29,5 @@ public interface ConsoleConstants {
     String VIEW_RENDER_FORM = "form";
     String VIEW_RENDER_SHOW = "show";
     String VIEW_RENDER_MANAGE = "sys/manage";
-
-    String ACTION_NAME_REFRESH_KEY = "refreshKey";
+    String ACTION_NAME_SHOW = "show";
 }

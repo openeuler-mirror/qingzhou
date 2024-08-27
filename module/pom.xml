@@ -18,7 +18,6 @@
         <module>qingzhou-registry</module>
         <module>qingzhou-deployer</module>
         <module>qingzhou-agent</module>
-        <module>qingzhou-heartbeat</module>
         <module>qingzhou-console</module>
     </modules>
 

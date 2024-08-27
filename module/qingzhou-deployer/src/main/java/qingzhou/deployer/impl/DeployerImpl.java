@@ -1,13 +1,14 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Showable;
+import qingzhou.api.type.*;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
+import qingzhou.logger.Logger;
 import qingzhou.registry.*;
 
 import java.io.File;
@@ -18,25 +19,25 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class DeployerImpl implements Deployer {
 
-    private final Map<Method, ModelActionInfo> presetMethodActionInfos;
+    private final Map<Method, ModelActionInfo> allDefaultActionCache;
 
     private final Map<String, App> apps = new HashMap<>();
     private final ModuleContext moduleContext;
+    private final Logger logger;
 
 
-    DeployerImpl(ModuleContext moduleContext) {
+    DeployerImpl(ModuleContext moduleContext, Logger logger) {
         this.moduleContext = moduleContext;
-        this.presetMethodActionInfos = parseModelActionInfos(new AnnotationReader(PresetAction.class));
+        this.logger = logger;
+        this.allDefaultActionCache = parseModelActionInfos(new AnnotationReader(DefaultAction.class));
     }
 
     @Override
@@ -45,7 +46,7 @@ class DeployerImpl implements Deployer {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-        boolean isSystemApp = DeployerConstants.MASTER_APP_NAME.equals(appName) || DeployerConstants.INSTANCE_APP_NAME.equals(appName);
+        boolean isSystemApp = "master".equals(appName) || "instance".equals(appName);
         AppImpl app = buildApp(appName, appDir, isSystemApp);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
@@ -60,6 +61,8 @@ class DeployerImpl implements Deployer {
 
         // 注册完成
         apps.put(appName, app);
+
+        logger.info("The app has been successfully installed: " + appName);
     }
 
     private void startModel(AppImpl app) throws Exception {
@@ -133,106 +136,112 @@ class DeployerImpl implements Deployer {
         appInfo.setModelInfos(modelInfos.values());
         app.setAppInfo(appInfo);
 
-        AppContextImpl appContext = buildAppContext(appInfo);
+        AppContextImpl appContext = buildAppContext(app);
         appContext.setAppDir(appDir);
         app.setAppContext(appContext);
 
         modelInfos.forEach((key, value) -> app.getModelBaseMap().put(value.getCode(), key));
 
         // 构建 Action 执行器
-        modelInfos.forEach((modelBase, modelInfo) -> initActionMap(app, modelInfo.getCode(), modelInfo.getModelActionInfos(), modelBase));
+        modelInfos.forEach((modelBase, modelInfo) -> {
+            Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelInfo.getCode(), model -> new HashMap<>());
+            for (ModelActionInfo action : modelInfo.getModelActionInfos()) {
+                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getCode(), modelBase);
+                moelMap.put(action.getCode(), actionMethod);
+            }
+        });
+
         // 构建 Action 执行器
-        Map<String, Collection<ModelActionInfo>> addPresetAction = addPresetAction(modelInfos);// 追加系统预置的 action
-        addPresetAction.forEach((modelName, addedModelActions) -> {
-            final ModelBase[] modelBase = new ModelBase[1];
-            modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> modelBase[0] = entry.getKey());
-            PresetAction presetAction = new PresetAction(app, modelBase[0]);
-            initActionMap(app, modelName, addedModelActions.toArray(new ModelActionInfo[0]), presetAction);
+        Map<String, Collection<ModelActionInfo>> addedDefaultActions = addDefaultAction(modelInfos);// 追加系统预置的 action
+        addedDefaultActions.forEach((modelName, addedModelActions) -> {
+            ModelBase[] findModelBase = new ModelBase[1];
+            modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> findModelBase[0] = entry.getKey());
+            DefaultAction defaultAction = new DefaultAction(app, findModelBase[0]);
+            Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelName, model -> new HashMap<>());
+            for (ModelActionInfo action : addedModelActions) {
+                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getCode(), defaultAction);
+                moelMap.put(action.getCode(), actionMethod);
+            }
         });
 
         return app;
     }
 
-    private void initActionMap(AppImpl app, String modelName, ModelActionInfo[] modelActionInfos, Object instance) {
-        Arrays.stream(modelActionInfos).forEach(modelActionInfo -> {
-            Map<String, ActionMethod> actionMap = app.getActionMap().computeIfAbsent(modelName, s -> new HashMap<>());
-            actionMap.computeIfAbsent(modelActionInfo.getCode(), s -> buildActionMethod(instance, s));
-        });
+    private Map<String, Collection<ModelActionInfo>> addDefaultAction(Map<ModelBase, ModelInfo> modelInfos) {
+        Map<String, Collection<ModelActionInfo>> addActionToModels = detectActionsToAdd(modelInfos);
+        mergeDefaultActions(modelInfos, addActionToModels);
+        return addActionToModels;
     }
 
-    private ActionMethod buildActionMethod(Object instance, String methodName) {
-        return new ActionMethod() {
-            private final Method method;
-
-            {
-                try {
-                    method = instance.getClass().getMethod(methodName, Request.class, Response.class);
-                } catch (NoSuchMethodException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            @Override
-            public void invoke(Request request, Response response) throws Exception {
-                method.invoke(instance, request, response);
-            }
-        };
-    }
-
-    private Map<String, Collection<ModelActionInfo>> addPresetAction(Map<ModelBase, ModelInfo> modelSelfInfos) {
-        Map<String, Collection<ModelActionInfo>> addedModelActions = new HashMap<>();
-
-        for (Map.Entry<ModelBase, ModelInfo> entry : modelSelfInfos.entrySet()) {
+    private Map<String, Collection<ModelActionInfo>> detectActionsToAdd(Map<ModelBase, ModelInfo> forModels) {
+        Map<String, Collection<ModelActionInfo>> addActionToModels = new HashMap<>();
+        for (Map.Entry<ModelBase, ModelInfo> entry : forModels.entrySet()) {
             List<ModelActionInfo> added = new ArrayList<>();
-
-            Set<ModelActionInfo> actions = Arrays.stream(entry.getValue().getModelActionInfos()).collect(Collectors.toSet());
+            Set<ModelActionInfo> selfActions = Arrays.stream(entry.getValue().getModelActionInfos()).collect(Collectors.toSet());
             ModelBase modelBase = entry.getKey();
-
-            // 1. 添加预设的 Action
-            Arrays.stream(modelBase.getClass().getInterfaces()).filter(aClass -> aClass.getPackage() == Showable.class.getPackage()).distinct().flatMap((Function<Class<?>, Stream<String>>) aClass -> Arrays.stream(aClass.getFields()).filter(field -> field.getName().startsWith("ACTION_NAME_")).map(field -> {
-                try {
-                    return field.get(null).toString();
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            })).forEach(addAction -> {
-                ModelActionInfo actionInfo = null;
-                for (ModelActionInfo action : actions) {
-                    if (addAction.equals(action.getCode())) {
-                        actionInfo = action;
+            Set<String> detectedActions = new HashSet<>();
+            findDefaultAction(modelBase.getClass(), detectedActions);
+            detectedActions.forEach(addAction -> {
+                boolean exists = false;
+                for (ModelActionInfo self : selfActions) {
+                    if (addAction.equals(self.getCode())) {
+                        exists = true;
                         break;
                     }
                 }
-
-                for (Map.Entry<Method, ModelActionInfo> ma : presetMethodActionInfos.entrySet()) {
-                    if (addAction.equals(ma.getValue().getCode())) {
-                        if (actionInfo == null) {
+                if (!exists) {
+                    for (Map.Entry<Method, ModelActionInfo> ma : allDefaultActionCache.entrySet()) {
+                        if (addAction.equals(ma.getValue().getCode())) {
                             added.add(ma.getValue());
+                            break;
                         }
-                        break;
                     }
                 }
             });
 
-            addedModelActions.put(entry.getValue().getCode(), added);
+            addActionToModels.put(entry.getValue().getCode(), added);
         }
+        return addActionToModels;
+    }
 
-        for (Map.Entry<String, Collection<ModelActionInfo>> addedModelActionInfos : addedModelActions.entrySet()) {
+    private void mergeDefaultActions(Map<ModelBase, ModelInfo> modelInfos, Map<String, Collection<ModelActionInfo>> addActionToModels) {
+        for (Map.Entry<String, Collection<ModelActionInfo>> addedModelActionInfos : addActionToModels.entrySet()) {
             ModelInfo addedToModel = null;
-            for (ModelInfo value : modelSelfInfos.values()) {
+            for (ModelInfo value : modelInfos.values()) {
                 if (value.getCode().equals(addedModelActionInfos.getKey())) {
                     addedToModel = value;
                     break;
                 }
             }
-            if (addedToModel != null) {
-                List<ModelActionInfo> modelActionInfoList = new ArrayList<>(Arrays.asList(addedToModel.getModelActionInfos()));
-                modelActionInfoList.addAll(addedModelActionInfos.getValue());
-                addedToModel.setModelActionInfos(modelActionInfoList.toArray(new ModelActionInfo[0]));
-            }
+            List<ModelActionInfo> modelActionInfoList = new ArrayList<>(Arrays.asList(Objects.requireNonNull(addedToModel).getModelActionInfos()));
+            modelActionInfoList.addAll(addedModelActionInfos.getValue());
+            addedToModel.setModelActionInfos(modelActionInfoList.toArray(new ModelActionInfo[0]));
+        }
+    }
+
+    private void findDefaultAction(Class<?> checkClass, Set<String> defaultActions) {
+        if (checkClass == Addable.class) {
+            defaultActions.add("create");
+            defaultActions.add("add");
+        } else if (checkClass == Deletable.class) {
+            defaultActions.add("delete");
+        } else if (checkClass == Downloadable.class) {
+            defaultActions.add("files");
+            defaultActions.add("download");
+        } else if (checkClass == Listable.class) {
+            defaultActions.add("list");
+        } else if (checkClass == Monitorable.class) {
+            defaultActions.add("monitor");
+        } else if (checkClass == Showable.class) {
+            defaultActions.add("show");
+        } else if (checkClass == Updatable.class) {
+            defaultActions.add("edit");
+            defaultActions.add("update");
         }
 
-        return addedModelActions;
+        for (Class<?> c : checkClass.getInterfaces()) {
+            findDefaultAction(c, defaultActions);
+        }
     }
 
     private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader) throws Exception {
@@ -269,9 +278,14 @@ class DeployerImpl implements Deployer {
             } catch (InstantiationException e) {
                 throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
             }
+            if (instance instanceof Listable) {
+                modelInfo.setIdFieldName(((Listable) instance).idFieldName());
+            }
             modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
             modelInfo.setModelActionInfos(parseModelActionInfos(annotation).values().toArray(new ModelActionInfo[0]));
-            modelInfo.setGroupInfos(getGroupInfo(instance));
+            if (instance instanceof Updatable) {
+                modelInfo.setGroupInfos(getGroupInfo(instance));
+            }
             modelInfos.put(instance, modelInfo);
         }
 
@@ -298,7 +312,7 @@ class DeployerImpl implements Deployer {
 
     private GroupInfo[] getGroupInfo(ModelBase instance) {
         List<GroupInfo> groupInfoList = new ArrayList<>();
-        Groups groups = instance.groups();
+        Groups groups = ((Updatable) instance).groups();
         if (groups != null) {
             groups.groups().forEach(group -> {
                 GroupInfo groupInfo = new GroupInfo();
@@ -393,10 +407,9 @@ class DeployerImpl implements Deployer {
         }
     }
 
-    private AppContextImpl buildAppContext(AppInfo appInfo) {
-        AppContextImpl appContext = new AppContextImpl(moduleContext, appInfo);
+    private AppContextImpl buildAppContext(AppImpl app) {
         //        appContext.addActionFilter(new UniqueFilter(appContext));
-        return appContext;
+        return new AppContextImpl(moduleContext, app);
     }
 
     private File[] buildLib(File appDir, boolean isSystemApp, List<File> scanAppFilesCache) throws IOException {
@@ -422,7 +435,7 @@ class DeployerImpl implements Deployer {
         forYunJian(appDir, libs);// todo 云鉴的定制需求？
 
         if (!isSystemApp) {
-            File[] commonFiles = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
+            File[] commonFiles = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
             if (commonFiles != null && commonFiles.length > 0) {
                 List<File> commonModels = Arrays.asList(commonFiles);
                 libs.addAll(commonModels);
@@ -435,12 +448,12 @@ class DeployerImpl implements Deployer {
     }
 
     private void forYunJian(File appDir, List<File> libs) {
-        File config = Utils.newFile(appDir, "config");
+        File config = FileUtil.newFile(appDir, "config");
         if (config.exists()) {
             libs.add(config);
         }
 
-        File lib = Utils.newFile(appDir, "lib");
+        File lib = FileUtil.newFile(appDir, "lib");
         if (lib.isDirectory()) {
             File[] files = lib.listFiles();
             if (files != null) {

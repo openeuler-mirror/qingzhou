@@ -1,6 +1,6 @@
 package qingzhou.engine.impl;
 
-import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class EngineContext {
 
     public File getTemp() {
         if (temp == null) {
-            temp = Utils.newFile(getInstanceDir(), "temp", "engine");
+            temp = FileUtil.newFile(getInstanceDir(), "temp", "engine");
         }
         return temp;
     }

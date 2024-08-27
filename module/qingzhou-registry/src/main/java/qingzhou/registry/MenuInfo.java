@@ -8,9 +8,6 @@ public class MenuInfo {
     private String icon;
     private int order;
 
-    public MenuInfo() {
-    }
-
     public MenuInfo(String name, String[] i18n, String icon, int order) {
         this.name = name;
         this.i18n = i18n;

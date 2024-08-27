@@ -17,7 +17,7 @@ public class Controller implements ModuleActivator {
     @Override
     public void start(ModuleContext context) {
         context.registerService(Config.class,
-                new JsonFileConfig(json, new File(context.getInstanceDir(), "qingzhou.json"))
+                new JsonFileConfig(json, new File(new File(context.getInstanceDir(), "conf"), "qingzhou.json"))
         );
     }
 }

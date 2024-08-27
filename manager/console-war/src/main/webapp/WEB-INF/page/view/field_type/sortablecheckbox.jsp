@@ -1,4 +1,3 @@
-<%@ page import="java.util.stream.Collectors" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%
@@ -18,7 +17,7 @@
 %>
 <div class="checkbox-group sortable">
     <%
-        String[] sortableCheckBoxOptions = PageBackendService.getFieldOptions(currentUser, menuAppName, modelInfo.getCode(), fieldName);
+        String[] sortableCheckBoxOptions = PageBackendService.getFieldOptions(currentUser, qzApp, modelInfo.getCode(), fieldName);
         if(sortableCheckBoxOptions != null){
             List<String> list = Arrays.stream(sortableCheckBoxOptions).sorted(Comparator.comparingInt(fieldValues::indexOf)).collect(Collectors.toList());
             for (String option : list) {
