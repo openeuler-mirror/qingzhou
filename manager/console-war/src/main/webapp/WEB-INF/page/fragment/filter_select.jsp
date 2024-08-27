@@ -27,7 +27,7 @@
     }
     selectHtml += "</ul>";
 
-    selectHtml = "<input type=\"text\" name=\"" + fieldName + "\" value=\"" + selectVal + "\" placeholder=\"" + I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + fieldName) + "\" >" + selectHtml;
+    selectHtml = "<input type=\"text\" name=\"" + fieldName + "\" value=\"" + selectVal + "\" placeholder=\"" + I18n.getString(qzApp, "model.field." + qzModel + "." + fieldName) + "\" >" + selectHtml;
     selectHtml = "<div class=\"form-control nice-select wide\">" + selectHtml + "</div>";
 
     out.print(selectHtml);

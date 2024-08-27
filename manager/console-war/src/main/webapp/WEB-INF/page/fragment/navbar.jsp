@@ -1,12 +1,13 @@
-<%@ page import="qingzhou.deployer.DeployerConstants" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <header class="main-header">
     <nav class="navbar navbar-fixed-top">
         <%-- 顶部 左侧 logo --%>
         <div class="navbar-header">
-            <a class="navbar-toggle" href="javascript:void(0);" data-toggle="collapse" data-target=".navbar-collapse"><i class="icon icon-th-large"></i></a>
-            <a class="sidebar-toggle" href="javascript:void(0);" data-toggle="push-menu"><i class="icon icon-sliders"></i></a>
+            <a class="navbar-toggle" href="javascript:void(0);" data-toggle="collapse" data-target=".navbar-collapse"><i
+                    class="icon icon-th-large"></i></a>
+            <a class="sidebar-toggle" href="javascript:void(0);" data-toggle="push-menu"><i
+                    class="icon icon-sliders"></i></a>
             <a class="navbar-brand" href="javascript:void(0);">
                 <img src="<%=contextPath%>/static/images/login/top_logo.svg" class="logo" alt="">
                 <span class="logo-mini" data-toggle="push-menu" style="display: none;">
@@ -64,10 +65,10 @@
                     <%-- 用户/修改密码 --%>
                     <li>
                         <a id="reset-password-btn"
-                           href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ DeployerConstants.MANAGE_TYPE_APP +"/"+ DeployerConstants.MASTER_APP_NAME +"/password/"+ Editable.ACTION_NAME_EDIT)%>"
+                           href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ "app" +"/"+ "master" +"/password/"+ "edit")%>"
                            class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=PageBackendService.getModelInfo(DeployerConstants.MASTER_APP_NAME,"user").getIcon()%>"></i>
+                                <i class="icon icon-<%=PageBackendService.getModelInfo("master","user").getIcon()%>"></i>
                             </span>
                         </a>
                     </li>

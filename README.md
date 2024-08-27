@@ -1,4 +1,4 @@
-# Qingzhou（轻舟）Web管理软件开发平台
+# QingZhou（轻舟）Web管理软件开发平台
 
 ## 平台简介
 
@@ -33,7 +33,7 @@ JDK >= 1.8
 
    若看到类似如下的日志输出，则表示启动完成。
    ```
-   Open a browser to access the Qingzhou console: http://localhost:9000/console。
+   Open a browser to access the QingZhou console: http://localhost:9000/console。
    ```
 
 4. **访问控制台**
@@ -131,6 +131,7 @@ Editable接口：提供了修改、更新、展示功能。
     info = {"这是一个用户模块。", "en:Menu description."})//菜单描述
     public class User extends ModelBase implements Createable {
           @ModelField(
+            required = true,
             list = true,
             name = {"用户ID", "en:User ID"},
             info = {"用户ID。", "en:User ID."})
@@ -164,39 +165,6 @@ Editable接口：提供了修改、更新、展示功能。
 
   ```java
 public class User extends ModelBase implements Createable {
-    @Override
-    public DataStore getDataStore() {
-        return dataStore;
-    }
-
-    private final DataStore dataStore = new AppDatastore();
-
-    private static class AppDatastore implements DataStore {
-        private List<Map<String, String>> users = new ArrayList<>();
-
-        @Override
-        public List<Map<String, String>> getAllData() {
-            return users;//获取所有数据
-        }
-
-        @Override
-        public void addData(String s, Map<String, String> map) {
-            users.add(map);//添加数据
-        }
-
-        @Override
-        public void updateDataById(String s, Map<String, String> map) {
-            users.stream() //根据id更新数据
-                    .filter(user -> user.get("id").equals(s))
-                    .findFirst()
-                    .ifPresent(user -> user.putAll(map));
-        }
-
-        @Override
-        public void deleteDataById(String s) { //根据id删除数据
-            users.removeIf(user -> user.get("id").equals(s));
-        }
-    }
 }
    ```
 

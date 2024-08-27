@@ -1,6 +1,5 @@
-<%@ page import="qingzhou.registry.ModelFieldInfo" %>
-<%@ page import="qingzhou.registry.ModelActionInfo" %>
 <%@ page pageEncoding="UTF-8" %>
+
 <%@ include file="../fragment/head.jsp" %>
 
 <%
@@ -49,19 +48,20 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    boolean canAccess = (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Createable.ACTION_NAME_ADD, LoginManager.getLoginUser(session)));
-                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo(Createable.ACTION_NAME_CREATE);
-                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo(Createable.ACTION_NAME_ADD);
+                    boolean canAccess = (AccessControl.canAccess(qzApp, qzModel + "/" + "add", LoginManager.getLoginUser(session)));
+                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo("create");
+                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo("add");
                     if (canAccess
                             && (listCreateAction != null && !listCreateAction.isDisable())
                             && (listAddAction != null && !listAddAction.isDisable())
                     ) {
-                        %>
-                        <a class="btn" href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Createable.ACTION_NAME_CREATE)%>">
-                            <i class="icon icon-plus-sign"></i>
-                            <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + Createable.ACTION_NAME_CREATE)%>
-                        </a>
-                        <%
+                %>
+                <a class="btn"
+                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "create")%>">
+                    <i class="icon icon-plus-sign"></i>
+                    <%=I18n.getString(qzApp, "model.action." + qzModel + "." + "create")%>
+                </a>
+                <%
                     }
 
                     // 用于判断是否需要操作列
@@ -74,11 +74,11 @@
                                 continue;
                             }
                             String actionKey = action.getCode();
-                            String titleStr = I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + actionKey);
+                            String titleStr = I18n.getString(qzApp, "model.action.info." + qzModel + "." + actionKey);
                             if (titleStr != null) {
                                 titleStr = "data-tip='" + titleStr + "'";
                             } else {
-                                titleStr = "data-tip='" + I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey) + "'";
+                                titleStr = "data-tip='" + I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey) + "'";
                             }
                             boolean isAjaxAction = action.isAjax();
                             String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
@@ -93,13 +93,13 @@
                             if (isAjaxAction) {
                                 out.print("act-ajax='true' act-confirm='" +
                                         String.format(PageBackendService.getMasterAppI18nString("page.operationConfirm"),
-                                                I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey),
-                                                I18n.getString(menuAppName, "model." + qzRequest.getModel())) + " ?' ");
+                                                I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey),
+                                                I18n.getString(qzApp, "model." + qzModel)) + " ?' ");
                             }
                         %>
                 >
                     <i class="icon icon-<%=action.getIcon()%>"></i>
-                    <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey)%>
+                    <%=I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey)%>
                 </a>
                 <%
                         }
@@ -126,7 +126,7 @@
                     for (Integer i : indexToShow) {
                         String name = PageBackendService.getFieldName(qzRequest, i);
                 %>
-                <th><%=I18n.getString(menuAppName, "model.field." + qzRequest.getModel() + "." + name)%>
+                <th><%=I18n.getString(qzApp, "model.field." + qzModel + "." + name)%>
                 </th>
                 <%
                     }
@@ -150,7 +150,7 @@
                         Map<String, String> modelBase = modelDataList.get(idx);
                         String modelIcon = modelInfo.getIcon();
 
-                        String originUnEncodedId = modelBase.get(Listable.FIELD_NAME_ID);
+                        String originUnEncodedId = modelBase.get(idFieldName);
                         String encodedId = PageBackendService.encodeId(originUnEncodedId);
             %>
             <tr>
@@ -160,8 +160,8 @@
                 %>
                 <td class="custom-checkbox">
                     <input type="checkbox"
-                           value="<%= PageBackendService.encodeId(modelBase.get(Listable.FIELD_NAME_ID))%>"
-                           name="<%=Listable.FIELD_NAME_ID%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
+                           value="<%= PageBackendService.encodeId(modelBase.get(idFieldName))%>"
+                           name="<%=idFieldName%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
                 </td>
                 <%
                     }
@@ -170,18 +170,18 @@
                 </td>
                 <%
                     ModelActionInfo targetAction = null;
-                    if (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Editable.ACTION_NAME_UPDATE, LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Editable.ACTION_NAME_EDIT, LoginManager.getLoginUser(session))) {
-                        targetAction = modelInfo.getModelActionInfo(Editable.ACTION_NAME_EDIT);
+                    if (AccessControl.canAccess(qzApp, qzModel + "/" + "update", LoginManager.getLoginUser(session))
+                            && AccessControl.canAccess(qzApp, qzModel + "/" + "edit", LoginManager.getLoginUser(session))) {
+                        targetAction = modelInfo.getModelActionInfo("edit");
                     }
                     if (targetAction == null) {
-                        if (AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + Showable.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
-                            targetAction = modelInfo.getModelActionInfo(Showable.ACTION_NAME_SHOW);
+                        if (AccessControl.canAccess(qzApp, qzModel + "/" + ConsoleConstants.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
+                            targetAction = modelInfo.getModelActionInfo(ConsoleConstants.ACTION_NAME_SHOW);
                         }
                     }
                     boolean isFirst = true;
                     for (Integer i : indexToShow) {
-                        String value = String.valueOf(modelBase.get(PageBackendService.getFieldName(qzRequest, i)));
+                        String value = modelBase.get(PageBackendService.getFieldName(qzRequest, i));
                         if (value == null) {
                             value = "";
                         }
@@ -192,7 +192,7 @@
                     <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.getCode() + "/" + encodedId)%>'
                        class="dataid tooltips"
                        record-action-id="<%=targetAction.getCode()%>"
-                       data-tip='<%=I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + targetAction.getCode())%>'
+                       data-tip='<%=I18n.getString(qzApp, "model.action.info." + qzModel + "." + targetAction.getCode())%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
                         <%=value%>
@@ -204,13 +204,13 @@
                     String linkField = /*modelInfo.getModelFieldInfo(fieldName).linkModel()*/null;
                     if (linkField != null && !linkField.isEmpty()) {
                         String[] split = linkField.split("\\.");
-                        String idFieldValue = modelBase.get(Listable.FIELD_NAME_ID);
+                        String idFieldValue = modelBase.get(idFieldName);
                 %>
                 <td>
                     <a href='<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
-                       onclick='difModelActive("<%=qzRequest.getModel()%>","<%=split[0]%>")'
+                       onclick='difModelActive("<%=qzModel%>","<%=split[0]%>")'
                        class="dataid tooltips" record-action-id="<%=split[1]%>"
-                       data-tip='<%=I18n.getString(menuAppName, "model." + split[0])%>'
+                       data-tip='<%=I18n.getString(qzApp, "model." + split[0])%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
                         <%=value%>
@@ -239,19 +239,19 @@
                                 continue;
                             }
                             String actionKey = action.getCode();
-                            if (actionKey.equals(Editable.ACTION_NAME_EDIT)) {
+                            if (actionKey.equals("edit")) {
                                 continue;
                             }
 
-                            if (!AccessControl.canAccess(menuAppName, qzRequest.getModel() + "/" + actionKey, LoginManager.getLoginUser(session))) {
+                            if (!AccessControl.canAccess(qzApp, qzModel + "/" + actionKey, LoginManager.getLoginUser(session))) {
                                 continue;
                             }
 
-                            String titleStr = I18n.getString(menuAppName, "model.action.info." + qzRequest.getModel() + "." + actionKey);
+                            String titleStr = I18n.getString(qzApp, "model.action.info." + qzModel + "." + actionKey);
                             if (titleStr != null) {
                                 titleStr = "data-tip='" + titleStr + "'";
                             } else {
-                                titleStr = "data-tip='" + I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey) + "'";
+                                titleStr = "data-tip='" + I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey) + "'";
                             }
 
                             boolean isAjaxAction = action.isAjax();
@@ -260,23 +260,23 @@
                     <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>
                        class="tw-action-link tooltips" data-tip-arrow="top"
                        model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
-                       data-name="<%=originUnEncodedId%>" data-id="<%=(qzRequest.getModel() + "|" + encodedId)%>"
+                       data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedId)%>"
                             <%
-                                if (actionKey.equals(Downloadable.ACTION_NAME_FILES)) {
-                                    out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_NAME_DOWNLOAD + "/" + encodedId) + "'");
+                                if (actionKey.equals("files")) {
+                                    out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                                 }
                                 if (isAjaxAction) {
                                     out.print(" act-ajax='true' act-confirm='"
                                             + String.format(PageBackendService.getMasterAppI18nString("page.operationConfirm"),
-                                            I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey),
-                                            I18n.getString(menuAppName, "model." + qzRequest.getModel()))
+                                            I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey),
+                                            I18n.getString(qzApp, "model." + qzModel))
                                             + " " + originUnEncodedId
                                             + "'");
                                 }
                             %>
                     >
                         <i class="icon icon-<%=action.getIcon()%>"></i>
-                        <%=I18n.getString(menuAppName, "model.action." + qzRequest.getModel() + "." + actionKey)%>
+                        <%=I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey)%>
                     </a>
                     <%
                         }
@@ -297,7 +297,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_NAME_LIST + "?markForAddCsrf")%>&<%=Listable.PARAMETER_PAGE_NUM%>="
+                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "list" + "?markForAddCsrf")%>&<%="pageNum"%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>
@@ -378,9 +378,9 @@
         params = params.substring(0, params.length - 1);
         var str = url;
         if (str.indexOf("?") > -1) {
-            url = str + "&<%=Listable.FIELD_NAME_ID%>=" + params;
+            url = str + "&<%=idFieldName%>=" + params;
         } else {
-            url = str + "?<%=Listable.FIELD_NAME_ID%>=" + params;
+            url = str + "?<%=idFieldName%>=" + params;
         }
         $("#" + action, getRestrictedArea()).attr("href", url);
     }

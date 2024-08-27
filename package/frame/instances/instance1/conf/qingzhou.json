@@ -19,7 +19,8 @@
       {
         "name": "-XX:+HeapDumpOnOutOfMemoryError",
         "desc": "开启堆转储"
-      },{
+      },
+      {
         "name": "-XX:HeapDumpPath=logs/heap_${QZ_TimeStamp}.hprof",
         "desc": "堆转储文件路径"
       },
@@ -74,16 +75,6 @@
           "passwordLastModified": ""
         }
       ],
-      "department": [
-        {
-          "id": "default",
-          "name": "系统默认部门",
-          "parent": "",
-          "manager": "qingzhou",
-          "phone": "",
-          "email": ""
-        }
-      ],
       "jmx": {
         "enabled": "false",
         "host": "",
@@ -92,15 +83,12 @@
     },
     "agent": {
       "enabled": "false",
-      "host": "",
-      "port": "9000",
-      "key": "",
-      "clusterId": ""
-    },
-    "heartbeat": {
-      "enabled": "false",
       "masterUrl": "",
-      "masterKey": "30819F300D06092A864886F70D010101050003818D0030818902818100A66263C580010AD2BC843AEF62F748A8C0F8C1A4CD7BC0FC23447B109B3E842EA1FBF3D278742ED98F5F441BBAD9003A84957BEC7648A14BB519AAC36343933C52F2DBED205D5C6F00626F88E865DF4D61BA095514F7275324EE4F7D55856D99DFBEF2074317AED9F8D51049A45B4D5C63822ACFE0995BE42CB2E4255DF8C8730203010001"
+      "masterKey": "30819F300D06092A864886F70D010101050003818D0030818902818100A66263C580010AD2BC843AEF62F748A8C0F8C1A4CD7BC0FC23447B109B3E842EA1FBF3D278742ED98F5F441BBAD9003A84957BEC7648A14BB519AAC36343933C52F2DBED205D5C6F00626F88E865DF4D61BA095514F7275324EE4F7D55856D99DFBEF2074317AED9F8D51049A45B4D5C63822ACFE0995BE42CB2E4255DF8C8730203010001",
+      "agentHost": "",
+      "agentPort": "9000",
+      "agentKey": "",
+      "attachments": {}
     }
   }
 }

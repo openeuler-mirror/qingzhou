@@ -1,6 +1,6 @@
 package qingzhou.console.view.type;
 
-import qingzhou.console.ResponseImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 

@@ -6,10 +6,7 @@ import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,23 +22,24 @@ public class AccessControl implements Filter<HttpServletContext> {
         add(RESTController.INDEX_PATH);
     }};
 
-    public static boolean canAccess(String appName, String modelAction, String user) throws Exception {
-        String[] ma = modelAction.split("/");
-        String checkModel = ma[0];
-        String checkAction = ma[1];
-        if (ma.length == 2) {
-            ModelInfo modelInfo = SystemController.getAppInfo(appName).getModelInfo(checkModel);
-            if (modelInfo == null || modelInfo.isHidden()) {
-                return false;
-            }
-            ModelActionInfo actionInfo = modelInfo.getModelActionInfo(checkAction);
-            if (actionInfo == null || actionInfo.isDisable()) {
-                return false;
-            }
-            if (DeployerConstants.MASTER_APP_PASSWORD_MODEL_NAME.equals(checkModel)) {
-                return true;
-            }
-        }
+    public static boolean canAccess(String appName, String modelAction, String user) {
+        // todo 待实现
+//        String[] ma = modelAction.split("/");
+//        String checkModel = ma[0];
+//        String checkAction = ma[1];
+//        if (ma.length == 2) {
+//            ModelInfo modelInfo = SystemController.getAppInfo(appName).getModelInfo(checkModel);
+//            if (modelInfo == null || modelInfo.isHidden()) {
+//                return false;
+//            }
+//            ModelActionInfo actionInfo = modelInfo.getModelActionInfo(checkAction);
+//            if (actionInfo == null || actionInfo.isDisable()) {
+//                return false;
+//            }
+//            if (DeployerConstants.MASTER_APP_PASSWORD_MODEL_NAME.equals(checkModel)) {
+//                return true;
+//            }
+//        }
 
         return true;//nodePermission(appName, user);
     }
@@ -97,12 +95,8 @@ public class AccessControl implements Filter<HttpServletContext> {
         }
 
         // 远程实例注册
-        if (path.startsWith("/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/heartservice/heatbeat") ||
-                path.startsWith("/rest/json/app/" + DeployerConstants.MASTER_APP_NAME + "/heartservice/register")) {
-            return true;
-        }
-
-        return false;
+        return path.startsWith("/rest/json/app/" + "master" + "/" + "instance" + "/checkRegistry") ||
+                path.startsWith("/rest/json/app/" + "master" + "/" + "instance" + "/register");
     }
 
     private static String wrapCheckingPath(String uri) {

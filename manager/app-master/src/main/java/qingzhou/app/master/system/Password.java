@@ -1,7 +1,7 @@
 package qingzhou.app.master.system;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Editable;
+import qingzhou.api.type.Updatable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
@@ -15,11 +15,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "password", icon = "key",
-        menu = "System", order = 3, entrance = Editable.ACTION_NAME_EDIT,
+        menu = "System", order = 3, entrance = "edit",
         name = {"密码管理", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
-public class Password extends ModelBase implements Editable {
+public class Password extends ModelBase implements Updatable {
     private static final String KEY_IN_SESSION_FLAG = "keyForOtp";
 
     public static String[] splitPwd(String storedCredentials) {
@@ -67,7 +67,7 @@ public class Password extends ModelBase implements Editable {
     public String confirmPassword;
 
     @ModelField(
-            required = false, type = FieldType.bool,
+            type = FieldType.bool,
             list = true,
             name = {"动态密码", "en:One-time password"},
             info = {"用户开启动态密码，在登录系统时，输入动态密码，可免输入账户密码。",
@@ -90,7 +90,7 @@ public class Password extends ModelBase implements Editable {
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request, Response response) throws Exception {
         Password password = new Password();
-        Map<String, String> loginUserPro = getDataStore().getDataById(request.getUser());
+        Map<String, String> loginUserPro = showData(request.getUser());
         password.enableOtp = Boolean.parseBoolean(loginUserPro.get("enableOtp"));
         response.addModelData(password);
     }
@@ -107,9 +107,10 @@ public class Password extends ModelBase implements Editable {
             info = {"更新密码。", "en:Update the password."})
     public void update(Request request, Response response) throws Exception {
         String loginUser = request.getUser();
-        Map<String, String> loginUserPro = getDataStore().getDataById(loginUser);
+        Map<String, String> loginUserPro = showData(loginUser);
 
-        if (Boolean.parseBoolean(request.getParameter("changePwd"))) {
+        if (Boolean.parseBoolean(request.getParameter("changePwd"))
+                && !loginUserPro.get("password").equals(User.PASSWORD_FLAG)) {
             String error = checkPwdParam(request, loginUserPro);
             if (error != null) {
                 response.setSuccess(false);
@@ -122,13 +123,13 @@ public class Password extends ModelBase implements Editable {
             int saltLength = Integer.parseInt(passwords[1]);
             int iterations = Integer.parseInt(passwords[2]);
             MessageDigest digest = appContext.getService(CryptoService.class).getMessageDigest();
-            loginUserPro.put(User.pwdKey, digest.digest(request.getParameter("newPassword"), digestAlg, saltLength, iterations));
+            loginUserPro.put("password", digest.digest(request.getParameter("newPassword"), digestAlg, saltLength, iterations));
             loginUserPro.put("changePwd", "false");
             User.insertPasswordModifiedTime(loginUserPro);
             Console console = MasterApp.getService(Config.class).getConsole();
             String historyPasswords = User.cutOldPasswords(
                     loginUserPro.remove("historyPasswords"),
-                    console.getSecurity().getPasswordLimitRepeats(), loginUserPro.get(User.pwdKey));
+                    console.getSecurity().getPasswordLimitRepeats(), loginUserPro.get("password"));
             loginUserPro.put("historyPasswords", historyPasswords);
         }
 
@@ -140,12 +141,12 @@ public class Password extends ModelBase implements Editable {
             String keyForOtp = loginUserPro.get("keyForOtp");
             if (parsedBoolean && Utils.isBlank(keyForOtp)) {
                 response.setSuccess(false);
-                response.setMsg(appContext.getI18n(request.getLang(),"keyForOtp.bind"));
+                response.setMsg(appContext.getI18n(request.getLang(), "keyForOtp.bind"));
                 return;
             }
         }
 
-        getDataStore().updateDataById(loginUser, loginUserPro);
+        updateData(loginUserPro);
     }
 
     private String checkPwdParam(Request request, Map<String, String> loginUserPro) {
@@ -155,7 +156,7 @@ public class Password extends ModelBase implements Editable {
         if (newValue == null) { // fix #ITAIT-2849
             return appContext.getI18n(request.getLang(), "validator.require");
         }
-        String pwd = loginUserPro.get(User.pwdKey);
+        String pwd = loginUserPro.get("password");
         MessageDigest digest = appContext.getService(CryptoService.class).getMessageDigest();
         if (!digest.matches(newValue, pwd)) {
             return appContext.getI18n(request.getLang(), "password.original.failed");
@@ -226,16 +227,21 @@ public class Password extends ModelBase implements Editable {
             result = Totp.verify(keyForOtp, reqCode);
             if (result) {
                 String loginUser = request.getUser();
-                Map<String, String> attributes = getDataStore().getDataById(loginUser);
+                Map<String, String> attributes = showData(loginUser);
                 attributes.put("keyForOtp", keyForOtp);
-                getDataStore().updateDataById(loginUser, attributes);
+                updateData(attributes);
             }
         }
         response.setSuccess(result);
     }
 
     @Override
-    public DataStore getDataStore() {
-        return User.USER_DATA_STORE;
+    public void updateData(Map<String, String> data) throws Exception {
+        User.updateDataForUser(data);
+    }
+
+    @Override
+    public Map<String, String> showData(String id) throws Exception {
+        return User.showDataForUser(id);
     }
 }

@@ -3,24 +3,19 @@ package qingzhou.console.page;
 import qingzhou.api.FieldType;
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
-import qingzhou.api.type.*;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
+import qingzhou.console.ConsoleConstants;
+import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
-import qingzhou.console.util.StringUtil;
+import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.ViewManager;
-import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Base32Util;
+import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
-import qingzhou.engine.util.Base32Util;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,16 +33,27 @@ public class PageBackendService {
     private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
 
     private static final Set<String> ShowToListExcludedActionNames = new HashSet<>(Arrays.asList(
-            Showable.ACTION_NAME_SHOW,
-            Createable.ACTION_NAME_CREATE,
-            Createable.ACTION_NAME_ADD,
-            Listable.ACTION_NAME_LIST,
-            Editable.ACTION_NAME_EDIT,
-            Editable.ACTION_NAME_UPDATE,
-            Downloadable.ACTION_NAME_DOWNLOAD
+            ConsoleConstants.ACTION_NAME_SHOW,
+            "create",
+            "add",
+            "list",
+            "edit",
+            "update",
+            "download"
     ));
 
     private PageBackendService() {
+    }
+
+    public static ModelActionInfo renderModelAction(String app, String model, String action, Request request) {
+        ModelInfo modelInfo = getModelInfo(app, model);
+        if (modelInfo == null) return null;
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
+        if (actionInfo == null) return null;
+
+        String user = request.getParameterInSession(LoginManager.LOGIN_USER);
+        boolean canAccess = AccessControl.canAccess(app, model + "/" + action, user);
+        return canAccess ? actionInfo : null;
     }
 
     public static String[] getFieldOptions(String userName, String app, String model, String field) {
@@ -82,19 +88,19 @@ public class PageBackendService {
 
     public static String getAppName(Request request) {
         if (request == null) {
-            return DeployerConstants.MASTER_APP_NAME;
+            return "master";
         }
 
-        if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(((RequestImpl) request).getManageType())) {
-            return DeployerConstants.INSTANCE_APP_NAME;
+        if ("instance".equals(((RequestImpl) request).getManageType())) {
+            return "instance";
         }
 
         return request.getApp();
     }
 
     public static String getAppName(String manageType, String appName) {
-        if (DeployerConstants.MANAGE_TYPE_INSTANCE.equals(manageType)) {
-            return DeployerConstants.INSTANCE_APP_NAME;
+        if ("instance".equals(manageType)) {
+            return "instance";
         }
 
         return appName;
@@ -263,20 +269,20 @@ public class PageBackendService {
         if (modelInfo == null) {
             return null;
         }
-        boolean isEdit = Objects.equals(Editable.ACTION_NAME_EDIT, request.getAction());
+        boolean isEdit = Objects.equals("edit", request.getAction());
         for (String actionName : modelInfo.getActionNames()) {
-            if (actionName.equals(Editable.ACTION_NAME_UPDATE)) {
+            if (actionName.equals("update")) {
                 if (isEdit) {
-                    return Editable.ACTION_NAME_UPDATE;
+                    return "update";
                 }
-            } else if (actionName.equals(Createable.ACTION_NAME_ADD)) {
+            } else if (actionName.equals("add")) {
                 if (!isEdit) {
-                    return Createable.ACTION_NAME_ADD;
+                    return "add";
                 }
             }
         }
 
-        return isEdit ? Editable.ACTION_NAME_UPDATE : Createable.ACTION_NAME_ADD;// 兜底
+        return isEdit ? "update" : "add";// 兜底
     }
 
     public static boolean hasIDField(Request request) {
@@ -284,8 +290,8 @@ public class PageBackendService {
         if (modelInfo == null) {
             return false;
         }
-        ModelActionInfo listAction = modelInfo.getModelActionInfo(Listable.ACTION_NAME_LIST);
-        ModelFieldInfo idField = modelInfo.getModelFieldInfo(Listable.FIELD_NAME_ID);
+        ModelActionInfo listAction = modelInfo.getModelActionInfo("list");
+        ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
         return listAction != null && idField != null;
     }
 
@@ -379,7 +385,7 @@ public class PageBackendService {
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
-                        if (isActionShow(request, data, action) != null || Editable.ACTION_NAME_EDIT.equals(actionName)) {
+                        if (isActionShow(request, data, action) != null || "edit".equals(actionName)) {
                             isShow = false;
                             break;
                         }
@@ -440,7 +446,7 @@ public class PageBackendService {
 
     public static Map<String, String> stringToMap(String str) {
         Map<String, String> map = new LinkedHashMap<>();
-        if (StringUtil.isBlank(str)) {
+        if (Utils.isBlank(str)) {
             return map;
         }
         String[] envArr = str.split(",");
@@ -458,7 +464,7 @@ public class PageBackendService {
     }
 
     public static boolean isShow(FieldValueRetriever retriever, String show) throws Exception {
-        if (StringUtil.isBlank(show)) {
+        if (Utils.isBlank(show)) {
             return true;
         }
 

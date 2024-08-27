@@ -54,7 +54,7 @@ public class JMXServerHolder {
             return false;
         }
 
-        objectName = new ObjectName("Qingzhou:name=console");
+        objectName = new ObjectName("QingZhou:name=console");
         mBeanServer = ManagementFactory.getPlatformMBeanServer();
         if (!mBeanServer.isRegistered(objectName)) {
             mBeanServer.registerMBean(new ConsoleJmx(), objectName);

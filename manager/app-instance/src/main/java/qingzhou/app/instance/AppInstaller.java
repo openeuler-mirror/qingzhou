@@ -4,7 +4,7 @@ import qingzhou.api.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.FileUtil;
 
 import java.io.*;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public class AppInstaller extends ModelBase {
     public void installApp(Request request, Response response) throws Exception {
         File srcFile;
         if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
-            srcFile = Utils.newFile(request.getParameter("fromUpload"));
+            srcFile = FileUtil.newFile(request.getParameter("fromUpload"));
         } else {
             srcFile = new File(request.getParameter("filename"));
         }
@@ -42,18 +42,18 @@ public class AppInstaller extends ModelBase {
         File app;
         String id = request.getId();
         if (srcFile.isDirectory()) {
-            app = Utils.newFile(getAppsDir(), id == null ? srcFileName : id);
-            Utils.copyFileOrDirectory(srcFile, app);
+            app = FileUtil.newFile(getAppsDir(), id == null ? srcFileName : id);
+            FileUtil.copyFileOrDirectory(srcFile, app);
         } else if (srcFileName.endsWith(".jar")) {
             int index = srcFileName.lastIndexOf(".");
             String appName = srcFileName.substring(0, index);
-            app = Utils.newFile(getAppsDir(), id == null ? appName : id);
-            Utils.copyFileOrDirectory(srcFile, Utils.newFile(app, srcFileName));
+            app = FileUtil.newFile(getAppsDir(), id == null ? appName : id);
+            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, srcFileName));
         } else if (srcFileName.endsWith(".zip")) {
             int index = srcFileName.lastIndexOf(".");
             String appName = srcFileName.substring(0, index);
-            app = Utils.newFile(getAppsDir(), id == null ? appName : id);
-            Utils.unZipToDir(srcFile, app);
+            app = FileUtil.newFile(getAppsDir(), id == null ? appName : id);
+            FileUtil.unZipToDir(srcFile, app);
         } else {
             throw new IllegalArgumentException("unknown app type");
         }
@@ -66,11 +66,11 @@ public class AppInstaller extends ModelBase {
             info = {"从该实例上卸载应用。", "en:Uninstall the app from the instance."})
     public void unInstallApp(Request request, Response response) throws Exception {
         InstanceApp.getService(Deployer.class).unInstallApp(request.getId());
-        Utils.forceDelete(Utils.newFile(getAppsDir(), request.getId()));
+        FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
 
     private File getAppsDir() {
-        return Utils.newFile(InstanceApp.getService(ModuleContext.class).getInstanceDir(), "apps");
+        return FileUtil.newFile(InstanceApp.getService(ModuleContext.class).getInstanceDir(), "apps");
     }
 
     @ModelAction(
@@ -83,14 +83,14 @@ public class AppInstaller extends ModelBase {
         boolean isEnd = Boolean.parseBoolean(request.getParameter("isEnd"));
         int len = Integer.parseInt(request.getParameter("len"));
         String timestamp = request.getParameter("timestamp");
-        File tempDir = Utils.newFile(InstanceApp.getInstanceDir(), "temp", request.getModel());
-        File destFile = Utils.newFile(tempDir, timestamp, fileName);
+        File tempDir = FileUtil.newFile(InstanceApp.getInstanceDir(), "temp", request.getModel());
+        File destFile = FileUtil.newFile(tempDir, timestamp, fileName);
         try {
             writeFile(destFile, appContext.getService(CryptoService.class).getHexCoder().hexToBytes(fileBytes), len, isStart);
         } catch (IOException e) {
             response.setSuccess(false);
             response.setMsg(appContext.getI18n(request.getLang(), "file.upload.fail"));
-            Utils.forceDelete(destFile);
+            FileUtil.forceDelete(destFile);
             return;
         }
 
@@ -105,18 +105,18 @@ public class AppInstaller extends ModelBase {
         if (isStart) {
             if (file.exists()) {
                 try {
-                    Utils.forceDelete(file);
+                    FileUtil.forceDelete(file);
                 } catch (Exception ignored) {
                 }
             }
-            Utils.mkdirs(file.getParentFile());
+            FileUtil.mkdirs(file.getParentFile());
             file.createNewFile();
         }
         try (OutputStream out = new FileOutputStream(file, true); BufferedOutputStream bos = new BufferedOutputStream(out)) {
             bos.write(fileBytes, 0, len);
             bos.flush();
         } catch (IOException e) {
-            Utils.forceDelete(file);
+            FileUtil.forceDelete(file);
             throw e;
         }
     }

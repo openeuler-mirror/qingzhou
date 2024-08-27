@@ -1,19 +1,20 @@
+<%@ page pageEncoding="UTF-8" %>
+
 <%@ page import="qingzhou.console.i18n.I18n" %>
 <%@ page import="qingzhou.console.page.PageBackendService" %>
 <%@ page import="qingzhou.console.login.LoginManager" %>
 <%@ page import="qingzhou.console.ConsoleConstants" %>
 <%@ page import="qingzhou.console.login.vercode.VerCode" %>
 <%@ page import="qingzhou.console.controller.About" %>
-<%@ page import="qingzhou.console.controller.rest.AsymmetricDecryptor" %>
+<%@ page import="qingzhou.console.controller.rest.ParameterReset" %>
 <%@ page import="qingzhou.console.controller.rest.RESTController" %>
-<%@ page import="qingzhou.deployer.DeployerConstants" %>
 
-<%@ page pageEncoding="UTF-8" %>
 <%
     String contextPath = request.getContextPath();
     session.invalidate();
     I18n.setI18nLang(request, I18n.DEFAULT_LANG);
 %>
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -22,7 +23,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="author" content="https://gitee.com/openeuler/qingzhou">
-    <title>Qingzhou Console</title>
+    <title>QingZhou Console</title>
     <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
     <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
     <link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/css/login.css">
@@ -52,19 +53,25 @@
               action="<%=PageBackendService.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>"
               class="form-group" autocomplete="off">
             <div class="input-control has-icon-left">
-                <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>" name="<%=LoginManager.LOGIN_USER%>" required
-                       class="form-control" placeholder="<%=PageBackendService.getMasterAppI18nString( "page.login.user")%>" autofocus>
+                <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>"
+                       name="<%=LoginManager.LOGIN_USER%>" required
+                       class="form-control"
+                       placeholder="<%=PageBackendService.getMasterAppI18nString( "page.login.user")%>" autofocus>
                 <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;">
-                    <i class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("user").getIcon()%> "></i>
+                    <i class="icon icon-<%=PageBackendService.getAppInfo("master").getModelInfo("user").getIcon()%> "></i>
                 </label>
             </div>
             <div class="input-control has-icon-left">
-                <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt" data-type="password" class="form-control"
+                <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt"
+                       data-type="password" class="form-control"
                        placeholder="<%=PageBackendService.getMasterAppI18nString( "page.login.password")%>"
-                       onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;" dotted>
-                <input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>" name="<%=LoginManager.LOGIN_PASSWORD%>">
-                <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left" style="line-height: 44px;">
-                    <i class="icon icon-<%=PageBackendService.getAppInfo(DeployerConstants.MASTER_APP_NAME).getModelInfo("password").getIcon()%>"></i>
+                       onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;"
+                       dotted>
+                <input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>"
+                       name="<%=LoginManager.LOGIN_PASSWORD%>">
+                <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left"
+                       style="line-height: 44px;">
+                    <i class="icon icon-<%=PageBackendService.getAppInfo("master").getModelInfo("password").getIcon()%>"></i>
                 </label>
                 <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt"
                        class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;">
@@ -87,17 +94,20 @@
                 <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control"
                        style="width:250px;display:inline-block;float:left;"
                        placeholder="<%=PageBackendService.getMasterAppI18nString( "page.vercode")%>">
-                <label class="input-control-icon-left" style="line-height: 44px;"><i class="icon icon-shield"></i></label>
-                <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>" class="captcha"
+                <label class="input-control-icon-left" style="line-height: 44px;"><i
+                        class="icon icon-shield"></i></label>
+                <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>"
+                     class="captcha"
                      onclick="this.src = '<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
             </div>
             <%
                 }
             %>
 
-            <input type="submit" value='<%=PageBackendService.getMasterAppI18nString( "page.login")%>' class="login_btn">
+            <input type="submit" value='<%=PageBackendService.getMasterAppI18nString( "page.login")%>'
+                   class="login_btn">
             <textarea id="pubkey" rows="3" style="display:none;">
-                <%=AsymmetricDecryptor.getPublicKeyString()%>
+                <%=ParameterReset.getPublicKeyString()%>
             </textarea>
         </form>
     </section>
@@ -127,7 +137,7 @@
         }
     });
     $("#loginForm").submit(function (e) {
-        var encrypt = new JSEncrypt({"default_key_size":<%=AsymmetricDecryptor.getKeySize()%>});
+        var encrypt = new JSEncrypt({"default_key_size":<%=ParameterReset.getKeySize()%>});
         encrypt.setPublicKey($('#pubkey').val());
         var inputs = $("#loginForm").find("input");
         for (var i = 0; i < inputs.length; i++) {

@@ -3,8 +3,8 @@ package qingzhou.console.login;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,7 +27,7 @@ public class LoginFreeFilter implements Filter<HttpServletContext> {
             }
         }
         String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
-        if(AccessControl.isNoLoginCheckUris(checkPath)){
+        if (AccessControl.isNoLoginCheckUris(checkPath)) {
             return true;
         }
 
@@ -36,8 +36,8 @@ public class LoginFreeFilter implements Filter<HttpServletContext> {
         }
 
         // rest 临时登录
-        if (StringUtil.notBlank(request.getParameter(LoginManager.LOGIN_USER))
-                && StringUtil.notBlank(request.getParameter(LoginManager.LOGIN_PASSWORD))) {
+        if (Utils.notBlank(request.getParameter(LoginManager.LOGIN_USER))
+                && Utils.notBlank(request.getParameter(LoginManager.LOGIN_PASSWORD))) {
             try {
                 LoginManager.LoginFailedMsg loginFailedMsg = LoginManager.login(request);
                 if (loginFailedMsg == null) {

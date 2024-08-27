@@ -4,15 +4,16 @@ import qingzhou.api.Lang;
 import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import static qingzhou.console.login.LoginManager.*;
+import static qingzhou.console.login.LoginManager.LOCKED_MSG_KEY;
+import static qingzhou.console.login.LoginManager.LOGIN_ERROR_MSG_KEY;
 
 public class SetI18n implements Filter<HttpServletContext> {
     public static final String LANG_SWITCH_URI = "/lang";
@@ -46,7 +47,7 @@ public class SetI18n implements Filter<HttpServletContext> {
                 s.setAttribute(SESSION_LANG_FLAG, lang);
 
                 String lastUri = (String) s.getAttribute(lastUriKey);
-                if (StringUtil.isBlank(lastUri)) {
+                if (Utils.isBlank(lastUri)) {
                     lastUri = request.getContextPath() + RESTController.INDEX_PATH;
                 }
                 response.sendRedirect(PageBackendService.encodeURL(response, lastUri)); // to welcome page
@@ -80,7 +81,7 @@ public class SetI18n implements Filter<HttpServletContext> {
     static {
         ConsoleI18n.addI18n(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
         ConsoleI18n.addI18n(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
-        ConsoleI18n.addI18n("page.index", new String[]{" Qingzhou 平台", "en:Qingzhou Platform"});
+        ConsoleI18n.addI18n("page.index", new String[]{" QingZhou 平台", "en:QingZhou Platform"});
         ConsoleI18n.addI18n("page.index.centralized", new String[]{"集中管理", "en:Centralized Management"});
         ConsoleI18n.addI18n("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
         ConsoleI18n.addI18n("page.action", new String[]{"操作", "en:Action"});

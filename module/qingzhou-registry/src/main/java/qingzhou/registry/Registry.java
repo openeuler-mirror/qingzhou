@@ -3,7 +3,7 @@ package qingzhou.registry;
 import java.util.Collection;
 
 public interface Registry {
-    boolean checkRegistered(String dataFingerprint);
+    boolean checkRegistry(String dataFingerprint);
 
     void register(String registrationData); // 远程注册，数据为 json 格式
 

@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "os", icon = "desktop", menu = "Monitor",
-        name = {"操作系统", "en:Operating System"}, entrance = Monitorable.ACTION_NAME_MONITOR,
+        name = {"操作系统", "en:Operating System"}, entrance = "monitor",
         info = {"操作系统的基本信息。", "en:Basic information about the operating system."})
 public class OS extends ModelBase implements Monitorable {
 

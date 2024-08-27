@@ -1,5 +1,7 @@
 package qingzhou.console.util;
 
+import qingzhou.engine.util.Utils;
+
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -131,7 +133,7 @@ public class ObjectUtil {
     }
 
     public static Number convertNumber(Class<?> type, String value) {
-        if (StringUtil.isBlank(value)) {
+        if (Utils.isBlank(value)) {
             return 0; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
         }
         if (type.equals(int.class) || type.equals(Integer.class)) {
@@ -160,7 +162,7 @@ public class ObjectUtil {
         }
 
         if (type == InetAddress.class) {
-            if (StringUtil.isBlank(value)) {
+            if (Utils.isBlank(value)) {
                 return null; // value=“” 时，会报转化类型异常。
             }
             return InetAddress.getByName(value);
@@ -192,7 +194,7 @@ public class ObjectUtil {
 
             Class<?>[] parameterTypes = writeMethod.getParameterTypes();
             if (parameterTypes.length == 1) {
-                Object arg = StringUtil.stringToType(val, parameterTypes[0]);
+                Object arg = Utils.stringToType(val, parameterTypes[0]);
                 writeMethod.invoke(obj, arg);
                 return;
             } else {

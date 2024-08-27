@@ -1,11 +1,16 @@
 package qingzhou.config;
 
+import java.util.Collections;
+import java.util.Map;
+
 public class Agent {
     private boolean enabled;
-    private String host;
-    private int port;
-    private String key;
-    private String clusterId;
+    private String masterUrl;
+    private String masterKey;
+    private String agentHost;
+    private int agentPort;
+    private String agentKey;
+    private Map<String, String> attachments;
 
     public boolean isEnabled() {
         return enabled;
@@ -15,35 +20,52 @@ public class Agent {
         this.enabled = enabled;
     }
 
-    public String getHost() {
-        return host;
+    public String getMasterUrl() {
+        return masterUrl;
     }
 
-    public void setHost(String host) {
-        this.host = host;
+    public void setMasterUrl(String masterUrl) {
+        this.masterUrl = masterUrl;
     }
 
-    public int getPort() {
-        return port;
+    public String getMasterKey() {
+        return masterKey;
     }
 
-    public void setPort(int port) {
-        this.port = port;
+    public void setMasterKey(String masterKey) {
+        this.masterKey = masterKey;
     }
 
-    public String getKey() {
-        return key;
+    public String getAgentHost() {
+        return agentHost;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setAgentHost(String agentHost) {
+        this.agentHost = agentHost;
     }
 
-    public String getClusterId() {
-        return clusterId;
+    public int getAgentPort() {
+        return agentPort;
     }
 
-    public void setClusterId(String clusterId) {
-        this.clusterId = clusterId;
+    public void setAgentPort(int agentPort) {
+        this.agentPort = agentPort;
+    }
+
+    public String getAgentKey() {
+        return agentKey;
+    }
+
+    public void setAgentKey(String agentKey) {
+        this.agentKey = agentKey;
+    }
+
+    public Map<String, String> getAttachments() {
+        if (attachments == null) return Collections.emptyMap();
+        return attachments;
+    }
+
+    public void setAttachments(Map<String, String> attachments) {
+        this.attachments = attachments;
     }
 }

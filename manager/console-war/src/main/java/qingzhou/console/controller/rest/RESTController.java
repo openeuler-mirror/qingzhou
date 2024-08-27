@@ -2,16 +2,15 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
 import qingzhou.console.ActionInvoker;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.util.StringUtil;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
@@ -33,7 +32,7 @@ import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + DeployerConstants.MANAGE_TYPE_APP + "/" + DeployerConstants.MASTER_APP_NAME + "/" + "index" + "/" + "index";
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + "app" + "/" + "master" + "/" + "index" + "/" + "index";
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = new File(SystemController.getModuleContext().getTemp(), "upload");
 
@@ -48,7 +47,7 @@ public class RESTController extends HttpServlet {
         if (uri != null) {
             String[] restTemp = uri.split("/");
             for (String r : restTemp) {
-                if (StringUtil.notBlank(r)) {
+                if (Utils.notBlank(r)) {
                     result.add(r);
                 }
             }
@@ -59,7 +58,7 @@ public class RESTController extends HttpServlet {
 
     private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
-            new AsymmetricDecryptor(), // 解密前端的 password 类型的表单域
+            new ParameterReset(), // 解密前端的 password 类型的表单域
             new ValidationFilter(), // 参数校验
 
             // 执行具体的业务逻辑
@@ -111,12 +110,12 @@ public class RESTController extends HttpServlet {
             if (fileAttachments != null) {
                 for (String fa : fileAttachments.values()) {
                     try {
-                        File f = Utils.newFile(fa);
+                        File f = FileUtil.newFile(fa);
                         if (f.exists()) {
                             File parentFile = f.getParentFile();
                             if (parentFile.exists()
                                     && parentFile.getCanonicalPath().startsWith(TEMP_BASE_PATH.getCanonicalPath())) {
-                                Utils.forceDelete(parentFile);
+                                FileUtil.forceDelete(parentFile);
                             }
                         }
                     } catch (Exception ignored) {
@@ -240,9 +239,9 @@ public class RESTController extends HttpServlet {
                 }
 
                 String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-                String fileName = Utils.newFile(part.getSubmittedFileName()).getName();
-                File targetFile = Utils.newFile(TEMP_BASE_PATH, time, fileName);
-                Utils.mkdirs(targetFile.getParentFile());
+                String fileName = FileUtil.newFile(part.getSubmittedFileName()).getName();
+                File targetFile = FileUtil.newFile(TEMP_BASE_PATH, time, fileName);
+                FileUtil.mkdirs(targetFile.getParentFile());
 
                 try (ReadableByteChannel readChannel = Channels.newChannel(part.getInputStream());
                      FileChannel writeChannel = FileChannel.open(targetFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {

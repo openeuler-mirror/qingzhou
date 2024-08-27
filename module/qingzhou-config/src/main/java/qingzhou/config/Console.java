@@ -69,11 +69,12 @@ public class Console {
         this.user = user;
     }
 
-    public Department[] getDepartments() {
+    public Department[] getDepartment() {
+        if (department == null) return new Department[0];
         return department;
     }
 
-    public void setUser(Department[] department) {
+    public void setDepartment(Department[] department) {
         this.department = department;
     }
 }
