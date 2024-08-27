@@ -1668,7 +1668,7 @@ function defaultOption() {
         width: 'auto',
         title: {text: ''},
         tooltip: {trigger: 'axis'},
-        legend: {data: [], textStyle: {fontSize: 13}, align: 'auto'},
+        legend: {data: [], textStyle: {fontSize: 13,color: "#9e9e9e"}, align: 'auto'},
         series: [],
         grid: {
             left: '3%',
