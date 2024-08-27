@@ -20,24 +20,7 @@ import java.util.Map;
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
 public class Password extends ModelBase implements Updatable {
-    private static final String KEY_IN_SESSION_FLAG = "keyForOtp";
-
-    public static String[] splitPwd(String storedCredentials) {
-        String SP = "$";
-        String[] pwdArray = new String[4];
-        int lastIndexOf = storedCredentials.lastIndexOf(SP);
-
-        String digestAlg = storedCredentials.substring(lastIndexOf + 1);
-        pwdArray[pwdArray.length - 1] = digestAlg;
-
-        storedCredentials = storedCredentials.substring(0, lastIndexOf);
-        String[] oldPwdDigestStyle = storedCredentials.split("\\" + SP);
-
-        oldPwdDigestStyle[1] = String.valueOf(oldPwdDigestStyle[1].length() / 2);
-        System.arraycopy(oldPwdDigestStyle, 0, pwdArray, 0, pwdArray.length - 1);
-
-        return pwdArray;
-    }
+    private final String KEY_IN_SESSION_FLAG = "keyForOtp";
 
     @ModelField(
             type = FieldType.bool,
@@ -48,6 +31,7 @@ public class Password extends ModelBase implements Updatable {
     @ModelField(
             show = "changePwd=true",
             type = FieldType.password,
+            required = true,
             name = {"原始密码", "en:Original Password"},
             info = {"登录系统的原始密码。", "en:The original password to log in to the system."})
     public String originalPassword;
@@ -55,6 +39,7 @@ public class Password extends ModelBase implements Updatable {
     @ModelField(
             show = "changePwd=true",
             type = FieldType.password,
+            required = true,
             name = {"新密码", "en:Password"},
             info = {"用于登录系统的新密码。", "en:The new password used to log in to the system."})
     public String newPassword;
@@ -62,6 +47,7 @@ public class Password extends ModelBase implements Updatable {
     @ModelField(
             show = "changePwd=true",
             type = FieldType.password,
+            required = true,
             name = {"确认密码", "en:Confirm Password"},
             info = {"确认用于登录系统的新密码。", "en:Confirm the new password used to log in to the system."})
     public String confirmPassword;
@@ -71,16 +57,19 @@ public class Password extends ModelBase implements Updatable {
             list = true,
             name = {"动态密码", "en:One-time password"},
             info = {"用户开启动态密码，在登录系统时，输入动态密码，可免输入账户密码。",
-                    "en:When the user turns on the one-time password, when logging in to the system, enter the one-time password, and the account password is not required."}
-    )
+                    "en:When the user turns on the one-time password, when logging in to the system, enter the one-time password, and the account password is not required."})
     public Boolean enableOtp = true;
 
     @Override
     public void start() {
-        appContext.addI18n("keyForOtp.bind", new String[]{"请先刷新动态密码", "en:Please refresh the one-time password"});
-        appContext.addI18n("password.confirm.failed", new String[]{"确认密码与新密码不一致", "en:Confirm that the password does not match the new password"});
-        appContext.addI18n("password.original.failed", new String[]{"原始密码错误", "en:The original password is wrong"});
-        appContext.addI18n("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变", "en:The new password is the same as the original password and has not changed"});
+        appContext.addI18n("keyForOtp.bind", new String[]{"请先刷新动态密码",
+                "en:Please refresh the one-time password"});
+        appContext.addI18n("password.confirm.failed", new String[]{"确认密码与新密码不一致",
+                "en:Confirm that the password does not match the new password"});
+        appContext.addI18n("password.original.failed", new String[]{"原始密码错误",
+                "en:The original password is wrong"});
+        appContext.addI18n("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变",
+                "en:The new password is the same as the original password and has not changed"});
         appContext.addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，禁止使用最近 %s 次使用过的旧密码",
                 "en:For security reasons, the use of old passwords that have been used last %s is prohibited"});
     }
@@ -243,5 +232,22 @@ public class Password extends ModelBase implements Updatable {
     @Override
     public Map<String, String> showData(String id) throws Exception {
         return User.showDataForUser(id);
+    }
+
+    static String[] splitPwd(String storedCredentials) {
+        String SP = "$";
+        String[] pwdArray = new String[4];
+        int lastIndexOf = storedCredentials.lastIndexOf(SP);
+
+        String digestAlg = storedCredentials.substring(lastIndexOf + 1);
+        pwdArray[pwdArray.length - 1] = digestAlg;
+
+        storedCredentials = storedCredentials.substring(0, lastIndexOf);
+        String[] oldPwdDigestStyle = storedCredentials.split("\\" + SP);
+
+        oldPwdDigestStyle[1] = String.valueOf(oldPwdDigestStyle[1].length() / 2);
+        System.arraycopy(oldPwdDigestStyle, 0, pwdArray, 0, pwdArray.length - 1);
+
+        return pwdArray;
     }
 }

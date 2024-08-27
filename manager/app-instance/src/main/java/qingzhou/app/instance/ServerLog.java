@@ -10,27 +10,26 @@ import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Model(code = "serverlog", icon = "file-text", entrance = "edit",
         name = {"服务器日志", "en:Server Log"}, order = 3,
         info = {"QingZhou 实例的日志配置。", "en:The logging configuration of the QingZhou instance."})
 public class ServerLog extends ModelBase implements Updatable, Downloadable {
-    public static final String LOG_PATTERN_DEFAULT = "simple";
-    public static final String LOG_PATTERN_RICH = "rich";
-
-    public static final Map<String, String> LOG_PATTERN_MAP = new LinkedHashMap<String, String>() {{
-        put(LOG_PATTERN_RICH, "{date:yyyy-MM-dd HH:mm:ss.SSS} [{level}] [{thread}] [{package}] - {message}");
-        put(LOG_PATTERN_DEFAULT, "{date} [{level}] - {message}");
-        put("none", "{message}");
-    }};
+    @ModelField(
+            type = FieldType.select,
+            options = {"rich", "simple", "none"},
+            name = {"日志格式", "en:Log Pattern"},
+            info = {"日志内容的记录格式，包括时间戳、线程名、日志级别等。", "en:The record format of the log content, including timestamp, thread name, log level, etc."})
+    public String logPattern = "simple";
 
     @ModelField(
             type = FieldType.select,
-            name = {"日志格式", "en:Log Pattern"},
-            info = {"日志内容的记录格式，包括时间戳、线程名、日志级别等。", "en:The record format of the log content, including timestamp, thread name, log level, etc."})
-    public String logPattern = LOG_PATTERN_DEFAULT;
+            options = {"error", "warn", "info", "debug"},
+            name = {"默认日志级别", "en:Global Log Level"},
+            info = {"设置默认日志级别，只有在日志信息的严重程度等于或高于此级别时，才会记录日志。",
+                    "en:Set the global log level so that log information is logged only if the severity of the log information is equal to or higher than this level."})
+    private String logLevel = "info";
 
     @ModelField(
             type = FieldType.bool,
@@ -49,15 +48,14 @@ public class ServerLog extends ModelBase implements Updatable, Downloadable {
     private Integer bufferQueueSize = 100000;
 
     @ModelField(
-            name = {"文件目录", "en:Base File"},
-            info = {"将日志文件存放到指定的目录下。", "en:Save the log file to the specified directory."})
-    private String baseFile = "logs";
-    @ModelField(
+            group = "file",
             type = FieldType.bool,
             name = {"按天轮转", "en:Rotation by Day"},
             info = {"将每日未达到大小阈值的日志在零点切割到一个新文件中。", "en:Cut the daily logs that do not reach the size threshold to a new file at zero."})
     private Boolean rotationByDay = true;
+
     @ModelField(
+            group = "file",
             type = FieldType.number,
             min = 1,
             name = {"按大小轮转", "en:Rotation by Size"},
@@ -65,6 +63,7 @@ public class ServerLog extends ModelBase implements Updatable, Downloadable {
     private Integer rotationBySize = 50;
 
     @ModelField(
+            group = "file",
             type = FieldType.number,
             min = 1,
             name = {"保留文件个数", "en:Keep Files"},
@@ -72,28 +71,15 @@ public class ServerLog extends ModelBase implements Updatable, Downloadable {
     private Integer keepMaxFiles = 100;
 
     @ModelField(
+            group = "file",
             type = FieldType.select,
+            options = {"UTF-8", "GBK", "ISO-8859-1", "GB18030", "GB2312", "UTF-16", "US-ASCII"},
             name = {"文件编码", "en:Charset"},
             info = {"指定日志文件的编码格式。", "en:Specifies the encoding format of the log file."})
     private String charset = "UTF-8";
 
     @ModelField(
-            type = FieldType.bool,
-            name = {"缓冲写入", "en:Buffered"},
-            info = {"是否开启文件缓冲写入功能。开启后，当持续记录的日志内容大小（单位：字节）之和达到缓冲大小时才一次性写入文件，而不是每条日志都立即写入文件（在服务器停止时会全部写入），这通常可以提高日志记录性能。关闭后，每条日志都立即写入文件。",
-                    "en:Whether to enable the file buffer write function. After it is enabled, when the sum of the continuously recorded log content size (unit: bytes) reaches the buffer size, the file will be written to the file at one time, instead of writing each log to the file immediately (all of them will be written when the server stops). This often improves logging performance. When closed, each log is written to the file immediately."})
-    private boolean buffered = true;
-
-    @ModelField(
-            show = "buffered=true",
-            type = FieldType.number,
-            min = 1,
-            name = {"缓冲大小", "en:Buffered Size"},
-            info = {"缓冲写入的阈值，当持续记录的日志内容大小（单位：字节）之和达到此值时，一次性写入进文件。"
-                    , "en:The threshold for buffered writing. When the sum of the size (unit: bytes) of the log content that is continuously recorded reaches this value, the file will be written to the file at one time."})
-    private Integer bufferedSize = 64 * 1024; // 64 KB
-
-    @ModelField(
+            group = "file",
             type = FieldType.bool,
             name = {"日志文件压缩", "en:Log File Compression"},
             info = {"是否开启日志文件压缩功能。开启后，对轮转后的日志文件进行压缩。",
@@ -101,18 +87,22 @@ public class ServerLog extends ModelBase implements Updatable, Downloadable {
     private boolean compression = false;
 
     @ModelField(
-            type = FieldType.number,
-            name = {"异步日志缓冲数", "en:Asynchronous Log Buffers"},
-            info = {"开启异步日志后，日志缓冲队列暂存的日志条数，-1 表示未开启异步日志。",
-                    "en:After the asynchronous log is enabled, the number of log entries temporarily stored in the log buffer queue. -1 means that the asynchronous log is not enabled."})
-    private Integer bufferQueueUsed = 0;
+            group = "file",
+            type = FieldType.bool,
+            name = {"缓冲写入", "en:Buffered"},
+            info = {"是否开启文件缓冲写入功能。开启后，当持续记录的日志内容大小（单位：字节）之和达到缓冲大小时才一次性写入文件，而不是每条日志都立即写入文件（在服务器停止时会全部写入），这通常可以提高日志记录性能。关闭后，每条日志都立即写入文件。",
+                    "en:Whether to enable the file buffer write function. After it is enabled, when the sum of the continuously recorded log content size (unit: bytes) reaches the buffer size, the file will be written to the file at one time, instead of writing each log to the file immediately (all of them will be written when the server stops). This often improves logging performance. When closed, each log is written to the file immediately."})
+    private boolean buffered = true;
 
     @ModelField(
-            type = FieldType.select,
-            name = {"默认日志级别", "en:Global Log Level"},
-            info = {"设置默认日志级别，只有在日志信息的严重程度等于或高于此级别时，才会记录日志。",
-                    "en:Set the global log level so that log information is logged only if the severity of the log information is equal to or higher than this level."})
-    private String logLevel = "info";
+            group = "file",
+            show = "buffered=true",
+            type = FieldType.number,
+            min = 1,
+            name = {"缓冲大小", "en:Buffered Size"},
+            info = {"缓冲写入的阈值，当持续记录的日志内容大小（单位：字节）之和达到此值时，一次性写入进文件。"
+                    , "en:The threshold for buffered writing. When the sum of the size (unit: bytes) of the log content that is continuously recorded reaches this value, the file will be written to the file at one time."})
+    private Integer bufferedSize = 64 * 1024; // 64 KB
 
     @Override
     public File downloadData(String id) {

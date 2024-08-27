@@ -18,17 +18,17 @@ public @interface ModelField {
 
     String show() default ""; // 标识此字段有效的条件
 
+    boolean createable() default true; // 允许创建时指定值
+
+    boolean editable() default true; // 允许编辑此字段
+
     FieldType type() default FieldType.text; // 字段的显示类型
+
+    boolean required() default false;
 
     String[] options() default ""; // 字段的取值范围
 
     Class<? extends ModelBase> refModel() default ModelBase.class; // 若 refModel 有，则 options() 会列出指定 model 的所有 id
-
-    boolean required() default false;
-
-    boolean createable() default true; // 允许创建时指定值
-
-    boolean editable() default true; // 允许编辑此字段
 
     long min() default Long.MIN_VALUE;
 
