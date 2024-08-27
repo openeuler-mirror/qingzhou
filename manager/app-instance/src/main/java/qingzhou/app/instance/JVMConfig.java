@@ -1,13 +1,12 @@
 package qingzhou.app.instance;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Editable;
+import qingzhou.api.type.Updatable;
 import qingzhou.config.Arg;
 import qingzhou.config.Config;
 import qingzhou.config.Env;
 import qingzhou.config.Jvm;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -19,9 +18,9 @@ import qingzhou.registry.ModelInfo;
 import java.io.File;
 import java.util.*;
 
-@Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = Editable.ACTION_NAME_EDIT,
-        name = {"JVM 配置", "en:JVM Configuration"}, info = {"配置运行 Qingzhou 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running Qingzhou applications."})
-public class JVMConfig extends ModelBase implements Editable {
+@Model(code = JVMConfig.MODEL_NAME_jvmconfig, icon = "coffee", entrance = "edit",
+        name = {"JVM 配置", "en:JVM Configuration"}, info = {"配置运行 QingZhou 应用服务器的 JVM 属性。", "en:Configure the JVM properties of the server running QingZhou applications."})
+public class JVMConfig extends ModelBase implements Updatable {
     public static final String MODEL_NAME_jvmconfig = "jvmconfig";
     public static final String DATA_SEPARATOR = ",";
     public static final String JAVA_HOME_KEY = "JAVA_HOME";
@@ -53,85 +52,85 @@ public class JVMConfig extends ModelBase implements Editable {
         appContext.addI18n("validator.check.timeFlag", new String[]{"时间戳只能出现在文件名上，而不能在文件夹上", "en:The timestamp can only appear on the file name, not on the folder"});
     }
 
-    @ModelField(required = false, group = group_memory, name = {"初始堆内存", "en:Initial Heap Size"}, info = {"设置初始堆内存大小 (-Xms)。", "en:Set the initial heap size (-Xms)."})
+    @ModelField(group = group_memory, name = {"初始堆内存", "en:Initial Heap Size"}, info = {"设置初始堆内存大小 (-Xms)。", "en:Set the initial heap size (-Xms)."})
     public String Xms;
 
-    @ModelField(required = false, group = group_memory, name = {"最大堆内存", "en:Max Heap Size"}, info = {"设置最大堆内存大小 (-Xmx)。", "en:Set the max heap size (-Xmx)."})
+    @ModelField(group = group_memory, name = {"最大堆内存", "en:Max Heap Size"}, info = {"设置最大堆内存大小 (-Xmx)。", "en:Set the max heap size (-Xmx)."})
     public String Xmx;
 
-    @ModelField(required = false, group = group_memory, name = {"新生代大小", "en:Xmn Size"}, info = {"设置新生代大小 (-Xmn)。", "en:Set the new generation size (-Xmn)."})
+    @ModelField(group = group_memory, name = {"新生代大小", "en:Xmn Size"}, info = {"设置新生代大小 (-Xmn)。", "en:Set the new generation size (-Xmn)."})
     public String Xmn;
 
-    @ModelField(required = false, group = group_memory, show = "Xmn=", min = 1, max = 100, type = FieldType.number, name = {"老年代比率", "en:New Ratio"}, info = {"设置新生代和老年代的大小比率，通俗地讲即老年代比新生代的倍数 (-XX:NewRatio)。", "en:Set the size ratio of the new generation and the old era, which is colloquially speaking, that is, the multiple of the old era to the new generation (-XX:NewRatio)."})
+    @ModelField(group = group_memory, show = "Xmn=", min = 1, max = 100, type = FieldType.number, name = {"老年代比率", "en:New Ratio"}, info = {"设置新生代和老年代的大小比率，通俗地讲即老年代比新生代的倍数 (-XX:NewRatio)。", "en:Set the size ratio of the new generation and the old era, which is colloquially speaking, that is, the multiple of the old era to the new generation (-XX:NewRatio)."})
     public Integer NewRatio;
 
-    @ModelField(required = false, group = group_memory, min = 1, max = 100, type = FieldType.number, name = {"Eden 区比率", "en:Survivor Ratio"}, info = {"设置新生代中 Eden 区域和 Survivor 区域（From 幸存区或 To 幸存区）的比率 (-XX:SurvivorRatio)。", "en:Sets the ratio of the Eden zone to the Survivor zone (From Survivor Zone or To Survivor Zone) in the new generation (-XX:SurvivorRatio)."})
+    @ModelField(group = group_memory, min = 1, max = 100, type = FieldType.number, name = {"Eden 区比率", "en:Survivor Ratio"}, info = {"设置新生代中 Eden 区域和 Survivor 区域（From 幸存区或 To 幸存区）的比率 (-XX:SurvivorRatio)。", "en:Sets the ratio of the Eden zone to the Survivor zone (From Survivor Zone or To Survivor Zone) in the new generation (-XX:SurvivorRatio)."})
     public Integer SurvivorRatio;
 
-    @ModelField(required = false, group = group_memory, name = {"初始元空间", "en:MetaspaceSize"}, info = {"设置初始元空间的大小 (-XX:MetaspaceSize)。", "en:Set the initial Metaspace size (-XX:MetaspaceSize)."})
+    @ModelField(group = group_memory, name = {"初始元空间", "en:MetaspaceSize"}, info = {"设置初始元空间的大小 (-XX:MetaspaceSize)。", "en:Set the initial Metaspace size (-XX:MetaspaceSize)."})
     public String MetaspaceSize;
 
-    @ModelField(required = false, group = group_memory, name = {"最大元空间", "en:MaxMetaspaceSize"}, info = {"设置最大元空间的大小 (-XX:MaxMetaspaceSize)。", "en:Set the max metaspace size (-XX:MaxMetaspaceSize)."})
+    @ModelField(group = group_memory, name = {"最大元空间", "en:MaxMetaspaceSize"}, info = {"设置最大元空间的大小 (-XX:MaxMetaspaceSize)。", "en:Set the max metaspace size (-XX:MaxMetaspaceSize)."})
     public String MaxMetaspaceSize;
 
-    @ModelField(required = false, group = group_memory, name = {"线程栈大小", "en:Stack Size"}, info = {"设置线程栈大小的最大值 (-Xss)。", "en:Set the max thread stack size (-Xss)."})
+    @ModelField(group = group_memory, name = {"线程栈大小", "en:Stack Size"}, info = {"设置线程栈大小的最大值 (-Xss)。", "en:Set the max thread stack size (-Xss)."})
     public String Xss;
 
-    @ModelField(required = false, group = group_memory, name = {"堆外内存", "en:MaxDirectMemorySize"}, info = {"设置最大堆外内存，当 Direct ByteBuffer 分配的堆外内存达到该大小后，即触发 Full GC (-XX:MaxDirectMemorySize)。", "en:Set the maximum out-of-heap memory. When the out-of-heap memory allocated by Direct ByteBuffer reaches this size, Full GC is triggered (-XX:MaxDirectMemorySize)."})
+    @ModelField(group = group_memory, name = {"堆外内存", "en:MaxDirectMemorySize"}, info = {"设置最大堆外内存，当 Direct ByteBuffer 分配的堆外内存达到该大小后，即触发 Full GC (-XX:MaxDirectMemorySize)。", "en:Set the maximum out-of-heap memory. When the out-of-heap memory allocated by Direct ByteBuffer reaches this size, Full GC is triggered (-XX:MaxDirectMemorySize)."})
     public String MaxDirectMemorySize;
 
-    @ModelField(required = false, group = group_gc, type = FieldType.radio,
+    @ModelField(group = group_gc, type = FieldType.radio,
             options = {"", "UseSerialGC", "UseParallelGC", "UseConcMarkSweepGC", "UseG1GC"},
             name = {"垃圾回收器", "en:GarbageCollector"},
             info = {"设置 JVM 回收内存使用的垃圾回收器。", "en:Set up the garbage collector used by the JVM to reclaim memory."})
     public String useGC;
 
-    @ModelField(required = false, group = group_gc, show = "useGC=UseParallelGC|useGC=UseConcMarkSweepGC", min = 1, max = 100, type = FieldType.number, name = {"并行收集线程数", "en:ParallelGCThreads"}, info = {"设置并行收集器收集时使用的CPU数，即并行收集线程数 (-XX:ParallelGCThreads)。", "en:Set the number of CPUs used by the parallel collector collection, that is, the number of parallel collection threads (-XX:ParallelGCThreads)."})
+    @ModelField(group = group_gc, show = "useGC=UseParallelGC|useGC=UseConcMarkSweepGC", min = 1, max = 100, type = FieldType.number, name = {"并行收集线程数", "en:ParallelGCThreads"}, info = {"设置并行收集器收集时使用的CPU数，即并行收集线程数 (-XX:ParallelGCThreads)。", "en:Set the number of CPUs used by the parallel collector collection, that is, the number of parallel collection threads (-XX:ParallelGCThreads)."})
     public Integer ParallelGCThreads;
-    @ModelField(required = false, group = group_gc, show = "useGC=UseParallelGC", min = 1, max = 100, type = FieldType.number, name = {"最大暂停时间", "en:MaxGCPauseMillis"}, info = {"每次 GC 最大的停顿毫秒数，VM 将调整 Java 堆大小和其他与 GC 相关的参数，以使 GC 引起的暂停时间短于该毫秒，尽可能地保证内存回收花费时间不超过设定值（-XX:MaxGCPauseMillis）。", "en:For each GC maximum pause milliseconds, the VM will adjust the Java heap size and other GC-related parameters so that the pause caused by GC is shorter than that millisecond, ensuring that memory reclamation takes no longer than the set value as much as possible (-XX:MaxGCPauseMillis)."})
+    @ModelField(group = group_gc, show = "useGC=UseParallelGC", min = 1, max = 100, type = FieldType.number, name = {"最大暂停时间", "en:MaxGCPauseMillis"}, info = {"每次 GC 最大的停顿毫秒数，VM 将调整 Java 堆大小和其他与 GC 相关的参数，以使 GC 引起的暂停时间短于该毫秒，尽可能地保证内存回收花费时间不超过设定值（-XX:MaxGCPauseMillis）。", "en:For each GC maximum pause milliseconds, the VM will adjust the Java heap size and other GC-related parameters so that the pause caused by GC is shorter than that millisecond, ensuring that memory reclamation takes no longer than the set value as much as possible (-XX:MaxGCPauseMillis)."})
     public Integer MaxGCPauseMillis;
-    @ModelField(required = false, group = group_gc, show = "useGC=UseParallelGC", min = 1, max = 100, type = FieldType.number, name = {"回收时间占比", "en:GCTimeRatio"}, info = {"设置垃圾回收时间占程序运行时间的百分比 (-XX:GCTimeRatio)。", "en:Sets the garbage collection time as a percentage of the program running time (-XX:GCTimeRatio)."})
+    @ModelField(group = group_gc, show = "useGC=UseParallelGC", min = 1, max = 100, type = FieldType.number, name = {"回收时间占比", "en:GCTimeRatio"}, info = {"设置垃圾回收时间占程序运行时间的百分比 (-XX:GCTimeRatio)。", "en:Sets the garbage collection time as a percentage of the program running time (-XX:GCTimeRatio)."})
     public Integer GCTimeRatio;
 
-    @ModelField(required = false, group = group_gc, type = FieldType.bool, name = {"记录 GC 日志", "en:Print GC "}, info = {"设置是否记录 JVM 的 GC 日志。", "en:Sets whether to record GC logs for the JVM."})
+    @ModelField(group = group_gc, type = FieldType.bool, name = {"记录 GC 日志", "en:Print GC "}, info = {"设置是否记录 JVM 的 GC 日志。", "en:Sets whether to record GC logs for the JVM."})
     public boolean gcLogEnabled;
-    @ModelField(required = false, group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录细节", "en:GC Details"}, info = {"设置是否记录 GC 的详细信息 (-XX:+PrintGCDetails)。", "en:Set whether GC details are logged (-XX:+PrintGCDetails)."})
+    @ModelField(group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录细节", "en:GC Details"}, info = {"设置是否记录 GC 的详细信息 (-XX:+PrintGCDetails)。", "en:Set whether GC details are logged (-XX:+PrintGCDetails)."})
     public boolean PrintGCDetails;
-    @ModelField(required = false, group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录系统停顿时间", "en:Application StoppedTime"}, info = {"是否在 GC 日志中记录系统停顿时间。仅适用于 java8 (-XX:+PrintGCApplicationStoppedTime)。", "en:Whether application StoppedTime are recorded in GC logs, only available for java8 (-XX:+PrintGCApplicationStoppedTime)."})
+    @ModelField(group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录系统停顿时间", "en:Application StoppedTime"}, info = {"是否在 GC 日志中记录系统停顿时间。仅适用于 java8 (-XX:+PrintGCApplicationStoppedTime)。", "en:Whether application StoppedTime are recorded in GC logs, only available for java8 (-XX:+PrintGCApplicationStoppedTime)."})
     public boolean PrintGCApplicationStoppedTime;
-    @ModelField(required = false, group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录系统执行时间", "en:Application ConcurrentTime"}, info = {"是否在 GC 日志中记录系统执行时间。仅适用于 java8 (-XX:+PrintGCApplicationConcurrentTime)。", "en:Whether application ConcurrentTime are recorded in GC logs, only available for java8 (-XX:+PrintGCApplicationConcurrentTime)."})
+    @ModelField(group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录系统执行时间", "en:Application ConcurrentTime"}, info = {"是否在 GC 日志中记录系统执行时间。仅适用于 java8 (-XX:+PrintGCApplicationConcurrentTime)。", "en:Whether application ConcurrentTime are recorded in GC logs, only available for java8 (-XX:+PrintGCApplicationConcurrentTime)."})
     public boolean PrintGCApplicationConcurrentTime;
-    @ModelField(required = false, group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录堆信息", "en:Print Heap"}, info = {"是否在 GC 日志中记录堆信息，仅适用于java8 (-XX:+PrintHeapAtGC)。", "en:Whether heap information is recorded in the GC log, only available for java8 (-XX:+PrintHeapAtGC)."})
+    @ModelField(group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录堆信息", "en:Print Heap"}, info = {"是否在 GC 日志中记录堆信息，仅适用于java8 (-XX:+PrintHeapAtGC)。", "en:Whether heap information is recorded in the GC log, only available for java8 (-XX:+PrintHeapAtGC)."})
     public boolean PrintHeapAtGC;
     @ModelField(group = group_gc, show = "gcLogEnabled=true", name = {"GC 日志文件", "en:GC Log Path"},
-            info = {"设置 GC 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 Qingzhou 实例目录的相对路径，同时可使用 ${QZ_TimeStamp} 变量添加 Qingzhou 启动时间戳 (-Xlog)。",
-                    "en:Set the storage location for GC logs. Note: The path can be absolute or relative to the Qingzhou instance directory, and the Qingzhou startup timestamp can be added using the ${QZ_TimeStamp} variable (-Xlog)."})
+            info = {"设置 GC 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 QingZhou 实例目录的相对路径，同时可使用 ${QZ_TimeStamp} 变量添加 QingZhou 启动时间戳 (-Xlog)。",
+                    "en:Set the storage location for GC logs. Note: The path can be absolute or relative to the QingZhou instance directory, and the QingZhou startup timestamp can be added using the ${QZ_TimeStamp} variable (-Xlog)."})
     public String gcLog = "logs/gc/gc.log";
 
-    @ModelField(required = false, group = group_heapDump, type = FieldType.bool, name = {"开启堆转储", "en:Heap Dump"}, info = {"当 JVM 发生 OOM 时，自动生成 DUMP 文件，文件位置由【堆转储文件】选项指定 (-XX:+HeapDumpOnOutOfMemoryError)。", "en:When OOM occurs in JVM, a dump file is automatically generated, and the file location is specified by the [Heap Dump Path] option (-XX:+HeapDumpOnOutOfMemoryError)."})
+    @ModelField(group = group_heapDump, type = FieldType.bool, name = {"开启堆转储", "en:Heap Dump"}, info = {"当 JVM 发生 OOM 时，自动生成 DUMP 文件，文件位置由【堆转储文件】选项指定 (-XX:+HeapDumpOnOutOfMemoryError)。", "en:When OOM occurs in JVM, a dump file is automatically generated, and the file location is specified by the [Heap Dump Path] option (-XX:+HeapDumpOnOutOfMemoryError)."})
     public boolean HeapDumpOnOutOfMemoryError;
     @ModelField(group = group_heapDump, show = "HeapDumpOnOutOfMemoryError=true",
-            name = {"堆转储文件", "en:Heap Dump Path"}, info = {"设置 JVM 发生 OOM 时，自动生成 DUMP 文件的路径。注：路径可以是绝对路径，也可以是相对于 Qingzhou 域目录的相对路径，同时可使用 ${QZ_TimeStamp} 变量添加 Qingzhou 启动时间戳 (-XX:HeapDumpPath)。",
-            "en:Set the path to the JVM to automatically generate a dump file when OOM occurs. Note: The path can be absolute or relative to the Qingzhou instance directory, and the Qingzhou startup timestamp can be added using the ${QZ_TimeStamp} variable (-XX:HeapDumpPath)."})
+            name = {"堆转储文件", "en:Heap Dump Path"}, info = {"设置 JVM 发生 OOM 时，自动生成 DUMP 文件的路径。注：路径可以是绝对路径，也可以是相对于 QingZhou 域目录的相对路径，同时可使用 ${QZ_TimeStamp} 变量添加 QingZhou 启动时间戳 (-XX:HeapDumpPath)。",
+            "en:Set the path to the JVM to automatically generate a dump file when OOM occurs. Note: The path can be absolute or relative to the QingZhou instance directory, and the QingZhou startup timestamp can be added using the ${QZ_TimeStamp} variable (-XX:HeapDumpPath)."})
     public String HeapDumpPath = "logs/heap_${QZ_TimeStamp}.hprof";
 
-    @ModelField(required = false, group = group_jvmLog, type = FieldType.bool, name = {"记录 JVM 日志", "en:Log VM Output"}, info = {"设置是否记录 JVM 日志 (-XX:+LogVMOutput)。", "en:Set whether to log JVM logs (-XX:+LogVMOutput)."})
+    @ModelField(group = group_jvmLog, type = FieldType.bool, name = {"记录 JVM 日志", "en:Log VM Output"}, info = {"设置是否记录 JVM 日志 (-XX:+LogVMOutput)。", "en:Set whether to log JVM logs (-XX:+LogVMOutput)."})
     public boolean LogVMOutput;
     @ModelField(group = group_jvmLog, show = "LogVMOutput=true",
             name = {"JVM 日志文件", "en:JVM Log Path"},
-            info = {"设置 JVM 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 Qingzhou 域目录的相对路径，同时可使用 ${QZ_TimeStamp} 变量添加 Qingzhou 启动时间戳 (-XX:LogFile)。",
-                    "en:Set the location where JVM logs are stored. Note: The path can be absolute or relative to the Qingzhou instance directory, and the Qingzhou startup timestamp can be added using the ${QZ_TimeStamp} variable (-XX:LogFile)."})
+            info = {"设置 JVM 日志的存储位置。注：路径可以是绝对路径，也可以是相对于 QingZhou 域目录的相对路径，同时可使用 ${QZ_TimeStamp} 变量添加 QingZhou 启动时间戳 (-XX:LogFile)。",
+                    "en:Set the location where JVM logs are stored. Note: The path can be absolute or relative to the QingZhou instance directory, and the QingZhou startup timestamp can be added using the ${QZ_TimeStamp} variable (-XX:LogFile)."})
     public String LogFile = "logs/jvm/jvm.log";
 
-    @ModelField(required = false, group = group_environment,
+    @ModelField(group = group_environment,
             name = {"Java 路径", "en:Java Home"},
-            info = {"设置运行 Qingzhou 所需要的 Java 路径。", "en:Set the Java path required to run Qingzhou."})
+            info = {"设置运行 QingZhou 所需要的 Java 路径。", "en:Set the Java path required to run QingZhou."})
     public String JAVA_HOME;
-    @ModelField(required = false, group = group_environment, type = FieldType.kv, lengthMax = 4096000, name = {"环境变量", "en:Environments"},
+    @ModelField(group = group_environment, type = FieldType.kv, lengthMax = 4096000, name = {"环境变量", "en:Environments"},
             info = {"设置应用程序所需要的环境变量。", "en:Set the environment variables required by the application."})
     public String envs;
 
-    @ModelField(required = false, group = group_IP, type = FieldType.bool,
+    @ModelField(group = group_IP, type = FieldType.bool,
             name = {"首选 IPv4", "en:Prefer IPv4"},
             info = {"在支持 IPv4 映射地址的 IPv6 网络协议栈中，首选使用 IPv4 协议栈 (-Djava.net.preferIPv4Stack)。",
                     "en:Among IPv6 network stacks that support IPv4 mapped addresses, the IPv4 stack is preferred (-Djava.net.preferIPv4Stack)."}
@@ -150,6 +149,33 @@ public class JVMConfig extends ModelBase implements Editable {
         );
     }
 
+    @Override
+    public void updateData(Map<String, String> data) throws Exception {
+        Json json = appContext.getService(Json.class);
+        Config config = InstanceApp.getService(Config.class);
+        Jvm jvm = config.getJvm();
+        List<Arg> oldArgs = jvm.getArg();
+        for (Arg oldArg : oldArgs) {
+            config.deleteArg(oldArg.getName());
+        }
+        List<Map<String, String>> args = json.fromJson(data.get("arg"), List.class);
+        for (Map<String, String> map : args) {
+            Arg arg = new Arg();
+            Utils.setPropertiesToObj(arg, map);
+            config.addArg(arg);
+        }
+
+        List<Env> oldEnvs = jvm.getEnv();
+        for (Env oldEnv : oldEnvs) {
+            config.deleteEnv(oldEnv.getName());
+        }
+        List<Map<String, String>> envs = json.fromJson(data.get("env"), List.class);
+        for (Map<String, String> map : envs) {
+            Env env = new Env();
+            Utils.setPropertiesToObj(env, map);
+            config.addEnv(env);
+        }
+    }
 
     @ModelAction(
             name = {"更新", "en:Update"},
@@ -160,7 +186,7 @@ public class JVMConfig extends ModelBase implements Editable {
         }
 
         Map<String, String> data = new HashMap<>();
-        AppInfo appInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo();
+        AppInfo appInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo();
         for (String fieldName : appInfo.getModelInfo(request.getModel()).getFormFieldNames()) {
             String value = request.getParameter(fieldName);
             if (value != null) {
@@ -298,7 +324,7 @@ public class JVMConfig extends ModelBase implements Editable {
             jvm.put("env", json.toJson(envs));
             jvm.put("arg", json.toJson(args));
 
-            getDataStore().updateDataById(request.getId(), jvm);
+            updateDataById(request.getId(), jvm);
 
             // 如果更新成功，保证文件的父目录存在，否则会导致启动无法创建文件而失败
             enSureFileExists(dataBackup);
@@ -308,7 +334,7 @@ public class JVMConfig extends ModelBase implements Editable {
     private List<Arg> getArgs() throws Exception {
         List<Arg> args = new ArrayList<>();
         Json json = appContext.getService(Json.class);
-        for (Map<String, String> data : getDataStore().getAllData()) {
+        for (Map<String, String> data : getAllData()) {
             if (data.remove("type").equals("arg")) {
                 args.add(json.fromJson(json.toJson(data), Arg.class));
             }
@@ -383,7 +409,7 @@ public class JVMConfig extends ModelBase implements Editable {
     public void show(Request request, Response response) throws Exception {
         Map<String, String> jvm = new HashMap<>();
         Map<String, String> envMap = new LinkedHashMap<>();
-        for (Map<String, String> element : getDataStore().getAllData()) {
+        for (Map<String, String> element : getAllData()) {
             String type = element.remove("type");
             if ("arg".equals(type) && Boolean.parseBoolean(element.getOrDefault("enabled", "true"))) {
                 String argKV = element.get("name");
@@ -460,7 +486,7 @@ public class JVMConfig extends ModelBase implements Editable {
         response.addData(jvm);
     }
 
-    private boolean validate(Request request, Response response) throws Exception {
+    private boolean validate(Request request, Response response) {
         Map<String, String> parameters = request.getParameters();
         for (String fieldName : parameters.keySet()) {
             String newValue = parameters.get(fieldName);
@@ -469,7 +495,7 @@ public class JVMConfig extends ModelBase implements Editable {
                 for (String key : SIZE_KEYS) {
                     if (key.equals(fieldName)) {
                         if (!newValue.matches("\\d+([mMgG])")) {
-                            ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
+                            ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
                             response.setSuccess(false);
                             response.setMsg(String.format(this.appContext.getI18n(request.getLang(), "validator.arg.memory.invalid"), I18nTool.retrieveI18n(modelFieldInfo.getName()).get(request.getLang())));
                             return false;
@@ -557,13 +583,13 @@ public class JVMConfig extends ModelBase implements Editable {
         String max = request.getParameter(maxKey);
         if (max != null && !max.isEmpty()) {
             if (!max.matches("\\d+([mMgG])")) {
-                ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(maxKey);
+                ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(maxKey);
                 return String.format(this.appContext.getI18n(request.getLang(), "validator.arg.memory.union.invalid"), I18nTool.retrieveI18n(modelFieldInfo.getName()).get(request.getLang()));
             }
 
             if (getValueAsByte(newValue) > getValueAsByte(max)) {
                 String msg = this.appContext.getI18n(request.getLang(), "validator.larger.cannot");
-                ModelInfo modelInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP_NAME).getAppInfo().getModelInfo(request.getModel());
+                ModelInfo modelInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo().getModelInfo(request.getModel());
                 ModelFieldInfo keyFieldInfo = modelInfo.getModelFieldInfo(key);
                 ModelFieldInfo maxKeyFieldInfo = modelInfo.getModelFieldInfo(maxKey);
                 String keyName = I18nTool.retrieveI18n(keyFieldInfo.getName()).get(request.getLang());
@@ -599,74 +625,61 @@ public class JVMConfig extends ModelBase implements Editable {
         }
     }
 
-
     @Override
-    public DataStore getDataStore() {
-        return jvmDataStore;
+    public Map<String, String> showData(String id) {
+        throw new IllegalStateException("覆写了 show 方法后，不应该进入此方法");
     }
 
-    private final JvmDataStore jvmDataStore = new JvmDataStore();
-
-    private class JvmDataStore implements DataStore {
-        @Override
-        public List<Map<String, String>> getAllData() throws Exception {
-            Jvm jvm = InstanceApp.getService(Config.class).getJvm();
-            if (jvm == null) {
-                return null;
-            }
-            List<Arg> args = jvm.getArg();
-            List<Map<String, String>> dataList = new ArrayList<>();
-            for (Arg arg : args) {
-                Map<String, String> argMap = Utils.getPropertiesFromObj(arg);
-                argMap.put("type", "arg");
-                dataList.add(argMap);
-            }
-            List<Env> envs = jvm.getEnv();
-            for (Env env : envs) {
-                Map<String, String> envMap = Utils.getPropertiesFromObj(env);
-                envMap.put("type", "env");
-                dataList.add(envMap);
-            }
-
-            return dataList;
+    public List<Map<String, String>> getAllData() throws Exception {
+        Jvm jvm = InstanceApp.getService(Config.class).getJvm();
+        if (jvm == null) {
+            return null;
+        }
+        List<Arg> args = jvm.getArg();
+        List<Map<String, String>> dataList = new ArrayList<>();
+        for (Arg arg : args) {
+            Map<String, String> argMap = Utils.getPropertiesFromObj(arg);
+            argMap.put("type", "arg");
+            dataList.add(argMap);
+        }
+        List<Env> envs = jvm.getEnv();
+        for (Env env : envs) {
+            Map<String, String> envMap = Utils.getPropertiesFromObj(env);
+            envMap.put("type", "env");
+            dataList.add(envMap);
         }
 
-        @Override
-        public void addData(String id, Map<String, String> data) throws Exception {
-            throw new RuntimeException("No Support.");
+        return dataList;
+    }
+
+    public void addData(String id, Map<String, String> data) throws Exception {
+        throw new RuntimeException("No Support.");
+    }
+
+    public void updateDataById(String id, Map<String, String> data) throws Exception {
+        Json json = appContext.getService(Json.class);
+        Config config = InstanceApp.getService(Config.class);
+        Jvm jvm = config.getJvm();
+        List<Arg> oldArgs = jvm.getArg();
+        for (Arg oldArg : oldArgs) {
+            config.deleteArg(oldArg.getName());
+        }
+        List<Map<String, String>> args = json.fromJson(data.get("arg"), List.class);
+        for (Map<String, String> map : args) {
+            Arg arg = new Arg();
+            Utils.setPropertiesToObj(arg, map);
+            config.addArg(arg);
         }
 
-        @Override
-        public void updateDataById(String id, Map<String, String> data) throws Exception {
-            Json json = appContext.getService(Json.class);
-            Config config = InstanceApp.getService(Config.class);
-            Jvm jvm = config.getJvm();
-            List<Arg> oldArgs = jvm.getArg();
-            for (Arg oldArg : oldArgs) {
-                config.deleteArg(oldArg.getName());
-            }
-            List<Map<String, String>> args = json.fromJson(data.get("arg"), List.class);
-            for (Map<String, String> map : args) {
-                Arg arg = new Arg();
-                Utils.setPropertiesToObj(arg, map);
-                config.addArg(arg);
-            }
-
-            List<Env> oldEnvs = jvm.getEnv();
-            for (Env oldEnv : oldEnvs) {
-                config.deleteEnv(oldEnv.getName());
-            }
-            List<Map<String, String>> envs = json.fromJson(data.get("env"), List.class);
-            for (Map<String, String> map : envs) {
-                Env env = new Env();
-                Utils.setPropertiesToObj(env, map);
-                config.addEnv(env);
-            }
+        List<Env> oldEnvs = jvm.getEnv();
+        for (Env oldEnv : oldEnvs) {
+            config.deleteEnv(oldEnv.getName());
         }
-
-        @Override
-        public void deleteDataById(String id) throws Exception {
-            throw new RuntimeException("No Support.");
+        List<Map<String, String>> envs = json.fromJson(data.get("env"), List.class);
+        for (Map<String, String> map : envs) {
+            Env env = new Env();
+            Utils.setPropertiesToObj(env, map);
+            config.addEnv(env);
         }
     }
 }

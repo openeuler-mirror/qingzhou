@@ -3,12 +3,11 @@ package qingzhou.deployer.impl;
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
-import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.http.Http;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
@@ -53,21 +52,21 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        deployer = new DeployerImpl(moduleContext);
+        deployer = new DeployerImpl(moduleContext, logger);
 
         moduleContext.registerService(Deployer.class, deployer);
 
-        File masterApp = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.MASTER_APP_NAME);
+        File masterApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "master");
         if (masterApp.exists()) {
             deployer.installApp(masterApp);
         }
 
-        File instanceApp = Utils.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.INSTANCE_APP_NAME);
+        File instanceApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "instance");
         if (instanceApp.exists()) {
             deployer.installApp(instanceApp);
         }
 
-        File[] files = Utils.newFile(moduleContext.getInstanceDir(), "apps").listFiles();
+        File[] files = FileUtil.newFile(moduleContext.getInstanceDir(), "apps").listFiles();
         if (files != null) {
             for (File file : files) {
                 if (!file.isDirectory()) continue;

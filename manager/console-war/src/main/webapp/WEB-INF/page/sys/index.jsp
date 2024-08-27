@@ -13,7 +13,7 @@
     <meta name="renderer" content="webkit|ie-comp|ie-stand">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5,shrink-to-fit=no,user-scalable=yes">
     <meta name="author" content="https://gitee.com/openeuler/qingzhou">
-    <title>Qingzhou Console</title>
+    <title>QingZhou Console</title>
     <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
     <link rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
     <link rel="stylesheet" href="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.css">
@@ -303,16 +303,16 @@
         confirmBtnText: '<%=PageBackendService.getMasterAppI18nString("page.confirm")%>',
         cancelBtnText: '<%=PageBackendService.getMasterAppI18nString("page.cancel")%>',
         notLogin: '<%=PageBackendService.getMasterAppI18nString("page.login.need")%>',
-        encrypt_key_size: '<%=AsymmetricDecryptor.getKeySize()%>',
+        encrypt_key_size: '<%=ParameterReset.getKeySize()%>',
         reloginBtnText: '<%=PageBackendService.getMasterAppI18nString("page.relogin")%>',
         iknowBtnText: '<%=PageBackendService.getMasterAppI18nString("page.gotit")%>',
         switchLang: '<%=PageBackendService.getMasterAppI18nString("page.lang.switch.confirm")%>',
         logout: '<%=PageBackendService.getMasterAppI18nString("page.logout.confirm")%>',
-        filesName: '<%=Downloadable.ACTION_NAME_FILES%>',
+        filesName: 'files',
         downloadTip: '<%=PageBackendService.getMasterAppI18nString("page.download.log.tip")%>',
         actionName_target: '<%=ConsoleConstants.ACTION_NAME_manage%>',
         downloadFileNames: '<%=ConsoleConstants.PARAMETER_DOWNLOAD_FILE_NAMES%>',
-        showAction: '<%=Showable.ACTION_NAME_SHOW%>',
+        showAction: '<%=ConsoleConstants.ACTION_NAME_SHOW%>',
         downloadCheckAll: '<%=PageBackendService.getMasterAppI18nString("page.download.checkall")%>',
         downloadTaskTip: '<%=PageBackendService.getMasterAppI18nString("page.download.tasktip")%>',
         layerTitleOtp: '<%=PageBackendService.getMasterAppI18nString("page.layertitle.otp")%>',

@@ -1,67 +1,50 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
-import qingzhou.api.type.Createable;
-import qingzhou.api.type.Editable;
-import qingzhou.console.RequestImpl;
-import qingzhou.console.ResponseImpl;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.util.StringUtil;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ValidationFilter implements Filter<RestContext> {
-    public static String validation_required = "validation_required";
-    public static String validation_min = "validation_min";
-    public static String validation_max = "validation_max";
-    public static String validation_lengthMin = "validation_lengthMin";
-    public static String validation_lengthMax = "validation_lengthMax";
-    public static String validation_pattern = "validation_pattern";
-    public static String validation_port = "validation_port";
-    public static String validation_password = "validation_password";
-    public static String validation_port_valueBetween = "validation_port_valueBetween";
-    public static String validation_unsupportedCharacters = "validation_unsupportedCharacters";
-    public static String validation_unsupportedStrings = "validation_unsupportedStrings";
-    public static String validation_createable = "validation_createable";
-    public static String validation_file = "validation_file";
-    public static String validation_xss = "validation_xss";
-    public static String validation_number = "validation_number";
-    public static String validation_email = "validation_email";
-
     static {
-        ConsoleI18n.addI18n(validation_required, new String[]{"内容不能为空白", "en:The content cannot be blank"});
-        ConsoleI18n.addI18n(validation_number, new String[]{"须是数字类型", "en:Must be a numeric type"});
-        ConsoleI18n.addI18n(validation_min, new String[]{"数字不能小于%s", "en:The number cannot be less than %s"});
-        ConsoleI18n.addI18n(validation_max, new String[]{"数字不能大于%s", "en:The number cannot be greater than %s"});
-        ConsoleI18n.addI18n(validation_lengthMin, new String[]{"字符串长度不能小于%s", "en:The length of the string cannot be less than %s"});
-        ConsoleI18n.addI18n(validation_lengthMax, new String[]{"字符串长度不能大于%s", "en:The length of the string cannot be greater than %s"});
-        ConsoleI18n.addI18n(validation_port, new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
-        ConsoleI18n.addI18n(validation_password, new String[]{"密码校验异常", "en:Validate password exception"});
-        ConsoleI18n.addI18n(validation_port_valueBetween, new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
-        ConsoleI18n.addI18n(validation_unsupportedCharacters, new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
-        ConsoleI18n.addI18n(validation_unsupportedStrings, new String[]{"不能包含字符串：%s", "en:Cannot contain the string: %s"});
-        ConsoleI18n.addI18n(validation_createable, new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
-        ConsoleI18n.addI18n(validation_file, new String[]{"须是一个合法的文件路径", "en:Must be a legal file path"});
-        ConsoleI18n.addI18n(validation_xss, new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
-        ConsoleI18n.addI18n(validation_pattern, new String[]{"内容不满足规则", "en:The content does not meet the rules"});
-        ConsoleI18n.addI18n(validation_email, new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
+        ConsoleI18n.addI18n("validation_required", new String[]{"内容不能为空白", "en:The content cannot be blank"});
+        ConsoleI18n.addI18n("validation_number", new String[]{"须是数字类型", "en:Must be a numeric type"});
+        ConsoleI18n.addI18n("validation_min", new String[]{"数字不能小于%s", "en:The number cannot be less than %s"});
+        ConsoleI18n.addI18n("validation_max", new String[]{"数字不能大于%s", "en:The number cannot be greater than %s"});
+        ConsoleI18n.addI18n("validation_lengthMin", new String[]{"字符串长度不能小于%s", "en:The length of the string cannot be less than %s"});
+        ConsoleI18n.addI18n("validation_lengthMax", new String[]{"字符串长度不能大于%s", "en:The length of the string cannot be greater than %s"});
+        ConsoleI18n.addI18n("validation_port", new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
+        ConsoleI18n.addI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
+        ConsoleI18n.addI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
+        ConsoleI18n.addI18n("validation_unsupportedStrings", new String[]{"不能包含字符串：%s", "en:Cannot contain the string: %s"});
+        ConsoleI18n.addI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
+        ConsoleI18n.addI18n("validation_file", new String[]{"须是一个合法的文件路径", "en:Must be a legal file path"});
+        ConsoleI18n.addI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
+        ConsoleI18n.addI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
+        ConsoleI18n.addI18n("validation_email", new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
     }
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
-        boolean isAddAction = Createable.ACTION_NAME_ADD.equals(request.getAction());
-        boolean isUpdateAction = Editable.ACTION_NAME_UPDATE.equals(request.getAction());
+        boolean isAddAction = "add".equals(request.getAction());
+        boolean isUpdateAction = "update".equals(request.getAction());
         if (isAddAction || isUpdateAction) {
             AppInfo appInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request));
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
@@ -70,11 +53,14 @@ public class ValidationFilter implements Filter<RestContext> {
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                 String parameterVal = request.getParameter(field);
-                ValidationContext vc = new ValidationContext(paramMap, fieldInfo, parameterVal, isAddAction, isUpdateAction);
+                ValidationContext vc = new ValidationContext(paramMap, modelInfo, fieldInfo, parameterVal, isAddAction, isUpdateAction);
                 String[] error = validate(vc);
                 if (error != null) {
-                    String[] params = Arrays.copyOfRange(error, 1, error.length);
-                    String i18n = ConsoleI18n.getI18n(request.getLang(), error[0], (Object) params);
+                    Object[] params = null;
+                    if (error.length > 1) {
+                        params = Arrays.copyOfRange(error, 1, error.length);
+                    }
+                    String i18n = ConsoleI18n.getI18n(request.getLang(), error[0], params);
                     errorMsg.put(field, i18n);
                 }
             }
@@ -95,7 +81,7 @@ public class ValidationFilter implements Filter<RestContext> {
     Validator[] validators = {
             new min(), new max(),
             new lengthMin(), new lengthMax(),
-            new port(), new Password(),
+            new port(),
             new unsupportedCharacters(), new unsupportedStrings(),
             new createable(), new editable(), new checkFile(), new checkXSS(),
             new regularExpression(),
@@ -105,16 +91,24 @@ public class ValidationFilter implements Filter<RestContext> {
     private String[] validate(ValidationContext context) throws Exception {
         Map<String, String> paramMap = context.params;
         ModelFieldInfo fieldInfo = context.fieldInfo;
-        String parameterVal = context.parameterVal;
-        if (parameterVal == null || parameterVal.trim().isEmpty()) {
+
+        boolean show = PageBackendService.isShow(paramMap::get, fieldInfo.getShow());
+        if (!show) { // 不再页面显示的属性，不需要校验
+            return null;
+        }
+
+        // 处理空值情况
+        if (context.parameterVal == null || context.parameterVal.isEmpty()) {
             if (context.isAddAction && !fieldInfo.isCreateable()) {
                 return null;
             }
             if (context.isUpdateAction && !fieldInfo.isEditable()) {
                 return null;
             }
-            if (fieldInfo.isRequired() && PageBackendService.isShow(o -> paramMap.containsKey(o) ? paramMap.get(o).trim() : null, fieldInfo.getShow())) {
-                return new String[]{validation_required};
+            if (fieldInfo.isRequired()) {
+                return new String[]{"validation_required"};
+            } else {
+                return null;
             }
         }
 
@@ -131,13 +125,15 @@ public class ValidationFilter implements Filter<RestContext> {
     }
 
     static class ValidationContext {
+        final ModelInfo modelInfo;
         final ModelFieldInfo fieldInfo;
         final String parameterVal;
         final boolean isAddAction;
         final boolean isUpdateAction;
         final Map<String, String> params;
 
-        ValidationContext(Map<String, String> params, ModelFieldInfo fieldInfo, String parameterVal, boolean isAddAction, boolean isUpdateAction) {
+        ValidationContext(Map<String, String> params, ModelInfo modelInfo, ModelFieldInfo fieldInfo, String parameterVal, boolean isAddAction, boolean isUpdateAction) {
+            this.modelInfo = modelInfo;
             this.params = params;
             this.fieldInfo = fieldInfo;
             this.parameterVal = parameterVal;
@@ -152,23 +148,11 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             try {
-                if (!FieldType.number.name().equals(fieldInfo.getType())) {
-                    return null;
-                }
-                String parameterVal = context.parameterVal;
-                if (parameterVal == null || parameterVal.trim().isEmpty()) {
-                    if (fieldInfo.isRequired() && PageBackendService.isShow(o -> context.params.containsKey(o) ? context.params.get(o).trim() : null, fieldInfo.getShow())) {
-                        return new String[]{validation_number};
-                    } else {
-                        return null;
-                    }
-                }
-                if (fieldInfo.getMin() == Long.MIN_VALUE) return null;
-                long parameterLong = Long.parseLong(parameterVal);
-                if (parameterLong >= fieldInfo.getMin()) return null;
-                return new String[]{validation_min, String.valueOf(fieldInfo.getMin())};
+                if (!FieldType.number.name().equals(fieldInfo.getType())) return null;
+                if (Long.parseLong(context.parameterVal) >= fieldInfo.getMin()) return null;
+                return new String[]{"validation_min", String.valueOf(fieldInfo.getMin())};
             } catch (Exception e) {
-                return new String[]{validation_number};
+                return new String[]{"validation_number"};
             }
         }
     }
@@ -179,23 +163,11 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             try {
-                if (!FieldType.number.name().equals(fieldInfo.getType())) {
-                    return null;
-                }
-                String parameterVal = context.parameterVal;
-                if (parameterVal == null || parameterVal.trim().isEmpty()) {
-                    if (fieldInfo.isRequired() && PageBackendService.isShow(o -> context.params.containsKey(o) ? context.params.get(o).trim() : null, fieldInfo.getShow())) {
-                        return new String[]{validation_number};
-                    } else {
-                        return null;
-                    }
-                }
-                if (fieldInfo.getMax() == Long.MAX_VALUE) return null;
-                long parameterLong = Long.parseLong(parameterVal);
-                if (parameterLong <= fieldInfo.getMax()) return null;
-                return new String[]{validation_max, String.valueOf(fieldInfo.getMax())};
+                if (!FieldType.number.name().equals(fieldInfo.getType())) return null;
+                if (Long.parseLong(context.parameterVal) <= fieldInfo.getMax()) return null;
+                return new String[]{"validation_max", String.valueOf(fieldInfo.getMax())};
             } catch (Exception e) {
-                return new String[]{validation_number};
+                return new String[]{"validation_number"};
             }
         }
     }
@@ -205,10 +177,8 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
-            if (fieldInfo.getLengthMin() == -1) return null;
-            if (parameterVal.length() >= fieldInfo.getLengthMin()) return null;
-            return new String[]{validation_lengthMin, String.valueOf(fieldInfo.getLengthMin())};
+            if (context.parameterVal.length() >= fieldInfo.getLengthMin()) return null;
+            return new String[]{"validation_lengthMin", String.valueOf(fieldInfo.getLengthMin())};
         }
     }
 
@@ -217,10 +187,8 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
-            if (fieldInfo.getLengthMax() == Integer.MAX_VALUE) return null;
-            if (parameterVal.length() <= fieldInfo.getLengthMax()) return null;
-            return new String[]{validation_lengthMax, String.valueOf(fieldInfo.getLengthMax())};
+            if (context.parameterVal.length() <= fieldInfo.getLengthMax()) return null;
+            return new String[]{"validation_lengthMax", String.valueOf(fieldInfo.getLengthMax())};
         }
     }
 
@@ -228,17 +196,11 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
-
-            if (StringUtil.isBlank(fieldInfo.getPattern())) {
-                return null;
-            }
+            if (Utils.isBlank(fieldInfo.getPattern())) return null;
             Pattern pattern = Pattern.compile(fieldInfo.getPattern());
-            Matcher matcher = pattern.matcher(parameterVal);
-            if (matcher.matches()) {
-                return null;
-            }
-            return new String[]{validation_pattern};
+            Matcher matcher = pattern.matcher(context.parameterVal);
+            if (matcher.matches()) return null;
+            return new String[]{"validation_pattern"};
         }
     }
 
@@ -249,42 +211,14 @@ public class ValidationFilter implements Filter<RestContext> {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             if (!fieldInfo.isPort()) return null;
             try {
-                String parameterVal = context.parameterVal;
-                long guessNumber = Long.parseLong(parameterVal);
+                long guessNumber = Long.parseLong(context.parameterVal);
                 int min = 1;
                 int max = 65535;
                 if (guessNumber < min || guessNumber > max) {
-                    return new String[]{validation_port_valueBetween, String.valueOf(min), String.valueOf(max)};
+                    return new String[]{"validation_port_valueBetween", String.valueOf(min), String.valueOf(max)};
                 }
             } catch (Exception e) {
-                return new String[]{validation_port};
-            }
-
-            return null;
-        }
-    }
-
-    static class Password implements Validator {
-
-        @Override
-        public String[] validate(ValidationContext context) {
-            ModelFieldInfo fieldInfo = context.fieldInfo;
-            if (!FieldType.password.name().equals(fieldInfo.getType())) return null;
-            try {
-                String pwdText = AsymmetricDecryptor.decryptWithConsolePrivateKey(context.parameterVal, true);
-                if (pwdText == null || pwdText.trim().isEmpty()) {
-                    if (context.isAddAction && !fieldInfo.isCreateable()) {
-                        return null;
-                    }
-                    if (context.isUpdateAction && !fieldInfo.isEditable()) {
-                        return null;
-                    }
-                    if (fieldInfo.isRequired() && PageBackendService.isShow(o -> context.params.containsKey(o) ? context.params.get(o).trim() : null, fieldInfo.getShow())) {
-                        return new String[]{validation_required};
-                    }
-                }
-            } catch (Exception e) {
-                return new String[]{validation_password};
+                return new String[]{"validation_port"};
             }
 
             return null;
@@ -296,12 +230,11 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
             if (fieldInfo.getUnsupportedCharacters().isEmpty()) return null;
             for (char c : fieldInfo.getUnsupportedCharacters().toCharArray()) {
                 String s = String.valueOf(c);
-                if (parameterVal.contains(s)) {
-                    return new String[]{validation_unsupportedCharacters, s};
+                if (context.parameterVal.contains(s)) {
+                    return new String[]{"validation_unsupportedCharacters", s};
                 }
             }
             return null;
@@ -312,11 +245,9 @@ public class ValidationFilter implements Filter<RestContext> {
 
         @Override
         public String[] validate(ValidationContext context) {
-            ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
-            for (String unsupportedString : fieldInfo.getUnsupportedStrings()) {
-                if (parameterVal.contains(unsupportedString)) {
-                    return new String[]{validation_unsupportedStrings, unsupportedString};
+            for (String unsupportedString : context.fieldInfo.getUnsupportedStrings()) {
+                if (context.parameterVal.contains(unsupportedString)) {
+                    return new String[]{"validation_unsupportedStrings", unsupportedString};
                 }
             }
             return null;
@@ -332,7 +263,7 @@ public class ValidationFilter implements Filter<RestContext> {
 
             if (!context.isAddAction) return null;
 
-            return new String[]{validation_createable};
+            return new String[]{"validation_createable"};
         }
     }
 
@@ -355,19 +286,13 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
-            if (parameterVal == null || parameterVal.isEmpty()) {
+            if (!FieldType.file.name().equals(fieldInfo.getType())) return null;
+            try {
+                new File(context.parameterVal);
                 return null;
+            } catch (NullPointerException e) {
+                return new String[]{"validation_file"};
             }
-            if (FieldType.file.name().equals(fieldInfo.getType())) {
-                try {
-                    new File(parameterVal);
-                    return null;
-                } catch (NullPointerException e) {
-                    return new String[]{validation_file};
-                }
-            }
-            return null;
         }
     }
 
@@ -375,19 +300,11 @@ public class ValidationFilter implements Filter<RestContext> {
 
         @Override
         public String[] validate(ValidationContext context) {
-            String parameterVal = context.parameterVal;
-            if (parameterVal == null || parameterVal.isEmpty()) {
-                return null;
-            }
-
-            if (checkIsXSS(parameterVal)) {
-                return new String[]{validation_xss};
-            }
-
-            return null;
+            if (!checkIsXSS(context.parameterVal)) return null;
+            return new String[]{"validation_xss"};
         }
 
-        final Pattern scriptPattern1 = Pattern.compile("vbscript:", 2);
+        final Pattern scriptPattern1 = Pattern.compile("vbscript:", Pattern.CASE_INSENSITIVE);
 
         boolean checkIsXSS(String check) {
             return !checkXssOk(check);
@@ -405,8 +322,6 @@ public class ValidationFilter implements Filter<RestContext> {
                     if (!resultUrl.equals(check)) {
                         return false;
                     } else {
-                        List<String> onXXEventPrefixList = new ArrayList();
-                        onXXEventPrefixList.addAll(Arrays.asList("%20", "&nbsp;", "\"", "'", "/", "\\+"));
                         resultUrl = scriptPattern1.matcher(resultUrl).replaceAll("");
                         if (!resultUrl.equals(check)) {
                             return false;
@@ -428,7 +343,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 if (!resultUrl.equals(check)) {
                     return false;
                 } else {
-                    resultUrl = resultUrl.replaceAll("\\[", "&#91").replaceAll("\\]", "&#93");
+                    resultUrl = resultUrl.replaceAll("\\[", "&#91").replaceAll("]", "&#93");
                     return resultUrl.equals(check);
                 }
             }
@@ -444,17 +359,10 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            String parameterVal = context.parameterVal;
-            if (parameterVal == null || parameterVal.isEmpty()) {
-                return null;
-            }
-            if (fieldInfo.isEmail()) {
-                Matcher matcher = pattern.matcher(parameterVal);
-                if (!matcher.matches()) {
-                    return new String[]{ValidationFilter.validation_email};
-                }
-            }
-            return null;
+            if (!fieldInfo.isEmail()) return null;
+            Matcher matcher = pattern.matcher(context.parameterVal);
+            if (matcher.matches()) return null;
+            return new String[]{"validation_email"};
         }
     }
 }

@@ -38,7 +38,7 @@ public class Controller implements ModuleActivator {
             @Override
             public void run() {
                 try {
-                    registry.clearTimeoutInstances(1000 * 30);// 此时间等于心跳上报的定时器时间 qingzhou.heartbeat.impl.Controller
+                    registry.clearTimeoutInstances(1000 * 30);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }

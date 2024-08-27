@@ -1,17 +1,10 @@
 package qingzhou.app.instance.monitor;
 
-import qingzhou.api.DataStore;
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Listable;
-import qingzhou.deployer.ReadOnlyDataStore;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -69,10 +62,11 @@ public class DeadlockedThread extends ModelBase implements Listable {
     @ModelAction(name = {"查看", "en:Show"},
             info = {"查看该死锁线程的信息，包括其死锁的堆栈等。", "en:View information about the deadlocked thread, including its deadlocked stack, etc."})
     public void show(Request request, Response response) throws Exception {
-        Map<String, String> data = getDataStore().getDataById(request.getId());
-        if (data != null && !data.isEmpty()) {
-            response.addData(data);
-        }
+        // todo 考虑使用覆写 showData 来实现
+//        Map<String, String> data = getDataStore().getDataById(request.getId());
+//        if (data != null && !data.isEmpty()) {
+//            response.addData(data);
+//        }
     }
 
     @ModelAction(
@@ -81,54 +75,29 @@ public class DeadlockedThread extends ModelBase implements Listable {
             info = {"尝试强制终止该线程的运行。注：该操作可能具有一定的危险，请在确保业务安全的前提下进行。此外，该操作不一定能够成功终止死锁的线程。",
                     "en:Attempts to forcibly terminate the thread may not always succeed for threads in a state such as \"BLOCKED\". Note: This operation may be dangerous, please do it under the premise of ensuring business safety. Also, the operation does not necessarily successfully terminate the deadlocked thread."})
     public void delete(Request request, Response response) throws Exception {
-        String tid = request.getId();
-        // 确保是自己的线程才能去 kill
-        for (Map<String, String> data : getDataStore().getAllData()) {
-            if (data.get(Listable.FIELD_NAME_ID).equals(tid)) {
-                BlockedThread.killThread(Long.parseLong(tid));
-                try {
-                    Thread.sleep(2000);// 等待线程真正结束，有短暂的存活时间
-                } catch (InterruptedException ignored) {
-                }
-                return;
-            }
-        }
-        getDataStore().deleteDataById(request.getId());
+        // todo 考虑使用覆写 deleteData 来实现
+//        String tid = request.getId();
+//        // 确保是自己的线程才能去 kill
+//        for (Map<String, String> data : getDataStore().getAllData()) {
+//            if (data.get(idFieldName()).equals(tid)) {
+//                BlockedThread.killThread(Long.parseLong(tid));
+//                try {
+//                    Thread.sleep(2000);// 等待线程真正结束，有短暂的存活时间
+//                } catch (InterruptedException ignored) {
+//                }
+//                return;
+//            }
+//        }
+//        getDataStore().deleteDataById(request.getId());
     }
 
-    private final ReadOnlyDataStore dataStore = new ReadOnlyDataStore() {
-        private final DeadlockedThreadTool tool = new DeadlockedThreadTool();
-
-        @Override
-        public List<Map<String, String>> getAllData() {
-            return tool.list();
-        }
-
-        @Override
-        public Map<String, String> getDataById(String id) {
-            return tool.show(id);
-        }
-
-        @Override
-        public List<Map<String, String>> getDataByIds(String[] ids) throws Exception {
-            List<Map<String, String>> datas = new ArrayList<>();
-            for (String id : ids) {
-                Map<String, String> data = getDataById(id);
-                if (data != null && !data.isEmpty()) {
-                    datas.add(data);
-                }
-            }
-            return datas;
-        }
-
-        @Override
-        public List<Map<String, String>> getDataFieldByIds(String[] ids, String[] fields) throws Exception {
-            return getDataByIds(ids);
-        }
-    };
+    @Override
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
+        return Collections.emptyList();
+    }
 
     @Override
-    public DataStore getDataStore() {
-        return dataStore;
+    public Map<String, String> showData(String id) throws Exception {
+        return Collections.emptyMap();
     }
 }

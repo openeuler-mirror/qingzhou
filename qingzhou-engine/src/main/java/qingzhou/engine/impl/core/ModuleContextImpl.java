@@ -2,7 +2,7 @@ package qingzhou.engine.impl.core;
 
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.impl.EngineContext;
-import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.util.HashMap;
@@ -50,8 +50,8 @@ class ModuleContextImpl implements ModuleContext {
     @Override
     public File getTemp() {
         if (temp == null) {
-            temp = Utils.newFile(engineContext.getTemp(), name);
-            Utils.mkdirs(temp);
+            temp = FileUtil.newFile(engineContext.getTemp(), name);
+            FileUtil.mkdirs(temp);
         }
         return temp;
     }

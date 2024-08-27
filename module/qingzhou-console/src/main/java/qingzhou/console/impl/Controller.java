@@ -10,7 +10,7 @@ import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
-import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.json.Json;
@@ -88,18 +88,7 @@ public class Controller implements ModuleActivator {
         @Override
         public void exec() {
             try {
-                ContextHelper.GetInstance.set(new ContextHelper() {
-                    @Override
-                    public <T> T getService(Class<T> type) {
-                        return moduleContext.getService(type);
-                    }
-
-                    @Override
-                    public ModuleContext getModuleContext() {
-                        return Controller.this.moduleContext;
-                    }
-                });
-
+                ContextHelper.GetInstance.set(() -> Controller.this.moduleContext);
                 exec0();
             } finally {
                 ContextHelper.GetInstance.remove();
@@ -107,11 +96,11 @@ public class Controller implements ModuleActivator {
         }
 
         private void exec0() {
-            File consoleApp = Utils.newFile(moduleContext.getLibDir(), "module", "console");
+            File consoleApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "console");
             String docBase = consoleApp.getAbsolutePath();
             contextPath = console.getContextRoot();
             servletContainer.addWebapp(contextPath, docBase);
-            logger.info("Open a browser to access the Qingzhou console: http://localhost:" + console.getPort() + contextPath);
+            logger.info("Open a browser to access the QingZhou console: http://localhost:" + console.getPort() + contextPath);
         }
 
         @Override
