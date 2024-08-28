@@ -25,6 +25,7 @@ public class ResponseImpl implements Response {
         this.success = success;
     }
 
+    @Override
     public boolean isSuccess() {
         return this.success;
     }
@@ -34,10 +35,12 @@ public class ResponseImpl implements Response {
         this.msg = msg;
     }
 
+    @Override
     public String getMsg() {
         return this.msg;
     }
 
+    @Override
     public int getTotalSize() {
         return totalSize;
     }
@@ -46,6 +49,7 @@ public class ResponseImpl implements Response {
         this.totalSize = totalSize;
     }
 
+    @Override
     public int getPageSize() {
         return pageSize;
     }
@@ -54,6 +58,7 @@ public class ResponseImpl implements Response {
         this.pageSize = pageSize;
     }
 
+    @Override
     public int getPageNum() {
         return pageNum;
     }
@@ -96,6 +101,7 @@ public class ResponseImpl implements Response {
         this.contentType = contentType;
     }
 
+    @Override
     public String getContentType() {
         return contentType;
     }

@@ -1,13 +1,13 @@
 package qingzhou.console.view.type;
 
+import qingzhou.api.Response;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.crypto.CryptoService;
+import qingzhou.deployer.RequestImpl;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +19,7 @@ public class FileView implements View {
     @Override
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
-        ResponseImpl response = restContext.response;
+        Response response = request.getResponse();
         String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModel() + "-" + System.currentTimeMillis()) : request.getId();
         HttpServletResponse servletResponse = restContext.servletResponse;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
@@ -48,7 +48,8 @@ public class FileView implements View {
             data.put(ConsoleConstants.DOWNLOAD_KEY, key);
             data.put(ConsoleConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);
-            ResponseImpl res = ActionInvoker.getInstance().invokeAction(req); // 续传
+            ActionInvoker.getInstance().invokeAction(req); // 续传
+            Response res = req.getResponse();
             if (res.isSuccess()) {
                 result = res.getDataList().get(0);
                 offset = Long.parseLong(result.get(ConsoleConstants.DOWNLOAD_OFFSET));

@@ -3,6 +3,7 @@ package qingzhou.console.page;
 import qingzhou.api.FieldType;
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.SystemController;
@@ -12,7 +13,6 @@ import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Base32Util;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
@@ -57,12 +57,8 @@ public class PageBackendService {
     }
 
     public static String[] getFieldOptions(String userName, String app, String model, String field) {
-        ModelInfo modelInfo = getAppInfo(app).getModelInfo(model);
+        ModelInfo modelInfo = SystemController.getAppInfo(app).getModelInfo(model);
         return modelInfo.getFieldOptions(field);
-    }
-
-    public static AppInfo getAppInfo(String appName) {
-        return SystemController.getAppInfo(appName);
     }
 
     public static ModelInfo getModelInfo(Request request) {
@@ -70,7 +66,7 @@ public class PageBackendService {
     }
 
     public static ModelInfo getModelInfo(String appName, String model) {
-        AppInfo appInfo = getAppInfo(appName);
+        AppInfo appInfo = SystemController.getAppInfo(appName);
         return appInfo.getModelInfo(model);
     }
 
@@ -132,12 +128,12 @@ public class PageBackendService {
         menuBuilder.append("</li>");
     }
 
-    static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, RequestImpl qzRequest, StringBuilder menuBuilder) {
+    static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, Request qzRequest, StringBuilder menuBuilder) {
         String model = menu.getMenuName();
         String action = menu.getMenuAction();
         menuBuilder.append("<li class=\"treeview ").append((model.equals(qzRequest.getModel()) ? " active" : "")).append("\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + qzRequest.getManageType() + "/" + qzRequest.getApp() + "/" + model + "/" + action;
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + ((RequestImpl) qzRequest).getManageType() + "/" + qzRequest.getApp() + "/" + model + "/" + action;
         menuBuilder.append("<a href='").append(encodeURL(response, url)).append("' modelName='").append(model).append("'>");
         menuBuilder.append("<i class='icon icon-").append(menu.getMenuIcon()).append("'></i>");
         menuBuilder.append("<span>").append(I18n.getString(getAppName(qzRequest), "model." + model)).append("</span>");
@@ -145,7 +141,7 @@ public class PageBackendService {
         menuBuilder.append("</li>");
     }
 
-    public static String buildMenuHtmlBuilder(HttpServletRequest request, HttpServletResponse response, RequestImpl qzRequest) {
+    public static String buildMenuHtmlBuilder(HttpServletRequest request, HttpServletResponse response, Request qzRequest) {
         StringBuilder builder = new StringBuilder();
         List<MenuItem> models = getAppMenuList(qzRequest);
         buildMenuHtmlBuilder(models, request, response, ViewManager.htmlView, qzRequest, builder, true);
@@ -153,7 +149,7 @@ public class PageBackendService {
         return String.format(menus, " ");
     }
 
-    private static void buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, RequestImpl qzRequest, StringBuilder builder, boolean needFavoritesMenu) {
+    private static void buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, Request qzRequest, StringBuilder builder, boolean needFavoritesMenu) {
         for (int i = 0; i < models.size(); i++) {
             if (needFavoritesMenu && i == 1) {
                 builder.append("%s");
@@ -173,9 +169,9 @@ public class PageBackendService {
         }
     }
 
-    public static List<MenuItem> getAppMenuList(RequestImpl request) {
+    public static List<MenuItem> getAppMenuList(Request request) {
         List<MenuItem> menus = new ArrayList<>();
-        AppInfo appInfo = getAppInfo(getAppName(request));
+        AppInfo appInfo = SystemController.getAppInfo(getAppName(request));
         if (appInfo == null) {
             return menus;
         }
@@ -359,7 +355,7 @@ public class PageBackendService {
     }
 
     /********************* 批量操作 start ************************/
-    public static ModelActionInfo[] listCommonOps(Request request, ResponseImpl response) {
+    public static ModelActionInfo[] listCommonOps(Request request, Response response) {
         List<ModelActionInfo> actions = visitActions(request, response.getDataList());
         actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
 
@@ -405,8 +401,8 @@ public class PageBackendService {
         return getActionNamesShowToList(request).length > 0;
     }
 
-    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, RequestImpl request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + request.getManageType() + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
+    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
+        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + ((RequestImpl) request).getManageType() + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
         return response.encodeURL(url);
     }
 

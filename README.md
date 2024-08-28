@@ -1,197 +1,47 @@
 # QingZhou（轻舟）Web管理软件开发平台
 
-## 平台简介
+## 项目简介
 
-轻舟是一款开源的轻量级软件开发平台，可用于简化Web管理控制台的开发。
+轻舟是一款开源的轻量级软件开发平台，其愿景是优化通用型Web管理软件的开发质量与效率。
+基于轻舟开发Web管理软件，只需编写简单的Java Bean，即可自动获得业务模块对应的前端网页、REST接口等服务，
+并能开箱即用轻舟提供的用户管理、认证授权、远程集中管理、公共组件等能力。
 
-### 主要特性
-
-轻舟具有免前端开发、接口多样化、支持上云等特点，预置了多种Web管理常用的功能，如认证授权、漏洞防护、国际化、菜单定制等。更重要的是，它天然支持在分布式环境下对各业务系统实施集中式的管理。
-
-### 运行环境
+## 环境要求
 
 JDK >= 1.8
 
-## 安装使用
+## 安装启动
 
-1. **获取安装包**
+1. **编译安装**
 
-   在项目根目录执行 `mvn clean package` 命令，即可在 `package/target/qingzhou` 中获取到安装包。
+在项目根目录执行 `mvn clean package` 命令，然后可在项目的 `package/target/qingzhou` 得到轻舟的产品包。
+> 其中：
+> 
+> **bin**：为轻舟的可执行程序目录，包含不同平台的脚本文件等；
+> 
+> **instances**：为轻舟的实例存放目录，包含轻舟的配置文件和应用的业务数据等；
+> 
+> **lib**：为轻舟的程序文件，以轻舟的版本号为规划，按目录存放。
 
+2. **启动服务**
 
-2. **启动平台服务**
+启动轻舟有两种方式，**择其一**即可：
+- 在 `${轻舟的产品包}/bin` 下，执行对应平台的 start 脚本；
+- 执行命令：`java -jar ${轻舟的产品包}/bin/qingzhou-launcher.jar server start`
 
-   方式一：
-   > + 进入安装包根目录。
-   >+ 在 bin 目录下，根据操作系统平台执行对应的 `start` 脚本即开始启动。
+> 看到类似如下的日志输出，则表示启动完成：
+> 
+> Open a browser to access the QingZhou console: http://localhost:9000/console
 
-   方式二：选择执行与平台无关的 java 命令来启动，如下所示。
-   > + 找到 `qingzhou-launcher.jar`所在目录
-   >+ 执行命令`java -jar ./qingzhou-launcher.jar server start`
+3. **访问控制台**
 
-3. **启动成功标识**
+打开浏览器访问轻舟的管理平台：
+[http://localhost:9000/console](http://localhost:9000/console)
 
-   若看到类似如下的日志输出，则表示启动完成。
-   ```
-   Open a browser to access the QingZhou console: http://localhost:9000/console。
-   ```
-
-4. **访问控制台**
-
-   平台服务启动完成后，可打开浏览器访问轻舟的可视化管理平台：
-
-   [http://localhost:9000/console](http://localhost:9000/console)
-  
-   ```
-   用户名：qingzhou
-   密码：qingzhou123.com
-   ```
-   注意：
-   >+ 针对本机客户端：安装轻舟后，默认仅本机受信任，本机操作不受限制。
-   >+ 针对远程客户端：当您把访问轻舟控制台的客户端所在IP设置信任IP后，远程客户端才有权限执行相关操作。
-   >+ 设置受信任IP：修改package/target/qingzhou/instances/instance1/qingzhou.json文件，trustedIP值设置为受信任客户端的IP地址。
-   
-
-## 应用开发
-
-基于轻舟开发应用，只需简单的几步：
-
-1. 在 IDE 中建立一个 Java 项目工程。
-2. 在工程里引入轻舟的 qingzhou-api.jar，对于 maven 项目，可通过如下方式：
-
-   ```xml
-    <dependency>
-         <groupId>qingzhou</groupId>
-         <artifactId>qingzhou-api</artifactId>
-         <version>x</version>
-         <scope>system</scope>
-         <systemPath>/path/to/qingzhou/lib/versionx/qingzhou-api.jar</systemPath>
-     </dependency>
-   ```
-
----   
-
-#### 入口类
-
-3. 创建一个类作为应用的入口，使其实现 `qingzhou.api.QingzhouApp` 接口。
-
-   该类在 `qingzhou-api` 内，后文提到的轻舟的类也都在其内。
-
-   实现 `start` 方法以定制应用的启动逻辑。`start` 方法会接收一个 `qingzhou.api.AppContext` 的实例对象，应用通过该对象与平台交互。
-
-4. 给入口类添加 `@App` 注解，以使得轻舟可以识别到它。
-
-   ```java
-   @App
-   public class App implements QingzhouApp {
-    
-       @Override
-       public void start(AppContext appContext) throws Exception {
-          //添加父级菜单
-          appContext.addMenu("User", 
-            new String[]{"用户管理", "en:User"}, "cog", 1);
-       }
-
-       @Override
-       public void stop() throws Exception {
-           //应用停止
-       }
-   }
-   ```
-
----   
-
-#### 模块类
-
-5. 创建应用的模块类，使其继承自 `qingzhou.api.ModelBase`，根据需要实现不同的接口。
-
-```
-Createable接口：提供了创建、添加、删除、修改、更新、列表以及查看功能。
-Deletable接口：提供了删除、列表、查看功能。
-Listable接口：提供了列表和查看功能。
-Showable接口：提供了查看功能。
-Editable接口：提供了修改、更新、展示功能。
-```
-
-对该类添加 `@Model` 注解以设置模块的名称、图标、菜单、国际化等信息。
-
-在该类内部创建 **public** 的属性（自动对应到页面上的表单元素），并对其添加 `@ModelField`
-注解以设置属性的相关信息。
-
-在该类内部创建方法（自动对应到页面上的按钮或链接），并对其添加 `@ModelAction`
-注解以设置方法的相关信息。
-
-关于配置的具体接口，可查看对应的Javadoc。
-
-   ```java
-    @Model(code = "user",//模块名称
-    icon = "user",//图标
-    menu = "User",//所属菜单
-    name = {"用户", "en:User"},//当菜单块名
-    info = {"这是一个用户模块。", "en:Menu description."})//菜单描述
-    public class User extends ModelBase implements Createable {
-          @ModelField(
-            required = true,
-            list = true,
-            name = {"用户ID", "en:User ID"},
-            info = {"用户ID。", "en:User ID."})
-    public String id;
-    @ModelField(
-            list = true,
-            name = {"用户名", "en:User Name"},
-            info = {"用户的姓名。", "en:User name."})
-    public String name;
-    @ModelField(
-            list = true,
-            name = {"联系方式", "en:Property"},
-            info = {"用户的联系方式。", "en:Contact information for the user."})
-    public String tel;
-    @ModelField(
-            list = true,
-            min = 1,
-            max = 200,
-            name = {"年龄", "en:Property"},
-            info = {"用户的年龄。", "en:User age."})
-    public int age;
-    @ModelField(
-            list = true,
-            name = {"住址", "en:Property"},
-            info = {"用户住址。", "en:User address."})
-    public String addr;
-   }
-   ```
-
-6. 模块类中需要复写DataStore 接口中的方法，来实现数据的增删改查，接口中定义了对数据进行存储、获取、更新和删除的方法规范。
-
-  ```java
-public class User extends ModelBase implements Createable {
-}
-   ```
-
-7. 打包工程。
-
-根据项目工程结构需要，可选择jar包或zip两种格式。 
-
-+ 打成jar包需要将项目依赖打包到一起为一个jar包即可；
-+ 打成zip包，则需要将上述注解标注的类所在的jar（如app.jar）放入zip包根目录，其依赖的其它资源包， 可在MANIFEST.MF 中配置 Class-Path 加入资源文件目录,MANIFEST.MF 配置内容如：`Class-Path: lib/resource.jar`。
-```
-zip包目录结构示意：
-  - app.zip
-      - lib
-          - resource.jar
-      - app.jar
-          - MANIFEST.MF
-```
-
-8. 访问轻舟的可视化管理平台，在`应用`模块下，安装上述应用的 jar 包或者 zip 包，至此，已完成应用的开发和部署。
-9. 后续，可通过轻舟的可视化管理平台对应用进行管理。
-10. 页面展示
- 
-   ![](./doc/readme/app.png)
-
-   ![](./doc/readme/form.png)
-
-   ![](./doc/readme/list.png)
+> 注：
+> 
+> 若遇到浏览器页面提示 IP 不受信任，可设置轻舟的配置文件`${轻舟的产品包}/instances/instance1/conf/qingzhou.json`，
+> 修改其中的 trustedIP 值，指定一个浏览器IP正则表达式来信任特定的浏览器，设置为 * 表示信任所有浏览器。
 
 ## 鸣谢
 
@@ -219,9 +69,10 @@ zip包目录结构示意：
 
 ## 参与贡献
 
-贡献让开源社区成为一个非常适合学习、启发和创新的地方。您所作出的任何贡献都是**受人尊敬**的。
+贡献让开源社区成为一个非常适合学习、启发和创新的地方，您所作出的任何贡献都是**受人尊敬**的。
 
-如果您有好的建议，请复刻（fork）本仓库并且创建一个拉取请求（pull request）。你也可以简单的创建一个议题（issue），并且添加标签『enhancement』。 不要忘记给项目点一个star！再次感谢！
+如果您有好的建议，请复刻（fork）本仓库并且创建一个拉取请求（pull request）。
+您也可以简单的创建一个议题（issue），并且添加标签『enhancement』。 不要忘记给项目点一个star！再次感谢！
 
 1. Fork [本仓库](https://gitee.com/openeuler/qingzhou)
 2. 新建您的 Feature 分支(`git checkout -b feature/AmazingFeature`)

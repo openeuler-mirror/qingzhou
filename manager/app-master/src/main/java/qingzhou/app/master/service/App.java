@@ -86,7 +86,7 @@
 //    @ModelAction(
 //            name = {"查看", "en:Show"},
 //            info = {"查看该组件的相关信息。", "en:View the information of this model."})
-//    public void show(Request request, Response response) throws Exception {
+//    public void show(Request request,) throws Exception {
 //        Map<String, String> appMap = new HashMap<>();
 //        String id = request.getId();
 //        qingzhou.deployer.App app = MasterApp.getService(Deployer.class).getApp(id);
@@ -94,7 +94,7 @@
 //            appMap.put("id", id);
 //            appMap.put("instances", "local");
 //            appMap.put("filename", ""); // ToDo
-//            response.addData(appMap);
+//            request.getResponse().addData(appMap);
 //            return;
 //        }
 //
@@ -125,17 +125,17 @@
 //    @ModelAction(
 //            name = {"编辑", "en:Edit"},
 //            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
-//    public void edit(Request request, Response response) throws Exception {
-//        show(request, response);
+//    public void edit(Request request) throws Exception {
+//        show(request);
 //    }
 //
 //    @ModelAction(
 //            name = {"更新", "en:Update"},
 //            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-//    public void update(Request request, Response response) throws Exception {
+//    public void update(Request request) throws Exception {
 //        try {
-//            delete(request, response);
-//            add(request, response);
+//            delete(request);
+//            add(request);
 //        } finally {
 //            ((RequestImpl) request).setManageType("app");
 //            ((RequestImpl) request).setAppName("master");
@@ -148,14 +148,14 @@
 //            name = {"部署", "en:Deploy"},
 //            info = {"部署应用到指定的实例上。",
 //                    "en:Deploy the application to the specified instance."})
-//    public void create(Request request, Response response) throws Exception {
-//        appContext.callDefaultAction("app", "create", request, response);
+//    public void create(Request request) throws Exception {
+//        appContext.callDefaultAction(request);
 //    }
 //
 //    @ModelAction(
 //            name = {"安装", "en:Install"},
 //            info = {"按配置要求安装应用到指定的实例。", "en:Install the app to the specified instance as required."})
-//    public void add(Request request, Response response) throws Exception {
+//    public void add(Request request) throws Exception {
 //        String[] instances = request.getParameter("instances") != null
 //                ? request.getParameter("instances").split(",")
 //                : new String[0];
@@ -182,11 +182,11 @@
 //                        }
 //                    }
 //                } catch (Exception e) { // todo 部分失败，如何显示到页面？
-//                    response.setSuccess(false);
+//                    request.getResponse().setSuccess(false);
 //                    if (e instanceof InvocationTargetException) {
-//                        response.setMsg(((InvocationTargetException) e).getTargetException().getMessage());
+//                        request.getResponse().setMsg(((InvocationTargetException) e).getTargetException().getMessage());
 //                    } else {
-//                        response.setMsg(e.getMessage());
+//                        request.getResponse().setMsg(e.getMessage());
 //                    }
 //                }
 //            }
@@ -290,7 +290,7 @@
 //            show = "id!=master&id!=instance",
 //            name = {"管理", "en:Manage"}, order = 1,
 //            info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
-//    public void manage(Request request, Response response) throws Exception {
+//    public void manage(Request request) throws Exception {
 //    }
 //
 //    @ModelAction(
@@ -299,7 +299,7 @@
 //            name = {"卸载", "en:Uninstall"},
 //            info = {"卸载应用，只能卸载本地实例部署的应用。注：请谨慎操作，删除后不可恢复。",
 //                    "en:If you uninstall an application, you can only uninstall an application deployed on a local instance. Note: Please operate with caution, it cannot be recovered after deletion."})
-//    public void delete(Request request, Response response) throws Exception {
+//    public void delete(Request request) throws Exception {
 //        String appName = request.getId();
 //        Deployer deployer = MasterApp.getService(Deployer.class);
 //        qingzhou.deployer.App app = deployer.getApp(appName);
@@ -310,7 +310,7 @@
 //        ((RequestImpl) request).setActionName("unInstallApp");
 //        try {
 //            if (app != null) {
-//                deployer.getApp("instance").invokeDirectly(request, response);
+//                deployer.getApp("instance").invokeDirectly(request);
 //            }
 //
 //            // 卸载远程实例

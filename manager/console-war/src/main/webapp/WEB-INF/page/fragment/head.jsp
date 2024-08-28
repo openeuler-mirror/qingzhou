@@ -18,14 +18,14 @@
 
 <%
     String currentUser = LoginManager.getLoginUser(session);
-    RequestImpl qzRequest = (RequestImpl) request.getAttribute(HtmlView.QZ_REQUEST_KEY);
+    Request qzRequest = (Request) request.getAttribute(Request.class.getName());
     String qzApp = PageBackendService.getAppName(qzRequest);
     String qzModel = qzRequest.getModel();
     String qzAction = qzRequest.getAction();
-    AppInfo appInfo = PageBackendService.getAppInfo(qzApp);
+    AppInfo appInfo = SystemController.getAppInfo(qzApp);
     ModelInfo modelInfo = PageBackendService.getModelInfo(qzRequest);
     String idFieldName = modelInfo.getIdFieldName();
-    ResponseImpl qzResponse = (ResponseImpl) request.getAttribute(HtmlView.QZ_RESPONSE_KEY);
+    Response qzResponse = qzRequest.getResponse();
 %>
 
 <script type="text/javascript">

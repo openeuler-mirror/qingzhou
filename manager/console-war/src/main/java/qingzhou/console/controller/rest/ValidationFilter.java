@@ -1,10 +1,11 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
+import qingzhou.api.Response;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.AppInfo;
@@ -33,10 +34,10 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
         ConsoleI18n.addI18n("validation_unsupportedStrings", new String[]{"不能包含字符串：%s", "en:Cannot contain the string: %s"});
         ConsoleI18n.addI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
-        ConsoleI18n.addI18n("validation_file", new String[]{"须是一个合法的文件路径", "en:Must be a legal file path"});
         ConsoleI18n.addI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
         ConsoleI18n.addI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
         ConsoleI18n.addI18n("validation_email", new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
+        ConsoleI18n.addI18n("validation_filePath", new String[]{"文件路径不支持以\\或者/结尾，不支持包含特殊字符和空格", "en:The file path cannot end with \\ or /, and cannot contain special characters or Spaces"});
     }
 
     @Override
@@ -46,7 +47,7 @@ public class ValidationFilter implements Filter<RestContext> {
         boolean isAddAction = "add".equals(request.getAction());
         boolean isUpdateAction = "update".equals(request.getAction());
         if (isAddAction || isUpdateAction) {
-            AppInfo appInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request));
+            AppInfo appInfo = SystemController.getAppInfo(PageBackendService.getAppName(request));
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
             clipParameter(request, modelInfo);
             Map<String, String> paramMap = request.getParameters();
@@ -66,9 +67,11 @@ public class ValidationFilter implements Filter<RestContext> {
             }
         }
 
-        ResponseImpl response = context.response;
-        response.setSuccess(errorMsg.isEmpty());
-        response.addData(errorMsg);
+        Response response = context.request.getResponse();
+        if (!errorMsg.isEmpty()) {
+            response.setSuccess(false);
+            response.addData(errorMsg);
+        }
 
         return response.isSuccess();
     }
@@ -83,9 +86,11 @@ public class ValidationFilter implements Filter<RestContext> {
             new lengthMin(), new lengthMax(),
             new port(),
             new unsupportedCharacters(), new unsupportedStrings(),
-            new createable(), new editable(), new checkFile(), new checkXSS(),
+            new createable(), new editable(),
+            new checkXSS(),
             new regularExpression(),
-            new checkEmail()
+            new checkEmail(),
+            new checkFilePath()
     };
 
     private String[] validate(ValidationContext context) throws Exception {
@@ -281,21 +286,6 @@ public class ValidationFilter implements Filter<RestContext> {
         }
     }
 
-    static class checkFile implements Validator {
-
-        @Override
-        public String[] validate(ValidationContext context) {
-            ModelFieldInfo fieldInfo = context.fieldInfo;
-            if (!FieldType.file.name().equals(fieldInfo.getType())) return null;
-            try {
-                new File(context.parameterVal);
-                return null;
-            } catch (NullPointerException e) {
-                return new String[]{"validation_file"};
-            }
-        }
-    }
-
     static class checkXSS implements Validator {
 
         @Override
@@ -363,6 +353,28 @@ public class ValidationFilter implements Filter<RestContext> {
             Matcher matcher = pattern.matcher(context.parameterVal);
             if (matcher.matches()) return null;
             return new String[]{"validation_email"};
+        }
+    }
+
+    static class checkFilePath implements Validator {
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            if (fieldInfo.getType().equals(FieldType.file.name())
+                    || fieldInfo.isFilePath()) {
+                String[] illegalCollections = {"|", "&", "~", "../", "./", ":", "*", "?", "\"", "'", "<", ">", "(", ")", "[", "]", "{", "}", "^", " "};
+                for (String illegalCollection : illegalCollections) {
+                    if (context.parameterVal.contains(illegalCollection)) {
+                        return new String[]{"validation_filePath"};
+                    }
+                }
+                try {
+                    new File(context.parameterVal);
+                } catch (Exception e) {
+                    return new String[]{"validation_filePath"};
+                }
+            }
+            return null;
         }
     }
 }

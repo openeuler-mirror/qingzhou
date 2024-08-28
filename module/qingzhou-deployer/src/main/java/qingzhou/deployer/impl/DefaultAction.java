@@ -3,11 +3,11 @@ package qingzhou.deployer.impl;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
-import qingzhou.api.Response;
 import qingzhou.api.type.*;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 
 import java.io.File;
@@ -17,6 +17,12 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 class DefaultAction {
+    static final List<ModelActionInfo> allDefaultActionCache;
+
+    static {
+        allDefaultActionCache = DeployerImpl.parseModelActionInfos(new AnnotationReader(DefaultAction.class));
+    }
+
     private final int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));
     private final AppImpl app;
     private final ModelBase instance;
@@ -31,18 +37,106 @@ class DefaultAction {
     }
 
     @ModelAction(
+            code = "show",
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
-    public void show(Request request, Response response) throws Exception {
+    public void show(Request request) throws Exception {
         Map<String, String> data = ((Showable) instance).showData(request.getId());
-        response.addData(data);
+        request.getResponse().addData(data);
     }
 
     @ModelAction(
+            code = "list",
+            name = {"列表", "en:List"},
+            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
+    public void list(Request request) throws Exception {
+        ResponseImpl responseImpl = (ResponseImpl) request.getResponse();
+        responseImpl.setTotalSize(((Listable) instance).totalSize());
+        responseImpl.setPageSize(10);
+
+        int pageNum = 1;
+        try {
+            pageNum = Integer.parseInt(request.getParameter("pageNum"));
+        } catch (NumberFormatException ignored) {
+        }
+        responseImpl.setPageNum(pageNum);
+
+        String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFormFieldList();
+        List<Map<String, String>> result = ((Listable) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList);
+        for (Map<String, String> data : result) {
+            request.getResponse().addData(data);
+        }
+    }
+
+    @ModelAction(
+            code = "create",
+            name = {"创建", "en:Create"},
+            info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
+    public void create(Request request) throws Exception {
+        Map<String, String> properties = getAppInfo().getModelInfo(request.getModel()).getFormFieldDefaultValues();
+        request.getResponse().addData(properties);
+    }
+
+    @ModelAction(
+            code = "add",
+            ajax = true,
+            name = {"添加", "en:Add"},
+            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
+    public void add(Request request) throws Exception {
+        Map<String, String> properties = prepareParameters(request);
+        if (request.getResponse().isSuccess()) {
+            ((Addable) instance).addData(properties);
+        }
+    }
+
+    @ModelAction(
+            code = "edit",
+            name = {"编辑", "en:Edit"},
+            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
+    public void edit(Request request) throws Exception {
+        show(request);
+    }
+
+    @ModelAction(
+            code = "update",
+            ajax = true,
+            name = {"更新", "en:Update"},
+            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
+    public void update(Request request) throws Exception {
+        Map<String, String> properties = prepareParameters(request);
+        if (request.getResponse().isSuccess()) {
+            ((Updatable) instance).updateData(properties);
+        }
+    }
+
+    @ModelAction(
+            code = "delete",
+            ajax = true,
+            batch = true,
+            name = {"删除", "en:Delete"},
+            info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
+                    "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
+    public void delete(Request request) throws Exception {
+        ((Deletable) instance).deleteData(request.getId());
+    }
+
+    private Map<String, String> prepareParameters(Request request) {
+        Map<String, String> properties = new HashMap<>();
+        for (String fieldName : getAppInfo().getModelInfo(request.getModel()).getFormFieldNames()) {
+            String value = request.getParameter(fieldName);
+            if (value != null) {
+                properties.put(fieldName, value);
+            }
+        }
+        return properties;
+    }
+
+    @ModelAction(
+            code = "monitor",
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
-    public void monitor(Request request, Response response) {
+    public void monitor(Request request) {
         Map<String, String> p = ((Monitorable) instance).monitorData();
 
         if (p == null || p.isEmpty()) {
@@ -69,67 +163,19 @@ class DefaultAction {
             infoData.put(infoFieldName, value);
         }
 
-        response.addData(monitorData);
-        response.addData(infoData);
+        request.getResponse().addData(monitorData);
+        request.getResponse().addData(infoData);
     }
 
     @ModelAction(
-            name = {"列表", "en:List"},
-            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    public void list(Request request, Response response) throws Exception {
-        ResponseImpl responseImpl = (ResponseImpl) response;
-        responseImpl.setTotalSize(((Listable) instance).totalSize());
-        responseImpl.setPageSize(10);
-
-        int pageNum = 1;
-        try {
-            pageNum = Integer.parseInt(request.getParameter("pageNum"));
-        } catch (NumberFormatException ignored) {
-        }
-        responseImpl.setPageNum(pageNum);
-
-        String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFormFieldList();
-        List<Map<String, String>> result = ((Listable) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList);
-        for (Map<String, String> data : result) {
-            response.addData(data);
-        }
-    }
-
-    @ModelAction(
-            name = {"编辑", "en:Edit"},
-            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
-    public void edit(Request request, Response response) throws Exception {
-        show(request, response);
-    }
-
-    @ModelAction(
-            ajax = true,
-            name = {"更新", "en:Update"},
-            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-    public void update(Request request, Response response) throws Exception {
-        Map<String, String> properties = prepareParameters(request);
-        ((Updatable) instance).updateData(properties);
-    }
-
-    Map<String, String> prepareParameters(Request request) {
-        Map<String, String> properties = new HashMap<>();
-        for (String fieldName : getAppInfo().getModelInfo(request.getModel()).getFormFieldNames()) {
-            String value = request.getParameter(fieldName);
-            if (value != null) {
-                properties.put(fieldName, value);
-            }
-        }
-        return properties;
-    }
-
-    @ModelAction(
+            code = "files",
+            icon = "download-alt",
             ajax = true,
             order = 98,
-            icon = "download-alt",
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
                     "en:Gets a list of downloadable files for this component."})
-    public void files(Request request, Response response) throws Exception {
+    public void files(Request request) throws Exception {
         String id = request.getId();
         if (id.contains("..")) {
             throw new IllegalArgumentException();
@@ -153,14 +199,16 @@ class DefaultAction {
                 map.put(downloadItem, downloadItem + " (" + FileUtil.getFileSize(rootFile) + ")");
             }
         }
-        response.addData(map);
+        request.getResponse().addData(map);
     }
 
-    @ModelAction(icon = "download-alt",
+    @ModelAction(
+            code = "download",
+            icon = "download-alt",
             name = {"下载文件", "en:Download File"},
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。注：指定的文件集合须以 downloadFileNames 参数传递给服务器，多个文件之间用英文逗号分隔。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files. Note: The specified file set must be passed to the server with the downloadFileNames parameter, and multiple files are separated by commas."})
-    public void download(Request request, Response response) throws Exception {
+    public void download(Request request) throws Exception {
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 
         String downloadKey = request.getParameter("DOWNLOAD_KEY");
@@ -169,8 +217,8 @@ class DefaultAction {
 
             // check
             if (downloadFileNames == null || downloadFileNames.trim().isEmpty()) {
-                response.setMsg("No file name found.");
-                response.setSuccess(false);
+                request.getResponse().setMsg("No file name found.");
+                request.getResponse().setSuccess(false);
                 return;
             }
             if (downloadFileNames.contains("..")) throw new IllegalArgumentException();
@@ -191,7 +239,7 @@ class DefaultAction {
 
         Map<String, String> downloadedStatus = downloadFile(downloadKey, downloadOffset, keyDir);
         if (downloadedStatus != null) {
-            response.addData(downloadedStatus);
+            request.getResponse().addData(downloadedStatus);
         }
     }
 
@@ -282,30 +330,5 @@ class DefaultAction {
             FileUtil.forceDelete(tempDir);
         }
         return key;
-    }
-
-    @ModelAction(batch = true, ajax = true,
-            name = {"删除", "en:Delete"},
-            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
-                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
-    public void delete(Request request, Response response) throws Exception {
-        ((Deletable) instance).deleteData(request.getId());
-    }
-
-    @ModelAction(
-            name = {"创建", "en:Create"},
-            info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
-    public void create(Request request, Response response) throws Exception {
-        Map<String, String> properties = getAppInfo().getModelInfo(request.getModel()).getFormFieldDefaultValues();
-        response.addData(properties);
-    }
-
-    @ModelAction(
-            ajax = true,
-            name = {"添加", "en:Add"},
-            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    public void add(Request request, Response response) throws Exception {
-        Map<String, String> properties = prepareParameters(request);
-        ((Addable) instance).addData(properties);
     }
 }

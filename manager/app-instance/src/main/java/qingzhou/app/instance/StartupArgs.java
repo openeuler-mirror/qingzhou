@@ -110,9 +110,11 @@ public class StartupArgs extends ModelBase implements Addable {
     public String desc;
 
     @ModelAction(
+            code = "add",
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    public void add(Request request, Response response) throws Exception {
+    public void add(Request request) throws Exception {
+        Response response = request.getResponse();
         Map<String, String> oldData = showData(request.getId());
         if (oldData != null) {
             response.setSuccess(false);
@@ -134,16 +136,17 @@ public class StartupArgs extends ModelBase implements Addable {
     }
 
     @ModelAction(
+            code = "update",
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-    public void update(Request request, Response response) throws Exception {
+    public void update(Request request) throws Exception {
         Map<String, String> newData = request.getParameters();
         Map<String, String> oldData = showData(request.getId());
 
         String error = validateArg(request, newData.get("changeToArg"), new ArrayList<>(), oldData == null ? null : oldData.get(idFieldName()));
         if (error != null) {
-            response.setSuccess(false);
-            response.setMsg(error);
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(error);
             return;
         }
 
@@ -161,15 +164,17 @@ public class StartupArgs extends ModelBase implements Addable {
         newData.put(SUPPORTED_JRE_KEY, supportedJre);
     }
 
-    @ModelAction(batch = true,
+    @ModelAction(
+            code = "delete",
+            batch = true,
             name = {"删除", "en:Delete"},
-            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
-                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
-    public void delete(Request request, Response response) throws Exception {
+            info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
+                    "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
+    public void delete(Request request) throws Exception {
         for (String managedPrefix : StartupArg.systemManagedPrefix) {
             if (request.getId().startsWith(managedPrefix)) {
-                response.setSuccess(false);
-                response.setMsg(appContext.getI18n(request.getLang(), "validator.sysmanaged"));
+                request.getResponse().setSuccess(false);
+                request.getResponse().setMsg(appContext.getI18n(request.getLang(), "validator.sysmanaged"));
                 return;
             }
         }

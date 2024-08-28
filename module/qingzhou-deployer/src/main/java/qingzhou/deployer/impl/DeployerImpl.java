@@ -14,7 +14,6 @@ import qingzhou.registry.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -27,8 +26,6 @@ import java.util.stream.Collectors;
 
 class DeployerImpl implements Deployer {
 
-    private final Map<Method, ModelActionInfo> allDefaultActionCache;
-
     private final Map<String, App> apps = new HashMap<>();
     private final ModuleContext moduleContext;
     private final Logger logger;
@@ -37,7 +34,6 @@ class DeployerImpl implements Deployer {
     DeployerImpl(ModuleContext moduleContext, Logger logger) {
         this.moduleContext = moduleContext;
         this.logger = logger;
-        this.allDefaultActionCache = parseModelActionInfos(new AnnotationReader(DefaultAction.class));
     }
 
     @Override
@@ -146,20 +142,20 @@ class DeployerImpl implements Deployer {
         modelInfos.forEach((modelBase, modelInfo) -> {
             Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelInfo.getCode(), model -> new HashMap<>());
             for (ModelActionInfo action : modelInfo.getModelActionInfos()) {
-                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getCode(), modelBase);
+                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getMethod(), modelBase);
                 moelMap.put(action.getCode(), actionMethod);
             }
         });
 
-        // 构建 Action 执行器
-        Map<String, Collection<ModelActionInfo>> addedDefaultActions = addDefaultAction(modelInfos);// 追加系统预置的 action
+        // 追加默认的的 Action 执行器
+        Map<String, List<ModelActionInfo>> addedDefaultActions = addDefaultAction(modelInfos);// 追加系统预置的 action
         addedDefaultActions.forEach((modelName, addedModelActions) -> {
             ModelBase[] findModelBase = new ModelBase[1];
             modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> findModelBase[0] = entry.getKey());
             DefaultAction defaultAction = new DefaultAction(app, findModelBase[0]);
             Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelName, model -> new HashMap<>());
             for (ModelActionInfo action : addedModelActions) {
-                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getCode(), defaultAction);
+                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getMethod(), defaultAction);
                 moelMap.put(action.getCode(), actionMethod);
             }
         });
@@ -167,32 +163,32 @@ class DeployerImpl implements Deployer {
         return app;
     }
 
-    private Map<String, Collection<ModelActionInfo>> addDefaultAction(Map<ModelBase, ModelInfo> modelInfos) {
-        Map<String, Collection<ModelActionInfo>> addActionToModels = detectActionsToAdd(modelInfos);
+    private Map<String, List<ModelActionInfo>> addDefaultAction(Map<ModelBase, ModelInfo> modelInfos) {
+        Map<String, List<ModelActionInfo>> addActionToModels = detectActionsToAdd(modelInfos);
         mergeDefaultActions(modelInfos, addActionToModels);
         return addActionToModels;
     }
 
-    private Map<String, Collection<ModelActionInfo>> detectActionsToAdd(Map<ModelBase, ModelInfo> forModels) {
-        Map<String, Collection<ModelActionInfo>> addActionToModels = new HashMap<>();
+    private Map<String, List<ModelActionInfo>> detectActionsToAdd(Map<ModelBase, ModelInfo> forModels) {
+        Map<String, List<ModelActionInfo>> addActionToModels = new HashMap<>();
         for (Map.Entry<ModelBase, ModelInfo> entry : forModels.entrySet()) {
             List<ModelActionInfo> added = new ArrayList<>();
             Set<ModelActionInfo> selfActions = Arrays.stream(entry.getValue().getModelActionInfos()).collect(Collectors.toSet());
             ModelBase modelBase = entry.getKey();
-            Set<String> detectedActions = new HashSet<>();
-            findDefaultAction(modelBase.getClass(), detectedActions);
-            detectedActions.forEach(addAction -> {
+            Set<String> detectedActionNames = new HashSet<>();
+            findSuperDefaultActions(modelBase.getClass(), detectedActionNames);
+            detectedActionNames.forEach(addActionName -> {
                 boolean exists = false;
                 for (ModelActionInfo self : selfActions) {
-                    if (addAction.equals(self.getCode())) {
+                    if (addActionName.equals(self.getCode())) {
                         exists = true;
                         break;
                     }
                 }
                 if (!exists) {
-                    for (Map.Entry<Method, ModelActionInfo> ma : allDefaultActionCache.entrySet()) {
-                        if (addAction.equals(ma.getValue().getCode())) {
-                            added.add(ma.getValue());
+                    for (ModelActionInfo actionInfo : DefaultAction.allDefaultActionCache) {
+                        if (addActionName.equals(actionInfo.getCode())) {
+                            added.add(actionInfo);
                             break;
                         }
                     }
@@ -204,8 +200,8 @@ class DeployerImpl implements Deployer {
         return addActionToModels;
     }
 
-    private void mergeDefaultActions(Map<ModelBase, ModelInfo> modelInfos, Map<String, Collection<ModelActionInfo>> addActionToModels) {
-        for (Map.Entry<String, Collection<ModelActionInfo>> addedModelActionInfos : addActionToModels.entrySet()) {
+    private void mergeDefaultActions(Map<ModelBase, ModelInfo> modelInfos, Map<String, List<ModelActionInfo>> addActionToModels) {
+        for (Map.Entry<String, List<ModelActionInfo>> addedModelActionInfos : addActionToModels.entrySet()) {
             ModelInfo addedToModel = null;
             for (ModelInfo value : modelInfos.values()) {
                 if (value.getCode().equals(addedModelActionInfos.getKey())) {
@@ -216,31 +212,6 @@ class DeployerImpl implements Deployer {
             List<ModelActionInfo> modelActionInfoList = new ArrayList<>(Arrays.asList(Objects.requireNonNull(addedToModel).getModelActionInfos()));
             modelActionInfoList.addAll(addedModelActionInfos.getValue());
             addedToModel.setModelActionInfos(modelActionInfoList.toArray(new ModelActionInfo[0]));
-        }
-    }
-
-    private void findDefaultAction(Class<?> checkClass, Set<String> defaultActions) {
-        if (checkClass == Addable.class) {
-            defaultActions.add("create");
-            defaultActions.add("add");
-        } else if (checkClass == Deletable.class) {
-            defaultActions.add("delete");
-        } else if (checkClass == Downloadable.class) {
-            defaultActions.add("files");
-            defaultActions.add("download");
-        } else if (checkClass == Listable.class) {
-            defaultActions.add("list");
-        } else if (checkClass == Monitorable.class) {
-            defaultActions.add("monitor");
-        } else if (checkClass == Showable.class) {
-            defaultActions.add("show");
-        } else if (checkClass == Updatable.class) {
-            defaultActions.add("edit");
-            defaultActions.add("update");
-        }
-
-        for (Class<?> c : checkClass.getInterfaces()) {
-            findDefaultAction(c, defaultActions);
         }
     }
 
@@ -282,7 +253,8 @@ class DeployerImpl implements Deployer {
                 modelInfo.setIdFieldName(((Listable) instance).idFieldName());
             }
             modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
-            modelInfo.setModelActionInfos(parseModelActionInfos(annotation).values().toArray(new ModelActionInfo[0]));
+            List<ModelActionInfo> methodModelActionInfoMap = parseModelActionInfos(annotation);
+            modelInfo.setModelActionInfos(methodModelActionInfoMap.toArray(new ModelActionInfo[0]));
             if (instance instanceof Updatable) {
                 modelInfo.setGroupInfos(getGroupInfo(instance));
             }
@@ -324,24 +296,6 @@ class DeployerImpl implements Deployer {
         return groupInfoList.toArray(new GroupInfo[0]);
     }
 
-    private Map<Method, ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
-        Map<Method, ModelActionInfo> modelActionInfos = new HashMap<>();
-        annotation.readModelAction().forEach((method, modelAction) -> {
-            ModelActionInfo modelActionInfo = new ModelActionInfo();
-            modelActionInfo.setCode(method.getName());
-            modelActionInfo.setName(modelAction.name());
-            modelActionInfo.setInfo(modelAction.info());
-            modelActionInfo.setIcon(modelAction.icon());
-            modelActionInfo.setOrder(modelAction.order());
-            modelActionInfo.setShow(modelAction.show());
-            modelActionInfo.setBatch(modelAction.batch());
-            modelActionInfo.setDisable(modelAction.disable());
-            modelActionInfo.setAjax(modelAction.ajax());
-            modelActionInfos.put(method, modelActionInfo);
-        });
-        return modelActionInfos;
-    }
-
     private ModelFieldInfo[] getModelFieldInfos(AnnotationReader annotation, ModelBase instance) {
         List<ModelFieldInfo> modelFieldInfoList = new ArrayList<>();
         annotation.readModelField().forEach((field, modelField) -> {
@@ -370,6 +324,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setUnsupportedStrings(modelField.unsupportedStrings());
             modelFieldInfo.setShow(modelField.show());
             modelFieldInfo.setEmail(modelField.email());
+            modelFieldInfo.setFilePath(modelField.filePath());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);
@@ -500,5 +455,50 @@ class DeployerImpl implements Deployer {
                 isSystemApp
                         ? QingzhouSystemApp.class.getClassLoader()
                         : QingzhouApp.class.getClassLoader());
+    }
+
+    static List<ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
+        List<ModelActionInfo> modelActionInfos = new ArrayList<>();
+        annotation.readModelAction().forEach((method, modelAction) -> {
+            ModelActionInfo modelActionInfo = new ModelActionInfo();
+            modelActionInfo.setMethod(method);
+            modelActionInfo.setCode(modelAction.code());
+            modelActionInfo.setName(modelAction.name());
+            modelActionInfo.setInfo(modelAction.info());
+            modelActionInfo.setIcon(modelAction.icon());
+            modelActionInfo.setOrder(modelAction.order());
+            modelActionInfo.setShow(modelAction.show());
+            modelActionInfo.setBatch(modelAction.batch());
+            modelActionInfo.setPage(modelAction.page());
+            modelActionInfo.setDisable(modelAction.disable());
+            modelActionInfo.setAjax(modelAction.ajax());
+            modelActionInfos.add(modelActionInfo);
+        });
+        return modelActionInfos;
+    }
+
+    static void findSuperDefaultActions(Class<?> checkClass, Set<String> defaultActions) {
+        if (checkClass == Addable.class) {
+            defaultActions.add("create");
+            defaultActions.add("add");
+        } else if (checkClass == Deletable.class) {
+            defaultActions.add("delete");
+        } else if (checkClass == Downloadable.class) {
+            defaultActions.add("files");
+            defaultActions.add("download");
+        } else if (checkClass == Listable.class) {
+            defaultActions.add("list");
+        } else if (checkClass == Monitorable.class) {
+            defaultActions.add("monitor");
+        } else if (checkClass == Showable.class) {
+            defaultActions.add("show");
+        } else if (checkClass == Updatable.class) {
+            defaultActions.add("edit");
+            defaultActions.add("update");
+        }
+
+        for (Class<?> c : checkClass.getInterfaces()) {
+            findSuperDefaultActions(c, defaultActions);
+        }
     }
 }

@@ -1,15 +1,15 @@
 package qingzhou.console.view;
 
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.api.Response;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.FileView;
 import qingzhou.console.view.type.HtmlView;
-import qingzhou.console.view.type.JsonView;
 import qingzhou.console.view.type.ImageView;
+import qingzhou.console.view.type.JsonView;
+import qingzhou.deployer.RequestImpl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +31,7 @@ public class ViewManager {
 
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
-        ResponseImpl response = restContext.response;
+        Response response = restContext.request.getResponse();
         // 完善响应的 msg
         if (response.getMsg() == null) {
             String appName = PageBackendService.getAppName(request);

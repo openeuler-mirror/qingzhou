@@ -1,6 +1,9 @@
 package qingzhou.app.instance;
 
-import qingzhou.api.*;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.ModuleContext;
@@ -23,9 +26,10 @@ public class AppInstaller extends ModelBase {
     }
 
     @ModelAction(
+            code = "installApp",
             name = {"安装应用", "en:Install App"},
             info = {"在该实例上安装应用。", "en:Install the application on the instance."})
-    public void installApp(Request request, Response response) throws Exception {
+    public void installApp(Request request) throws Exception {
         File srcFile;
         if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
             srcFile = FileUtil.newFile(request.getParameter("fromUpload"));
@@ -33,8 +37,8 @@ public class AppInstaller extends ModelBase {
             srcFile = new File(request.getParameter("filename"));
         }
         if (!srcFile.exists() || !srcFile.isFile()) {
-            response.setSuccess(false);
-            response.setMsg(appContext.getI18n(request.getLang(), "app.not.found"));
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(appContext.getI18n(request.getLang(), "app.not.found"));
             return;
         }
 
@@ -62,9 +66,10 @@ public class AppInstaller extends ModelBase {
     }
 
     @ModelAction(
+            code = "unInstallApp",
             name = {"卸载应用", "en:UnInstall App"},
             info = {"从该实例上卸载应用。", "en:Uninstall the app from the instance."})
-    public void unInstallApp(Request request, Response response) throws Exception {
+    public void unInstallApp(Request request) throws Exception {
         InstanceApp.getService(Deployer.class).unInstallApp(request.getId());
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
@@ -74,9 +79,10 @@ public class AppInstaller extends ModelBase {
     }
 
     @ModelAction(
+            code = "uploadFile",
             name = {"上传文件", "en:Upload File"},
             info = {"应用模块表单文件上传。", "en:Upload the application module form file."})
-    public void uploadFile(Request request, Response response) throws IOException {
+    public void uploadFile(Request request) throws IOException {
         String fileName = request.getParameter("fileName");
         String fileBytes = request.getParameter("fileBytes");
         boolean isStart = Boolean.parseBoolean(request.getParameter("isStart"));
@@ -88,8 +94,8 @@ public class AppInstaller extends ModelBase {
         try {
             writeFile(destFile, appContext.getService(CryptoService.class).getHexCoder().hexToBytes(fileBytes), len, isStart);
         } catch (IOException e) {
-            response.setSuccess(false);
-            response.setMsg(appContext.getI18n(request.getLang(), "file.upload.fail"));
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(appContext.getI18n(request.getLang(), "file.upload.fail"));
             FileUtil.forceDelete(destFile);
             return;
         }
@@ -97,7 +103,7 @@ public class AppInstaller extends ModelBase {
         if (isEnd) {
             Map<String, String> data = new HashMap<>();
             data.put("fileName", destFile.getCanonicalPath());
-            response.addData(data);
+            request.getResponse().addData(data);
         }
     }
 

@@ -9,7 +9,6 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -162,12 +161,6 @@ class ConfigTool {
 
     private static String convert(String origin) {
         String replacement = System.getProperty(origin);
-
-        if (replacement == null) {
-            if ("QZ_TimeStamp".equals(origin)) {
-                replacement = new SimpleDateFormat("yyyy-MM-dd'T'HHmmss").format(new Date());
-            }
-        }
 
         if (replacement == null) {
             replacement = System.getenv(origin);

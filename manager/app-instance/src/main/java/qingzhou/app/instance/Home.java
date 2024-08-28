@@ -17,12 +17,13 @@ public class Home extends ModelBase implements Showable {
     public String javaHome;
 
     @ModelAction(
+            code = "show",
             name = {"首页", "en:Home"},
             info = {"展示实例的首页信息。", "en:Displays the homepage information of the instance."})
-    public void show(Request request, Response response) throws Exception {
+    public void show(Request request) throws Exception {
         Home home = new Home();
         home.javaHome = System.getProperty("java.home");
-        response.addModelData(home);
+        request.getResponse().addModelData(home);
     }
 
     @Override

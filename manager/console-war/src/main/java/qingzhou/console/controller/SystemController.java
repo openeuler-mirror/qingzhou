@@ -4,8 +4,6 @@ import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.config.Security;
@@ -16,7 +14,6 @@ import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
-import qingzhou.console.page.PageBackendService;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyPairCipher;
 import qingzhou.deployer.App;
@@ -41,7 +38,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     private static String publicKey;
     private static String privateKey;
     public static KeyPairCipher keyPairCipher;
-    private static ContextHelper contextHelper;
+    private static final ContextHelper contextHelper;
 
     static {
         contextHelper = ContextHelper.GetInstance.get();
@@ -89,10 +86,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
     public static String getPrivateKeyString() {
         return privateKey;
-    }
-
-    public static void invokeLocalApp(Request request, Response response) throws Exception {
-        getService(Deployer.class).getApp(PageBackendService.getAppName(request)).invokeDirectly(request, response);
     }
 
     private final Filter<HttpServletContext>[] processors = new Filter[]{

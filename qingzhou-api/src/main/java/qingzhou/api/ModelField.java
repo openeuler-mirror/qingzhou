@@ -48,6 +48,8 @@ public @interface ModelField {
 
     boolean email() default false;
 
+    boolean filePath() default false;
+
     boolean monitor() default false; // 标识该属性为监视类型，而非表单项
 
     boolean numeric() default false;  // 标识该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。

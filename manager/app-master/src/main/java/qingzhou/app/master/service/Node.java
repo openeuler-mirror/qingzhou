@@ -60,7 +60,7 @@
 //    @ModelAction(
 //            name = {"添加", "en:Add"},
 //            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-//    public void add(Request request, Response response) throws Exception {
+//    public void add(Request request) throws Exception {
 //        if (getDataStore().exists(request.getParameter(idFieldName()))) {
 //            response.setSuccess(false);
 //            response.setMsg(appContext.getI18n(request.getLang(), "validator.exist"));
@@ -73,14 +73,14 @@
 //    @ModelAction(
 //            name = {"编辑", "en:Edit"},
 //            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
-//    public void edit(Request request, Response response) throws Exception {
+//    public void edit(Request request) throws Exception {
 //        show(request, response);
 //    }
 //
 //    @ModelAction(
 //            name = {"查看", "en:Show"},
 //            info = {"查看该组件的相关信息。", "en:View the information of this model."})
-//    public void show(Request request, Response response) throws Exception {
+//    public void show(Request request) throws Exception {
 //        DataStore dataStore = getDataStore();
 //        Map<String, String> data = dataStore.getDataById(request.getId());
 //        response.addData(data);
@@ -89,7 +89,7 @@
 //    @ModelAction(
 //            name = {"更新", "en:Update"},
 //            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-//    public void update(Request request, Response response) throws Exception {
+//    public void update(Request request) throws Exception {
 //        DataStore dataStore = getDataStore();
 //        Map<String, String> newData = request.getParameters();
 //        dataStore.updateDataById(request.getId(), newData);
@@ -97,9 +97,9 @@
 //
 //    @ModelAction(
 //            name = {"删除", "en:Delete"},
-//            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
-//                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
-//    public void delete(Request request, Response response) throws Exception {
+//            info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
+//                    "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
+//    public void delete(Request request) throws Exception {
 //        String id = request.getId();
 //        DataStore dataStore = getDataStore();
 //        dataStore.deleteDataById(id);
@@ -109,7 +109,7 @@
 //            ajax = true,
 //            name = {"测试", "en:Validate"},
 //            info = {"验证远程服务器连接配置的有效性。", "en:Validate the remote server connection configuration."})
-//    public void validate(Request request, Response response) throws Exception {
+//    public void validate(Request request) throws Exception {
 //        Map<String, String> data = getDataStore().getDataById(request.getId());
 //        SSHConfig sshConfig = new SSHConfig()
 //                .setHostname(data.get("host"))
@@ -128,7 +128,7 @@
 //    @ModelAction(
 //            name = {"列表", "en:List"},
 //            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-//    public void list(Request request, Response response) throws Exception {
+//    public void list(Request request) throws Exception {
 //        int pageSize = 10;
 //        int pageNum = 1;
 //        int totalSize = 0;

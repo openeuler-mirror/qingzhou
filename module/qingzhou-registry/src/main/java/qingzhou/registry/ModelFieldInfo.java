@@ -25,7 +25,17 @@ public class ModelFieldInfo {
     private String[] unsupportedStrings;
     private String pattern;
     private String show;
+
+    public boolean isFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(boolean filePath) {
+        this.filePath = filePath;
+    }
+
     private boolean email;
+    private boolean filePath;
 
     public String getPattern() {
         return pattern;
