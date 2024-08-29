@@ -3,7 +3,7 @@
     Made by Hernán Sartorio  */
 .nice-select {
     -webkit-tap-highlight-color: transparent;
-    background-color: #fff;
+    background-color: var(--bg-color-nice-select,#fff);
     border-radius: 1px;
     border: solid 1px #DCDCDC;
     box-sizing: border-box;
@@ -97,7 +97,7 @@
     pointer-events: none;
     position: absolute;
     border-radius: 1px;
-    background-color: #fff;
+    background-color: var(--dark-black,#fff);
     max-height: 200px;
     box-sizing: border-box;
     box-shadow: 0 0 0 1px rgba(68, 68, 68, 0.11);
@@ -125,7 +125,7 @@
     transition: all 0.2s;
 }
 .nice-select .unmatch{display:none;}
-.nice-select .option:hover, .nice-select .option.focus, .nice-select .option.selected.focus { background-color: #f6f6f6; }
+.nice-select .option:hover, .nice-select .option.focus, .nice-select .option.selected.focus { background-color: var(--dark-black,#f6f6f6); }
 .nice-select .option.selected {font-weight: bold; }
 .nice-select .option.disabled { background-color: transparent; color: #999; cursor: default; }
 .no-csspointerevents .nice-select .list { display: none; }

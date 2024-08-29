@@ -307,6 +307,27 @@ $(document).ready(function () {
     if (browserInfo != {} && browserInfo.core === "Edge" && browserInfo.v <= 60.0) {
         $(".main-body").css({"min-height": "calc(-100px + 100%)", "height": "auto", "top": "100px", "bottom": "100px"});
     }
+    //切换主题模式点击事件
+    $("#switch-mode-btn").click(function() {
+        var icon = $(this).find("i");
+
+        icon.addClass("rotate-fade-out");
+
+        setTimeout(function() {
+            if (icon.hasClass("icon-moon")) {
+                icon.removeClass("icon-moon").addClass("icon-sun");
+                $("#switch-mode-btn").attr("data-tip", "switch to light theme");
+                $("body").addClass("dark-mode");
+            } else {
+                icon.removeClass("icon-sun").addClass("icon-moon");
+                $("#switch-mode-btn").attr("data-tip", "switch to dark theme");
+                $("body").removeClass("dark-mode");
+            }
+
+            icon.removeClass("rotate-fade-out").addClass("rotate-fade-in");
+        }, 300);
+        icon.removeClass("rotate-fade-in");
+    });
     // 切换语言点击事件
     $("#switch-lang>ul>li>a").unbind("click").bind("click", function (e) {
         e.preventDefault();
@@ -1647,7 +1668,7 @@ function defaultOption() {
         width: 'auto',
         title: {text: ''},
         tooltip: {trigger: 'axis'},
-        legend: {data: [], textStyle: {fontSize: 13}, align: 'auto'},
+        legend: {data: [], textStyle: {fontSize: 13,color: "#9e9e9e"}, align: 'auto'},
         series: [],
         grid: {
             left: '3%',
