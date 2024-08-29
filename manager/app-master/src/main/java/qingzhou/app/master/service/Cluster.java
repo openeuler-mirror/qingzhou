@@ -50,36 +50,36 @@
 //    @ModelAction(
 //            name = {"管理", "en:Manage"}, order = 1, disable = true,// TODO
 //            info = {"转到此集群的管理页面。", "en:Go to the administration page for this cluster."})
-//    public void manage(Request request, Response response) throws Exception {
+//    public void manage(Request request) throws Exception {
 //    }
 //
 //    @ModelAction(
 //            disable = true,
 //            name = {"编辑", "en:Edit"},
 //            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
-//    public void edit(Request request, Response response) throws Exception {
-//        show(request, response);
+//    public void edit(Request request) throws Exception {
+//        show(request);
 //    }
 //
 //    @ModelAction(
 //            name = {"查看", "en:Show"},
 //            info = {"查看该组件的详细配置信息。", "en:View the detailed configuration information of the component."})
-//    public void show(Request request, Response response) throws Exception {
+//    public void show(Request request) throws Exception {
 //        list(request, response);
-//        ((ResponseImpl) response).getDataList().removeIf(cluster -> !cluster.get(idFieldName()).equals(request.getId()));
+//        request.getResponse().getDataList().removeIf(cluster -> !cluster.get(idFieldName()).equals(request.getId()));
 //    }
 //
 //    @ModelAction(disable = true,
 //            name = {"删除", "en:Delete"},
-//            info = {"删除这个组件，该组件引用的其它组件不会被删除。注：请谨慎操作，删除后不可恢复。",
-//                    "en:Delete this component, other components referenced by this component will not be deleted. Note: Please operate with caution, it cannot be recovered after deletion."})
-//    public void delete(Request request, Response response) throws Exception {
+//            info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
+//                    "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
+//    public void delete(Request request) throws Exception {
 //    }
 //
 //    @ModelAction(
 //            name = {"列表", "en:List"},
 //            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-//    public void list(Request request, Response response) throws Exception {
+//    public void list(Request request) throws Exception {
 //        int pageSize = 10;
 //        int pageNum = 1;
 //

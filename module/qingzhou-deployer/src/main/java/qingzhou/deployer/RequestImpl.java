@@ -2,12 +2,15 @@ package qingzhou.deployer;
 
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
+import qingzhou.api.Response;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class RequestImpl implements Request, Cloneable {
     private transient SessionParameterListener sessionParameterListener;
+    private transient final Response response;
+
     private String manageType;
     private String appName;
     private String modelName;
@@ -18,6 +21,14 @@ public class RequestImpl implements Request, Cloneable {
     private Lang lang;
     private final Map<String, String> parameters = new HashMap<>();
     private final Map<String, String> parametersInSession = new HashMap<>();
+
+    public RequestImpl() {
+        this(null);
+    }
+
+    public RequestImpl(Response response) {
+        this.response = response;
+    }
 
     @Override
     public String getApp() {
@@ -84,6 +95,11 @@ public class RequestImpl implements Request, Cloneable {
     @Override
     public Lang getLang() {
         return lang;
+    }
+
+    @Override
+    public Response getResponse() {
+        return response;
     }
 
     public void setAppName(String appName) {

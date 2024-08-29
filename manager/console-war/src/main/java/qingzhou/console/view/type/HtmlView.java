@@ -3,15 +3,16 @@ package qingzhou.console.view.type;
 import qingzhou.api.Request;
 import qingzhou.console.ActionInvoker;
 import qingzhou.console.ConsoleConstants;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.engine.util.Utils;
+import qingzhou.registry.ModelActionInfo;
 
 import javax.servlet.http.HttpServletRequest;
 
 public class HtmlView implements View {
-    public static final String QZ_REQUEST_KEY = "QZ_REQUEST_KEY";
-    public static final String QZ_RESPONSE_KEY = "QZ_RESPONSE_KEY";
     public static final String htmlPageBase = "/WEB-INF/page/";
 
     @Override
@@ -30,19 +31,17 @@ public class HtmlView implements View {
             request.setAppName(request.getId());
             request.setModelName("home");
             request.setActionName("show");
-            restContext.response = ActionInvoker.getInstance().invokeAction(request);
+            ActionInvoker.getInstance().invokeAction(request);
         }
-        req.setAttribute(QZ_REQUEST_KEY, request);
-        req.setAttribute(QZ_RESPONSE_KEY, restContext.response);
+        req.setAttribute(Request.class.getName(), request);
 
-        String pageForward = getPageForward(request.getModel(), request.getAction(), isManageAction);
+        String pageForward = getPageForward(request, isManageAction);
         String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
         restContext.servletRequest.getRequestDispatcher(forwardToPage).forward(restContext.servletRequest, restContext.servletResponse);
     }
 
     private boolean isManageAction(Request request) {
-        if (!ConsoleConstants.ACTION_NAME_manage.equals(request.getAction())) return false;
-
+        if (!"manage".equals(request.getAction())) return false;
         if (!"master".equals(request.getApp())) return false;
 
         return "app".equals(request.getModel())
@@ -54,30 +53,37 @@ public class HtmlView implements View {
         return "text/html;charset=UTF-8";
     }
 
-    private String getPageForward(String model, String action, boolean isManageAction) {
+    private String getPageForward(Request request, boolean isManageAction) {
         if (isManageAction) {
-            return ConsoleConstants.VIEW_RENDER_MANAGE;
+            return "sys/manage";
         }
 
-        if ((ConsoleConstants.MODEL_NAME_index.equals(model) || ConsoleConstants.MODEL_NAME_apphome.equals(model))
-                && ConsoleConstants.ACTION_NAME_SHOW.equals(action)) {
-            return ConsoleConstants.VIEW_RENDER_HOME;
+        if ((ConsoleConstants.MODEL_NAME_index.equals(request.getModel()) || ConsoleConstants.MODEL_NAME_apphome.equals(request.getModel()))
+                && request.getAction().equals("show")) {
+            return "home";
         }
 
-        switch (action) {
+        ModelActionInfo actionInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel()).getModelActionInfo(request.getAction());
+        if (Utils.notBlank(actionInfo.getPage())) {
+            return actionInfo.getPage();
+        }
+
+        switch (request.getAction()) {
             case "list":
-                return ConsoleConstants.VIEW_RENDER_LIST;
+            case "delete":
+                return "list";
             case "create":
             case "edit":
-                return ConsoleConstants.VIEW_RENDER_FORM;
-            case "index":
-                return ConsoleConstants.VIEW_RENDER_INDEX;
-            case ConsoleConstants.ACTION_NAME_manage:
-                return ConsoleConstants.VIEW_RENDER_MANAGE;
-            case ConsoleConstants.ACTION_NAME_SHOW:
+                return "form";
+            case "show":
             case "monitor":
-                return ConsoleConstants.VIEW_RENDER_SHOW;
+                return "show";
+            case "index":
+                return "sys/index";
+            case "manage":
+                return "sys/manage";
         }
-        return ConsoleConstants.VIEW_RENDER_DEFAULT;
+
+        return "default";
     }
 }

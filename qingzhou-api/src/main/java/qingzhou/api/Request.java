@@ -68,4 +68,6 @@ public interface Request {
      * @return 返回当前的国际化语言设置。
      */
     Lang getLang();
+
+    Response getResponse();
 }

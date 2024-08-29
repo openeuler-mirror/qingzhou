@@ -13,7 +13,7 @@ public class ParameterReset implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
-        ModelInfo modelInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request)).getModelInfo(request.getModel());
+        ModelInfo modelInfo = SystemController.getAppInfo(PageBackendService.getAppName(request)).getModelInfo(request.getModel());
         for (String fieldName : modelInfo.getFormFieldNames()) {
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField.getType().equals(FieldType.password.name())) {

@@ -19,15 +19,4 @@ public interface ConsoleConstants {
     String DOWNLOAD_OFFSET = "DOWNLOAD_OFFSET";
     // 过程出参
     String DOWNLOAD_BLOCK = "DOWNLOAD_BLOCK";
-    // actions
-    String ACTION_NAME_manage = "manage";
-    // view renders
-    String VIEW_RENDER_DEFAULT = "default";
-    String VIEW_RENDER_INDEX = "sys/index";
-    String VIEW_RENDER_HOME = "home";
-    String VIEW_RENDER_LIST = "list";
-    String VIEW_RENDER_FORM = "form";
-    String VIEW_RENDER_SHOW = "show";
-    String VIEW_RENDER_MANAGE = "sys/manage";
-    String ACTION_NAME_SHOW = "show";
 }

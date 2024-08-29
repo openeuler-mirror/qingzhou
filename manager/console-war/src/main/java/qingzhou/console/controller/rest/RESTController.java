@@ -64,9 +64,8 @@ public class RESTController extends HttpServlet {
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
-                ResponseImpl response = ActionInvoker.getInstance().invokeAction(restContext.request);
-                restContext.response = response;
-                return response.isSuccess(); // 触发后续的响应
+                ActionInvoker.getInstance().invokeAction(restContext.request);
+                return restContext.request.getResponse().isSuccess(); // 触发后续的响应
             }
     };
     private final ViewManager viewManager = new ViewManager();
@@ -101,7 +100,7 @@ public class RESTController extends HttpServlet {
                 return;
             }
 
-            RestContext context = new RestContext(req, resp, request, new ResponseImpl());
+            RestContext context = new RestContext(req, resp, request);
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
             viewManager.render(context); // 最后作出响应
         } catch (Exception e) {
@@ -135,7 +134,7 @@ public class RESTController extends HttpServlet {
             return null;
         }
 
-        RequestImpl request = new RequestImpl();
+        RequestImpl request = new RequestImpl(new ResponseImpl());
         request.setSessionParameterListener((key, val) -> req.getSession().setAttribute(key, val));
         request.setViewName(rest.get(0));
         request.setManageType(rest.get(1));
@@ -154,7 +153,7 @@ public class RESTController extends HttpServlet {
             request.setId(PageBackendService.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        ModelInfo modelInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request))
+        ModelInfo modelInfo = SystemController.getAppInfo(PageBackendService.getAppName(request))
                 .getModelInfo(request.getModel());
         String[] actions = modelInfo.getActionNames();
         for (String name : actions) {

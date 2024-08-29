@@ -8,7 +8,10 @@ import qingzhou.console.i18n.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.*;
+import qingzhou.deployer.App;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.logger.Logger;
 import qingzhou.registry.*;
 
@@ -33,16 +36,16 @@ public class ActionInvoker {
     private ActionInvoker() {
     }
 
-    public ResponseImpl invokeAction(RequestImpl request) {
+    public void invokeAction(RequestImpl request) {
         if (isBatchAction(request)) {
-            return invokeBatch(request);
+            invokeBatch(request);
         } else {
-            return invoke(request);
+            invoke(request);
         }
     }
 
     private boolean isBatchAction(Request request) {
-        AppInfo appInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request));
+        AppInfo appInfo = SystemController.getAppInfo(PageBackendService.getAppName(request));
         if (appInfo == null) return false;
         ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
         String ids = request.getParameter(modelInfo.getIdFieldName());
@@ -60,7 +63,7 @@ public class ActionInvoker {
         int fail = 0;
         StringBuilder errbuilder = new StringBuilder();
         LinkedHashMap<String, String> result = new LinkedHashMap<>();
-        AppInfo appInfo = PageBackendService.getAppInfo(PageBackendService.getAppName(request));
+        AppInfo appInfo = SystemController.getAppInfo(PageBackendService.getAppName(request));
         ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
         String oid = request.getParameter(modelInfo.getIdFieldName());
         for (String id : oid.split(",")) {
@@ -182,10 +185,10 @@ public class ActionInvoker {
         for (String instance : appInstances) {
             ResponseImpl responseOnNode;
             if (instance.equals("local")) {
-                responseOnNode = new ResponseImpl();
                 SystemController.getService(Deployer.class)
                         .getApp(PageBackendService.getAppName(request))
-                        .invoke(request, responseOnNode);
+                        .invoke(request);
+                responseOnNode = (ResponseImpl) request.getResponse();
             } else {
                 InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(instance);
 

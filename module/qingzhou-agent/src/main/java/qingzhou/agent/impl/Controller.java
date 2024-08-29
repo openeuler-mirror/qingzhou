@@ -142,7 +142,7 @@ public class Controller implements ModuleActivator {
                 appName = "instance";
             }
             App app = deployer.getApp(appName);
-            app.invoke(request, response);
+            app.invoke(request);
 
             // 将 request 收集的 session 参数，通过 response 回传到调用端
             response.getParametersInSession().putAll(request.getParametersInSession());

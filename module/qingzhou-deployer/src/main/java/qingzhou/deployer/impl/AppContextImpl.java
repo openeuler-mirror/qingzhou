@@ -1,6 +1,9 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import qingzhou.api.ActionFilter;
+import qingzhou.api.AppContext;
+import qingzhou.api.Lang;
+import qingzhou.api.Request;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
@@ -80,8 +83,8 @@ class AppContextImpl implements AppContext {
     }
 
     @Override
-    public void callDefaultAction(Request request, Response response) throws Exception {
-        app.invokeDefault(request, response);
+    public void callDefaultAction(Request request) throws Exception {
+        app.invokeDefault(request);
     }
 
     @Override

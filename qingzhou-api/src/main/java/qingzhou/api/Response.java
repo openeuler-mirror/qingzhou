@@ -13,10 +13,14 @@ public interface Response {
      */
     void setSuccess(boolean success);
 
+    boolean isSuccess();
+
     /**
      * 设置操作返回的消息。
      */
     void setMsg(String msg);
+
+    String getMsg();
 
     /**
      * 添加数据到响应中，数据以Map形式组织。
@@ -33,8 +37,16 @@ public interface Response {
      */
     List<Map<String, String>> getDataList();
 
+    int getTotalSize();
+
+    int getPageSize();
+
+    int getPageNum();
+
     /**
      * 设置响应类型
      */
     void setContentType(String contentType);
+
+    String getContentType();
 }

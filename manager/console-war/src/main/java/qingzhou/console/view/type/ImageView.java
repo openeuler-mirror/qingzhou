@@ -13,7 +13,7 @@ public class ImageView implements View {
 
     @Override
     public void render(RestContext restContext) throws Exception {
-        List<Map<String, String>> dataList = restContext.response.getDataList();
+        List<Map<String, String>> dataList = restContext.request.getResponse().getDataList();
         if (dataList.isEmpty()) return;
 
         Map<String, String> map = dataList.get(0);

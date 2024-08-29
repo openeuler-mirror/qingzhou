@@ -1,12 +1,18 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import qingzhou.api.ActionFilter;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.Request;
 import qingzhou.deployer.App;
 import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelActionInfo;
 
 import java.net.URLClassLoader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 class AppImpl implements App {
     private URLClassLoader loader;
@@ -28,21 +34,21 @@ class AppImpl implements App {
     }
 
     @Override
-    public void invoke(Request request, Response response) throws Exception {
+    public void invoke(Request request) throws Exception {
         for (ActionFilter actionFilter : appContext.getActionFilters()) {
-            String msg = actionFilter.doFilter(request, response);
+            String msg = actionFilter.doFilter(request);
             if (msg != null) {
-                response.setSuccess(false);
-                response.setMsg(msg);
+                request.getResponse().setSuccess(false);
+                request.getResponse().setMsg(msg);
                 return;
             }
         }
 
-        invokeDirectly(request, response);
+        invokeDirectly(request);
     }
 
     @Override
-    public void invokeDirectly(Request request, Response response) throws Exception {
+    public void invokeDirectly(Request request) throws Exception {
         String modelName = request.getModel();
         Map<String, ActionMethod> methodMap = modelActionMap.get(modelName);
         if (methodMap == null) return;
@@ -51,15 +57,37 @@ class AppImpl implements App {
         ActionMethod actionMethod = methodMap.get(actionName);
         if (actionMethod == null) return;
 
-        actionMethod.invoke(request, response);
+        actionMethod.invoke(request);
     }
 
     @Override
-    public void invokeDefault(Request request, Response response) throws Exception {
+    public void invokeDefault(Request request) throws Exception {
         String modelName = request.getModel();
+        String actionName = request.getAction();
+
         Map<String, ActionMethod> actionMethodMap = addedDefaultActions.computeIfAbsent(modelName, k -> new HashMap<>());
-        ActionMethod actionMethod = actionMethodMap.computeIfAbsent(request.getAction(), s -> ActionMethod.buildActionMethod(s, new DefaultAction(AppImpl.this, modelBaseMap.get(modelName))));
-        actionMethod.invoke(request, response);
+        ActionMethod actionMethod = actionMethodMap.computeIfAbsent(actionName, s -> {
+            ModelBase modelBase = modelBaseMap.get(modelName);
+            Class<? extends ModelBase> modelClass = modelBase.getClass();
+            Set<String> defaultActions = new HashSet<>();
+            DeployerImpl.findSuperDefaultActions(modelClass, defaultActions);
+            if (defaultActions.contains(actionName)) {
+                for (ModelActionInfo actionInfo : DefaultAction.allDefaultActionCache) {
+                    if (actionInfo.getCode().equals(actionName)) {
+                        return ActionMethod.buildActionMethod(actionInfo.getMethod(), new DefaultAction(this, modelBase));
+                    }
+                }
+            }
+
+            return null;
+        });
+
+        if (actionMethod != null) {
+            actionMethod.invoke(request);
+            return;
+        }
+
+        throw new IllegalArgumentException("The default action was not found for model: " + modelName + ", action: " + actionName);
     }
 
     Map<String, Map<String, ActionMethod>> getModelActionMap() {

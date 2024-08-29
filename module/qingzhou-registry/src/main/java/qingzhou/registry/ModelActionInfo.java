@@ -1,6 +1,9 @@
 package qingzhou.registry;
 
+import java.lang.reflect.Method;
+
 public class ModelActionInfo {
+    private transient Method method;
     private String code;
     private String[] name;
     private String[] info;
@@ -8,8 +11,16 @@ public class ModelActionInfo {
     private int order;
     private String show;
     private boolean batch;
-    private boolean disable;
+    private String page;
     private boolean ajax;
+
+    public Method getMethod() {
+        return method;
+    }
+
+    public void setMethod(Method method) {
+        this.method = method;
+    }
 
     public String getCode() {
         return code;
@@ -51,6 +62,14 @@ public class ModelActionInfo {
         this.batch = batch;
     }
 
+    public String getPage() {
+        return page;
+    }
+
+    public void setPage(String page) {
+        this.page = page;
+    }
+
     public String getIcon() {
         return icon;
     }
@@ -65,14 +84,6 @@ public class ModelActionInfo {
 
     public void setOrder(int order) {
         this.order = order;
-    }
-
-    public boolean isDisable() {
-        return disable;
-    }
-
-    public void setDisable(boolean disable) {
-        this.disable = disable;
     }
 
     public boolean isAjax() {

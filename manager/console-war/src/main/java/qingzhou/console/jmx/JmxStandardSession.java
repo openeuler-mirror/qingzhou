@@ -17,7 +17,6 @@ public class JmxStandardSession extends StandardSession {
         setId(generateSessionId());
     }
 
-
     protected String generateSessionId() {
         String id;
         do {

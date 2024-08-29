@@ -56,7 +56,7 @@
 //            order = -1,
 //            name = {"注册检查", "en:Check Registry"},
 //            info = {"用于接收实例心跳信息。", "en:Used to receive the heartbeat information of the instance."})
-//    public void checkRegistry(Request request, Response response) {
+//    public void checkRegistry(Request request) {
 //        String fingerprint = request.getParameter("fingerprint");
 //        if (fingerprint != null) {
 //            Map<String, String> result = new HashMap<>();
@@ -70,7 +70,7 @@
 //            order = -1,
 //            name = {"注册实例", "en:Register"},
 //            info = {"用于接收实例注册的信息。", "en:Information used to receive instance registrations."})
-//    public void register(Request request, Response response) {
+//    public void register(Request request) {
 //        String doRegister = request.getParameter("doRegister");
 //        if (doRegister != null) {
 //            Registry registry = MasterApp.getService(Registry.class);
@@ -81,13 +81,13 @@
 //    @ModelAction(
 //            name = {"管理", "en:Manage"}, show = "running=true", order = 1,
 //            info = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
-//    public void manage(Request request, Response response) throws Exception {
+//    public void manage(Request request) throws Exception {
 //    }
 //
 //    @ModelAction(
 //            name = {"查看", "en:Show"},
 //            info = {"查看该组件的相关信息。", "en:View the information of this model."})
-//    public void show(Request request, Response response) {
+//    public void show(Request request) {
 //        String id = request.getId();
 //        if ("local".equals(id)) {
 //            response.addData(localInstance());
@@ -106,7 +106,7 @@
 //    @ModelAction(
 //            name = {"列表", "en:List"},
 //            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-//    public void list(Request request, Response response) throws Exception {
+//    public void list(Request request) throws Exception {
 //        int pageSize = 10;
 //        int pageNum = 1;
 //        int totalSize = 0;

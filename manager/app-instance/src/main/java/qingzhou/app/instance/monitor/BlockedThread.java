@@ -68,22 +68,24 @@ public class BlockedThread extends ModelBase implements Listable {
     }
 
     @ModelAction(
+            code = "show",
             name = {"查看", "en:Show"},
             info = {"查看该阻塞线程的信息，包括其调用的堆栈等。", "en:View the information of the blocking thread, including the stack of its calls."})
-    public void show(Request request, Response response) throws Exception {
+    public void show(Request request) throws Exception {
         // todo 考虑使用覆写 showData 来实现
 //        Map<String, String> data = getDataStore().getDataById(request.getId());
 //        if (data != null && !data.isEmpty()) {
-//            response.addData(data);
+//        request.getResponse().addData(data);
 //        }
     }
 
     @ModelAction(
+            code = "delete",
             show = "canBeKilled=true",
             name = {"强停", "en:Stop"},
             info = {"尝试强制终止该线程的运行。注：该操作可能具有一定的危险，请在确保业务安全的前提下进行。此外，该操作不一定能够成功终止死锁的线程。",
                     "en:Attempts to forcibly terminate the thread may not always succeed for threads in a state such as \"BLOCKED\". Note: This operation may be dangerous, please do it under the premise of ensuring business safety. Also, the operation does not necessarily successfully terminate the deadlocked thread."})
-    public void delete(Request request, Response response) throws Exception {
+    public void delete(Request request) throws Exception {
         // todo 考虑使用覆写 deleteData 来实现
 //        String tid = request.getId();
 //        // 确保是自己的线程才能去 kill

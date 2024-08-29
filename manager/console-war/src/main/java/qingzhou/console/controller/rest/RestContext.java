@@ -1,7 +1,6 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -10,12 +9,10 @@ public class RestContext {
     public final HttpServletRequest servletRequest;
     public final HttpServletResponse servletResponse;
     public final RequestImpl request;
-    public ResponseImpl response;
 
-    public RestContext(HttpServletRequest servletRequest, HttpServletResponse servletResponse, RequestImpl request, ResponseImpl response) {
+    public RestContext(HttpServletRequest servletRequest, HttpServletResponse servletResponse, RequestImpl request) {
         this.servletRequest = servletRequest;
         this.servletResponse = servletResponse;
         this.request = request;
-        this.response = response;
     }
 }

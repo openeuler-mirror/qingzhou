@@ -52,7 +52,7 @@
 //
 //    @ModelField(
 //            required = false, type = FieldType.number, min = 1, max = 10,
-//            name = {"不与最近密码重复", "en:Recent Password Restrictions"},
+//            name = {"不使用最近密码", "en:Recent Password Restrictions"},
 //            info = {"限制本次更新的密码不能和最近几次使用过的密码重复。注：设置为 “1” 表示只要不与当前密码重复即可。",
 //                    "en:Restrict this update password to not be duplicated by the last few times you have used. Note: A setting of 1 means as long as it does not duplicate the current password."})
 //    public Integer passwordLimitRepeats = 1;

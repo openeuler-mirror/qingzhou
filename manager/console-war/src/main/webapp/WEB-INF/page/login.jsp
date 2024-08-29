@@ -8,6 +8,7 @@
 <%@ page import="qingzhou.console.controller.About" %>
 <%@ page import="qingzhou.console.controller.rest.ParameterReset" %>
 <%@ page import="qingzhou.console.controller.rest.RESTController" %>
+<%@ page import="qingzhou.console.controller.SystemController" %>
 
 <%
     String contextPath = request.getContextPath();
@@ -58,7 +59,7 @@
                        class="form-control"
                        placeholder="<%=PageBackendService.getMasterAppI18nString( "page.login.user")%>" autofocus>
                 <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;">
-                    <i class="icon icon-<%=PageBackendService.getAppInfo("master").getModelInfo("user").getIcon()%> "></i>
+                    <i class="icon icon-<%=SystemController.getAppInfo("master").getModelInfo("user").getIcon()%> "></i>
                 </label>
             </div>
             <div class="input-control has-icon-left">
@@ -71,7 +72,7 @@
                        name="<%=LoginManager.LOGIN_PASSWORD%>">
                 <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left"
                        style="line-height: 44px;">
-                    <i class="icon icon-<%=PageBackendService.getAppInfo("master").getModelInfo("password").getIcon()%>"></i>
+                    <i class="icon icon-<%=SystemController.getAppInfo("master").getModelInfo("password").getIcon()%>"></i>
                 </label>
                 <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt"
                        class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;">

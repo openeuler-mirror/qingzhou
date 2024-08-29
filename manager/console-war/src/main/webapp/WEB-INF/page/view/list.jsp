@@ -51,10 +51,7 @@
                     boolean canAccess = (AccessControl.canAccess(qzApp, qzModel + "/" + "add", LoginManager.getLoginUser(session)));
                     ModelActionInfo listCreateAction = modelInfo.getModelActionInfo("create");
                     ModelActionInfo listAddAction = modelInfo.getModelActionInfo("add");
-                    if (canAccess
-                            && (listCreateAction != null && !listCreateAction.isDisable())
-                            && (listAddAction != null && !listAddAction.isDisable())
-                    ) {
+                    if (canAccess && (listCreateAction != null) && (listAddAction != null)) {
                 %>
                 <a class="btn"
                    href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "create")%>">
@@ -70,9 +67,6 @@
                     if (needOperationColumn) {
                         String modelIcon = modelInfo.getIcon();
                         for (ModelActionInfo action : opsActions) {
-                            if (action.isDisable()) {
-                                continue;
-                            }
                             String actionKey = action.getCode();
                             String titleStr = I18n.getString(qzApp, "model.action.info." + qzModel + "." + actionKey);
                             if (titleStr != null) {
@@ -169,23 +163,14 @@
                 <td class="sequence"><%=++listOrder%>
                 </td>
                 <%
-                    ModelActionInfo targetAction = null;
-                    if (AccessControl.canAccess(qzApp, qzModel + "/" + "update", LoginManager.getLoginUser(session))
-                            && AccessControl.canAccess(qzApp, qzModel + "/" + "edit", LoginManager.getLoginUser(session))) {
-                        targetAction = modelInfo.getModelActionInfo("edit");
-                    }
-                    if (targetAction == null) {
-                        if (AccessControl.canAccess(qzApp, qzModel + "/" + ConsoleConstants.ACTION_NAME_SHOW, LoginManager.getLoginUser(session))) {
-                            targetAction = modelInfo.getModelActionInfo(ConsoleConstants.ACTION_NAME_SHOW);
-                        }
-                    }
+                    ModelActionInfo targetAction = modelInfo.getModelActionInfo("show");
                     boolean isFirst = true;
                     for (Integer i : indexToShow) {
                         String value = modelBase.get(PageBackendService.getFieldName(qzRequest, i));
                         if (value == null) {
                             value = "";
                         }
-                        if (isFirst && hasId && (targetAction != null && !targetAction.isDisable())) {
+                        if (isFirst && hasId && targetAction != null) {
                             isFirst = false;
                 %>
                 <td>
@@ -232,16 +217,10 @@
                         String[] actions = PageBackendService.getActionNamesShowToList(qzRequest);
                         for (String actionName : actions) {
                             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                            if (action == null || action.isDisable()) {
-                                continue;
-                            }
                             if (PageBackendService.isActionShow(qzRequest, modelBase, action) != null) {
                                 continue;
                             }
                             String actionKey = action.getCode();
-                            if (actionKey.equals("edit")) {
-                                continue;
-                            }
 
                             if (!AccessControl.canAccess(qzApp, qzModel + "/" + actionKey, LoginManager.getLoginUser(session))) {
                                 continue;

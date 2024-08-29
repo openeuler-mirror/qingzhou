@@ -3,8 +3,8 @@ package qingzhou.app.common;
 import qingzhou.api.*;
 
 @Model(code = "home", icon = "home",
-        entrance = "show",
         order = -1,
+        entrance = "show",
         name = {"应用", "en:App"},
         info = {"展示当前应用的说明信息。",
                 "en:Displays the description of the current app."})
@@ -20,12 +20,13 @@ public class AppHome extends ModelBase {
     public String javaHome;
 
     @ModelAction(
+            code = "show",
             name = {"首页", "en:Home"},
             info = {"展示应用的首页信息。", "en:Displays the homepage information of the app."})
-    public void show(Request request, Response response) throws Exception {
+    public void show(Request request) throws Exception {
         AppHome home = new AppHome();
         home.appName = request.getApp();
         home.javaHome = System.getProperty("java.home");
-        response.addModelData(home);
+        request.getResponse().addModelData(home);
     }
 }
