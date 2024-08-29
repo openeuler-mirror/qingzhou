@@ -86,6 +86,8 @@ class DeployerImpl implements Deployer {
         AppImpl app = (AppImpl) apps.remove(appName);
         if (app == null) return;
 
+        app.getModelBaseMap().values().forEach(ModelBase::stop);
+
         QingzhouApp qingzhouApp = app.getQingzhouApp();
         if (qingzhouApp != null) {
             qingzhouApp.stop();
@@ -319,6 +321,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setLengthMin(modelField.lengthMin());
             modelFieldInfo.setLengthMax(modelField.lengthMax());
             modelFieldInfo.setPattern(modelField.pattern());
+            modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
             modelFieldInfo.setUnsupportedCharacters(modelField.unsupportedCharacters());
             modelFieldInfo.setUnsupportedStrings(modelField.unsupportedStrings());

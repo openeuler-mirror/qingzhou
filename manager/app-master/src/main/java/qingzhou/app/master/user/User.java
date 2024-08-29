@@ -1,4 +1,4 @@
-package qingzhou.app.master.system;
+package qingzhou.app.master.user;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Addable;

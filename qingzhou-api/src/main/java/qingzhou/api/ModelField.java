@@ -38,6 +38,8 @@ public @interface ModelField {
 
     int lengthMax() default Integer.MAX_VALUE;
 
+    boolean host() default false;
+
     boolean port() default false;
 
     String unsupportedCharacters() default "";

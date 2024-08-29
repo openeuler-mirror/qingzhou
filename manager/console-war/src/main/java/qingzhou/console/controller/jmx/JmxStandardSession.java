@@ -1,4 +1,4 @@
-package qingzhou.console.jmx;
+package qingzhou.console.controller.jmx;
 
 import org.apache.catalina.Manager;
 import org.apache.catalina.Session;

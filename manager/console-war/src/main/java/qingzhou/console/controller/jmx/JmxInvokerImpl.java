@@ -1,13 +1,14 @@
-package qingzhou.console.jmx;
+package qingzhou.console.controller.jmx;
 
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.i18n.I18n;
+import qingzhou.deployer.JmxServiceAdapter;
 
 import javax.servlet.http.HttpSession;
 import java.util.Properties;
 
-public class ConsoleJmx implements ConsoleJmxMBean {
+public class JmxInvokerImpl implements JmxServiceAdapter.JmxInvoker {
 
     @Override
     public String invoke(String appName, String modelName, String actionName, Properties args) {
@@ -24,7 +25,7 @@ public class ConsoleJmx implements ConsoleJmxMBean {
             RESTController.invokeReq(request, response);
             return response.getResult();
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            return JmxInvokerImpl.class.getSimpleName() + " error: " + e.getMessage();
         } finally {
             I18n.resetI18nLang();
 

@@ -1,4 +1,4 @@
-package qingzhou.console.jmx;
+package qingzhou.app.master.jmx;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.rmi.server.RMISocketFactory;
 
-public class HostSocketFactory extends RMISocketFactory {
+class HostSocketFactory extends RMISocketFactory {
 
     @Override
     public Socket createSocket(String host, int port) throws IOException {

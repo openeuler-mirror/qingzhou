@@ -1,4 +1,4 @@
-package qingzhou.console.jmx;
+package qingzhou.console.controller.jmx;
 
 import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.TrustIpCheck;
@@ -14,7 +14,7 @@ import java.rmi.server.RemoteServer;
 import java.rmi.server.ServerNotActiveException;
 import java.util.Properties;
 
-public class CustomJMXAuthenticator implements JMXAuthenticator {
+public class JMXAuthenticatorImpl implements JMXAuthenticator {
 
     static {
         ConsoleI18n.addI18n("jmx.credentials.miss", new String[]{"请输入身份认证信息", "en:Please enter authentication information"});

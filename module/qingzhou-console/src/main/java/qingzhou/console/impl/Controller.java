@@ -6,6 +6,7 @@ import qingzhou.console.ContextHelper;
 import qingzhou.console.Totp;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -37,6 +38,8 @@ public class Controller implements ModuleActivator {
     private CryptoService cryptoService;
     @Service
     private Json json;// RemoteClient会用到
+    @Service
+    private JmxServiceAdapter jmxServiceAdapter;
 
     private Console console;
     private ProcessSequence sequence;

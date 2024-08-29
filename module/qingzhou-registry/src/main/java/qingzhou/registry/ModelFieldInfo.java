@@ -20,6 +20,7 @@ public class ModelFieldInfo {
     private long max;
     private int lengthMin;
     private int lengthMax;
+    private boolean host;
     private boolean port;
     private String unsupportedCharacters;
     private String[] unsupportedStrings;
@@ -195,6 +196,14 @@ public class ModelFieldInfo {
 
     public void setLengthMax(int lengthMax) {
         this.lengthMax = lengthMax;
+    }
+
+    public boolean isHost() {
+        return host;
+    }
+
+    public void setHost(boolean host) {
+        this.host = host;
     }
 
     public boolean isPort() {

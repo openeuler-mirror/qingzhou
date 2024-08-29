@@ -1,4 +1,4 @@
-package qingzhou.console.jmx;
+package qingzhou.console.controller.jmx;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;

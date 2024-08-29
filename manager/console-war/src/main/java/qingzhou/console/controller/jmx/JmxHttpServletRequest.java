@@ -1,6 +1,5 @@
-package qingzhou.console.jmx;
+package qingzhou.console.controller.jmx;
 
-import org.apache.catalina.Session;
 import org.apache.catalina.session.StandardSession;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
@@ -169,12 +168,6 @@ public class JmxHttpServletRequest implements HttpServletRequest {
         }
         if (session == null && b) {
             session = new JmxStandardSession(SystemController.SESSIONS_MANAGER);
-            session.addSessionListener(event -> {
-                if (event.getType().equals(Session.SESSION_DESTROYED_EVENT)) {
-                    Session session = event.getSession();
-                    JMXServerHolder.getInstance().closeConnection(session.getId());
-                }
-            });
         }
 
         if (session != null) {
@@ -183,7 +176,6 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
         return session;
     }
-
 
     @Override
     public HttpSession getSession() {

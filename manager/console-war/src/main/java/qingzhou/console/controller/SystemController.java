@@ -9,7 +9,9 @@ import qingzhou.config.Console;
 import qingzhou.config.Security;
 import qingzhou.console.ContextHelper;
 import qingzhou.console.i18n.SetI18n;
-import qingzhou.console.jmx.JMXServerHolder;
+import qingzhou.console.controller.jmx.JmxInvokerImpl;
+import qingzhou.console.controller.jmx.JMXAuthenticatorImpl;
+import qingzhou.console.controller.jmx.NotificationListenerImpl;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
@@ -18,6 +20,7 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.KeyPairCipher;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
@@ -108,19 +111,21 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         try {
-            boolean jmxStarted = JMXServerHolder.getInstance().init();
-            if (jmxStarted) {
-                ApplicationContext context = getApplicationContext(sce);
-                Field field = context.getClass().getDeclaredField("context");
-                boolean accessible = field.isAccessible();
-                field.setAccessible(true);
-                StandardContext sc = (StandardContext) field.get(context);
-                field.setAccessible(accessible);
-                if (sc != null) {
-                    SESSIONS_MANAGER = sc.getManager();
-                } else {
-                    throw new IllegalStateException();
-                }
+            JmxServiceAdapter jmxServiceAdapter = SystemController.getService(JmxServiceAdapter.class);
+            jmxServiceAdapter.registerJMXAuthenticator(new JMXAuthenticatorImpl());
+            jmxServiceAdapter.registerJmxInvoker(new JmxInvokerImpl());
+            jmxServiceAdapter.registerNotificationListener(new NotificationListenerImpl());
+
+            ApplicationContext context = getApplicationContext(sce);
+            Field field = context.getClass().getDeclaredField("context");
+            boolean accessible = field.isAccessible();
+            field.setAccessible(true);
+            StandardContext sc = (StandardContext) field.get(context);
+            field.setAccessible(accessible);
+            if (sc != null) {
+                SESSIONS_MANAGER = sc.getManager();
+            } else {
+                throw new IllegalStateException();
             }
         } catch (Exception e) {
             getService(Logger.class).warn(e.getMessage(), e);
@@ -142,11 +147,10 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        try {
-            JMXServerHolder.getInstance().destroy();
-        } catch (Exception e) {
-            getService(Logger.class).warn(e.getMessage(), e);
-        }
+        JmxServiceAdapter jmxServiceAdapter = SystemController.getService(JmxServiceAdapter.class);
+        jmxServiceAdapter.registerJMXAuthenticator(null);
+        jmxServiceAdapter.registerJmxInvoker(null);
+        jmxServiceAdapter.registerNotificationListener(null);
     }
 
     @Override

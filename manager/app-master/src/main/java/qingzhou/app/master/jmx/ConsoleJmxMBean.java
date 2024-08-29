@@ -1,4 +1,4 @@
-package qingzhou.console.jmx;
+package qingzhou.app.master.jmx;
 
 import java.util.Properties;
 

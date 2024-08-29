@@ -1,10 +1,10 @@
-package qingzhou.console.jmx;
+package qingzhou.app.master.jmx;
 
 import com.sun.jmx.remote.security.MBeanServerAccessController;
 
 import javax.management.ObjectName;
 
-public class CustomMBeanServerAccessController extends MBeanServerAccessController {
+class CustomMBeanServerAccessController extends MBeanServerAccessController {
 
     @Override
     protected void checkRead() {

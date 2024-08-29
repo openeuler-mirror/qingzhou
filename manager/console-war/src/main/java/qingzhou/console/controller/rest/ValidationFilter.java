@@ -13,6 +13,8 @@ import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +31,7 @@ public class ValidationFilter implements Filter<RestContext> {
         ConsoleI18n.addI18n("validation_max", new String[]{"数字不能大于%s", "en:The number cannot be greater than %s"});
         ConsoleI18n.addI18n("validation_lengthMin", new String[]{"字符串长度不能小于%s", "en:The length of the string cannot be less than %s"});
         ConsoleI18n.addI18n("validation_lengthMax", new String[]{"字符串长度不能大于%s", "en:The length of the string cannot be greater than %s"});
+        ConsoleI18n.addI18n("validation_host", new String[]{"非法的IP地址或域名", "en:Illegal IP address or host name"});
         ConsoleI18n.addI18n("validation_port", new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
         ConsoleI18n.addI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         ConsoleI18n.addI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
@@ -84,6 +87,7 @@ public class ValidationFilter implements Filter<RestContext> {
     Validator[] validators = {
             new min(), new max(),
             new lengthMin(), new lengthMax(),
+            new host(),
             new port(),
             new unsupportedCharacters(), new unsupportedStrings(),
             new createable(), new editable(),
@@ -224,6 +228,23 @@ public class ValidationFilter implements Filter<RestContext> {
                 }
             } catch (Exception e) {
                 return new String[]{"validation_port"};
+            }
+
+            return null;
+        }
+    }
+
+    static class host implements Validator {
+
+        @Override
+        public String[] validate(ValidationContext context) {
+            ModelFieldInfo fieldInfo = context.fieldInfo;
+            if (!fieldInfo.isHost()) return null;
+            // 兼容这个情况： newValue == 0.0.0.0aa
+            try {
+                InetAddress.getByName(context.parameterVal).getHostAddress(); // ::1简写变成完整名称
+            } catch (UnknownHostException ignored) {
+                return new String[]{"validation_host"};
             }
 
             return null;
