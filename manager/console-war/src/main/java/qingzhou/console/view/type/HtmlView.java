@@ -41,8 +41,7 @@ public class HtmlView implements View {
     }
 
     private boolean isManageAction(Request request) {
-        if (!ConsoleConstants.ACTION_NAME_manage.equals(request.getAction())) return false;
-
+        if (!"manage".equals(request.getAction())) return false;
         if (!"master".equals(request.getApp())) return false;
 
         return "app".equals(request.getModel())
@@ -56,12 +55,12 @@ public class HtmlView implements View {
 
     private String getPageForward(Request request, boolean isManageAction) {
         if (isManageAction) {
-            return ConsoleConstants.VIEW_RENDER_MANAGE;
+            return "sys/manage";
         }
 
         if ((ConsoleConstants.MODEL_NAME_index.equals(request.getModel()) || ConsoleConstants.MODEL_NAME_apphome.equals(request.getModel()))
-                && ConsoleConstants.ACTION_NAME_SHOW.equals(request.getAction())) {
-            return ConsoleConstants.VIEW_RENDER_HOME;
+                && request.getAction().equals("show")) {
+            return "home";
         }
 
         ModelActionInfo actionInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel()).getModelActionInfo(request.getAction());
@@ -71,19 +70,20 @@ public class HtmlView implements View {
 
         switch (request.getAction()) {
             case "list":
-                return ConsoleConstants.VIEW_RENDER_LIST;
+            case "delete":
+                return "list";
             case "create":
             case "edit":
-                return ConsoleConstants.VIEW_RENDER_FORM;
-            case "index":
-                return ConsoleConstants.VIEW_RENDER_INDEX;
-            case ConsoleConstants.ACTION_NAME_manage:
-                return ConsoleConstants.VIEW_RENDER_MANAGE;
-            case ConsoleConstants.ACTION_NAME_SHOW:
+                return "form";
+            case "show":
             case "monitor":
-                return ConsoleConstants.VIEW_RENDER_SHOW;
+                return "show";
+            case "index":
+                return "sys/index";
+            case "manage":
+                return "sys/manage";
         }
 
-        return ConsoleConstants.VIEW_RENDER_DEFAULT;
+        return "default";
     }
 }

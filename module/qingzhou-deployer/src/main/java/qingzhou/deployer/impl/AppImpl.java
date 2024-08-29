@@ -84,9 +84,10 @@ class AppImpl implements App {
 
         if (actionMethod != null) {
             actionMethod.invoke(request);
+            return;
         }
 
-        throw new IllegalArgumentException("The default action was not found");
+        throw new IllegalArgumentException("The default action was not found for model: " + modelName + ", action: " + actionName);
     }
 
     Map<String, Map<String, ActionMethod>> getModelActionMap() {

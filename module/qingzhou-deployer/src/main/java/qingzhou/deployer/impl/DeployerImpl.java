@@ -460,6 +460,7 @@ class DeployerImpl implements Deployer {
     static List<ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
         List<ModelActionInfo> modelActionInfos = new ArrayList<>();
         annotation.readModelAction().forEach((method, modelAction) -> {
+            if (modelAction.disable()) return;
             ModelActionInfo modelActionInfo = new ModelActionInfo();
             modelActionInfo.setMethod(method);
             modelActionInfo.setCode(modelAction.code());
@@ -470,7 +471,6 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setBatch(modelAction.batch());
             modelActionInfo.setPage(modelAction.page());
-            modelActionInfo.setDisable(modelAction.disable());
             modelActionInfo.setAjax(modelAction.ajax());
             modelActionInfos.add(modelActionInfo);
         });

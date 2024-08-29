@@ -12,7 +12,6 @@ public class ModelActionInfo {
     private String show;
     private boolean batch;
     private String page;
-    private boolean disable;
     private boolean ajax;
 
     public Method getMethod() {
@@ -85,14 +84,6 @@ public class ModelActionInfo {
 
     public void setOrder(int order) {
         this.order = order;
-    }
-
-    public boolean isDisable() {
-        return disable;
-    }
-
-    public void setDisable(boolean disable) {
-        this.disable = disable;
     }
 
     public boolean isAjax() {

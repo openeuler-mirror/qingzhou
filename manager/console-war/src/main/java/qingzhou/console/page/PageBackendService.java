@@ -4,7 +4,6 @@ import qingzhou.api.FieldType;
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.AccessControl;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
@@ -31,16 +30,6 @@ import java.util.stream.Collectors;
 public class PageBackendService {
 
     private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
-
-    private static final Set<String> ShowToListExcludedActionNames = new HashSet<>(Arrays.asList(
-            ConsoleConstants.ACTION_NAME_SHOW,
-            "create",
-            "add",
-            "list",
-            "edit",
-            "update",
-            "download"
-    ));
 
     private PageBackendService() {
     }
@@ -73,7 +62,7 @@ public class PageBackendService {
     public static String[] getActionNamesShowToList(Request request) {
         ModelInfo modelInfo = getModelInfo(request);
         return Arrays.stream(modelInfo.getModelActionInfos()).filter(modelActionInfo -> modelActionInfo.getOrder() >= 0).
-                filter(modelActionInfo -> !ShowToListExcludedActionNames.contains(modelActionInfo.getCode()))
+                filter(modelActionInfo -> modelActionInfo.getOrder()>0)
                 .sorted(Comparator.comparingInt(ModelActionInfo::getOrder)).map(ModelActionInfo::getCode).toArray(String[]::new);
     }
 

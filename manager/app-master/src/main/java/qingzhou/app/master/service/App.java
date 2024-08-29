@@ -15,13 +15,11 @@
 //import qingzhou.registry.*;
 //
 //import javax.net.ssl.SSLSocketFactory;
-//import javax.net.ssl.X509TrustManager;
 //import java.io.*;
 //import java.lang.reflect.InvocationTargetException;
 //import java.net.HttpURLConnection;
 //import java.nio.charset.StandardCharsets;
 //import java.nio.file.Files;
-//import java.security.cert.X509Certificate;
 //import java.util.*;
 //
 //@Model(code = "app", icon = "cube-alt",
@@ -46,21 +44,26 @@
 //    public boolean appFrom = false;
 //
 //    @ModelField(
-//            list = true, show = "appFrom=false",
+//            show = "appFrom=false",
+//            required = true,
+//            list = true,
 //            name = {"应用位置", "en:Application File"},
 //            info = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar, *.zip 类型的文件或目录。",
 //                    "en:The location of the application on the server, usually the app package, Note: Must be a *.jar, *.zip file or directory."})
 //    public String filename;
 //
 //    @ModelField(
-//            type = FieldType.file, show = "appFrom=true",
+//            show = "appFrom=true",
+//            type = FieldType.file,
+//            required = true,
 //            name = {"上传应用", "en:Upload Application"},
 //            info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 QingZhou 应用文件，否则可能会导致安装失败。",
 //                    "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
 //    public String fromUpload;
 //
 //    @ModelField(
-//            //type = FieldType.multiselect,
+//            type = FieldType.multiselect,
+//            options = {"local"},
 //            list = true, //refModel = Instance.class, todo 远程获取引用model的列表
 //            name = {"实例", "en:Instance"},
 //            info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
@@ -70,23 +73,13 @@
 //    public void start() {
 //        appContext.addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
 //        appContext.addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
-//
-//        appContext.addActionFilter((request, response) -> {
-//            if (request.getId().equals("master")
-//                    || request.getId().equals("instance")) {
-//                if ("update".equals(request.getAction())
-//                        || "delete".equals(request.getAction())) {
-//                    return appContext.getI18n(request.getLang(), "validator.master.system");
-//                }
-//            }
-//            return null;
-//        });
 //    }
 //
 //    @ModelAction(
+//            code = "show", icon = "folder-open-alt",
 //            name = {"查看", "en:Show"},
 //            info = {"查看该组件的相关信息。", "en:View the information of this model."})
-//    public void show(Request request,) throws Exception {
+//    public void show(Request request) throws Exception {
 //        Map<String, String> appMap = new HashMap<>();
 //        String id = request.getId();
 //        qingzhou.deployer.App app = MasterApp.getService(Deployer.class).getApp(id);
@@ -123,13 +116,6 @@
 //    }
 //
 //    @ModelAction(
-//            name = {"编辑", "en:Edit"},
-//            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
-//    public void edit(Request request) throws Exception {
-//        show(request);
-//    }
-//
-//    @ModelAction(
 //            name = {"更新", "en:Update"},
 //            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
 //    public void update(Request request) throws Exception {
@@ -142,14 +128,6 @@
 //            ((RequestImpl) request).setModelName("app");
 //            ((RequestImpl) request).setActionName("update");
 //        }
-//    }
-//
-//    @ModelAction(
-//            name = {"部署", "en:Deploy"},
-//            info = {"部署应用到指定的实例上。",
-//                    "en:Deploy the application to the specified instance."})
-//    public void create(Request request) throws Exception {
-//        appContext.callDefaultAction(request);
 //    }
 //
 //    @ModelAction(
@@ -390,7 +368,6 @@
 //    }
 //
 //    private static SSLSocketFactory ssf;
-//    public static final X509TrustManager TRUST_ALL_MANAGER = new X509TrustManagerInternal();
 //
 //    @Override
 //    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
@@ -434,39 +411,6 @@
 //        int startIndex = (pageNum - 1) * pageSize;
 //        int endIndex = Math.min(startIndex + pageSize, totalSize);
 //
-//        List<Map<String, String>> pagedApps = finalAppList.subList(startIndex, endIndex);
-//    }
-//
-//    static class X509TrustManagerInternal implements X509TrustManager {
-//        //返回受信任的X509证书数组。
-//        @Override
-//        public X509Certificate[] getAcceptedIssuers() {
-//            return null;
-//        }
-//
-//        //该方法检查服务器的证书，若不信任该证书同样抛出异常。通过自己实现该方法，可以使之信任我们指定的任何证书。
-//        //在实现该方法时，也可以简单的不做任何处理，即一个空的函数体，由于不会抛出异常，它就会信任任何证书。
-//        @Override
-//        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-//        }
-//
-//        //该方法检查客户端的证书，若不信任该证书则抛出异常。由于我们不需要对客户端进行认证，
-//        //因此我们只需要执行默认的信任管理器的这个方法。JSSE中，默认的信任管理器类为TrustManager。
-//        @Override
-//        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-//        }
-//    }
-//
-//    private static void setConnectionProperties(HttpURLConnection conn) throws Exception {
-//        conn.setRequestMethod("POST");
-//        conn.setDoInput(true);
-//        conn.setDoOutput(true);
-//        conn.setUseCaches(false);
-//        conn.setConnectTimeout(60000);
-//        conn.setRequestProperty("Connection", "close");
-//        conn.setRequestProperty("Charset", "UTF-8");
-//        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");// 设置文件类型
-//        conn.setRequestProperty("accept", "*/*");// 设置接收类型否则返回415错误
-//        conn.setInstanceFollowRedirects(false);// 不处理重定向，否则“动态密钥需要刷新”提示信息收不到。。。
+//        return finalAppList.subList(startIndex, endIndex);
 //    }
 //}
