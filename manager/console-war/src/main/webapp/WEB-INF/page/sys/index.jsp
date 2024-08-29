@@ -320,7 +320,7 @@
         networkError: '<%=PageBackendService.getMasterAppI18nString("page.error.network")%>',
         placeholderOtp: '<%=PageBackendService.getMasterAppI18nString("page.placeholder.otp")%>',
         bindSuccessOtp: '<%=PageBackendService.getMasterAppI18nString("page.bindsuccess.otp")%>',
-        bindFailOtp: '<%=PageBackendService.getMasterAppI18nString("page.bindfail.otp")%>',
+        bindFailOtp: "<%=PageBackendService.getMasterAppI18nString("page.bindfail.otp")%>",
         passwordChangedMsg: '<%=PageBackendService.getMasterAppI18nString("page.password.changed")%>',
         searchHiddenTip: '<%=PageBackendService.getMasterAppI18nString("page.search.hidden")%>',
         passwordConfirmFailed: '<%=PageBackendService.getMasterAppI18nString("password.confirm.notequal")%>'
