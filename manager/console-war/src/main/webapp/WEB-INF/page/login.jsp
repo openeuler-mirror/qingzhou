@@ -1,19 +1,19 @@
 <%@ page pageEncoding="UTF-8" %>
 
-<%@ page import="qingzhou.console.i18n.I18n" %>
+<%@ page import="qingzhou.console.controller.I18n" %>
 <%@ page import="qingzhou.console.page.PageBackendService" %>
 <%@ page import="qingzhou.console.login.LoginManager" %>
 <%@ page import="qingzhou.console.ConsoleConstants" %>
 <%@ page import="qingzhou.console.login.vercode.VerCode" %>
 <%@ page import="qingzhou.console.controller.About" %>
-<%@ page import="qingzhou.console.controller.rest.ParameterReset" %>
 <%@ page import="qingzhou.console.controller.rest.RESTController" %>
 <%@ page import="qingzhou.console.controller.SystemController" %>
+<%@ page import="qingzhou.deployer.DeployerConstants" %>
 
 <%
     String contextPath = request.getContextPath();
     session.invalidate();
-    I18n.setI18nLang(request, I18n.DEFAULT_LANG);
+    I18n.resetI18nLang();
 %>
 
 <!DOCTYPE html>
@@ -48,7 +48,7 @@
         <div class="body_img"></div>
     </section>
     <section class="panel-body">
-        <div class="logo"><%=PageBackendService.getMasterAppI18nString("page.userlogin")%>
+        <div class="logo"><%=I18n.getKeyI18n("page.userlogin")%>
         </div>
         <form id="loginForm" method="post"
               action="<%=PageBackendService.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>"
@@ -57,22 +57,22 @@
                 <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>"
                        name="<%=LoginManager.LOGIN_USER%>" required
                        class="form-control"
-                       placeholder="<%=PageBackendService.getMasterAppI18nString( "page.login.user")%>" autofocus>
+                       placeholder="<%=I18n.getKeyI18n( "page.login.user")%>" autofocus>
                 <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;">
-                    <i class="icon icon-<%=SystemController.getAppInfo("master").getModelInfo("user").getIcon()%> "></i>
+                    <i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.MASTER_APP).getModelInfo("user").getIcon()%> "></i>
                 </label>
             </div>
             <div class="input-control has-icon-left">
                 <input value="qingzhou123.com" type="text" id="<%=LoginManager.LOGIN_PASSWORD%>_txt"
                        data-type="password" class="form-control"
-                       placeholder="<%=PageBackendService.getMasterAppI18nString( "page.login.password")%>"
+                       placeholder="<%=I18n.getKeyI18n( "page.login.password")%>"
                        onchange="document.getElementById('<%=LoginManager.LOGIN_PASSWORD%>').value = this.value;"
                        dotted>
                 <input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>"
                        name="<%=LoginManager.LOGIN_PASSWORD%>">
                 <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left"
                        style="line-height: 44px;">
-                    <i class="icon icon-<%=SystemController.getAppInfo("master").getModelInfo("password").getIcon()%>"></i>
+                    <i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.MASTER_APP).getModelInfo(DeployerConstants.PASSWORD_MODEL).getIcon()%>"></i>
                 </label>
                 <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt"
                        class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;">
@@ -81,7 +81,7 @@
             </div>
             <div class="input-control has-icon-left">
                 <input type="text" id="<%=ConsoleConstants.LOGIN_OTP%>_txt" class="form-control"
-                       placeholder="<%=PageBackendService.getMasterAppI18nString( "page.info.otp")%>"
+                       placeholder="<%=I18n.getKeyI18n( "page.info.otp")%>"
                        onchange="document.getElementById('<%=ConsoleConstants.LOGIN_OTP%>').value = this.value;">
                 <input type="hidden" id="<%=ConsoleConstants.LOGIN_OTP%>" name="<%=ConsoleConstants.LOGIN_OTP%>">
                 <label for="<%=ConsoleConstants.LOGIN_OTP%>_txt" class="input-control-icon-left"
@@ -94,7 +94,7 @@
             <div class="input-control has-icon-left">
                 <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control"
                        style="width:250px;display:inline-block;float:left;"
-                       placeholder="<%=PageBackendService.getMasterAppI18nString( "page.vercode")%>">
+                       placeholder="<%=I18n.getKeyI18n( "page.vercode")%>">
                 <label class="input-control-icon-left" style="line-height: 44px;"><i
                         class="icon icon-shield"></i></label>
                 <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>"
@@ -105,18 +105,18 @@
                 }
             %>
 
-            <input type="submit" value='<%=PageBackendService.getMasterAppI18nString( "page.login")%>'
+            <input type="submit" value='<%=I18n.getKeyI18n( "page.login")%>'
                    class="login_btn">
             <textarea id="pubkey" rows="3" style="display:none;">
-                <%=ParameterReset.getPublicKeyString()%>
+                <%=SystemController.getPublicKeyString()%>
             </textarea>
         </form>
     </section>
 </main>
 
 <footer class="page-copyright">
-    <%=PageBackendService.getMasterAppI18nString("page.copyright")%>&nbsp;<a href="https://gitee.com/openeuler/qingzhou"
-                                                                             target="_blank">gitee.com/openeuler/qingzhou</a>
+    <%=I18n.getKeyI18n("page.copyright")%>&nbsp;<a href="https://gitee.com/openeuler/qingzhou"
+                                                   target="_blank">gitee.com/openeuler/qingzhou</a>
     &nbsp;<a href="javascript:about();">关于</a>
 </footer>
 
@@ -138,7 +138,7 @@
         }
     });
     $("#loginForm").submit(function (e) {
-        var encrypt = new JSEncrypt({"default_key_size":<%=ParameterReset.getKeySize()%>});
+        var encrypt = new JSEncrypt({"default_key_size":<%=SystemController.getKeySize()%>});
         encrypt.setPublicKey($('#pubkey').val());
         var inputs = $("#loginForm").find("input");
         for (var i = 0; i < inputs.length; i++) {

@@ -1,16 +1,15 @@
 package qingzhou.console.page;
 
 import qingzhou.api.FieldType;
-import qingzhou.api.Lang;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.console.controller.AccessControl;
+import qingzhou.console.controller.I18n;
+import qingzhou.console.controller.SecurityFilter;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.ViewManager;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Base32Util;
 import qingzhou.engine.util.Utils;
@@ -35,13 +34,13 @@ public class PageBackendService {
     }
 
     public static ModelActionInfo renderModelAction(String app, String model, String action, Request request) {
-        ModelInfo modelInfo = getModelInfo(app, model);
+        ModelInfo modelInfo = SystemController.getModelInfo(app, model);
         if (modelInfo == null) return null;
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
         if (actionInfo == null) return null;
 
         String user = request.getParameterInSession(LoginManager.LOGIN_USER);
-        boolean canAccess = AccessControl.canAccess(app, model + "/" + action, user);
+        boolean canAccess = SecurityFilter.canAccess(app, model + "/" + action, user);
         return canAccess ? actionInfo : null;
     }
 
@@ -51,18 +50,13 @@ public class PageBackendService {
     }
 
     public static ModelInfo getModelInfo(Request request) {
-        return getModelInfo(getAppName(request), request.getModel());
-    }
-
-    public static ModelInfo getModelInfo(String appName, String model) {
-        AppInfo appInfo = SystemController.getAppInfo(appName);
-        return appInfo.getModelInfo(model);
+        return SystemController.getModelInfo(getAppName(request), request.getModel());
     }
 
     public static String[] getActionNamesShowToList(Request request) {
         ModelInfo modelInfo = getModelInfo(request);
         return Arrays.stream(modelInfo.getModelActionInfos()).filter(modelActionInfo -> modelActionInfo.getOrder() >= 0).
-                filter(modelActionInfo -> modelActionInfo.getOrder()>0)
+                filter(modelActionInfo -> modelActionInfo.getOrder() > 0)
                 .sorted(Comparator.comparingInt(ModelActionInfo::getOrder)).map(ModelActionInfo::getCode).toArray(String[]::new);
     }
 
@@ -73,7 +67,7 @@ public class PageBackendService {
 
     public static String getAppName(Request request) {
         if (request == null) {
-            return "master";
+            return DeployerConstants.MASTER_APP;
         }
 
         if ("instance".equals(((RequestImpl) request).getManageType())) {
@@ -91,18 +85,10 @@ public class PageBackendService {
         return appName;
     }
 
-    public static String getMasterAppI18nString(String key, Lang lang) {
-        return ConsoleI18n.getI18n(lang, key);
-    }
-
-    public static String getMasterAppI18nString(String key) {
-        return ConsoleI18n.getI18n(I18n.getI18nLang(), key);
-    }
-
     static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
         boolean isDefaultActive = DEFAULT_EXPAND_MENU_GROUP_NAME.equals(menu.getMenuName());
         String model = menu.getMenuName();
-        String menuText = I18n.getString(menu.getI18ns());
+        String menuText = I18n.getStringI18n(menu.getI18ns());
         menuBuilder.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append(model.equals(curModel) ? " active" : "").append("\">");
         menuBuilder.append("<a href=\"javascript:void(0);\">");
         menuBuilder.append(" <i class=\"icon icon-").append(menu.getMenuIcon()).append("\"></i>");
@@ -125,7 +111,7 @@ public class PageBackendService {
         String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + ((RequestImpl) qzRequest).getManageType() + "/" + qzRequest.getApp() + "/" + model + "/" + action;
         menuBuilder.append("<a href='").append(encodeURL(response, url)).append("' modelName='").append(model).append("'>");
         menuBuilder.append("<i class='icon icon-").append(menu.getMenuIcon()).append("'></i>");
-        menuBuilder.append("<span>").append(I18n.getString(getAppName(qzRequest), "model." + model)).append("</span>");
+        menuBuilder.append("<span>").append(I18n.getModelI18n(getAppName(qzRequest), "model." + model)).append("</span>");
         menuBuilder.append("</a>");
         menuBuilder.append("</li>");
     }
@@ -226,7 +212,7 @@ public class PageBackendService {
                 LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + ConsoleConstants.OPTION_GROUP_SEPARATOR + groupData[1], k -> new LinkedHashMap<>());
                 items.put(value, desc);
             }
-        }*/ // TODO
+        }*/
         if (!groupedMap.isEmpty()) {
             groupDes.putAll(twoGroup);
         } else {
@@ -254,11 +240,11 @@ public class PageBackendService {
         if (modelInfo == null) {
             return null;
         }
-        boolean isEdit = Objects.equals("edit", request.getAction());
+        boolean isEdit = Objects.equals(DeployerConstants.EDIT_ACTION, request.getAction());
         for (String actionName : modelInfo.getActionNames()) {
-            if (actionName.equals("update")) {
+            if (actionName.equals(DeployerConstants.UPDATE_ACTION)) {
                 if (isEdit) {
-                    return "update";
+                    return DeployerConstants.UPDATE_ACTION;
                 }
             } else if (actionName.equals("add")) {
                 if (!isEdit) {
@@ -267,7 +253,7 @@ public class PageBackendService {
             }
         }
 
-        return isEdit ? "update" : "add";// 兜底
+        return isEdit ? DeployerConstants.UPDATE_ACTION : "add";// 兜底
     }
 
     public static boolean hasIDField(Request request) {
@@ -278,28 +264,6 @@ public class PageBackendService {
         ModelActionInfo listAction = modelInfo.getModelActionInfo("list");
         ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
         return listAction != null && idField != null;
-    }
-
-    public static String isActionShow(Request request, Map<String, String> obj, ModelActionInfo modelAction) {
-        final ModelInfo modelInfo = getModelInfo(request);
-        if (modelInfo == null) {
-            return null;
-        }
-        if (modelAction != null) {
-            String condition = modelAction.getShow();
-            boolean isShow = false;
-            try {
-                isShow = isShow(obj::get, condition);
-            } catch (Exception ignored) {
-            }
-            if (!isShow) {
-                return String.format(
-                        ConsoleI18n.getI18n(I18n.getI18nLang(), "validator.ActionShow.notsupported"),
-                        I18n.getString(getAppName(request), "model.action." + request.getModel() + "." + request.getAction()),// todo
-                        condition);
-            }
-        }
-        return null;
     }
 
     public static Map<String, String> modelFieldShowMap(Request request) {
@@ -370,7 +334,7 @@ public class PageBackendService {
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
-                        if (isActionShow(request, data, action) != null || "edit".equals(actionName)) {
+                        if (SecurityFilter.isActionAvailable(request, data, action) != null || DeployerConstants.EDIT_ACTION.equals(actionName)) {
                             isShow = false;
                             break;
                         }
@@ -447,106 +411,4 @@ public class PageBackendService {
         }
         return map;
     }
-
-    public static boolean isShow(FieldValueRetriever retriever, String show) throws Exception {
-        if (Utils.isBlank(show)) {
-            return true;
-        }
-
-        AndOrQueue queue = null;
-        String[] split;
-        if ((split = show.split("&")).length > 1) {
-            queue = new AndOrQueue(true);
-        } else if ((split = show.split("\\|")).length > 1) {
-            queue = new AndOrQueue(false);
-        }
-        if (queue == null) {
-            if (split.length > 0) {
-                queue = new AndOrQueue(true);
-            }
-        }
-        if (queue == null) {
-            return true;
-        }
-
-        String notEqStr = "!=";
-        String eqStr = "=";
-        for (String s : split) {
-            int notEq = s.indexOf(notEqStr);
-            if (notEq > 1) {
-                String f = s.substring(0, notEq);
-                String v = s.substring(notEq + notEqStr.length());
-                queue.addComparator(new ShowComparator(false, retriever.getFieldValue(f), v));
-                continue;
-            }
-            int eq = s.indexOf(eqStr);
-            if (eq > 1) {
-                String f = s.substring(0, eq);
-                String v = s.substring(eq + eqStr.length());
-                queue.addComparator(new ShowComparator(true, retriever.getFieldValue(f), v));
-            }
-        }
-
-        return queue.compare();
-    }
-
-    public interface FieldValueRetriever {
-        String getFieldValue(String fieldName) throws Exception;
-    }
-
-    private static final class ShowComparator {
-        final boolean eqOrNot;
-        final String v1;
-        final String v2;
-
-        ShowComparator(boolean eqOrNot, String v1, String v2) {
-            this.eqOrNot = eqOrNot;
-            this.v1 = v1;
-            this.v2 = v2;
-        }
-
-        boolean compare() {
-            String vv1 = v1;
-            String vv2 = v2;
-            if (vv1 != null) {
-                vv1 = vv1.toLowerCase();
-            }
-            if (vv2 != null) {
-                vv2 = vv2.toLowerCase();
-            }
-            return eqOrNot == Objects.equals(vv1, vv2);
-        }
-    }
-
-    private static final class AndOrQueue {
-        final boolean andOr;
-        final List<ShowComparator> comparators = new ArrayList<>();
-
-        AndOrQueue(boolean andOr) {
-            this.andOr = andOr;
-        }
-
-        void addComparator(ShowComparator comparator) {
-            comparators.add(comparator);
-        }
-
-        boolean compare() {
-            if (andOr) {
-                for (ShowComparator c : comparators) {
-                    if (!c.compare()) {
-                        return false;
-                    }
-                }
-                return true;
-            } else {
-                for (ShowComparator c : comparators) {
-                    if (c.compare()) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
-    }
-
 }

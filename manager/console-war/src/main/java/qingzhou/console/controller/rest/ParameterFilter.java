@@ -5,11 +5,10 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.pattern.Filter;
-import qingzhou.logger.Logger;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
-public class ParameterReset implements Filter<RestContext> {
+public class ParameterFilter implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
@@ -19,7 +18,7 @@ public class ParameterReset implements Filter<RestContext> {
             if (modelField.getType().equals(FieldType.password.name())) {
                 try {
                     String val = request.getParameter(fieldName);
-                    String result = decryptWithConsolePrivateKey(val);
+                    String result = SystemController.decryptWithConsolePrivateKey(val, false);
                     if (result != null) { // 可能是空串
                         request.setParameter(fieldName, result.trim());
                     }
@@ -35,32 +34,5 @@ public class ParameterReset implements Filter<RestContext> {
         }
 
         return true;
-    }
-
-    public static String decryptWithConsolePrivateKey(String input) {
-        return decryptWithConsolePrivateKey(input, false);
-    }
-
-    public static String decryptWithConsolePrivateKey(String input, boolean ignoredEx) {
-        if (input == null || input.isEmpty()) {
-            return input;
-        }
-        try {
-            return SystemController.keyPairCipher.decryptWithPrivateKey(input);
-        } catch (Exception e) {
-            if (!ignoredEx) {
-                SystemController.getService(Logger.class).warn("Decryption error", e);
-            }
-            return input;
-        }
-    }
-
-    // js 加密： 获取非对称算法密钥长度
-    public static int getKeySize() { // login.jsp 使用
-        return 1024;
-    }
-
-    public static String getPublicKeyString() {
-        return SystemController.getPublicKeyString();
     }
 }

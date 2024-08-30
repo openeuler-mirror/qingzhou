@@ -1,7 +1,7 @@
 package qingzhou.console.login;
 
-import qingzhou.console.controller.AccessControl;
-import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.SecurityFilter;
+import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.Utils;
@@ -12,11 +12,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-public class LoginFreeFilter implements Filter<HttpServletContext> {
+public class LoginFreeFilter implements Filter<SystemControllerContext> {
     public static final String LOGIN_FREE_FLAG = "LOGIN_FREE_FLAG";
 
     @Override
-    public boolean doFilter(HttpServletContext context) throws Exception {
+    public boolean doFilter(SystemControllerContext context) throws Exception {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
 
@@ -26,8 +26,8 @@ public class LoginFreeFilter implements Filter<HttpServletContext> {
                 return true;
             }
         }
-        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
-        if (AccessControl.isNoLoginCheckUris(checkPath)) {
+        String checkPath = RESTController.getReqUri(request);
+        if (SecurityFilter.isOpenUris(checkPath)) {
             return true;
         }
 
@@ -63,7 +63,7 @@ public class LoginFreeFilter implements Filter<HttpServletContext> {
     }
 
     @Override
-    public void afterFilter(HttpServletContext context) {
+    public void afterFilter(SystemControllerContext context) {
         HttpServletRequest request = context.req;
         if (request.getAttribute(LOGIN_FREE_FLAG) != null) {
             LoginManager.logout(context.req);

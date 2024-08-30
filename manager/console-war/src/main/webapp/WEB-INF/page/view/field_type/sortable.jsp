@@ -48,7 +48,7 @@
             <a href="javascript:void(0);" class="<%=!"".equals(readonly) ? "read-only" : ""%>"
                onclick="addRow(this, <%=!"".equals(readonly)%>);">
                 <i class="icon icon-plus" style="font-size:10px;"></i>
-                <%=PageBackendService.getMasterAppI18nString("page.info.add")%>
+                <%=I18n.getKeyI18n("page.info.add")%>
             </a>
         </li>
     </ul>

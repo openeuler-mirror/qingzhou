@@ -6,6 +6,7 @@ import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.ModelActionInfo;
@@ -24,7 +25,7 @@ public class HtmlView implements View {
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
             if ("app".equals(modelName)) {
-                request.setManageType("app");
+                request.setManageType(DeployerConstants.APP_MANAGE);
             } else if ("instance".equals(modelName)) {
                 request.setManageType("instance");
             }
@@ -42,7 +43,7 @@ public class HtmlView implements View {
 
     private boolean isManageAction(Request request) {
         if (!"manage".equals(request.getAction())) return false;
-        if (!"master".equals(request.getApp())) return false;
+        if (!DeployerConstants.MASTER_APP.equals(request.getApp())) return false;
 
         return "app".equals(request.getModel())
                 || "instance".equals(request.getModel());
@@ -73,7 +74,7 @@ public class HtmlView implements View {
             case "delete":
                 return "list";
             case "create":
-            case "edit":
+            case DeployerConstants.EDIT_ACTION:
                 return "form";
             case "show":
             case "monitor":

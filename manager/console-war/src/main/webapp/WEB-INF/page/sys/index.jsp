@@ -11,7 +11,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="renderer" content="webkit|ie-comp|ie-stand">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=0.5,shrink-to-fit=no,user-scalable=yes">
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1.0,minimum-scale=0.5,shrink-to-fit=no,user-scalable=yes">
     <meta name="author" content="https://gitee.com/openeuler/qingzhou">
     <title>QingZhou Console</title>
     <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
@@ -185,7 +186,7 @@
 
         .kv tr td {
             padding: 5px !important;
-            background-color: var(--bg-color-kv-tr-td,#ffffff);
+            background-color: var(--bg-color-kv-tr-td, #ffffff);
         }
 
         .kv td.edit-kv {
@@ -198,12 +199,12 @@
         .kv .narrow {
             width: 32px !important;
             text-align: center;
-            background: var(--bg-color-kv-narrow,#F9FAFB);
+            background: var(--bg-color-kv-narrow, #F9FAFB);
             border: 1px solid #DCDCDC;
         }
 
         .kv a {
-            color: var(--color-kv-a,black);
+            color: var(--color-kv-a, black);
             text-decoration: none;
         }
 
@@ -238,7 +239,7 @@
 
 <body style="overflow:hidden;">
 <!--[if lt IE 8]>
-    <div class="alert alert-danger"><%=PageBackendService.getMasterAppI18nString( "page.browser.outdated")%></div>
+    <div class="alert alert-danger"><%=I18n.getKeyI18n( "page.browser.outdated")%></div>
     <![endif]-->
 
 <%@ include file="../fragment/navbar.jsp" %>
@@ -249,7 +250,8 @@
             <li id="defaultTab" class="active" fixed="true">
                 <a href="javascript:void(0);">
                     <i class="icon icon-resize"></i>
-                    <label><%=PageBackendService.getMasterAppI18nString("page.index.centralized")%></label>
+                    <label><%=I18n.getKeyI18n("page.index.centralized")%>
+                    </label>
                 </a>
             </li>
         </ul>
@@ -297,35 +299,35 @@
         checkOtp: '<%=ConsoleConstants.LOGIN_OTP%>',
         separa: ',',
         downdloadGroupSepara: '<%=ConsoleConstants.GROUP_SEPARATOR%>',
-        locale: '<%=(I18n.isZH() ? "zh-CN":"en-US")%>',
-        pageLang: '<%=(I18n.isZH() ? "zh_cn":"en")%>',
-        pageErrorMsg: '<%=PageBackendService.getMasterAppI18nString("page.error")%>',
-        pageConfirmTitle: '<%=PageBackendService.getMasterAppI18nString("page.confirm.title")%>',
-        confirmBtnText: '<%=PageBackendService.getMasterAppI18nString("page.confirm")%>',
-        cancelBtnText: '<%=PageBackendService.getMasterAppI18nString("page.cancel")%>',
-        notLogin: '<%=PageBackendService.getMasterAppI18nString("page.login.need")%>',
-        encrypt_key_size: '<%=ParameterReset.getKeySize()%>',
-        reloginBtnText: '<%=PageBackendService.getMasterAppI18nString("page.relogin")%>',
-        iknowBtnText: '<%=PageBackendService.getMasterAppI18nString("page.gotit")%>',
-        switchLang: '<%=PageBackendService.getMasterAppI18nString("page.lang.switch.confirm")%>',
-        logout: '<%=PageBackendService.getMasterAppI18nString("page.logout.confirm")%>',
+        locale: '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',
+        pageLang: '<%=(I18n.isZH() ? "zh_cn" : "en")%>',
+        pageErrorMsg: '<%=I18n.getKeyI18n("page.error")%>',
+        pageConfirmTitle: '<%=I18n.getKeyI18n("page.confirm.title")%>',
+        confirmBtnText: '<%=I18n.getKeyI18n("page.confirm")%>',
+        cancelBtnText: '<%=I18n.getKeyI18n("page.cancel")%>',
+        notLogin: '<%=I18n.getKeyI18n("page.login.need")%>',
+        encrypt_key_size: '<%=SystemController.getKeySize()%>',
+        reloginBtnText: '<%=I18n.getKeyI18n("page.relogin")%>',
+        iknowBtnText: '<%=I18n.getKeyI18n("page.gotit")%>',
+        switchLang: '<%=I18n.getKeyI18n("page.lang.switch.confirm")%>',
+        logout: '<%=I18n.getKeyI18n("page.logout.confirm")%>',
         filesName: 'files',
-        downloadTip: '<%=PageBackendService.getMasterAppI18nString("page.download.log.tip")%>',
+        downloadTip: '<%=I18n.getKeyI18n("page.download.log.tip")%>',
         actionName_target: '<%="manage"%>',
         downloadFileNames: '<%=ConsoleConstants.PARAMETER_DOWNLOAD_FILE_NAMES%>',
         showAction: '<%="show"%>',
-        downloadCheckAll: '<%=PageBackendService.getMasterAppI18nString("page.download.checkall")%>',
-        downloadTaskTip: '<%=PageBackendService.getMasterAppI18nString("page.download.tasktip")%>',
-        layerTitleOtp: '<%=PageBackendService.getMasterAppI18nString("page.layertitle.otp")%>',
-        networkError: '<%=PageBackendService.getMasterAppI18nString("page.error.network")%>',
-        placeholderOtp: '<%=PageBackendService.getMasterAppI18nString("page.placeholder.otp")%>',
-        bindSuccessOtp: '<%=PageBackendService.getMasterAppI18nString("page.bindsuccess.otp")%>',
-        bindFailOtp: "<%=PageBackendService.getMasterAppI18nString("page.bindfail.otp")%>",
-        passwordChangedMsg: '<%=PageBackendService.getMasterAppI18nString("page.password.changed")%>',
-        searchHiddenTip: '<%=PageBackendService.getMasterAppI18nString("page.search.hidden")%>',
-        passwordConfirmFailed: '<%=PageBackendService.getMasterAppI18nString("password.confirm.notequal")%>'
+        downloadCheckAll: '<%=I18n.getKeyI18n("page.download.checkall")%>',
+        downloadTaskTip: '<%=I18n.getKeyI18n("page.download.tasktip")%>',
+        layerTitleOtp: '<%=I18n.getKeyI18n("page.layertitle.otp")%>',
+        networkError: '<%=I18n.getKeyI18n("page.error.network")%>',
+        placeholderOtp: '<%=I18n.getKeyI18n("page.placeholder.otp")%>',
+        bindSuccessOtp: '<%=I18n.getKeyI18n("page.bindsuccess.otp")%>',
+        bindFailOtp: "<%=I18n.getKeyI18n("page.bindfail.otp")%>",
+        passwordChangedMsg: '<%=I18n.getKeyI18n("page.password.changed")%>',
+        searchHiddenTip: '<%=I18n.getKeyI18n("page.search.hidden")%>',
+        passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>'
     };
-    var searchUrl = '<%=PageBackendService.encodeURL( response, contextPath + "/search")%>';
+    var searchUrl = '<%=PageBackendService.encodeURL(response, contextPath + "/search")%>';
 </script>
 <script src="<%=contextPath%>/static/js/main.js"></script>
 <script src="<%=contextPath%>/static/js/index.js"></script>

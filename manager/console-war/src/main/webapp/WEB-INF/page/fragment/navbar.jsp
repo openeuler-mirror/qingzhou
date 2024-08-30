@@ -20,7 +20,7 @@
         <div class="collapse navbar-collapse">
             <div>
                 <ul class="nav navbar-nav">
-                    <li><span class="console-name"><%=PageBackendService.getMasterAppI18nString("page.index")%></span>
+                    <li><span class="console-name"><%=I18n.getKeyI18n("page.index")%></span>
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
@@ -29,7 +29,7 @@
                         <div class="searchBar">
                             <div class="sample">
                                 <input type="text" id="searchText" name="search"
-                                       placeholder="<%=PageBackendService.getMasterAppI18nString( "page.filter")%>">
+                                       placeholder="<%=I18n.getKeyI18n( "page.filter")%>">
                                 <a href="javascript:void(0);" class="btn btn-search"><i
                                         class="icon icon-search"></i></a>
                                 <div id="searchResult" class="search-list"></div>
@@ -49,14 +49,14 @@
                     <%-- 切换语言 --%>
                     <li id="switch-lang" class="dropdown">
                         <a href="javascript:void(0);" class="tooltips" data-toggle="dropdown" data-tip-arrow="bottom"
-                           data-tip='<%=PageBackendService.getMasterAppI18nString( "page.lang.switch")%>'>
+                           data-tip='<%=I18n.getKeyI18n( "page.lang.switch")%>'>
                             <span class="circle-bg"><i class="icon icon-language"></i></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-reset">
                             <%
                                 for (Lang lang : Lang.values()) {
                                     out.print("<li>");
-                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", PageBackendService.encodeURL(response, contextPath + SetI18n.LANG_SWITCH_URI + "/" + lang), lang.info));
+                                    out.print(String.format("<a href=\"%s\"><span>%s</span></a>", PageBackendService.encodeURL(response, contextPath + I18n.LANG_SWITCH_URI + "/" + lang), lang.info));
                                     out.print("</li>");
                                 }
                             %>
@@ -65,10 +65,10 @@
                     <%-- 用户/修改密码 --%>
                     <li>
                         <a id="reset-password-btn"
-                           href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ "app" +"/"+ "master" +"/password/"+ "edit")%>"
+                           href="<%=PageBackendService.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + RESTController.REST_PREFIX + "/" + ViewManager.htmlView+"/"+ DeployerConstants.APP_MANAGE +"/"+ DeployerConstants.MASTER_APP +"/" + DeployerConstants.PASSWORD_MODEL + "/" + DeployerConstants.EDIT_ACTION)%>"
                            class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=PageBackendService.getModelInfo("master","user").getIcon()%>"></i>
+                                <i class="icon icon-<%=SystemController.getModelInfo(DeployerConstants.MASTER_APP,"user").getIcon()%>"></i>
                             </span>
                         </a>
                     </li>
@@ -77,7 +77,7 @@
                         <a id="logout-btn"
                            href="<%=PageBackendService.encodeURL( response, contextPath + LoginManager.LOGIN_PATH + "?" + LoginManager.LOGOUT_FLAG)%>"
                            class="tooltips"
-                           data-tip='<%=PageBackendService.getMasterAppI18nString( "page.invalidate")%>'
+                           data-tip='<%=I18n.getKeyI18n( "page.invalidate")%>'
                            data-tip-arrow="bottom">
                             <span class="circle-bg"><i class="icon icon-signout"></i></span>
                         </a>

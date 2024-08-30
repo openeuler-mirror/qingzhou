@@ -1,14 +1,16 @@
 package qingzhou.console.controller.jmx;
 
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
+import qingzhou.console.controller.I18n;
 import qingzhou.deployer.JmxServiceAdapter;
 
 import javax.servlet.http.HttpSession;
 import java.util.Properties;
 
 public class JmxInvokerImpl implements JmxServiceAdapter.JmxInvoker {
+    static {
+        I18n.addKeyI18n("jmx.authentication.invalid", new String[]{"JMX 认证无效", "en:JMX authentication is invalid"});
+    }
 
     @Override
     public String invoke(String appName, String modelName, String actionName, Properties args) {
@@ -17,7 +19,7 @@ public class JmxInvokerImpl implements JmxServiceAdapter.JmxInvoker {
             JmxHttpServletRequest request = new JmxHttpServletRequest(appName, modelName, actionName, args);
             session = request.getSession(false);
             if (session == null) {
-                throw new RuntimeException(ConsoleI18n.getI18n(I18n.getI18nLang(), "jmx.authentication.invalid"));
+                throw new RuntimeException(I18n.getKeyI18n("jmx.authentication.invalid"));
             }
             JmxHttpServletResponse response = new JmxHttpServletResponse();
             I18n.setI18nLang(request, null);

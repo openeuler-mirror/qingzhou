@@ -4,6 +4,7 @@ import org.apache.catalina.session.StandardSession;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
+import qingzhou.deployer.DeployerConstants;
 
 import javax.security.auth.Subject;
 import javax.servlet.*;
@@ -78,7 +79,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getPathInfo() {
-        String uri = "/" + ViewManager.jsonView + "/" + "app" + "/" + appName + "/" + modelName + "/" + actionName;
+        String uri = "/" + ViewManager.jsonView + "/" + DeployerConstants.APP_MANAGE + "/" + appName + "/" + modelName + "/" + actionName;
         if (this.id != null) {
             uri = uri + "/" + id;
         }

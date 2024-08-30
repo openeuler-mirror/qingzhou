@@ -48,7 +48,7 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    boolean canAccess = (AccessControl.canAccess(qzApp, qzModel + "/" + "add", LoginManager.getLoginUser(session)));
+                    boolean canAccess = (SecurityFilter.canAccess(qzApp, qzModel + "/" + "add", LoginManager.getLoginUser(session)));
                     ModelActionInfo listCreateAction = modelInfo.getModelActionInfo("create");
                     ModelActionInfo listAddAction = modelInfo.getModelActionInfo("add");
                     if (canAccess && (listCreateAction != null) && (listAddAction != null)) {
@@ -56,7 +56,7 @@
                 <a class="btn"
                    href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "create")%>">
                     <i class="icon icon-plus-sign"></i>
-                    <%=I18n.getString(qzApp, "model.action." + qzModel + "." + "create")%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + "create")%>
                 </a>
                 <%
                     }
@@ -68,11 +68,11 @@
                         String modelIcon = modelInfo.getIcon();
                         for (ModelActionInfo action : opsActions) {
                             String actionKey = action.getCode();
-                            String titleStr = I18n.getString(qzApp, "model.action.info." + qzModel + "." + actionKey);
+                            String titleStr = I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionKey);
                             if (titleStr != null) {
                                 titleStr = "data-tip='" + titleStr + "'";
                             } else {
-                                titleStr = "data-tip='" + I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey) + "'";
+                                titleStr = "data-tip='" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey) + "'";
                             }
                             boolean isAjaxAction = action.isAjax();
                             String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
@@ -86,14 +86,14 @@
                         <%
                             if (isAjaxAction) {
                                 out.print("act-ajax='true' act-confirm='" +
-                                        String.format(PageBackendService.getMasterAppI18nString("page.operationConfirm"),
-                                                I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey),
-                                                I18n.getString(qzApp, "model." + qzModel)) + " ?' ");
+                                        String.format(I18n.getKeyI18n("page.operationConfirm"),
+                                                I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
+                                                I18n.getModelI18n(qzApp, "model." + qzModel)) + " ?' ");
                             }
                         %>
                 >
                     <i class="icon icon-<%=action.getIcon()%>"></i>
-                    <%=I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey)%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey)%>
                 </a>
                 <%
                         }
@@ -114,18 +114,18 @@
                 <%
                     }
                 %>
-                <th class="sequence"><%=PageBackendService.getMasterAppI18nString("page.list.order")%>
+                <th class="sequence"><%=I18n.getKeyI18n("page.list.order")%>
                 </th>
                 <%
                     for (Integer i : indexToShow) {
                         String name = PageBackendService.getFieldName(qzRequest, i);
                 %>
-                <th><%=I18n.getString(qzApp, "model.field." + qzModel + "." + name)%>
+                <th><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + name)%>
                 </th>
                 <%
                     }
                     if (needOperationColumn) {
-                        out.print("<th>" + PageBackendService.getMasterAppI18nString("page.action") + "</th>");
+                        out.print("<th>" + I18n.getKeyI18n("page.action") + "</th>");
                     }
                 %>
             </tr>
@@ -136,7 +136,7 @@
                 if (modelDataList.isEmpty()) {
                     String dataEmpty = "<tr><td colspan='" + (indexToShow.size() + (needOperationColumn ? 2 : 1)) + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
-                            + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + PageBackendService.getMasterAppI18nString("page.none") + "</span></td>";
+                            + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getKeyI18n("page.none") + "</span></td>";
                     out.print(dataEmpty);
                 } else {
                     int listOrder = (pageNum - 1) * pageSize;
@@ -177,7 +177,7 @@
                     <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , targetAction.getCode() + "/" + encodedId)%>'
                        class="dataid tooltips"
                        record-action-id="<%=targetAction.getCode()%>"
-                       data-tip='<%=I18n.getString(qzApp, "model.action.info." + qzModel + "." + targetAction.getCode())%>'
+                       data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + targetAction.getCode())%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
                         <%=value%>
@@ -195,7 +195,7 @@
                     <a href='<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
                        onclick='difModelActive("<%=qzModel%>","<%=split[0]%>")'
                        class="dataid tooltips" record-action-id="<%=split[1]%>"
-                       data-tip='<%=I18n.getString(qzApp, "model." + split[0])%>'
+                       data-tip='<%=I18n.getModelI18n(qzApp, "model." + split[0])%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
                         <%=value%>
@@ -217,20 +217,20 @@
                         String[] actions = PageBackendService.getActionNamesShowToList(qzRequest);
                         for (String actionName : actions) {
                             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                            if (PageBackendService.isActionShow(qzRequest, modelBase, action) != null) {
+                            if (SecurityFilter.isActionAvailable(qzApp, modelBase, action) != null) {
                                 continue;
                             }
                             String actionKey = action.getCode();
 
-                            if (!AccessControl.canAccess(qzApp, qzModel + "/" + actionKey, LoginManager.getLoginUser(session))) {
+                            if (!SecurityFilter.canAccess(qzApp, qzModel + "/" + actionKey, LoginManager.getLoginUser(session))) {
                                 continue;
                             }
 
-                            String titleStr = I18n.getString(qzApp, "model.action.info." + qzModel + "." + actionKey);
+                            String titleStr = I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionKey);
                             if (titleStr != null) {
                                 titleStr = "data-tip='" + titleStr + "'";
                             } else {
-                                titleStr = "data-tip='" + I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey) + "'";
+                                titleStr = "data-tip='" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey) + "'";
                             }
 
                             boolean isAjaxAction = action.isAjax();
@@ -246,16 +246,16 @@
                                 }
                                 if (isAjaxAction) {
                                     out.print(" act-ajax='true' act-confirm='"
-                                            + String.format(PageBackendService.getMasterAppI18nString("page.operationConfirm"),
-                                            I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey),
-                                            I18n.getString(qzApp, "model." + qzModel))
+                                            + String.format(I18n.getKeyI18n("page.operationConfirm"),
+                                            I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
+                                            I18n.getModelI18n(qzApp, "model." + qzModel))
                                             + " " + originUnEncodedId
                                             + "'");
                                 }
                             %>
                     >
                         <i class="icon icon-<%=action.getIcon()%>"></i>
-                        <%=I18n.getString(qzApp, "model.action." + qzModel + "." + actionKey)%>
+                        <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey)%>
                     </a>
                     <%
                         }

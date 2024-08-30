@@ -6,10 +6,10 @@ import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletResponse;
 
-public class JspInterceptor implements Filter<HttpServletContext> {
+public class JspInterceptor implements Filter<SystemControllerContext> {
     @Override
-    public boolean doFilter(HttpServletContext context) throws Exception {
-        String checkPath = RESTController.retrieveServletPathAndPathInfo(context.req);
+    public boolean doFilter(SystemControllerContext context) throws Exception {
+        String checkPath = RESTController.getReqUri(context.req);
         if (Utils.notBlank(checkPath) && (
                 checkPath.trim().endsWith(".jsp") || checkPath.trim().endsWith(".jspx")
         )) {

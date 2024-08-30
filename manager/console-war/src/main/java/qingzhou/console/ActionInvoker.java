@@ -3,15 +3,11 @@ package qingzhou.console;
 import qingzhou.api.FieldType;
 import qingzhou.api.Request;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
+import qingzhou.console.controller.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.*;
 import qingzhou.logger.Logger;
 import qingzhou.registry.*;
 
@@ -27,6 +23,10 @@ import java.sql.SQLException;
 import java.util.*;
 
 public class ActionInvoker {
+    static {
+        I18n.addKeyI18n("batch.ops.fail", new String[]{"%s%s成功%s个，失败%s个，失败详情：", "en:%s%s success %s, failure %s, failure details:"});// 一些 filter 需要 i18n，如 LoginFreeFilter 调用了Helper.convertCommonMsg(msg)，此时 RestController 等类可能都还没有初始化（例如 Rest 直连登录），会导致 i18n 信息丢失，因此放到这里
+    }
+
     private static final ActionInvoker instance = new ActionInvoker();
 
     public static ActionInvoker getInstance() {
@@ -90,14 +90,14 @@ public class ActionInvoker {
         }
         request.setId(oid);
         String appName = PageBackendService.getAppName(request);
-        String model = I18n.getString(appName, "model." + request.getModel());
-        String action = I18n.getString(appName, "model.action." + request.getModel() + "." + request.getAction());
+        String model = I18n.getModelI18n(appName, "model." + request.getModel());
+        String action = I18n.getModelI18n(appName, "model.action." + request.getModel() + "." + request.getAction());
         if (result.isEmpty()) {
-            String resultMsg = ConsoleI18n.getI18n(I18n.getI18nLang(), "batch.ops.success", model, action, suc);
+            String resultMsg = I18n.getKeyI18n("batch.ops.success", model, action, suc);
             response.setMsg(resultMsg);
         } else {
             response.setSuccess(suc > 0);
-            errbuilder.append(ConsoleI18n.getI18n(I18n.getI18nLang(), "batch.ops.fail", model, action, suc, fail));
+            errbuilder.append(I18n.getKeyI18n("batch.ops.fail", model, action, suc, fail));
             errbuilder.append("<br/>");
             for (Map.Entry<String, String> entry : result.entrySet()) {
                 String key = entry.getKey();
@@ -178,7 +178,7 @@ public class ActionInvoker {
         if ("instance".equals(manageType)) {
             appInstances.add(appName);
             uploadFileAppName = "instance";
-        } else if ("app".equals(manageType)) {
+        } else if (DeployerConstants.APP_MANAGE.equals(manageType)) {
             appInstances = getAppInstances(appName);
         }
 
@@ -266,7 +266,7 @@ public class ActionInvoker {
                 req.setAppName("instance");
                 req.setModelName("appinstaller");
                 req.setActionName("uploadFile");
-                req.setManageType("app");
+                req.setManageType(DeployerConstants.APP_MANAGE);
 
                 Map<String, String> parameters = new HashMap<>();
                 parameters.put("fileName", fileName);
@@ -308,7 +308,7 @@ public class ActionInvoker {
         if (app != null) {
             instances.add("local");
         }
-        if (!"instance".equals(appName) && !"master".equals(appName)) {
+        if (!"instance".equals(appName) && !DeployerConstants.MASTER_APP.equals(appName)) {
             try {
                 Registry registry = SystemController.getService(Registry.class);
                 AppInfo appInfo = registry.getAppInfo(appName);

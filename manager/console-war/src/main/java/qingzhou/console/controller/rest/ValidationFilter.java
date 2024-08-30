@@ -2,9 +2,11 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.Response;
+import qingzhou.console.controller.I18n;
+import qingzhou.console.controller.SecurityFilter;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.i18n.ConsoleI18n;
 import qingzhou.console.page.PageBackendService;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
@@ -25,22 +27,22 @@ import java.util.stream.Collectors;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
-        ConsoleI18n.addI18n("validation_required", new String[]{"内容不能为空白", "en:The content cannot be blank"});
-        ConsoleI18n.addI18n("validation_number", new String[]{"须是数字类型", "en:Must be a numeric type"});
-        ConsoleI18n.addI18n("validation_min", new String[]{"数字不能小于%s", "en:The number cannot be less than %s"});
-        ConsoleI18n.addI18n("validation_max", new String[]{"数字不能大于%s", "en:The number cannot be greater than %s"});
-        ConsoleI18n.addI18n("validation_lengthMin", new String[]{"字符串长度不能小于%s", "en:The length of the string cannot be less than %s"});
-        ConsoleI18n.addI18n("validation_lengthMax", new String[]{"字符串长度不能大于%s", "en:The length of the string cannot be greater than %s"});
-        ConsoleI18n.addI18n("validation_host", new String[]{"非法的IP地址或域名", "en:Illegal IP address or host name"});
-        ConsoleI18n.addI18n("validation_port", new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
-        ConsoleI18n.addI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
-        ConsoleI18n.addI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
-        ConsoleI18n.addI18n("validation_unsupportedStrings", new String[]{"不能包含字符串：%s", "en:Cannot contain the string: %s"});
-        ConsoleI18n.addI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
-        ConsoleI18n.addI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
-        ConsoleI18n.addI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
-        ConsoleI18n.addI18n("validation_email", new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
-        ConsoleI18n.addI18n("validation_filePath", new String[]{"文件路径不支持以\\或者/结尾，不支持包含特殊字符和空格", "en:The file path cannot end with \\ or /, and cannot contain special characters or Spaces"});
+        I18n.addKeyI18n("validation_required", new String[]{"内容不能为空白", "en:The content cannot be blank"});
+        I18n.addKeyI18n("validation_number", new String[]{"须是数字类型", "en:Must be a numeric type"});
+        I18n.addKeyI18n("validation_min", new String[]{"数字不能小于%s", "en:The number cannot be less than %s"});
+        I18n.addKeyI18n("validation_max", new String[]{"数字不能大于%s", "en:The number cannot be greater than %s"});
+        I18n.addKeyI18n("validation_lengthMin", new String[]{"字符串长度不能小于%s", "en:The length of the string cannot be less than %s"});
+        I18n.addKeyI18n("validation_lengthMax", new String[]{"字符串长度不能大于%s", "en:The length of the string cannot be greater than %s"});
+        I18n.addKeyI18n("validation_host", new String[]{"非法的IP地址或域名", "en:Illegal IP address or host name"});
+        I18n.addKeyI18n("validation_port", new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
+        I18n.addKeyI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
+        I18n.addKeyI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
+        I18n.addKeyI18n("validation_unsupportedStrings", new String[]{"不能包含字符串：%s", "en:Cannot contain the string: %s"});
+        I18n.addKeyI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
+        I18n.addKeyI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
+        I18n.addKeyI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
+        I18n.addKeyI18n("validation_email", new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
+        I18n.addKeyI18n("validation_filePath", new String[]{"文件路径不支持以\\或者/结尾，不支持包含特殊字符和空格", "en:The file path cannot end with \\ or /, and cannot contain special characters or Spaces"});
     }
 
     @Override
@@ -48,7 +50,7 @@ public class ValidationFilter implements Filter<RestContext> {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
         boolean isAddAction = "add".equals(request.getAction());
-        boolean isUpdateAction = "update".equals(request.getAction());
+        boolean isUpdateAction = DeployerConstants.UPDATE_ACTION.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
             AppInfo appInfo = SystemController.getAppInfo(PageBackendService.getAppName(request));
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
@@ -64,7 +66,7 @@ public class ValidationFilter implements Filter<RestContext> {
                     if (error.length > 1) {
                         params = Arrays.copyOfRange(error, 1, error.length);
                     }
-                    String i18n = ConsoleI18n.getI18n(request.getLang(), error[0], params);
+                    String i18n = I18n.getKeyI18n(error[0], params);
                     errorMsg.put(field, i18n);
                 }
             }
@@ -101,7 +103,7 @@ public class ValidationFilter implements Filter<RestContext> {
         Map<String, String> paramMap = context.params;
         ModelFieldInfo fieldInfo = context.fieldInfo;
 
-        boolean show = PageBackendService.isShow(paramMap::get, fieldInfo.getShow());
+        boolean show = SecurityFilter.isShow(fieldInfo.getShow(), paramMap::get);
         if (!show) { // 不再页面显示的属性，不需要校验
             return null;
         }

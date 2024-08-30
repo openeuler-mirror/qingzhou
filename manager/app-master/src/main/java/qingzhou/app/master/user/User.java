@@ -6,6 +6,7 @@ import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 
 import java.text.SimpleDateFormat;
@@ -346,7 +347,7 @@ public class User extends ModelBase implements Addable {
     }
 
     static void insertPasswordModifiedTime(Map<String, String> params) {
-        String value = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        String value = new SimpleDateFormat(DeployerConstants.PASSWORD_LAST_MODIFIED_DATE_FORMAT).format(new Date());
         params.put("passwordLastModified", value);
     }
 

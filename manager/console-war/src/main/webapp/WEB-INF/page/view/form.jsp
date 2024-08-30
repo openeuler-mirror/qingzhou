@@ -6,7 +6,7 @@
         return; // for 静态源码漏洞扫描
     }
 
-    boolean isEdit = Objects.equals("edit", qzAction);
+    boolean isEdit = Objects.equals(DeployerConstants.EDIT_ACTION, qzAction);
     String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
     ModelFieldInfo idField = modelInfo.getModelFieldInfo(idFieldName);
     final boolean hasId = idField != null;
@@ -45,7 +45,7 @@
             <li <%=isFirst ? "class='active'" : ""%>>
                 <a data-tab href="#group-<%=group%>-<%=suffixId%>"
                    tabGroup="<%=group%>">
-                    <%=I18n.getString((Arrays.stream(modelInfo.getGroupInfos())
+                    <%=I18n.getStringI18n((Arrays.stream(modelInfo.getGroupInfos())
                             .filter(groupInfo -> groupInfo.getName().equals(finalGroup))
                             .findFirst().get().getI18n()))%>
                 </a>
@@ -114,9 +114,9 @@
                 <div class="form-group" id="form-item-<%=fieldName%>">
                     <label for="<%=fieldName%>" class="col-sm-4">
                         <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
-                        <%=I18n.getString(qzApp, "model.field." + qzModel + "." + fieldName)%>
+                        <%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
                         <%
-                            String fieldInfo = I18n.getString(qzApp, "model.field.info." + qzModel + "." + fieldName);
+                            String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
                             if (fieldInfo != null) {
                                 // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
                                 fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
@@ -262,7 +262,7 @@
                     if (formCreateAction != null) {
                 %>
                 <input type="submit" class="btn"
-                       value='<%=I18n.getString(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
+                       value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
                 <%
                     }
 
@@ -271,7 +271,7 @@
                 %>
                 <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "list")%>"
                    btn-type="goback" class="btn">
-                    <%=PageBackendService.getMasterAppI18nString("page.cancel")%>
+                    <%=I18n.getKeyI18n("page.cancel")%>
                 </a>
                 <%
                     }
@@ -280,7 +280,7 @@
                 %>
                 <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, "refreshKey")%>"
                    btn-type="qrOtp" class="btn">
-                    <%=I18n.getString(qzApp, "model.action." + qzModel + ".refreshKey")%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + ".refreshKey")%>
                 </a>
                 <%
                     }
@@ -295,10 +295,10 @@
                         <%
                             out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                         %>
-                   data-tip='<%=I18n.getString(qzApp, "model.action.info." + qzModel + "." + "files")%>'
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + "files")%>'
                    data-tip-arrow="top"
                    btn-type="<%="files"%>" class="btn tooltips">
-                    <%=I18n.getString(qzApp, "model.action." + qzModel + "." + "files")%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + "files")%>
                 </a>
                 <%
                     }
@@ -308,7 +308,7 @@
 
         <div id="tempZone" style="display:none;"></div>
         <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-        <%=ParameterReset.getPublicKeyString()%>
+        <%=SystemController.getPublicKeyString()%>
         </textarea>
 
         <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">

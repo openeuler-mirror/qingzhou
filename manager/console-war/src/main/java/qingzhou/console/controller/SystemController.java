@@ -8,9 +8,8 @@ import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.config.Security;
 import qingzhou.console.ContextHelper;
-import qingzhou.console.i18n.SetI18n;
-import qingzhou.console.controller.jmx.JmxInvokerImpl;
 import qingzhou.console.controller.jmx.JMXAuthenticatorImpl;
+import qingzhou.console.controller.jmx.JmxInvokerImpl;
 import qingzhou.console.controller.jmx.NotificationListenerImpl;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
@@ -27,6 +26,7 @@ import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelInfo;
 import qingzhou.registry.Registry;
 
 import javax.servlet.*;
@@ -62,6 +62,24 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         }
     }
 
+    public static int getKeySize() { // login.jsp 使用
+        return 1024;
+    }
+
+    public static String decryptWithConsolePrivateKey(String input, boolean ignoredEx) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+        try {
+            return SystemController.keyPairCipher.decryptWithPrivateKey(input);
+        } catch (Exception e) {
+            if (!ignoredEx) {
+                SystemController.getService(Logger.class).warn("Decryption error", e);
+            }
+            return input;
+        }
+    }
+
     public static AppInfo getAppInfo(String appName) {
         // 优先找本地，master和instance都在本地
         App app = getService(Deployer.class).getApp(appName);
@@ -69,6 +87,12 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
         // 再找远程
         return getService(Registry.class).getAppInfo(appName);
+    }
+
+    public static ModelInfo getModelInfo(String appName, String model) {
+        AppInfo appInfo = getAppInfo(appName);
+        if (appInfo != null) return appInfo.getModelInfo(model);
+        return null;
     }
 
     public static <T> T getService(Class<T> type) {
@@ -91,18 +115,17 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return privateKey;
     }
 
-    private final Filter<HttpServletContext>[] processors = new Filter[]{
+    private final Filter<SystemControllerContext>[] processors = new Filter[]{
             new TrustIpCheck(),
             new JspInterceptor(),
-            new SetI18n(),
+            new I18n(),
             new About(),
             new VerCode(),
             new LoginFreeFilter(),
             new LoginManager(),
             new ResetPassword(),
-            new AccessControl(),
-            new SearchFilter(),
-            (Filter<HttpServletContext>) context -> {
+            new SecurityFilter(),
+            (Filter<SystemControllerContext>) context -> {
                 context.chain.doFilter(context.req, context.resp); // 这样可以进入 servlet 资源
                 return false;
             }
@@ -157,7 +180,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
-        HttpServletContext context = new HttpServletContext(httpServletRequest, httpServletResponse, chain);
+        SystemControllerContext context = new SystemControllerContext(httpServletRequest, httpServletResponse, chain);
         try {
             FilterPattern.doFilter(context, processors);
         } catch (Throwable e) {

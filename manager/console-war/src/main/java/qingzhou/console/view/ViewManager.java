@@ -2,8 +2,7 @@ package qingzhou.console.view;
 
 import qingzhou.api.Response;
 import qingzhou.console.controller.rest.RestContext;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
+import qingzhou.console.controller.I18n;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.FileView;
 import qingzhou.console.view.type.HtmlView;
@@ -36,9 +35,9 @@ public class ViewManager {
         if (response.getMsg() == null) {
             String appName = PageBackendService.getAppName(request);
             String SP = I18n.isZH() ? "" : " ";
-            String msg = response.isSuccess() ? ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.success") : ConsoleI18n.getI18n(I18n.getI18nLang(), "msg.fail");
-            String model = I18n.getString(appName, "model." + request.getModel());
-            String action = I18n.getString(appName, "model.action." + request.getModel() + "." + request.getAction());
+            String msg = response.isSuccess() ? I18n.getKeyI18n("msg.success") : I18n.getKeyI18n("msg.fail");
+            String model = I18n.getModelI18n(appName, "model." + request.getModel());
+            String action = I18n.getModelI18n(appName, "model.action." + request.getModel() + "." + request.getAction());
             String operation = Objects.equals(model, action) ? model : model + SP + action;
             response.setMsg(operation + SP + msg);
         }

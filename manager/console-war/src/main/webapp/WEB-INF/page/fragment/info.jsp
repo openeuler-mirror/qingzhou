@@ -57,7 +57,7 @@
                                 continue;
                             }
 
-                            String msg = I18n.getString(qzApp, "model.field.info." + qzModel + "." + fieldName);
+                            String msg = I18n.getKeyI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
                             String info = "";
                             if (msg != null && !msg.startsWith("model.field.")) {
                                 info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-question-sign' data-tip-arrow=\"right\"></i></span>";
@@ -70,7 +70,7 @@
                     <tr row-item="<%=fieldName%>">
                         <td class="home-field-info" field="<%=fieldName%>">
                             <label for="<%=fieldName%>"><%=info%>&nbsp;
-                                <%=I18n.getString(qzApp, "model.field." + qzModel + "." + fieldName)%>
+                                <%=I18n.getKeyI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
                             </label>
                         </td>
                         <td style="word-break: break-all" field-val="<%=fieldValue%>">
@@ -111,7 +111,7 @@
                 keysBuilder.append("{");
                 for (Map.Entry<String, String> e : models.get(0).entrySet()) {
                     String key = e.getKey();
-                    String i18n = I18n.getString(qzApp, "model.field." + qzModel + "." + key);
+                    String i18n = I18n.getKeyI18n(qzApp, "model.field." + qzModel + "." + key);
                     keysBuilder.append("\"").append(key).append("\":\"").append(i18n).append("\",");
                 }
                 if (keysBuilder.indexOf(",") > 0) {
@@ -148,7 +148,7 @@
 <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
     <div class="form-btn">
         <a href="javascript:void(0);" onclick="tw.goback(this);" btn-type="goback" class="btn" pg="info.jsp">
-            <%=ConsoleI18n.getI18n(I18n.getI18nLang(), "page.cancel")%>
+            <%=I18n.getKeyI18n("page.cancel")%>
         </a>
     </div>
 </div>

@@ -31,7 +31,7 @@
                     }
                 %>
                 <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control"
-                       placeholder="<%=I18n.getString(qzApp, "model.field." + qzModel + "." + fieldName)%>">
+                       placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>">
                 <%
                     }
                 %>
@@ -45,7 +45,7 @@
                             <a class="btn"
                                href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,ViewManager.htmlView,"list")%>"
                                form="filterForm">
-                                <i class="icon icon-search"></i> <%=PageBackendService.getMasterAppI18nString("page.filter")%>
+                                <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter")%>
                             </a>
                         </span>
         </div>

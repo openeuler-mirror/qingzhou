@@ -1,12 +1,8 @@
 package qingzhou.console.login.vercode;
 
-import qingzhou.console.controller.HttpServletContext;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.rest.ParameterReset;
+import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.login.LockOutRealm;
-import qingzhou.console.login.LoginManager;
 import qingzhou.console.util.IPUtil;
 import qingzhou.engine.util.pattern.Filter;
 
@@ -18,15 +14,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
-public class VerCode implements Filter<HttpServletContext> {
-    public static final int verCodeCount = 1;
-
+public class VerCode implements Filter<SystemControllerContext> {
     public static final String CAPTCHA_URI = "/captcha";
-
     public static final String CAPTCHA = "j_captcha";
-
     public static final String SHOW_CAPTCHA_FLAG = "SHOW_CAPTCHA_FLAG";
-    public static final String captchaError = "page.login.captchaError";
+
 
     private static final Map<String, Map<String, String>> userVerCodes = new LinkedHashMap<String, Map<String, String>>() {
         @Override
@@ -35,16 +27,11 @@ public class VerCode implements Filter<HttpServletContext> {
         }
     };
 
-    static {
-        ConsoleI18n.addI18n(captchaError, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
-    }
-
     private final String verCodeFormat = "jpeg";
     private final Captcha captcha = new Captcha(verCodeFormat);
     private final char[] CHAR_ARRAY = "3456789ABCDEFGHJKMNPQRSTUVWXY".toCharArray();
 
-    public static Map<String, String> getUserVerCodes(HttpServletRequest request) {
-        String clientIp = request.getRemoteAddr();
+    private static Map<String, String> getUserVerCodesFromIp(String clientIp) {
         if (IPUtil.isLocalIp(clientIp)) { // 本机访问本机，浏览器、命令行、接口等可能用了不同的发送ip，有的是h127，有的是::1，有的实际ip等
             clientIp = "LocalIp";
         }
@@ -55,37 +42,14 @@ public class VerCode implements Filter<HttpServletContext> {
         return !SystemController.getConsole().getSecurity().isVerCodeEnabled();
     }
 
-    public static LoginManager.LoginFailedMsg checkVerCode(HttpServletRequest request) {
-        if (isVerCodeDisabled()) {
-            return null;
-        }
-
-        String user = request.getParameter(LoginManager.LOGIN_USER);
-        LockOutRealm.LockRecord lockRecord = LoginManager.getLockOutRealm(request).getLockRecord(user);
-        if (lockRecord != null) {
-            int failureCount = lockRecord.getFailures();
-            if (failureCount >= verCodeCount) {
-                if (!validate(request)) {
-                    // login.jsp 已经在 application.xml 中配置了过滤，
-                    // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
-                    return new LoginManager.LoginFailedMsg(captchaError,
-                            LoginManager.LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + captchaError);
-                }
-            }
-        }
-        return null;
-    }
-
     /**
      * 校验用户输入的验证码是否正确
      */
     public static boolean validate(HttpServletRequest request) {
-        String clientCode = ParameterReset.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA), true);
-        if (clientCode == null) {
-            return false;
-        }
+        String clientCode = SystemController.decryptWithConsolePrivateKey(request.getParameter(CAPTCHA), true);
+        if (clientCode == null) return false;
 
-        Map<String, String> userVerCodes = getUserVerCodes(request);
+        Map<String, String> userVerCodes = getUserVerCodesFromIp(request.getRemoteAddr());
         if (userVerCodes == null) {
             return false;
         }
@@ -95,14 +59,12 @@ public class VerCode implements Filter<HttpServletContext> {
     }
 
     @Override
-    public boolean doFilter(HttpServletContext context) throws Exception {
-        if (isVerCodeDisabled()) {
-            return true;
-        }
+    public boolean doFilter(SystemControllerContext context) throws Exception {
+        if (isVerCodeDisabled()) return true;
 
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
-        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
+        String checkPath = RESTController.getReqUri(request);
 
         if (checkPath.equals(CAPTCHA_URI)) {
             render(request, response);
@@ -121,7 +83,7 @@ public class VerCode implements Filter<HttpServletContext> {
         response.setHeader("Cache-Control", "no-cache");
         response.setDateHeader("Expires", 0);
         response.setContentType("image/" + verCodeFormat);
-        getUserVerCodes(request).put(CAPTCHA, verCode);// getSession(true): for #ITAIT-3763
+        getUserVerCodesFromIp(request.getRemoteAddr()).put(CAPTCHA, verCode);// getSession(true): for #ITAIT-3763
         captcha.render(verCode, response.getOutputStream());
     }
 

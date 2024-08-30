@@ -2,12 +2,13 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
 import qingzhou.console.ActionInvoker;
+import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
@@ -32,11 +33,11 @@ import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + "app" + "/" + "master" + "/" + "index" + "/" + "index";
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + DeployerConstants.APP_MANAGE + "/" + DeployerConstants.MASTER_APP + "/" + "index" + "/" + "index";
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = new File(SystemController.getModuleContext().getTemp(), "upload");
 
-    public static String retrieveServletPathAndPathInfo(HttpServletRequest request) {
+    public static String getReqUri(HttpServletRequest request) {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
     }
 
@@ -58,7 +59,7 @@ public class RESTController extends HttpServlet {
 
     private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
-            new ParameterReset(), // 解密前端的 password 类型的表单域
+            new ParameterFilter(), // 解密前端的 password 类型的表单域
             new ValidationFilter(), // 参数校验
 
             // 执行具体的业务逻辑
