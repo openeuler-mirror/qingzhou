@@ -3,11 +3,13 @@ package qingzhou.crypto;
 public interface CryptoService {
     String generateKey();
 
-    KeyCipher getKeyCipher(String keySeed);
+    Cipher getCipher(String key);
 
-    String[] generateKeyPair(String seedKey);
+    String[] generatePairKey();
 
-    KeyPairCipher getKeyPairCipher(String publicKey, String privateKey) throws Exception;
+    PairCipher getPairCipher(String publicKey, String privateKey) throws Exception;
+
+    TotpCipher getTotpCipher();
 
     MessageDigest getMessageDigest();
 

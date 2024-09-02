@@ -24,7 +24,7 @@
                 selectVal = option;
                 selectText = option;
                 tabIndex = index;
-                selectHtml += "<li data-value=\"" + option + "\" class=\"option selected focus\" format=\"" + option + "\">" + option + "</li>"; // TODO options.getFormat(name) ?
+                selectHtml += "<li data-value=\"" + option + "\" class=\"option selected focus\" format=\"" + option + "\">" + option + "</li>";
             } else {
                 selectHtml += "<li data-value=\"" + option + "\" class=\"option\" format=\"" + option + "\">" + option + "</li>";
             }

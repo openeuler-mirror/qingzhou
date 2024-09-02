@@ -14,7 +14,10 @@
 //import java.util.Map;
 //
 //@Model(code = "security", icon = "shield",
-//        menu = "System", order = 4, entrance = "edit",
+
+import qingzhou.deployer.DeployerConstants;
+
+//menu = "System", order = 4, entrance = DeployerConstants.EDIT_ACTION,
 //        name = {"平台安全", "en:Security"},
 //        info = {"配置 轻舟 管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
 //public class Security extends ModelBase implements Updatable {

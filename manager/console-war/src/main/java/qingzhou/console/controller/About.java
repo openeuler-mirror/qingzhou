@@ -10,16 +10,14 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class About implements Filter<HttpServletContext> {
+public class About implements Filter<SystemControllerContext> {
     public static final String ABOUT_URI = "/about";
     private byte[] byteCache;
 
     @Override
-    public boolean doFilter(HttpServletContext context) throws Exception {
-        String checkPath = RESTController.retrieveServletPathAndPathInfo(context.req);
-        if (!checkPath.equals(ABOUT_URI)) {
-            return true;
-        }
+    public boolean doFilter(SystemControllerContext context) throws Exception {
+        String checkPath = RESTController.getReqUri(context.req);
+        if (!checkPath.equals(ABOUT_URI)) return true;
 
         HttpServletResponse response = context.resp;
         response.setContentType("text/plain; charset=UTF-8");

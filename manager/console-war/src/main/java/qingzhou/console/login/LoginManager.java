@@ -2,21 +2,18 @@ package qingzhou.console.login;
 
 import qingzhou.api.Lang;
 import qingzhou.config.User;
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.Totp;
-import qingzhou.console.controller.AccessControl;
-import qingzhou.console.controller.HttpServletContext;
+import qingzhou.console.controller.I18n;
+import qingzhou.console.controller.SecurityFilter;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.rest.ParameterReset;
+import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.TotpCipher;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,18 +27,27 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class LoginManager implements Filter<HttpServletContext> {
+public class LoginManager implements Filter<SystemControllerContext> {
     public static final String LOGIN_USER = "j_username";
     public static final String LOGIN_PASSWORD = "j_password";
+    public static final String LOGIN_OTP = "otp";
+    public static final String LOGIN_CAPTCHA = "j_captcha";
+    public static final String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
 
     public static final String LOGIN_PATH = "/login";
     public static final String LOGIN_URI = "/j_login";
     public static final String LOGOUT_FLAG = "invalidate";
     public static final String LOGIN_ERROR_MSG_KEY = "page.login.invalid";
     public static final String LOCKED_MSG_KEY = "page.login.locked";
+    private static final String LOGIN_CAPTCHA_ERROR = "page.login.captchaError";
+
+    static {
+        I18n.addKeyI18n(LOGIN_CAPTCHA_ERROR, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
+        I18n.addKeyI18n(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
+        I18n.addKeyI18n(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
+    }
 
     public static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
-    public static final String[] noLoginCheckUris = {LOGIN_PATH, VerCode.CAPTCHA_URI, ConsoleConstants.REGISTER_URI};
     private static final Map<String, LockOutRealm> userLockOutRealms = new LinkedHashMap<String, LockOutRealm>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, LockOutRealm> eldest) {
@@ -63,7 +69,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     private static void webLogin(HttpServletRequest request, HttpServletResponse response) throws Exception {
         // 对于浏览器的 web 登录，需要验证码校验
-        LoginFailedMsg failedMsg = VerCode.checkVerCode(request);
+        LoginFailedMsg failedMsg = checkVerCode(request);
         if (failedMsg == null) {
             failedMsg = login(request);
         }
@@ -72,7 +78,7 @@ public class LoginManager implements Filter<HttpServletContext> {
             try {
                 // web 页面，设置默认的中文 i18n
                 // 需要在登录成功后设置，这是为了保证存入到跳转前的 session 里面
-                I18n.setI18nLang(request, I18n.DEFAULT_LANG);
+                I18n.resetI18nLang();
 
                 // 进入主页
                 response.sendRedirect(PageBackendService.encodeURL(response, request.getContextPath() + RESTController.INDEX_PATH)); // to welcome page
@@ -99,7 +105,27 @@ public class LoginManager implements Filter<HttpServletContext> {
         }
     }
 
-    public static void setLoginUser(HttpSession session, String user) {
+    private static LoginManager.LoginFailedMsg checkVerCode(HttpServletRequest request) {
+        if (VerCode.isVerCodeDisabled()) return null;
+
+        String user = request.getParameter(LoginManager.LOGIN_USER);
+        LockOutRealm.LockRecord lockRecord = LoginManager.getLockOutRealm(request).getLockRecord(user);
+        if (lockRecord != null) {
+            int failureCount = lockRecord.getFailures();
+            int verCodeCount = 1;
+            if (failureCount >= verCodeCount) {
+                if (!VerCode.validate(request)) {
+                    // login.jsp 已经在 application.xml 中配置了过滤，
+                    // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
+                    return new LoginManager.LoginFailedMsg(LOGIN_CAPTCHA_ERROR,
+                            LoginManager.LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + LOGIN_CAPTCHA_ERROR);
+                }
+            }
+        }
+        return null;
+    }
+
+    private static void setLoginUser(HttpSession session, String user) {
         if (user == null) {
             return;
         }
@@ -107,7 +133,7 @@ public class LoginManager implements Filter<HttpServletContext> {
         session.setAttribute(LOGIN_USER, user);
     }
 
-    public static String encodeUser(String user) {
+    private static String encodeUser(String user) {
         return Base64.getEncoder().encodeToString(user.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -178,7 +204,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
     private static boolean checkOtp(HttpServletRequest request) throws Exception {
         return checkOtp(request.getParameter(LOGIN_USER),
-                ParameterReset.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_OTP)));
+                SystemController.decryptWithConsolePrivateKey(request.getParameter(LOGIN_OTP), false));
     }
 
     private static boolean checkOtp(String user, String inputOtp) throws Exception {
@@ -192,12 +218,13 @@ public class LoginManager implements Filter<HttpServletContext> {
         }
 
         String keyForOtp = u.getKeyForOtp();
-        return Totp.verify(keyForOtp, inputOtp);
+        TotpCipher totpCipher = SystemController.getService(CryptoService.class).getTotpCipher();
+        return totpCipher.verifyCode(keyForOtp, inputOtp);
     }
 
-    public static String checkPassword(String user, String password) {
+    private static String checkPassword(String user, String password) {
         try {
-            password = ParameterReset.decryptWithConsolePrivateKey(password);
+            password = SystemController.decryptWithConsolePrivateKey(password, false);
         } catch (Exception ignored) {
         }
 
@@ -246,18 +273,15 @@ public class LoginManager implements Filter<HttpServletContext> {
     }
 
     private static String getMsg(String msg) {
-        String i18n = ConsoleI18n.getI18n(I18n.getI18nLang(), msg);
+        String i18n = I18n.getKeyI18n(msg);
         return i18n != null ? i18n : msg;
     }
 
     @Override
-    public boolean doFilter(HttpServletContext context) throws Exception {
+    public boolean doFilter(SystemControllerContext context) throws Exception {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
-        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
-        if (AccessControl.isNoLoginCheckUris(checkPath)) {
-            return true;
-        }
+        String checkPath = RESTController.getReqUri(request);
 
         if (checkPath.equals(LOGIN_PATH)) {
             if (request.getParameter(LOGOUT_FLAG) != null) {
@@ -268,6 +292,10 @@ public class LoginManager implements Filter<HttpServletContext> {
             }
             request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
             return false;
+        }
+
+        if (SecurityFilter.isOpenUris(checkPath)) {
+            return true;
         }
 
         if (checkPath.equals("/")) {
@@ -282,7 +310,7 @@ public class LoginManager implements Filter<HttpServletContext> {
 
         if (checkPath.equals(LOGIN_URI)) {
             try {
-                I18n.setI18nLang(request, I18n.DEFAULT_LANG); // 确保登录页面（包括出错信息）都以中文信息展示
+                I18n.resetI18nLang(); // 确保登录页面（包括出错信息）都以默认i18n展示
                 webLogin(request, response);
             } catch (Exception e) {
                 if (e instanceof IOException) {
@@ -307,7 +335,7 @@ public class LoginManager implements Filter<HttpServletContext> {
                 if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
                     response.setContentType("application/json;charset=UTF-8");
                     try (PrintWriter writer = context.resp.getWriter()) {
-                        writer.write("{\"success\":\"false\",\"msg\":\"" + ConsoleI18n.getI18n(I18n.getI18nLang(), "page.login.need") + "\"}");
+                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getKeyI18n("page.login.need") + "\"}");
                         writer.flush();
                     }
                     return false;
@@ -316,9 +344,9 @@ public class LoginManager implements Filter<HttpServletContext> {
                 // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
                 String toJson = JsonView.responseErrorJson(response, "Please enter username and password to log in to the system");
                 if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);
+                    response.setHeader(RESPONSE_HEADER_MSG_KEY, toJson);
                 } else {
-                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
+                    response.setHeader(RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
                 }
                 response.sendRedirect(request.getContextPath() + LOGIN_PATH);
             }

@@ -1,10 +1,11 @@
 package qingzhou.app.master;
 
 import qingzhou.api.*;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.ModuleContext;
 
-@Model(code = "index", icon = "home",
-        entrance = "show",
+@Model(code = DeployerConstants.INDEX_MODEL, icon = "home",
+        entrance = DeployerConstants.SHOW_ACTION,
         name = {"主页", "en:Home"},
         info = {"查看 QingZhou 产品的相关信息。", "en:Check out the relevant information of QingZhou products."})
 public class Index extends ModelBase {
@@ -19,7 +20,7 @@ public class Index extends ModelBase {
     public String version;
 
     @ModelAction(
-            code = "show",
+            code = DeployerConstants.SHOW_ACTION,
             name = {"主页", "en:Home"},
             info = {"查看 QingZhou 的产品信息。",
                     "en:View QingZhou product information."})
@@ -32,7 +33,7 @@ public class Index extends ModelBase {
     }
 
     @ModelAction(// NOTE: 这个方法用作是 Login 成功后 跳过的
-            code = "index",
+            code = DeployerConstants.INDEX_ACTION,
             name = {"主页", "en:Home"},
             info = {"查看 QingZhou 的产品信息。",
                     "en:View QingZhou product information."})

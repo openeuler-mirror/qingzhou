@@ -15,7 +15,7 @@
     <a href="javascript:;" onclick="$('#<%=tempId%>').click();" class="btn uploader-btn-browse"
        style="width: 108px; height: 32px; border-radius: 1px; background: #FFFFFF;">
         <i class="icon icon-upload-alt"></i>
-        <span style="padding-left: 6px; font-family: PingFangSC-Regular; font-size: 14px; color: #262626; line-height: 20px;"><%=PageBackendService.getMasterAppI18nString("page.selectfile")%></span>
+        <span style="padding-left: 6px; font-family: PingFangSC-Regular; font-size: 14px; color: #262626; line-height: 20px;"><%=I18n.getKeyI18n("page.selectfile")%></span>
     </a>
     <%--
     <!-- <a href="javascript:;"

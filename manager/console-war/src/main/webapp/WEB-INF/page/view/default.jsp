@@ -16,7 +16,7 @@
         <table class="table table-hover">
             <tr>
                 <td>
-                    <%=PageBackendService.getMasterAppI18nString("page.status")%>:
+                    <%=I18n.getKeyI18n("page.status")%>:
                 </td>
                 <td>
                     <%=qzResponse.isSuccess()%>
@@ -24,7 +24,7 @@
             </tr>
             <tr>
                 <td>
-                    <%=PageBackendService.getMasterAppI18nString("page.msg")%>:
+                    <%=I18n.getKeyI18n("page.msg")%>:
                 </td>
                 <td>
                     <%=qzResponse.getMsg()%>
@@ -76,13 +76,13 @@
     </div>
 
     <%
-        if (modelInfo.getModelActionInfo("list") != null) {
+        if (modelInfo.getModelActionInfo(DeployerConstants.LIST_ACTION) != null) {
     %>
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
         <div class="form-btn">
             <a href="javascript:void(0);" btn-type="goback" onclick="tw.goback(this);" class="btn">
                 <!--<i class="icon icon-undo"></i>-->
-                <%=PageBackendService.getMasterAppI18nString("page.cancel")%>
+                <%=I18n.getKeyI18n("page.cancel")%>
             </a>
         </div>
     </div>

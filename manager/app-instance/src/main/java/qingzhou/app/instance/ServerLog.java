@@ -6,13 +6,15 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Downloadable;
 import qingzhou.api.type.Updatable;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 
-@Model(code = "serverlog", icon = "file-text", entrance = "edit",
+@Model(code = "serverlog", icon = "file-text",
+        entrance = DeployerConstants.EDIT_ACTION,
         name = {"服务器日志", "en:Server Log"}, order = 3,
         info = {"QingZhou 实例的日志配置。", "en:The logging configuration of the QingZhou instance."})
 public class ServerLog extends ModelBase implements Updatable, Downloadable {
@@ -106,7 +108,7 @@ public class ServerLog extends ModelBase implements Updatable, Downloadable {
 
     @Override
     public File downloadData(String id) {
-        return FileUtil.newFile(InstanceApp.getInstanceDir(), "logs");
+        return FileUtil.newFile(Main.getInstanceDir(), "logs");
     }
 
     @Override

@@ -1,15 +1,13 @@
 package qingzhou.console.controller;
 
 import qingzhou.api.Lang;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.i18n.ConsoleI18n;
-import qingzhou.console.i18n.I18n;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.pattern.Filter;
+import qingzhou.logger.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,20 +16,24 @@ import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TrustIpCheck implements Filter<HttpServletContext> {
+public class TrustIpCheck implements Filter<SystemControllerContext> {
+    static {
+        I18n.addKeyI18n("client.trusted.not", new String[]{"该操作仅限于在服务器本机或受信任的IP上执行，受信任IP的设置方式请参考产品手册", "en:This operation can only be performed on the local server or on a trusted IP. Please refer to the product manual for the setting method of the trusted IP"});
+    }
+
     @Override
-    public boolean doFilter(HttpServletContext context) throws Exception {
+    public boolean doFilter(SystemControllerContext context) throws Exception {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
 
-        String checkPath = RESTController.retrieveServletPathAndPathInfo(request);
+        String checkPath = RESTController.getReqUri(request);
         if (checkPath.equals(LoginManager.LOGIN_URI) && notTrustedIp(request.getRemoteAddr())) {
             String msgKey = "client.trusted.not";
-            String toJson = JsonView.responseErrorJson(response, ConsoleI18n.getI18n(I18n.getI18nLang(), msgKey));
+            String toJson = JsonView.responseErrorJson(response, I18n.getKeyI18n(msgKey));
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
+                response.setHeader(LoginManager.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
             } else {
-                response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
+                response.setHeader(LoginManager.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
             }
             response.sendRedirect(request.getContextPath() + LoginManager.LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + msgKey);
             return false;
@@ -65,8 +67,7 @@ public class TrustIpCheck implements Filter<HttpServletContext> {
 
         boolean isOk = validateIpOrigin(trustedPattern, checkIp);
         if (!isOk) {
-            System.err.println("Client IP ( " + checkIp + " ) was rejected because the trust mode is not satisfied: ( " + trustedPattern + " )");
-            System.err.println("The client IP [ " + checkIp + " ] has been intercepted, and the currently configured trusted IP policy is: [" + trustedPattern + " ]");
+            SystemController.getService(Logger.class).info("Client IP ( " + checkIp + " ) was rejected because the trust mode is not satisfied: ( " + trustedPattern + " )");
         }
         return isOk;
     }
@@ -90,7 +91,7 @@ public class TrustIpCheck implements Filter<HttpServletContext> {
                 if (ipt >= lo && ipt <= hi) {
                     return true;
                 }
-            } else {// add for exactIP ex:168.1.2.3
+            } else { // add for exactIP ex:168.1.2.3
                 if (validIp.equals(ip)) {
                     return true;
                 } else {
@@ -147,7 +148,6 @@ public class TrustIpCheck implements Filter<HttpServletContext> {
             return false;
         }
     }
-
 
     private static String parseIpv6(String ipv6Address) {
         String[] ips = ipv6Address.split(":");

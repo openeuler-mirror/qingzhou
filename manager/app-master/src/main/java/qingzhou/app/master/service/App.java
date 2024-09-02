@@ -1,4 +1,4 @@
-//package qingzhou.app.master.service;
+import qingzhou.deployer.DeployerConstants;//package qingzhou.app.master.service;
 //
 //import qingzhou.api.*;
 //import qingzhou.api.type.Addable;
@@ -22,7 +22,7 @@
 //import java.nio.file.Files;
 //import java.util.*;
 //
-//@Model(code = "app", icon = "cube-alt",
+//@Model(code = DeployerConstants.APP_MODEL, icon = "cube-alt",
 //        menu = "Service", order = 1,
 //        name = {"应用", "en:App"},
 //        info = {"应用。",
@@ -76,7 +76,7 @@
 //    }
 //
 //    @ModelAction(
-//            code = "show", icon = "folder-open-alt",
+//            code =DeployerConstants.SHOW_ACTION, icon = "folder-open-alt",
 //            name = {"查看", "en:Show"},
 //            info = {"查看该组件的相关信息。", "en:View the information of this model."})
 //    public void show(Request request) throws Exception {
@@ -123,9 +123,9 @@
 //            delete(request);
 //            add(request);
 //        } finally {
-//            ((RequestImpl) request).setManageType("app");
+//            ((RequestImpl) request).setManageType(DeployerConstants.APP_MANAGE);
 //            ((RequestImpl) request).setAppName("master");
-//            ((RequestImpl) request).setModelName("app");
+//            ((RequestImpl) request).setModelName(DeployerConstants.APP_MODEL);
 //            ((RequestImpl) request).setActionName("update");
 //        }
 //    }
@@ -137,8 +137,8 @@
 //        String[] instances = request.getParameter("instances") != null
 //                ? request.getParameter("instances").split(",")
 //                : new String[0];
-//        ((RequestImpl) request).setAppName("instance");
-//        ((RequestImpl) request).setModelName("appinstaller");
+//        ((RequestImpl) request).setAppName(DeployerConstants.INSTANCE_APP);
+//        ((RequestImpl) request).setModelName("installer");
 //        ((RequestImpl) request).setActionName("installApp");
 //        try {
 //            Registry registry = MasterApp.getService(Registry.class);
@@ -146,7 +146,7 @@
 //            for (String instance : instances) {
 //                try {
 //                    if ("local".equals(instance)) { // 安装到本地节点
-//                        MasterApp.getService(Deployer.class).getApp("instance").invokeDirectly(request, response);
+//                        MasterApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP).invokeDirectly(request, response);
 //                    } else {
 //                        InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
 //                        String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
@@ -170,8 +170,8 @@
 //            }
 //        } finally {
 //            ((RequestImpl) request).setAppName("master");
-//            ((RequestImpl) request).setModelName("app");
-//            ((RequestImpl) request).setActionName("add");
+//            ((RequestImpl) request).setModelName(DeployerConstants.APP_MODEL);
+//            ((RequestImpl) request).setActionName(DeployerConstants.ADD_ACTION);
 //        }
 //    }
 //
@@ -181,7 +181,7 @@
 //        // 文件上传
 //        qingzhou.deployer.App appInfo = MasterApp.getService(Deployer.class).getApp("master");
 //        if (appInfo != null) {
-//            ModelInfo modelInfo = appInfo.getAppInfo().getModelInfo("app");
+//            ModelInfo modelInfo = appInfo.getAppInfo().getModelInfo(DeployerConstants.APP_MODEL);
 //            if (modelInfo != null) {
 //                ModelFieldInfo[] modelFieldInfos = modelInfo.getModelFieldInfos();
 //                if (modelFieldInfos != null) {
@@ -226,10 +226,10 @@
 //            for (int i = 0; i < count; i++) {
 //                len = bis.read(bytes);
 //                RequestImpl req = new RequestImpl();
-//                req.setAppName("instance");
-//                req.setModelName("appinstaller");
+//                req.setAppName(DeployerConstants.INSTANCE_APP);
+//                req.setModelName("installer");
 //                req.setActionName("uploadFile");
-//                req.setManageType("app");
+//                req.setManageType(DeployerConstants.APP_MANAGE);
 //
 //                Map<String, String> parameters = new HashMap<>();
 //                parameters.put("fileName", fileName);
@@ -265,6 +265,7 @@
 //    }
 //
 //    @ModelAction(
+//            code  = DeployerConstants.MANAGE_ACTION,
 //            show = "id!=master&id!=instance",
 //            name = {"管理", "en:Manage"}, order = 1,
 //            info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
@@ -282,13 +283,13 @@
 //        Deployer deployer = MasterApp.getService(Deployer.class);
 //        qingzhou.deployer.App app = deployer.getApp(appName);
 //
-//        ((RequestImpl) request).setManageType("instance");
-//        ((RequestImpl) request).setAppName("instance");
-//        ((RequestImpl) request).setModelName("appinstaller");
+//        ((RequestImpl) request).setManageType(DeployerConstants.INSTANCE_MANAGE);
+//        ((RequestImpl) request).setAppName(DeployerConstants.INSTANCE_APP);
+//        ((RequestImpl) request).setModelName("installer");
 //        ((RequestImpl) request).setActionName("unInstallApp");
 //        try {
 //            if (app != null) {
-//                deployer.getApp("instance").invokeDirectly(request);
+//                deployer.getApp(DeployerConstants.INSTANCE_APP).invokeDirectly(request);
 //            }
 //
 //            // 卸载远程实例
@@ -319,10 +320,10 @@
 //            response.setSuccess(false);
 //            response.setMsg(e.getMessage());
 //        } finally {
-//            ((RequestImpl) request).setManageType("app");
+//            ((RequestImpl) request).setManageType(DeployerConstants.APP_MANAGE);
 //            ((RequestImpl) request).setAppName("master");
-//            ((RequestImpl) request).setModelName("app");
-//            ((RequestImpl) request).setActionName("delete");
+//            ((RequestImpl) request).setModelName(DeployerConstants.APP_MODEL);
+//            ((RequestImpl) request).setActionName(DeployerConstants.DELETE_ACTION);
 //        }
 //    }
 //
@@ -377,7 +378,7 @@
 //
 //        // 处理本地应用名称
 //        for (String appName : localAppNames) {
-//            if ("master".equals(appName) || "instance".equals(appName)) {
+//            if (qingzhou.deployer.DeployerConstants.MASTER_APP.equals(appName) ||qingzhou.deployer.DeployerConstants.INSTANCE_APP.equals(appName)) {
 //                continue;
 //            }
 //            uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add("local");
@@ -403,7 +404,7 @@
 //            Map<String, String> appMap = new HashMap<>();
 //            appMap.put("id", appName);
 //            appMap.put("instances", String.join(",", instances));
-//            appMap.put("filename", !("instance".equals(appName) || "master".equals(appName)) ? "apps/" + appName : "");
+//            appMap.put("filename", !(DeployerConstants.INSTANCE_APP.equals(appName) || DeployerConstants.MASTER_APP.equals(appName)) ? "apps/" + appName : "");
 //            finalAppList.add(appMap);
 //        }
 //

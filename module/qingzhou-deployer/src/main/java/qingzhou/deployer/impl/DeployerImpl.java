@@ -4,6 +4,7 @@ import qingzhou.api.*;
 import qingzhou.api.type.*;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
@@ -42,7 +43,7 @@ class DeployerImpl implements Deployer {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-        boolean isSystemApp = "master".equals(appName) || "instance".equals(appName);
+        boolean isSystemApp = DeployerConstants.MASTER_APP.equals(appName) || DeployerConstants.INSTANCE_APP.equals(appName);
         AppImpl app = buildApp(appName, appDir, isSystemApp);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
@@ -85,6 +86,8 @@ class DeployerImpl implements Deployer {
     public void unInstallApp(String appName) throws Exception {
         AppImpl app = (AppImpl) apps.remove(appName);
         if (app == null) return;
+
+        app.getModelBaseMap().values().forEach(ModelBase::stop);
 
         QingzhouApp qingzhouApp = app.getQingzhouApp();
         if (qingzhouApp != null) {
@@ -319,6 +322,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setLengthMin(modelField.lengthMin());
             modelFieldInfo.setLengthMax(modelField.lengthMax());
             modelFieldInfo.setPattern(modelField.pattern());
+            modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
             modelFieldInfo.setUnsupportedCharacters(modelField.unsupportedCharacters());
             modelFieldInfo.setUnsupportedStrings(modelField.unsupportedStrings());
@@ -479,22 +483,22 @@ class DeployerImpl implements Deployer {
 
     static void findSuperDefaultActions(Class<?> checkClass, Set<String> defaultActions) {
         if (checkClass == Addable.class) {
-            defaultActions.add("create");
-            defaultActions.add("add");
+            defaultActions.add(DeployerConstants.CREATE_ACTION);
+            defaultActions.add(DeployerConstants.ADD_ACTION);
         } else if (checkClass == Deletable.class) {
-            defaultActions.add("delete");
+            defaultActions.add(DeployerConstants.DELETE_ACTION);
         } else if (checkClass == Downloadable.class) {
-            defaultActions.add("files");
-            defaultActions.add("download");
+            defaultActions.add(DeployerConstants.FILES_ACTION);
+            defaultActions.add(DeployerConstants.DOWNLOAD_ACTION);
         } else if (checkClass == Listable.class) {
-            defaultActions.add("list");
+            defaultActions.add(DeployerConstants.LIST_ACTION);
         } else if (checkClass == Monitorable.class) {
-            defaultActions.add("monitor");
+            defaultActions.add(DeployerConstants.MONITOR_ACTION);
         } else if (checkClass == Showable.class) {
-            defaultActions.add("show");
+            defaultActions.add(DeployerConstants.SHOW_ACTION);
         } else if (checkClass == Updatable.class) {
-            defaultActions.add("edit");
-            defaultActions.add("update");
+            defaultActions.add(DeployerConstants.EDIT_ACTION);
+            defaultActions.add(DeployerConstants.UPDATE_ACTION);
         }
 
         for (Class<?> c : checkClass.getInterfaces()) {

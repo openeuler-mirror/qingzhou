@@ -11,4 +11,7 @@ public abstract class ModelBase {
      */
     public void start() {
     }
+
+    public void stop() {
+    }
 }
