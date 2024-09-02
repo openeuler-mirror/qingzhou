@@ -192,7 +192,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = "add",
+            code = DeployerConstants.ADD_ACTION,
             ajax = true,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
@@ -208,7 +208,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = "delete",
+            code = DeployerConstants.DELETE_ACTION,
             show = "id!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
@@ -218,7 +218,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = "update",
+            code = DeployerConstants.UPDATE_ACTION,
             name = {"更新", "en:Update"},
             info = {"更新账户信息。",
                     "en:Update your account information."})

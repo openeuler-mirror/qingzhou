@@ -76,7 +76,7 @@
     </div>
 
     <%
-        if (modelInfo.getModelActionInfo("list") != null) {
+        if (modelInfo.getModelActionInfo(DeployerConstants.LIST_ACTION) != null) {
     %>
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
         <div class="form-btn">

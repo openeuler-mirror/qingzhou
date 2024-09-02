@@ -1,6 +1,6 @@
 package qingzhou.crypto;
 
-public interface KeyCipher {
+public interface Cipher {
     String encrypt(String s) throws Exception;
 
     String decrypt(String s) throws Exception;

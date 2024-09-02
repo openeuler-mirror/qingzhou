@@ -14,13 +14,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 
-import static qingzhou.console.login.LoginManager.LOCKED_MSG_KEY;
-import static qingzhou.console.login.LoginManager.LOGIN_ERROR_MSG_KEY;
-
 public class I18n implements Filter<SystemControllerContext> {
+    public static final String LANG_SWITCH_URI = "/lang";
+
+    private static final I18nTool KEY_I18N = new I18nTool();
+    private static final Lang DEFAULT_LANG = Lang.zh;// 这样一来，命令行和rest默认就是中文了（也可通过 --lang 参数来修改），控制台除外（有特殊处理）
+    private static final ThreadLocal<Lang> SESSION_LANG = ThreadLocal.withInitial(() -> DEFAULT_LANG);// 直接修改语言
+    private static final String SESSION_LANG_FLAG = "lang";// 向下兼容，不可修改
+    private static final String lastUriKey = "lastUriKey";
+
     static {
-        addKeyI18n(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
-        addKeyI18n(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
         addKeyI18n("page.index", new String[]{" QingZhou 平台", "en:QingZhou Platform"});
         addKeyI18n("page.index.centralized", new String[]{"集中管理", "en:Centralized Management"});
         addKeyI18n("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
@@ -71,13 +74,6 @@ public class I18n implements Filter<SystemControllerContext> {
 
         addKeyI18n("batch.ops.success", new String[]{"%s%s成功%s个", "en:%s %s Success %s"});
     }
-
-    private static final I18nTool KEY_I18N = new I18nTool();
-    private static final Lang DEFAULT_LANG = Lang.zh;// 这样一来，命令行和rest默认就是中文了（也可通过 --lang 参数来修改），控制台除外（有特殊处理）
-    private static final ThreadLocal<Lang> SESSION_LANG = ThreadLocal.withInitial(() -> DEFAULT_LANG);// 直接修改语言
-    public static final String LANG_SWITCH_URI = "/lang";
-    public static final String SESSION_LANG_FLAG = "lang";// 向下兼容，不可修改
-    private static final String lastUriKey = "lastUriKey";
 
     @Override
     public boolean doFilter(SystemControllerContext context) throws Exception {

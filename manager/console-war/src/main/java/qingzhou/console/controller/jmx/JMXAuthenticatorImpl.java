@@ -1,6 +1,5 @@
 package qingzhou.console.controller.jmx;
 
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.TrustIpCheck;
 import qingzhou.console.login.LoginManager;
@@ -62,7 +61,7 @@ public class JMXAuthenticatorImpl implements JMXAuthenticator {
             jmxProperties.setProperty(LoginManager.LOGIN_USER, username);
             jmxProperties.setProperty(LoginManager.LOGIN_PASSWORD, password);
             if (aCredentials.length >= 3 && Utils.notBlank(aCredentials[2])) {
-                jmxProperties.setProperty(ConsoleConstants.LOGIN_OTP, aCredentials[2]);
+                jmxProperties.setProperty(LoginManager.LOGIN_OTP, aCredentials[2]);
             }
 
             request = new JmxHttpServletRequest("", "", "", jmxProperties);

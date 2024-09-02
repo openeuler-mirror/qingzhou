@@ -3,7 +3,6 @@ package qingzhou.console.impl;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.console.ContextHelper;
-import qingzhou.console.Totp;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.JmxServiceAdapter;
@@ -55,7 +54,6 @@ public class Controller implements ModuleActivator {
         console = config.getConsole();
 
         if (!console.isEnabled()) return;
-        Totp.hexCoder = cryptoService.getHexCoder();
 
         sequence = new ProcessSequence(
                 new StartServletContainer(),

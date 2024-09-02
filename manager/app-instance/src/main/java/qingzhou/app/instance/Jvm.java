@@ -7,6 +7,7 @@
 //import qingzhou.config.Config;
 //import qingzhou.config.Env;
 //import qingzhou.deployer.Deployer;
+//import qingzhou.deployer.DeployerConstants;
 //import qingzhou.deployer.I18nTool;
 //import qingzhou.engine.ModuleContext;
 //import qingzhou.engine.util.Utils;
@@ -24,7 +25,10 @@
 //import java.util.*;
 //
 //@Model(code = "jvm", icon = "coffee",
-//        entrance = "edit",
+
+//import qingzhou.deployer.DeployerConstants;
+
+//entrance = DeployerConstants.EDIT_ACTION,
 //        name = {"JVM 配置", "en:JVM Configuration"},
 //        info = {"配置运行 QingZhou 应用服务器所使用的 JVM 属性，并监视 JVM 的运行状态。",
 //                "en:Configure the JVM properties used to run the QingZhou application server, and monitor the running status of the JVM."})
@@ -43,7 +47,7 @@
 //        appContext.addI18n("validator.larger.cannot", new String[]{"%s不能大于%s", "en:Cannot be larger than %s"});
 //        appContext.addI18n("validator.arg.memory.union.invalid", new String[]{"联合校验参数【%s】不合法，该参数应以数字加单位(m/M、g/G)构成", "en:The joint verification parameter [%s] is illegal, and the parameter should be composed of numbers plus units (m/m, g/g)."});
 //        appContext.addI18n("validator.env.notJava", new String[]{"请不要通过这里设置 JAVA_HOME 环境变量，您可使用”Java 路径“参数来设置",
-//                "en:Please do not set the JAVA_HOME environment variable here, you can set it using \"JAVA_HOME\" Parameter"});
+//                "en:Please do not set the JAVA_HOME environment variable here, you can set it using JAVA_HOME Parameter"});
 //        appContext.addI18n("validator.check.heapDumpPath", new String[]{"堆转储文件仅支持以.hprof结束", "en:Heap dumps are only supported for files ending in .hprof"});
 //        appContext.addI18n("validator.check.logFile", new String[]{"日志文件只支持以.log或.txt结束", "en:Log files only support ending in .log or .txt"});
 //        appContext.addI18n("validator.check.timeFlag", new String[]{"时间戳只能出现在文件名上，而不能在文件夹上", "en:The timestamp can only appear on the file name, not on the folder"});
@@ -268,7 +272,7 @@
 //            for (String key : SIZE_KEYS) {
 //                if (key.equals(fieldName)) {
 //                    if (!newValue.matches("\\d+([mMgG])")) {
-//                        ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
+//                        ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP).getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
 //                        response.setSuccess(false);
 //                        response.setMsg(String.format(this.appContext.getI18n(request.getLang(), "validator.arg.memory.invalid"), I18nTool.retrieveI18n(modelFieldInfo.getName()).get(request.getLang())));
 //                        return null;
@@ -332,13 +336,13 @@
 //        String max = request.getParameter(maxKey);
 //        if (max != null && !max.isEmpty()) {
 //            if (!max.matches("\\d+([mMgG])")) {
-//                ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(maxKey);
+//                ModelFieldInfo modelFieldInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP).getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(maxKey);
 //                return String.format(this.appContext.getI18n(request.getLang(), "validator.arg.memory.union.invalid"), I18nTool.retrieveI18n(modelFieldInfo.getName()).get(request.getLang()));
 //            }
 //
 //            if (getValueAsByte(newValue) > getValueAsByte(max)) {
 //                String msg = this.appContext.getI18n(request.getLang(), "validator.larger.cannot");
-//                ModelInfo modelInfo = InstanceApp.getService(Deployer.class).getApp("instance").getAppInfo().getModelInfo(request.getModel());
+//                ModelInfo modelInfo = InstanceApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP).getAppInfo().getModelInfo(request.getModel());
 //                ModelFieldInfo keyFieldInfo = modelInfo.getModelFieldInfo(key);
 //                ModelFieldInfo maxKeyFieldInfo = modelInfo.getModelFieldInfo(maxKey);
 //                String keyName = I18nTool.retrieveI18n(keyFieldInfo.getName()).get(request.getLang());
@@ -376,7 +380,7 @@
 //
 //
 //    @ModelAction(
-//            code = "update",
+//            code = DeployerConstants.UPDATE_ACTION,
 //            name = {"更新", "en:Update"},
 //            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
 //    public void update(Request request) throws Exception {
@@ -582,7 +586,7 @@
 //    }
 //
 //    @ModelAction(
-//            code = "edit",
+//            code = DeployerConstants.EDIT_ACTION,
 //            name = {"编辑", "en:Edit"},
 //            info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
 //    public void edit(Request request) throws Exception {
@@ -590,7 +594,7 @@
 //    }
 //
 //    @ModelAction(
-//            code = "show",
+//            code = DeployerConstants.SHOW_ACTION,
 //            name = {"查看", "en:Show"},
 //            info = {"查看该组件的相关信息。", "en:View the information of this model."})
 //    public void show(Request request) throws Exception {

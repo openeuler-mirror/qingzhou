@@ -2,8 +2,6 @@ package qingzhou.console.login;
 
 import qingzhou.api.Lang;
 import qingzhou.config.User;
-import qingzhou.console.ConsoleConstants;
-import qingzhou.console.Totp;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SecurityFilter;
 import qingzhou.console.controller.SystemController;
@@ -15,6 +13,7 @@ import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.TotpCipher;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,6 +30,9 @@ import java.util.Map;
 public class LoginManager implements Filter<SystemControllerContext> {
     public static final String LOGIN_USER = "j_username";
     public static final String LOGIN_PASSWORD = "j_password";
+    public static final String LOGIN_OTP = "otp";
+    public static final String LOGIN_CAPTCHA = "j_captcha";
+    public static final String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
 
     public static final String LOGIN_PATH = "/login";
     public static final String LOGIN_URI = "/j_login";
@@ -41,6 +43,8 @@ public class LoginManager implements Filter<SystemControllerContext> {
 
     static {
         I18n.addKeyI18n(LOGIN_CAPTCHA_ERROR, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
+        I18n.addKeyI18n(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
+        I18n.addKeyI18n(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
     }
 
     public static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
@@ -200,7 +204,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
 
     private static boolean checkOtp(HttpServletRequest request) throws Exception {
         return checkOtp(request.getParameter(LOGIN_USER),
-                SystemController.decryptWithConsolePrivateKey(request.getParameter(ConsoleConstants.LOGIN_OTP), false));
+                SystemController.decryptWithConsolePrivateKey(request.getParameter(LOGIN_OTP), false));
     }
 
     private static boolean checkOtp(String user, String inputOtp) throws Exception {
@@ -214,7 +218,8 @@ public class LoginManager implements Filter<SystemControllerContext> {
         }
 
         String keyForOtp = u.getKeyForOtp();
-        return Totp.verify(keyForOtp, inputOtp);
+        TotpCipher totpCipher = SystemController.getService(CryptoService.class).getTotpCipher();
+        return totpCipher.verifyCode(keyForOtp, inputOtp);
     }
 
     private static String checkPassword(String user, String password) {
@@ -277,9 +282,6 @@ public class LoginManager implements Filter<SystemControllerContext> {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
         String checkPath = RESTController.getReqUri(request);
-        if (SecurityFilter.isOpenUris(checkPath)) {
-            return true;
-        }
 
         if (checkPath.equals(LOGIN_PATH)) {
             if (request.getParameter(LOGOUT_FLAG) != null) {
@@ -290,6 +292,10 @@ public class LoginManager implements Filter<SystemControllerContext> {
             }
             request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
             return false;
+        }
+
+        if (SecurityFilter.isOpenUris(checkPath)) {
+            return true;
         }
 
         if (checkPath.equals("/")) {
@@ -338,9 +344,9 @@ public class LoginManager implements Filter<SystemControllerContext> {
                 // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
                 String toJson = JsonView.responseErrorJson(response, "Please enter username and password to log in to the system");
                 if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);
+                    response.setHeader(RESPONSE_HEADER_MSG_KEY, toJson);
                 } else {
-                    response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
+                    response.setHeader(RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
                 }
                 response.sendRedirect(request.getContextPath() + LOGIN_PATH);
             }

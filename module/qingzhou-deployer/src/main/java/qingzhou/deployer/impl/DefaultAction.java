@@ -4,6 +4,7 @@ import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
 import qingzhou.api.type.*;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.registry.AppInfo;
@@ -37,7 +38,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "show", icon = "folder-open-alt",
+            code = DeployerConstants.SHOW_ACTION, icon = "folder-open-alt",
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request) throws Exception {
@@ -46,7 +47,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "list", icon = "list",
+            code = DeployerConstants.LIST_ACTION, icon = "list",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request) throws Exception {
@@ -69,7 +70,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "create", icon = "plus-sign",
+            code = DeployerConstants.CREATE_ACTION, icon = "plus-sign",
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) throws Exception {
@@ -78,7 +79,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "add", icon = "save",
+            code = DeployerConstants.ADD_ACTION, icon = "save",
             ajax = true,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
@@ -90,7 +91,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "edit", icon = "edit", order = 1,
+            code = DeployerConstants.EDIT_ACTION, icon = "edit", order = 1,
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
@@ -98,7 +99,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "update", icon = "save",
+            code = DeployerConstants.UPDATE_ACTION, icon = "save",
             ajax = true,
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
@@ -110,7 +111,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "delete", icon = "trash", order = 9,
+            code = DeployerConstants.DELETE_ACTION, icon = "trash", order = 9,
             ajax = true,
             batch = true,
             name = {"删除", "en:Delete"},
@@ -132,7 +133,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "monitor", icon = "line-chart", order = 2,
+            code = DeployerConstants.MONITOR_ACTION, icon = "line-chart", order = 2,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -168,7 +169,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "files", icon = "download-alt",
+            code = DeployerConstants.FILES_ACTION, icon = "download-alt",
             ajax = true,
             order = 8,
             name = {"下载", "en:Download"},
@@ -202,10 +203,10 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = "download", icon = "download-alt",
+            code = DeployerConstants.DOWNLOAD_ACTION, icon = "download-alt",
             name = {"下载文件", "en:Download File"},
-            info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。注：指定的文件集合须以 downloadFileNames 参数传递给服务器，多个文件之间用英文逗号分隔。",
-                    "en:Downloads the specified set of files that are in the component list of downloadable files. Note: The specified file set must be passed to the server with the downloadFileNames parameter, and multiple files are separated by commas."})
+            info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
+                    "en:Downloads the specified set of files that are in the component list of downloadable files."})
     public void download(Request request) throws Exception {
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 

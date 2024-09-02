@@ -2,8 +2,8 @@ package qingzhou.console;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.Request;
-import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.I18n;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.remote.RemoteClient;
 import qingzhou.crypto.CryptoService;
@@ -175,9 +175,9 @@ public class ActionInvoker {
         String manageType = request.getManageType();
         String appName = request.getApp();
         String uploadFileAppName = appName;
-        if ("instance".equals(manageType)) {
+        if (DeployerConstants.INSTANCE_MANAGE.equals(manageType)) {
             appInstances.add(appName);
-            uploadFileAppName = "instance";
+            uploadFileAppName = DeployerConstants.INSTANCE_APP;
         } else if (DeployerConstants.APP_MANAGE.equals(manageType)) {
             appInstances = getAppInstances(appName);
         }
@@ -193,7 +193,7 @@ public class ActionInvoker {
                 InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(instance);
 
                 String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
-                String remoteKey = SystemController.getService(CryptoService.class).getKeyPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
+                String remoteKey = SystemController.getService(CryptoService.class).getPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
 
                 // 远程实例文件上传
                 uploadFile(request, uploadFileAppName, remoteUrl, remoteKey);
@@ -211,7 +211,7 @@ public class ActionInvoker {
     private void uploadFile(RequestImpl request, String appName, String remoteUrl, String remoteKey) throws Exception {
         // 文件上传
         AppInfo appInfo;
-        if ("instance".equals(appName)) {
+        if (DeployerConstants.INSTANCE_APP.equals(appName)) {
             appInfo = SystemController.getAppInfo(appName);
         } else {
             appInfo = SystemController.getService(Registry.class).getAppInfo(appName);
@@ -263,8 +263,8 @@ public class ActionInvoker {
             for (int i = 0; i < count; i++) {
                 len = bis.read(bytes);
                 RequestImpl req = new RequestImpl();
-                req.setAppName("instance");
-                req.setModelName("appinstaller");
+                req.setAppName(DeployerConstants.INSTANCE_APP);
+                req.setModelName("installer");
                 req.setActionName("uploadFile");
                 req.setManageType(DeployerConstants.APP_MANAGE);
 
@@ -308,7 +308,8 @@ public class ActionInvoker {
         if (app != null) {
             instances.add("local");
         }
-        if (!"instance".equals(appName) && !DeployerConstants.MASTER_APP.equals(appName)) {
+        if (!DeployerConstants.INSTANCE_APP.equals(appName)
+                && !DeployerConstants.MASTER_APP.equals(appName)) {
             try {
                 Registry registry = SystemController.getService(Registry.class);
                 AppInfo appInfo = registry.getAppInfo(appName);

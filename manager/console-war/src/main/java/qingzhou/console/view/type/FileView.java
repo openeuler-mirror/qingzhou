@@ -2,7 +2,6 @@ package qingzhou.console.view.type;
 
 import qingzhou.api.Response;
 import qingzhou.console.ActionInvoker;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
@@ -31,29 +30,28 @@ public class FileView implements View {
         }
 
         Map<String, String> result = dataList.get(0);
-        String key = result.get(ConsoleConstants.DOWNLOAD_KEY);
-        long offset = Long.parseLong(result.get(ConsoleConstants.DOWNLOAD_OFFSET));
+        String key = result.get("DOWNLOAD_KEY");
+        long offset = Long.parseLong(result.get("DOWNLOAD_OFFSET"));
         while (true) {
-            byte[] content = SystemController.getService(CryptoService.class).getHexCoder().hexToBytes(result.get(ConsoleConstants.DOWNLOAD_BLOCK));
+            byte[] content = SystemController.getService(CryptoService.class).getHexCoder().hexToBytes(result.get("DOWNLOAD_BLOCK"));
 
             ServletOutputStream outputStream = servletResponse.getOutputStream();
             outputStream.write(content);
             outputStream.flush();
-            if (offset < 0) {
-                break;
-            }
+
+            if (offset < 0) break;
 
             RequestImpl req = request.clone();
             Map<String, String> data = new HashMap<>();
-            data.put(ConsoleConstants.DOWNLOAD_KEY, key);
-            data.put(ConsoleConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
+            data.put("DOWNLOAD_KEY", key);
+            data.put("DOWNLOAD_OFFSET", String.valueOf(offset));
             req.setParameters(data);
             ActionInvoker.getInstance().invokeAction(req); // 续传
             Response res = req.getResponse();
             if (res.isSuccess()) {
                 result = res.getDataList().get(0);
-                offset = Long.parseLong(result.get(ConsoleConstants.DOWNLOAD_OFFSET));
-                key = result.get(ConsoleConstants.DOWNLOAD_KEY);
+                offset = Long.parseLong(result.get("DOWNLOAD_OFFSET"));
+                key = result.get("DOWNLOAD_KEY");
             } else {
                 response.setSuccess(false);
                 response.setMsg(res.getMsg());

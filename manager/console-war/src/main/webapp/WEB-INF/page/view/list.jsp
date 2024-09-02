@@ -48,15 +48,15 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    boolean canAccess = (SecurityFilter.canAccess(qzApp, qzModel + "/" + "add", LoginManager.getLoginUser(session)));
-                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo("create");
-                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo("add");
+                    boolean canAccess = (SecurityFilter.canAccess(qzApp, qzModel + "/" + DeployerConstants.ADD_ACTION, LoginManager.getLoginUser(session)));
+                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo(DeployerConstants.CREATE_ACTION);
+                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo(DeployerConstants.ADD_ACTION);
                     if (canAccess && (listCreateAction != null) && (listAddAction != null)) {
                 %>
                 <a class="btn"
-                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "create")%>">
+                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.CREATE_ACTION)%>">
                     <i class="icon icon-plus-sign"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + "create")%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.CREATE_ACTION)%>
                 </a>
                 <%
                     }
@@ -141,20 +141,20 @@
                 } else {
                     int listOrder = (pageNum - 1) * pageSize;
                     for (int idx = 0; idx < modelDataList.size(); idx++) {
-                        Map<String, String> modelBase = modelDataList.get(idx);
+                        Map<String, String> modelData = modelDataList.get(idx);
                         String modelIcon = modelInfo.getIcon();
 
-                        String originUnEncodedId = modelBase.get(idFieldName);
+                        String originUnEncodedId = modelData.get(idFieldName);
                         String encodedId = PageBackendService.encodeId(originUnEncodedId);
             %>
             <tr>
                 <%
                     if (opsActions.length > 0) {
-                        boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, modelBase).length > 0;
+                        boolean hasCheckAction = PageBackendService.listModelBaseOps(qzRequest, modelData).length > 0;
                 %>
                 <td class="custom-checkbox">
                     <input type="checkbox"
-                           value="<%= PageBackendService.encodeId(modelBase.get(idFieldName))%>"
+                           value="<%= PageBackendService.encodeId(modelData.get(idFieldName))%>"
                            name="<%=idFieldName%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
                 </td>
                 <%
@@ -163,10 +163,10 @@
                 <td class="sequence"><%=++listOrder%>
                 </td>
                 <%
-                    ModelActionInfo targetAction = modelInfo.getModelActionInfo("show");
+                    ModelActionInfo targetAction = modelInfo.getModelActionInfo(DeployerConstants.SHOW_ACTION);
                     boolean isFirst = true;
                     for (Integer i : indexToShow) {
-                        String value = modelBase.get(PageBackendService.getFieldName(qzRequest, i));
+                        String value = modelData.get(PageBackendService.getFieldName(qzRequest, i));
                         if (value == null) {
                             value = "";
                         }
@@ -189,7 +189,7 @@
                     String linkField = /*modelInfo.getModelFieldInfo(fieldName).linkModel()*/null;
                     if (linkField != null && !linkField.isEmpty()) {
                         String[] split = linkField.split("\\.");
-                        String idFieldValue = modelBase.get(idFieldName);
+                        String idFieldValue = modelData.get(idFieldName);
                 %>
                 <td>
                     <a href='<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
@@ -217,7 +217,7 @@
                         String[] actions = PageBackendService.getActionNamesShowToList(qzRequest);
                         for (String actionName : actions) {
                             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                            if (SecurityFilter.isActionAvailable(qzApp, modelBase, action) != null) {
+                            if (SecurityFilter.isActionAvailable(qzRequest, modelData, action) != null) {
                                 continue;
                             }
                             String actionKey = action.getCode();
@@ -241,7 +241,7 @@
                        model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedId)%>"
                             <%
-                                if (actionKey.equals("files")) {
+                                if (actionKey.equals(DeployerConstants.FILES_ACTION)) {
                                     out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                                 }
                                 if (isAjaxAction) {
@@ -276,7 +276,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "list" + "?markForAddCsrf")%>&<%="pageNum"%>="
+                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.LIST_ACTION + "?markForAddCsrf")%>&<%="pageNum"%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>

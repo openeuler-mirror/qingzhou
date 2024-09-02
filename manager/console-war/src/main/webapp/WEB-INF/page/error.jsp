@@ -1,9 +1,9 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ page import="java.util.*" %>
-<%@ page import="qingzhou.console.ConsoleConstants" %>
+<%@ page import="qingzhou.console.login.LoginManager" %>
 <%
     String statusCode = String.valueOf(response.getStatus());
-    String errorMsg = response.getHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY);
+    String errorMsg = response.getHeader(LoginManager.RESPONSE_HEADER_MSG_KEY);
     if (errorMsg == null || errorMsg.trim().isEmpty()) {
         switch (response.getStatus()) {
             case 403:

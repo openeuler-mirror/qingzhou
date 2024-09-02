@@ -16,7 +16,7 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyPairCipher;
+import qingzhou.crypto.PairCipher;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.JmxServiceAdapter;
@@ -40,7 +40,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     public static Manager SESSIONS_MANAGER;
     private static String publicKey;
     private static String privateKey;
-    public static KeyPairCipher keyPairCipher;
+    public static PairCipher pairCipher;
     private static final ContextHelper contextHelper;
 
     static {
@@ -51,12 +51,12 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         publicKey = security.getPublicKey();
         privateKey = security.getPrivateKey();
         if (Utils.isBlank(publicKey) || Utils.isBlank(privateKey)) {
-            String[] keyPair = cryptoService.generateKeyPair(UUID.randomUUID().toString().replace("-", ""));
-            publicKey = keyPair[0];
-            privateKey = keyPair[1];
+            String[] pairKey = cryptoService.generatePairKey();
+            publicKey = pairKey[0];
+            privateKey = pairKey[1];
         }
         try {
-            keyPairCipher = cryptoService.getKeyPairCipher(publicKey, privateKey);
+            pairCipher = cryptoService.getPairCipher(publicKey, privateKey);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -71,7 +71,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             return input;
         }
         try {
-            return SystemController.keyPairCipher.decryptWithPrivateKey(input);
+            return SystemController.pairCipher.decryptWithPrivateKey(input);
         } catch (Exception e) {
             if (!ignoredEx) {
                 SystemController.getService(Logger.class).warn("Decryption error", e);

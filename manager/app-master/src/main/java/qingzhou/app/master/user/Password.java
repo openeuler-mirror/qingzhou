@@ -4,9 +4,10 @@ import qingzhou.api.*;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
-import qingzhou.console.Totp;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
+import qingzhou.crypto.TotpCipher;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
 
@@ -14,8 +15,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Model(code = "password", icon = "key",
-        menu = "System", order = 2, entrance = "edit",
+@Model(code = DeployerConstants.PASSWORD_MODEL, icon = "key",
+        menu = "System", order = 2,
+        entrance = DeployerConstants.EDIT_ACTION,
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
@@ -75,7 +77,7 @@ public class Password extends ModelBase {
     }
 
     @ModelAction(
-            code = "edit",
+            code = DeployerConstants.EDIT_ACTION,
             name = {"修改", "en:Edit"},
             info = {"修改当前登录账户的密码。",
                     "en:Change the password of the current login account."})
@@ -87,7 +89,7 @@ public class Password extends ModelBase {
     }
 
     @ModelAction(
-            code = "update",
+            code = DeployerConstants.UPDATE_ACTION,
             name = {"更新", "en:Update"},
             info = {"更新密码。", "en:Update the password."})
     public void update(Request request) throws Exception {
@@ -167,14 +169,15 @@ public class Password extends ModelBase {
             name = {"刷新动态密码", "en:Refresh OTP"},
             info = {"获取当前用户的动态密码，以二维码形式提供给用户。", "en:Obtain the current user OTP and provide it to the user in the form of a QR code."})
     public void refreshKey(Request request) throws Exception {
-        String keyForOtp = Totp.randomSecureKey();
+        TotpCipher totpCipher = appContext.getService(CryptoService.class).getTotpCipher();
+        String keyForOtp = totpCipher.generateKey();
         request.setParameterInSession(KEY_IN_SESSION_FLAG, keyForOtp);
 
-        String loginUser = request.getUser();
-        String qrCode = Totp.buildTotpLink(loginUser, keyForOtp);
         String format = "PNG";
         request.getResponse().setContentType("image/" + format);
 
+        String loginUser = request.getUser();
+        String qrCode = "otpauth://totp/" + loginUser + "?secret=" + keyForOtp;
         QrGenerator qrGenerator = appContext.getService(QrGenerator.class);
         byte[] bytes = qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
         // 二维码返回到浏览器
@@ -193,7 +196,8 @@ public class Password extends ModelBase {
         String reqCode = request.getParameter("otp");
         if (Utils.notBlank(reqCode)) {
             String keyForOtp = request.getParameterInSession(KEY_IN_SESSION_FLAG);
-            result = Totp.verify(keyForOtp, reqCode);
+            TotpCipher totpCipher = appContext.getService(CryptoService.class).getTotpCipher();
+            result = totpCipher.verifyCode(keyForOtp, reqCode);
             if (result) {
                 Map<String, String> data = new HashMap<>();
                 data.put(User.idKey, request.getUser());

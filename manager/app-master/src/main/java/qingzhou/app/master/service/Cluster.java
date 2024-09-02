@@ -48,6 +48,10 @@
 //    public int instanceCount;
 //
 //    @ModelAction(
+
+import qingzhou.deployer.DeployerConstants;
+
+//code=DeployerConstants.MANAGE_ACTION,
 //            name = {"管理", "en:Manage"}, order = 1, disable = true,// TODO
 //            info = {"转到此集群的管理页面。", "en:Go to the administration page for this cluster."})
 //    public void manage(Request request) throws Exception {

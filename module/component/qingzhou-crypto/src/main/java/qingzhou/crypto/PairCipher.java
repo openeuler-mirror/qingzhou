@@ -1,6 +1,6 @@
 package qingzhou.crypto;
 
-public interface KeyPairCipher {
+public interface PairCipher {
     String encryptWithPublicKey(String input);
 
     String decryptWithPrivateKey(String input);

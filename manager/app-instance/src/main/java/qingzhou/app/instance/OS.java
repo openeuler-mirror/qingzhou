@@ -1,9 +1,10 @@
-package qingzhou.app.instance.monitor;
+package qingzhou.app.instance;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Monitorable;
+import qingzhou.deployer.DeployerConstants;
 
 import java.io.File;
 import java.lang.management.ManagementFactory;
@@ -12,8 +13,10 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-@Model(code = "os", icon = "desktop", menu = "Monitor",
-        name = {"操作系统", "en:Operating System"}, entrance = "monitor",
+@Model(code = "os", icon = "desktop",
+        menu = "Monitor",
+        entrance = DeployerConstants.MONITOR_ACTION,
+        name = {"操作系统", "en:Operating System"},
         info = {"操作系统的基本信息。", "en:Basic information about the operating system."})
 public class OS extends ModelBase implements Monitorable {
 

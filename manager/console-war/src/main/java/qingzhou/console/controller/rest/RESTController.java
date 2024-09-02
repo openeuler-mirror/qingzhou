@@ -33,7 +33,7 @@ import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + DeployerConstants.APP_MANAGE + "/" + DeployerConstants.MASTER_APP + "/" + "index" + "/" + "index";
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + DeployerConstants.APP_MANAGE + "/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INDEX_MODEL + "/index";
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = new File(SystemController.getModuleContext().getTemp(), "upload");
 

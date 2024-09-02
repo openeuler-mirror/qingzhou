@@ -266,10 +266,10 @@
                 <%
                     }
 
-                    ModelActionInfo listActionInfo = PageBackendService.renderModelAction(qzApp, qzModel, "list", qzRequest);
+                    ModelActionInfo listActionInfo = PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.LIST_ACTION, qzRequest);
                     if (hasId && listActionInfo != null) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, "list")%>"
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.LIST_ACTION)%>"
                    btn-type="goback" class="btn">
                     <%=I18n.getKeyI18n("page.cancel")%>
                 </a>
@@ -286,19 +286,19 @@
                     }
 
                     boolean hasPermission =
-                            PageBackendService.renderModelAction(qzApp, qzModel, "files", qzRequest) != null
+                            PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.FILES_ACTION, qzRequest) != null
                                     &&
-                                    PageBackendService.renderModelAction(qzApp, qzModel, "download", qzRequest) != null;
+                                    PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.DOWNLOAD_ACTION, qzRequest) != null;
                     if (hasPermission) {
                 %>
-                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, "files" + "/" + encodedId)%>'
+                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DeployerConstants.FILES_ACTION + "/" + encodedId)%>'
                         <%
                             out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                         %>
-                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + "files")%>'
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + DeployerConstants.FILES_ACTION)%>'
                    data-tip-arrow="top"
-                   btn-type="<%="files"%>" class="btn tooltips">
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + "files")%>
+                   btn-type="<%=DeployerConstants.FILES_ACTION%>" class="btn tooltips">
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.FILES_ACTION)%>
                 </a>
                 <%
                     }

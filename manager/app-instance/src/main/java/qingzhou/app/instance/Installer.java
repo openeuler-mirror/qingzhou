@@ -13,12 +13,12 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@Model(code = "appinstaller",
+@Model(code = "installer",
         hidden = true,
         name = {"应用安装器", "en:App Installer"},
         info = {"执行管理节点下发的应用安装、卸载等指令。",
                 "en:Execute the commands issued by the management node to install and uninstall applications."})
-public class AppInstaller extends ModelBase {
+public class Installer extends ModelBase {
     @Override
     public void start() {
         appContext.addI18n("app.not.found", new String[]{"应用文件未找到", "en:File Not Found"});
@@ -62,7 +62,7 @@ public class AppInstaller extends ModelBase {
             throw new IllegalArgumentException("unknown app type");
         }
 
-        InstanceApp.getService(Deployer.class).installApp(app);
+        Main.getService(Deployer.class).installApp(app);
     }
 
     @ModelAction(
@@ -70,12 +70,12 @@ public class AppInstaller extends ModelBase {
             name = {"卸载应用", "en:UnInstall App"},
             info = {"从该实例上卸载应用。", "en:Uninstall the app from the instance."})
     public void unInstallApp(Request request) throws Exception {
-        InstanceApp.getService(Deployer.class).unInstallApp(request.getId());
+        Main.getService(Deployer.class).unInstallApp(request.getId());
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
 
     private File getAppsDir() {
-        return FileUtil.newFile(InstanceApp.getService(ModuleContext.class).getInstanceDir(), "apps");
+        return FileUtil.newFile(Main.getService(ModuleContext.class).getInstanceDir(), "apps");
     }
 
     @ModelAction(
@@ -89,7 +89,7 @@ public class AppInstaller extends ModelBase {
         boolean isEnd = Boolean.parseBoolean(request.getParameter("isEnd"));
         int len = Integer.parseInt(request.getParameter("len"));
         String timestamp = request.getParameter("timestamp");
-        File tempDir = FileUtil.newFile(InstanceApp.getInstanceDir(), "temp", request.getModel());
+        File tempDir = FileUtil.newFile(Main.getInstanceDir(), "temp", request.getModel());
         File destFile = FileUtil.newFile(tempDir, timestamp, fileName);
         try {
             writeFile(destFile, appContext.getService(CryptoService.class).getHexCoder().hexToBytes(fileBytes), len, isStart);

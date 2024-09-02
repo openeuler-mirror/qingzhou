@@ -2,7 +2,6 @@ package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
 import qingzhou.console.ActionInvoker;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
@@ -24,14 +23,14 @@ public class HtmlView implements View {
         String modelName = request.getModel();
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
-            if ("app".equals(modelName)) {
+            if (DeployerConstants.APP_MODEL.equals(modelName)) {
                 request.setManageType(DeployerConstants.APP_MANAGE);
-            } else if ("instance".equals(modelName)) {
-                request.setManageType("instance");
+            } else if (DeployerConstants.INSTANCE_MODEL.equals(modelName)) {
+                request.setManageType(DeployerConstants.INSTANCE_MANAGE);
             }
             request.setAppName(request.getId());
-            request.setModelName("home");
-            request.setActionName("show");
+            request.setModelName(DeployerConstants.HOME_MODEL);
+            request.setActionName(DeployerConstants.SHOW_ACTION);
             ActionInvoker.getInstance().invokeAction(request);
         }
         req.setAttribute(Request.class.getName(), request);
@@ -42,11 +41,11 @@ public class HtmlView implements View {
     }
 
     private boolean isManageAction(Request request) {
-        if (!"manage".equals(request.getAction())) return false;
+        if (!DeployerConstants.MANAGE_ACTION.equals(request.getAction())) return false;
         if (!DeployerConstants.MASTER_APP.equals(request.getApp())) return false;
 
-        return "app".equals(request.getModel())
-                || "instance".equals(request.getModel());
+        return DeployerConstants.APP_MODEL.equals(request.getModel())
+                || DeployerConstants.INSTANCE_MODEL.equals(request.getModel());
     }
 
     @Override
@@ -59,8 +58,9 @@ public class HtmlView implements View {
             return "sys/manage";
         }
 
-        if ((ConsoleConstants.MODEL_NAME_index.equals(request.getModel()) || ConsoleConstants.MODEL_NAME_apphome.equals(request.getModel()))
-                && request.getAction().equals("show")) {
+        if ((DeployerConstants.INDEX_MODEL.equals(request.getModel())
+                || DeployerConstants.HOME_MODEL.equals(request.getModel()))
+                && request.getAction().equals(DeployerConstants.SHOW_ACTION)) {
             return "home";
         }
 
@@ -70,18 +70,18 @@ public class HtmlView implements View {
         }
 
         switch (request.getAction()) {
-            case "list":
-            case "delete":
+            case DeployerConstants.LIST_ACTION:
+            case DeployerConstants.DELETE_ACTION:
                 return "list";
-            case "create":
+            case DeployerConstants.CREATE_ACTION:
             case DeployerConstants.EDIT_ACTION:
                 return "form";
-            case "show":
-            case "monitor":
+            case DeployerConstants.SHOW_ACTION:
+            case DeployerConstants.MONITOR_ACTION:
                 return "show";
-            case "index":
+            case DeployerConstants.INDEX_ACTION:
                 return "sys/index";
-            case "manage":
+            case DeployerConstants.MANAGE_ACTION:
                 return "sys/manage";
         }
 

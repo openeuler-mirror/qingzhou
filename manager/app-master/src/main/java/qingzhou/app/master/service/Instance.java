@@ -5,6 +5,8 @@
 //import qingzhou.app.master.MasterApp;
 //import qingzhou.config.Agent;
 //import qingzhou.config.Config;
+//import qingzhou.deployer.DeployerConstants;
+//import qingzhou.deployer.ResponseImpl;
 //import qingzhou.registry.InstanceInfo;
 //import qingzhou.registry.Registry;
 //
@@ -12,7 +14,7 @@
 //import java.util.HashMap;
 //import java.util.Map;
 //
-//@Model(code = "instance", icon = "stack",
+//@Model(code = DeployerConstants.INSTANCE_APP, icon = "stack",
 //        menu = "Service", order = 2,
 //        name = {"实例", "en:Instance"},
 //        info = {"实例是轻舟提供的运行应用的实际环境，即应用的运行时。",
@@ -24,7 +26,7 @@
 //            name = {"名称", "en:Name"},
 //            info = {"唯一标识。", "en:Unique identifier."})
 //    public String id;
-
+//
 //    @ModelField(list = true,
 //            name = {"IP", "en:IP"},
 //            info = {"连接实例的 IP 地址。", "en:The IP address of the connected instance."})
@@ -43,8 +45,8 @@
 //    public void start() {
 //        appContext.addActionFilter((request, response) -> {
 //            if (request.getId().equals("local")) {
-//                if ("update".equals(request.getAction())
-//                        || "delete".equals(request.getAction())) {
+//                if (DeployerConstants.UPDATE_ACTION.equals(request.getAction())
+//                        || DeployerConstants.DELETE_ACTION.equals(request.getAction())) {
 //                    return appContext.getI18n(request.getLang(), "validator.master.system");
 //                }
 //            }
@@ -53,6 +55,7 @@
 //    }
 //
 //    @ModelAction(
+//            code = DeployerConstants.CHECKREGISTRY_ACTION,
 //            order = -1,
 //            name = {"注册检查", "en:Check Registry"},
 //            info = {"用于接收实例心跳信息。", "en:Used to receive the heartbeat information of the instance."})
@@ -79,18 +82,20 @@
 //    }
 //
 //    @ModelAction(
+//            code = DeployerConstants.MANAGE_ACTION,
 //            name = {"管理", "en:Manage"}, show = "running=true", order = 1,
 //            info = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
 //    public void manage(Request request) throws Exception {
 //    }
 //
 //    @ModelAction(
+//            code = DeployerConstants.SHOW_ACTION,
 //            name = {"查看", "en:Show"},
 //            info = {"查看该组件的相关信息。", "en:View the information of this model."})
 //    public void show(Request request) {
 //        String id = request.getId();
 //        if ("local".equals(id)) {
-//            response.addData(localInstance());
+//            request.getResponse().addData(localInstance());
 //            return;
 //        }
 //        Registry registry = MasterApp.getService(Registry.class);
@@ -100,10 +105,11 @@
 //        instance.put("ip", instanceInfo.getHost());
 //        instance.put("port", String.valueOf(instanceInfo.getPort()));
 //        instance.put("running", Boolean.TRUE.toString());
-//        response.addData(instance);
+//        request.getResponse().addData(instance);
 //    }
 //
 //    @ModelAction(
+//            code = DeployerConstants.LIST_ACTION,
 //            name = {"列表", "en:List"},
 //            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
 //    public void list(Request request) throws Exception {
@@ -119,6 +125,8 @@
 //                // 忽略异常，使用默认页码
 //            }
 //        }
+//
+//        ResponseImpl response = (ResponseImpl) request.getResponse();
 //
 //        response.setPageSize(pageSize);
 //        response.setPageNum(pageNum);

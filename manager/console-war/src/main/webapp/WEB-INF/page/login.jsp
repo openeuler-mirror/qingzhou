@@ -3,7 +3,6 @@
 <%@ page import="qingzhou.console.controller.I18n" %>
 <%@ page import="qingzhou.console.page.PageBackendService" %>
 <%@ page import="qingzhou.console.login.LoginManager" %>
-<%@ page import="qingzhou.console.ConsoleConstants" %>
 <%@ page import="qingzhou.console.login.vercode.VerCode" %>
 <%@ page import="qingzhou.console.controller.About" %>
 <%@ page import="qingzhou.console.controller.rest.RESTController" %>
@@ -80,11 +79,11 @@
                 </label>
             </div>
             <div class="input-control has-icon-left">
-                <input type="text" id="<%=ConsoleConstants.LOGIN_OTP%>_txt" class="form-control"
+                <input type="text" id="<%=LoginManager.LOGIN_OTP%>_txt" class="form-control"
                        placeholder="<%=I18n.getKeyI18n( "page.info.otp")%>"
-                       onchange="document.getElementById('<%=ConsoleConstants.LOGIN_OTP%>').value = this.value;">
-                <input type="hidden" id="<%=ConsoleConstants.LOGIN_OTP%>" name="<%=ConsoleConstants.LOGIN_OTP%>">
-                <label for="<%=ConsoleConstants.LOGIN_OTP%>_txt" class="input-control-icon-left"
+                       onchange="document.getElementById('<%=LoginManager.LOGIN_OTP%>').value = this.value;">
+                <input type="hidden" id="<%=LoginManager.LOGIN_OTP%>" name="<%=LoginManager.LOGIN_OTP%>">
+                <label for="<%=LoginManager.LOGIN_OTP%>_txt" class="input-control-icon-left"
                        style="line-height: 44px;"><i class="icon icon-shield"></i></label>
             </div>
 
@@ -92,7 +91,7 @@
                 if (request.getParameter(VerCode.SHOW_CAPTCHA_FLAG) != null) {
             %>
             <div class="input-control has-icon-left">
-                <input type="text" id="<%=VerCode.CAPTCHA%>" name="<%=VerCode.CAPTCHA%>" class="form-control"
+                <input type="text" id="<%=LoginManager.LOGIN_CAPTCHA%>" name="<%=LoginManager.LOGIN_CAPTCHA%>" class="form-control"
                        style="width:250px;display:inline-block;float:left;"
                        placeholder="<%=I18n.getKeyI18n( "page.vercode")%>">
                 <label class="input-control-icon-left" style="line-height: 44px;"><i
@@ -144,7 +143,7 @@
         for (var i = 0; i < inputs.length; i++) {
             var input = inputs[i];
             $(input).change();
-            if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=ConsoleConstants.LOGIN_OTP%>") {
+            if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=LoginManager.LOGIN_OTP%>") {
                 $(input).val(encrypt.encryptLong2($(input).val()));
             }
         }

@@ -1,6 +1,6 @@
 package qingzhou.crypto.impl;
 
-import qingzhou.crypto.KeyPairCipher;
+import qingzhou.crypto.PairCipher;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -15,14 +15,14 @@ import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-class KeyPairCipherImpl implements KeyPairCipher {
+class PairCipherImpl implements PairCipher {
     static final String ALG = "RSA";
     private static final int ENCRYPT_BLOCK = 117;
     private static final int DECRYPT_BLOCK = 128;
     private PublicKey publicKey;
     private PrivateKey privateKey;
 
-    KeyPairCipherImpl(String pubKeyAsBase64, String priKeyAsBase64) {
+    PairCipherImpl(String pubKeyAsBase64, String priKeyAsBase64) {
         try {
             if (pubKeyAsBase64 != null) {
                 publicKey = convertPublic(pubKeyAsBase64);

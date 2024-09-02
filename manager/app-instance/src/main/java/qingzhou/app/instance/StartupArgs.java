@@ -5,6 +5,7 @@ import qingzhou.api.type.Addable;
 import qingzhou.config.Arg;
 import qingzhou.config.Config;
 import qingzhou.config.Jvm;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 
 import java.util.*;
@@ -110,7 +111,7 @@ public class StartupArgs extends ModelBase implements Addable {
     public String desc;
 
     @ModelAction(
-            code = "add",
+            code = DeployerConstants.ADD_ACTION,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
@@ -136,7 +137,7 @@ public class StartupArgs extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = "update",
+            code = DeployerConstants.UPDATE_ACTION,
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
@@ -165,7 +166,7 @@ public class StartupArgs extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = "delete",
+            code = DeployerConstants.DELETE_ACTION,
             batch = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
@@ -323,7 +324,7 @@ public class StartupArgs extends ModelBase implements Addable {
 
     @Override
     public void addData(Map<String, String> data) throws Exception {
-        Config config = InstanceApp.getService(Config.class);
+        Config config = Main.getService(Config.class);
         Arg arg = new Arg();
         Utils.setPropertiesToObj(arg, data);
         arg.setName(data.get(idFieldName()));
@@ -332,12 +333,12 @@ public class StartupArgs extends ModelBase implements Addable {
 
     @Override
     public void deleteData(String id) throws Exception {
-        InstanceApp.getService(Config.class).deleteArg(id);
+        Main.getService(Config.class).deleteArg(id);
     }
 
     @Override
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
-        Config config = InstanceApp.getService(Config.class);
+        Config config = Main.getService(Config.class);
         Jvm jvm = config.getJvm();
         List<Map<String, String>> list = new ArrayList<>();
         for (Arg arg : jvm.getArg()) {
@@ -353,7 +354,7 @@ public class StartupArgs extends ModelBase implements Addable {
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        Config config = InstanceApp.getService(Config.class);
+        Config config = Main.getService(Config.class);
         Arg arg = new Arg();
         Utils.setPropertiesToObj(arg, data);
         config.deleteArg(data.get(idFieldName()));
@@ -362,7 +363,7 @@ public class StartupArgs extends ModelBase implements Addable {
 
     @Override
     public Map<String, String> showData(String id) throws Exception {
-        Config config = InstanceApp.getService(Config.class);
+        Config config = Main.getService(Config.class);
         Jvm jvm = config.getJvm();
         List<Map<String, String>> list = new ArrayList<>();
         for (Arg arg : jvm.getArg()) {

@@ -3,7 +3,7 @@ package qingzhou.console.remote;
 import qingzhou.api.Request;
 import qingzhou.console.controller.SystemController;
 import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyCipher;
+import qingzhou.crypto.Cipher;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.json.Json;
@@ -43,9 +43,9 @@ public class RemoteClient {
             Json jsonService = SystemController.getService(Json.class);
             String json = jsonService.toJson(request);
 
-            KeyCipher cipher;
+            Cipher cipher;
             try {
-                cipher = SystemController.getService(CryptoService.class).getKeyCipher(remoteKey);
+                cipher = SystemController.getService(CryptoService.class).getCipher(remoteKey);
             } catch (Exception ignored) {
                 throw new RuntimeException("remoteKey error");
             }

@@ -1,14 +1,13 @@
 package qingzhou.crypto.impl;
 
-import qingzhou.crypto.KeyCipher;
+import qingzhou.crypto.Cipher;
 
-import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 
-class KeyCipherImpl implements KeyCipher {
+class CipherImpl implements Cipher {
     private final String transformation = "DESede"; // Triple-DES encryption algorithm
 
     static byte[] build3desData(byte[] keySeed) {
@@ -24,11 +23,11 @@ class KeyCipherImpl implements KeyCipher {
 
     private final SecretKeySpec K;
 
-    KeyCipherImpl(String key) {
+    CipherImpl(String key) {
         this(key.getBytes(StandardCharsets.UTF_8));
     }
 
-    KeyCipherImpl(byte[] realKeyBytes) {
+    CipherImpl(byte[] realKeyBytes) {
         byte[] keySeed = build3desData(realKeyBytes);
         K = new SecretKeySpec(keySeed, transformation);
     }
@@ -55,8 +54,8 @@ class KeyCipherImpl implements KeyCipher {
     public byte[] encrypt(byte[] s) throws Exception {
         if (s == null) return null;
 
-        Cipher cipher = getCipher();
-        cipher.init(Cipher.ENCRYPT_MODE, K);
+        javax.crypto.Cipher cipher = getCipher();
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, K);
         return cipher.doFinal(s);
     }
 
@@ -66,16 +65,16 @@ class KeyCipherImpl implements KeyCipher {
             return null;
         }
 
-        Cipher cipher = getCipher();
-        cipher.init(Cipher.DECRYPT_MODE, K);
+        javax.crypto.Cipher cipher = getCipher();
+        cipher.init(javax.crypto.Cipher.DECRYPT_MODE, K);
         return cipher.doFinal(s);
     }
 
-    private Cipher getCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
+    private javax.crypto.Cipher getCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
         try {
-            return Cipher.getInstance(transformation, "SunJCE");
+            return javax.crypto.Cipher.getInstance(transformation, "SunJCE");
         } catch (Exception e) {
-            return Cipher.getInstance(transformation);
+            return javax.crypto.Cipher.getInstance(transformation);
         }
     }
 }

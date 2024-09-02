@@ -1,10 +1,8 @@
 package qingzhou.console.controller;
 
 import qingzhou.api.Request;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.deployer.DeployerConstants;
@@ -70,16 +68,10 @@ public class SecurityFilter implements Filter<SystemControllerContext> {
             }
         }
 
-        String[] noLoginCheckUris = {LoginManager.LOGIN_PATH, VerCode.CAPTCHA_URI, ConsoleConstants.REGISTER_URI};
-        for (String uri : noLoginCheckUris) {
-            if (checkUri.equals(uri)) {
-                return true;
-            }
-        }
-
         // 远程实例注册
-        return checkUri.startsWith("/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + "instance" + "/checkRegistry") ||
-                checkUri.startsWith("/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + "instance" + "/register");
+        return checkUri.equals("/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.CHECKREGISTRY_ACTION)
+                ||
+                checkUri.equals("/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.REGISTER_ACTION);
     }
 
     // 所有人都有

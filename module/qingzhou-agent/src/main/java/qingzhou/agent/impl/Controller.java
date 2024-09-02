@@ -3,12 +3,9 @@ package qingzhou.agent.impl;
 import qingzhou.config.Agent;
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.KeyCipher;
-import qingzhou.crypto.KeyPairCipher;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.crypto.Cipher;
+import qingzhou.crypto.PairCipher;
+import qingzhou.deployer.*;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -129,8 +126,8 @@ public class Controller implements ModuleActivator {
                         : agent.getAgentKey();
             }
 
-            KeyCipher keyCipher = cryptoService.getKeyCipher(agentKey);
-            byte[] decryptedData = keyCipher.decrypt(requestData);
+            Cipher cipher = cryptoService.getCipher(agentKey);
+            byte[] decryptedData = cipher.decrypt(requestData);
 
             // 3. 得到请求对象
             RequestImpl request = json.fromJson(new String(decryptedData, StandardCharsets.UTF_8), RequestImpl.class);
@@ -138,8 +135,8 @@ public class Controller implements ModuleActivator {
             // 4. 处理
             ResponseImpl response = new ResponseImpl();
             String appName = request.getApp();
-            if ("instance".equals(request.getManageType())) {
-                appName = "instance";
+            if (DeployerConstants.INSTANCE_MANAGE.equals(request.getManageType())) {
+                appName = DeployerConstants.INSTANCE_APP;
             }
             App app = deployer.getApp(appName);
             app.invoke(request);
@@ -151,7 +148,7 @@ public class Controller implements ModuleActivator {
             byte[] responseData = json.toJson(response).getBytes(StandardCharsets.UTF_8);
 
             // 6. 数据加密，返回到客户端
-            return keyCipher.encrypt(responseData);
+            return cipher.encrypt(responseData);
         }
     }
 
@@ -195,7 +192,8 @@ public class Controller implements ModuleActivator {
 
             List<AppInfo> appInfos = new ArrayList<>();
             for (String a : deployer.getAllApp()) {
-                if ("instance".equals(a) || "master".equals(a)) {
+                if (DeployerConstants.INSTANCE_APP.equals(a)
+                        || DeployerConstants.MASTER_APP.equals(a)) {
                     continue;
                 }
                 appInfos.add(deployer.getApp(a).getAppInfo());
@@ -209,7 +207,7 @@ public class Controller implements ModuleActivator {
                 if (masterUrl.endsWith("/")) {
                     masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
                 }
-                String fingerprintUrl = masterUrl + "/rest/json/app/" + "master" + "/" + "instance" + "/checkRegistry";
+                String fingerprintUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.CHECKREGISTRY_ACTION;
                 String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
                 HttpResponse response = http.buildHttpClient().send(fingerprintUrl, new HashMap<String, String>() {{
                     put("fingerprint", fingerprint);
@@ -227,7 +225,7 @@ public class Controller implements ModuleActivator {
             }
             if (registered) return;
 
-            String registerUrl = masterUrl + "/rest/json/app/" + "master" + "/" + "instance" + "/register";
+            String registerUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.REGISTER_ACTION;
             http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
                 put("doRegister", registerData);
             }});
@@ -243,13 +241,13 @@ public class Controller implements ModuleActivator {
                     : agentHost);
             instanceInfo.setPort(agentPort);
 
-            KeyPairCipher keyPairCipher;
+            PairCipher pairCipher;
             try {
-                keyPairCipher = cryptoService.getKeyPairCipher(agent.getMasterKey(), null);
+                pairCipher = cryptoService.getPairCipher(agent.getMasterKey(), null);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            String key = keyPairCipher.encryptWithPublicKey(agent.getAgentKey());
+            String key = pairCipher.encryptWithPublicKey(agent.getAgentKey());
             instanceInfo.setKey(key);
             return instanceInfo;
         }

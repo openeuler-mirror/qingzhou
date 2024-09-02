@@ -14,19 +14,20 @@ public class CryptoServiceImpl implements CryptoService {
     @Override
     public String generateKey() {
         String random = UUID.randomUUID().toString();
-        byte[] bytes = KeyCipherImpl.build3desData(random.getBytes());
+        byte[] bytes = CipherImpl.build3desData(random.getBytes());
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
     @Override
-    public KeyCipher getKeyCipher(String keySeed) {
-        return new KeyCipherImpl(keySeed);
+    public Cipher getCipher(String key) {
+        return new CipherImpl(key);
     }
 
     @Override
-    public String[] generateKeyPair(String seedKey) {
+    public String[] generatePairKey() {
         KeyPair keyPair;
         try {
+            String seedKey = UUID.randomUUID().toString().replace("-", "");
             keyPair = genKeyPair(seedKey);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -41,8 +42,13 @@ public class CryptoServiceImpl implements CryptoService {
     }
 
     @Override
-    public KeyPairCipher getKeyPairCipher(String publicKey, String privateKey) {
-        return new KeyPairCipherImpl(publicKey, privateKey);
+    public PairCipher getPairCipher(String publicKey, String privateKey) {
+        return new PairCipherImpl(publicKey, privateKey);
+    }
+
+    @Override
+    public TotpCipher getTotpCipher() {
+        return new TotpCipherImpl();
     }
 
     @Override
@@ -56,7 +62,7 @@ public class CryptoServiceImpl implements CryptoService {
     }
 
     private KeyPair genKeyPair(String seedKey) throws Exception {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(KeyPairCipherImpl.ALG);//KeyPairGenerator.getInstance(ALGORITHM, pro);
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(PairCipherImpl.ALG);//KeyPairGenerator.getInstance(ALGORITHM, pro);
         // windows和linux下SecureRandom的行为不一致
         // 如果使用new SecureRandom(seedKey.getBytes())，在windows会生成相同密钥，在linux会生成不同密钥
         // 因此使用如下方法，确保在相同seedKey下，windows和linux都能生成相同密钥

@@ -7,6 +7,7 @@ import qingzhou.api.ModelField;
 import qingzhou.api.type.Updatable;
 import qingzhou.app.master.MasterApp;
 import qingzhou.config.Config;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -15,7 +16,8 @@ import qingzhou.logger.Logger;
 import java.util.Map;
 
 @Model(code = "jmx", icon = "exchange",
-        menu = "System", order = 4, entrance = "edit",
+        menu = "System", order = 4,
+        entrance = DeployerConstants.EDIT_ACTION,
         name = {"JMX", "en:JMX"},
         info = {"开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 QingZhou。",
                 "en:After enabling the JMX interface service, the client can manage QingZhou through the java jmx protocol."})

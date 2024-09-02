@@ -1,7 +1,6 @@
 package qingzhou.console.controller;
 
 import qingzhou.api.Lang;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
@@ -32,9 +31,9 @@ public class TrustIpCheck implements Filter<SystemControllerContext> {
             String msgKey = "client.trusted.not";
             String toJson = JsonView.responseErrorJson(response, I18n.getKeyI18n(msgKey));
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
+                response.setHeader(LoginManager.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
             } else {
-                response.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
+                response.setHeader(LoginManager.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
             }
             response.sendRedirect(request.getContextPath() + LoginManager.LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + msgKey);
             return false;

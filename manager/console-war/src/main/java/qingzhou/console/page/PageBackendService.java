@@ -70,16 +70,16 @@ public class PageBackendService {
             return DeployerConstants.MASTER_APP;
         }
 
-        if ("instance".equals(((RequestImpl) request).getManageType())) {
-            return "instance";
+        if (DeployerConstants.INSTANCE_MANAGE.equals(((RequestImpl) request).getManageType())) {
+            return DeployerConstants.INSTANCE_APP;
         }
 
         return request.getApp();
     }
 
     public static String getAppName(String manageType, String appName) {
-        if ("instance".equals(manageType)) {
-            return "instance";
+        if (DeployerConstants.INSTANCE_MANAGE.equals(manageType)) {
+            return DeployerConstants.INSTANCE_APP;
         }
 
         return appName;
@@ -200,7 +200,7 @@ public class PageBackendService {
         LinkedHashMap<String, String> twoGroup = new LinkedHashMap<>();
         /*for (Option option : options.options()) {
             String value = option.value();
-            String[] groupData = value.split(ConsoleConstants.OPTION_GROUP_SEPARATOR);
+            String[] groupData = value.split("/");
             String desc = I18n.getString(option.i18n());
             if (groupData.length == 1) {
                 groupDes.putIfAbsent(value, desc);
@@ -209,7 +209,7 @@ public class PageBackendService {
                 items.putIfAbsent(groupData[0], desc);
                 twoGroup.putIfAbsent(value, desc);
             } else if (groupData.length == 3) {
-                LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + ConsoleConstants.OPTION_GROUP_SEPARATOR + groupData[1], k -> new LinkedHashMap<>());
+                LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + "/" + groupData[1], k -> new LinkedHashMap<>());
                 items.put(value, desc);
             }
         }*/
@@ -246,14 +246,14 @@ public class PageBackendService {
                 if (isEdit) {
                     return DeployerConstants.UPDATE_ACTION;
                 }
-            } else if (actionName.equals("add")) {
+            } else if (actionName.equals(DeployerConstants.ADD_ACTION)) {
                 if (!isEdit) {
-                    return "add";
+                    return DeployerConstants.ADD_ACTION;
                 }
             }
         }
 
-        return isEdit ? DeployerConstants.UPDATE_ACTION : "add";// 兜底
+        return isEdit ? DeployerConstants.UPDATE_ACTION : DeployerConstants.ADD_ACTION;// 兜底
     }
 
     public static boolean hasIDField(Request request) {
@@ -261,7 +261,7 @@ public class PageBackendService {
         if (modelInfo == null) {
             return false;
         }
-        ModelActionInfo listAction = modelInfo.getModelActionInfo("list");
+        ModelActionInfo listAction = modelInfo.getModelActionInfo(DeployerConstants.LIST_ACTION);
         ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
         return listAction != null && idField != null;
     }

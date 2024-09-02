@@ -3,7 +3,6 @@ package qingzhou.console.login;
 import qingzhou.api.Lang;
 import qingzhou.config.Security;
 import qingzhou.config.User;
-import qingzhou.console.ConsoleConstants;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SecurityFilter;
 import qingzhou.console.controller.SystemController;
@@ -52,9 +51,9 @@ public class ResetPassword implements Filter<SystemControllerContext> {
             String viewName = "/" + rest.get(0);
             String toJson = JsonView.responseErrorJson(httpServletResponse, LoginManager.retrieveI18nMsg(msgI18nKey));
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                httpServletResponse.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
+                httpServletResponse.setHeader(LoginManager.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
             } else {
-                httpServletResponse.setHeader(ConsoleConstants.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
+                httpServletResponse.setHeader(LoginManager.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
             }
 
             httpServletResponse.sendRedirect(PageBackendService.encodeURL(httpServletResponse, httpServletRequest.getContextPath() +
@@ -84,7 +83,8 @@ public class ResetPassword implements Filter<SystemControllerContext> {
             String passwordLastModified = u.getPasswordLastModified();
             if (passwordLastModified != null && !passwordLastModified.isEmpty()) {
                 long time = new SimpleDateFormat(DeployerConstants.PASSWORD_LAST_MODIFIED_DATE_FORMAT).parse(passwordLastModified).getTime();
-                long max = time + maxAge * ConsoleConstants.DAY_MILLIS_VALUE;
+                long DAY_MILLIS_VALUE = 24 * 60 * 60 * 1000; // 一天的毫秒值
+                long max = time + maxAge * DAY_MILLIS_VALUE;
                 if (System.currentTimeMillis() > max) {
                     return "password.max," + maxAge + "," + passwordLastModified;
                 }
