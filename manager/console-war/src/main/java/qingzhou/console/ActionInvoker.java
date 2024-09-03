@@ -5,7 +5,6 @@ import qingzhou.api.Request;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.page.PageBackendService;
-import qingzhou.console.remote.RemoteClient;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.*;
 import qingzhou.logger.Logger;
@@ -175,32 +174,32 @@ public class ActionInvoker {
         String manageType = request.getManageType();
         String appName = request.getApp();
         String uploadFileAppName = appName;
-        if (DeployerConstants.INSTANCE_MANAGE.equals(manageType)) {
+        if (DeployerConstants.MANAGE_INSTANCE.equals(manageType)) {
             appInstances.add(appName);
-            uploadFileAppName = DeployerConstants.INSTANCE_APP;
-        } else if (DeployerConstants.APP_MANAGE.equals(manageType)) {
+            uploadFileAppName = DeployerConstants.APP_INSTANCE;
+        } else if (DeployerConstants.MANAGE_APP.equals(manageType)) {
             appInstances = getAppInstances(appName);
         }
 
         for (String instance : appInstances) {
-            ResponseImpl responseOnNode;
+            ResponseImpl responseOnNode = null;
             if (instance.equals("local")) {
                 SystemController.getService(Deployer.class)
                         .getApp(PageBackendService.getAppName(request))
                         .invoke(request);
                 responseOnNode = (ResponseImpl) request.getResponse();
             } else {
-                InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(instance);
-
-                String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
-                String remoteKey = SystemController.getService(CryptoService.class).getPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
-
-                // 远程实例文件上传
-                uploadFile(request, uploadFileAppName, remoteUrl, remoteKey);
-
-                responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
-                // 将 response 回传的 session 参数，同步给 request
-                request.getParametersInSession().putAll(responseOnNode.getParametersInSession());
+//                InstanceInfo instanceInfo = SystemController.getService(Registry.class).getInstanceInfo(instance);
+//
+//                String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
+//                String remoteKey = SystemController.getService(CryptoService.class).getPairCipher(SystemController.getPublicKeyString(), SystemController.getPrivateKeyString()).decryptWithPrivateKey(instanceInfo.getKey());
+//
+//                // 远程实例文件上传
+//                uploadFile(request, uploadFileAppName, remoteUrl, remoteKey);
+//
+//                responseOnNode = RemoteClient.sendReq(remoteUrl, request, remoteKey);
+//                // 将 response 回传的 session 参数，同步给 request
+//                request.getParametersInSession().putAll(responseOnNode.getParametersInSession());
             }
             resultOnNode.put(instance, responseOnNode);
         }
@@ -211,7 +210,7 @@ public class ActionInvoker {
     private void uploadFile(RequestImpl request, String appName, String remoteUrl, String remoteKey) throws Exception {
         // 文件上传
         AppInfo appInfo;
-        if (DeployerConstants.INSTANCE_APP.equals(appName)) {
+        if (DeployerConstants.APP_INSTANCE.equals(appName)) {
             appInfo = SystemController.getAppInfo(appName);
         } else {
             appInfo = SystemController.getService(Registry.class).getAppInfo(appName);
@@ -260,33 +259,33 @@ public class ActionInvoker {
             in = Files.newInputStream(tempFile.toPath());
             bis = new BufferedInputStream(in);
             int len;
-            for (int i = 0; i < count; i++) {
-                len = bis.read(bytes);
-                RequestImpl req = new RequestImpl();
-                req.setAppName(DeployerConstants.INSTANCE_APP);
-                req.setModelName("installer");
-                req.setActionName("uploadFile");
-                req.setManageType(DeployerConstants.APP_MANAGE);
-
-                Map<String, String> parameters = new HashMap<>();
-                parameters.put("fileName", fileName);
-                parameters.put("fileBytes", SystemController.getService(CryptoService.class).getHexCoder().bytesToHex(bytes));
-                parameters.put("len", String.valueOf(len));
-                parameters.put("isStart", String.valueOf(i == 0));
-                parameters.put("isEnd", String.valueOf(i == count - 1));
-                parameters.put("timestamp", timestamp);
-                req.setParameters(parameters);
-
-                ResponseImpl response = RemoteClient.sendReq(remoteUrl, req, remoteKey);
-                if (response.isSuccess()) {
-                    List<Map<String, String>> dataList = response.getDataList();
-                    if (!dataList.isEmpty()) {
-                        return dataList.get(0).get("fileName");
-                    }
-                } else {
-                    break;
-                }
-            }
+//            for (int i = 0; i < count; i++) {
+//                len = bis.read(bytes);
+//                RequestImpl req = new RequestImpl();
+//                req.setAppName(DeployerConstants.APP_INSTANCE);
+//                req.setModelName("installer");
+//                req.setActionName("uploadFile");
+//                req.setManageType(DeployerConstants.MANAGE_APP);
+//
+//                Map<String, String> parameters = new HashMap<>();
+//                parameters.put("fileName", fileName);
+//                parameters.put("fileBytes", SystemController.getService(CryptoService.class).getBase64Coder().encode(bytes));
+//                parameters.put("len", String.valueOf(len));
+//                parameters.put("isStart", String.valueOf(i == 0));
+//                parameters.put("isEnd", String.valueOf(i == count - 1));
+//                parameters.put("timestamp", timestamp);
+//                req.setParameters(parameters);
+//
+//                ResponseImpl response = RemoteClient.sendReq(remoteUrl, req, remoteKey);
+//                if (response.isSuccess()) {
+//                    List<Map<String, String>> dataList = response.getDataList();
+//                    if (!dataList.isEmpty()) {
+//                        return dataList.get(0).get("fileName");
+//                    }
+//                } else {
+//                    break;
+//                }
+//            }
         } finally {
             try {
                 if (bis != null) {
@@ -308,8 +307,8 @@ public class ActionInvoker {
         if (app != null) {
             instances.add("local");
         }
-        if (!DeployerConstants.INSTANCE_APP.equals(appName)
-                && !DeployerConstants.MASTER_APP.equals(appName)) {
+        if (!DeployerConstants.APP_INSTANCE.equals(appName)
+                && !DeployerConstants.APP_MASTER.equals(appName)) {
             try {
                 Registry registry = SystemController.getService(Registry.class);
                 AppInfo appInfo = registry.getAppInfo(appName);

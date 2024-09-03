@@ -4,6 +4,7 @@ import java.util.Collection;
 
 public class AppInfo {
     private String name;
+    private String filePath;
     private Collection<ModelInfo> modelInfos;
     private Collection<MenuInfo> menuInfos;
 
@@ -29,6 +30,14 @@ public class AppInfo {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
     public Collection<ModelInfo> getModelInfos() {

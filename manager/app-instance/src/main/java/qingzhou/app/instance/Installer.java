@@ -6,6 +6,7 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 
@@ -13,7 +14,7 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@Model(code = "installer",
+@Model(code = DeployerConstants.MODEL_INSTALLER,
         hidden = true,
         name = {"应用安装器", "en:App Installer"},
         info = {"执行管理节点下发的应用安装、卸载等指令。",
@@ -26,36 +27,36 @@ public class Installer extends ModelBase {
     }
 
     @ModelAction(
-            code = "installApp",
+            code = DeployerConstants.ACTION_INSTALL,
             name = {"安装应用", "en:Install App"},
             info = {"在该实例上安装应用。", "en:Install the application on the instance."})
-    public void installApp(Request request) throws Exception {
+    public void install(Request request) throws Exception {
         File srcFile;
-        if (Boolean.parseBoolean(request.getParameter("appFrom"))) {
-            srcFile = FileUtil.newFile(request.getParameter("fromUpload"));
+        if (Boolean.parseBoolean(request.getParameter("upload"))) {
+            srcFile = FileUtil.newFile(request.getParameter("file"));
         } else {
-            srcFile = new File(request.getParameter("filename"));
+            srcFile = new File(request.getParameter(DeployerConstants.APP_KEY_PATH));
         }
-        if (!srcFile.exists() || !srcFile.isFile()) {
+        if (!srcFile.exists()) {
             request.getResponse().setSuccess(false);
             request.getResponse().setMsg(appContext.getI18n(request.getLang(), "app.not.found"));
             return;
         }
 
-        String srcFileName = srcFile.getName();
+        String fileName = srcFile.getName();
         File app;
-        String id = request.getId();
+        String id = request.getParameter(DeployerConstants.APP_KEY_ID);
         if (srcFile.isDirectory()) {
-            app = FileUtil.newFile(getAppsDir(), id == null ? srcFileName : id);
+            app = FileUtil.newFile(getAppsDir(), id == null ? fileName : id);
             FileUtil.copyFileOrDirectory(srcFile, app);
-        } else if (srcFileName.endsWith(".jar")) {
-            int index = srcFileName.lastIndexOf(".");
-            String appName = srcFileName.substring(0, index);
+        } else if (fileName.endsWith(".jar")) {
+            int index = fileName.lastIndexOf(".");
+            String appName = fileName.substring(0, index);
             app = FileUtil.newFile(getAppsDir(), id == null ? appName : id);
-            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, srcFileName));
-        } else if (srcFileName.endsWith(".zip")) {
-            int index = srcFileName.lastIndexOf(".");
-            String appName = srcFileName.substring(0, index);
+            FileUtil.copyFileOrDirectory(srcFile, FileUtil.newFile(app, fileName));
+        } else if (fileName.endsWith(".zip")) {
+            int index = fileName.lastIndexOf(".");
+            String appName = fileName.substring(0, index);
             app = FileUtil.newFile(getAppsDir(), id == null ? appName : id);
             FileUtil.unZipToDir(srcFile, app);
         } else {
@@ -66,10 +67,10 @@ public class Installer extends ModelBase {
     }
 
     @ModelAction(
-            code = "unInstallApp",
+            code = DeployerConstants.ACTION_UNINSTALL,
             name = {"卸载应用", "en:UnInstall App"},
             info = {"从该实例上卸载应用。", "en:Uninstall the app from the instance."})
-    public void unInstallApp(Request request) throws Exception {
+    public void uninstall(Request request) throws Exception {
         Main.getService(Deployer.class).unInstallApp(request.getId());
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
@@ -79,10 +80,10 @@ public class Installer extends ModelBase {
     }
 
     @ModelAction(
-            code = "uploadFile",
+            code = DeployerConstants.ACTION_UPLOAD,
             name = {"上传文件", "en:Upload File"},
             info = {"应用模块表单文件上传。", "en:Upload the application module form file."})
-    public void uploadFile(Request request) throws IOException {
+    public void upload(Request request) throws IOException {
         String fileName = request.getParameter("fileName");
         String fileBytes = request.getParameter("fileBytes");
         boolean isStart = Boolean.parseBoolean(request.getParameter("isStart"));
@@ -92,7 +93,7 @@ public class Installer extends ModelBase {
         File tempDir = FileUtil.newFile(Main.getInstanceDir(), "temp", request.getModel());
         File destFile = FileUtil.newFile(tempDir, timestamp, fileName);
         try {
-            writeFile(destFile, appContext.getService(CryptoService.class).getHexCoder().hexToBytes(fileBytes), len, isStart);
+            writeFile(destFile, Main.getService(CryptoService.class).getBase64Coder().decode(fileBytes), len, isStart);
         } catch (IOException e) {
             request.getResponse().setSuccess(false);
             request.getResponse().setMsg(appContext.getI18n(request.getLang(), "file.upload.fail"));

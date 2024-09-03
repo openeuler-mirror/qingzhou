@@ -13,5 +13,9 @@ public interface CryptoService {
 
     MessageDigest getMessageDigest();
 
-    HexCoder getHexCoder();
+    Base64Coder getBase64Coder();
+
+    Base32Coder getBase32Coder();
+
+    Base16Coder getBase16Coder();
 }

@@ -23,14 +23,14 @@ public class HtmlView implements View {
         String modelName = request.getModel();
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
-            if (DeployerConstants.APP_MODEL.equals(modelName)) {
-                request.setManageType(DeployerConstants.APP_MANAGE);
-            } else if (DeployerConstants.INSTANCE_MODEL.equals(modelName)) {
-                request.setManageType(DeployerConstants.INSTANCE_MANAGE);
+            if (DeployerConstants.MODEL_APP.equals(modelName)) {
+                request.setManageType(DeployerConstants.MANAGE_APP);
+            } else if (DeployerConstants.MODEL_INSTANCE.equals(modelName)) {
+                request.setManageType(DeployerConstants.MANAGE_INSTANCE);
             }
             request.setAppName(request.getId());
-            request.setModelName(DeployerConstants.HOME_MODEL);
-            request.setActionName(DeployerConstants.SHOW_ACTION);
+            request.setModelName(DeployerConstants.MODEL_HOME);
+            request.setActionName(DeployerConstants.ACTION_SHOW);
             ActionInvoker.getInstance().invokeAction(request);
         }
         req.setAttribute(Request.class.getName(), request);
@@ -41,11 +41,11 @@ public class HtmlView implements View {
     }
 
     private boolean isManageAction(Request request) {
-        if (!DeployerConstants.MANAGE_ACTION.equals(request.getAction())) return false;
-        if (!DeployerConstants.MASTER_APP.equals(request.getApp())) return false;
+        if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) return false;
+        if (!DeployerConstants.APP_MASTER.equals(request.getApp())) return false;
 
-        return DeployerConstants.APP_MODEL.equals(request.getModel())
-                || DeployerConstants.INSTANCE_MODEL.equals(request.getModel());
+        return DeployerConstants.MODEL_APP.equals(request.getModel())
+                || DeployerConstants.MODEL_INSTANCE.equals(request.getModel());
     }
 
     @Override
@@ -58,9 +58,9 @@ public class HtmlView implements View {
             return "sys/manage";
         }
 
-        if ((DeployerConstants.INDEX_MODEL.equals(request.getModel())
-                || DeployerConstants.HOME_MODEL.equals(request.getModel()))
-                && request.getAction().equals(DeployerConstants.SHOW_ACTION)) {
+        if ((DeployerConstants.MODEL_INDEX.equals(request.getModel())
+                || DeployerConstants.MODEL_HOME.equals(request.getModel()))
+                && request.getAction().equals(DeployerConstants.ACTION_SHOW)) {
             return "home";
         }
 
@@ -70,18 +70,18 @@ public class HtmlView implements View {
         }
 
         switch (request.getAction()) {
-            case DeployerConstants.LIST_ACTION:
-            case DeployerConstants.DELETE_ACTION:
+            case DeployerConstants.ACTION_LIST:
+            case DeployerConstants.ACTION_DELETE:
                 return "list";
-            case DeployerConstants.CREATE_ACTION:
-            case DeployerConstants.EDIT_ACTION:
+            case DeployerConstants.ACTION_CREATE:
+            case DeployerConstants.ACTION_EDIT:
                 return "form";
-            case DeployerConstants.SHOW_ACTION:
-            case DeployerConstants.MONITOR_ACTION:
+            case DeployerConstants.ACTION_SHOW:
+            case DeployerConstants.ACTION_MONITOR:
                 return "show";
-            case DeployerConstants.INDEX_ACTION:
+            case DeployerConstants.ACTION_INDEX:
                 return "sys/index";
-            case DeployerConstants.MANAGE_ACTION:
+            case DeployerConstants.ACTION_MANAGE:
                 return "sys/manage";
         }
 

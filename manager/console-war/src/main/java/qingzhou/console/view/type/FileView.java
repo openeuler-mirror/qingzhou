@@ -33,7 +33,7 @@ public class FileView implements View {
         String key = result.get("DOWNLOAD_KEY");
         long offset = Long.parseLong(result.get("DOWNLOAD_OFFSET"));
         while (true) {
-            byte[] content = SystemController.getService(CryptoService.class).getHexCoder().hexToBytes(result.get("DOWNLOAD_BLOCK"));
+            byte[] content = SystemController.getService(CryptoService.class).getBase64Coder().decode(result.get("DOWNLOAD_BLOCK"));
 
             ServletOutputStream outputStream = servletResponse.getOutputStream();
             outputStream.write(content);

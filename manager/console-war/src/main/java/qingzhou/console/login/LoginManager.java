@@ -12,6 +12,7 @@ import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.TotpCipher;
 import qingzhou.engine.util.pattern.Filter;
@@ -23,7 +24,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -126,15 +126,10 @@ public class LoginManager implements Filter<SystemControllerContext> {
     }
 
     private static void setLoginUser(HttpSession session, String user) {
-        if (user == null) {
-            return;
-        }
-        user = encodeUser(user);
+        if (user == null) return;
+        Base64Coder base64Coder = SystemController.getService(CryptoService.class).getBase64Coder();
+        user = base64Coder.encode(user.getBytes(StandardCharsets.UTF_8));
         session.setAttribute(LOGIN_USER, user);
-    }
-
-    private static String encodeUser(String user) {
-        return Base64.getEncoder().encodeToString(user.getBytes(StandardCharsets.UTF_8));
     }
 
     public static String getLoginUser(HttpSession session) {
@@ -150,7 +145,8 @@ public class LoginManager implements Filter<SystemControllerContext> {
         if (user == null) {
             return null;
         }
-        return new String(Base64.getDecoder().decode(user), StandardCharsets.UTF_8);
+        Base64Coder base64Coder = SystemController.getService(CryptoService.class).getBase64Coder();
+        return new String(base64Coder.decode(user), StandardCharsets.UTF_8);
     }
 
     public static LoginFailedMsg login(HttpServletRequest request) throws Exception {

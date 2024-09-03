@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.Map;
 
 @Model(code = "serverlog", icon = "file-text",
-        entrance = DeployerConstants.EDIT_ACTION,
+        entrance = DeployerConstants.ACTION_EDIT,
         name = {"服务器日志", "en:Server Log"}, order = 3,
         info = {"QingZhou 实例的日志配置。", "en:The logging configuration of the QingZhou instance."})
 public class ServerLog extends ModelBase implements Updatable, Downloadable {

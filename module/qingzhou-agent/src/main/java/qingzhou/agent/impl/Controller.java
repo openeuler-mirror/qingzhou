@@ -135,8 +135,8 @@ public class Controller implements ModuleActivator {
             // 4. 处理
             ResponseImpl response = new ResponseImpl();
             String appName = request.getApp();
-            if (DeployerConstants.INSTANCE_MANAGE.equals(request.getManageType())) {
-                appName = DeployerConstants.INSTANCE_APP;
+            if (DeployerConstants.MANAGE_INSTANCE.equals(request.getManageType())) {
+                appName = DeployerConstants.APP_INSTANCE;
             }
             App app = deployer.getApp(appName);
             app.invoke(request);
@@ -192,8 +192,8 @@ public class Controller implements ModuleActivator {
 
             List<AppInfo> appInfos = new ArrayList<>();
             for (String a : deployer.getAllApp()) {
-                if (DeployerConstants.INSTANCE_APP.equals(a)
-                        || DeployerConstants.MASTER_APP.equals(a)) {
+                if (DeployerConstants.APP_INSTANCE.equals(a)
+                        || DeployerConstants.APP_MASTER.equals(a)) {
                     continue;
                 }
                 appInfos.add(deployer.getApp(a).getAppInfo());
@@ -207,7 +207,7 @@ public class Controller implements ModuleActivator {
                 if (masterUrl.endsWith("/")) {
                     masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
                 }
-                String fingerprintUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.CHECKREGISTRY_ACTION;
+                String fingerprintUrl = masterUrl + "/rest/json/app/" + DeployerConstants.APP_MASTER + "/" + DeployerConstants.MODEL_INSTANCE + "/" + DeployerConstants.ACTION_CHECKREGISTRY;
                 String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
                 HttpResponse response = http.buildHttpClient().send(fingerprintUrl, new HashMap<String, String>() {{
                     put("fingerprint", fingerprint);
@@ -225,7 +225,7 @@ public class Controller implements ModuleActivator {
             }
             if (registered) return;
 
-            String registerUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.REGISTER_ACTION;
+            String registerUrl = masterUrl + "/rest/json/app/" + DeployerConstants.APP_MASTER + "/" + DeployerConstants.MODEL_INSTANCE + "/" + DeployerConstants.ACTION_REGISTER;
             http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
                 put("doRegister", registerData);
             }});

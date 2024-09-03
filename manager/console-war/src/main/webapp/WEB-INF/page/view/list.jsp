@@ -48,15 +48,15 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    boolean canAccess = (SecurityFilter.canAccess(qzApp, qzModel + "/" + DeployerConstants.ADD_ACTION, LoginManager.getLoginUser(session)));
-                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo(DeployerConstants.CREATE_ACTION);
-                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo(DeployerConstants.ADD_ACTION);
+                    boolean canAccess = (SecurityFilter.canAccess(qzApp, qzModel + "/" + DeployerConstants.ACTION_ADD, LoginManager.getLoginUser(session)));
+                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo(DeployerConstants.ACTION_CREATE);
+                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo(DeployerConstants.ACTION_ADD);
                     if (canAccess && (listCreateAction != null) && (listAddAction != null)) {
                 %>
                 <a class="btn"
-                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.CREATE_ACTION)%>">
+                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.ACTION_CREATE)%>">
                     <i class="icon icon-plus-sign"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.CREATE_ACTION)%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.ACTION_CREATE)%>
                 </a>
                 <%
                     }
@@ -163,7 +163,7 @@
                 <td class="sequence"><%=++listOrder%>
                 </td>
                 <%
-                    ModelActionInfo targetAction = modelInfo.getModelActionInfo(DeployerConstants.SHOW_ACTION);
+                    ModelActionInfo targetAction = modelInfo.getModelActionInfo(DeployerConstants.ACTION_SHOW);
                     boolean isFirst = true;
                     for (Integer i : indexToShow) {
                         String value = modelData.get(PageBackendService.getFieldName(qzRequest, i));
@@ -241,7 +241,7 @@
                        model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedId)%>"
                             <%
-                                if (actionKey.equals(DeployerConstants.FILES_ACTION)) {
+                                if (actionKey.equals(DeployerConstants.ACTION_FILES)) {
                                     out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                                 }
                                 if (isAjaxAction) {
@@ -276,7 +276,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.LIST_ACTION + "?markForAddCsrf")%>&<%="pageNum"%>="
+                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>

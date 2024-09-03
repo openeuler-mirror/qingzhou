@@ -6,12 +6,12 @@ import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 
 @App
-public class MasterApp extends QingzhouSystemApp {
-    private static MasterApp masterApp;
+public class Main extends QingzhouSystemApp {
+    private static Main main;
 
     @Override
     public void start(AppContext appContext) {
-        masterApp = this;
+        main = this;
 
         appContext.addI18n("validator.exist", new String[]{"已存在", "en:Already exists"});
         appContext.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
@@ -21,8 +21,8 @@ public class MasterApp extends QingzhouSystemApp {
     }
 
     public static <T> T getService(Class<T> type) {
-        if (type == ModuleContext.class) return (T) masterApp.moduleContext;
+        if (type == ModuleContext.class) return (T) main.moduleContext;
 
-        return masterApp.moduleContext.getService(type);
+        return main.moduleContext.getService(type);
     }
 }

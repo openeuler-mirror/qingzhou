@@ -4,7 +4,7 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Addable;
-import qingzhou.app.master.MasterApp;
+import qingzhou.app.master.Main;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.engine.util.Utils;
@@ -62,18 +62,18 @@ public class Department extends ModelBase implements Addable {
     public void addData(Map<String, String> data) throws Exception {
         qingzhou.config.Department d = new qingzhou.config.Department();
         Utils.setPropertiesToObj(d, data);
-        MasterApp.getService(Config.class).addDepartment(d);
+        Main.getService(Config.class).addDepartment(d);
     }
 
     @Override
     public void deleteData(String id) throws Exception {
-        MasterApp.getService(Config.class).deleteDepartment(id);
+        Main.getService(Config.class).deleteDepartment(id);
     }
 
     @Override
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
         List<Map<String, String>> departments = new ArrayList<>();
-        Console console = MasterApp.getService(Config.class).getConsole();
+        Console console = Main.getService(Config.class).getConsole();
         for (qingzhou.config.Department department : console.getDepartment()) {
             Map<String, String> departmentMap = Utils.getPropertiesFromObj(department);
             departments.add(departmentMap);
@@ -83,7 +83,7 @@ public class Department extends ModelBase implements Addable {
 
     @Override
     public Map<String, String> showData(String id) throws Exception {
-        Console console = MasterApp.getService(Config.class).getConsole();
+        Console console = Main.getService(Config.class).getConsole();
         for (qingzhou.config.Department department : console.getDepartment()) {
             if (department.getId().equals(id)) return Utils.getPropertiesFromObj(department);
         }
@@ -92,7 +92,7 @@ public class Department extends ModelBase implements Addable {
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        Config config = MasterApp.getService(Config.class);
+        Config config = Main.getService(Config.class);
         String id = data.get(idFieldName());
         qingzhou.config.Department department = config.getConsole().getDepartment(id);
         config.deleteDepartment(id);

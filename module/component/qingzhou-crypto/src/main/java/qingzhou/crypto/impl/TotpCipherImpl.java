@@ -1,7 +1,8 @@
 package qingzhou.crypto.impl;
 
+import qingzhou.crypto.Base16Coder;
+import qingzhou.crypto.Base32Coder;
 import qingzhou.crypto.TotpCipher;
-import qingzhou.engine.util.Base32Util;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -10,15 +11,22 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 class TotpCipherImpl implements TotpCipher {
+    private final Base16Coder base16Coder;
+    private final Base32Coder base32Coder;
     private final int[] DIGITS_POWER
             // 0 1  2   3    4     5      6       7        8
             = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
+
+    TotpCipherImpl(Base16Coder base16Coder, Base32Coder base32Coder) {
+        this.base16Coder = base16Coder;
+        this.base32Coder = base32Coder;
+    }
 
     @Override
     public String generateKey() {
         byte[] salt = new byte[8];
         new SecureRandom().nextBytes(salt);
-        return Base32Util.encode(salt);
+        return base32Coder.encode(salt);
     }
 
     @Override
@@ -27,7 +35,7 @@ class TotpCipherImpl implements TotpCipher {
         long t = currentTime / 30;
         String time = Long.toHexString(t).toUpperCase();
 
-        return generateTOTP(Base32Util.decode(key), time);
+        return generateTOTP(base32Coder.decode(key), time);
     }
 
     @Override
@@ -54,7 +62,7 @@ class TotpCipherImpl implements TotpCipher {
         }
         time = timeBuilder.toString();
 
-        byte[] msg = HexUtil.hexToBytes(time);
+        byte[] msg = base16Coder.decode(time);
         byte[] hash = hMac(key, msg);
 
         return computeCode(hash);

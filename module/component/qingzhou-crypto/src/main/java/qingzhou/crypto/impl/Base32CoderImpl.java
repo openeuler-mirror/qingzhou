@@ -1,18 +1,20 @@
-package qingzhou.engine.util;
+package qingzhou.crypto.impl;
+
+import qingzhou.crypto.Base32Coder;
 
 import java.util.Arrays;
 
-public class Base32Util {
-    private static final char[] ALPHABET = {
+class Base32CoderImpl implements Base32Coder {
+    private final char[] ALPHABET = {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
             'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
             'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
             'Y', 'Z', '2', '3', '4', '5', '6', '7'
     };
 
-    private static final byte[] DECODE_TABLE;
+    private final byte[] DECODE_TABLE;
 
-    static {
+    {
         DECODE_TABLE = new byte[128];
         Arrays.fill(DECODE_TABLE, (byte) 0xFF);
         for (int i = 0; i < ALPHABET.length; i++) {
@@ -23,8 +25,8 @@ public class Base32Util {
         }
     }
 
-    public static String encode(byte[] data) {
-
+    @Override
+    public String encode(byte[] data) {
         char[] chars = new char[((data.length * 8) / 5) + ((data.length % 5) != 0 ? 1 : 0)];
 
         for (int i = 0, j = 0, index = 0; i < chars.length; i++) {
@@ -49,19 +51,13 @@ public class Base32Util {
         return new String(chars);
     }
 
-    public static byte[] decode(String s) throws Exception {
-
+    @Override
+    public byte[] decode(String s) {
         char[] stringData = s.toCharArray();
         byte[] data = new byte[(stringData.length * 5) / 8];
 
         for (int i = 0, j = 0, index = 0; i < stringData.length; i++) {
-            int val;
-
-            try {
-                val = DECODE_TABLE[stringData[i]];
-            } catch (ArrayIndexOutOfBoundsException e) {
-                throw new Exception("Illegal character");
-            }
+            int val = DECODE_TABLE[stringData[i]];
 
             if (index <= 3) {
                 index = (index + 5) % 8;

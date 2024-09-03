@@ -49,8 +49,8 @@ public class ValidationFilter implements Filter<RestContext> {
     public boolean doFilter(RestContext context) throws Exception {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
-        boolean isAddAction = DeployerConstants.ADD_ACTION.equals(request.getAction());
-        boolean isUpdateAction = DeployerConstants.UPDATE_ACTION.equals(request.getAction());
+        boolean isAddAction = DeployerConstants.ACTION_ADD.equals(request.getAction());
+        boolean isUpdateAction = DeployerConstants.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
             AppInfo appInfo = SystemController.getAppInfo(PageBackendService.getAppName(request));
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());

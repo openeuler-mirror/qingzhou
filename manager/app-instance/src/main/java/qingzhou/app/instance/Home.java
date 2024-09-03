@@ -3,9 +3,9 @@ package qingzhou.app.instance;
 import qingzhou.api.*;
 import qingzhou.deployer.DeployerConstants;
 
-@Model(code = DeployerConstants.HOME_MODEL, icon = "home",
+@Model(code = DeployerConstants.MODEL_HOME, icon = "home",
         order = -1,
-        entrance = DeployerConstants.SHOW_ACTION,
+        entrance = DeployerConstants.ACTION_SHOW,
         name = {"实例", "en:Instance"},
         info = {"展示当前实例的说明信息。",
                 "en:Displays the description of the current instance."})
@@ -16,7 +16,7 @@ public class Home extends ModelBase {
     public String javaHome;
 
     @ModelAction(
-            code = DeployerConstants.SHOW_ACTION,
+            code = DeployerConstants.ACTION_SHOW,
             name = {"首页", "en:Home"},
             info = {"展示实例的首页信息。", "en:Displays the homepage information of the instance."})
     public void show(Request request) throws Exception {

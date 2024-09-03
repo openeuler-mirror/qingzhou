@@ -8,8 +8,10 @@ import java.security.*;
 import java.util.UUID;
 
 public class CryptoServiceImpl implements CryptoService {
-    private final MessageDigest messageDigest = new MessageDigestImpl();
-    private final HexCoder hexCoder = new HexCoderImpl();
+    private final Base64Coder base64Coder = new Base64CoderImpl();
+    private final Base32Coder base32Coder = new Base32CoderImpl();
+    private final Base16Coder base16Coder = new Base16CoderImpl();
+    private final MessageDigest messageDigest = new MessageDigestImpl(base64Coder);
 
     @Override
     public String generateKey() {
@@ -20,7 +22,7 @@ public class CryptoServiceImpl implements CryptoService {
 
     @Override
     public Cipher getCipher(String key) {
-        return new CipherImpl(key);
+        return new CipherImpl(key, base64Coder);
     }
 
     @Override
@@ -36,19 +38,19 @@ public class CryptoServiceImpl implements CryptoService {
         PrivateKey privateKey = keyPair.getPrivate();
 
         String[] keyPairArray = new String[2];
-        keyPairArray[0] = hexCoder.bytesToHex(publicKey.getEncoded());
-        keyPairArray[1] = hexCoder.bytesToHex(privateKey.getEncoded());
+        keyPairArray[0] = base64Coder.encode(publicKey.getEncoded());
+        keyPairArray[1] = base64Coder.encode(privateKey.getEncoded());
         return keyPairArray;
     }
 
     @Override
     public PairCipher getPairCipher(String publicKey, String privateKey) {
-        return new PairCipherImpl(publicKey, privateKey);
+        return new PairCipherImpl(publicKey, privateKey, base64Coder);
     }
 
     @Override
     public TotpCipher getTotpCipher() {
-        return new TotpCipherImpl();
+        return new TotpCipherImpl(base16Coder, base32Coder);
     }
 
     @Override
@@ -57,8 +59,18 @@ public class CryptoServiceImpl implements CryptoService {
     }
 
     @Override
-    public HexCoder getHexCoder() {
-        return hexCoder;
+    public Base64Coder getBase64Coder() {
+        return base64Coder;
+    }
+
+    @Override
+    public Base32Coder getBase32Coder() {
+        return base32Coder;
+    }
+
+    @Override
+    public Base16Coder getBase16Coder() {
+        return base16Coder;
     }
 
     private KeyPair genKeyPair(String seedKey) throws Exception {

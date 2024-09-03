@@ -26,8 +26,9 @@ import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 class DeployerImpl implements Deployer {
+    // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
+    private final Map<String, App> apps = new TreeMap<>();
 
-    private final Map<String, App> apps = new HashMap<>();
     private final ModuleContext moduleContext;
     private final Logger logger;
 
@@ -43,7 +44,10 @@ class DeployerImpl implements Deployer {
         if (apps.containsKey(appName)) {
             throw new IllegalArgumentException("The app already exists: " + appName);
         }
-        boolean isSystemApp = DeployerConstants.MASTER_APP.equals(appName) || DeployerConstants.INSTANCE_APP.equals(appName);
+
+        if (!appDir.isDirectory()) throw new IllegalArgumentException("The app file must be a directory");
+
+        boolean isSystemApp = DeployerConstants.APP_MASTER.equals(appName) || DeployerConstants.APP_INSTANCE.equals(appName);
         AppImpl app = buildApp(appName, appDir, isSystemApp);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
@@ -101,8 +105,8 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public Collection<String> getAllApp() {
-        return apps.keySet();
+    public List<String> getAllApp() {
+        return new ArrayList<>(apps.keySet());
     }
 
     @Override
@@ -131,6 +135,7 @@ class DeployerImpl implements Deployer {
 
         AppInfo appInfo = new AppInfo();
         appInfo.setName(appName);
+        appInfo.setFilePath(appDir.getAbsolutePath());
         Map<ModelBase, ModelInfo> modelInfos = getModelInfos(scanAppFiles, loader);
         appInfo.setModelInfos(modelInfos.values());
         app.setAppInfo(appInfo);
@@ -483,22 +488,22 @@ class DeployerImpl implements Deployer {
 
     static void findSuperDefaultActions(Class<?> checkClass, Set<String> defaultActions) {
         if (checkClass == Addable.class) {
-            defaultActions.add(DeployerConstants.CREATE_ACTION);
-            defaultActions.add(DeployerConstants.ADD_ACTION);
+            defaultActions.add(DeployerConstants.ACTION_CREATE);
+            defaultActions.add(DeployerConstants.ACTION_ADD);
         } else if (checkClass == Deletable.class) {
-            defaultActions.add(DeployerConstants.DELETE_ACTION);
+            defaultActions.add(DeployerConstants.ACTION_DELETE);
         } else if (checkClass == Downloadable.class) {
-            defaultActions.add(DeployerConstants.FILES_ACTION);
-            defaultActions.add(DeployerConstants.DOWNLOAD_ACTION);
+            defaultActions.add(DeployerConstants.ACTION_FILES);
+            defaultActions.add(DeployerConstants.ACTION_DOWNLOAD);
         } else if (checkClass == Listable.class) {
-            defaultActions.add(DeployerConstants.LIST_ACTION);
+            defaultActions.add(DeployerConstants.ACTION_LIST);
         } else if (checkClass == Monitorable.class) {
-            defaultActions.add(DeployerConstants.MONITOR_ACTION);
+            defaultActions.add(DeployerConstants.ACTION_MONITOR);
         } else if (checkClass == Showable.class) {
-            defaultActions.add(DeployerConstants.SHOW_ACTION);
+            defaultActions.add(DeployerConstants.ACTION_SHOW);
         } else if (checkClass == Updatable.class) {
-            defaultActions.add(DeployerConstants.EDIT_ACTION);
-            defaultActions.add(DeployerConstants.UPDATE_ACTION);
+            defaultActions.add(DeployerConstants.ACTION_EDIT);
+            defaultActions.add(DeployerConstants.ACTION_UPDATE);
         }
 
         for (Class<?> c : checkClass.getInterfaces()) {

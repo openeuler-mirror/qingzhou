@@ -1,39 +1,48 @@
-import qingzhou.deployer.DeployerConstants;//package qingzhou.app.master.service;
+//package qingzhou.app.master.service;
 //
 //import qingzhou.api.*;
-//import qingzhou.api.type.Addable;
-//import qingzhou.app.master.MasterApp;
+//import qingzhou.api.type.Listable;
+//import qingzhou.app.master.Main;
 //import qingzhou.config.Config;
 //import qingzhou.config.Security;
+//import qingzhou.crypto.Cipher;
 //import qingzhou.crypto.CryptoService;
-//import qingzhou.crypto.KeyCipher;
 //import qingzhou.deployer.Deployer;
+//import qingzhou.deployer.DeployerConstants;
 //import qingzhou.deployer.RequestImpl;
 //import qingzhou.deployer.ResponseImpl;
 //import qingzhou.engine.util.FileUtil;
 //import qingzhou.json.Json;
 //import qingzhou.registry.*;
 //
-//import javax.net.ssl.SSLSocketFactory;
 //import java.io.*;
-//import java.lang.reflect.InvocationTargetException;
 //import java.net.HttpURLConnection;
 //import java.nio.charset.StandardCharsets;
 //import java.nio.file.Files;
-//import java.util.*;
+//import java.util.ArrayList;
+//import java.util.HashMap;
+//import java.util.List;
+//import java.util.Map;
 //
-//@Model(code = DeployerConstants.APP_MODEL, icon = "cube-alt",
+//@Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
 //        menu = "Service", order = 1,
 //        name = {"应用", "en:App"},
-//        info = {"应用。",
-//                "en:App Management."})
-//public class App extends ModelBase implements Addable {
+//        info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可部署在轻舟平台上，用于管理特定的业务系统。",
+//                "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
+//public class App extends ModelBase implements Listable {
+//    private final String SP = DeployerConstants.DEFAULT_DATA_SEPARATOR;
+//
+//    @Override
+//    public String idFieldName() {
+//        return DeployerConstants.APP_KEY_ID;
+//    }
+//
 //    @ModelField(
-//            required = true,
-//            editable = false, createable = false,
+//            editable = false,
 //            list = true,
 //            name = {"名称", "en:Name"},
-//            info = {"应用名称。", "en:App Name"})
+//            info = {"应用的名称信息，用以识别业务系统。",
+//                    "en:The name of the application to identify the business system."})
 //    public String id;
 //
 //    @ModelField(
@@ -41,33 +50,35 @@ import qingzhou.deployer.DeployerConstants;//package qingzhou.app.master.service
 //            name = {"使用上传", "en:Enable Upload"},
 //            info = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。",
 //                    "en:The installed app can be uploaded from the client or read from a location specified on the server side."})
-//    public boolean appFrom = false;
+//    public boolean upload = false;
 //
 //    @ModelField(
-//            show = "appFrom=false",
+//            show = "upload=false",
 //            required = true,
+//            filePath = true,
 //            list = true,
 //            name = {"应用位置", "en:Application File"},
 //            info = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar, *.zip 类型的文件或目录。",
 //                    "en:The location of the application on the server, usually the app package, Note: Must be a *.jar, *.zip file or directory."})
-//    public String filename;
+//    public String path;
 //
 //    @ModelField(
-//            show = "appFrom=true",
+//            show = "upload=true",
 //            type = FieldType.file,
 //            required = true,
 //            name = {"上传应用", "en:Upload Application"},
 //            info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 QingZhou 应用文件，否则可能会导致安装失败。",
 //                    "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
-//    public String fromUpload;
+//    public String file;
 //
 //    @ModelField(
 //            type = FieldType.multiselect,
-//            options = {"local"},
+//            required = true,
+//            options = {DeployerConstants.INSTANCE_LOCAL},
 //            list = true, //refModel = Instance.class, todo 远程获取引用model的列表
 //            name = {"实例", "en:Instance"},
 //            info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
-//    public String instances = "local";
+//    public String instances = DeployerConstants.INSTANCE_LOCAL;
 //
 //    @Override
 //    public void start() {
@@ -75,113 +86,171 @@ import qingzhou.deployer.DeployerConstants;//package qingzhou.app.master.service
 //        appContext.addI18n("app.type.unknown", new String[]{"未知的应用类型", "en:Unknown app type"});
 //    }
 //
-//    @ModelAction(
-//            code =DeployerConstants.SHOW_ACTION, icon = "folder-open-alt",
-//            name = {"查看", "en:Show"},
-//            info = {"查看该组件的相关信息。", "en:View the information of this model."})
-//    public void show(Request request) throws Exception {
-//        Map<String, String> appMap = new HashMap<>();
-//        String id = request.getId();
-//        qingzhou.deployer.App app = MasterApp.getService(Deployer.class).getApp(id);
+//    @Override
+//    public Map<String, String> showData(String id) {
+//        qingzhou.deployer.App app = Main.getService(Deployer.class).getApp(id);
 //        if (app != null) {
-//            appMap.put("id", id);
-//            appMap.put("instances", "local");
-//            appMap.put("filename", ""); // ToDo
-//            request.getResponse().addData(appMap);
-//            return;
+//            Map<String, String> appMap = new HashMap<>();
+//            appMap.put(idFieldName(), id);
+//            appMap.put("instances", DeployerConstants.INSTANCE_LOCAL);
+//            appMap.put(DeployerConstants.APP_KEY_PATH, app.getAppContext().getAppDir().getAbsolutePath());
+//            return appMap;
 //        }
 //
-//        try {
-//            Registry registry = MasterApp.getService(Registry.class);
-//            Collection<String> allInstanceIds = registry.getAllInstanceId();
-//            // 处理远程实例的应用信息
-//            for (String instanceId : allInstanceIds) {
-//                InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
-//                AppInfo[] appInfos = instanceInfo.getAppInfos();
-//                for (AppInfo appInfo : appInfos) {
-//                    if (id.equals(appInfo.getName())) {
-//                        appMap.put("id", appInfo.getName());
-//                        appMap.put("instances", instanceId);
-//                        appMap.put("filename", ""); // ToDo
-//                        response.addData(appMap);
-//                        break;
+//        Registry registry = Main.getService(Registry.class);
+//        Map<String, String> appMap = new HashMap<>();
+//        for (String instance : registry.getAllInstanceId()) {
+//            InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
+//            for (AppInfo appInfo : instanceInfo.getAppInfos()) {
+//                if (appInfo.getName().equals(id)) {
+//                    if (!appMap.containsKey(idFieldName())) {
+//                        appMap.put(idFieldName(), id);
+//                        appMap.put("instances", instanceInfo.getId());
+//                        appMap.put(DeployerConstants.APP_KEY_PATH, appInfo.getFilePath());
+//                    } else {
+//                        appMap.put("instances", appMap.get("instances")
+//                                + SP + instanceInfo.getId());
 //                    }
 //                }
-//                if (!appMap.isEmpty()) {
-//                    break;
-//                }
 //            }
-//        } catch (Exception ignored) {
+//        }
+//
+//        return null;
+//    }
+//
+//    @Override
+//    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
+//        List<String> allAppNames = listAllAppNames();
+//        int totalSize = allAppNames.size();
+//        int startIndex = (pageNum - 1) * pageSize;
+//        int endIndex = Math.min(startIndex + pageSize, totalSize);
+//        List<String> subList = allAppNames.subList(startIndex, endIndex);
+//        List<Map<String, String>> data = new ArrayList<>();
+//        subList.forEach(a -> data.add(showData(a)));
+//        return data;
+//    }
+//
+//    private List<String> listAllAppNames() {
+//        List<String> allAppNames = new ArrayList<>();
+//
+//        Main.getService(Deployer.class).getAllApp().forEach(a -> {
+//            if (DeployerConstants.APP_MASTER.equals(a)
+//                    || DeployerConstants.APP_INSTANCE.equals(a)) {
+//                return;
+//            }
+//            allAppNames.add(a);
+//        });
+//
+//        Registry registry = Main.getService(Registry.class);
+//        allAppNames.addAll(registry.getAllAppNames());
+//
+//        return allAppNames;
+//    }
+//
+//    @ModelAction(
+//            code = DeployerConstants.ACTION_DELETE, icon = "trash", order = 9,
+//            ajax = true,
+//            batch = true,
+//            name = {"卸载", "en:Uninstall"},
+//            info = {"卸载应用，只能卸载本地实例部署的应用。注：请谨慎操作，删除后不可恢复。",
+//                    "en:If you uninstall an application, you can only uninstall an application deployed on a local instance. Note: Please operate with caution, it cannot be recovered after deletion."})
+//    public void delete(Request request) throws Exception {
+//        String appName = request.getId();
+//        Map<String, String> app = showData(appName);
+//        String[] instances = app.get("instances").split(SP);
+//
+//        RequestImpl tmpReq = new RequestImpl();
+//        tmpReq.setId(appName);
+//        tmpReq.setAppName(DeployerConstants.APP_INSTANCE);
+//        tmpReq.setModelName(DeployerConstants.MODEL_INSTALLER);
+//        tmpReq.setActionName(DeployerConstants.ACTION_UNINSTALL);
+//
+//        List<Response> responseList = invokeOnInstances(tmpReq, instances);
+//        request.getResponse().setSuccess(responseList.isEmpty());
+//
+//        if (!responseList.isEmpty()) {
+//            // todo 参考 ActionInvoker 的 invokeBatch 方法，给出友好的响应信息
 //        }
 //    }
 //
 //    @ModelAction(
+//            code = DeployerConstants.ACTION_UPDATE, icon = "save",
+//            ajax = true,
 //            name = {"更新", "en:Update"},
 //            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
 //    public void update(Request request) throws Exception {
-//        try {
-//            delete(request);
-//            add(request);
-//        } finally {
-//            ((RequestImpl) request).setManageType(DeployerConstants.APP_MANAGE);
-//            ((RequestImpl) request).setAppName("master");
-//            ((RequestImpl) request).setModelName(DeployerConstants.APP_MODEL);
-//            ((RequestImpl) request).setActionName("update");
+//        delete(request);
+//        add(request);
+//    }
+//
+//    @ModelAction(
+//            code = DeployerConstants.ACTION_ADD, icon = "save",
+//            ajax = true,
+//            name = {"添加", "en:Add"},
+//            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
+//    public void add(Request request) throws Exception {
+//        String[] instances = request.getParameter("instances").split(SP);
+//
+//        RequestImpl tmpReq = new RequestImpl();
+//        tmpReq.setAppName(DeployerConstants.APP_INSTANCE);
+//        tmpReq.setModelName(DeployerConstants.MODEL_INSTALLER);
+//        tmpReq.setActionName(DeployerConstants.ACTION_INSTALL);
+//        tmpReq.setParameters(request.getParameters());
+//
+//        List<Response> responseList = invokeOnInstances(tmpReq, instances);
+//        request.getResponse().setSuccess(responseList.isEmpty());
+//
+//        if (!responseList.isEmpty()) {
+//            // todo 参考 ActionInvoker 的 invokeBatch 方法，给出友好的响应信息
 //        }
 //    }
 //
 //    @ModelAction(
-//            name = {"安装", "en:Install"},
-//            info = {"按配置要求安装应用到指定的实例。", "en:Install the app to the specified instance as required."})
-//    public void add(Request request) throws Exception {
-//        String[] instances = request.getParameter("instances") != null
-//                ? request.getParameter("instances").split(",")
-//                : new String[0];
-//        ((RequestImpl) request).setAppName(DeployerConstants.INSTANCE_APP);
-//        ((RequestImpl) request).setModelName("installer");
-//        ((RequestImpl) request).setActionName("installApp");
-//        try {
-//            Registry registry = MasterApp.getService(Registry.class);
-//            Security security = MasterApp.getService(Config.class).getConsole().getSecurity();
-//            for (String instance : instances) {
-//                try {
-//                    if ("local".equals(instance)) { // 安装到本地节点
-//                        MasterApp.getService(Deployer.class).getApp(DeployerConstants.INSTANCE_APP).invokeDirectly(request, response);
-//                    } else {
-//                        InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
-//                        String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
-//                        String remoteKey = appContext.getService(CryptoService.class).getKeyPairCipher(security.getPublicKey(), security.getPrivateKey()).decryptWithPrivateKey(instanceInfo.getKey());
+//            code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
+//            order = 1,
+//            name = {"管理", "en:Manage"},
+//            info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
+//    public void manage(Request request) {
+//    }
 //
-//                        uploadFile((RequestImpl) request, remoteUrl, remoteKey);
+//    private List<Response> invokeOnInstances(Request tmpReq, String[] instances) throws Exception {
+//        List<Response> responseList = new ArrayList<>();
 //
-//                        ResponseImpl responseImpl = sendReq(remoteUrl, request, remoteKey);
-//                        if (!responseImpl.isSuccess()) {
-//                            System.out.println(responseImpl.getMsg());
-//                        }
-//                    }
-//                } catch (Exception e) { // todo 部分失败，如何显示到页面？
-//                    request.getResponse().setSuccess(false);
-//                    if (e instanceof InvocationTargetException) {
-//                        request.getResponse().setMsg(((InvocationTargetException) e).getTargetException().getMessage());
-//                    } else {
-//                        request.getResponse().setMsg(e.getMessage());
-//                    }
+//        String remoteKey = null;
+//        for (String instance : instances) {
+//            if (instance.equals(DeployerConstants.INSTANCE_LOCAL)) {
+//                Deployer deployer = Main.getService(Deployer.class);
+//                qingzhou.deployer.App instanceApp = deployer.getApp(tmpReq.getApp());
+//                instanceApp.invokeDirectly(tmpReq);
+//                responseList.add(tmpReq.getResponse());
+//            } else {
+//                Registry registry = Main.getService(Registry.class);
+//                InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
+//                String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
+//
+//                if (remoteKey == null) {
+//                    Config config = Main.getService(Config.class);
+//                    Security security = config.getConsole().getSecurity();
+//                    remoteKey = Main.getService(CryptoService.class)
+//                            .getPairCipher(security.getPublicKey(), security.getPrivateKey())
+//                            .decryptWithPrivateKey(instanceInfo.getKey());
 //                }
+//
+//                ResponseImpl responseImpl = sendReq(remoteUrl, tmpReq, remoteKey);
+//                responseList.add(responseImpl);
 //            }
-//        } finally {
-//            ((RequestImpl) request).setAppName("master");
-//            ((RequestImpl) request).setModelName(DeployerConstants.APP_MODEL);
-//            ((RequestImpl) request).setActionName(DeployerConstants.ADD_ACTION);
 //        }
+//
+//        return responseList;
 //    }
 //
 //    private static final int FILE_SIZE = 1024 * 1024 * 10; // 集中管控文件分割传输大小，10M
 //
 //    private void uploadFile(RequestImpl request, String remoteUrl, String remoteKey) throws Exception {
 //        // 文件上传
-//        qingzhou.deployer.App appInfo = MasterApp.getService(Deployer.class).getApp("master");
+//        qingzhou.deployer.App appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_MASTER);
 //        if (appInfo != null) {
-//            ModelInfo modelInfo = appInfo.getAppInfo().getModelInfo(DeployerConstants.APP_MODEL);
+//            ModelInfo modelInfo = appInfo.getAppInfo().getModelInfo(DeployerConstants.MODEL_APP);
 //            if (modelInfo != null) {
 //                ModelFieldInfo[] modelFieldInfos = modelInfo.getModelFieldInfos();
 //                if (modelFieldInfos != null) {
@@ -226,14 +295,14 @@ import qingzhou.deployer.DeployerConstants;//package qingzhou.app.master.service
 //            for (int i = 0; i < count; i++) {
 //                len = bis.read(bytes);
 //                RequestImpl req = new RequestImpl();
-//                req.setAppName(DeployerConstants.INSTANCE_APP);
+//                req.setAppName(DeployerConstants.APP_INSTANCE);
 //                req.setModelName("installer");
 //                req.setActionName("uploadFile");
-//                req.setManageType(DeployerConstants.APP_MANAGE);
+//                req.setManageType(DeployerConstants.MANAGE_APP);
 //
 //                Map<String, String> parameters = new HashMap<>();
 //                parameters.put("fileName", fileName);
-//                parameters.put("fileBytes", appContext.getService(CryptoService.class).getHexCoder().bytesToHex(bytes));
+//                parameters.put("fileBytes", Main.getService(CryptoService.class).getBase64Coder().encode(bytes));
 //                parameters.put("len", String.valueOf(len));
 //                parameters.put("isStart", String.valueOf(i == 0));
 //                parameters.put("isEnd", String.valueOf(i == count - 1));
@@ -264,78 +333,15 @@ import qingzhou.deployer.DeployerConstants;//package qingzhou.app.master.service
 //        return null;
 //    }
 //
-//    @ModelAction(
-//            code  = DeployerConstants.MANAGE_ACTION,
-//            show = "id!=master&id!=instance",
-//            name = {"管理", "en:Manage"}, order = 1,
-//            info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
-//    public void manage(Request request) throws Exception {
-//    }
-//
-//    @ModelAction(
-//            ajax = true,
-//            batch = true, order = 2, show = "id!=master&id!=instance",
-//            name = {"卸载", "en:Uninstall"},
-//            info = {"卸载应用，只能卸载本地实例部署的应用。注：请谨慎操作，删除后不可恢复。",
-//                    "en:If you uninstall an application, you can only uninstall an application deployed on a local instance. Note: Please operate with caution, it cannot be recovered after deletion."})
-//    public void delete(Request request) throws Exception {
-//        String appName = request.getId();
-//        Deployer deployer = MasterApp.getService(Deployer.class);
-//        qingzhou.deployer.App app = deployer.getApp(appName);
-//
-//        ((RequestImpl) request).setManageType(DeployerConstants.INSTANCE_MANAGE);
-//        ((RequestImpl) request).setAppName(DeployerConstants.INSTANCE_APP);
-//        ((RequestImpl) request).setModelName("installer");
-//        ((RequestImpl) request).setActionName("unInstallApp");
-//        try {
-//            if (app != null) {
-//                deployer.getApp(DeployerConstants.INSTANCE_APP).invokeDirectly(request);
-//            }
-//
-//            // 卸载远程实例
-//            Registry registry = MasterApp.getService(Registry.class);
-//            AppInfo appInfo = registry.getAppInfo(appName);
-//            if (appInfo != null) {
-//                Security security = MasterApp.getService(Config.class).getConsole().getSecurity();
-//                for (String instanceId : registry.getAllInstanceId()) {
-//                    InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
-//                    for (AppInfo info : instanceInfo.getAppInfos()) {
-//                        if (appName.equals(info.getName())) {
-//                            ((RequestImpl) request).setAppName(instanceId);
-//                            String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
-//                            String remoteKey = appContext.getService(CryptoService.class).getKeyPairCipher(security.getPublicKey(), security.getPrivateKey()).decryptWithPrivateKey(instanceInfo.getKey());
-//                            ResponseImpl responseImpl = sendReq(remoteUrl, request, remoteKey);
-//                            if (!responseImpl.isSuccess()) {
-//                                System.out.println(responseImpl.getMsg());
-//                            }
-//                            break;
-//                        }
-//                    }
-//                }
-//            }
-//        } catch (Exception e) {
-//            if (e.getMessage().contains("App not found:")) { // todo 部分失败，如何显示到页面？
-//                return;
-//            }
-//            response.setSuccess(false);
-//            response.setMsg(e.getMessage());
-//        } finally {
-//            ((RequestImpl) request).setManageType(DeployerConstants.APP_MANAGE);
-//            ((RequestImpl) request).setAppName("master");
-//            ((RequestImpl) request).setModelName(DeployerConstants.APP_MODEL);
-//            ((RequestImpl) request).setActionName(DeployerConstants.DELETE_ACTION);
-//        }
-//    }
-//
 //    private ResponseImpl sendReq(String url, Request request, String remoteKey) throws Exception {
 //        HttpURLConnection connection = null;
 //        try {
-//            Json jsonService = appContext.getService(Json.class);
+//            Json jsonService = Main.getService(Json.class);
 //            String json = jsonService.toJson(request);
 //
-//            KeyCipher cipher;
+//            Cipher cipher;
 //            try {
-//                cipher = appContext.getService(CryptoService.class).getKeyCipher(remoteKey);
+//                cipher = Main.getService(CryptoService.class).getCipher(remoteKey);
 //            } catch (Exception ignored) {
 //                throw new RuntimeException("remoteKey error");
 //            }
@@ -366,52 +372,5 @@ import qingzhou.deployer.DeployerConstants;//package qingzhou.app.master.service
 //                connection.disconnect();
 //            }
 //        }
-//    }
-//
-//    private static SSLSocketFactory ssf;
-//
-//    @Override
-//    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
-//        Deployer deployer = MasterApp.getService(Deployer.class);
-//        Collection<String> localAppNames = deployer.getAllApp();
-//        Map<String, Set<String>> uniqueApps = new HashMap<>();
-//
-//        // 处理本地应用名称
-//        for (String appName : localAppNames) {
-//            if (qingzhou.deployer.DeployerConstants.MASTER_APP.equals(appName) ||qingzhou.deployer.DeployerConstants.INSTANCE_APP.equals(appName)) {
-//                continue;
-//            }
-//            uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add("local");
-//        }
-//
-//        try {
-//            // 处理远程实例的应用信息
-//            Registry registry = MasterApp.getService(Registry.class);
-//            for (String instanceId : registry.getAllInstanceId()) {
-//                InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
-//                for (AppInfo appInfo : instanceInfo.getAppInfos()) {
-//                    String appName = appInfo.getName();
-//                    uniqueApps.computeIfAbsent(appName, k -> new HashSet<>()).add(instanceId);
-//                }
-//            }
-//        } catch (Exception ignored) {
-//        }
-//
-//        List<Map<String, String>> finalAppList = new ArrayList<>();
-//        for (Map.Entry<String, Set<String>> entry : uniqueApps.entrySet()) {
-//            String appName = entry.getKey();
-//            Set<String> instances = entry.getValue();
-//            Map<String, String> appMap = new HashMap<>();
-//            appMap.put("id", appName);
-//            appMap.put("instances", String.join(",", instances));
-//            appMap.put("filename", !(DeployerConstants.INSTANCE_APP.equals(appName) || DeployerConstants.MASTER_APP.equals(appName)) ? "apps/" + appName : "");
-//            finalAppList.add(appMap);
-//        }
-//
-//        int totalSize = finalAppList.size();
-//        int startIndex = (pageNum - 1) * pageSize;
-//        int endIndex = Math.min(startIndex + pageSize, totalSize);
-//
-//        return finalAppList.subList(startIndex, endIndex);
 //    }
 //}

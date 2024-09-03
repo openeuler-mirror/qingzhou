@@ -1,5 +1,6 @@
 package qingzhou.crypto.impl;
 
+import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.Cipher;
 
 import javax.crypto.NoSuchPaddingException;
@@ -8,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 
 class CipherImpl implements Cipher {
+    private final Base64Coder base64Coder;
     private final String transformation = "DESede"; // Triple-DES encryption algorithm
 
     static byte[] build3desData(byte[] keySeed) {
@@ -23,11 +25,12 @@ class CipherImpl implements Cipher {
 
     private final SecretKeySpec K;
 
-    CipherImpl(String key) {
-        this(key.getBytes(StandardCharsets.UTF_8));
+    CipherImpl(String key, Base64Coder base64Coder) {
+        this(key.getBytes(StandardCharsets.UTF_8), base64Coder);
     }
 
-    CipherImpl(byte[] realKeyBytes) {
+    CipherImpl(byte[] realKeyBytes, Base64Coder base64Coder) {
+        this.base64Coder = base64Coder;
         byte[] keySeed = build3desData(realKeyBytes);
         K = new SecretKeySpec(keySeed, transformation);
     }
@@ -38,14 +41,14 @@ class CipherImpl implements Cipher {
         s = s.trim();
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         byte[] encrypt = encrypt(bytes);
-        return HexUtil.bytesToHex(encrypt);// 不要用base64，不利于http传输，转义会错误
+        return base64Coder.encode(encrypt);// 不要用base64，不利于http传输，转义会错误
     }
 
     @Override
     public String decrypt(String s) throws Exception {
         if (s == null) return null;
 
-        byte[] bytes = HexUtil.hexToBytes(s);
+        byte[] bytes = base64Coder.decode(s);
         byte[] decrypt = decrypt(bytes);
         return new String(decrypt, StandardCharsets.UTF_8);
     }

@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Model(code = "os", icon = "desktop",
         menu = "Monitor",
-        entrance = DeployerConstants.MONITOR_ACTION,
+        entrance = DeployerConstants.ACTION_MONITOR,
         name = {"操作系统", "en:Operating System"},
         info = {"操作系统的基本信息。", "en:Basic information about the operating system."})
 public class OS extends ModelBase implements Monitorable {

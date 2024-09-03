@@ -2,7 +2,7 @@ package qingzhou.app.master.user;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Addable;
-import qingzhou.app.master.MasterApp;
+import qingzhou.app.master.Main;
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
@@ -141,7 +141,7 @@ public class User extends ModelBase implements Addable {
 
         qingzhou.config.User u = new qingzhou.config.User();
         Utils.setPropertiesToObj(u, data);
-        MasterApp.getService(Config.class).addUser(u);
+        Main.getService(Config.class).addUser(u);
     }
 
     @Override
@@ -168,7 +168,7 @@ public class User extends ModelBase implements Addable {
             insertPasswordModifiedTime(data);
 
             String historyPasswords = originUser.get("historyPasswords");
-            int limitRepeats = MasterApp.getService(Config.class).getConsole().getSecurity().getPasswordLimitRepeats();
+            int limitRepeats = Main.getService(Config.class).getConsole().getSecurity().getPasswordLimitRepeats();
             String cutOldPasswords = cutOldPasswords(historyPasswords, limitRepeats, data.get("password"));
             data.put("historyPasswords", cutOldPasswords);
         }
@@ -179,20 +179,20 @@ public class User extends ModelBase implements Addable {
 
     @Override
     public void deleteData(String id) throws Exception {
-        MasterApp.getService(Config.class).deleteUser(id);
+        Main.getService(Config.class).deleteUser(id);
     }
 
     @Override
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
         List<Map<String, String>> users = new ArrayList<>();
-        for (qingzhou.config.User user : MasterApp.getService(Config.class).getConsole().getUser()) {
+        for (qingzhou.config.User user : Main.getService(Config.class).getConsole().getUser()) {
             users.add(Utils.getPropertiesFromObj(user));
         }
         return users;
     }
 
     @ModelAction(
-            code = DeployerConstants.ADD_ACTION,
+            code = DeployerConstants.ACTION_ADD,
             ajax = true,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
@@ -208,7 +208,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = DeployerConstants.DELETE_ACTION,
+            code = DeployerConstants.ACTION_DELETE,
             show = "id!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
@@ -218,7 +218,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = DeployerConstants.UPDATE_ACTION,
+            code = DeployerConstants.ACTION_UPDATE,
             name = {"更新", "en:Update"},
             info = {"更新账户信息。",
                     "en:Update your account information."})
@@ -254,7 +254,7 @@ public class User extends ModelBase implements Addable {
     }
 
     static Map<String, String> showDataForUser(String userId) throws Exception {
-        for (qingzhou.config.User user : MasterApp.getService(Config.class).getConsole().getUser()) {
+        for (qingzhou.config.User user : Main.getService(Config.class).getConsole().getUser()) {
             if (user.getId().equals(userId)) {
                 Map<String, String> data = Utils.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
@@ -271,7 +271,7 @@ public class User extends ModelBase implements Addable {
     }
 
     static void updateDataForUser(Map<String, String> data) throws Exception {
-        Config config = MasterApp.getService(Config.class);
+        Config config = Main.getService(Config.class);
         String id = data.get(idKey);
         qingzhou.config.User user = config.getConsole().getUser(id);
         config.deleteUser(id);
@@ -319,7 +319,7 @@ public class User extends ModelBase implements Addable {
     }
 
     static String cutOldPasswords(String historyPasswords, int limitRepeats, String newPwd) {
-        String DATA_SEPARATOR = ",";
+        String DATA_SEPARATOR = DeployerConstants.DEFAULT_DATA_SEPARATOR;
 
         if (historyPasswords == null) {
             historyPasswords = "";

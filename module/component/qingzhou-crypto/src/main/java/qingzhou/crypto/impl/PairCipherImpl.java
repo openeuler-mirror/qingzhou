@@ -1,5 +1,6 @@
 package qingzhou.crypto.impl;
 
+import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.PairCipher;
 
 import javax.crypto.BadPaddingException;
@@ -19,10 +20,12 @@ class PairCipherImpl implements PairCipher {
     static final String ALG = "RSA";
     private static final int ENCRYPT_BLOCK = 117;
     private static final int DECRYPT_BLOCK = 128;
+    private final Base64Coder base64Coder;
     private PublicKey publicKey;
     private PrivateKey privateKey;
 
-    PairCipherImpl(String pubKeyAsBase64, String priKeyAsBase64) {
+    PairCipherImpl(String pubKeyAsBase64, String priKeyAsBase64, Base64Coder base64Coder) {
+        this.base64Coder = base64Coder;
         try {
             if (pubKeyAsBase64 != null) {
                 publicKey = convertPublic(pubKeyAsBase64);
@@ -75,13 +78,13 @@ class PairCipherImpl implements PairCipher {
         if (keyAsBase64 == null) {
             return null;
         }
-        byte[] pubBytes = HexUtil.hexToBytes(keyAsBase64);
+        byte[] pubBytes = base64Coder.decode(keyAsBase64);
         X509EncodedKeySpec encPubKeySpec = new X509EncodedKeySpec(pubBytes);
         return KeyFactory.getInstance(ALG).generatePublic(encPubKeySpec);
     }
 
     private PrivateKey convertPrivate(String keyAsBase64) throws Exception {
-        byte[] privateBytes = HexUtil.hexToBytes(keyAsBase64);
+        byte[] privateBytes = base64Coder.decode(keyAsBase64);
         PKCS8EncodedKeySpec encPriKeySpec = new PKCS8EncodedKeySpec(privateBytes);
         return KeyFactory.getInstance(ALG).generatePrivate(encPriKeySpec);
     }
@@ -89,7 +92,7 @@ class PairCipherImpl implements PairCipher {
     private String encryptWithKey(Key key, String input) throws Exception {
         byte[] bytesContent = input.getBytes(StandardCharsets.UTF_8);
         byte[] enContent = encryptWithKey(key, bytesContent);
-        return HexUtil.bytesToHex(enContent);
+        return base64Coder.encode(enContent);
     }
 
     private byte[] encryptWithKey(Key key, byte[] encryptBytes) throws Exception {
@@ -102,18 +105,9 @@ class PairCipherImpl implements PairCipher {
     private String decryptWithKey(Key key, String input) throws Exception {
         if (input == null) return null;
 
-        byte[] bytesContent;
-        try {
-            bytesContent = HexUtil.hexToBytes(input);// 内部是十六进制编码
-        } catch (Exception e) {
-            bytesContent = decodeAsBase64(input);// 登录页面是base64编码
-        }
+        byte[] bytesContent = base64Coder.decode(input);
         byte[] decryptedWithKey = decryptWithKey(key, bytesContent);
         return new String(decryptedWithKey, StandardCharsets.UTF_8);
-    }
-
-    private byte[] decodeAsBase64(String src) {
-        return java.util.Base64.getDecoder().decode(src);
     }
 
     private byte[] decryptWithKey(Key key, byte[] decryptBytes) throws Exception {

@@ -111,7 +111,7 @@ public class StartupArgs extends ModelBase implements Addable {
     public String desc;
 
     @ModelAction(
-            code = DeployerConstants.ADD_ACTION,
+            code = DeployerConstants.ACTION_ADD,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
@@ -137,7 +137,7 @@ public class StartupArgs extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = DeployerConstants.UPDATE_ACTION,
+            code = DeployerConstants.ACTION_UPDATE,
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
@@ -166,7 +166,7 @@ public class StartupArgs extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = DeployerConstants.DELETE_ACTION,
+            code = DeployerConstants.ACTION_DELETE,
             batch = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",

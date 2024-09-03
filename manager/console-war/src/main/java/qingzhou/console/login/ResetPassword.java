@@ -41,9 +41,9 @@ public class ResetPassword implements Filter<SystemControllerContext> {
 
         String msgI18nKey = user == null ? null : needReset(user);
         if (user != null && msgI18nKey != null) { // 例如加密工具不需要登录时候 user == null
-            if (DeployerConstants.PASSWORD_MODEL.equals(model)) {
-                if (DeployerConstants.EDIT_ACTION.equals(action)
-                        || DeployerConstants.UPDATE_ACTION.equals(action)) { // 允许访问重置密码的 uri
+            if (DeployerConstants.MODEL_PASSWORD.equals(model)) {
+                if (DeployerConstants.ACTION_EDIT.equals(action)
+                        || DeployerConstants.ACTION_UPDATE.equals(action)) { // 允许访问重置密码的 uri
                     return true;
                 }
             }
@@ -59,10 +59,10 @@ public class ResetPassword implements Filter<SystemControllerContext> {
             httpServletResponse.sendRedirect(PageBackendService.encodeURL(httpServletResponse, httpServletRequest.getContextPath() +
                     RESTController.REST_PREFIX +
                     viewName +
-                    "/" + DeployerConstants.APP_MANAGE +
-                    "/" + DeployerConstants.MASTER_APP +
-                    "/" + DeployerConstants.PASSWORD_MODEL +
-                    "/" + DeployerConstants.EDIT_ACTION +
+                    "/" + DeployerConstants.MANAGE_APP +
+                    "/" + DeployerConstants.APP_MASTER +
+                    "/" + DeployerConstants.MODEL_PASSWORD +
+                    "/" + DeployerConstants.ACTION_EDIT +
                     "/" + user +
                     "?" + RESTController.MSG_FLAG + "=" + msgI18nKey));
             return false;

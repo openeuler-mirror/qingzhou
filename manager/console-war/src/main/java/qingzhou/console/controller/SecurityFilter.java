@@ -69,9 +69,9 @@ public class SecurityFilter implements Filter<SystemControllerContext> {
         }
 
         // 远程实例注册
-        return checkUri.equals("/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.CHECKREGISTRY_ACTION)
+        return checkUri.equals("/rest/json/app/" + DeployerConstants.APP_MASTER + "/" + DeployerConstants.MODEL_INSTANCE + "/" + DeployerConstants.ACTION_CHECKREGISTRY)
                 ||
-                checkUri.equals("/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.REGISTER_ACTION);
+                checkUri.equals("/rest/json/app/" + DeployerConstants.APP_MASTER + "/" + DeployerConstants.MODEL_INSTANCE + "/" + DeployerConstants.ACTION_REGISTER);
     }
 
     // 所有人都有

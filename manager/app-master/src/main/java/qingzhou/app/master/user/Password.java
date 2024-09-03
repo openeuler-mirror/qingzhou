@@ -1,7 +1,7 @@
 package qingzhou.app.master.user;
 
 import qingzhou.api.*;
-import qingzhou.app.master.MasterApp;
+import qingzhou.app.master.Main;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.crypto.CryptoService;
@@ -15,9 +15,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Model(code = DeployerConstants.PASSWORD_MODEL, icon = "key",
+@Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         menu = "System", order = 2,
-        entrance = DeployerConstants.EDIT_ACTION,
+        entrance = DeployerConstants.ACTION_EDIT,
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
@@ -77,7 +77,7 @@ public class Password extends ModelBase {
     }
 
     @ModelAction(
-            code = DeployerConstants.EDIT_ACTION,
+            code = DeployerConstants.ACTION_EDIT,
             name = {"修改", "en:Edit"},
             info = {"修改当前登录账户的密码。",
                     "en:Change the password of the current login account."})
@@ -89,7 +89,7 @@ public class Password extends ModelBase {
     }
 
     @ModelAction(
-            code = DeployerConstants.UPDATE_ACTION,
+            code = DeployerConstants.ACTION_UPDATE,
             name = {"更新", "en:Update"},
             info = {"更新密码。", "en:Update the password."})
     public void update(Request request) throws Exception {
@@ -108,11 +108,11 @@ public class Password extends ModelBase {
             String digestAlg = passwords[0];
             int saltLength = Integer.parseInt(passwords[1]);
             int iterations = Integer.parseInt(passwords[2]);
-            MessageDigest digest = appContext.getService(CryptoService.class).getMessageDigest();
+            MessageDigest digest = Main.getService(CryptoService.class).getMessageDigest();
             baseData.put("password", digest.digest(request.getParameter("newPassword"), digestAlg, saltLength, iterations));
             baseData.put("changePwd", "false");
             User.insertPasswordModifiedTime(baseData);
-            Console console = MasterApp.getService(Config.class).getConsole();
+            Console console = Main.getService(Config.class).getConsole();
             String historyPasswords = User.cutOldPasswords(
                     baseData.remove("historyPasswords"),
                     console.getSecurity().getPasswordLimitRepeats(), baseData.get("password"));
@@ -137,7 +137,7 @@ public class Password extends ModelBase {
 
     private String checkError(Request request, Map<String, String> baseData) {
         String oldPwd = baseData.get("password");
-        MessageDigest digest = appContext.getService(CryptoService.class).getMessageDigest();
+        MessageDigest digest = Main.getService(CryptoService.class).getMessageDigest();
         if (!digest.matches(request.getParameter("originalPassword"),
                 oldPwd)) return "password.original.failed";
 
@@ -169,7 +169,7 @@ public class Password extends ModelBase {
             name = {"刷新动态密码", "en:Refresh OTP"},
             info = {"获取当前用户的动态密码，以二维码形式提供给用户。", "en:Obtain the current user OTP and provide it to the user in the form of a QR code."})
     public void refreshKey(Request request) throws Exception {
-        TotpCipher totpCipher = appContext.getService(CryptoService.class).getTotpCipher();
+        TotpCipher totpCipher = Main.getService(CryptoService.class).getTotpCipher();
         String keyForOtp = totpCipher.generateKey();
         request.setParameterInSession(KEY_IN_SESSION_FLAG, keyForOtp);
 
@@ -178,12 +178,12 @@ public class Password extends ModelBase {
 
         String loginUser = request.getUser();
         String qrCode = "otpauth://totp/" + loginUser + "?secret=" + keyForOtp;
-        QrGenerator qrGenerator = appContext.getService(QrGenerator.class);
+        QrGenerator qrGenerator = Main.getService(QrGenerator.class);
         byte[] bytes = qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
         // 二维码返回到浏览器
-        String body = appContext.getService(CryptoService.class).getHexCoder().bytesToHex(bytes);
+        String body = Main.getService(CryptoService.class).getBase16Coder().encode(bytes);
         request.getResponse().addData(new HashMap<String, String>() {{
-            put("qrImage", body);
+            put("FOR-FileView", body);
         }});
     }
 

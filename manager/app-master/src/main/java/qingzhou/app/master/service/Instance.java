@@ -2,7 +2,7 @@
 //
 //import qingzhou.api.*;
 //import qingzhou.api.type.Listable;
-//import qingzhou.app.master.MasterApp;
+//import qingzhou.app.master.Main;
 //import qingzhou.config.Agent;
 //import qingzhou.config.Config;
 //import qingzhou.deployer.DeployerConstants;
@@ -14,7 +14,7 @@
 //import java.util.HashMap;
 //import java.util.Map;
 //
-//@Model(code = DeployerConstants.INSTANCE_APP, icon = "stack",
+//@Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
 //        menu = "Service", order = 2,
 //        name = {"实例", "en:Instance"},
 //        info = {"实例是轻舟提供的运行应用的实际环境，即应用的运行时。",
@@ -44,9 +44,10 @@
 //    @Override
 //    public void start() {
 //        appContext.addActionFilter((request, response) -> {
-//            if (request.getId().equals("local")) {
-//                if (DeployerConstants.UPDATE_ACTION.equals(request.getAction())
-//                        || DeployerConstants.DELETE_ACTION.equals(request.getAction())) {
+//
+//            if (request.getId().equals(DeployerConstants.INSTANCE_LOCAL)) {
+//                if (DeployerConstants.ACTION_UPDATE.equals(request.getAction())
+//                        || DeployerConstants.ACTION_DELETE.equals(request.getAction())) {
 //                    return appContext.getI18n(request.getLang(), "validator.master.system");
 //                }
 //            }
@@ -55,7 +56,7 @@
 //    }
 //
 //    @ModelAction(
-//            code = DeployerConstants.CHECKREGISTRY_ACTION,
+//            code = DeployerConstants.ACTION_CHECKREGISTRY,
 //            order = -1,
 //            name = {"注册检查", "en:Check Registry"},
 //            info = {"用于接收实例心跳信息。", "en:Used to receive the heartbeat information of the instance."})
@@ -63,42 +64,43 @@
 //        String fingerprint = request.getParameter("fingerprint");
 //        if (fingerprint != null) {
 //            Map<String, String> result = new HashMap<>();
-//            Registry registry = MasterApp.getService(Registry.class);
+//            Registry registry = Main.getService(Registry.class);
 //            result.put(fingerprint, String.valueOf(registry.checkRegistry(fingerprint)));
 //            response.addData(result);
 //        }
 //    }
 //
 //    @ModelAction(
-//            order = -1,
+//            code = DeployerConstants.ACTION_REGISTER,
 //            name = {"注册实例", "en:Register"},
 //            info = {"用于接收实例注册的信息。", "en:Information used to receive instance registrations."})
 //    public void register(Request request) {
 //        String doRegister = request.getParameter("doRegister");
 //        if (doRegister != null) {
-//            Registry registry = MasterApp.getService(Registry.class);
+//            Registry registry = Main.getService(Registry.class);
 //            registry.register(doRegister);
 //        }
 //    }
 //
 //    @ModelAction(
-//            code = DeployerConstants.MANAGE_ACTION,
-//            name = {"管理", "en:Manage"}, show = "running=true", order = 1,
+//            code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
+//            order = 1,
+//            name = {"管理", "en:Manage"}, show = "running=true",
 //            info = {"转到此实例的管理页面。", "en:Go to the administration page for this instance."})
-//    public void manage(Request request) throws Exception {
+//    public void manage(Request request) {
 //    }
 //
 //    @ModelAction(
-//            code = DeployerConstants.SHOW_ACTION,
+//            code = DeployerConstants.ACTION_SHOW,
 //            name = {"查看", "en:Show"},
 //            info = {"查看该组件的相关信息。", "en:View the information of this model."})
 //    public void show(Request request) {
 //        String id = request.getId();
-//        if ("local".equals(id)) {
+//        if (.DeployerConstants.INSTANCE_LOCAL.equals(id)){
 //            request.getResponse().addData(localInstance());
 //            return;
 //        }
-//        Registry registry = MasterApp.getService(Registry.class);
+//        Registry registry = Main.getService(Registry.class);
 //        InstanceInfo instanceInfo = registry.getInstanceInfo(id);
 //        Map<String, String> instance = new HashMap<>();
 //        instance.put("id", id);
@@ -109,7 +111,7 @@
 //    }
 //
 //    @ModelAction(
-//            code = DeployerConstants.LIST_ACTION,
+//            code = DeployerConstants.ACTION_LIST,
 //            name = {"列表", "en:List"},
 //            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
 //    public void list(Request request) throws Exception {
@@ -140,7 +142,7 @@
 //        }
 //
 //        int index = 0;
-//        Registry registry = MasterApp.getService(Registry.class);
+//        Registry registry = Main.getService(Registry.class);
 //        Collection<String> allInstanceId = registry.getAllInstanceId();
 //        for (String instanceId : allInstanceId) {
 //            InstanceInfo instanceInfo = registry.getInstanceInfo(instanceId);
@@ -167,8 +169,9 @@
 //
 //    private Map<String, String> localInstance() {
 //        Map<String, String> local = new HashMap<>();
-//        local.put("id", "local");
-//        Agent agent = MasterApp.getService(Config.class).getAgent();
+//
+//        local.put("id", DeployerConstants.INSTANCE_LOCAL);
+//        Agent agent = Main.getService(Config.class).getAgent();
 //        local.put("ip", agent.getAgentHost());
 //        local.put("port", String.valueOf(agent.getAgentPort()));
 //        local.put("running", Boolean.TRUE.toString());

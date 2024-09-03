@@ -8,9 +8,10 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.crypto.Base64Coder;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
@@ -33,7 +34,7 @@ import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + DeployerConstants.APP_MANAGE + "/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INDEX_MODEL + "/index";
+    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + DeployerConstants.MANAGE_APP + "/" + DeployerConstants.APP_MASTER + "/" + DeployerConstants.MODEL_INDEX + "/index";
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = new File(SystemController.getModuleContext().getTemp(), "upload");
 
@@ -135,8 +136,8 @@ public class RESTController extends HttpServlet {
             return null;
         }
 
-        RequestImpl request = new RequestImpl(new ResponseImpl());
-        request.setSessionParameterListener((key, val) -> req.getSession().setAttribute(key, val));
+        RequestImpl request = new RequestImpl();
+        request.addSessionParameterListener((key, val) -> req.getSession().setAttribute(key, val));
         request.setViewName(rest.get(0));
         request.setManageType(rest.get(1));
         request.setAppName(rest.get(2));
@@ -182,7 +183,8 @@ public class RESTController extends HttpServlet {
                     for (int i = 0; i < v.length; i++) {// 前端页面的 kv 组件会对此进行 Base64加密，在这里进行解密，解密异常不处理，传递原始数据
                         v[i] = v[i].trim();
                         try {
-                            v[i] = new String(Base64.getDecoder().decode(v[i].getBytes(StandardCharsets.ISO_8859_1)), StandardCharsets.UTF_8);
+                            Base64Coder base64Coder = SystemController.getService(CryptoService.class).getBase64Coder();
+                            v[i] = new String(base64Coder.decode(v[i]), StandardCharsets.UTF_8);
                         } catch (Exception ignored) {
                         }
                     }

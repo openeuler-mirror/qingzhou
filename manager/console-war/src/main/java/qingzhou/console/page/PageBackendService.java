@@ -9,9 +9,10 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.ViewManager;
+import qingzhou.crypto.Base32Coder;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
-import qingzhou.engine.util.Base32Util;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
 
@@ -67,19 +68,19 @@ public class PageBackendService {
 
     public static String getAppName(Request request) {
         if (request == null) {
-            return DeployerConstants.MASTER_APP;
+            return DeployerConstants.APP_MASTER;
         }
 
-        if (DeployerConstants.INSTANCE_MANAGE.equals(((RequestImpl) request).getManageType())) {
-            return DeployerConstants.INSTANCE_APP;
+        if (DeployerConstants.MANAGE_INSTANCE.equals(((RequestImpl) request).getManageType())) {
+            return DeployerConstants.APP_INSTANCE;
         }
 
         return request.getApp();
     }
 
     public static String getAppName(String manageType, String appName) {
-        if (DeployerConstants.INSTANCE_MANAGE.equals(manageType)) {
-            return DeployerConstants.INSTANCE_APP;
+        if (DeployerConstants.MANAGE_INSTANCE.equals(manageType)) {
+            return DeployerConstants.APP_INSTANCE;
         }
 
         return appName;
@@ -240,20 +241,20 @@ public class PageBackendService {
         if (modelInfo == null) {
             return null;
         }
-        boolean isEdit = Objects.equals(DeployerConstants.EDIT_ACTION, request.getAction());
+        boolean isEdit = Objects.equals(DeployerConstants.ACTION_EDIT, request.getAction());
         for (String actionName : modelInfo.getActionNames()) {
-            if (actionName.equals(DeployerConstants.UPDATE_ACTION)) {
+            if (actionName.equals(DeployerConstants.ACTION_UPDATE)) {
                 if (isEdit) {
-                    return DeployerConstants.UPDATE_ACTION;
+                    return DeployerConstants.ACTION_UPDATE;
                 }
-            } else if (actionName.equals(DeployerConstants.ADD_ACTION)) {
+            } else if (actionName.equals(DeployerConstants.ACTION_ADD)) {
                 if (!isEdit) {
-                    return DeployerConstants.ADD_ACTION;
+                    return DeployerConstants.ACTION_ADD;
                 }
             }
         }
 
-        return isEdit ? DeployerConstants.UPDATE_ACTION : DeployerConstants.ADD_ACTION;// 兜底
+        return isEdit ? DeployerConstants.ACTION_UPDATE : DeployerConstants.ACTION_ADD;// 兜底
     }
 
     public static boolean hasIDField(Request request) {
@@ -261,7 +262,7 @@ public class PageBackendService {
         if (modelInfo == null) {
             return false;
         }
-        ModelActionInfo listAction = modelInfo.getModelActionInfo(DeployerConstants.LIST_ACTION);
+        ModelActionInfo listAction = modelInfo.getModelActionInfo(DeployerConstants.ACTION_LIST);
         ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
         return listAction != null && idField != null;
     }
@@ -334,7 +335,7 @@ public class PageBackendService {
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
-                        if (SecurityFilter.isActionAvailable(request, data, action) != null || DeployerConstants.EDIT_ACTION.equals(actionName)) {
+                        if (SecurityFilter.isActionAvailable(request, data, action) != null || DeployerConstants.ACTION_EDIT.equals(actionName)) {
                             isShow = false;
                             break;
                         }
@@ -372,7 +373,8 @@ public class PageBackendService {
     public static String decodeId(String encodeId) {
         try {
             if (encodeId.startsWith(encodedFlag)) {
-                return new String(Base32Util.decode(encodeId.substring(encodedFlag.length())), StandardCharsets.UTF_8); // for #NC-558 特殊字符可能编码了
+                Base32Coder base32Coder = SystemController.getService(CryptoService.class).getBase32Coder();
+                return new String(base32Coder.decode(encodeId.substring(encodedFlag.length())), StandardCharsets.UTF_8); // for #NC-558 特殊字符可能编码了
             }
         } catch (Exception ignored) {
         }
@@ -384,7 +386,8 @@ public class PageBackendService {
         try {
             for (String flag : encodeFlags) {
                 if (id.contains(flag)) {
-                    return encodedFlag + Base32Util.encode(id.getBytes(StandardCharsets.UTF_8)); // for #NC-558 特殊字符可能编码了
+                    Base32Coder base32Coder = SystemController.getService(CryptoService.class).getBase32Coder();
+                    return encodedFlag + base32Coder.encode(id.getBytes(StandardCharsets.UTF_8)); // for #NC-558 特殊字符可能编码了
                 }
             }
         } catch (Exception ignored) {

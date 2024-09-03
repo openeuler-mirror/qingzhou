@@ -1,32 +1,47 @@
 package qingzhou.deployer;
 
 public interface DeployerConstants {
-    String APP_MANAGE = "app";
-    String INSTANCE_MANAGE = "instance";
+    // master model
+    String APP_MASTER = "master";
+    String MODEL_INDEX = "index";
+    String MODEL_APP = "app";
+    String MODEL_INSTANCE = "instance";
+    String MODEL_PASSWORD = "password";
 
-    String MASTER_APP = "master";
-    String INSTANCE_APP = "instance";
+    // instance model
+    String APP_INSTANCE = "instance";
+    String MODEL_HOME = "home";
+    String MODEL_INSTALLER = "installer";
 
-    String HOME_MODEL = "home";
-    String INDEX_MODEL = "index";
-    String APP_MODEL = "app";
-    String INSTANCE_MODEL = "instance";
-    String PASSWORD_MODEL = "password";
+    // api 级 action
+    String ACTION_CREATE = "create";
+    String ACTION_ADD = "add";
+    String ACTION_EDIT = "edit";
+    String ACTION_UPDATE = "update";
+    String ACTION_LIST = "list";
+    String ACTION_DELETE = "delete";
+    String ACTION_SHOW = "show";
+    String ACTION_MONITOR = "monitor";
+    String ACTION_FILES = "files";
+    String ACTION_DOWNLOAD = "download";
 
-    String CREATE_ACTION = "create";
-    String ADD_ACTION = "add";
-    String EDIT_ACTION = "edit";
-    String UPDATE_ACTION = "update";
-    String LIST_ACTION = "list";
-    String DELETE_ACTION = "delete";
-    String SHOW_ACTION = "show";
-    String MONITOR_ACTION = "monitor";
-    String FILES_ACTION = "files";
-    String DOWNLOAD_ACTION = "download";
+    // 系统内部 action
+    String ACTION_MANAGE = "manage";
+    String ACTION_REGISTER = "register";
+    String ACTION_CHECKREGISTRY = "checkRegistry";
+    String ACTION_INDEX = "index";
+    String ACTION_INSTALL = "install";
+    String ACTION_UNINSTALL = "uninstall";
+    String ACTION_UPLOAD = "upload";
 
-    String MANAGE_ACTION = "manage";
-    String REGISTER_ACTION = "register";
-    String CHECKREGISTRY_ACTION = "checkRegistry";
+    // 管理类型
+    String MANAGE_APP = "app";
+    String MANAGE_INSTANCE = "instance";
+
+    // 其它参数
+    String INSTANCE_LOCAL = "local";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-    String INDEX_ACTION = "index";
+    String DEFAULT_DATA_SEPARATOR = ",";
+    String APP_KEY_ID = "id";
+    String APP_KEY_PATH = "path";
 }

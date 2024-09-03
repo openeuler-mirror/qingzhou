@@ -3,17 +3,14 @@ package qingzhou.http.impl;
 import qingzhou.http.HttpClient;
 import qingzhou.http.HttpResponse;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -24,20 +21,9 @@ public class HttpClientImpl implements HttpClient {
     @Override
     public HttpResponse send(String url, String body) throws Exception {
         HttpURLConnection conn = buildConnection(url);
-        conn.setRequestMethod("POST");
-        conn.setDoInput(true);
-        conn.setDoOutput(true);
-        conn.setUseCaches(false);
-        conn.setConnectTimeout(10000);
-        conn.setReadTimeout(10000);
-        conn.setRequestProperty("Connection", "close");
-        conn.setRequestProperty("Charset", "UTF-8");
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setRequestProperty("accept", "*/*");
-        conn.setInstanceFollowRedirects(false);
-
+        setDefaultHttpURLConnection(conn);
         if (body != null) {
-            byte[] b = body.getBytes("UTF-8");
+            byte[] b = body.getBytes(StandardCharsets.UTF_8);
             conn.setRequestProperty("Content-Length", String.valueOf(b.length));
             OutputStream outputStream = conn.getOutputStream();
             outputStream.write(b, 0, b.length);
@@ -65,6 +51,20 @@ public class HttpClientImpl implements HttpClient {
             }
         }
         return send(url, bodyStr.toString());
+    }
+
+    private void setDefaultHttpURLConnection(HttpURLConnection conn) throws ProtocolException {
+        conn.setRequestMethod("POST");
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        conn.setUseCaches(false);
+        conn.setConnectTimeout(10000);
+        conn.setReadTimeout(10000);
+        conn.setRequestProperty("Connection", "close");
+        conn.setRequestProperty("Charset", "UTF-8");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setRequestProperty("accept", "*/*");
+        conn.setInstanceFollowRedirects(false);
     }
 
     private HttpURLConnection buildConnection(String url) throws NoSuchAlgorithmException, IOException, KeyManagementException {

@@ -79,7 +79,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getPathInfo() {
-        String uri = "/" + ViewManager.jsonView + "/" + DeployerConstants.APP_MANAGE + "/" + appName + "/" + modelName + "/" + actionName;
+        String uri = "/" + ViewManager.jsonView + "/" + DeployerConstants.MANAGE_APP + "/" + appName + "/" + modelName + "/" + actionName;
         if (this.id != null) {
             uri = uri + "/" + id;
         }

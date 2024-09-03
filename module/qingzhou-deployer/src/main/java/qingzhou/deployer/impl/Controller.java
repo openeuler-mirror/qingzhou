@@ -57,12 +57,12 @@ public class Controller implements ModuleActivator {
 
         moduleContext.registerService(Deployer.class, deployer);
 
-        File masterApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.MASTER_APP);
+        File masterApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.APP_MASTER);
         if (masterApp.exists()) {
             deployer.installApp(masterApp);
         }
 
-        File instanceApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.INSTANCE_APP);
+        File instanceApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.APP_INSTANCE);
         if (instanceApp.exists()) {
             deployer.installApp(instanceApp);
         }
