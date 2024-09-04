@@ -39,7 +39,7 @@ public class Admin extends CommandLineProcessor { // 由 Launcher 来调用
             }
 
             if (acceptStatus == AcceptStatus.startsWith) {
-                found.add(processor);// 模糊匹配，例如 startWiths
+                found.add(processor);// 模糊匹配，例如 startsWith
             }
         }
         if (found.isEmpty()) {
