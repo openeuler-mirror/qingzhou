@@ -172,6 +172,10 @@ function shakeTip(msg) {
     layer.msg(msg, function(){});
 };
 function showConfirm(confirmMsg, options, yesFn, noFn) {
+    var theme = $("#switch-mode-btn").attr("theme");
+    if (theme != "") {
+        options["skin"] = "layer-" + theme;
+    }
     return layer.confirm(confirmMsg, options, function (index) {
         var caller = {};
         caller.fn = yesFn;
@@ -186,8 +190,12 @@ function showConfirm(confirmMsg, options, yesFn, noFn) {
 };
 function openLayer(options) {
     var defaults = {area: ["600px", "360px"], yes: function () {
-            // do nothing
-        }};
+        // do nothing
+    }};
+    var theme = $("#switch-mode-btn").attr("theme");
+    if (theme != "") {
+        options["skin"] = "layer-" + theme;
+    }
     return layer.open($.extend(defaults, options));
 };
 function closeLayer(index) {

@@ -40,9 +40,11 @@
                     <li id="switch-mode" class="switch-btn">
                         <a id="switch-mode-btn"
                            href="javascript:void(0);"
-                           class="tooltips" data-tip='switch to dark theme' data-tip-arrow="bottom">
+                           theme="<%=(themeMode == null || "".equals(themeMode)) ? "" : themeMode%>"
+                           themeUrl="<%=PageBackendService.encodeURL(response, contextPath + DeployerConstants.URI_THEME + "/" + ((themeMode == null || "".equals(themeMode)) ? "dark" : ""))%>"
+                           class="tooltips" data-tip="<%=I18n.getKeyI18n("page.thememode")%>" data-tip-arrow="bottom">
                         <span class="circle-bg">
-                            <i class="icon icon-moon"></i>
+                            <i class="icon <%=(themeMode == null || "".equals(themeMode)) ? "icon-moon" : "icon-sun"%>"></i>
                         </span>
                         </a>
                     </li>

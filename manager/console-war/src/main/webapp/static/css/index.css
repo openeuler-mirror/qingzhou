@@ -704,3 +704,8 @@ a.cancelfavorites:active{text-decoration: none;color: black;}
 .app-table .app-version {padding-top: 8px; font-size: 13px;}
 .app-table .app-install-upgrade {padding-top: 8px; font-size: 15px;}
 .app-table .app-detail {padding-top: 15px; font-size: 14px; text-align: left;}
+
+.layer-dark .layui-layer-title{background:#333333; color:#fff; border: none;}
+.layer-dark .layui-layer-setwin .layui-layer-close1 {background-position: -156px -38px;}
+.layer-dark .layui-layer-content{background:#222222; color:#fff;}
+.layer-dark .layui-layer-btn{background:#333333; color:#fff;}

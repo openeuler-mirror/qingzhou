@@ -26,6 +26,7 @@
     ModelInfo modelInfo = PageBackendService.getModelInfo(qzRequest);
     String idFieldName = modelInfo.getIdFieldName();
     Response qzResponse = qzRequest.getResponse();
+    String themeMode = session == null ? "" : (String)session.getAttribute(DeployerConstants.KEY_THEME_MODE);
 %>
 
 <script type="text/javascript">

@@ -77,7 +77,7 @@ public class SecurityFilter implements Filter<SystemControllerContext> {
     // 所有人都有
     public static boolean isCommonUris(String checkUri) {
         String check = makeMatchingPath(checkUri);
-        String[] commonUris = {RESTController.INDEX_PATH};
+        String[] commonUris = {RESTController.INDEX_PATH, DeployerConstants.URI_THEME};
         for (String uri : commonUris) {
             if (check.startsWith(uri)) {
                 return true;

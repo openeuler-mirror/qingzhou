@@ -29,4 +29,9 @@ public interface DeployerConstants {
     String CHECKREGISTRY_ACTION = "checkRegistry";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String INDEX_ACTION = "index";
+
+    String KEY_THEME_MODE = "theme_mode";
+
+    String URI_THEME = "/theme";
+
 }
