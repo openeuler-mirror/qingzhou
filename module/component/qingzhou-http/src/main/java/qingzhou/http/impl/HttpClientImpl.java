@@ -19,20 +19,23 @@ import java.util.Map;
 
 public class HttpClientImpl implements HttpClient {
     @Override
-    public HttpResponse send(String url, String body) throws Exception {
+    public HttpResponse send(String url, byte[] body) throws Exception {
         HttpURLConnection conn = buildConnection(url);
         setDefaultHttpURLConnection(conn);
         if (body != null) {
-            byte[] b = body.getBytes(StandardCharsets.UTF_8);
-            conn.setRequestProperty("Content-Length", String.valueOf(b.length));
+            conn.setRequestProperty("Content-Length", String.valueOf(body.length));
             OutputStream outputStream = conn.getOutputStream();
-            outputStream.write(b, 0, b.length);
+            outputStream.write(body, 0, body.length);
             outputStream.flush();
             outputStream.close();
         }
 
-        conn.connect();
-        return new HttpResponseImpl(conn);
+        try {
+            conn.connect();
+            return new HttpResponseImpl(conn);
+        } finally {
+            conn.disconnect();
+        }
     }
 
     @Override
@@ -50,7 +53,7 @@ public class HttpClientImpl implements HttpClient {
                 bodyStr.append(URLEncoder.encode(value, "UTF-8"));
             }
         }
-        return send(url, bodyStr.toString());
+        return send(url, bodyStr.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     private void setDefaultHttpURLConnection(HttpURLConnection conn) throws ProtocolException {

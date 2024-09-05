@@ -5,8 +5,8 @@
     boolean chartEnabled = !qzResponse.getDataList().isEmpty();
     boolean isMonitor = DeployerConstants.ACTION_MONITOR.equals(qzAction);
 
-    String encodedId = PageBackendService.encodeId(qzRequest.getId());
-    String url = PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DeployerConstants.ACTION_MONITOR + (existId ? "/" + encodedId : ""));
+    String encodedId = RESTController.encodeId(qzRequest.getId());
+    String url = PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, DeployerConstants.ACTION_MONITOR + (existId ? "/" + encodedId : ""));
 %>
 
 <div class="infoPage" chartMonitor="<%=isMonitor && chartEnabled%>" data-url="<%=url%>">

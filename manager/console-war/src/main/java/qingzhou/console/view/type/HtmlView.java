@@ -1,10 +1,11 @@
 package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
-import qingzhou.console.ActionInvoker;
+import qingzhou.api.Response;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
+import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
@@ -18,31 +19,26 @@ public class HtmlView implements View {
     @Override
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
-        HttpServletRequest req = restContext.servletRequest;
+        HttpServletRequest req = restContext.req;
 
-        String modelName = request.getModel();
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
-            if (DeployerConstants.MODEL_APP.equals(modelName)) {
-                request.setManageType(DeployerConstants.MANAGE_APP);
-            } else if (DeployerConstants.MODEL_INSTANCE.equals(modelName)) {
-                request.setManageType(DeployerConstants.MANAGE_INSTANCE);
-            }
             request.setAppName(request.getId());
             request.setModelName(DeployerConstants.MODEL_HOME);
             request.setActionName(DeployerConstants.ACTION_SHOW);
-            ActionInvoker.getInstance().invokeAction(request);
+            Response response = SystemController.getService(ActionInvoker.class).invokeOnce(request);
+            request.setResponse(response);
         }
         req.setAttribute(Request.class.getName(), request);
 
-        String pageForward = getPageForward(request, isManageAction);
+        String pageForward = isManageAction ? "sys/manage" : getPageForward(request);
         String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
-        restContext.servletRequest.getRequestDispatcher(forwardToPage).forward(restContext.servletRequest, restContext.servletResponse);
+        restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);
     }
 
     private boolean isManageAction(Request request) {
         if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) return false;
-        if (!DeployerConstants.APP_MASTER.equals(request.getApp())) return false;
+        if (!DeployerConstants.APP_SYSTEM.equals(request.getApp())) return false;
 
         return DeployerConstants.MODEL_APP.equals(request.getModel())
                 || DeployerConstants.MODEL_INSTANCE.equals(request.getModel());
@@ -53,11 +49,7 @@ public class HtmlView implements View {
         return "text/html;charset=UTF-8";
     }
 
-    private String getPageForward(Request request, boolean isManageAction) {
-        if (isManageAction) {
-            return "sys/manage";
-        }
-
+    private String getPageForward(Request request) {
         if ((DeployerConstants.MODEL_INDEX.equals(request.getModel())
                 || DeployerConstants.MODEL_HOME.equals(request.getModel()))
                 && request.getAction().equals(DeployerConstants.ACTION_SHOW)) {

@@ -5,7 +5,6 @@
 <%@ page import="qingzhou.api.*" %>
 <%@ page import="qingzhou.api.type.*" %>
 <%@ page import="qingzhou.console.*" %>
-<%@ page import="qingzhou.console.i18n.*" %>
 <%@ page import="qingzhou.console.controller.*" %>
 <%@ page import="qingzhou.console.controller.rest.*" %>
 <%@ page import="qingzhou.console.login.*" %>
@@ -19,7 +18,7 @@
 <%
     String currentUser = LoginManager.getLoginUser(session);
     Request qzRequest = (Request) request.getAttribute(Request.class.getName());
-    String qzApp = PageBackendService.getAppName(qzRequest);
+    String qzApp = SystemController.getAppName(qzRequest);
     String qzModel = qzRequest.getModel();
     String qzAction = qzRequest.getAction();
     AppInfo appInfo = SystemController.getAppInfo(qzApp);

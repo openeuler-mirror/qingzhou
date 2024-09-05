@@ -327,7 +327,7 @@
         searchHiddenTip: '<%=I18n.getKeyI18n("page.search.hidden")%>',
         passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>'
     };
-    var searchUrl = '<%=PageBackendService.encodeURL(response, contextPath + "/search")%>';
+    var searchUrl = '<%=RESTController.encodeURL(response, contextPath + "/search")%>';
 </script>
 <script src="<%=contextPath%>/static/js/main.js"></script>
 <script src="<%=contextPath%>/static/js/index.js"></script>

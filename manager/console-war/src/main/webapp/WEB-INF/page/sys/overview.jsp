@@ -7,7 +7,7 @@
 
     <%-- 仪表盘 --%>
     <div class="panel" view="dashboard"
-         data-url="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView , "os")%>"
+         data-url="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView , "os")%>"
          actName="<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + ".os")%>"
          style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
         <div class="panel-heading"
@@ -20,7 +20,7 @@
 
     <%-- 柱状图 --%>
     <div class="panel" view="bars"
-         data-url="<%=PageBackendService.buildRequestUrl(request, response,qzRequest, ViewManager.jsonView, ACTION_NAME_SERVER)%>"
+         data-url="<%=PageBackendService.buildRequestUrl(request, response,qzRequest, DeployerConstants.jsonView, ACTION_NAME_SERVER)%>"
          actName="<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + ACTION_NAME_SERVER)%>"
          style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
         <div class="panel-heading"

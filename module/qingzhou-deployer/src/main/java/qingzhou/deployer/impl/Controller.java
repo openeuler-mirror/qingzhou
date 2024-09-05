@@ -2,6 +2,7 @@ package qingzhou.deployer.impl;
 
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
+import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.Module;
@@ -56,16 +57,10 @@ public class Controller implements ModuleActivator {
         deployer = new DeployerImpl(moduleContext, logger);
 
         moduleContext.registerService(Deployer.class, deployer);
+        moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, config, cryptoService, http));
 
-        File masterApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.APP_MASTER);
-        if (masterApp.exists()) {
-            deployer.installApp(masterApp);
-        }
-
-        File instanceApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.APP_INSTANCE);
-        if (instanceApp.exists()) {
-            deployer.installApp(instanceApp);
-        }
+        File systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.APP_SYSTEM);
+        deployer.installApp(systemApp);
 
         File[] files = FileUtil.newFile(moduleContext.getInstanceDir(), "apps").listFiles();
         if (files != null) {

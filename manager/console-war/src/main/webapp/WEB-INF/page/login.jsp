@@ -1,7 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ page import="qingzhou.console.controller.I18n" %>
-<%@ page import="qingzhou.console.page.PageBackendService" %>
 <%@ page import="qingzhou.console.login.LoginManager" %>
 <%@ page import="qingzhou.console.login.vercode.VerCode" %>
 <%@ page import="qingzhou.console.controller.About" %>
@@ -50,7 +49,7 @@
         <div class="logo"><%=I18n.getKeyI18n("page.userlogin")%>
         </div>
         <form id="loginForm" method="post"
-              action="<%=PageBackendService.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>"
+              action="<%=RESTController.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>"
               class="form-group" autocomplete="off">
             <div class="input-control has-icon-left">
                 <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>"
@@ -58,7 +57,7 @@
                        class="form-control"
                        placeholder="<%=I18n.getKeyI18n( "page.login.user")%>" autofocus>
                 <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;">
-                    <i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_MASTER).getModelInfo("user").getIcon()%> "></i>
+                    <i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_SYSTEM).getModelInfo("user").getIcon()%> "></i>
                 </label>
             </div>
             <div class="input-control has-icon-left">
@@ -71,7 +70,7 @@
                        name="<%=LoginManager.LOGIN_PASSWORD%>">
                 <label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left"
                        style="line-height: 44px;">
-                    <i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_MASTER).getModelInfo(DeployerConstants.MODEL_PASSWORD).getIcon()%>"></i>
+                    <i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_SYSTEM).getModelInfo(DeployerConstants.MODEL_PASSWORD).getIcon()%>"></i>
                 </label>
                 <label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt"
                        class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;">
@@ -91,14 +90,15 @@
                 if (request.getParameter(VerCode.SHOW_CAPTCHA_FLAG) != null) {
             %>
             <div class="input-control has-icon-left">
-                <input type="text" id="<%=LoginManager.LOGIN_CAPTCHA%>" name="<%=LoginManager.LOGIN_CAPTCHA%>" class="form-control"
+                <input type="text" id="<%=VerCode.LOGIN_CAPTCHA%>" name="<%=VerCode.LOGIN_CAPTCHA%>"
+                       class="form-control"
                        style="width:250px;display:inline-block;float:left;"
                        placeholder="<%=I18n.getKeyI18n( "page.vercode")%>">
                 <label class="input-control-icon-left" style="line-height: 44px;"><i
                         class="icon icon-shield"></i></label>
-                <img src="<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>"
+                <img src="<%=RESTController.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>"
                      class="captcha"
-                     onclick="this.src = '<%=PageBackendService.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
+                     onclick="this.src = '<%=RESTController.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
             </div>
             <%
                 }

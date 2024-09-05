@@ -12,7 +12,7 @@
     final boolean hasId = idField != null;
     List<String> passwordFields = new ArrayList<>();
     String id = qzRequest.getId();
-    String encodedId = PageBackendService.encodeId(id);
+    String encodedId = RESTController.encodeId(id);
 
     if (encodedId == null) {
         encodedId = "";
@@ -24,7 +24,7 @@
 <%@ include file="../fragment/breadcrumb.jsp" %>
 
 <form name="pageForm" method="post" class="form-horizontal"
-      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, submitActionName+"/"+encodedId)%>">
+      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, submitActionName+"/"+encodedId)%>">
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
             Map<String, String> model;
@@ -291,7 +291,7 @@
                                     PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.ACTION_DOWNLOAD, qzRequest) != null;
                     if (hasPermission) {
                 %>
-                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DeployerConstants.ACTION_FILES + "/" + encodedId)%>'
+                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, DeployerConstants.ACTION_FILES + "/" + encodedId)%>'
                         <%
                             out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                         %>

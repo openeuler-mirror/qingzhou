@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <form name="filterForm" id="filterForm" method="POST"
-      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + ((RequestImpl)qzRequest).getManageType() + "/" + qzRequest.getApp() + "/" + qzModel + "/" + DeployerConstants.ACTION_LIST)%>">
+      action="<%=RESTController.encodeURL( response, ViewManager.htmlView + "/" + qzApp + "/" + qzModel + "/" + DeployerConstants.ACTION_LIST)%>">
     <div class="row filterForm" style="margin-top: 10px; display: none;">
         <%
             for (Integer i : indexToShow) {

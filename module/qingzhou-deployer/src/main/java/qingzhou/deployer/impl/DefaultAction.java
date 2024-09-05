@@ -210,7 +210,7 @@ class DefaultAction {
     public void download(Request request) throws Exception {
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 
-        String downloadKey = request.getParameter("DOWNLOAD_KEY");
+        String downloadKey = request.getParameter(DeployerConstants.DOWNLOAD_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
             String downloadFileNames = request.getParameter("downloadFileNames");
 
@@ -231,7 +231,7 @@ class DefaultAction {
         }
 
         long downloadOffset = 0;
-        String downloadOffsetParameter = request.getParameter("DOWNLOAD_OFFSET");
+        String downloadOffsetParameter = request.getParameter(DeployerConstants.DOWNLOAD_OFFSET);
         if (downloadOffsetParameter != null && !downloadOffsetParameter.trim().isEmpty()) {
             downloadOffset = Long.parseLong(downloadOffsetParameter.trim());
         }
@@ -249,7 +249,7 @@ class DefaultAction {
 
         Map<String, String> result = new HashMap<>();
         File downloadFile = new File(baseDir, key);
-        result.put("DOWNLOAD_KEY", key);
+        result.put(DeployerConstants.DOWNLOAD_KEY, key);
 
         byte[] byteRead;
         boolean hasMore = false;
@@ -269,15 +269,15 @@ class DefaultAction {
                     System.arraycopy(block, 0, byteRead, 0, read);
                 }
 
-                result.put("DOWNLOAD_BLOCK", Controller.cryptoService.getBase64Coder().encode(byteRead));
+                result.put(DeployerConstants.DOWNLOAD_BLOCK, Controller.cryptoService.getBase64Coder().encode(byteRead));
                 offset = raf.getFilePointer();
             }
         }
 
         if (hasMore) {
-            result.put("DOWNLOAD_OFFSET", String.valueOf(offset));
+            result.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
         } else {
-            result.put("DOWNLOAD_OFFSET", String.valueOf(-1L));
+            result.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(-1L));
             File temp = FileUtil.newFile(baseDir, key);
             FileUtil.forceDelete(temp);
         }

@@ -11,9 +11,8 @@ import java.util.Map;
 
 public class RequestImpl implements Request, Cloneable {
     private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
-    private transient final Response response = new ResponseImpl();
+    private transient Response response = new ResponseImpl();
 
-    private String manageType;
     private String appName;
     private String modelName;
     private String actionName;
@@ -136,16 +135,12 @@ public class RequestImpl implements Request, Cloneable {
         return parametersInSession;
     }
 
-    public String getManageType() {
-        return manageType;
-    }
-
-    public void setManageType(String manageType) {
-        this.manageType = manageType;
-    }
-
     public void addSessionParameterListener(SessionParameterListener sessionParameterListener) {
         this.sessionParameterListener.add(sessionParameterListener);
+    }
+
+    public void setResponse(Response response) {
+        this.response = response;
     }
 
     @Override

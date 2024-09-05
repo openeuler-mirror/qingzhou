@@ -13,8 +13,4 @@ public interface App {
     AppInfo getAppInfo();
 
     void invoke(Request request) throws Exception;
-
-    void invokeDirectly(Request request) throws Exception;
-
-    void invokeDefault(Request request) throws Exception;
 }

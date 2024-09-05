@@ -3,9 +3,7 @@ package qingzhou.console.controller.rest;
 import qingzhou.api.FieldType;
 import qingzhou.api.Response;
 import qingzhou.console.controller.I18n;
-import qingzhou.console.controller.SecurityFilter;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.page.PageBackendService;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
@@ -37,7 +35,7 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_port", new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
         I18n.addKeyI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         I18n.addKeyI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
-        I18n.addKeyI18n("validation_unsupportedStrings", new String[]{"不能包含字符串：%s", "en:Cannot contain the string: %s"});
+        I18n.addKeyI18n("validation_unsupportedStrings", new String[]{"不能使用此值：%s", "en:You can't use this value: %s"});
         I18n.addKeyI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
         I18n.addKeyI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
         I18n.addKeyI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
@@ -52,7 +50,7 @@ public class ValidationFilter implements Filter<RestContext> {
         boolean isAddAction = DeployerConstants.ACTION_ADD.equals(request.getAction());
         boolean isUpdateAction = DeployerConstants.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
-            AppInfo appInfo = SystemController.getAppInfo(PageBackendService.getAppName(request));
+            AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
             ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
             clipParameter(request, modelInfo);
             Map<String, String> paramMap = request.getParameters();
@@ -274,8 +272,10 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             for (String unsupportedString : context.fieldInfo.getUnsupportedStrings()) {
-                if (context.parameterVal.contains(unsupportedString)) {
-                    return new String[]{"validation_unsupportedStrings", unsupportedString};
+                for (String param : context.parameterVal.split(DeployerConstants.DEFAULT_DATA_SEPARATOR)) {
+                    if (param.equals(unsupportedString)) {
+                        return new String[]{"validation_unsupportedStrings", param};
+                    }
                 }
             }
             return null;

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface HttpResponse {
-    String getResponseBody();
+    byte[] getResponseBody();
 
     int getResponseCode();
 

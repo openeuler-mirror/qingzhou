@@ -1,17 +1,16 @@
 package qingzhou.deployer;
 
 public interface DeployerConstants {
+    String APP_SYSTEM = "-";
+    String ACTION_INVOKE_CHARSET = "UTF-8";
+
     // master model
-    String APP_MASTER = "master";
     String MODEL_INDEX = "index";
+    String MODEL_HOME = "home";
     String MODEL_APP = "app";
+    String MODEL_INSTALLER = "installer";
     String MODEL_INSTANCE = "instance";
     String MODEL_PASSWORD = "password";
-
-    // instance model
-    String APP_INSTANCE = "instance";
-    String MODEL_HOME = "home";
-    String MODEL_INSTALLER = "installer";
 
     // api 级 action
     String ACTION_CREATE = "create";
@@ -34,14 +33,16 @@ public interface DeployerConstants {
     String ACTION_UNINSTALL = "uninstall";
     String ACTION_UPLOAD = "upload";
 
-    // 管理类型
-    String MANAGE_APP = "app";
-    String MANAGE_INSTANCE = "instance";
-
     // 其它参数
     String INSTANCE_LOCAL = "local";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String DEFAULT_DATA_SEPARATOR = ",";
-    String APP_KEY_ID = "id";
-    String APP_KEY_PATH = "path";
+    String INSTALLER_PARAMETER_FILE_ID = "fileId";
+    String INSTALLER_PARAMETER_FILE_NAME = "fileName";
+    String INSTALLER_PARAMETER_FILE_BYTES = "fileBytes";
+    String DOWNLOAD_KEY="DOWNLOAD_KEY";
+    String DOWNLOAD_OFFSET="DOWNLOAD_OFFSET";
+    String DOWNLOAD_BLOCK="DOWNLOAD_BLOCK";
+    String REST_PREFIX = "/rest";
+    String jsonView = "json";
 }

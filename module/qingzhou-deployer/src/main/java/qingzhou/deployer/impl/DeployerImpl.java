@@ -7,7 +7,6 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 import qingzhou.registry.*;
@@ -47,8 +46,7 @@ class DeployerImpl implements Deployer {
 
         if (!appDir.isDirectory()) throw new IllegalArgumentException("The app file must be a directory");
 
-        boolean isSystemApp = DeployerConstants.APP_MASTER.equals(appName) || DeployerConstants.APP_INSTANCE.equals(appName);
-        AppImpl app = buildApp(appName, appDir, isSystemApp);
+        AppImpl app = buildApp(appName, appDir);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
         try {
@@ -114,19 +112,17 @@ class DeployerImpl implements Deployer {
         return apps.get(name);
     }
 
-    private AppImpl buildApp(String appName, File appDir, boolean isSystemApp) throws Exception {
+    private AppImpl buildApp(String appName, File appDir) throws Exception {
         AppImpl app = new AppImpl();
 
-        List<File> scanAppFilesCache = new ArrayList<>();
-        File[] appLibs = buildLib(appDir, isSystemApp, scanAppFilesCache);
-        if (appLibs.length == 0) {
-            throw new IllegalArgumentException("The app[" + appName + "] jar file was not found");
-        }
-        URLClassLoader loader = buildLoader(appLibs, isSystemApp);
+        List<File> scanAppLibFiles = new ArrayList<>();
+        findLib(appDir, scanAppLibFiles);
+        File[] appLibs = scanAppLibFiles.toArray(new File[0]);
+
+        URLClassLoader loader = buildLoader(appLibs, DeployerConstants.APP_SYSTEM.equals(appName));
         app.setLoader(loader);
 
-        File[] scanAppFiles = scanAppFilesCache.toArray(new File[0]);
-        QingzhouApp qingzhouApp = buildQingzhouApp(scanAppFiles, loader);
+        QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader);
         if (qingzhouApp instanceof QingzhouSystemApp) {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
@@ -136,7 +132,7 @@ class DeployerImpl implements Deployer {
         AppInfo appInfo = new AppInfo();
         appInfo.setName(appName);
         appInfo.setFilePath(appDir.getAbsolutePath());
-        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(scanAppFiles, loader);
+        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader);
         appInfo.setModelInfos(modelInfos.values());
         app.setAppInfo(appInfo);
 
@@ -367,7 +363,7 @@ class DeployerImpl implements Deployer {
             Class<?> cls = loader.loadClass(annotatedClass.iterator().next());
             return (QingzhouApp) cls.newInstance();
         } else {
-            throw new IllegalStateException("An app must have and can only have one implementation class for qingzhou.api.QingzhouApp");
+            throw new IllegalStateException("An app must have and can only have one implementation class for " + QingzhouApp.class.getName());
         }
     }
 
@@ -376,64 +372,31 @@ class DeployerImpl implements Deployer {
         return new AppContextImpl(moduleContext, app);
     }
 
-    private File[] buildLib(File appDir, boolean isSystemApp, List<File> scanAppFilesCache) throws IOException {
-        File[] appFiles = appDir.listFiles();
-        if (appFiles == null || appFiles.length == 0) {
-            throw new IllegalArgumentException("app lib not found: " + appDir.getName());
+    private void findLib(File libFile, List<File> libs) throws IOException {
+        libs.add(libFile);
+
+        if (libFile.isDirectory()) {
+            File[] listFiles = libFile.listFiles();
+            if (listFiles != null) {
+                for (File f : listFiles) {
+                    findLib(f, libs);
+                }
+            }
+            return;
         }
+
+        if (!libFile.getName().endsWith(".jar")) return;
+        libs.addAll(parseManifestLib(libFile));
+    }
+
+    private List<File> parseManifestLib(File appFile) throws IOException {
         List<File> libs = new ArrayList<>();
-        for (File appFile : appFiles) {
-            if (appFile.isDirectory()) {
-                continue;
-            }
-
-            if (!appFile.getName().endsWith(".jar")) {
-                continue;
-            }
-            libs.add(appFile);
-            appendAppClassPath(appFile, libs);
-
-            scanAppFilesCache.add(appFile);
-        }
-
-        forYunJian(appDir, libs);// todo 云鉴的定制需求？
-
-        if (!isSystemApp) {
-            File[] commonFiles = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common").listFiles();
-            if (commonFiles != null && commonFiles.length > 0) {
-                List<File> commonModels = Arrays.asList(commonFiles);
-                libs.addAll(commonModels);
-
-                scanAppFilesCache.addAll(commonModels);
-            }
-        }
-
-        return libs.toArray(new File[0]);
-    }
-
-    private void forYunJian(File appDir, List<File> libs) {
-        File config = FileUtil.newFile(appDir, "config");
-        if (config.exists()) {
-            libs.add(config);
-        }
-
-        File lib = FileUtil.newFile(appDir, "lib");
-        if (lib.isDirectory()) {
-            File[] files = lib.listFiles();
-            if (files != null) {
-                Arrays.sort(files);// 排序A-Za-z
-                libs.addAll(Arrays.asList(files));
-            }
-        }
-    }
-
-    private void appendAppClassPath(File appFile, List<File> libs) throws IOException {
         try (JarFile jarFile = new JarFile(appFile)) {
             Manifest manifest = jarFile.getManifest();
             Attributes mainAttributes = manifest.getMainAttributes();
             String classPathValue = mainAttributes.getValue(Attributes.Name.CLASS_PATH);
             if (classPathValue == null || classPathValue.isEmpty()) {
-                return;
+                return libs;
             }
 
             String[] classPathEntries = classPathValue.split(" ");
@@ -450,6 +413,7 @@ class DeployerImpl implements Deployer {
                 libs.add(file);
             }
         }
+        return libs;
     }
 
     private URLClassLoader buildLoader(File[] appLibs, boolean isSystemApp) {

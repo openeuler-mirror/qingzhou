@@ -19,7 +19,7 @@ public class ImageView implements View {
         Map<String, String> map = dataList.get(0);
         String value = map.entrySet().iterator().next().getValue();
         CryptoService cryptoService = SystemController.getService(CryptoService.class);
-        restContext.servletResponse.getOutputStream().write(cryptoService.getBase64Coder().decode(value));
+        restContext.resp.getOutputStream().write(cryptoService.getBase64Coder().decode(value));
     }
 
     @Override

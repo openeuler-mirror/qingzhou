@@ -4,6 +4,7 @@ import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
+import qingzhou.api.Request;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.config.Security;
@@ -13,7 +14,6 @@ import qingzhou.console.controller.jmx.JmxInvokerImpl;
 import qingzhou.console.controller.jmx.NotificationListenerImpl;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.login.ResetPassword;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;
@@ -34,7 +34,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.UUID;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
@@ -80,6 +79,10 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         }
     }
 
+    public static String getAppName(Request request) {
+        return request.getApp();
+    }
+
     public static AppInfo getAppInfo(String appName) {
         // 优先找本地，master和instance都在本地
         App app = getService(Deployer.class).getApp(appName);
@@ -123,8 +126,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new VerCode(),
             new LoginFreeFilter(),
             new LoginManager(),
-            new ResetPassword(),
-            new SecurityFilter(),
             (Filter<SystemControllerContext>) context -> {
                 context.chain.doFilter(context.req, context.resp); // 这样可以进入 servlet 资源
                 return false;

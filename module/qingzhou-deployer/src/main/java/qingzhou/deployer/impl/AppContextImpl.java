@@ -19,7 +19,6 @@ import java.io.File;
 import java.util.*;
 
 class AppContextImpl implements AppContext {
-    private final Class<?>[] serviceTypes = {CryptoService.class, Http.class, Json.class, Logger.class, QrGenerator.class, ServletService.class, SSHService.class};
     private final ModuleContext moduleContext;
     private final List<ActionFilter> actionFilters = new ArrayList<>();
     private final I18nTool i18nTool = new I18nTool();
@@ -71,15 +70,19 @@ class AppContextImpl implements AppContext {
 
     @Override
     public <T> T getService(Class<T> clazz) {
-        if (Arrays.stream(serviceTypes).anyMatch(aClass -> aClass == clazz)) {
-            return moduleContext.getService(clazz);
-        }
-        throw new UnsupportedOperationException("No such service: " + clazz);
+        return getServiceTypes().contains(clazz) ? moduleContext.getService(clazz) : null;
     }
 
     @Override
     public Collection<Class<?>> getServiceTypes() {
-        return new ArrayList<>(Arrays.asList(serviceTypes));
+        Set<Class<?>> types = new HashSet<>();
+        Class<?>[] scopedTypes = {CryptoService.class, Http.class, Json.class, Logger.class, QrGenerator.class, ServletService.class, SSHService.class};
+        for (Class<?> serviceType : scopedTypes) {
+            if (moduleContext.getService(serviceType) != null) {
+                types.add(serviceType);
+            }
+        }
+        return types;
     }
 
     @Override
