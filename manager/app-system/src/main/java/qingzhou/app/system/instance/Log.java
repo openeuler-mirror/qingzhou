@@ -15,11 +15,12 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 
-@Model(code = "serverlog", icon = "file-text",
+@Model(code = "log", icon = "file-text",
         entrance = DeployerConstants.ACTION_EDIT,
+        hidden = true,
         name = {"服务器日志", "en:Server Log"}, order = 3,
         info = {"QingZhou 实例的日志配置。", "en:The logging configuration of the QingZhou instance."})
-public class ServerLog extends ModelBase implements Updatable, Downloadable {
+public class Log extends ModelBase implements Updatable, Downloadable {
     @ModelField(
             type = FieldType.select,
             options = {"rich", "simple", "none"},

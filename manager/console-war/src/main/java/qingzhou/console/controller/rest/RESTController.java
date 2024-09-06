@@ -182,7 +182,7 @@ public class RESTController extends HttpServlet {
         request.setAppName(rest.get(1));
         request.setModelName(rest.get(2));
         request.setActionName(rest.get(3));
-        request.setUserName(LoginManager.getLoginUser(req.getSession(false)));
+        request.setUserName(LoginManager.getLoginUser(req));
         request.setI18nLang(I18n.getI18nLang());
 
         StringBuilder id = new StringBuilder();

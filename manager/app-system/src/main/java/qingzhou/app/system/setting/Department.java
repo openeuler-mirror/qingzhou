@@ -1,4 +1,4 @@
-package qingzhou.app.system.user;
+package qingzhou.app.system.setting;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
@@ -14,15 +14,15 @@ import java.util.List;
 import java.util.Map;
 
 @Model(code = "department", icon = "sitemap",
-        menu = "System", order = 3,
+        menu = Main.SETTING_MENU, order = 3,
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
 public class Department extends ModelBase implements Addable {
     @ModelField(
             required = true,
             list = true,
-            name = {"部门编号", "en:Department Code"},
-            info = {"该部门在系统中的唯一标识符。", "en:Unique identifier of the department in the system."})
+            name = {"名称", "en:Name"},
+            info = {"表示本条数据的 ID。", "en:Indicates the ID of this piece of data."})
     public String id;
 
     @ModelField(

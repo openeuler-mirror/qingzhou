@@ -18,7 +18,7 @@ import java.util.Objects;
 public class SecurityFilter implements Filter<RestContext> {
     static {
         I18n.addKeyI18n("page.error.permission.deny", new String[]{"对不起，您无权访问该资源", "en:Sorry, you do not have access to this resource"});
-        I18n.addKeyI18n("validator.ActionShow.notsupported", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});// The product uses untrusted data to generated HTML pages. 客户端传来的参数不能回显到页面上，以阻止可能的xss攻击
+        I18n.addKeyI18n("validator.ActionShow.notsupported", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});
     }
 
     public static boolean check(String user, String app, String model, String action) {
@@ -53,7 +53,7 @@ public class SecurityFilter implements Filter<RestContext> {
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {
-        String user = LoginManager.getLoginUser(context.req.getSession(false));
+        String user = LoginManager.getLoginUser(context.req);
         if (user != null) {
             if (check(user,
                     context.request.getApp(), context.request.getModel(), context.request.getAction()))

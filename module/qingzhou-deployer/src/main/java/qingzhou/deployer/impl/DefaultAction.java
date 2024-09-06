@@ -111,7 +111,8 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.ACTION_DELETE, icon = "trash", order = 9,
+            code = DeployerConstants.ACTION_DELETE, icon = "trash",
+            order = 9,
             ajax = true,
             batch = true,
             name = {"删除", "en:Delete"},

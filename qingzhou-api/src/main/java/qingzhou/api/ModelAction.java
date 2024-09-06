@@ -23,7 +23,7 @@ public @interface ModelAction {
 
     boolean ajax() default false;
 
-    boolean batch() default false; // 标识该操作是否支持批量处理
+    boolean batch() default false; // 该操作是否支持批量处理
 
     String page() default ""; // 由指定的视图处理
     /**

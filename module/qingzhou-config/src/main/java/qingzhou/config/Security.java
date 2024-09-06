@@ -3,7 +3,7 @@ package qingzhou.config;
 public class Security {
     private String publicKey;
     private String privateKey;
-    private String trustedIP;
+    private String trustedIp;
     private boolean verCodeEnabled;
     private int lockOutTime;
     private int failureCount;
@@ -58,12 +58,12 @@ public class Security {
         this.lockOutTime = lockOutTime;
     }
 
-    public String getTrustedIP() {
-        return trustedIP;
+    public String getTrustedIp() {
+        return trustedIp;
     }
 
-    public void setTrustedIP(String trustedIP) {
-        this.trustedIP = trustedIP;
+    public void setTrustedIp(String trustedIp) {
+        this.trustedIp = trustedIp;
     }
 
     public boolean isVerCodeEnabled() {

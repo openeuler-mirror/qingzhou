@@ -7,6 +7,8 @@ import qingzhou.engine.ModuleContext;
 
 @App
 public class Main extends QingzhouSystemApp {
+    public static final String SERVICE_MENU = "Service";
+    public static final String SETTING_MENU = "Setting";
     private static Main main;
 
     @Override
@@ -17,9 +19,8 @@ public class Main extends QingzhouSystemApp {
         appContext.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
         appContext.addI18n("validator.master.system", new String[]{"为保障系统安全可用，请勿修改此配置", "en:To ensure the security and availability of the system, do not modify this configuration"});
 
-        appContext.addMenu("Service", new String[]{"服务管理", "en:Service"}, "th-large", 1);
-        appContext.addMenu("Monitor", new String[]{"监视管理", "en:Monitor"}, "server", 2);
-        appContext.addMenu("System", new String[]{"系统管理", "en:System"}, "cog", 3);
+        appContext.addMenu(Main.SERVICE_MENU, new String[]{"服务管理", "en:Service"}, "th-large", 1);
+        appContext.addMenu(Main.SETTING_MENU, new String[]{"系统设置", "en:System"}, "cog", 3);
     }
 
     public static <T> T getService(Class<T> type) {

@@ -1,6 +1,5 @@
 package qingzhou.console.login;
 
-import qingzhou.api.Lang;
 import qingzhou.config.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -11,7 +10,6 @@ import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.TotpCipher;
 import qingzhou.deployer.DeployerConstants;
@@ -20,9 +18,7 @@ import qingzhou.engine.util.pattern.Filter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -130,24 +126,18 @@ public class LoginManager implements Filter<SystemControllerContext> {
 
     private static void setLoginUser(HttpSession session, String user) {
         if (user == null) return;
-        Base64Coder base64Coder = SystemController.getService(CryptoService.class).getBase64Coder();
-        user = base64Coder.encode(user.getBytes(StandardCharsets.UTF_8));
         session.setAttribute(LOGIN_USER, user);
     }
 
-    public static String getLoginUser(HttpSession session) {
+    public static String getLoginUser(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
         if (session == null) return null;
 
-        String user;
         try {
-            user = (String) session.getAttribute(LOGIN_USER);
+            return (String) session.getAttribute(LOGIN_USER);
         } catch (Exception e) { // 可能是登陆页面，在首行 注销了
             return null;
         }
-        if (user == null) return null;
-
-        Base64Coder base64Coder = SystemController.getService(CryptoService.class).getBase64Coder();
-        return new String(base64Coder.decode(user), StandardCharsets.UTF_8);
     }
 
     public static LoginFailedMsg login(HttpServletRequest request) throws Exception {
@@ -248,10 +238,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
     public static void logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
-            String user = getLoginUser(session);
-            if (user != null) {
-                session.invalidate();
-            }
+            session.invalidate();
         }
     }
 
@@ -294,7 +281,18 @@ public class LoginManager implements Filter<SystemControllerContext> {
         HttpServletResponse response = context.resp;
         String checkPath = RESTController.getReqUri(request);
 
-        // 是否注销
+        // 登录
+        if (checkPath.equals(LOGIN_URI)) {
+            try {
+                I18n.resetI18nLang(); // 确保登录页面（包括出错信息）都以默认i18n展示
+                webLogin(request, response);
+            } finally {
+                I18n.resetI18nLang();
+            }
+            return false;
+        }
+
+        // 注销
         if (checkPath.equals(LOGIN_PATH)) {
             if (request.getParameter(LOGOUT_FLAG) != null) {
                 HttpSession session = request.getSession(false);
@@ -306,67 +304,39 @@ public class LoginManager implements Filter<SystemControllerContext> {
             return false;
         }
 
-        if (isOpenUris(checkPath)) {
-            return true;
-        }
-
+        // 主页
         if (checkPath.equals("/")) {
             HttpSession session = request.getSession(false);
             if (session != null) {
                 response.sendRedirect(RESTController.encodeURL(response, request.getContextPath() + INDEX_PATH));
             } else {
                 request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
-                return false;
-            }
-        }
-
-        if (checkPath.equals(LOGIN_URI)) {
-            try {
-                I18n.resetI18nLang(); // 确保登录页面（包括出错信息）都以默认i18n展示
-                webLogin(request, response);
-            } catch (Exception e) {
-                if (e instanceof IOException) {
-                    throw e;
-                } else {
-                    throw new IllegalStateException(e);
-                }
-            } finally {
-                I18n.resetI18nLang();
             }
             return false;
         }
+
+        // 已登录，进入业务系统
+        String loginUser = getLoginUser(request);
+        if (loginUser != null) return true;
+
+        // 未登录，开放资源，放行
+        if (isOpenUris(checkPath)) return true;
 
         // 拦截未登录的请求
-        HttpSession session = request.getSession(false);
-        String user = null;
-        if (session != null) {
-            user = getLoginUser(session);
-        }
-        if (session == null || user == null) {
-            if (!response.isCommitted()) {
-                if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
-                    response.setContentType("application/json;charset=UTF-8");
-                    try (PrintWriter writer = context.resp.getWriter()) {
-                        writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getKeyI18n("page.login.need") + "\"}");
-                        writer.flush();
-                    }
-                    return false;
+        if (!response.isCommitted()) {
+            if (request.getHeader("accept") != null && request.getHeader("accept").contains("application/json")) {
+                response.setContentType("application/json;charset=UTF-8");
+                try (PrintWriter writer = context.resp.getWriter()) {
+                    writer.write("{\"success\":\"false\",\"msg\":\"" + I18n.getKeyI18n("page.login.need") + "\"}");
+                    writer.flush();
                 }
-                // login.jsp 已经在 application.xml 中配置了过滤，
-                // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
+            } else {
                 String toJson = JsonView.responseErrorJson(response, "Please enter username and password to log in to the system");
-                if (I18n.getI18nLang() == Lang.en) { // header里只能英文
-                    response.setHeader(RESPONSE_HEADER_MSG_KEY, toJson);
-                } else {
-                    response.setHeader(RESPONSE_HEADER_MSG_KEY, RESTController.encodeId(toJson));
-                }
+                response.setHeader(RESPONSE_HEADER_MSG_KEY, toJson);
                 response.sendRedirect(request.getContextPath() + LOGIN_PATH);
             }
-            return false;
         }
-
-        // here, Everything looks good
-        return true;
+        return false;
     }
 
     public static class LoginFailedMsg {

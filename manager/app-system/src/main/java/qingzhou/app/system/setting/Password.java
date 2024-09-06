@@ -1,4 +1,4 @@
-package qingzhou.app.system.user;
+package qingzhou.app.system.setting;
 
 import qingzhou.api.*;
 import qingzhou.app.system.Main;
@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
-        menu = "System", order = 2,
+        menu = Main.SETTING_MENU, order = 2,
         entrance = DeployerConstants.ACTION_EDIT,
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
@@ -28,7 +28,7 @@ public class Password extends ModelBase {
             type = FieldType.bool,
             name = {"修改密码", "en:Change Password"},
             info = {"标记需要本用户登录系统的密码。", "en:Mark the password that requires the user to log in to the system."})
-    public boolean changePwd = true;
+    public Boolean changePwd = true;
 
     @ModelField(
             show = "changePwd=true",

@@ -32,7 +32,7 @@ public class ResetPassword implements Filter<RestContext> {
         String RESET_OK_FLAG = "RESET_OK_FLAG";
         if (session.getAttribute(RESET_OK_FLAG) != null) return true;
 
-        String user = LoginManager.getLoginUser(session);
+        String user = LoginManager.getLoginUser(servletRequest);
         String resetPwdInfo = checkResetPwdInfo(user);
         if (resetPwdInfo == null) {
             session.setAttribute(RESET_OK_FLAG, RESET_OK_FLAG);// 成功登录

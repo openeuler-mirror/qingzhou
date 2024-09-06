@@ -1,7 +1,7 @@
 package qingzhou.app.system.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Listable;
+import qingzhou.api.type.Addable;
 import qingzhou.app.system.Main;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.Deployer;
@@ -17,14 +17,15 @@ import java.util.List;
 import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
-        menu = "Service", order = 1,
+        menu = Main.SERVICE_MENU, order = 1,
         name = {"应用", "en:App"},
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可部署在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
-public class App extends ModelBase implements Listable {
+public class App extends ModelBase implements Addable {
     private final String SP = DeployerConstants.DEFAULT_DATA_SEPARATOR;
 
     @ModelField(
+            required = true,
             editable = false,
             unsupportedStrings = {DeployerConstants.APP_SYSTEM},
             list = true,
@@ -38,7 +39,7 @@ public class App extends ModelBase implements Listable {
             name = {"使用上传", "en:Enable Upload"},
             info = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。",
                     "en:The installed app can be uploaded from the client or read from a location specified on the server side."})
-    public boolean upload = false;
+    public Boolean upload = false;
 
     @ModelField(
             show = "upload=false",
@@ -133,67 +134,49 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = DeployerConstants.ACTION_DELETE, icon = "trash", order = 9,
-            ajax = true,
-            batch = true,
-            name = {"卸载", "en:Uninstall"},
-            info = {"卸载应用，只能卸载本地实例部署的应用。注：请谨慎操作，删除后不可恢复。",
-                    "en:If you uninstall an application, you can only uninstall an application deployed on a local instance. Note: Please operate with caution, it cannot be recovered after deletion."})
-    public void delete(Request request) throws Exception {
-        String appName = request.getId();
-        Map<String, String> app = showData(appName);
-        String[] instances = app.get("instances").split(SP);
-
-        RequestImpl tmpReq = new RequestImpl();
-        tmpReq.setId(appName);
-        tmpReq.setAppName(DeployerConstants.APP_SYSTEM);
-        tmpReq.setModelName(DeployerConstants.MODEL_INSTALLER);
-        tmpReq.setActionName(DeployerConstants.ACTION_UNINSTALL);
-
-        List<Response> responseList = Main.getService(ActionInvoker.class).invokeOnInstances(tmpReq, instances);
-        request.getResponse().setSuccess(responseList.isEmpty());
-
-        if (!responseList.isEmpty()) {
-            // todo 参考 ActionInvoker 的 invokeBatch 方法，给出友好的响应信息
-        }
-    }
-
-    @ModelAction(
-            code = DeployerConstants.ACTION_UPDATE, icon = "save",
-            ajax = true,
-            name = {"更新", "en:Update"},
-            info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
-    public void update(Request request) throws Exception {
-        delete(request);
-        add(request);
-    }
-
-    @ModelAction(
-            code = DeployerConstants.ACTION_ADD, icon = "save",
-            ajax = true,
-            name = {"添加", "en:Add"},
-            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    public void add(Request request) throws Exception {
-        RequestImpl tmpReq = new RequestImpl();
-        tmpReq.setAppName(DeployerConstants.APP_SYSTEM);
-        tmpReq.setModelName(DeployerConstants.MODEL_INSTALLER);
-        tmpReq.setActionName(DeployerConstants.ACTION_INSTALL);
-        tmpReq.setParameters(request.getParameters());
-
-        String[] instances = request.getParameter("instances").split(SP);
-        List<Response> responseList = Main.getService(ActionInvoker.class).invokeOnInstances(tmpReq, instances);
-        request.getResponse().setSuccess(responseList.isEmpty());
-
-        if (!responseList.isEmpty()) {
-            // todo 参考 ActionInvoker 的 invokeBatch 方法，给出友好的响应信息
-        }
-    }
-
-    @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
             order = 1,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request) {
+    }
+
+    @Override
+    public void addData(Map<String, String> data) throws Exception {
+        RequestImpl tmpReq = new RequestImpl();
+        tmpReq.setAppName(DeployerConstants.APP_SYSTEM);
+        tmpReq.setModelName(DeployerConstants.MODEL_INSTALLER);
+        tmpReq.setActionName(DeployerConstants.ACTION_INSTALL);
+
+        String instances = data.remove("instances");
+        tmpReq.setParameters(data);
+
+        List<Response> responseList = Main.getService(ActionInvoker.class).invokeOnInstances(tmpReq, instances.split(SP));
+        if (!responseList.isEmpty()) {
+            // todo 参考 ActionInvoker 的 invokeBatch 方法，给出友好的响应信息
+        }
+    }
+
+    @Override
+    public void deleteData(String id) throws Exception {
+        Map<String, String> app = showData(id);
+        String[] instances = app.get("instances").split(SP);
+
+        RequestImpl tmpReq = new RequestImpl();
+        tmpReq.setId(id);
+        tmpReq.setAppName(DeployerConstants.APP_SYSTEM);
+        tmpReq.setModelName(DeployerConstants.MODEL_INSTALLER);
+        tmpReq.setActionName(DeployerConstants.ACTION_UNINSTALL);
+
+        List<Response> responseList = Main.getService(ActionInvoker.class).invokeOnInstances(tmpReq, instances);
+        if (!responseList.isEmpty()) {
+            // todo 参考 ActionInvoker 的 invokeBatch 方法，给出友好的响应信息
+        }
+    }
+
+    @Override
+    public void updateData(Map<String, String> data) throws Exception {
+        deleteData(data.get(idFieldName()));
+        addData(data);
     }
 }

@@ -49,7 +49,7 @@
         <div class="logo"><%=I18n.getKeyI18n("page.userlogin")%>
         </div>
         <form id="loginForm" method="post"
-              action="<%=RESTController.encodeURL( response, contextPath+LoginManager.LOGIN_URI)%>"
+              action="<%=RESTController.encodeURL( response, contextPath + LoginManager.LOGIN_URI)%>"
               class="form-group" autocomplete="off">
             <div class="input-control has-icon-left">
                 <input value="qingzhou" type="text" id="<%=LoginManager.LOGIN_USER%>"

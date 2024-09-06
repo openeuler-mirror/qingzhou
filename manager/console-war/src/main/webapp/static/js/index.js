@@ -693,7 +693,7 @@ function bindEventForFormPage() {
         return false;
     });
 
-    // 只读元素鼠标手势标识
+    // 只读元素鼠标手势
     $(".form-group [readonly]").each(function () {
         $(this).css("cursor", "not-allowed").parent().css("cursor", "not-allowed");
     });

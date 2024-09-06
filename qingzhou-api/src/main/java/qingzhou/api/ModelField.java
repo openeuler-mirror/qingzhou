@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
 public @interface ModelField {
     String group() default ""; // 设置字段所属的页面表单展示分组，默认为空字符串表示“其它”分组。
 
-    String show() default ""; // 标识此字段有效的条件
+    String show() default ""; // 此字段有效的条件
 
     boolean createable() default true; // 允许创建时指定值
 
@@ -52,9 +52,9 @@ public @interface ModelField {
 
     boolean filePath() default false;
 
-    boolean monitor() default false; // 标识该属性为监视类型，而非表单项
+    boolean monitor() default false; // 该属性为监视类型，而非表单项
 
-    boolean numeric() default false;  // 标识该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
+    boolean numeric() default false;  // 该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
 
     boolean list() default false; // 是否显示在列表中。
 

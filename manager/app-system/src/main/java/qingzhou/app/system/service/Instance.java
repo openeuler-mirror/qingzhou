@@ -3,7 +3,8 @@ package qingzhou.app.system.service;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Addable;
+import qingzhou.api.type.Listable;
+import qingzhou.app.system.Main;
 import qingzhou.deployer.DeployerConstants;
 
 import java.util.Collections;
@@ -11,54 +12,48 @@ import java.util.List;
 import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
-        menu = "Service", order = 2,
+        menu = Main.SERVICE_MENU, order = 2,
         name = {"实例", "en:Instance"},
         info = {"实例是轻舟提供的运行应用的实际环境，即应用的运行时。",
                 "en:The instance is the actual environment for running the application provided by QingZhou, that is, the runtime of the application."})
-public class Instance extends ModelBase implements Addable {
+public class Instance extends ModelBase implements Listable {
     @ModelField(
             required = true,
             list = true,
-            name = {"名称", "en:Name"},
-            info = {"唯一标识。", "en:Unique identifier."})
+            name = {"ID", "en:ID"},
+            info = {"表示本条数据的 ID。", "en:Indicates the ID of this piece of data."})
     public String id;
 
-    @ModelField(list = true,
-            name = {"IP", "en:IP"},
-            info = {"连接实例的 IP 地址。", "en:The IP address of the connected instance."})
+    @ModelField(
+            required = true,
+            host = true,
+            list = true,
+            name = {"实例 IP", "en:IP"},
+            info = {"该实例所在环境的 IP 地址。", "en:The IP address of the environment in which the instance resides."})
     public String ip;
 
-    @ModelField(list = true,
-            name = {"管理端口", "en:Management Port"},
-            info = {"实例的管理端口。", "en:The management port of the instance."})
-    public int port = 7000;
+    @ModelField(
+            required = true,
+            port = true,
+            list = true,
+            name = {"实例端口", "en:Management Port"},
+            info = {"管理该实例所使用的端口。", "en:Manage the ports used by the instance."})
+    public Integer port;
 
-    @ModelField(list = true, createable = false, editable = false,
-            name = {"运行中", "en:Running"}, info = {"了解该组件的运行状态。", "en:Know the operational status of the component."})
-    public boolean running;
-
-    @Override
-    public void addData(Map<String, String> data) throws Exception {
-
-    }
-
-    @Override
-    public void deleteData(String id) throws Exception {
-
-    }
+    @ModelField(
+            monitor = true,
+            list = true,
+            name = {"运行中", "en:Running"},
+            info = {"表示该实例是否正在运行中。", "en:Indicates whether the instance is running."})
+    public Boolean running;
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
         return Collections.emptyList();
     }
 
     @Override
-    public void updateData(Map<String, String> data) throws Exception {
-
-    }
-
-    @Override
-    public Map<String, String> showData(String id) throws Exception {
+    public Map<String, String> showData(String id) {
         return Collections.emptyMap();
     }
 

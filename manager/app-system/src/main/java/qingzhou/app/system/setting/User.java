@@ -1,4 +1,4 @@
-package qingzhou.app.system.user;
+package qingzhou.app.system.setting;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Addable;
@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 @Model(code = "user", icon = "user",
-        menu = "System", order = 1,
+        menu = Main.SETTING_MENU, order = 1,
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements Addable {
@@ -208,7 +208,8 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = DeployerConstants.ACTION_DELETE,
+            code = DeployerConstants.ACTION_DELETE, icon = "trash",
+            order = 9,
             show = "id!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",

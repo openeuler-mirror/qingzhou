@@ -5,47 +5,50 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Addable;
+import qingzhou.app.system.Main;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 @Model(code = "node", icon = "node",
-        menu = "Service", order = 4,
+        menu = Main.SERVICE_MENU, order = 3,
         name = {"节点", "en:Node"},
-        info = {"节点是对物理环境的抽象，是 TongWeb 集中管理得以实施的基础设施，一台物理设备（准确的说是一个IP）只需要安装一个节点即可，在节点之上可以构建集群、实例、会话服务器、负载均衡器等逻辑组件。" +
-                "在逻辑上，节点只做管理使用，不会参与用户应用的部署和运行（应用由 TongWeb 实例管理）。",
-                "en:A node is an abstraction of the physical environment and is the infrastructure for the implementation of TongWeb centralized management. " +
-                        "A physical device (to be precise, an IP) only needs to install a node, and a cluster, instance, and session server can be built on the node. , " +
-                        "load balancer and other logical components. Logically, the node is only used for management, and will not participate in the deployment and " +
-                        "operation of the user application (the application is managed by the TongWeb instance)."})
+        info = {"节点表示一种物理环境，通常是基于 SSH 协议进行管理，轻舟在节点之上运行轻舟的实例。",
+                "en:A node represents a physical environment, usually managed based on the SSH protocol, and Qingzhou runs an instance of Qingzhou on top of the node."})
 public class Node extends ModelBase implements Addable {
     @ModelField(
             required = true,
             list = true,
             name = {"名称", "en:Name"},
-            info = {"唯一标识。", "en:Unique identifier."})
+            info = {"表示本条数据的 ID。", "en:Indicates the ID of this piece of data."})
     public String id;
 
-    @ModelField(list = true,
+    @ModelField(
+            required = true,
+            list = true,
             name = {"SSH 主机", "en:SSH Address"},
             info = {"连接节点的 IP 地址。", "en:The IP address of the connected node."})
     public String host;
 
-    @ModelField(list = true,
+    @ModelField(
             type = FieldType.number,
+            required = true,
             port = true,
+            list = true,
             name = {"SSH 端口", "en:SSH Port"},
             info = {"连接节点的 IP 地址的ssh服务使用的端口。", "en:Port used by the SSH service to connect the IP address of the node."})
-    public int sshPort = 22;
+    public Integer sshPort = 22;
 
     @ModelField(
+            required = true,
             name = {"SSH 用户名", "en:SSH User Name "},
             info = {"SSH 登录使用的用户名。", "en:User name for SSH login"})
     public String sshUserName;
 
     @ModelField(
             type = FieldType.password,
+            required = true,
             name = {"SSH 密码", "en:SSH Password"},
             info = {"SSH 登录使用的密码", "en:Password or certificate."})
     public String sshPassword;

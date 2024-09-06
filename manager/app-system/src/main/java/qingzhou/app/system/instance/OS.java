@@ -14,8 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "os", icon = "desktop",
-        menu = "Monitor",
         entrance = DeployerConstants.ACTION_MONITOR,
+        hidden = true,
         name = {"操作系统", "en:Operating System"},
         info = {"操作系统的基本信息。", "en:Basic information about the operating system."})
 public class OS extends ModelBase implements Monitorable {
@@ -30,7 +30,7 @@ public class OS extends ModelBase implements Monitorable {
     public String Arch;
 
     @ModelField(name = {"CPU 个数", "en:The Number Of Cpus"}, info = {"虚拟机可用的处理器数量。", "en:The number of processors available to the virtual machine."})
-    public int AvailableProcessors;
+    public Integer AvailableProcessors;
 
     @ModelField(
             monitor = true, numeric = true,
@@ -55,11 +55,11 @@ public class OS extends ModelBase implements Monitorable {
     public Double CommittedVirtualMemorySize;
 
     @ModelField(monitor = true, numeric = true, name = {"磁盘分区总量（GB）", "en:File Total Space (GB)"},
-            info = {"TongWeb 所在的磁盘分区总空间大小，单位GB。", "en:The total space of the disk partition where TongWeb is located, in GB."})
+            info = {"磁盘分区总空间大小，单位GB。", "en:The total size of the disk partition, in GB."})
     public Double fileTotalSpace;
 
     @ModelField(monitor = true, numeric = true, name = {"磁盘分区剩余（GB）", "en:File Free Space (GB)"},
-            info = {"TongWeb 所在的磁盘分区剩余空间，单位GB。", "en:The remaining space of the disk partition where TongWeb is located, in GB."})
+            info = {"磁盘分区剩余空间，单位GB。", "en:The remaining space of the disk partition, in GB."})
     public Double fileFreeSpace;
 
     @Override

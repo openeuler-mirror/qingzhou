@@ -38,7 +38,7 @@ public interface Request {
     /**
      * 获取请求的ID。
      *
-     * @return 返回请求的唯一标识符。
+     * @return 返回请求的唯一符。
      */
     String getId();
 

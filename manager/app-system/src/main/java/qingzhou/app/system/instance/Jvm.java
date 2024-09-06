@@ -20,6 +20,7 @@ import java.util.*;
 
 @Model(code = "jvm", icon = "coffee",
         entrance = DeployerConstants.ACTION_EDIT,
+        hidden = true,
         name = {"JVM 配置", "en:JVM Configuration"},
         info = {"配置运行 QingZhou 应用服务器所使用的 JVM 属性，并监视 JVM 的运行状态。",
                 "en:Configure the JVM properties used to run the QingZhou application server, and monitor the running status of the JVM."})
@@ -85,15 +86,15 @@ public class Jvm extends ModelBase implements Updatable, Monitorable {
     public Integer GCTimeRatio;
 
     @ModelField(group = group_gc, type = FieldType.bool, name = {"记录 GC 日志", "en:Print GC "}, info = {"设置是否记录 JVM 的 GC 日志。", "en:Sets whether to record GC logs for the JVM."})
-    public boolean gcLogEnabled;
+    public Boolean gcLogEnabled;
     @ModelField(group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录细节", "en:GC Details"}, info = {"设置是否记录 GC 的详细信息 (-XX:+PrintGCDetails)。", "en:Set whether GC details are logged (-XX:+PrintGCDetails)."})
-    public boolean PrintGCDetails;
+    public Boolean PrintGCDetails;
     @ModelField(group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录系统停顿时间", "en:Application StoppedTime"}, info = {"是否在 GC 日志中记录系统停顿时间。仅适用于 java8 (-XX:+PrintGCApplicationStoppedTime)。", "en:Whether application StoppedTime are recorded in GC logs, only available for java8 (-XX:+PrintGCApplicationStoppedTime)."})
-    public boolean PrintGCApplicationStoppedTime;
+    public Boolean PrintGCApplicationStoppedTime;
     @ModelField(group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录系统执行时间", "en:Application ConcurrentTime"}, info = {"是否在 GC 日志中记录系统执行时间。仅适用于 java8 (-XX:+PrintGCApplicationConcurrentTime)。", "en:Whether application ConcurrentTime are recorded in GC logs, only available for java8 (-XX:+PrintGCApplicationConcurrentTime)."})
-    public boolean PrintGCApplicationConcurrentTime;
+    public Boolean PrintGCApplicationConcurrentTime;
     @ModelField(group = group_gc, show = "gcLogEnabled=true", type = FieldType.bool, name = {"记录堆信息", "en:Print Heap"}, info = {"是否在 GC 日志中记录堆信息，仅适用于java8 (-XX:+PrintHeapAtGC)。", "en:Whether heap information is recorded in the GC log, only available for java8 (-XX:+PrintHeapAtGC)."})
-    public boolean PrintHeapAtGC;
+    public Boolean PrintHeapAtGC;
     @ModelField(
             group = group_gc,
             filePath = true,
@@ -104,7 +105,7 @@ public class Jvm extends ModelBase implements Updatable, Monitorable {
     public String gcLog = "logs/gc/gc.log";
 
     @ModelField(group = group_heapDump, type = FieldType.bool, name = {"开启堆转储", "en:Heap Dump"}, info = {"当 JVM 发生 OOM 时，自动生成 DUMP 文件，文件位置由【堆转储文件】选项指定 (-XX:+HeapDumpOnOutOfMemoryError)。", "en:When OOM occurs in JVM, a dump file is automatically generated, and the file location is specified by the [Heap Dump Path] option (-XX:+HeapDumpOnOutOfMemoryError)."})
-    public boolean HeapDumpOnOutOfMemoryError;
+    public Boolean HeapDumpOnOutOfMemoryError;
     @ModelField(
             group = group_heapDump,
             show = "HeapDumpOnOutOfMemoryError=true",
@@ -115,7 +116,7 @@ public class Jvm extends ModelBase implements Updatable, Monitorable {
     public String HeapDumpPath = "logs/heap.hprof";
 
     @ModelField(group = group_jvmLog, type = FieldType.bool, name = {"记录 JVM 日志", "en:Log VM Output"}, info = {"设置是否记录 JVM 日志 (-XX:+LogVMOutput)。", "en:Set whether to log JVM logs (-XX:+LogVMOutput)."})
-    public boolean LogVMOutput;
+    public Boolean LogVMOutput;
     @ModelField(
             group = group_jvmLog,
             show = "LogVMOutput=true",
@@ -138,7 +139,7 @@ public class Jvm extends ModelBase implements Updatable, Monitorable {
             info = {"在支持 IPv4 映射地址的 IPv6 网络协议栈中，首选使用 IPv4 协议栈 (-Djava.net.preferIPv4Stack)。",
                     "en:Among IPv6 network stacks that support IPv4 mapped addresses, the IPv4 stack is preferred (-Djava.net.preferIPv4Stack)."}
     )
-    public boolean preferIPv4Stack = false;
+    public Boolean preferIPv4Stack = false;
 
     @ModelField(
             monitor = true,
@@ -186,31 +187,31 @@ public class Jvm extends ModelBase implements Updatable, Monitorable {
             monitor = true, numeric = true,
             name = {"最大堆内存（MB）", "en:Heap Memory Max (MB)"},
             info = {"可使用的最大堆内存，单位MB。", "en:The maximum heap memory that can be used, in MB."})
-    public double heapCommitted;
+    public Double heapCommitted;
 
     @ModelField(
             monitor = true, numeric = true,
             name = {"JVM 线程总数", "en:JVM Thread Count"},
             info = {"当前活动线程的数量，包括守护线程和非守护线程。", "en:The current number of live threads including both daemon and non-daemon threads."})
-    public int threadCount;
+    public Integer threadCount;
 
     @ModelField(
             monitor = true, numeric = true,
             name = {"死锁线程数", "en:Deadlocked Threads"},
             info = {"死锁等待对象监视器或同步器的线程数。", "en:The number of threads deadlocked waiting for an object monitor or synchronizer."})
-    public int deadlockedThreadCount;
+    public Integer deadlockedThreadCount;
 
     @ModelField(
             monitor = true, numeric = true,
             name = {"使用中堆内存（MB）", "en:Heap Memory Used (MB)"},
             info = {"正在使用的堆内存的大小，单位MB。", "en:The size of the heap memory in use, in MB."})
-    public double heapUsed;
+    public Double heapUsed;
 
     @ModelField(
             monitor = true, numeric = true,
             name = {"使用中非堆内存（MB）", "en:Non-Heap Memory Used (MB)"},
             info = {"正在使用的非堆内存的大小，单位MB。", "en:The size of the non-heap memory in use, in MB."})
-    public double nonHeapUsed;
+    public Double nonHeapUsed;
 
     @Override
     public Groups groups() {
