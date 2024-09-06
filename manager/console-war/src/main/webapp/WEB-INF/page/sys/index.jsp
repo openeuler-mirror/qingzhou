@@ -237,7 +237,7 @@
     <%@ include file="../fragment/head.jsp" %>
 </head>
 
-<body style="overflow:hidden;">
+<body class="<%=(themeMode == null || "".equals(themeMode)) ? "" : (themeMode + "-mode")%>" style="overflow:hidden;">
 <!--[if lt IE 8]>
     <div class="alert alert-danger"><%=I18n.getKeyI18n( "page.browser.outdated")%></div>
     <![endif]-->
@@ -322,7 +322,7 @@
         networkError: '<%=I18n.getKeyI18n("page.error.network")%>',
         placeholderOtp: '<%=I18n.getKeyI18n("page.placeholder.otp")%>',
         bindSuccessOtp: '<%=I18n.getKeyI18n("page.bindsuccess.otp")%>',
-        bindFailOtp: '<%=I18n.getKeyI18n("page.bindfail.otp")%>',
+        bindFailOtp: "<%=I18n.getKeyI18n("page.bindfail.otp")%>",
         passwordChangedMsg: '<%=I18n.getKeyI18n("page.password.changed")%>',
         searchHiddenTip: '<%=I18n.getKeyI18n("page.search.hidden")%>',
         passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>'

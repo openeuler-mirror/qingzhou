@@ -309,24 +309,28 @@ $(document).ready(function () {
     }
     //切换主题模式点击事件
     $("#switch-mode-btn").click(function() {
-        var icon = $(this).find("i");
-
-        icon.addClass("rotate-fade-out");
-
-        setTimeout(function() {
+        var icon = $("i", this);
+        var $this = this;
+        var themeUrl = $(this).attr("themeUrl");
+        var nowTheme = $(this).attr("theme");
+        var toTheme = $(this).attr("theme") == "" ? "dark" : "";
+        if (themeUrl.indexOf("?") > 0) {
+            themeUrl = themeUrl.substr(0, themeUrl.lastIndexOf("/") + 1) + toTheme + themeUrl.substring(themeUrl.indexOf("?"));
+        } else {
+            themeUrl = themeUrl.substr(0, themeUrl.lastIndexOf("/") + 1) + toTheme;
+        }
+        $.post(themeUrl, {}, function (themeTxt) {
+            $("body").removeClass(nowTheme + "-mode");
+            if (themeTxt != "") {
+                $("body").addClass(themeTxt + "-mode");
+            }
             if (icon.hasClass("icon-moon")) {
                 icon.removeClass("icon-moon").addClass("icon-sun");
-                $("#switch-mode-btn").attr("data-tip", "switch to light theme");
-                $("body").addClass("dark-mode");
             } else {
                 icon.removeClass("icon-sun").addClass("icon-moon");
-                $("#switch-mode-btn").attr("data-tip", "switch to dark theme");
-                $("body").removeClass("dark-mode");
             }
-
-            icon.removeClass("rotate-fade-out").addClass("rotate-fade-in");
-        }, 300);
-        icon.removeClass("rotate-fade-in");
+            $($this).attr("theme", themeTxt);
+        }, "text");
     });
     // 切换语言点击事件
     $("#switch-lang>ul>li>a").unbind("click").bind("click", function (e) {
