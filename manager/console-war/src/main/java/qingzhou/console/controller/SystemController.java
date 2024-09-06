@@ -12,7 +12,6 @@ import qingzhou.console.ContextHelper;
 import qingzhou.console.controller.jmx.JMXAuthenticatorImpl;
 import qingzhou.console.controller.jmx.JmxInvokerImpl;
 import qingzhou.console.controller.jmx.NotificationListenerImpl;
-import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.vercode.VerCode;
@@ -20,7 +19,6 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -123,12 +121,12 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     private final Filter<SystemControllerContext>[] processors = new Filter[]{
             new TrustIpCheck(),
             new JspInterceptor(),
-            ofThemeFilter(),
             new I18n(),
             new About(),
             new VerCode(),
             new LoginFreeFilter(),
             new LoginManager(),
+            new Theme(),
             (Filter<SystemControllerContext>) context -> {
                 context.chain.doFilter(context.req, context.resp); // 这样可以进入 servlet 资源
                 return false;
@@ -190,31 +188,5 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         } catch (Throwable e) {
             getService(Logger.class).error(e.getMessage(), e);
         }
-    }
-
-    private Filter<SystemControllerContext> ofThemeFilter() {
-        return new Filter<SystemControllerContext>() {
-            @Override
-            public boolean doFilter(SystemControllerContext context) throws Exception {
-                String checkPath = RESTController.getReqUri(context.req);
-                if (!checkPath.startsWith(DeployerConstants.URI_THEME)) {
-                    return true;
-                }
-
-                HttpServletResponse response = context.resp;
-                response.setContentType("text/plain; charset=UTF-8");
-                ServletOutputStream out = response.getOutputStream();
-                boolean isDarkTheme = checkPath.startsWith(DeployerConstants.URI_THEME + "/dark");
-                if (context.req.getSession(false) != null) {
-                    try {
-                        context.req.getSession(false).setAttribute(DeployerConstants.KEY_THEME_MODE, isDarkTheme ? "dark" : "");
-                    } catch (Exception ignored) {
-                    }
-                }
-                out.write((isDarkTheme ? "dark" : "").getBytes());
-                out.flush();
-                return false;
-            }
-        };
     }
 }

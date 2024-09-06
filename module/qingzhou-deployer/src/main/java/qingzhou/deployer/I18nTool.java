@@ -66,6 +66,9 @@ public class I18nTool {
             if (val.isEmpty()) {
                 throw new IllegalArgumentException("Missing i18n of " + lang.name() + " for: " + Arrays.toString(i18n));
             }
+            if (val.contains("'")) {
+                new UnsupportedOperationException("Single quotes (') are not supported: " + langLine).printStackTrace();
+            }
 
             String origin = i18nMap.put(lang, val);
             if (origin != null) {

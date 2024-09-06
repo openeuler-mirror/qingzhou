@@ -35,7 +35,7 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_port", new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
         I18n.addKeyI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         I18n.addKeyI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
-        I18n.addKeyI18n("validation_unsupportedStrings", new String[]{"不能使用此值：%s", "en:You can't use this value: %s"});
+        I18n.addKeyI18n("validation_unsupportedStrings", new String[]{"不能使用此值：%s", "en:You can not use this value: %s"});
         I18n.addKeyI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
         I18n.addKeyI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
         I18n.addKeyI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});

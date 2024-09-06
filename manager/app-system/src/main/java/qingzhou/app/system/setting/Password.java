@@ -73,7 +73,7 @@ public class Password extends ModelBase {
         appContext.addI18n("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变",
                 "en:The new password is the same as the original password and has not changed"});
         appContext.addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，请勿设置最近使用过的密码",
-                "en:For security reasons, don't set a recently used password"});
+                "en:For security reasons, do not set a recently used password"});
     }
 
     @ModelAction(
