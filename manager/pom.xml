@@ -13,9 +13,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>app-common</module>
-        <module>app-instance</module>
-        <module>app-master</module>
+        <module>app-system</module>
         <module>console-war</module>
     </modules>
 

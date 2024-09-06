@@ -1,13 +1,14 @@
 package qingzhou.console.view;
 
 import qingzhou.api.Response;
-import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.controller.I18n;
-import qingzhou.console.page.PageBackendService;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.type.FileView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.ImageView;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 
 import java.util.HashMap;
@@ -16,14 +17,13 @@ import java.util.Objects;
 
 public class ViewManager {
     public static final String htmlView = "html";
-    public static final String jsonView = "json";
     public static final String fileView = "file";
     public static final String imageView = "image";
     private final Map<String, View> views = new HashMap<>();
 
     public ViewManager() {
         views.put(htmlView, new HtmlView());
-        views.put(jsonView, new JsonView());
+        views.put(DeployerConstants.jsonView, new JsonView());
         views.put(fileView, new FileView());
         views.put(imageView, new ImageView());
     }
@@ -33,7 +33,7 @@ public class ViewManager {
         Response response = restContext.request.getResponse();
         // 完善响应的 msg
         if (response.getMsg() == null) {
-            String appName = PageBackendService.getAppName(request);
+            String appName = SystemController.getAppName(request);
             String SP = I18n.isZH() ? "" : " ";
             String msg = response.isSuccess() ? I18n.getKeyI18n("msg.success") : I18n.getKeyI18n("msg.fail");
             String model = I18n.getModelI18n(appName, "model." + request.getModel());
@@ -49,7 +49,7 @@ public class ViewManager {
         }
 
         String contentType = response.getContentType();
-        restContext.servletResponse.setContentType((contentType == null || contentType.isEmpty()) ? view.getContentType() : contentType);
+        restContext.resp.setContentType((contentType == null || contentType.isEmpty()) ? view.getContentType() : contentType);
         view.render(restContext);
     }
 }

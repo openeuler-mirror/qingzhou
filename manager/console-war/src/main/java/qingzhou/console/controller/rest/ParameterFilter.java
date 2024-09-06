@@ -2,7 +2,6 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.page.PageBackendService;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelFieldInfo;
@@ -12,7 +11,7 @@ public class ParameterFilter implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
-        ModelInfo modelInfo = SystemController.getAppInfo(PageBackendService.getAppName(request)).getModelInfo(request.getModel());
+        ModelInfo modelInfo = SystemController.getAppInfo(SystemController.getAppName(request)).getModelInfo(request.getModel());
         for (String fieldName : modelInfo.getFormFieldNames()) {
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField.getType().equals(FieldType.password.name())) {

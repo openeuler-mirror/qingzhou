@@ -3,6 +3,8 @@ package qingzhou.engine;
 import java.io.File;
 
 public interface ModuleContext {
+    String getPlatformVersion();
+
     File getLibDir();
 
     File getInstanceDir();

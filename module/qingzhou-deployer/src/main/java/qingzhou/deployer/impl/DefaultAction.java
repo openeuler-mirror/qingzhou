@@ -38,7 +38,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.SHOW_ACTION, icon = "folder-open-alt",
+            code = DeployerConstants.ACTION_SHOW, icon = "folder-open-alt",
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request) throws Exception {
@@ -47,7 +47,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.LIST_ACTION, icon = "list",
+            code = DeployerConstants.ACTION_LIST, icon = "list",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request) throws Exception {
@@ -70,7 +70,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.CREATE_ACTION, icon = "plus-sign",
+            code = DeployerConstants.ACTION_CREATE, icon = "plus-sign",
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) throws Exception {
@@ -79,7 +79,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.ADD_ACTION, icon = "save",
+            code = DeployerConstants.ACTION_ADD, icon = "save",
             ajax = true,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
@@ -91,7 +91,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.EDIT_ACTION, icon = "edit", order = 1,
+            code = DeployerConstants.ACTION_EDIT, icon = "edit", order = 1,
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
@@ -99,7 +99,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.UPDATE_ACTION, icon = "save",
+            code = DeployerConstants.ACTION_UPDATE, icon = "save",
             ajax = true,
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
@@ -111,7 +111,8 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.DELETE_ACTION, icon = "trash", order = 9,
+            code = DeployerConstants.ACTION_DELETE, icon = "trash",
+            order = 9,
             ajax = true,
             batch = true,
             name = {"删除", "en:Delete"},
@@ -133,7 +134,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.MONITOR_ACTION, icon = "line-chart", order = 2,
+            code = DeployerConstants.ACTION_MONITOR, icon = "line-chart", order = 2,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -169,7 +170,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.FILES_ACTION, icon = "download-alt",
+            code = DeployerConstants.ACTION_FILES, icon = "download-alt",
             ajax = true,
             order = 8,
             name = {"下载", "en:Download"},
@@ -203,14 +204,14 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = DeployerConstants.DOWNLOAD_ACTION, icon = "download-alt",
+            code = DeployerConstants.ACTION_DOWNLOAD, icon = "download-alt",
             name = {"下载文件", "en:Download File"},
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files."})
     public void download(Request request) throws Exception {
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 
-        String downloadKey = request.getParameter("DOWNLOAD_KEY");
+        String downloadKey = request.getParameter(DeployerConstants.DOWNLOAD_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
             String downloadFileNames = request.getParameter("downloadFileNames");
 
@@ -231,7 +232,7 @@ class DefaultAction {
         }
 
         long downloadOffset = 0;
-        String downloadOffsetParameter = request.getParameter("DOWNLOAD_OFFSET");
+        String downloadOffsetParameter = request.getParameter(DeployerConstants.DOWNLOAD_OFFSET);
         if (downloadOffsetParameter != null && !downloadOffsetParameter.trim().isEmpty()) {
             downloadOffset = Long.parseLong(downloadOffsetParameter.trim());
         }
@@ -249,7 +250,7 @@ class DefaultAction {
 
         Map<String, String> result = new HashMap<>();
         File downloadFile = new File(baseDir, key);
-        result.put("DOWNLOAD_KEY", key);
+        result.put(DeployerConstants.DOWNLOAD_KEY, key);
 
         byte[] byteRead;
         boolean hasMore = false;
@@ -269,15 +270,15 @@ class DefaultAction {
                     System.arraycopy(block, 0, byteRead, 0, read);
                 }
 
-                result.put("DOWNLOAD_BLOCK", Controller.cryptoService.getHexCoder().bytesToHex(byteRead));
+                result.put(DeployerConstants.DOWNLOAD_BLOCK, Controller.cryptoService.getBase64Coder().encode(byteRead));
                 offset = raf.getFilePointer();
             }
         }
 
         if (hasMore) {
-            result.put("DOWNLOAD_OFFSET", String.valueOf(offset));
+            result.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
         } else {
-            result.put("DOWNLOAD_OFFSET", String.valueOf(-1L));
+            result.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(-1L));
             File temp = FileUtil.newFile(baseDir, key);
             FileUtil.forceDelete(temp);
         }

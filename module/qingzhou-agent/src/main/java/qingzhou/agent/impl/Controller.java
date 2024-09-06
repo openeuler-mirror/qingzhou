@@ -2,8 +2,8 @@ package qingzhou.agent.impl;
 
 import qingzhou.config.Agent;
 import qingzhou.config.Config;
-import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.Cipher;
+import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;
 import qingzhou.deployer.*;
 import qingzhou.engine.Module;
@@ -130,22 +130,18 @@ public class Controller implements ModuleActivator {
             byte[] decryptedData = cipher.decrypt(requestData);
 
             // 3. 得到请求对象
-            RequestImpl request = json.fromJson(new String(decryptedData, StandardCharsets.UTF_8), RequestImpl.class);
+            RequestImpl request = json.fromJson(new String(decryptedData, DeployerConstants.ACTION_INVOKE_CHARSET), RequestImpl.class);
 
             // 4. 处理
-            ResponseImpl response = new ResponseImpl();
-            String appName = request.getApp();
-            if (DeployerConstants.INSTANCE_MANAGE.equals(request.getManageType())) {
-                appName = DeployerConstants.INSTANCE_APP;
-            }
-            App app = deployer.getApp(appName);
+            App app = deployer.getApp(request.getApp());
             app.invoke(request);
 
             // 将 request 收集的 session 参数，通过 response 回传到调用端
+            ResponseImpl response = (ResponseImpl) request.getResponse();
             response.getParametersInSession().putAll(request.getParametersInSession());
 
             // 5. 响应数据
-            byte[] responseData = json.toJson(response).getBytes(StandardCharsets.UTF_8);
+            byte[] responseData = json.toJson(response).getBytes(DeployerConstants.ACTION_INVOKE_CHARSET);
 
             // 6. 数据加密，返回到客户端
             return cipher.encrypt(responseData);
@@ -188,14 +184,13 @@ public class Controller implements ModuleActivator {
             if (masterUrl == null || masterUrl.trim().isEmpty()) {
                 logger.warn("MasterUrl cannot be empty");
                 return;
+            } else if (masterUrl.endsWith("/")) {
+                masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
             }
 
             List<AppInfo> appInfos = new ArrayList<>();
             for (String a : deployer.getAllApp()) {
-                if (DeployerConstants.INSTANCE_APP.equals(a)
-                        || DeployerConstants.MASTER_APP.equals(a)) {
-                    continue;
-                }
+                if (DeployerConstants.APP_SYSTEM.equals(a)) continue;
                 appInfos.add(deployer.getApp(a).getAppInfo());
             }
             thisInstanceInfo.setAppInfos(appInfos.toArray(new AppInfo[0]));
@@ -203,17 +198,14 @@ public class Controller implements ModuleActivator {
             String registerData = json.toJson(thisInstanceInfo);
 
             boolean registered = false;
+            String baseUri = masterUrl + DeployerConstants.REST_PREFIX + "/" + DeployerConstants.jsonView + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_INSTANCE + "/";
             try {
-                if (masterUrl.endsWith("/")) {
-                    masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
-                }
-                String fingerprintUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.CHECKREGISTRY_ACTION;
                 String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
-                HttpResponse response = http.buildHttpClient().send(fingerprintUrl, new HashMap<String, String>() {{
+                HttpResponse response = http.buildHttpClient().send(baseUri + DeployerConstants.ACTION_CHECKREGISTRY, new HashMap<String, String>() {{
                     put("fingerprint", fingerprint);
                 }});
                 if (response.getResponseCode() == 200) {
-                    Map resultMap = json.fromJson(response.getResponseBody(), Map.class);
+                    Map resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
                     List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get("data");
                     if (dataList != null && !dataList.isEmpty()) {
                         String checkResult = dataList.get(0).get(fingerprint);
@@ -225,8 +217,7 @@ public class Controller implements ModuleActivator {
             }
             if (registered) return;
 
-            String registerUrl = masterUrl + "/rest/json/app/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INSTANCE_MODEL + "/" + DeployerConstants.REGISTER_ACTION;
-            http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
+            http.buildHttpClient().send(baseUri + DeployerConstants.ACTION_REGISTER, new HashMap<String, String>() {{
                 put("doRegister", registerData);
             }});
         }

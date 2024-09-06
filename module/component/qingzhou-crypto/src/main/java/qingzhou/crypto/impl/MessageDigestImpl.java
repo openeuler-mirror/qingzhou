@@ -1,5 +1,6 @@
 package qingzhou.crypto.impl;
 
+import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.MessageDigest;
 
 import java.nio.charset.StandardCharsets;
@@ -9,9 +10,14 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 class MessageDigestImpl implements MessageDigest {
+    private final Base64Coder base64Coder;
     private final Random random = ThreadLocalRandom.current();
 
     private final String SP = "$";
+
+    MessageDigestImpl(Base64Coder base64Coder) {
+        this.base64Coder = base64Coder;
+    }
 
     @Override
     public String digest(String text, String algorithm, int saltLength, int iterations) {
@@ -50,11 +56,11 @@ class MessageDigestImpl implements MessageDigest {
     }
 
     private byte[] decode(String encode) {
-        return HexUtil.hexToBytes(encode);
+        return base64Coder.decode(encode);
     }
 
     private String encode(byte[] bytes) {
-        return HexUtil.bytesToHex(bytes);
+        return base64Coder.encode(bytes);
     }
 
     private byte[] digest(String algorithm, int iterations, byte[]... input) {

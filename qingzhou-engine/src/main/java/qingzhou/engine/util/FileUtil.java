@@ -162,9 +162,17 @@ public class FileUtil {
         }
     }
 
+    public static void writeFile(File file, byte[] bytes) throws IOException {
+        mkdirs(file.getParentFile());
+        try (FileOutputStream fos = new FileOutputStream(file, true);) {
+            fos.write(bytes);
+        }
+    }
+
     public static void writeFile(File file, String context) throws IOException {
         mkdirs(file.getParentFile());
-        try (FileOutputStream fos = new FileOutputStream(file); BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8))) {
+        try (FileOutputStream fos = new FileOutputStream(file);
+             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos, StandardCharsets.UTF_8))) {
             bw.write(context, 0, context.length());
         }
     }
@@ -248,7 +256,6 @@ public class FileUtil {
     /**
      * 获取文件大小
      *
-     * @param file
      * @return xx B、xx K、xx M、xx G、xx T
      */
     public static String getFileSize(File file) {

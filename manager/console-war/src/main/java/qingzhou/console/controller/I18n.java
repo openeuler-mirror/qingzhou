@@ -2,8 +2,9 @@ package qingzhou.console.controller;
 
 import qingzhou.api.Lang;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.page.PageBackendService;
+import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.ViewManager;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
@@ -62,7 +63,7 @@ public class I18n implements Filter<SystemControllerContext> {
         addKeyI18n("page.layertitle.otp", new String[]{"请使用TOTP客户端扫描二维码", "en:Please use the TOTP client to scan the QR code"});
         addKeyI18n("page.placeholder.otp", new String[]{"使用TOTP工具扫码后输入密码", "en:Use the TOTP tool to scan the QR code and enter the password"});
         addKeyI18n("page.bindsuccess.otp", new String[]{"绑定成功", "en:Bind success"});
-        addKeyI18n("page.bindfail.otp", new String[]{"密码不匹配", "en:The passwords don't match"});
+        addKeyI18n("page.bindfail.otp", new String[]{"密码不匹配", "en:The passwords does not match"});
         addKeyI18n("page.info.otp", new String[]{"动态密码，选填", "en:OTP, optional"});
         addKeyI18n("page.error.network", new String[]{"服务器连接错误，请确认服务器已启动或检查网络是否通畅", "en:Server connection error, please confirm that the server has been started or check whether the network is smooth"});
         addKeyI18n("page.info.add", new String[]{"添加", "en:Add"});
@@ -104,9 +105,9 @@ public class I18n implements Filter<SystemControllerContext> {
 
                 String lastUri = (String) s.getAttribute(lastUriKey);
                 if (Utils.isBlank(lastUri)) {
-                    lastUri = request.getContextPath() + RESTController.INDEX_PATH;
+                    lastUri = request.getContextPath() + LoginManager.INDEX_PATH;
                 }
-                response.sendRedirect(PageBackendService.encodeURL(response, lastUri)); // to welcome page
+                response.sendRedirect(RESTController.encodeURL(response, lastUri)); // to welcome page
             }
 
             return false;
@@ -125,7 +126,7 @@ public class I18n implements Filter<SystemControllerContext> {
         I18n.resetI18nLang();
         try {
             String requestURI = context.req.getRequestURI();
-            if (requestURI.contains(RESTController.REST_PREFIX + "/" + ViewManager.htmlView)) {
+            if (requestURI.contains(DeployerConstants.REST_PREFIX + "/" + ViewManager.htmlView)) {
                 // 如果没有这个判断，在查看折线图页面，发送的最后请求是 json数据，就会跳转错误
                 HttpSession s = context.req.getSession(false);
                 if (s != null) {

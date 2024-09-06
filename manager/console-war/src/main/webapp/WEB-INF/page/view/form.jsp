@@ -6,13 +6,13 @@
         return; // for 静态源码漏洞扫描
     }
 
-    boolean isEdit = Objects.equals(DeployerConstants.EDIT_ACTION, qzAction);
+    boolean isEdit = Objects.equals(DeployerConstants.ACTION_EDIT, qzAction);
     String submitActionName = PageBackendService.getSubmitActionName(qzRequest);
     ModelFieldInfo idField = modelInfo.getModelFieldInfo(idFieldName);
     final boolean hasId = idField != null;
     List<String> passwordFields = new ArrayList<>();
     String id = qzRequest.getId();
-    String encodedId = PageBackendService.encodeId(id);
+    String encodedId = RESTController.encodeId(id);
 
     if (encodedId == null) {
         encodedId = "";
@@ -24,7 +24,7 @@
 <%@ include file="../fragment/breadcrumb.jsp" %>
 
 <form name="pageForm" method="post" class="form-horizontal"
-      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, submitActionName+"/"+encodedId)%>">
+      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, submitActionName+"/"+encodedId)%>">
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
             Map<String, String> model;
@@ -266,10 +266,10 @@
                 <%
                     }
 
-                    ModelActionInfo listActionInfo = PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.LIST_ACTION, qzRequest);
+                    ModelActionInfo listActionInfo = PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.ACTION_LIST, qzRequest);
                     if (hasId && listActionInfo != null) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.LIST_ACTION)%>"
+                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.ACTION_LIST)%>"
                    btn-type="goback" class="btn">
                     <%=I18n.getKeyI18n("page.cancel")%>
                 </a>
@@ -286,19 +286,19 @@
                     }
 
                     boolean hasPermission =
-                            PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.FILES_ACTION, qzRequest) != null
+                            PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.ACTION_FILES, qzRequest) != null
                                     &&
-                                    PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.DOWNLOAD_ACTION, qzRequest) != null;
+                                    PageBackendService.renderModelAction(qzApp, qzModel, DeployerConstants.ACTION_DOWNLOAD, qzRequest) != null;
                     if (hasPermission) {
                 %>
-                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.jsonView, DeployerConstants.FILES_ACTION + "/" + encodedId)%>'
+                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, DeployerConstants.ACTION_FILES + "/" + encodedId)%>'
                         <%
                             out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                         %>
-                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + DeployerConstants.FILES_ACTION)%>'
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + DeployerConstants.ACTION_FILES)%>'
                    data-tip-arrow="top"
-                   btn-type="<%=DeployerConstants.FILES_ACTION%>" class="btn tooltips">
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.FILES_ACTION)%>
+                   btn-type="<%=DeployerConstants.ACTION_FILES%>" class="btn tooltips">
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.ACTION_FILES)%>
                 </a>
                 <%
                     }

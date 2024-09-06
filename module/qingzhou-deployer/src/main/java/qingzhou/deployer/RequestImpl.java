@@ -4,14 +4,15 @@ import qingzhou.api.Lang;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RequestImpl implements Request, Cloneable {
-    private transient SessionParameterListener sessionParameterListener;
-    private transient final Response response;
+    private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
+    private transient Response response = new ResponseImpl();
 
-    private String manageType;
     private String appName;
     private String modelName;
     private String actionName;
@@ -21,14 +22,6 @@ public class RequestImpl implements Request, Cloneable {
     private Lang lang;
     private final Map<String, String> parameters = new HashMap<>();
     private final Map<String, String> parametersInSession = new HashMap<>();
-
-    public RequestImpl() {
-        this(null);
-    }
-
-    public RequestImpl(Response response) {
-        this.response = response;
-    }
 
     @Override
     public String getApp() {
@@ -78,9 +71,7 @@ public class RequestImpl implements Request, Cloneable {
         }
         parametersInSession.put(key, val);
 
-        if (sessionParameterListener != null) {
-            sessionParameterListener.onParameterSet(key, val);
-        }
+        sessionParameterListener.forEach(sessionParameterListener -> sessionParameterListener.onParameterSet(key, val));
     }
 
     public void setId(String id) {
@@ -144,16 +135,12 @@ public class RequestImpl implements Request, Cloneable {
         return parametersInSession;
     }
 
-    public String getManageType() {
-        return manageType;
+    public void addSessionParameterListener(SessionParameterListener sessionParameterListener) {
+        this.sessionParameterListener.add(sessionParameterListener);
     }
 
-    public void setManageType(String manageType) {
-        this.manageType = manageType;
-    }
-
-    public void setSessionParameterListener(SessionParameterListener sessionParameterListener) {
-        this.sessionParameterListener = sessionParameterListener;
+    public void setResponse(Response response) {
+        this.response = response;
     }
 
     @Override

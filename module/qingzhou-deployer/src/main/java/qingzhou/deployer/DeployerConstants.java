@@ -1,37 +1,48 @@
 package qingzhou.deployer;
 
 public interface DeployerConstants {
-    String APP_MANAGE = "app";
-    String INSTANCE_MANAGE = "instance";
+    String APP_SYSTEM = "-";
+    String ACTION_INVOKE_CHARSET = "UTF-8";
 
-    String MASTER_APP = "master";
-    String INSTANCE_APP = "instance";
+    // master model
+    String MODEL_INDEX = "index";
+    String MODEL_HOME = "home";
+    String MODEL_APP = "app";
+    String MODEL_INSTALLER = "installer";
+    String MODEL_INSTANCE = "instance";
+    String MODEL_PASSWORD = "password";
 
-    String HOME_MODEL = "home";
-    String INDEX_MODEL = "index";
-    String APP_MODEL = "app";
-    String INSTANCE_MODEL = "instance";
-    String PASSWORD_MODEL = "password";
+    // api 级 action
+    String ACTION_CREATE = "create";
+    String ACTION_ADD = "add";
+    String ACTION_EDIT = "edit";
+    String ACTION_UPDATE = "update";
+    String ACTION_LIST = "list";
+    String ACTION_DELETE = "delete";
+    String ACTION_SHOW = "show";
+    String ACTION_MONITOR = "monitor";
+    String ACTION_FILES = "files";
+    String ACTION_DOWNLOAD = "download";
 
-    String CREATE_ACTION = "create";
-    String ADD_ACTION = "add";
-    String EDIT_ACTION = "edit";
-    String UPDATE_ACTION = "update";
-    String LIST_ACTION = "list";
-    String DELETE_ACTION = "delete";
-    String SHOW_ACTION = "show";
-    String MONITOR_ACTION = "monitor";
-    String FILES_ACTION = "files";
-    String DOWNLOAD_ACTION = "download";
+    // 系统内部 action
+    String ACTION_MANAGE = "manage";
+    String ACTION_REGISTER = "register";
+    String ACTION_CHECKREGISTRY = "checkRegistry";
+    String ACTION_INDEX = "index";
+    String ACTION_INSTALL = "install";
+    String ACTION_UNINSTALL = "uninstall";
+    String ACTION_UPLOAD = "upload";
 
-    String MANAGE_ACTION = "manage";
-    String REGISTER_ACTION = "register";
-    String CHECKREGISTRY_ACTION = "checkRegistry";
+    // 其它参数
+    String INSTANCE_LOCAL = "local";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-    String INDEX_ACTION = "index";
-
-    String KEY_THEME_MODE = "theme_mode";
-
-    String URI_THEME = "/theme";
-
+    String DEFAULT_DATA_SEPARATOR = ",";
+    String INSTALLER_PARAMETER_FILE_ID = "fileId";
+    String INSTALLER_PARAMETER_FILE_NAME = "fileName";
+    String INSTALLER_PARAMETER_FILE_BYTES = "fileBytes";
+    String DOWNLOAD_KEY="DOWNLOAD_KEY";
+    String DOWNLOAD_OFFSET="DOWNLOAD_OFFSET";
+    String DOWNLOAD_BLOCK="DOWNLOAD_BLOCK";
+    String REST_PREFIX = "/rest";
+    String jsonView = "json";
 }

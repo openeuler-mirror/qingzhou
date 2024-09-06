@@ -4,20 +4,17 @@ import qingzhou.api.FieldType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.console.controller.I18n;
-import qingzhou.console.controller.SecurityFilter;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.controller.rest.SecurityFilter;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.engine.util.Base32Util;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,7 +37,7 @@ public class PageBackendService {
         if (actionInfo == null) return null;
 
         String user = request.getParameterInSession(LoginManager.LOGIN_USER);
-        boolean canAccess = SecurityFilter.canAccess(app, model + "/" + action, user);
+        boolean canAccess = SecurityFilter.check(user, app, model, action);
         return canAccess ? actionInfo : null;
     }
 
@@ -50,7 +47,7 @@ public class PageBackendService {
     }
 
     public static ModelInfo getModelInfo(Request request) {
-        return SystemController.getModelInfo(getAppName(request), request.getModel());
+        return SystemController.getModelInfo(SystemController.getAppName(request), request.getModel());
     }
 
     public static String[] getActionNamesShowToList(Request request) {
@@ -63,26 +60,6 @@ public class PageBackendService {
     public static String getFieldName(Request request, int fieldIndex) {
         ModelInfo modelInfo = getModelInfo(request);
         return modelInfo.getFormFieldList()[fieldIndex];
-    }
-
-    public static String getAppName(Request request) {
-        if (request == null) {
-            return DeployerConstants.MASTER_APP;
-        }
-
-        if (DeployerConstants.INSTANCE_MANAGE.equals(((RequestImpl) request).getManageType())) {
-            return DeployerConstants.INSTANCE_APP;
-        }
-
-        return request.getApp();
-    }
-
-    public static String getAppName(String manageType, String appName) {
-        if (DeployerConstants.INSTANCE_MANAGE.equals(manageType)) {
-            return DeployerConstants.INSTANCE_APP;
-        }
-
-        return appName;
     }
 
     static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -108,10 +85,10 @@ public class PageBackendService {
         String action = menu.getMenuAction();
         menuBuilder.append("<li class=\"treeview ").append((model.equals(qzRequest.getModel()) ? " active" : "")).append("\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + RESTController.REST_PREFIX + "/" + viewName + "/" + ((RequestImpl) qzRequest).getManageType() + "/" + qzRequest.getApp() + "/" + model + "/" + action;
-        menuBuilder.append("<a href='").append(encodeURL(response, url)).append("' modelName='").append(model).append("'>");
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + qzRequest.getApp() + "/" + model + "/" + action;
+        menuBuilder.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(model).append("'>");
         menuBuilder.append("<i class='icon icon-").append(menu.getMenuIcon()).append("'></i>");
-        menuBuilder.append("<span>").append(I18n.getModelI18n(getAppName(qzRequest), "model." + model)).append("</span>");
+        menuBuilder.append("<span>").append(I18n.getModelI18n(SystemController.getAppName(qzRequest), "model." + model)).append("</span>");
         menuBuilder.append("</a>");
         menuBuilder.append("</li>");
     }
@@ -146,7 +123,7 @@ public class PageBackendService {
 
     public static List<MenuItem> getAppMenuList(Request request) {
         List<MenuItem> menus = new ArrayList<>();
-        AppInfo appInfo = SystemController.getAppInfo(getAppName(request));
+        AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
         if (appInfo == null) {
             return menus;
         }
@@ -189,10 +166,6 @@ public class PageBackendService {
         menus.sort(Comparator.comparingInt(MenuItem::getOrder));
 
         return menus;
-    }
-
-    public static String encodeURL(HttpServletResponse response, String url) {
-        return response.encodeURL(url);
     }
 
     public static void multiSelectGroup(LinkedHashMap<String, String> groupDes, LinkedHashMap<String, LinkedHashMap<String, String>> groupedMap, String options) {
@@ -240,20 +213,20 @@ public class PageBackendService {
         if (modelInfo == null) {
             return null;
         }
-        boolean isEdit = Objects.equals(DeployerConstants.EDIT_ACTION, request.getAction());
+        boolean isEdit = Objects.equals(DeployerConstants.ACTION_EDIT, request.getAction());
         for (String actionName : modelInfo.getActionNames()) {
-            if (actionName.equals(DeployerConstants.UPDATE_ACTION)) {
+            if (actionName.equals(DeployerConstants.ACTION_UPDATE)) {
                 if (isEdit) {
-                    return DeployerConstants.UPDATE_ACTION;
+                    return DeployerConstants.ACTION_UPDATE;
                 }
-            } else if (actionName.equals(DeployerConstants.ADD_ACTION)) {
+            } else if (actionName.equals(DeployerConstants.ACTION_ADD)) {
                 if (!isEdit) {
-                    return DeployerConstants.ADD_ACTION;
+                    return DeployerConstants.ACTION_ADD;
                 }
             }
         }
 
-        return isEdit ? DeployerConstants.UPDATE_ACTION : DeployerConstants.ADD_ACTION;// 兜底
+        return isEdit ? DeployerConstants.ACTION_UPDATE : DeployerConstants.ACTION_ADD;// 兜底
     }
 
     public static boolean hasIDField(Request request) {
@@ -261,7 +234,7 @@ public class PageBackendService {
         if (modelInfo == null) {
             return false;
         }
-        ModelActionInfo listAction = modelInfo.getModelActionInfo(DeployerConstants.LIST_ACTION);
+        ModelActionInfo listAction = modelInfo.getModelActionInfo(DeployerConstants.ACTION_LIST);
         ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
         return listAction != null && idField != null;
     }
@@ -334,7 +307,7 @@ public class PageBackendService {
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
-                        if (SecurityFilter.isActionAvailable(request, data, action) != null || DeployerConstants.EDIT_ACTION.equals(actionName)) {
+                        if (SecurityFilter.isActionAvailable(request, data) != null || DeployerConstants.ACTION_EDIT.equals(actionName)) {
                             isShow = false;
                             break;
                         }
@@ -355,42 +328,8 @@ public class PageBackendService {
     }
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + RESTController.REST_PREFIX + "/" + viewName + "/" + ((RequestImpl) request).getManageType() + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
+        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
         return response.encodeURL(url);
-    }
-
-    /********************* 批量操作 end ************************/
-
-    private static final String encodedFlag = "Encoded:";
-    private static final String[] encodeFlags = {
-            "#", "?", "&",// 一些不能在url中传递的参数
-            ":", "%", "+", " ", "=", ",",
-            "[", "]"
-    };
-
-    // 启动参数(如 -XX:+DisableExplicitGC )有特殊字符，编码后放在url里作参数，因此需要解码
-    public static String decodeId(String encodeId) {
-        try {
-            if (encodeId.startsWith(encodedFlag)) {
-                return new String(Base32Util.decode(encodeId.substring(encodedFlag.length())), StandardCharsets.UTF_8); // for #NC-558 特殊字符可能编码了
-            }
-        } catch (Exception ignored) {
-        }
-        return encodeId; // 出错，表示 rest 接口，没有编码
-    }
-
-    // 启动参数(如 -XX:+DisableExplicitGC )有特殊字符，不能在url里作参数，因此需要编码
-    public static String encodeId(String id) {
-        try {
-            for (String flag : encodeFlags) {
-                if (id.contains(flag)) {
-                    return encodedFlag + Base32Util.encode(id.getBytes(StandardCharsets.UTF_8)); // for #NC-558 特殊字符可能编码了
-                }
-            }
-        } catch (Exception ignored) {
-        }
-
-        return id; // 出错，表示 rest 接口，没有编码
     }
 
     public static Map<String, String> stringToMap(String str) {

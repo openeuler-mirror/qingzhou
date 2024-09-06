@@ -3,7 +3,6 @@ package qingzhou.console.controller;
 import qingzhou.api.Lang;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.page.PageBackendService;
 import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.pattern.Filter;
@@ -18,7 +17,7 @@ import java.util.regex.Pattern;
 
 public class TrustIpCheck implements Filter<SystemControllerContext> {
     static {
-        I18n.addKeyI18n("client.trusted.not", new String[]{"该操作仅限于在服务器本机或受信任的IP上执行，受信任IP的设置方式请参考产品手册", "en:This operation can only be performed on the local server or on a trusted IP. Please refer to the product manual for the setting method of the trusted IP"});
+        I18n.addKeyI18n("client.trusted.not", new String[]{"该操作仅限于在服务器本机或受信任的IP上执行，受信任IP的设置方式请参考相关手册", "en:This operation can only be performed on the local server or on a trusted IP. Please refer to the manual for the setting method of the trusted IP"});
     }
 
     @Override
@@ -33,7 +32,7 @@ public class TrustIpCheck implements Filter<SystemControllerContext> {
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文
                 response.setHeader(LoginManager.RESPONSE_HEADER_MSG_KEY, toJson);// 重定向，会丢失body里的消息，所以用header
             } else {
-                response.setHeader(LoginManager.RESPONSE_HEADER_MSG_KEY, PageBackendService.encodeId(toJson));
+                response.setHeader(LoginManager.RESPONSE_HEADER_MSG_KEY, RESTController.encodeId(toJson));
             }
             response.sendRedirect(request.getContextPath() + LoginManager.LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + msgKey);
             return false;
@@ -47,8 +46,8 @@ public class TrustIpCheck implements Filter<SystemControllerContext> {
             return false;
         }
         try {
-            String trustedIP = SystemController.getConsole().getSecurity().getTrustedIP();
-            return !validateIps(trustedIP, clientIp);
+            String trustedIp = SystemController.getConsole().getSecurity().getTrustedIp();
+            return !validateIps(trustedIp, clientIp);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

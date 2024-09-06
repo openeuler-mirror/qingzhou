@@ -16,7 +16,7 @@ public class JsonView implements View {
     @Override
     public void render(RestContext restContext) throws Exception {
         String json = convertToJson(restContext.request.getResponse());
-        PrintWriter writer = restContext.servletResponse.getWriter();
+        PrintWriter writer = restContext.resp.getWriter();
         writer.write(json);
         writer.flush();
     }

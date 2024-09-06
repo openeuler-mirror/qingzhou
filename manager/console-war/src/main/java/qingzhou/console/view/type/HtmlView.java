@@ -1,10 +1,11 @@
 package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
-import qingzhou.console.ActionInvoker;
+import qingzhou.api.Response;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
+import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
@@ -18,34 +19,29 @@ public class HtmlView implements View {
     @Override
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
-        HttpServletRequest req = restContext.servletRequest;
+        HttpServletRequest req = restContext.req;
 
-        String modelName = request.getModel();
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
-            if (DeployerConstants.APP_MODEL.equals(modelName)) {
-                request.setManageType(DeployerConstants.APP_MANAGE);
-            } else if (DeployerConstants.INSTANCE_MODEL.equals(modelName)) {
-                request.setManageType(DeployerConstants.INSTANCE_MANAGE);
-            }
             request.setAppName(request.getId());
-            request.setModelName(DeployerConstants.HOME_MODEL);
-            request.setActionName(DeployerConstants.SHOW_ACTION);
-            ActionInvoker.getInstance().invokeAction(request);
+            request.setModelName(DeployerConstants.MODEL_HOME);
+            request.setActionName(DeployerConstants.ACTION_SHOW);
+            Response response = SystemController.getService(ActionInvoker.class).invokeOnce(request);
+            request.setResponse(response);
         }
         req.setAttribute(Request.class.getName(), request);
 
-        String pageForward = getPageForward(request, isManageAction);
+        String pageForward = isManageAction ? "sys/manage" : getPageForward(request);
         String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
-        restContext.servletRequest.getRequestDispatcher(forwardToPage).forward(restContext.servletRequest, restContext.servletResponse);
+        restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);
     }
 
     private boolean isManageAction(Request request) {
-        if (!DeployerConstants.MANAGE_ACTION.equals(request.getAction())) return false;
-        if (!DeployerConstants.MASTER_APP.equals(request.getApp())) return false;
+        if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) return false;
+        if (!DeployerConstants.APP_SYSTEM.equals(request.getApp())) return false;
 
-        return DeployerConstants.APP_MODEL.equals(request.getModel())
-                || DeployerConstants.INSTANCE_MODEL.equals(request.getModel());
+        return DeployerConstants.MODEL_APP.equals(request.getModel())
+                || DeployerConstants.MODEL_INSTANCE.equals(request.getModel());
     }
 
     @Override
@@ -53,14 +49,10 @@ public class HtmlView implements View {
         return "text/html;charset=UTF-8";
     }
 
-    private String getPageForward(Request request, boolean isManageAction) {
-        if (isManageAction) {
-            return "sys/manage";
-        }
-
-        if ((DeployerConstants.INDEX_MODEL.equals(request.getModel())
-                || DeployerConstants.HOME_MODEL.equals(request.getModel()))
-                && request.getAction().equals(DeployerConstants.SHOW_ACTION)) {
+    private String getPageForward(Request request) {
+        if ((DeployerConstants.MODEL_INDEX.equals(request.getModel())
+                || DeployerConstants.MODEL_HOME.equals(request.getModel()))
+                && request.getAction().equals(DeployerConstants.ACTION_SHOW)) {
             return "home";
         }
 
@@ -70,18 +62,18 @@ public class HtmlView implements View {
         }
 
         switch (request.getAction()) {
-            case DeployerConstants.LIST_ACTION:
-            case DeployerConstants.DELETE_ACTION:
+            case DeployerConstants.ACTION_LIST:
+            case DeployerConstants.ACTION_DELETE:
                 return "list";
-            case DeployerConstants.CREATE_ACTION:
-            case DeployerConstants.EDIT_ACTION:
+            case DeployerConstants.ACTION_CREATE:
+            case DeployerConstants.ACTION_EDIT:
                 return "form";
-            case DeployerConstants.SHOW_ACTION:
-            case DeployerConstants.MONITOR_ACTION:
+            case DeployerConstants.ACTION_SHOW:
+            case DeployerConstants.ACTION_MONITOR:
                 return "show";
-            case DeployerConstants.INDEX_ACTION:
+            case DeployerConstants.ACTION_INDEX:
                 return "sys/index";
-            case DeployerConstants.MANAGE_ACTION:
+            case DeployerConstants.ACTION_MANAGE:
                 return "sys/manage";
         }
 

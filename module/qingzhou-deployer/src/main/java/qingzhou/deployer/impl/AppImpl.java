@@ -47,8 +47,7 @@ class AppImpl implements App {
         invokeDirectly(request);
     }
 
-    @Override
-    public void invokeDirectly(Request request) throws Exception {
+    void invokeDirectly(Request request) throws Exception {
         String modelName = request.getModel();
         Map<String, ActionMethod> methodMap = modelActionMap.get(modelName);
         if (methodMap == null) return;
@@ -60,8 +59,7 @@ class AppImpl implements App {
         actionMethod.invoke(request);
     }
 
-    @Override
-    public void invokeDefault(Request request) throws Exception {
+    void invokeDefault(Request request) throws Exception {
         String modelName = request.getModel();
         String actionName = request.getAction();
 

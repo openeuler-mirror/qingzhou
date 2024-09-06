@@ -13,28 +13,19 @@ import java.util.Map;
 
 public class HttpResponseImpl implements HttpResponse {
     private final int code;
-    private final String result;
+    private final byte[] result;
     private final Map<String, List<String>> headers;
-
-    private final HttpURLConnection conn;
 
     public HttpResponseImpl(HttpURLConnection conn) throws IOException {
         code = conn.getResponseCode();
-        result = inputStreamToString(conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream());
+        result = read(conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream());
         headers = new HashMap<>();
-        this.conn = conn;
         conn.getHeaderFields().forEach((s, strings) -> headers.put(s, new ArrayList<>(strings)));
     }
 
     @Override
-    public String getResponseBody() {
-        try {
-            return result;
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
+    public byte[] getResponseBody() {
+        return result;
     }
 
     @Override
@@ -47,16 +38,13 @@ public class HttpResponseImpl implements HttpResponse {
         return headers;
     }
 
-    private String inputStreamToString(InputStream inputStream) throws IOException {
-        if (inputStream == null) {
-            return "";
-        }
+    private byte[] read(InputStream inputStream) throws IOException {
         int len;
         byte[] bytes = new byte[1024 * 8];
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         while ((len = inputStream.read(bytes)) != -1) {
             os.write(bytes, 0, len);
         }
-        return os.toString("UTF-8");
+        return os.toByteArray();
     }
 }

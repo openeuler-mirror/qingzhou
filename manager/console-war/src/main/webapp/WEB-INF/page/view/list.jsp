@@ -48,15 +48,15 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    boolean canAccess = (SecurityFilter.canAccess(qzApp, qzModel + "/" + DeployerConstants.ADD_ACTION, LoginManager.getLoginUser(session)));
-                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo(DeployerConstants.CREATE_ACTION);
-                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo(DeployerConstants.ADD_ACTION);
+                    boolean canAccess = (SecurityFilter.check(currentUser, qzApp, qzModel, DeployerConstants.ACTION_ADD));
+                    ModelActionInfo listCreateAction = modelInfo.getModelActionInfo(DeployerConstants.ACTION_CREATE);
+                    ModelActionInfo listAddAction = modelInfo.getModelActionInfo(DeployerConstants.ACTION_ADD);
                     if (canAccess && (listCreateAction != null) && (listAddAction != null)) {
                 %>
                 <a class="btn"
-                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.CREATE_ACTION)%>">
+                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.ACTION_CREATE)%>">
                     <i class="icon icon-plus-sign"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.CREATE_ACTION)%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.ACTION_CREATE)%>
                 </a>
                 <%
                     }
@@ -75,7 +75,7 @@
                                 titleStr = "data-tip='" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey) + "'";
                             }
                             boolean isAjaxAction = action.isAjax();
-                            String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
+                            String viewName = isAjaxAction ? DeployerConstants.jsonView : ViewManager.htmlView;
                 %>
                 <a id="<%=actionKey%>"
                    href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey)%>"
@@ -145,7 +145,7 @@
                         String modelIcon = modelInfo.getIcon();
 
                         String originUnEncodedId = modelData.get(idFieldName);
-                        String encodedId = PageBackendService.encodeId(originUnEncodedId);
+                        String encodedId = RESTController.encodeId(originUnEncodedId);
             %>
             <tr>
                 <%
@@ -154,7 +154,7 @@
                 %>
                 <td class="custom-checkbox">
                     <input type="checkbox"
-                           value="<%= PageBackendService.encodeId(modelData.get(idFieldName))%>"
+                           value="<%= RESTController.encodeId(modelData.get(idFieldName))%>"
                            name="<%=idFieldName%>" <%= hasCheckAction ? "class='morecheck'" : "disabled" %> />
                 </td>
                 <%
@@ -163,7 +163,7 @@
                 <td class="sequence"><%=++listOrder%>
                 </td>
                 <%
-                    ModelActionInfo targetAction = modelInfo.getModelActionInfo(DeployerConstants.SHOW_ACTION);
+                    ModelActionInfo targetAction = modelInfo.getModelActionInfo(DeployerConstants.ACTION_SHOW);
                     boolean isFirst = true;
                     for (Integer i : indexToShow) {
                         String value = modelData.get(PageBackendService.getFieldName(qzRequest, i));
@@ -192,7 +192,7 @@
                         String idFieldValue = modelData.get(idFieldName);
                 %>
                 <td>
-                    <a href='<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
+                    <a href='<%=RESTController.encodeURL( response, ViewManager.htmlView + "/" + split[0] + "/" + split[1] + "?" + split[2] + "=" + idFieldValue)%>'
                        onclick='difModelActive("<%=qzModel%>","<%=split[0]%>")'
                        class="dataid tooltips" record-action-id="<%=split[1]%>"
                        data-tip='<%=I18n.getModelI18n(qzApp, "model." + split[0])%>'
@@ -217,12 +217,13 @@
                         String[] actions = PageBackendService.getActionNamesShowToList(qzRequest);
                         for (String actionName : actions) {
                             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                            if (SecurityFilter.isActionAvailable(qzRequest, modelData, action) != null) {
+                            if (SecurityFilter.isActionAvailable(qzRequest, modelData) != null) {
                                 continue;
                             }
+
                             String actionKey = action.getCode();
 
-                            if (!SecurityFilter.canAccess(qzApp, qzModel + "/" + actionKey, LoginManager.getLoginUser(session))) {
+                            if (!SecurityFilter.check(currentUser, qzApp, qzModel, actionKey)) {
                                 continue;
                             }
 
@@ -234,14 +235,14 @@
                             }
 
                             boolean isAjaxAction = action.isAjax();
-                            String viewName = isAjaxAction ? ViewManager.jsonView : ViewManager.htmlView;
+                            String viewName = isAjaxAction ? DeployerConstants.jsonView : ViewManager.htmlView;
                     %>
                     <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, viewName, actionKey + "/" + encodedId)%>" <%=titleStr%>
                        class="tw-action-link tooltips" data-tip-arrow="top"
                        model-icon="<%=modelIcon%>" action-name="<%=actionKey%>"
                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedId)%>"
                             <%
-                                if (actionKey.equals(DeployerConstants.FILES_ACTION)) {
+                                if (actionKey.equals(DeployerConstants.ACTION_FILES)) {
                                     out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
                                 }
                                 if (isAjaxAction) {
@@ -276,7 +277,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.LIST_ACTION + "?markForAddCsrf")%>&<%="pageNum"%>="
+                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>

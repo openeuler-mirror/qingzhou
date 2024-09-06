@@ -1,62 +1,32 @@
 package qingzhou.console.login;
 
-import qingzhou.console.controller.SecurityFilter;
 import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
 
 public class LoginFreeFilter implements Filter<SystemControllerContext> {
-    public static final String LOGIN_FREE_FLAG = "LOGIN_FREE_FLAG";
+    private final String LOGIN_FREE_FLAG = "LOGIN_FREE_FLAG";
 
     @Override
     public boolean doFilter(SystemControllerContext context) throws Exception {
         HttpServletRequest request = context.req;
-        HttpServletResponse response = context.resp;
 
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            if (LoginManager.getLoginUser(session) != null) { // 已经登录
-                return true;
-            }
-        }
-        String checkPath = RESTController.getReqUri(request);
-        if (SecurityFilter.isOpenUris(checkPath)) {
-            return true;
-        }
+        // 已登录
+        if (LoginManager.getLoginUser(request) != null) return true;
 
-        if (checkPath.equals(LoginManager.LOGIN_URI)) { // 浏览器登录
-            return true;
-        }
+        // 交由 LoginManager 处理：带了 LoginManager.LOGIN_USER 和 LoginManager.LOGIN_PASSWORD，很可能是要登录
+        String reqUri = RESTController.getReqUri(request);
+        if (reqUri.equals(LoginManager.LOGIN_URI)) return true;
 
-        // rest 临时登录
         if (Utils.notBlank(request.getParameter(LoginManager.LOGIN_USER))
                 && Utils.notBlank(request.getParameter(LoginManager.LOGIN_PASSWORD))) {
-            try {
-                LoginManager.LoginFailedMsg loginFailedMsg = LoginManager.login(request);
-                if (loginFailedMsg == null) {
-                    // 成功登录
-                    request.setAttribute(LOGIN_FREE_FLAG, LOGIN_FREE_FLAG);
-                    return true;
-                } else {
-                    String headerMsg = loginFailedMsg.getHeaderMsg();
-                    String msg = LoginManager.retrieveI18nMsg(headerMsg);
-                    JsonView.responseErrorJson(response, msg);
-                }
-            } catch (Exception e) {
-                if (e instanceof IOException) {
-                    throw e;
-                } else {
-                    throw new IllegalStateException(e);
-                }
+            LoginManager.LoginFailedMsg loginFailedMsg = LoginManager.login(request);
+            if (loginFailedMsg == null) {
+                request.setAttribute(LOGIN_FREE_FLAG, LOGIN_FREE_FLAG);// 成功登录
             }
-            return false;
         }
 
         return true;

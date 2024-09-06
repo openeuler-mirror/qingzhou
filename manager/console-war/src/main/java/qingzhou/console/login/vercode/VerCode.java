@@ -3,7 +3,6 @@ package qingzhou.console.login.vercode;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.login.LoginManager;
 import qingzhou.console.util.IPUtil;
 import qingzhou.engine.util.pattern.Filter;
 
@@ -16,6 +15,7 @@ import java.util.Map;
 import java.util.Random;
 
 public class VerCode implements Filter<SystemControllerContext> {
+    public static final String LOGIN_CAPTCHA = "j_captcha";
     public static final String CAPTCHA_URI = "/captcha";
     public static final String SHOW_CAPTCHA_FLAG = "SHOW_CAPTCHA_FLAG";
 
@@ -46,14 +46,14 @@ public class VerCode implements Filter<SystemControllerContext> {
      * 校验用户输入的验证码是否正确
      */
     public static boolean validate(HttpServletRequest request) {
-        String clientCode = SystemController.decryptWithConsolePrivateKey(request.getParameter(LoginManager.LOGIN_CAPTCHA), true);
+        String clientCode = SystemController.decryptWithConsolePrivateKey(request.getParameter(LOGIN_CAPTCHA), true);
         if (clientCode == null) return false;
 
         Map<String, String> userVerCodes = getUserVerCodesFromIp(request.getRemoteAddr());
         if (userVerCodes == null) {
             return false;
         }
-        String serverCode = userVerCodes.remove(LoginManager.LOGIN_CAPTCHA);// remove: 及时销毁使用过的验证码
+        String serverCode = userVerCodes.remove(LOGIN_CAPTCHA);// remove: 及时销毁使用过的验证码
 
         return clientCode.equalsIgnoreCase(serverCode);
     }
@@ -83,7 +83,7 @@ public class VerCode implements Filter<SystemControllerContext> {
         response.setHeader("Cache-Control", "no-cache");
         response.setDateHeader("Expires", 0);
         response.setContentType("image/" + verCodeFormat);
-        getUserVerCodesFromIp(request.getRemoteAddr()).put(LoginManager.LOGIN_CAPTCHA, verCode);// getSession(true): for #ITAIT-3763
+        getUserVerCodesFromIp(request.getRemoteAddr()).put(LOGIN_CAPTCHA, verCode);// getSession(true): for #ITAIT-3763
         captcha.render(verCode, response.getOutputStream());
     }
 

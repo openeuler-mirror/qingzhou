@@ -6,13 +6,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class RestContext {
-    public final HttpServletRequest servletRequest;
-    public final HttpServletResponse servletResponse;
+    public final HttpServletRequest req;
+    public final HttpServletResponse resp;
     public final RequestImpl request;
 
-    public RestContext(HttpServletRequest servletRequest, HttpServletResponse servletResponse, RequestImpl request) {
-        this.servletRequest = servletRequest;
-        this.servletResponse = servletResponse;
+    public RestContext(HttpServletRequest req, HttpServletResponse resp, RequestImpl request) {
+        this.req = req;
+        this.resp = resp;
         this.request = request;
     }
 }

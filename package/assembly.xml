@@ -104,36 +104,13 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:app-master</include>
+                <include>${project.groupId}:app-system</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/master</outputDirectory>
+            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/-</outputDirectory>
         </dependencySet>
-
-        <dependencySet>
-            <includes>
-                <include>${project.groupId}:app-instance</include>
-            </includes>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useProjectAttachments>false</useProjectAttachments>
-            <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/instance</outputDirectory>
-        </dependencySet>
-
-        <dependencySet>
-            <includes>
-                <include>${project.groupId}:app-common</include>
-            </includes>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useProjectAttachments>false</useProjectAttachments>
-            <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/common</outputDirectory>
-        </dependencySet>
-
     </dependencySets>
 </assembly>

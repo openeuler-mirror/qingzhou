@@ -38,7 +38,7 @@ public class Controller implements ModuleActivator {
             @Override
             public void run() {
                 try {
-                    registry.clearTimeoutInstances(1000 * 30);
+                    registry.timerCheck();
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }

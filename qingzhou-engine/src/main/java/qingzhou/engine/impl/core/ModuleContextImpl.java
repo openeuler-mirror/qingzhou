@@ -22,6 +22,11 @@ class ModuleContextImpl implements ModuleContext {
     }
 
     @Override
+    public String getPlatformVersion() {
+        return getLibDir().getName().substring("version".length());
+    }
+
+    @Override
     public File getLibDir() {
         return engineContext.getLibDir();
     }

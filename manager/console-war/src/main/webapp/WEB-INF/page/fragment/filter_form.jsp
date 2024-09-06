@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <form name="filterForm" id="filterForm" method="POST"
-      action="<%=PageBackendService.encodeURL( response, ViewManager.htmlView + "/" + ((RequestImpl)qzRequest).getManageType() + "/" + qzRequest.getApp() + "/" + qzModel + "/" + DeployerConstants.LIST_ACTION)%>">
+      action="<%=RESTController.encodeURL( response, ViewManager.htmlView + "/" + qzApp + "/" + qzModel + "/" + DeployerConstants.ACTION_LIST)%>">
     <div class="row filterForm" style="margin-top: 10px; display: none;">
         <%
             for (Integer i : indexToShow) {
@@ -43,7 +43,7 @@
         <div class="col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
                         <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0px;">
                             <a class="btn"
-                               href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.LIST_ACTION)%>"
+                               href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.ACTION_LIST)%>"
                                form="filterForm">
                                 <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter")%>
                             </a>

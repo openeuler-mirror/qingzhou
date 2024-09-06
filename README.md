@@ -14,7 +14,7 @@ JDK >= 1.8
 
 1. **编译安装**
 
-在项目根目录执行 `mvn clean package` 命令，然后可在项目的 `package/target/qingzhou` 得到轻舟的产品包。
+在项目根目录执行 `mvn clean package` 命令，然后可在项目的 `package/target/qingzhou` 得到轻舟的安装包。
 > 其中：
 > 
 > **bin**：为轻舟的可执行程序目录，包含不同平台的脚本文件等；
@@ -26,8 +26,8 @@ JDK >= 1.8
 2. **启动服务**
 
 启动轻舟有两种方式，**择其一**即可：
-- 在 `${轻舟的产品包}/bin` 下，执行对应平台的 start 脚本；
-- 执行命令：`java -jar ${轻舟的产品包}/bin/qingzhou-launcher.jar server start`
+- 在 `${轻舟的安装包}/bin` 下，执行对应平台的 start 脚本；
+- 执行命令：`java -jar ${轻舟的安装包}/bin/qingzhou-launcher.jar server start`
 
 > 看到类似如下的日志输出，则表示启动完成：
 > 
@@ -40,8 +40,8 @@ JDK >= 1.8
 
 > 注：
 > 
-> 若遇到浏览器页面提示 IP 不受信任，可设置轻舟的配置文件`${轻舟的产品包}/instances/instance1/conf/qingzhou.json`，
-> 修改其中的 trustedIP 值，指定一个浏览器IP正则表达式来信任特定的浏览器，设置为 * 表示信任所有浏览器。
+> 若遇到浏览器页面提示 IP 不受信任，可设置轻舟的配置文件`${轻舟的安装包}/instances/instance1/conf/qingzhou.json`，
+> 修改其中的 trustedIp 值，指定一个浏览器IP正则表达式来信任特定的浏览器，设置为 * 表示信任所有浏览器。
 
 ## 鸣谢
 

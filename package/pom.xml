@@ -133,17 +133,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>app-master</artifactId>
-            <version>x</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>app-instance</artifactId>
-            <version>x</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>app-common</artifactId>
+            <artifactId>app-system</artifactId>
             <version>x</version>
         </dependency>
     </dependencies>

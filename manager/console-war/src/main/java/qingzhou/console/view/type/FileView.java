@@ -1,11 +1,12 @@
 package qingzhou.console.view.type;
 
 import qingzhou.api.Response;
-import qingzhou.console.ActionInvoker;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.crypto.CryptoService;
+import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 
 import javax.servlet.ServletOutputStream;
@@ -20,7 +21,7 @@ public class FileView implements View {
         RequestImpl request = restContext.request;
         Response response = request.getResponse();
         String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModel() + "-" + System.currentTimeMillis()) : request.getId();
-        HttpServletResponse servletResponse = restContext.servletResponse;
+        HttpServletResponse servletResponse = restContext.resp;
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
 
         List<Map<String, String>> dataList = response.getDataList();
@@ -30,10 +31,10 @@ public class FileView implements View {
         }
 
         Map<String, String> result = dataList.get(0);
-        String key = result.get("DOWNLOAD_KEY");
-        long offset = Long.parseLong(result.get("DOWNLOAD_OFFSET"));
+        String key = result.get(DeployerConstants.DOWNLOAD_KEY);
+        long offset = Long.parseLong(result.get(DeployerConstants.DOWNLOAD_OFFSET));
         while (true) {
-            byte[] content = SystemController.getService(CryptoService.class).getHexCoder().hexToBytes(result.get("DOWNLOAD_BLOCK"));
+            byte[] content = SystemController.getService(CryptoService.class).getBase64Coder().decode(result.get(DeployerConstants.DOWNLOAD_BLOCK));
 
             ServletOutputStream outputStream = servletResponse.getOutputStream();
             outputStream.write(content);
@@ -43,15 +44,13 @@ public class FileView implements View {
 
             RequestImpl req = request.clone();
             Map<String, String> data = new HashMap<>();
-            data.put("DOWNLOAD_KEY", key);
-            data.put("DOWNLOAD_OFFSET", String.valueOf(offset));
+            data.put(DeployerConstants.DOWNLOAD_KEY, key);
+            data.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             req.setParameters(data);
-            ActionInvoker.getInstance().invokeAction(req); // 续传
-            Response res = req.getResponse();
+            Response res = SystemController.getService(ActionInvoker.class).invokeOnce(req); // 续传
             if (res.isSuccess()) {
                 result = res.getDataList().get(0);
-                offset = Long.parseLong(result.get("DOWNLOAD_OFFSET"));
-                key = result.get("DOWNLOAD_KEY");
+                offset = Long.parseLong(result.get(DeployerConstants.DOWNLOAD_OFFSET));
             } else {
                 response.setSuccess(false);
                 response.setMsg(res.getMsg());

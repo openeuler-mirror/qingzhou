@@ -1,16 +1,17 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
-import qingzhou.console.ActionInvoker;
+import qingzhou.api.Response;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.page.PageBackendService;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.deployer.DeployerConstants;
+import qingzhou.crypto.Base32Coder;
+import qingzhou.crypto.Base64Coder;
+import qingzhou.crypto.CryptoService;
+import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
@@ -32,16 +33,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class RESTController extends HttpServlet {
-    public static final String REST_PREFIX = "/rest";
-    public static final String INDEX_PATH = REST_PREFIX + "/" + ViewManager.htmlView + "/" + DeployerConstants.APP_MANAGE + "/" + DeployerConstants.MASTER_APP + "/" + DeployerConstants.INDEX_MODEL + "/index";
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = new File(SystemController.getModuleContext().getTemp(), "upload");
+    private static final String encodedFlag = "Encoded:";
+    private static final String[] encodeFlags = {
+            "#", "?", "&",// 一些不能在url中传递的参数
+            ":", "%", "+", " ", "=", ",",
+            "[", "]"
+    };
 
     public static String getReqUri(HttpServletRequest request) {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
     }
 
-    public static List<String> retrieveRestPathInfo(HttpServletRequest req) {
+    private static List<String> detectRest(HttpServletRequest req) {
         List<String> result = new ArrayList<>();
 
         String uri = req.getPathInfo();
@@ -57,16 +62,52 @@ public class RESTController extends HttpServlet {
         return result;
     }
 
+    public static String encodeURL(HttpServletResponse response, String url) {
+        return response.encodeURL(url);
+    }
+
+    // 启动参数(如 -XX:+DisableExplicitGC )有特殊字符，不能在url里作参数，因此需要编码
+    public static String encodeId(String id) {
+        try {
+            for (String flag : encodeFlags) {
+                if (id.contains(flag)) {
+                    Base32Coder base32Coder = SystemController.getService(CryptoService.class).getBase32Coder();
+                    return encodedFlag + base32Coder.encode(id.getBytes(StandardCharsets.UTF_8)); // for #NC-558 特殊字符可能编码了
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        return id; // 出错，表示 rest 接口，没有编码
+    }
+
+    // 启动参数(如 -XX:+DisableExplicitGC )有特殊字符，编码后放在url里作参数，因此需要解码
+    public static String decodeId(String encodeId) {
+        try {
+            if (encodeId.startsWith(encodedFlag)) {
+                Base32Coder base32Coder = SystemController.getService(CryptoService.class).getBase32Coder();
+                return new String(base32Coder.decode(encodeId.substring(encodedFlag.length())), StandardCharsets.UTF_8); // for #NC-558 特殊字符可能编码了
+            }
+        } catch (Exception ignored) {
+        }
+        return encodeId; // 出错，表示 rest 接口，没有编码
+    }
+
     private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
+            new ResetPassword(),
+            new SecurityFilter(),
             new ParameterFilter(), // 解密前端的 password 类型的表单域
             new ValidationFilter(), // 参数校验
 
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
-                ActionInvoker.getInstance().invokeAction(restContext.request);
-                return restContext.request.getResponse().isSuccess(); // 触发后续的响应
+                List<Response> responseList = SystemController.getService(ActionInvoker.class).invokeAuto(restContext.request);
+                for (Response response : responseList) {
+                    if (!response.isSuccess()) return false;
+                }
+                return true;
             }
     };
     private final ViewManager viewManager = new ViewManager();
@@ -100,8 +141,8 @@ public class RESTController extends HttpServlet {
             if (request == null) {
                 return;
             }
-
             RestContext context = new RestContext(req, resp, request);
+
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
             viewManager.render(context); // 最后作出响应
         } catch (Exception e) {
@@ -126,8 +167,8 @@ public class RESTController extends HttpServlet {
     }
 
     private RequestImpl buildRequest(HttpServletRequest req, HttpServletResponse resp, Map<String, String> fileAttachments) throws IOException {
-        List<String> rest = retrieveRestPathInfo(req);
-        int restDepth = 5;
+        List<String> rest = detectRest(req);
+        int restDepth = 4;
         if (rest.size() < restDepth) { // must have model & action
             String msg = "Parameters missing, make sure to use the correct REST interface: " + req.getRequestURI();
             JsonView.responseErrorJson(resp, msg);
@@ -135,26 +176,25 @@ public class RESTController extends HttpServlet {
             return null;
         }
 
-        RequestImpl request = new RequestImpl(new ResponseImpl());
-        request.setSessionParameterListener((key, val) -> req.getSession().setAttribute(key, val));
+        RequestImpl request = new RequestImpl();
+        request.addSessionParameterListener((key, val) -> req.getSession().setAttribute(key, val));
         request.setViewName(rest.get(0));
-        request.setManageType(rest.get(1));
-        request.setAppName(rest.get(2));
-        request.setModelName(rest.get(3));
-        request.setActionName(rest.get(4));
-        request.setUserName(LoginManager.getLoginUser(req.getSession(false)));
+        request.setAppName(rest.get(1));
+        request.setModelName(rest.get(2));
+        request.setActionName(rest.get(3));
+        request.setUserName(LoginManager.getLoginUser(req));
         request.setI18nLang(I18n.getI18nLang());
 
         StringBuilder id = new StringBuilder();
         if (rest.size() > restDepth) {
             id.append(rest.get(restDepth));
             for (int i = restDepth + 1; i < rest.size(); i++) {
-                id.append("/").append(rest.get(i));// support ds jndi: jdbc/test
+                id.append("/").append(rest.get(i)); // support ds jndi: jdbc/test
             }
-            request.setId(PageBackendService.decodeId(id.toString()));
+            request.setId(RESTController.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        ModelInfo modelInfo = SystemController.getAppInfo(PageBackendService.getAppName(request))
+        ModelInfo modelInfo = SystemController.getAppInfo(SystemController.getAppName(request))
                 .getModelInfo(request.getModel());
         String[] actions = modelInfo.getActionNames();
         for (String name : actions) {
@@ -182,7 +222,8 @@ public class RESTController extends HttpServlet {
                     for (int i = 0; i < v.length; i++) {// 前端页面的 kv 组件会对此进行 Base64加密，在这里进行解密，解密异常不处理，传递原始数据
                         v[i] = v[i].trim();
                         try {
-                            v[i] = new String(Base64.getDecoder().decode(v[i].getBytes(StandardCharsets.ISO_8859_1)), StandardCharsets.UTF_8);
+                            Base64Coder base64Coder = SystemController.getService(CryptoService.class).getBase64Coder();
+                            v[i] = new String(base64Coder.decode(v[i]), StandardCharsets.UTF_8);
                         } catch (Exception ignored) {
                         }
                     }

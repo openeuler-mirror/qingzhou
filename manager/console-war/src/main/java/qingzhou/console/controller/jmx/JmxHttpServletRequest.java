@@ -2,8 +2,7 @@ package qingzhou.console.controller.jmx;
 
 import org.apache.catalina.session.StandardSession;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.page.PageBackendService;
-import qingzhou.console.view.ViewManager;
+import qingzhou.console.controller.rest.RESTController;
 import qingzhou.deployer.DeployerConstants;
 
 import javax.security.auth.Subject;
@@ -34,7 +33,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
         this.actionName = actionName;
         this.properties = properties;
         String id = properties == null ? null : properties.getProperty("id");
-        this.id = PageBackendService.encodeId(id);
+        this.id = RESTController.encodeId(id);
     }
 
     @Override
@@ -79,7 +78,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getPathInfo() {
-        String uri = "/" + ViewManager.jsonView + "/" + DeployerConstants.APP_MANAGE + "/" + appName + "/" + modelName + "/" + actionName;
+        String uri = "/" + DeployerConstants.jsonView + "/" + appName + "/" + modelName + "/" + actionName;
         if (this.id != null) {
             uri = uri + "/" + id;
         }

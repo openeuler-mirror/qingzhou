@@ -237,7 +237,7 @@
     <%@ include file="../fragment/head.jsp" %>
 </head>
 
-<body class="<%=(themeMode == null || "".equals(themeMode)) ? "" : (themeMode + "-mode")%>" style="overflow:hidden;">
+<body class="<%=(themeMode == null || themeMode.isEmpty()) ? "" : (themeMode + "-mode")%>" style="overflow:hidden;">
 <!--[if lt IE 8]>
     <div class="alert alert-danger"><%=I18n.getKeyI18n( "page.browser.outdated")%></div>
     <![endif]-->
@@ -314,20 +314,20 @@
         switchLang: '<%=I18n.getKeyI18n("page.lang.switch.confirm")%>',
         logout: '<%=I18n.getKeyI18n("page.logout.confirm")%>',
         downloadTip: '<%=I18n.getKeyI18n("page.download.log.tip")%>',
-        actionName_target: '<%=DeployerConstants.MANAGE_ACTION%>',
-        showAction: '<%=DeployerConstants.SHOW_ACTION%>',
+        actionName_target: '<%=DeployerConstants.ACTION_MANAGE%>',
+        showAction: '<%=DeployerConstants.ACTION_SHOW%>',
         downloadCheckAll: '<%=I18n.getKeyI18n("page.download.checkall")%>',
         downloadTaskTip: '<%=I18n.getKeyI18n("page.download.tasktip")%>',
         layerTitleOtp: '<%=I18n.getKeyI18n("page.layertitle.otp")%>',
         networkError: '<%=I18n.getKeyI18n("page.error.network")%>',
         placeholderOtp: '<%=I18n.getKeyI18n("page.placeholder.otp")%>',
         bindSuccessOtp: '<%=I18n.getKeyI18n("page.bindsuccess.otp")%>',
-        bindFailOtp: "<%=I18n.getKeyI18n("page.bindfail.otp")%>",
+        bindFailOtp: '<%=I18n.getKeyI18n("page.bindfail.otp")%>',
         passwordChangedMsg: '<%=I18n.getKeyI18n("page.password.changed")%>',
         searchHiddenTip: '<%=I18n.getKeyI18n("page.search.hidden")%>',
         passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>'
     };
-    var searchUrl = '<%=PageBackendService.encodeURL(response, contextPath + "/search")%>';
+    var searchUrl = '<%=RESTController.encodeURL(response, contextPath + "/search")%>';
 </script>
 <script src="<%=contextPath%>/static/js/main.js"></script>
 <script src="<%=contextPath%>/static/js/index.js"></script>
