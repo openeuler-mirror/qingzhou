@@ -48,7 +48,7 @@ public class Department extends ModelBase implements Addable {
     @ModelField(
             list = true,
             name = {"联系电话", "en:Department Phone"},
-            info = {"该部门的联系电话。", "en:The department's contact number."})
+            info = {"该部门的联系电话。", "en:The department contact number."})
     public String phone;
 
     @ModelField(

@@ -29,10 +29,20 @@ public class App extends ModelBase implements Addable {
             editable = false,
             unsupportedStrings = {DeployerConstants.APP_SYSTEM},
             list = true,
-            name = {"名称", "en:Name"},
-            info = {"应用的名称信息，用以识别业务系统。",
-                    "en:The name of the application to identify the business system."})
+            name = {"应用ID", "en:App ID"},
+            info = {"应用的名称，用以区别业务系统。",
+                    "en:The name of the application to distinguish the business system."})
     public String id;
+
+    @ModelField(
+            required = true,
+            createable = false, editable = false,
+            unsupportedStrings = {DeployerConstants.APP_SYSTEM},
+            list = true,
+            name = {"应用类型", "en:App Type"},
+            info = {"应用的类型信息，表示该应用的业务系统种类，一种业务系统可部署在多个轻舟实例上，此时它们的应用类型相同，但应用ID不同。",
+                    "en:The type of application indicates the type of business system of the application, and a business system can be deployed on multiple Qingzhou instances, and their application types are the same, but the application IDs are different."})
+    public String type;
 
     @ModelField(
             type = FieldType.bool,
@@ -45,7 +55,6 @@ public class App extends ModelBase implements Addable {
             show = "upload=false",
             required = true,
             filePath = true,
-            list = true,
             name = {"应用位置", "en:Application File"},
             info = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar, *.zip 类型的文件或目录。",
                     "en:The location of the application on the server, usually the app package, Note: Must be a *.jar, *.zip file or directory."})

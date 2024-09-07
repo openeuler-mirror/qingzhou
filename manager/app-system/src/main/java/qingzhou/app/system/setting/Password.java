@@ -181,7 +181,7 @@ public class Password extends ModelBase {
         QrGenerator qrGenerator = Main.getService(QrGenerator.class);
         byte[] bytes = qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
         // 二维码返回到浏览器
-        String body = Main.getService(CryptoService.class).getBase16Coder().encode(bytes);
+        String body = Main.getService(CryptoService.class).getBase64Coder().encode(bytes);
         request.getResponse().addData(new HashMap<String, String>() {{
             put("FOR-FileView", body);
         }});
