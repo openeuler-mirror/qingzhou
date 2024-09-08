@@ -17,11 +17,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Utils {
-    public static boolean isJava9Plus() {
-        double javaVerson = Double.parseDouble(System.getProperty("java.specification.version"));
-        return javaVerson > 1.8;
-    }
-
     public static void setPropertiesToObj(Object obj, Map<String, String> data) throws Exception {
         for (Map.Entry<String, String> entry : data.entrySet()) {
             setPropertyToObj(obj, entry.getKey(), String.valueOf(entry.getValue()));

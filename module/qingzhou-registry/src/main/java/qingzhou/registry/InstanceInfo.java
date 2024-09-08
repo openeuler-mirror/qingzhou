@@ -1,27 +1,18 @@
 package qingzhou.registry;
 
 public class InstanceInfo {
-    private String id;
-    private String clusterId;
+    private String name;
     private String host;
     private int port;
     private String key;
     private AppInfo[] appInfos;
 
-    public String getId() {
-        return id;
+    public String getName() {
+        return name;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getClusterId() {
-        return clusterId;
-    }
-
-    public void setClusterId(String clusterId) {
-        this.clusterId = clusterId;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getHost() {

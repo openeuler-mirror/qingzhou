@@ -1,14 +1,5 @@
 <%@ page pageEncoding="UTF-8" %>
 
-<%
-    if (readonly == null) {
-        return; // for 静态源码漏洞扫描
-    }
-    if (fieldValue == null) {
-        return; // for 静态源码漏洞扫描
-    }
-%>
-
 <div class="form-control-kv">
     <input type="hidden" name="<%=fieldName%>" value='<%=fieldValue%>'>
     <table class="kv table table-bordered">

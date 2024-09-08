@@ -80,7 +80,6 @@ class DefaultAction {
 
     @ModelAction(
             code = DeployerConstants.ACTION_ADD, icon = "save",
-            ajax = true,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
@@ -100,7 +99,6 @@ class DefaultAction {
 
     @ModelAction(
             code = DeployerConstants.ACTION_UPDATE, icon = "save",
-            ajax = true,
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
@@ -113,7 +111,6 @@ class DefaultAction {
     @ModelAction(
             code = DeployerConstants.ACTION_DELETE, icon = "trash",
             order = 9,
-            ajax = true,
             batch = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
@@ -171,12 +168,11 @@ class DefaultAction {
 
     @ModelAction(
             code = DeployerConstants.ACTION_FILES, icon = "download-alt",
-            ajax = true,
             order = 8,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
                     "en:Gets a list of downloadable files for this component."})
-    public void files(Request request) throws Exception {
+    public void files(Request request) {
         String id = request.getId();
         if (id.contains("..")) {
             throw new IllegalArgumentException();

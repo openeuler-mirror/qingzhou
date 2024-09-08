@@ -1,4 +1,4 @@
-package qingzhou.console.util;
+package qingzhou.console;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

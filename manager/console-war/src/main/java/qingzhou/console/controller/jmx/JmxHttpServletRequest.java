@@ -4,6 +4,7 @@ import org.apache.catalina.session.StandardSession;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.engine.util.Utils;
 
 import javax.security.auth.Subject;
 import javax.servlet.*;
@@ -32,8 +33,13 @@ public class JmxHttpServletRequest implements HttpServletRequest {
         this.modelName = modelName;
         this.actionName = actionName;
         this.properties = properties;
-        String id = properties == null ? null : properties.getProperty("id");
-        this.id = RESTController.encodeId(id);
+        String idFieldName = SystemController.getModelInfo(appName, modelName).getIdFieldName();
+        if (Utils.notBlank(idFieldName)) {
+            String id = properties == null ? null : properties.getProperty(idFieldName);
+            this.id = RESTController.encodeId(id);
+        } else {
+            this.id = null;
+        }
     }
 
     @Override
@@ -79,7 +85,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     @Override
     public String getPathInfo() {
         String uri = "/" + DeployerConstants.jsonView + "/" + appName + "/" + modelName + "/" + actionName;
-        if (this.id != null) {
+        if (Utils.notBlank(this.id)) {
             uri = uri + "/" + id;
         }
         return uri;

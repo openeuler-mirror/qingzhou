@@ -65,7 +65,7 @@
       },
       "user": [
         {
-          "id": "qingzhou",
+          "name": "qingzhou",
           "info": "系统预置管理员",
           "password": "SHA-256$zQA=$2$QtAiP41cVQj6RHzYqK3VqJ9cL2w7Gpa5sNNvMv2tF1s=",
           "active": "true",
@@ -86,7 +86,7 @@
       "masterUrl": "",
       "masterKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCh4JpnxULijNi2GUa8wQfMGSWdGQLwscYNkHirc+A3rWIVTIvbjbdKkay0cNsclO4C0y/eN7lFwlkTDz1kvI3zrNajYdXD55QXzYdpVdHwlh+MoX0AHvoNwNtE1SqZTUcxlcixD3NMGYNcSq3D5dgD42C3pzY2TsMkQs1VSeBcZwIDAQAB",
       "agentHost": "",
-      "agentPort": "9000",
+      "agentPort": "5000",
       "agentKey": "",
       "attachments": {}
     }

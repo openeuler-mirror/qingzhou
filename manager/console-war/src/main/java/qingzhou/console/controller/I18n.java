@@ -34,9 +34,9 @@ public class I18n implements Filter<SystemControllerContext> {
         addKeyI18n("page.msg", new String[]{"消息", "en:Message"});
         addKeyI18n("page.browser.outdated", new String[]{"您正在使用过时的浏览器，当前页面不能支持，请升级或更换浏览器!", "en:You are using an outdated browser, the current page is not supported, please upgrade or change your browser!"});
         addKeyI18n("page.confirm", new String[]{"确定", "en:Confirm"});
-        addKeyI18n("page.cancel", new String[]{"返回", "en:Cancel"});
+        addKeyI18n("page.return", new String[]{"返回", "en:Return"});
         addKeyI18n("page.confirm.title", new String[]{"请确认", "en:Please confirm"});
-        addKeyI18n("page.operationConfirm", new String[]{"是否%s该%s", "en:Whether to %s this %s"});
+        addKeyI18n("page.operationConfirm", new String[]{"是否%s此%s", "en:Whether to %s this %s"});
         addKeyI18n("page.document", new String[]{"手册", "en:Manual"});
         addKeyI18n("page.invalidate", new String[]{"注销", "en:Logout"});
         addKeyI18n("page.error", new String[]{"请求服务器出现错误，请查看服务器日志以了解详情", "en:There was an error requesting the server, please check the server log for details"});
@@ -61,9 +61,9 @@ public class I18n implements Filter<SystemControllerContext> {
         addKeyI18n("page.download.checkall", new String[]{"全选", "en:Check all"});
         addKeyI18n("page.download.tasktip", new String[]{"开始下载", "en:Start downloading"});
         addKeyI18n("page.layertitle.otp", new String[]{"请使用TOTP客户端扫描二维码", "en:Please use the TOTP client to scan the QR code"});
-        addKeyI18n("page.placeholder.otp", new String[]{"使用TOTP工具扫码后输入密码", "en:Use the TOTP tool to scan the QR code and enter the password"});
+        addKeyI18n("page.placeholder.otp", new String[]{"输入扫描得到的密码", "en:Enter scanned otp"});
         addKeyI18n("page.bindsuccess.otp", new String[]{"绑定成功", "en:Bind success"});
-        addKeyI18n("page.bindfail.otp", new String[]{"密码不匹配", "en:The passwords does not match"});
+        addKeyI18n("page.bindfail.otp", new String[]{"密码不匹配", "en:Mismatch"});
         addKeyI18n("page.info.otp", new String[]{"动态密码，选填", "en:OTP, optional"});
         addKeyI18n("page.error.network", new String[]{"服务器连接错误，请确认服务器已启动或检查网络是否通畅", "en:Server connection error, please confirm that the server has been started or check whether the network is smooth"});
         addKeyI18n("page.info.add", new String[]{"添加", "en:Add"});

@@ -71,7 +71,28 @@ public class ServiceManager {
         env.put("jmx.remote.x.mlet.allow.getMBeansFromURL", "false");
 
         server = JMXConnectorServerFactory.newJMXConnectorServer(serviceURL, env, mBeanServer);
-        server.setMBeanServerForwarder(new CustomMBeanServerAccessController());
+        try {
+            server.setMBeanServerForwarder(new com.sun.jmx.remote.security.MBeanServerAccessController() {
+                @Override
+                protected void checkRead() {
+                }
+
+                @Override
+                protected void checkWrite() {
+                }
+
+                @Override
+                protected void checkCreate(String className) {
+                    throw new SecurityException("Access denied!");
+                }
+
+                @Override
+                public void unregisterMBean(ObjectName name) {
+                    throw new SecurityException("Access denied!");
+                }
+            });
+        } catch (Throwable ignored) {
+        }
         if (JmxServiceAdapterImpl.getInstance().notificationListener != null) {
             server.addNotificationListener(JmxServiceAdapterImpl.getInstance().notificationListener,
                     null, null);

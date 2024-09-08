@@ -3,7 +3,7 @@ package qingzhou.console.login.vercode;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.util.IPUtil;
+import qingzhou.console.IPUtil;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;

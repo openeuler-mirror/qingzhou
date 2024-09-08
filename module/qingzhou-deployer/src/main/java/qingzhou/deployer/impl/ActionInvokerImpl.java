@@ -10,14 +10,16 @@ import qingzhou.deployer.*;
 import qingzhou.http.Http;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
+import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
-import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 class ActionInvokerImpl implements ActionInvoker {
     private final Deployer deployer;
@@ -26,79 +28,94 @@ class ActionInvokerImpl implements ActionInvoker {
     private final Config config;
     private final CryptoService crypto;
     private final Http http;
+    private final Logger logger;
 
-    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, Config config, CryptoService crypto, Http http) {
+    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, Config config, CryptoService crypto, Http http, Logger logger) {
         this.deployer = deployer;
         this.registry = registry;
         this.json = json;
         this.config = config;
         this.crypto = crypto;
         this.http = http;
+        this.logger = logger;
     }
 
     @Override
-    public List<Response> invokeOnInstances(Request request, String... onInstances) throws Exception {
+    public List<Response> invokeOnInstances(Request request, String... onInstances) {
         List<Response> responseList = new ArrayList<>();
         byte[] sendContent = null;
         Cipher cipher = null;
         for (String instance : onInstances) {
-            if (instance.equals(DeployerConstants.INSTANCE_LOCAL)) {
-                App instanceApp = deployer.getApp(request.getApp());
-                instanceApp.invoke(request);
-                responseList.add(request.getResponse());
-            } else {
-                InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
-                if (sendContent == null) {
-                    Security security = config.getConsole().getSecurity();
-                    String remoteKey = crypto.getPairCipher(security.getPublicKey(), security.getPrivateKey())
-                            .decryptWithPrivateKey(instanceInfo.getKey());
-                    byte[] resultJson = json.toJson(request).getBytes(StandardCharsets.UTF_8);
-                    cipher = crypto.getCipher(remoteKey);
-                    sendContent = cipher.encrypt(resultJson);
-                }
+            try {
+                if (instance.equals(DeployerConstants.INSTANCE_LOCAL)) {
+                    App instanceApp = deployer.getApp(request.getApp());
+                    AppContextImpl appContext = (AppContextImpl) instanceApp.getAppContext();
+                    appContext.setRequestLang(request.getLang());
+                    instanceApp.invoke(request);
+                    responseList.add(request.getResponse());
+                } else {
+                    InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
+                    if (sendContent == null) {
+                        Security security = config.getConsole().getSecurity();
+                        String remoteKey = crypto.getPairCipher(security.getPublicKey(), security.getPrivateKey())
+                                .decryptWithPrivateKey(instanceInfo.getKey());
+                        byte[] resultJson = json.toJson(request).getBytes(StandardCharsets.UTF_8);
+                        cipher = crypto.getCipher(remoteKey);
+                        sendContent = cipher.encrypt(resultJson);
+                    }
 
-                String remoteUrl = "";
-                try {
-                    remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
+                    String remoteUrl = String.format("http://%s:%s", instanceInfo.getHost(), instanceInfo.getPort());
                     HttpResponse response = http.buildHttpClient().send(remoteUrl, sendContent);
                     byte[] responseBody = response.getResponseBody();
                     byte[] decryptedData = cipher.decrypt(responseBody);
                     ResponseImpl result = json.fromJson(new String(decryptedData, DeployerConstants.ACTION_INVOKE_CHARSET), ResponseImpl.class);
                     responseList.add(result);
-                } catch (Exception e) {
-                    if (e instanceof RuntimeException || e instanceof FileNotFoundException) {
-                        throw e;
-                    } else {
-                        throw new RuntimeException(String.format("Remote server [%s] request error: %s.",
-                                remoteUrl,
-                                e.getMessage()));
-                    }
                 }
+            } catch (Exception e) {
+                responseList.add(buildErrorResponse(instance, e));
             }
         }
 
         return responseList;
     }
 
+    private Response buildErrorResponse(String instance, Exception e) {
+        ResponseImpl response = new ResponseImpl();
+        response.setSuccess(false);
+
+        Set<Throwable> test = new HashSet<>();
+        Throwable tmp = e;
+        while (tmp.getCause() != null && test.add(tmp)) {
+            tmp = tmp.getCause();
+        }
+        String error = instance + ": " + tmp.getMessage();
+        response.setMsg(error);
+
+        logger.error(error, e);
+        return response;
+    }
+
     @Override
-    public Response invokeOnce(Request request) throws Exception {
+    public Response invokeOnce(Request request) {
         List<String> appInstances = getAppInstances(request.getApp());
         List<Response> responseList = invokeOnInstances(request, appInstances.get(0));
         return responseList.get(0);
     }
 
     @Override
-    public List<Response> invokeAuto(Request request) throws Exception {
+    public List<Response> invokeAuto(Request request) {
         List<String> appInstances = getAppInstances(request.getApp());
         return invokeOnInstances(request, appInstances.toArray(new String[0]));
     }
 
     private List<String> getAppInstances(String app) {
         List<String> instances = new ArrayList<>();
-        if (app == null || app.equals(DeployerConstants.APP_SYSTEM)) {
+
+        App deployerApp = deployer.getApp(app);
+        if (deployerApp != null) {
             instances.add(DeployerConstants.INSTANCE_LOCAL);
         } else {
-            registry.getAllInstanceId().forEach(s -> {
+            registry.getAllInstanceNames().forEach(s -> {
                 InstanceInfo instanceInfo = registry.getInstanceInfo(s);
                 for (AppInfo appInfo : instanceInfo.getAppInfos()) {
                     if (appInfo.getName().equals(app)) instances.add(s);

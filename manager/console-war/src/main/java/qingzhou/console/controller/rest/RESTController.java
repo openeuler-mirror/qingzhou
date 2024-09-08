@@ -96,7 +96,6 @@ public class RESTController extends HttpServlet {
     private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
             new ResetPassword(),
-            new SecurityFilter(),
             new ParameterFilter(), // 解密前端的 password 类型的表单域
             new ValidationFilter(), // 参数校验
 

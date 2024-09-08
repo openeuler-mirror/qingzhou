@@ -1,12 +1,12 @@
 package qingzhou.console.login;
 
 import qingzhou.config.User;
+import qingzhou.console.IPUtil;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.vercode.VerCode;
-import qingzhou.console.util.IPUtil;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
@@ -242,7 +242,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
         }
     }
 
-    public static String retrieveI18nMsg(String webLoginMsg) { // 来自 head.jsp
+    public static String retrieveI18nMsg(String webLoginMsg) {
         String common_msg = webLoginMsg;
         if (common_msg != null) {
             String[] split = common_msg.split(",");
@@ -269,8 +269,8 @@ public class LoginManager implements Filter<SystemControllerContext> {
         }
 
         // 远程实例注册
-        String baseUri = DeployerConstants.REST_PREFIX + "/" + DeployerConstants.jsonView + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_INSTANCE + "/";
-        return checkUri.equals(baseUri + DeployerConstants.ACTION_CHECKREGISTRY)
+        String baseUri = DeployerConstants.REST_PREFIX + "/" + DeployerConstants.jsonView + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
+        return checkUri.equals(baseUri + DeployerConstants.ACTION_CHECK)
                 ||
                 checkUri.equals(baseUri + DeployerConstants.ACTION_REGISTER);
     }

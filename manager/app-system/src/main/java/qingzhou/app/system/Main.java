@@ -17,7 +17,6 @@ public class Main extends QingzhouSystemApp {
 
         appContext.addI18n("validator.exist", new String[]{"已存在", "en:Already exists"});
         appContext.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
-        appContext.addI18n("validator.master.system", new String[]{"为保障系统安全可用，请勿修改此配置", "en:To ensure the security and availability of the system, do not modify this configuration"});
 
         appContext.addMenu(Main.SERVICE_MENU, new String[]{"服务管理", "en:Service"}, "th-large", 1);
         appContext.addMenu(Main.SETTING_MENU, new String[]{"系统设置", "en:System"}, "cog", 3);

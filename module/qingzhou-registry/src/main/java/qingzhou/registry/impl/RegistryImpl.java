@@ -44,7 +44,7 @@ class RegistryImpl implements Registry {
         InstanceInfo instanceInfo = json.fromJson(registrationData, InstanceInfo.class);
         String fingerprint = cryptoService.getMessageDigest().fingerprint(registrationData);
 
-        registryInfo.put(instanceInfo.getId(),
+        registryInfo.put(instanceInfo.getName(),
                 new RegisteredInfo(
                         instanceInfo,
                         System.currentTimeMillis(),
@@ -52,22 +52,22 @@ class RegistryImpl implements Registry {
     }
 
     @Override
-    public List<String> getAllInstanceId() {
+    public List<String> getAllInstanceNames() {
         return new ArrayList<>(registryInfo.keySet());
     }
 
     @Override
-    public InstanceInfo getInstanceInfo(String id) {
-        return registryInfo.get(id).instanceInfo;
+    public InstanceInfo getInstanceInfo(String instanceName) {
+        RegisteredInfo registeredInfo = registryInfo.get(instanceName);
+        if (registeredInfo == null) return null;
+        return registeredInfo.instanceInfo;
     }
 
     @Override
     public List<String> getAllAppNames() {
         List<String> appNames = new ArrayList<>();
         registryInfo.values().forEach(reg -> Arrays.stream(reg.instanceInfo.getAppInfos()).forEach(ap -> {
-            if (!appNames.contains(ap.getName())) {
-                appNames.add(ap.getName());
-            }
+            appNames.add(ap.getName());
         }));
         return appNames;
     }
@@ -83,6 +83,20 @@ class RegistryImpl implements Registry {
         }
 
         return null;
+    }
+
+    @Override
+    public List<String> getAppInstanceNames(String appName) {
+        List<String> found = new ArrayList<>();
+        for (RegisteredInfo registeredInfo : registryInfo.values()) {
+            for (AppInfo appInfo : registeredInfo.instanceInfo.getAppInfos()) {
+                if (appInfo.getName().equals(appName)) {
+                    found.add(registeredInfo.instanceInfo.getName());
+                    break;
+                }
+            }
+        }
+        return found;
     }
 
     // 周期执行，可进行过期清理等操作

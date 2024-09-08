@@ -16,6 +16,7 @@
         <module>module</module>
         <module>manager</module>
         <module>package</module>
+        <module>apps</module>
     </modules>
 
     <properties>

@@ -38,7 +38,6 @@ import java.lang.reflect.Field;
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
     private static String publicKey;
-    private static String privateKey;
     public static PairCipher pairCipher;
     private static final ContextHelper contextHelper;
 
@@ -48,7 +47,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         CryptoService cryptoService = SystemController.getService(CryptoService.class);
         Security security = getConsole().getSecurity();
         publicKey = security.getPublicKey();
-        privateKey = security.getPrivateKey();
+        String privateKey = security.getPrivateKey();
         if (Utils.isBlank(publicKey) || Utils.isBlank(privateKey)) {
             String[] pairKey = cryptoService.generatePairKey();
             publicKey = pairKey[0];
@@ -112,10 +111,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
     public static String getPublicKeyString() {
         return publicKey;
-    }
-
-    public static String getPrivateKeyString() {
-        return privateKey;
     }
 
     private final Filter<SystemControllerContext>[] processors = new Filter[]{

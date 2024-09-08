@@ -6,8 +6,7 @@ import qingzhou.api.Response;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.controller.rest.SecurityFilter;
-import qingzhou.console.login.LoginManager;
+import qingzhou.console.SecurityController;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
@@ -28,22 +27,6 @@ public class PageBackendService {
     private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
 
     private PageBackendService() {
-    }
-
-    public static ModelActionInfo renderModelAction(String app, String model, String action, Request request) {
-        ModelInfo modelInfo = SystemController.getModelInfo(app, model);
-        if (modelInfo == null) return null;
-        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
-        if (actionInfo == null) return null;
-
-        String user = request.getParameterInSession(LoginManager.LOGIN_USER);
-        boolean canAccess = SecurityFilter.check(user, app, model, action);
-        return canAccess ? actionInfo : null;
-    }
-
-    public static String[] getFieldOptions(String userName, String app, String model, String field) {
-        ModelInfo modelInfo = SystemController.getAppInfo(app).getModelInfo(model);
-        return modelInfo.getFieldOptions(field);
     }
 
     public static ModelInfo getModelInfo(Request request) {
@@ -168,31 +151,6 @@ public class PageBackendService {
         return menus;
     }
 
-    public static void multiSelectGroup(LinkedHashMap<String, String> groupDes, LinkedHashMap<String, LinkedHashMap<String, String>> groupedMap, String options) {
-        LinkedHashMap<String, LinkedHashMap<String, String>> tempGroup = new LinkedHashMap<>();
-        LinkedHashMap<String, String> twoGroup = new LinkedHashMap<>();
-        /*for (Option option : options.options()) {
-            String value = option.value();
-            String[] groupData = value.split("/");
-            String desc = I18n.getString(option.i18n());
-            if (groupData.length == 1) {
-                groupDes.putIfAbsent(value, desc);
-            } else if (groupData.length == 2) {
-                LinkedHashMap<String, String> items = tempGroup.computeIfAbsent(groupData[0], k -> new LinkedHashMap<>());
-                items.putIfAbsent(groupData[0], desc);
-                twoGroup.putIfAbsent(value, desc);
-            } else if (groupData.length == 3) {
-                LinkedHashMap<String, String> items = groupedMap.computeIfAbsent(groupData[0] + "/" + groupData[1], k -> new LinkedHashMap<>());
-                items.put(value, desc);
-            }
-        }*/
-        if (!groupedMap.isEmpty()) {
-            groupDes.putAll(twoGroup);
-        } else {
-            groupedMap.putAll(tempGroup);
-        }
-    }
-
     public static Map<String, Map<String, ModelFieldInfo>> getGroupedModelFieldMap(Request request) {
         Map<String, Map<String, ModelFieldInfo>> result = new LinkedHashMap<>();
         ModelInfo modelInfo = getModelInfo(request);
@@ -206,27 +164,6 @@ public class PageBackendService {
         }
 
         return result;
-    }
-
-    public static String getSubmitActionName(Request request) {
-        final ModelInfo modelInfo = getModelInfo(request);
-        if (modelInfo == null) {
-            return null;
-        }
-        boolean isEdit = Objects.equals(DeployerConstants.ACTION_EDIT, request.getAction());
-        for (String actionName : modelInfo.getActionNames()) {
-            if (actionName.equals(DeployerConstants.ACTION_UPDATE)) {
-                if (isEdit) {
-                    return DeployerConstants.ACTION_UPDATE;
-                }
-            } else if (actionName.equals(DeployerConstants.ACTION_ADD)) {
-                if (!isEdit) {
-                    return DeployerConstants.ACTION_ADD;
-                }
-            }
-        }
-
-        return isEdit ? DeployerConstants.ACTION_UPDATE : DeployerConstants.ACTION_ADD;// 兜底
     }
 
     public static boolean hasIDField(Request request) {
@@ -265,7 +202,7 @@ public class PageBackendService {
         }
         ModelFieldInfo[] modelFieldInfos = modelInfo.getModelFieldInfos();
         String fieldType = modelFieldInfos[i].getType();
-        return FieldType.radio.name().equals(fieldType) || FieldType.bool.name().equals(fieldType) || FieldType.select.name().equals(fieldType) || FieldType.groupmultiselect.name().equals(fieldType) || FieldType.checkbox.name().equals(fieldType) || FieldType.sortablecheckbox.name().equals(fieldType);
+        return FieldType.radio.name().equals(fieldType) || FieldType.bool.name().equals(fieldType) || FieldType.select.name().equals(fieldType) || FieldType.checkbox.name().equals(fieldType) || FieldType.sortablecheckbox.name().equals(fieldType);
     }
 
     public static boolean isFieldReadOnly(Request request, String fieldName) {
@@ -281,38 +218,38 @@ public class PageBackendService {
     }
 
     /********************* 批量操作 start ************************/
-    public static ModelActionInfo[] listCommonOps(Request request, Response response) {
-        List<ModelActionInfo> actions = visitActions(request, response.getDataList());
+    public static ModelActionInfo[] listCommonOps(Request request, Response response, String loginUser) {
+        List<ModelActionInfo> actions = visitActions(request, response.getDataList(), loginUser);
         actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
 
         return actions.toArray(new ModelActionInfo[0]);
     }
 
-    public static ModelActionInfo[] listModelBaseOps(Request request, Map<String, String> obj) {
+    public static ModelActionInfo[] listModelBaseOps(Request request, Map<String, String> obj, String loginUser) {
         List<ModelActionInfo> actions = visitActions(request, new ArrayList<Map<String, String>>() {{
             add(obj);
-        }});
+        }}, loginUser);
         actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
 
         return actions.toArray(new ModelActionInfo[0]);
     }
 
-    private static List<ModelActionInfo> visitActions(Request request, List<Map<String, String>> dataList) {
+    private static List<ModelActionInfo> visitActions(Request request, List<Map<String, String>> dataList, String loginUser) {
         final ModelInfo modelInfo = getModelInfo(request);
         List<ModelActionInfo> actions = new ArrayList<>();
         if (modelInfo != null) {
             boolean hasId = hasIDField(request);
             if (hasId && !dataList.isEmpty()) {
                 for (String actionName : modelInfo.getBatchActionNames()) {
-                    ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     boolean isShow = true;
                     for (Map<String, String> data : dataList) {
-                        if (SecurityFilter.isActionAvailable(request, data) != null || DeployerConstants.ACTION_EDIT.equals(actionName)) {
+                        if (!SecurityController.isActionShow(request.getApp(), request.getModel(), actionName, data, loginUser)) {
                             isShow = false;
                             break;
                         }
                     }
                     if (isShow) {
+                        ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                         actions.add(action);
                     }
                 }

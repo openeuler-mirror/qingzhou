@@ -5,11 +5,11 @@ public interface DeployerConstants {
     String ACTION_INVOKE_CHARSET = "UTF-8";
 
     // master model
+    String MODEL_MASTER = "master";
+    String MODEL_AGENT = "agent";
     String MODEL_INDEX = "index";
     String MODEL_HOME = "home";
     String MODEL_APP = "app";
-    String MODEL_INSTALLER = "installer";
-    String MODEL_INSTANCE = "instance";
     String MODEL_PASSWORD = "password";
 
     // api 级 action
@@ -25,24 +25,27 @@ public interface DeployerConstants {
     String ACTION_DOWNLOAD = "download";
 
     // 系统内部 action
-    String ACTION_MANAGE = "manage";
+    String ACTION_CHECK = "check";
     String ACTION_REGISTER = "register";
-    String ACTION_CHECKREGISTRY = "checkRegistry";
-    String ACTION_INDEX = "index";
     String ACTION_INSTALL = "install";
     String ACTION_UNINSTALL = "uninstall";
+    String ACTION_MANAGE = "manage";
+    String ACTION_INDEX = "index";
     String ACTION_UPLOAD = "upload";
+    String ACTION_REFRESHKEY = "refreshKey";
 
     // 其它参数
     String INSTANCE_LOCAL = "local";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    String DEFAULT_USER_QINGZHOU = "qingzhou";
     String DEFAULT_DATA_SEPARATOR = ",";
     String INSTALLER_PARAMETER_FILE_ID = "fileId";
     String INSTALLER_PARAMETER_FILE_NAME = "fileName";
     String INSTALLER_PARAMETER_FILE_BYTES = "fileBytes";
-    String DOWNLOAD_KEY="DOWNLOAD_KEY";
-    String DOWNLOAD_OFFSET="DOWNLOAD_OFFSET";
-    String DOWNLOAD_BLOCK="DOWNLOAD_BLOCK";
+    String DOWNLOAD_KEY = "DOWNLOAD_KEY";
+    String DOWNLOAD_OFFSET = "DOWNLOAD_OFFSET";
+    String DOWNLOAD_BLOCK = "DOWNLOAD_BLOCK";
     String REST_PREFIX = "/rest";
     String jsonView = "json";
+    String CHECK_FINGERPRINT = "fingerprint";
 }

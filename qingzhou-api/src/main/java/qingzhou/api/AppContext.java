@@ -39,6 +39,16 @@ public interface AppContext {
     String getI18n(Lang lang, String key, Object... args);
 
     /**
+     * 根据 getRequestLang() 返回值查找 i18n
+     */
+    String getI18n(String key, Object... args);
+
+    /**
+     * 同 qingzhou.api.Request#getLang()
+     */
+    Lang getRequestLang();
+
+    /**
      * 添加菜单项。
      *
      * @param name  菜单项的名称。

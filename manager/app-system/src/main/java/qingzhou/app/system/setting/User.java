@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements Addable {
-    static final String idKey = "id";
+    static final String idKey = "name";
     static final String PASSWORD_FLAG = "***************";
 
     @Override
@@ -40,7 +40,7 @@ public class User extends ModelBase implements Addable {
             list = true,
             name = {"账户名称", "en:User Name"},
             info = {"用于登录系统的用户名。", "en:The username used to log in to the system."})
-    public String id;
+    public String name;
 
     @ModelField(
             type = FieldType.password,
@@ -191,16 +191,20 @@ public class User extends ModelBase implements Addable {
         return users;
     }
 
+    @Override
+    public int totalSize() {
+        return Main.getService(Config.class).getConsole().getUser().length;
+    }
+
     @ModelAction(
             code = DeployerConstants.ACTION_ADD,
-            ajax = true,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
         String msg = checkPwd(request.getParameter("password"), request.getUser());
         if (msg != null) {
             request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(this.appContext.getI18n(request.getLang(), msg));
+            request.getResponse().setMsg(this.appContext.getI18n(msg));
             return;
         }
 
@@ -210,6 +214,7 @@ public class User extends ModelBase implements Addable {
     @ModelAction(
             code = DeployerConstants.ACTION_DELETE, icon = "trash",
             order = 9,
+            batch = true,
             show = "id!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
@@ -225,10 +230,10 @@ public class User extends ModelBase implements Addable {
                     "en:Update your account information."})
     public void update(Request request) throws Exception {
         String userId = request.getId();
-        if ("qingzhou".equals(userId)) {
+        if (DeployerConstants.DEFAULT_USER_QINGZHOU.equals(userId)) {
             if (!Boolean.parseBoolean(request.getParameter("active"))) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(this.appContext.getI18n(request.getLang(), "System.users.keep.active"));
+                request.getResponse().setMsg(this.appContext.getI18n("System.users.keep.active"));
                 return;
             }
         }
@@ -238,12 +243,12 @@ public class User extends ModelBase implements Addable {
             String msg = checkPwd(password, userId);
             if (msg != null) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(this.appContext.getI18n(request.getLang(), msg));
+                request.getResponse().setMsg(this.appContext.getI18n(msg));
                 return;
             }
             if (!Objects.equals(password, request.getParameter("confirmPassword"))) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(this.appContext.getI18n(request.getLang(), "confirmPassword.different"));
+                request.getResponse().setMsg(this.appContext.getI18n("confirmPassword.different"));
             }
         }
 
@@ -256,7 +261,7 @@ public class User extends ModelBase implements Addable {
 
     static Map<String, String> showDataForUser(String userId) throws Exception {
         for (qingzhou.config.User user : Main.getService(Config.class).getConsole().getUser()) {
-            if (user.getId().equals(userId)) {
+            if (user.getName().equals(userId)) {
                 Map<String, String> data = Utils.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
                 String digestAlg = passwords[0];

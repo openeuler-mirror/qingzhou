@@ -39,14 +39,9 @@ class DeployerImpl implements Deployer {
 
     @Override
     public void installApp(File appDir) throws Exception {
-        String appName = appDir.getName();
-        if (apps.containsKey(appName)) {
-            throw new IllegalArgumentException("The app already exists: " + appName);
-        }
-
         if (!appDir.isDirectory()) throw new IllegalArgumentException("The app file must be a directory");
 
-        AppImpl app = buildApp(appName, appDir);
+        AppImpl app = buildApp(appDir);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
         try {
@@ -59,9 +54,9 @@ class DeployerImpl implements Deployer {
         }
 
         // 注册完成
-        apps.put(appName, app);
+        apps.put(app.getAppInfo().getName(), app);
 
-        logger.info("The app has been successfully installed: " + appName);
+        logger.info("The app has been successfully installed: " + appDir.getName());
     }
 
     private void startModel(AppImpl app) throws Exception {
@@ -108,18 +103,19 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public App getApp(String name) {
-        return apps.get(name);
+    public App getApp(String appName) {
+        return apps.get(appName);
     }
 
-    private AppImpl buildApp(String appName, File appDir) throws Exception {
+    private AppImpl buildApp(File appDir) throws Exception {
         AppImpl app = new AppImpl();
 
         List<File> scanAppLibFiles = new ArrayList<>();
         findLib(appDir, scanAppLibFiles);
         File[] appLibs = scanAppLibFiles.toArray(new File[0]);
 
-        URLClassLoader loader = buildLoader(appLibs, DeployerConstants.APP_SYSTEM.equals(appName));
+        boolean isSystemApp = DeployerConstants.APP_SYSTEM.equals(appDir.getName());
+        URLClassLoader loader = buildLoader(appLibs, isSystemApp);
         app.setLoader(loader);
 
         QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader);
@@ -130,7 +126,7 @@ class DeployerImpl implements Deployer {
         app.setQingzhouApp(qingzhouApp);
 
         AppInfo appInfo = new AppInfo();
-        appInfo.setName(appName);
+        appInfo.setName(appDir.getName());
         appInfo.setFilePath(appDir.getAbsolutePath());
         Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader);
         appInfo.setModelInfos(modelInfos.values());
@@ -427,7 +423,7 @@ class DeployerImpl implements Deployer {
         return new URLClassLoader(urls,
                 isSystemApp
                         ? QingzhouSystemApp.class.getClassLoader()
-                        : QingzhouApp.class.getClassLoader());
+                        : moduleContext.getLoader());
     }
 
     static List<ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
@@ -444,7 +440,6 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setBatch(modelAction.batch());
             modelActionInfo.setPage(modelAction.page());
-            modelActionInfo.setAjax(modelAction.ajax());
             modelActionInfos.add(modelActionInfo);
         });
         return modelActionInfos;

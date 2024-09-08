@@ -37,7 +37,7 @@ public class JsonFileConfig implements Config {
 
     @Override
     public void deleteUser(String id) throws IOException {
-        deleteJson("id", id, "module", "console", "user");
+        deleteJson("name", id, "module", "console", "user");
     }
 
     @Override
@@ -71,23 +71,8 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
-    public Node[] getNode() {
-        return readJsonFile(reader -> json.fromJson(reader, Node[].class, "module", "node"));
-    }
-
-    @Override
     public void setSecurity(Security security) throws Exception {
         writeJson(security, false, "module", "console", "security");
-    }
-
-    @Override
-    public void addNode(Node node) throws Exception {
-        writeJson(node, true, "module", "node");
-    }
-
-    @Override
-    public void deleteNode(String id) throws Exception {
-        deleteJson("id", id, "module", "node");
     }
 
     public void deleteJson(String idKey, String idVal, String... position) throws IOException {
@@ -135,6 +120,6 @@ public class JsonFileConfig implements Config {
 
     @Override
     public void deleteDepartment(String id) throws Exception {
-        deleteJson("id", id, "module", "console", "department");
+        deleteJson("name", id, "module", "console", "department");
     }
 }

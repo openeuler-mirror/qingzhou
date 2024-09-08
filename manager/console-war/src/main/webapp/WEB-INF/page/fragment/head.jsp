@@ -3,6 +3,7 @@
 <%@ page import="java.util.*" %>
 <%@ page import="java.util.stream.*" %>
 <%@ page import="qingzhou.api.*" %>
+<%@ page import="qingzhou.engine.util.*" %>
 <%@ page import="qingzhou.api.type.*" %>
 <%@ page import="qingzhou.console.*" %>
 <%@ page import="qingzhou.console.controller.*" %>
@@ -16,59 +17,61 @@
 <%@ page import="qingzhou.deployer.*" %>
 
 <%
-    String currentUser = LoginManager.getLoginUser(request);
-    Request qzRequest = (Request) request.getAttribute(Request.class.getName());
-    String qzApp = SystemController.getAppName(qzRequest);
-    String qzModel = qzRequest.getModel();
-    String qzAction = qzRequest.getAction();
-    AppInfo appInfo = SystemController.getAppInfo(qzApp);
-    ModelInfo modelInfo = PageBackendService.getModelInfo(qzRequest);
-    String idFieldName = modelInfo.getIdFieldName();
-    Response qzResponse = qzRequest.getResponse();
-    String themeMode = (String)session.getAttribute(Theme.KEY_THEME_MODE);
+	String contextPath = request.getContextPath();
+	String currentUser = LoginManager.getLoginUser(request);
+	Request qzRequest = (Request) request.getAttribute(Request.class.getName());
+	String qzApp = SystemController.getAppName(qzRequest);
+	String qzModel = qzRequest.getModel();
+	String qzAction = qzRequest.getAction();
+	AppInfo appInfo = SystemController.getAppInfo(qzApp);
+	ModelInfo modelInfo = PageBackendService.getModelInfo(qzRequest);
+	String id = qzRequest.getId();
+	String encodedId = RESTController.encodeId(id);
+	Response qzResponse = qzRequest.getResponse();
+	String themeMode = (String) session.getAttribute(Theme.KEY_THEME_MODE);
 %>
 
 <script type="text/javascript">
-    $(document).ready(function () {
-        // 新页面，首先关闭之前的通知消息弹窗
-        try {
-            $("#" + $(getActiveTabContent()).attr("showInfoIndex")).remove();
-            closeLayer($(getActiveTabContent()).attr("showInfoIndex"));
-        } catch (e) {
-            // login.jsp
-        }
-    });
+	$(document).ready(function () {
+		// 新页面，首先关闭之前的通知消息弹窗
+		try {
+			$("#" + $(getActiveTabContent()).attr("showInfoIndex")).remove();
+			closeLayer($(getActiveTabContent()).attr("showInfoIndex"));
+		} catch (e) {
+			// login.jsp
+		}
+	});
 </script>
 
 <%--公用“重定向页面”消息提示--%>
 <%
-    String common_msg = request.getParameter(RESTController.MSG_FLAG);
-    common_msg = LoginManager.retrieveI18nMsg(common_msg);
-    if (common_msg != null) {
+	String common_msg = request.getParameter(RESTController.MSG_FLAG);
+	common_msg = LoginManager.retrieveI18nMsg(common_msg);
+	if (common_msg != null) {
 %>
 <script>
-    $(document).ready(function () {
-        window.setTimeout(function () {
-            var common_msgIndex = showError("<%=common_msg%>");
-                            // 记录最后一次通知弹窗
-                            try {
-                                $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
-                            } catch (e) {
-                                // login.jsp
-                            }
-                        }, 350);
-                    });
+	$(document).ready(function () {
+		window.setTimeout(function () {
+			var common_msgIndex = showError("<%=common_msg%>");
+            // 记录最后一次通知弹窗
+            try {
+                $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
+            } catch (e) {
+                // login.jsp
+            }
+        }, 350);
+    });
 </script>
 <%
-    }
+	}
 %>
 
 <%
-    if (qzResponse != null && !qzResponse.isSuccess()) {
+	if (!qzResponse.isSuccess()) {
 %>
 <script type="text/javascript">
-    $(document).ready(function () {
-        var forward_msgIndex = showError("<%=qzResponse.getMsg()%>");
+	$(document).ready(function () {
+		var forward_msgIndex = showError("<%=qzResponse.getMsg()%>");
         // 记录最后一次通知弹窗
         try {
             $(getActiveTabContent()).attr("showInfoIndex", forward_msgIndex);
@@ -78,5 +81,5 @@
     });
 </script>
 <%
-    }
+	}
 %>

@@ -1,20 +1,11 @@
 package qingzhou.config;
 
 public class Department {
-    private String id;
     private String name;
     private String superior;
     private String manager;
     private String phone;
     private String email;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
