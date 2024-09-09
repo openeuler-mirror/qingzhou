@@ -23,6 +23,12 @@ public class ResetPassword implements Filter<RestContext> {
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {
+        if (DeployerConstants.MODEL_INDEX.equals(context.request.getModel())) {
+            if (DeployerConstants.ACTION_INDEX.equals(context.request.getAction())) {
+                return true;
+            }
+        }
+
         HttpServletRequest servletRequest = context.req;
         HttpServletResponse servletResponse = context.resp;
 
