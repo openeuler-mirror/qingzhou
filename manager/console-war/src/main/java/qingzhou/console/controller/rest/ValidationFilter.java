@@ -387,7 +387,7 @@ public class ValidationFilter implements Filter<RestContext> {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             if (fieldInfo.getType().equals(FieldType.file.name())
                     || fieldInfo.isFilePath()) {
-                String[] illegalCollections = {"|", "&", "~", "../", "./", ":", "*", "?", "\"", "'", "<", ">", "(", ")", "[", "]", "{", "}", "^", " "};
+                String[] illegalCollections = {"|", "&", "~", "../", "./", "*", "?", "\"", "'", "<", ">", "(", ")", "[", "]", "{", "}", "^", " "};
                 for (String illegalCollection : illegalCollections) {
                     if (context.parameterVal.contains(illegalCollection)) {
                         return new String[]{"validation_filePath"};

@@ -18,7 +18,7 @@ import java.util.Map;
         info = {"测试模块的说明信息。",
                 "en:Description of the test module."})
 public class TestModel extends ModelBase implements Addable {
-    private final DataStore dataStore = new MemoryDataStore();
+    public static final DataStore dataStore = new MemoryDataStore();
 
     @ModelField(
             required = true,
@@ -45,7 +45,7 @@ public class TestModel extends ModelBase implements Addable {
             name = {"开关", "en:Switch"},
             info = {"开关说明信息。",
                     "en:Switch description information."})
-    public String bool;
+    public Boolean bool = false;
 
     @Override
     public void addData(Map<String, String> data) {

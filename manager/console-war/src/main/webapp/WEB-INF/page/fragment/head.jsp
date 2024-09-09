@@ -17,7 +17,6 @@
 <%@ page import="qingzhou.deployer.*" %>
 
 <%
-	String contextPath = request.getContextPath();
 	String currentUser = LoginManager.getLoginUser(request);
 	Request qzRequest = (Request) request.getAttribute(Request.class.getName());
 	String qzApp = SystemController.getAppName(qzRequest);
