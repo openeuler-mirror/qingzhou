@@ -17,6 +17,7 @@
         <module>manager</module>
         <module>apps</module>
         <module>package</module>
+        <module>auto-test</module>
     </modules>
 
     <properties>
