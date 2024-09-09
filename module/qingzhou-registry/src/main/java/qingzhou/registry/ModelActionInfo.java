@@ -12,7 +12,6 @@ public class ModelActionInfo {
     private String show;
     private boolean batch;
     private String page;
-    private boolean ajax;
 
     public Method getMethod() {
         return method;
@@ -84,13 +83,5 @@ public class ModelActionInfo {
 
     public void setOrder(int order) {
         this.order = order;
-    }
-
-    public boolean isAjax() {
-        return ajax;
-    }
-
-    public void setAjax(boolean ajax) {
-        this.ajax = ajax;
     }
 }

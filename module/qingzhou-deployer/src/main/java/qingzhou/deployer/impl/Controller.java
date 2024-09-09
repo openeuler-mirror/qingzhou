@@ -57,7 +57,7 @@ public class Controller implements ModuleActivator {
         deployer = new DeployerImpl(moduleContext, logger);
 
         moduleContext.registerService(Deployer.class, deployer);
-        moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, config, cryptoService, http));
+        moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, config, cryptoService, http, logger));
 
         File systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.APP_SYSTEM);
         deployer.installApp(systemApp);

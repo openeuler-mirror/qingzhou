@@ -14,7 +14,7 @@ JDK >= 1.8
 
 1. **编译安装**
 
-在项目根目录执行 `mvn clean package` 命令，然后可在项目的 `package/target/qingzhou` 得到轻舟的安装包。
+在项目根目录执行 `mvn clean install` 命令，然后可在项目的 `package/target/qingzhou` 得到轻舟的安装包。
 > 其中：
 > 
 > **bin**：为轻舟的可执行程序目录，包含不同平台的脚本文件等；

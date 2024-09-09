@@ -1,12 +1,7 @@
-package qingzhou.console.controller.rest;
+package qingzhou.console;
 
-import qingzhou.api.Request;
-import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.login.LoginManager;
-import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
 
@@ -15,57 +10,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class SecurityFilter implements Filter<RestContext> {
-    static {
-        I18n.addKeyI18n("page.error.permission.deny", new String[]{"对不起，您无权访问该资源", "en:Sorry, you do not have access to this resource"});
-        I18n.addKeyI18n("validator.ActionShow.notsupported", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});
-    }
-
-    public static boolean check(String user, String app, String model, String action) {
-        return true;// todo
-    }
-
-    public static String isActionAvailable(Request request, Map<String, String> data) {
-        String app = request.getApp();
-        String model = request.getModel();
-        String action = request.getAction();
-
+public class SecurityController {
+    public static boolean isActionShow(String app, String model, String action, Map<String, String> data, String user) {
+        // model 是否存在
         ModelInfo modelInfo = SystemController.getModelInfo(app, model);
-        if (modelInfo == null) return null;
+        if (modelInfo == null) return false;
 
+        // action 是否存在
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
-        if (actionInfo == null) return null;
+        if (actionInfo==null) return false;
 
-        String condition = actionInfo.getShow();
-        boolean isShow = false;
-        try {
-            isShow = isShow(condition, data::get);
-        } catch (Exception ignored) {
-        }
-        if (!isShow) {
-            return String.format(
-                    I18n.getKeyI18n("validator.ActionShow.notsupported"),
-                    I18n.getModelI18n(app, "model.action." + model + "." + action),
-                    condition);
-        }
-        return null;
+        // 检查用户的权限
+        if (user == null) return false;
+
+        // 检查数据约束
+        if (data == null) return true;
+        return isShow(actionInfo.getShow(), data::get);
     }
 
-    @Override
-    public boolean doFilter(RestContext context) throws Exception {
-        String user = LoginManager.getLoginUser(context.req);
-        if (user != null) {
-            if (check(user,
-                    context.request.getApp(), context.request.getModel(), context.request.getAction()))
-                return true;
-        }
-
-        String msg = I18n.getKeyI18n("page.error.permission.deny");
-        JsonView.responseErrorJson(context.resp, msg);
-        return false;
-    }
-
-    public static boolean isShow(String condition, FieldValueRetriever retriever) throws Exception {
+    public static boolean isShow(String condition, FieldValueRetriever retriever) {
         if (Utils.isBlank(condition)) {
             return true;
         }
@@ -108,7 +71,7 @@ public class SecurityFilter implements Filter<RestContext> {
     }
 
     public interface FieldValueRetriever {
-        String getFieldValue(String fieldName) throws Exception;
+        String getFieldValue(String fieldName);
     }
 
     private static final class ShowComparator {

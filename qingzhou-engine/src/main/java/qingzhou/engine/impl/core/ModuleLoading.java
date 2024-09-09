@@ -52,8 +52,8 @@ public class ModuleLoading implements Process {
             if (moduleFiles == null) throw new IllegalStateException("Module Directory Not Found: " + moduleDir);
 
             for (File moduleFile : moduleFiles) {
-                ModuleInfo moduleInfo = new ModuleInfo(moduleFile);
-                ModuleContextImpl moduleContext = new ModuleContextImpl(moduleInfo.getName(), engineContext);
+                ModuleInfo moduleInfo = new ModuleInfo(moduleFile, engineContext);
+                ModuleContextImpl moduleContext = new ModuleContextImpl(moduleInfo.getName(), moduleInfo);
                 moduleInfo.setModuleContext(moduleContext);
                 moduleInfoList.add(moduleInfo);
             }

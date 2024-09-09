@@ -2,6 +2,7 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.Response;
+import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.DeployerConstants;
@@ -35,7 +36,7 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_port", new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
         I18n.addKeyI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         I18n.addKeyI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
-        I18n.addKeyI18n("validation_unsupportedStrings", new String[]{"不能使用此值：%s", "en:You can not use this value: %s"});
+        I18n.addKeyI18n("validation_unsupportedStrings", new String[]{"该值已被禁用", "en:This value is disabled"});
         I18n.addKeyI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
         I18n.addKeyI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
         I18n.addKeyI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
@@ -97,12 +98,13 @@ public class ValidationFilter implements Filter<RestContext> {
             new checkFilePath()
     };
 
-    private String[] validate(ValidationContext context) throws Exception {
+    private String[] validate(ValidationContext context) {
         Map<String, String> paramMap = context.params;
         ModelFieldInfo fieldInfo = context.fieldInfo;
 
-        boolean show = SecurityFilter.isShow(fieldInfo.getShow(), paramMap::get);
-        if (!show) { // 不再页面显示的属性，不需要校验
+        boolean show = SecurityController.isShow(fieldInfo.getShow(), paramMap::get);
+        if (!show) { // 不再页面显示的属性，不需要校验，并删除之以免后续持久化了错误数据
+            paramMap.remove(fieldInfo.getCode());
             return null;
         }
 
@@ -274,7 +276,7 @@ public class ValidationFilter implements Filter<RestContext> {
             for (String unsupportedString : context.fieldInfo.getUnsupportedStrings()) {
                 for (String param : context.parameterVal.split(DeployerConstants.DEFAULT_DATA_SEPARATOR)) {
                     if (param.equals(unsupportedString)) {
-                        return new String[]{"validation_unsupportedStrings", param};
+                        return new String[]{"validation_unsupportedStrings"};
                     }
                 }
             }

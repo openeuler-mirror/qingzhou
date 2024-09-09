@@ -1,7 +1,6 @@
 package qingzhou.engine.impl.core;
 
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.impl.EngineContext;
 import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
@@ -10,15 +9,20 @@ import java.util.Map;
 
 class ModuleContextImpl implements ModuleContext {
     private final String name;
-    private final EngineContext engineContext;
+    private final ModuleInfo moduleInfo;
     final Map<Class<?>, Object> registeredServices = new HashMap<>();
     final Map<Class<?>, Object> injectedServices = new HashMap<>();
 
     private File temp;
 
-    ModuleContextImpl(String name, EngineContext engineContext) {
+    ModuleContextImpl(String name, ModuleInfo moduleInfo) {
         this.name = name;
-        this.engineContext = engineContext;
+        this.moduleInfo = moduleInfo;
+    }
+
+    @Override
+    public ClassLoader getLoader() {
+        return moduleInfo.getLoader();
     }
 
     @Override
@@ -28,7 +32,7 @@ class ModuleContextImpl implements ModuleContext {
 
     @Override
     public File getLibDir() {
-        return engineContext.getLibDir();
+        return moduleInfo.getEngineContext().getLibDir();
     }
 
     @Override
@@ -49,13 +53,13 @@ class ModuleContextImpl implements ModuleContext {
 
     @Override
     public File getInstanceDir() {
-        return engineContext.getInstanceDir();
+        return moduleInfo.getEngineContext().getInstanceDir();
     }
 
     @Override
     public File getTemp() {
         if (temp == null) {
-            temp = FileUtil.newFile(engineContext.getTemp(), name);
+            temp = FileUtil.newFile(moduleInfo.getEngineContext().getTemp(), name);
             FileUtil.mkdirs(temp);
         }
         return temp;

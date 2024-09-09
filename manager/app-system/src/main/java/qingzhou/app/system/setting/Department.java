@@ -18,12 +18,6 @@ import java.util.Map;
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
 public class Department extends ModelBase implements Addable {
-    @ModelField(
-            required = true,
-            list = true,
-            name = {"名称", "en:Name"},
-            info = {"表示本条数据的 ID。", "en:Indicates the ID of this piece of data."})
-    public String id;
 
     @ModelField(
             required = true,
@@ -71,6 +65,11 @@ public class Department extends ModelBase implements Addable {
     }
 
     @Override
+    public String idFieldName() {
+        return "name";
+    }
+
+    @Override
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
         List<Map<String, String>> departments = new ArrayList<>();
         Console console = Main.getService(Config.class).getConsole();
@@ -82,10 +81,17 @@ public class Department extends ModelBase implements Addable {
     }
 
     @Override
+    public int totalSize() {
+        Console console = Main.getService(Config.class).getConsole();
+        qingzhou.config.Department[] department = console.getDepartment();
+        return department != null ? department.length : 0;
+    }
+
+    @Override
     public Map<String, String> showData(String id) throws Exception {
         Console console = Main.getService(Config.class).getConsole();
         for (qingzhou.config.Department department : console.getDepartment()) {
-            if (department.getId().equals(id)) return Utils.getPropertiesFromObj(department);
+            if (department.getName().equals(id)) return Utils.getPropertiesFromObj(department);
         }
         return null;
     }

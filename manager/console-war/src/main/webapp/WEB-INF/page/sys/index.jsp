@@ -1,8 +1,8 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
+<%@ include file="../fragment/head.jsp" %>
 <%
-    String contextPath = request.getContextPath();
-    request.setAttribute("indexPageFlag", true);
+    request.setAttribute("comeFromIndexPage", true);
 %>
 <!DOCTYPE html>
 <html lang="zh">
@@ -27,11 +27,6 @@
         table.table.table-striped.table-hover th {
             color: black;
             font-weight: unset;
-        }
-
-        /* overview.jsp */
-        b, strong {
-            font-weight: normal;
         }
 
         .panel > .panel-heading {
@@ -234,7 +229,6 @@
     <script src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
     <script src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
     <script src="<%=contextPath%>/static/lib/muuri/muuri.min.js"></script>
-    <%@ include file="../fragment/head.jsp" %>
 </head>
 
 <body class="<%=(themeMode == null || themeMode.isEmpty()) ? "" : (themeMode + "-mode")%>" style="overflow:hidden;">
@@ -306,7 +300,7 @@
         pageErrorMsg: '<%=I18n.getKeyI18n("page.error")%>',
         pageConfirmTitle: '<%=I18n.getKeyI18n("page.confirm.title")%>',
         confirmBtnText: '<%=I18n.getKeyI18n("page.confirm")%>',
-        cancelBtnText: '<%=I18n.getKeyI18n("page.cancel")%>',
+        cancelBtnText: '<%=I18n.getKeyI18n("page.return")%>',
         notLogin: '<%=I18n.getKeyI18n("page.login.need")%>',
         encrypt_key_size: '<%=SystemController.getKeySize()%>',
         reloginBtnText: '<%=I18n.getKeyI18n("page.relogin")%>',

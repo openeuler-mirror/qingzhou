@@ -13,12 +13,12 @@ public class Console {
 
     public User getUser(String name) {
         if (user == null) return null;
-        return Arrays.stream(user).filter(user -> user.getId().equals(name)).findAny().orElse(null);
+        return Arrays.stream(user).filter(user -> user.getName().equals(name)).findAny().orElse(null);
     }
 
     public Department getDepartment(String id) {
         if (department == null) return null;
-        return Arrays.stream(department).filter(d -> d.getId().equals(id)).findAny().orElse(null);
+        return Arrays.stream(department).filter(d -> d.getName().equals(id)).findAny().orElse(null);
     }
 
     public Jmx getJmx() {

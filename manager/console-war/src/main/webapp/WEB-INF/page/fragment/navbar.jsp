@@ -25,17 +25,17 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <%-- 快捷搜索 --%>
-                    <%--<li>
+                    <li>
                         <div class="searchBar">
                             <div class="sample">
                                 <input type="text" id="searchText" name="search"
-                                       placeholder="<%=I18n.getKeyI18n( "page.filter")%>">
+                                       placeholder="<%=I18n.getKeyI18n( "page.filter")%> : TODO">
                                 <a href="javascript:void(0);" class="btn btn-search"><i
                                         class="icon icon-search"></i></a>
                                 <div id="searchResult" class="search-list"></div>
                             </div>
                         </div>
-                    </li>--%>
+                    </li>
                     <%-- 明暗主题切换 --%>
                     <li id="switch-mode" class="switch-btn">
                         <a id="switch-mode-btn"

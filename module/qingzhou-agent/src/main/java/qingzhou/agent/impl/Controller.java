@@ -182,7 +182,7 @@ public class Controller implements ModuleActivator {
         void register() throws Exception {
             String masterUrl = config.getAgent().getMasterUrl();
             if (masterUrl == null || masterUrl.trim().isEmpty()) {
-                logger.warn("MasterUrl cannot be empty");
+                logger.warn("Instance registration fails: \"masterUrl\" is not set correctly.");
                 return;
             } else if (masterUrl.endsWith("/")) {
                 masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
@@ -198,11 +198,11 @@ public class Controller implements ModuleActivator {
             String registerData = json.toJson(thisInstanceInfo);
 
             boolean registered = false;
-            String baseUri = masterUrl + DeployerConstants.REST_PREFIX + "/" + DeployerConstants.jsonView + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_INSTANCE + "/";
+            String baseUri = masterUrl + DeployerConstants.REST_PREFIX + "/" + DeployerConstants.jsonView + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
             try {
                 String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
-                HttpResponse response = http.buildHttpClient().send(baseUri + DeployerConstants.ACTION_CHECKREGISTRY, new HashMap<String, String>() {{
-                    put("fingerprint", fingerprint);
+                HttpResponse response = http.buildHttpClient().send(baseUri + DeployerConstants.ACTION_CHECK, new HashMap<String, String>() {{
+                    put(DeployerConstants.CHECK_FINGERPRINT, fingerprint);
                 }});
                 if (response.getResponseCode() == 200) {
                     Map resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
@@ -224,9 +224,8 @@ public class Controller implements ModuleActivator {
 
         private InstanceInfo thisInstanceInfo() {
             InstanceInfo instanceInfo = new InstanceInfo();
-            instanceInfo.setId(UUID.randomUUID().toString().replace("-", ""));
+            instanceInfo.setName(UUID.randomUUID().toString().replace("-", ""));
             Agent agent = config.getAgent();
-            instanceInfo.setClusterId(agent.getAttachments().get("clusterId"));
             instanceInfo.setHost(agentHost.equals("0.0.0.0")
                     ? Utils.getLocalIps().iterator().next()
                     : agentHost);

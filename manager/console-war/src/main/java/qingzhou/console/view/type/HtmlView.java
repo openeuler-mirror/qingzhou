@@ -12,22 +12,26 @@ import qingzhou.engine.util.Utils;
 import qingzhou.registry.ModelActionInfo;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class HtmlView implements View {
     public static final String htmlPageBase = "/WEB-INF/page/";
 
     @Override
     public void render(RestContext restContext) throws Exception {
+        HttpServletResponse resp = restContext.resp;
+        if (resp.isCommitted()) return;
+
         RequestImpl request = restContext.request;
         HttpServletRequest req = restContext.req;
 
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
-            request.setAppName(request.getId());
             request.setModelName(DeployerConstants.MODEL_HOME);
             request.setActionName(DeployerConstants.ACTION_SHOW);
             Response response = SystemController.getService(ActionInvoker.class).invokeOnce(request);
             request.setResponse(response);
+            request.setAppName(request.getId()); // 切换到目标应用的菜单
         }
         req.setAttribute(Request.class.getName(), request);
 
@@ -39,9 +43,7 @@ public class HtmlView implements View {
     private boolean isManageAction(Request request) {
         if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) return false;
         if (!DeployerConstants.APP_SYSTEM.equals(request.getApp())) return false;
-
-        return DeployerConstants.MODEL_APP.equals(request.getModel())
-                || DeployerConstants.MODEL_INSTANCE.equals(request.getModel());
+        return DeployerConstants.MODEL_APP.equals(request.getModel());
     }
 
     @Override

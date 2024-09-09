@@ -6,9 +6,10 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Updatable;
 import qingzhou.app.system.Main;
+import qingzhou.config.Config;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.engine.util.Utils;
 
-import java.util.Collections;
 import java.util.Map;
 
 @Model(code = "security", icon = "shield",
@@ -71,20 +72,15 @@ public class Security extends ModelBase implements Updatable {
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        // todo
-//        Config config = MasterApp.getService(Config.class);
-//        qingzhou.config.Security security = config.getConsole().getSecurity();
-//        Utils.setPropertiesToObj(security, data);
-//        config.setSecurity(security);
+        Config config = Main.getService(Config.class);
+        qingzhou.config.Security security = config.getConsole().getSecurity();
+        Utils.setPropertiesToObj(security, data);
+        config.setSecurity(security);
     }
 
     @Override
     public Map<String, String> showData(String id) throws Exception {
-        // todo
-//        qingzhou.config.Security security = MasterApp.getService(Config.class).getConsole().getSecurity();
-//        Map<String, String> propertiesFromObj = Utils.getPropertiesFromObj(security);
-//        List<Map<String, String>> list = new ArrayList<>();
-//        list.add(propertiesFromObj);
-        return Collections.emptyMap();
+        qingzhou.config.Security security = Main.getService(Config.class).getConsole().getSecurity();
+        return Utils.getPropertiesFromObj(security);
     }
 }

@@ -1,26 +1,35 @@
-package qingzhou.app.system.instance;
+package qingzhou.app.system;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
-import qingzhou.app.system.Main;
 import qingzhou.crypto.CryptoService;
+import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
-@Model(code = DeployerConstants.MODEL_INSTALLER,
+@Model(code = DeployerConstants.MODEL_AGENT,
         hidden = true,
-        name = {"应用安装器", "en:App Installer"},
+        name = {"实例代理", "en:Agent"},
         info = {"执行管理节点下发的应用安装、卸载等指令。",
                 "en:Execute the commands issued by the management node to install and uninstall applications."})
-public class Installer extends ModelBase {
+public class Agent extends ModelBase {
+    @Override
+    public void start() {
+        appContext.addI18n("app.exists", new String[]{"应用已存在，请更换为其它的应用名后重试",
+                "en:If the application already exists, please change it to another application name and try again"});
+        appContext.addI18n("app.not.found", new String[]{"应用文件未找到",
+                "en:The app file was not found"});
+        appContext.addI18n("app.type.unknown", new String[]{"应用文件类型无法识别",
+                "en:The app file type is not recognized"});
+    }
+
     @ModelAction(
             code = DeployerConstants.ACTION_INSTALL,
             name = {"安装应用", "en:Install App"},
@@ -32,7 +41,9 @@ public class Installer extends ModelBase {
             File uploadDir = new File(appContext.getTemp(), fileId);
             File[] listFiles = uploadDir.listFiles();
             if (listFiles == null || listFiles.length == 0) {
-                throw new FileNotFoundException(fileId);
+                request.getResponse().setSuccess(false);
+                request.getResponse().setMsg(appContext.getI18n("app.not.found"));
+                return;
             }
             srcFile = listFiles[0];
         }
@@ -53,10 +64,25 @@ public class Installer extends ModelBase {
             app = FileUtil.newFile(getAppsDir(), appName);
             FileUtil.unZipToDir(srcFile, app);
         } else {
-            throw new IllegalArgumentException("unknown app type");
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(appContext.getI18n("app.type.unknown"));
+            return;
         }
 
-        Main.getService(Deployer.class).installApp(app);
+        Deployer deployer = Main.getService(Deployer.class);
+        App deployerApp = deployer.getApp(app.getName());
+        if (deployerApp != null) {
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(appContext.getI18n("app.exists"));
+            return;
+        }
+
+        try {
+            deployer.installApp(app);
+        } catch (Exception e) {
+            FileUtil.forceDelete(app);
+            throw e;
+        }
     }
 
     @ModelAction(

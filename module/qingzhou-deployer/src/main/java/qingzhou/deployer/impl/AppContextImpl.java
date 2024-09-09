@@ -27,6 +27,8 @@ class AppContextImpl implements AppContext {
     private File appTemp;
     private File appDir;
 
+    private Lang requestLang;
+
     AppContextImpl(ModuleContext moduleContext, AppImpl app) {
         this.moduleContext = moduleContext;
         this.app = app;
@@ -54,8 +56,23 @@ class AppContextImpl implements AppContext {
         this.i18nTool.addI18n(key, i18n);
     }
 
+    @Override
     public String getI18n(Lang lang, String key, Object... args) {
         return this.i18nTool.getI18n(lang, key, args);
+    }
+
+    @Override
+    public String getI18n(String key, Object... args) {
+        return getI18n(getRequestLang(), key, args);
+    }
+
+    @Override
+    public Lang getRequestLang() {
+        return requestLang;
+    }
+
+    public void setRequestLang(Lang requestLang) {
+        this.requestLang = requestLang;
     }
 
     @Override

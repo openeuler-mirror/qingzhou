@@ -21,8 +21,6 @@ public @interface ModelAction {
 
     String show() default ""; // 设置该操作的可用条件
 
-    boolean ajax() default false;
-
     boolean batch() default false; // 该操作是否支持批量处理
 
     String page() default ""; // 由指定的视图处理

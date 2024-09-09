@@ -42,7 +42,7 @@ public class Password extends ModelBase {
             show = "changePwd=true",
             type = FieldType.password,
             required = true,
-            name = {"新密码", "en:Password"},
+            name = {"新密码", "en:New Password"},
             info = {"用于登录系统的新密码。", "en:The new password used to log in to the system."})
     public String newPassword;
 
@@ -100,7 +100,7 @@ public class Password extends ModelBase {
             String error = checkError(request, baseData);
             if (error != null) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(appContext.getI18n(request.getLang(), error));
+                request.getResponse().setMsg(appContext.getI18n(error));
                 return;
             }
 
@@ -127,7 +127,7 @@ public class Password extends ModelBase {
             String keyForOtp = baseData.get("keyForOtp");
             if (parsedBoolean && Utils.isBlank(keyForOtp)) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(appContext.getI18n(request.getLang(), "keyForOtp.bind"));
+                request.getResponse().setMsg(appContext.getI18n("keyForOtp.bind"));
                 return;
             }
         }
@@ -164,7 +164,7 @@ public class Password extends ModelBase {
     }
 
     @ModelAction(
-            code = "refreshKey",
+            code = DeployerConstants.ACTION_REFRESHKEY,
             icon = "shield",
             name = {"刷新动态密码", "en:Refresh OTP"},
             info = {"获取当前用户的动态密码，以二维码形式提供给用户。", "en:Obtain the current user OTP and provide it to the user in the form of a QR code."})

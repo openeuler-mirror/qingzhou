@@ -1,18 +1,11 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    if (readonly == null) {
-        return; // for 静态源码漏洞扫描
-    }
-    if (model == null) {
-        return; // for 静态源码漏洞扫描
-    }
-
     if (!readonly.isEmpty()) {
         readonly = " onclick='return false;' readonly";
     }
 
-    String[] radioOptions = PageBackendService.getFieldOptions(currentUser, qzApp, modelInfo.getCode(), fieldName);
+    String[] radioOptions = modelInfo.getFieldOptions(fieldName);
     for (String option : radioOptions) {
 %>
 <label class="radio-inline radio-label radio-anim">

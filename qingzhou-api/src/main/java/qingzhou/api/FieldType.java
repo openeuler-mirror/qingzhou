@@ -19,7 +19,6 @@ public enum FieldType {
     sortablecheckbox,   // 可排序复选框，与复选框类似，但支持通过拖放操作对选项进行排序。
     select,             // 下拉框，提供一个可下拉的选择列表，用户从中选择一项。
     multiselect,        // 多选下拉框，允许用户从列表中选择多个选项。
-    groupmultiselect,   // 分组多选下拉框，类似多选下拉框，但选项被组织成不同分组以便浏览和选择。
     sortable,           // 可排序输入框，允许用户通过拖放操作对输入内容进行排序。
     kv,                 // Key-Value 输入框，允许用户以键值对的形式输入数据。
     markdown,           // Markdown 样式，用于以Markdown格式显示文本内容。

@@ -1,34 +1,23 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    String selectVal = "";
-    String selectHtml = "<ul class=\"list\">";
-    selectHtml += "<li data-value=\"\" class=\"option\"></li>";
-    for (String option : modelOptionsEntry) {
-        if (option == null) {
-            continue;
-        }
-        if (option.trim().isEmpty()) {
-            continue;
-        }
+	String selectVal = "";
+	StringBuilder selectHtml = new StringBuilder("<ul class=\"list\">");
+	selectHtml.append("<li data-value=\"\" class=\"option\"></li>");
+	String inputParam = request.getParameter(fieldName);
+	for (String option : modelOptionsEntry) {
+		boolean setSelect = Objects.equals(inputParam, option);
+		if (setSelect) {
+			selectVal = option;
+			selectHtml.append("<li data-value=\"").append(option).append("\" class=\"option selected focus\">").append(option).append("</li>");
+		} else {
+			selectHtml.append("<li data-value=\"").append(option).append("\" class=\"option\">").append(option).append("</li>");
+		}
+	}
+	selectHtml.append("</ul>");
 
-        String param = request.getParameter(fieldName);
-        boolean setSelect = false;
-        if (!Objects.equals(param, option) &&
-                Objects.equals(param, option)) {
-            setSelect = true;
-        }
-        if (Objects.equals(param, option) || setSelect) {
-            selectVal = option;
-            selectHtml += "<li data-value=\"" + option + "\" class=\"option selected focus\">" + option + "</li>";
-        } else {
-            selectHtml += "<li data-value=\"" + option + "\" class=\"option\">" + option + "</li>";
-        }
-    }
-    selectHtml += "</ul>";
+	selectHtml.insert(0, "<input type=\"text\" name=\"" + fieldName + "\" value=\"" + selectVal + "\" placeholder=\"" + I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName) + "\" >");
+	selectHtml = new StringBuilder("<div class=\"form-control nice-select wide\">" + selectHtml + "</div>");
 
-    selectHtml = "<input type=\"text\" name=\"" + fieldName + "\" value=\"" + selectVal + "\" placeholder=\"" + I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName) + "\" >" + selectHtml;
-    selectHtml = "<div class=\"form-control nice-select wide\">" + selectHtml + "</div>";
-
-    out.print(selectHtml);
+	out.print(selectHtml.toString());
 %>
