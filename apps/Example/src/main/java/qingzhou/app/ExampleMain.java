@@ -3,11 +3,7 @@ package qingzhou.app;
 import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.QingzhouApp;
-import qingzhou.app.model.TestModel;
 import qingzhou.logger.Logger;
-
-import java.util.List;
-import java.util.Map;
 
 @App
 public class ExampleMain implements QingzhouApp {
@@ -34,18 +30,6 @@ public class ExampleMain implements QingzhouApp {
 
     @Override
     public void stop() {
-        int pageNum = 1;
-        int defaultPageSize = 10;
-        int totalSize = TestModel.dataStore.totalSize();
-
-        int pageSize = (totalSize > defaultPageSize) ? ((totalSize - 1) / defaultPageSize + 1) * defaultPageSize : defaultPageSize;
-        if (totalSize > 0){
-            List<Map<String, String>> list = TestModel.dataStore.listData(pageNum, pageSize, new String[]{"name", "num", "bool"});
-            for (Map<String, String> map : list) {
-                TestModel.dataStore.deleteData(map.get("name"));
-            }
-        }
-
-        logger.info("应用已停止运行");
+        logger.info("停止样例应用");
     }
 }

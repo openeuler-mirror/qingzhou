@@ -47,7 +47,7 @@ public class ServiceManager {
 
         String jmxIp = jmx.getHost();
         if (Utils.isBlank(jmxIp)) {
-            jmxIp = "0.0.0.0";
+            jmxIp = "127.0.0.1";
         }
         System.setProperty("java.rmi.server.hostname", jmxIp);
 

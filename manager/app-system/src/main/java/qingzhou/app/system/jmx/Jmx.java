@@ -33,9 +33,9 @@ public class Jmx extends ModelBase implements Updatable {
             show = "enabled=true",
             host = true,
             name = {"服务 IP", "en:Service IP"},
-            info = {"指定 JMX 监听服务绑定的 IP 地址，为空表示绑定到所有 IP。",
-                    "en:Specifies the IP address to which the JMX listener service is bound, and if it is empty, it is bound to all IPs."})
-    public String host;
+            info = {"指定 JMX 监听服务绑定的 IP 地址，为空表示绑定到 127.0.0.1。",
+                    "en:Specifies the IP address to which the JMX listener service is bound, and if it is empty, it is bound to 127.0.0.1 ."})
+    public String host = "127.0.0.1";
 
     @ModelField(
             show = "enabled=true",
