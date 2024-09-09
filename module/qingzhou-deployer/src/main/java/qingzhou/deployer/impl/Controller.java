@@ -5,6 +5,7 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
@@ -48,9 +49,9 @@ public class Controller implements ModuleActivator {
     private ServletService servletService;
 
     @Service
-    static CryptoService cryptoService;
+    private CryptoService cryptoService;
 
-    static Deployer deployer;
+    private DeployerImpl deployer;
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
@@ -59,9 +60,33 @@ public class Controller implements ModuleActivator {
         moduleContext.registerService(Deployer.class, deployer);
         moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, config, cryptoService, http, logger));
 
+        deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
+            @Override
+            public ClassLoader getClassLoader() {
+                return QingzhouSystemApp.class.getClassLoader();
+            }
+
+            @Override
+            public File[] getAdditionalLib() {
+                return null;
+            }
+        });
         File systemApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", DeployerConstants.APP_SYSTEM);
         deployer.installApp(systemApp);
 
+        deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
+            final File commonApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "qingzhou-deployer", "common");
+
+            @Override
+            public ClassLoader getClassLoader() {
+                return moduleContext.getApiLoader();
+            }
+
+            @Override
+            public File[] getAdditionalLib() {
+                return commonApp.listFiles();
+            }
+        });
         File[] files = FileUtil.newFile(moduleContext.getInstanceDir(), "apps").listFiles();
         if (files != null) {
             for (File file : files) {

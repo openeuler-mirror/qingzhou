@@ -17,7 +17,7 @@ import java.util.Map;
         name = {"测试模块", "en:TestListModel"},
         info = {"测试模块的说明信息。",
                 "en:Description of the test module."})
-public class TestListModel extends ModelBase implements Addable {
+public class TestModel extends ModelBase implements Addable {
     private final DataStore dataStore = new MemoryDataStore();
 
     @ModelField(

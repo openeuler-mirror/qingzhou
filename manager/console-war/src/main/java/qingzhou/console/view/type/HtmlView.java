@@ -27,11 +27,11 @@ public class HtmlView implements View {
 
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
+            request.setAppName(request.getId());
             request.setModelName(DeployerConstants.MODEL_HOME);
             request.setActionName(DeployerConstants.ACTION_SHOW);
             Response response = SystemController.getService(ActionInvoker.class).invokeOnce(request);
             request.setResponse(response);
-            request.setAppName(request.getId()); // 切换到目标应用的菜单
         }
         req.setAttribute(Request.class.getName(), request);
 
@@ -52,12 +52,6 @@ public class HtmlView implements View {
     }
 
     private String getPageForward(Request request) {
-        if ((DeployerConstants.MODEL_INDEX.equals(request.getModel())
-                || DeployerConstants.MODEL_HOME.equals(request.getModel()))
-                && request.getAction().equals(DeployerConstants.ACTION_SHOW)) {
-            return "home";
-        }
-
         ModelActionInfo actionInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel()).getModelActionInfo(request.getAction());
         if (Utils.notBlank(actionInfo.getPage())) {
             return actionInfo.getPage();

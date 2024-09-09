@@ -436,8 +436,6 @@ function setOrReset() {
     initInfoPage();
     // monit.jsp 页面加载
     initMonitPage();
-    // tree.jsp 页面加载
-    initTree();
     // grid.jsp 页面初始化
     if (document.querySelectorAll(".apps").length > 0) {
         var apps = document.querySelectorAll(".apps");
@@ -1531,64 +1529,6 @@ function panelUpdate(datas, restrictedArea) {
     }
 };
 /**************************************** info.jsp - end *************************************************/
-/**************************************** tree.jsp - start *************************************************/
-function initTree() {
-    $(".bodyDiv>div[jndiContainer='true'][loaded!='true']").each(function () {
-        $(this).attr("loaded", "true");
-        var treeKeys = eval("(" + $("textarea[name='treeKeys']", this).val() + ")");
-        // 初始化树
-        $("ul[treeView='true']", this).each(function () {
-            var treeJson = eval("(" + $("textarea", this).val() + ")");
-            $(this).tree({
-                data: treeJson,
-                itemCreator: function ($li, item) {
-                    var node = $("<a/>", {href: item.url}).text(item.title);
-                    $li.append(node);
-                    // 节点绑定点击事件
-                    $(node).click(function () {
-                        var html = "<table class=\"table\">";
-                        for (var key in item) {
-                            if (treeKeys[key]) {
-                                html += "<tr>";
-                                html += "<td style=\"text-align: right;width: 90px\">" + treeKeys[key] + ": </td>";
-                                html += "<td style=\"word-break: break-word\">" + item[key].replaceAll("\n", "<br>") + "</td>";
-                                html += "</tr>";
-                            }
-                        }
-                        html += "</table>";
-
-                        openLayer({type: 1, shadeClose: true, shade: 0.6, maxmin: true, content: html});
-                    });
-                }
-            });
-        });
-
-        $("ul[jndiNav='true']", this).height($(document).height() - $(this).offset().top - 36);
-        $("ul[jndiNav='true'] li", this).each(function () {
-            var width = $("a span", this).width();
-            var compare = width - $(this).width() + 5;
-            if (compare > 0) {
-                var title = $("a span", this).text();
-                $("a", this).attr("title", title);
-                $("a span", this).text(title.substring(0, parseInt(($(this).width() - 10) / (width / title.length)) - 8) + " ...");
-            }
-        });
-    });
-
-    var timer = 0;
-    $(window).unbind("resize").bind("resize", function () {
-        resizeFilterForm();
-        if (timer !== 0) {
-            window.clearTimeout(timer);
-        }
-        timer = window.setTimeout(function () {
-            $(".bodyDiv>div[jndiContainer='true']").each(function () {
-                $("ul[jndiNav='true']", this).height($(document).height() - $(this).offset().top - 36);
-            });
-        }, 500);
-    });
-};
-/**************************************** tree.jsp - end *************************************************/
 /**
  * 绘制 / 结束绘制引导锚点
  * @param {boolean} off 关闭绘制锚点 true | false

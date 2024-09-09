@@ -112,5 +112,16 @@
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/-</outputDirectory>
         </dependencySet>
+
+        <dependencySet>
+            <includes>
+                <include>${project.groupId}:app-common</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/common</outputDirectory>
+        </dependencySet>
     </dependencySets>
 </assembly>

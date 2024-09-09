@@ -29,6 +29,7 @@ class FilterLoading {
             fileFilter.excludePackages.add(getApiPkg(moduleInfo.getFile()));
             loader.addFileFilter(fileFilter);
             moduleInfo.setLoader(loader);
+            moduleInfo.moduleContext.apiLoader = moduleApiLoader;
         }
     }
 

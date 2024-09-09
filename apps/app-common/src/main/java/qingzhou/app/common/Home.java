@@ -1,19 +1,17 @@
-package qingzhou.app.system;
+package qingzhou.app.common;
 
 import qingzhou.api.*;
-import qingzhou.deployer.DeployerConstants;
 
-@Model(code = DeployerConstants.MODEL_HOME, icon = "home",
-        entrance = DeployerConstants.ACTION_SHOW,
-        hidden = true,
+@Model(code = "home", icon = "home",
+        entrance = "show",
         name = {"首页", "en:Home"},
         info = {"展示应用的默认首页信息。",
                 "en:Displays the default app Home information."})
 public class Home extends ModelBase {
     @ModelField(
-            name = {"应用名称", "en:App Name"},
-            info = {"应用的名称。", "en:The name of this app."})
-    public String appName;
+            name = {"应用路径", "en:App Dir"},
+            info = {"应用的路径信息。", "en:The path information of the app."})
+    public String appDir;
 
     @ModelField(
             name = {"Java 环境", "en:Java Env"},
@@ -21,13 +19,13 @@ public class Home extends ModelBase {
     public String javaHome;
 
     @ModelAction(
-            code = DeployerConstants.ACTION_SHOW,
+            code = "show",
             name = {"首页", "en:Home"},
             info = {"进入此应用的默认首页。",
                     "en:Go to the default home of this app."})
     public void show(Request request) throws Exception {
         Home home = new Home();
-        home.appName = request.getId();
+        home.appDir = appContext.getAppDir().getAbsolutePath();
         home.javaHome = System.getProperty("java.home");
         request.getResponse().addModelData(home);
     }

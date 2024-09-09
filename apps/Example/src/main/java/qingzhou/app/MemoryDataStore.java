@@ -28,7 +28,7 @@ public class MemoryDataStore implements DataStore {
     @Override
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
         int fromIndex = (pageNum - 1) * pageSize;
-        int toIndex = pageNum * pageSize - 1;
+        int toIndex = Math.min(pageNum * pageSize - 1, dataList.size());
 
         List<Map<String, String>> result = new ArrayList<>();
         new ArrayList<>(dataList.keySet()).subList(fromIndex, toIndex).forEach(s -> {

@@ -52,10 +52,7 @@ public class ModuleLoading implements Process {
             if (moduleFiles == null) throw new IllegalStateException("Module Directory Not Found: " + moduleDir);
 
             for (File moduleFile : moduleFiles) {
-                ModuleInfo moduleInfo = new ModuleInfo(moduleFile, engineContext);
-                ModuleContextImpl moduleContext = new ModuleContextImpl(moduleInfo.getName(), moduleInfo);
-                moduleInfo.setModuleContext(moduleContext);
-                moduleInfoList.add(moduleInfo);
+                moduleInfoList.add(new ModuleInfo(moduleFile, engineContext));
             }
         }
 
@@ -99,14 +96,14 @@ public class ModuleLoading implements Process {
                 for (String a : annotatedClasses) {
                     Class<?> aClass = moduleInfo.getLoader().loadClass(a);
                     ModuleActivator activator = (ModuleActivator) aClass.newInstance();
-                    moduleInfo.getModuleActivators().add(activator);
+                    moduleInfo.moduleActivators.add(activator);
                 }
             }
         }
 
         @Override
         public void undo() {
-            moduleInfoList.forEach(moduleInfo -> moduleInfo.getModuleActivators().clear());
+            moduleInfoList.forEach(moduleInfo -> moduleInfo.moduleActivators.clear());
         }
     }
 
@@ -134,7 +131,7 @@ public class ModuleLoading implements Process {
             Collections.reverse(moduleStartedOrder); // QingZhou Loggoer module must be the last one to stop.
             moduleStartedOrder.forEach(moduleInfo -> {
                 moduleInfo.setStarted(false);
-                moduleInfo.getModuleActivators().forEach(ModuleActivator::stop);
+                moduleInfo.moduleActivators.forEach(ModuleActivator::stop);
             });
             moduleStartedOrder.clear();
         }
@@ -144,8 +141,8 @@ public class ModuleLoading implements Process {
             for (ModuleInfo moduleInfo : toStartList) {
                 Class<?> missing = injectRequiredService(moduleInfo);
                 if (missing == null) {
-                    for (ModuleActivator moduleActivator : moduleInfo.getModuleActivators()) {
-                        moduleActivator.start(moduleInfo.getModuleContext());
+                    for (ModuleActivator moduleActivator : moduleInfo.moduleActivators) {
+                        moduleActivator.start(moduleInfo.moduleContext);
                     }
                     moduleInfo.setStarted(true);
                     moduleStartedOrder.add(moduleInfo);
@@ -157,7 +154,7 @@ public class ModuleLoading implements Process {
         }
 
         Class<?> injectRequiredService(ModuleInfo moduleInfo) throws Exception {
-            for (ModuleActivator moduleActivator : moduleInfo.getModuleActivators()) {
+            for (ModuleActivator moduleActivator : moduleInfo.moduleActivators) {
                 Field[] fields;
                 try {
                     fields = moduleActivator.getClass().getDeclaredFields();
@@ -183,7 +180,7 @@ public class ModuleLoading implements Process {
                         field.set(moduleActivator, serviceObj);
                     }
 
-                    moduleInfo.getModuleContext().injectedServices.put(serviceType, serviceObj);
+                    moduleInfo.moduleContext.injectedServices.put(serviceType, serviceObj);
                 }
             }
 
@@ -193,7 +190,7 @@ public class ModuleLoading implements Process {
         Object findService(Class<?> serviceType) {
             final Object[] serviceObj = {null};
             moduleInfoList.stream().filter(ModuleInfo::isStarted).forEach(moduleInfo -> {
-                Map<Class<?>, Object> registeredServices = moduleInfo.getModuleContext().registeredServices;
+                Map<Class<?>, Object> registeredServices = moduleInfo.moduleContext.registeredServices;
                 Object foundService = registeredServices.get(serviceType);
                 if (foundService != null) {
                     if (serviceObj[0] == null) {

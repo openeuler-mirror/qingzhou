@@ -3,7 +3,7 @@ package qingzhou.engine;
 import java.io.File;
 
 public interface ModuleContext {
-    ClassLoader getLoader();
+    ClassLoader getApiLoader();
 
     String getPlatformVersion();
 
