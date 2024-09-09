@@ -23,7 +23,6 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     private final String appName;
     private final String modelName;
     private final String actionName;
-    private final String id;
     private final Properties properties;
     private final Hashtable<String, Object> attrs = new Hashtable<>();
     private StandardSession session;
@@ -33,13 +32,6 @@ public class JmxHttpServletRequest implements HttpServletRequest {
         this.modelName = modelName;
         this.actionName = actionName;
         this.properties = properties;
-        String idFieldName = SystemController.getModelInfo(appName, modelName).getIdFieldName();
-        if (Utils.notBlank(idFieldName)) {
-            String id = properties == null ? null : properties.getProperty(idFieldName);
-            this.id = RESTController.encodeId(id);
-        } else {
-            this.id = null;
-        }
     }
 
     @Override
@@ -85,8 +77,12 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     @Override
     public String getPathInfo() {
         String uri = "/" + DeployerConstants.jsonView + "/" + appName + "/" + modelName + "/" + actionName;
-        if (Utils.notBlank(this.id)) {
-            uri = uri + "/" + id;
+        String idFieldName = SystemController.getModelInfo(appName, modelName).getIdFieldName();
+        if (Utils.notBlank(idFieldName)) {
+            String id = properties == null ? null : properties.getProperty(idFieldName);
+            if (Utils.notBlank(id)) {
+                uri = uri + "/" + RESTController.encodeId(id);
+            }
         }
         return uri;
     }
