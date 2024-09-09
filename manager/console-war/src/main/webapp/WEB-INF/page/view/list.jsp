@@ -3,6 +3,7 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
+	String contextPath = request.getContextPath();
 	String idFieldName = modelInfo.getIdFieldName();
 	LinkedHashMap<String, ModelFieldInfo> fieldInfos = new LinkedHashMap<>();
 	String[] fieldNames = modelInfo.getFormFieldList();

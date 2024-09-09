@@ -1,7 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
-<%@ include file="../fragment/head.jsp" %>
 <%
+    String contextPath = request.getContextPath();
     request.setAttribute("comeFromIndexPage", true);
 %>
 <!DOCTYPE html>
@@ -217,6 +217,7 @@
     <script src="<%=contextPath%>/static/lib/muuri/muuri.min.js"></script>
 </head>
 
+<%@ include file="../fragment/head.jsp" %>
 <body class="<%=(themeMode == null || themeMode.isEmpty()) ? "" : (themeMode + "-mode")%>" style="overflow:hidden;">
 <!--[if lt IE 8]>
     <div class="alert alert-danger"><%=I18n.getKeyI18n( "page.browser.outdated")%></div>
