@@ -8,21 +8,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 class ModuleContextImpl implements ModuleContext {
-    private final String name;
     private final ModuleInfo moduleInfo;
+
+    ClassLoader apiLoader;
     final Map<Class<?>, Object> registeredServices = new HashMap<>();
     final Map<Class<?>, Object> injectedServices = new HashMap<>();
 
     private File temp;
 
-    ModuleContextImpl(String name, ModuleInfo moduleInfo) {
-        this.name = name;
+    ModuleContextImpl(ModuleInfo moduleInfo) {
         this.moduleInfo = moduleInfo;
     }
 
     @Override
-    public ClassLoader getLoader() {
-        return moduleInfo.getLoader();
+    public ClassLoader getApiLoader() {
+        return apiLoader;
     }
 
     @Override
@@ -59,7 +59,7 @@ class ModuleContextImpl implements ModuleContext {
     @Override
     public File getTemp() {
         if (temp == null) {
-            temp = FileUtil.newFile(moduleInfo.getEngineContext().getTemp(), name);
+            temp = FileUtil.newFile(moduleInfo.getEngineContext().getTemp(), moduleInfo.getName());
             FileUtil.mkdirs(temp);
         }
         return temp;

@@ -15,8 +15,8 @@
         <module>qingzhou-api</module>
         <module>module</module>
         <module>manager</module>
-        <module>package</module>
         <module>apps</module>
+        <module>package</module>
     </modules>
 
     <properties>

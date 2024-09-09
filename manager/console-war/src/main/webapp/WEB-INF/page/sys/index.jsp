@@ -33,20 +33,6 @@
             color: black;
         }
 
-        /* tree.jsp */
-        #jndiNav li a {
-            height: 44px;
-            line-height: 30px;
-            vertical-align: middle;
-            text-align: left;
-        }
-
-        #jndiNav li.active a {
-            color: #DF2525;
-            border: 0px;
-            background-color: #FFF5F5;
-        }
-
         /* sortable.jsp */
         .form-control-sortable {
             display: block;

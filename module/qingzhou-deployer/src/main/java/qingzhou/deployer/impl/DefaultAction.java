@@ -4,6 +4,7 @@ import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
 import qingzhou.api.type.*;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
@@ -266,7 +267,8 @@ class DefaultAction {
                     System.arraycopy(block, 0, byteRead, 0, read);
                 }
 
-                result.put(DeployerConstants.DOWNLOAD_BLOCK, Controller.cryptoService.getBase64Coder().encode(byteRead));
+                CryptoService cryptoService = app.getAppContext().getService(CryptoService.class);
+                result.put(DeployerConstants.DOWNLOAD_BLOCK, cryptoService.getBase64Coder().encode(byteRead));
                 offset = raf.getFilePointer();
             }
         }

@@ -30,7 +30,7 @@ class DeployerImpl implements Deployer {
 
     private final ModuleContext moduleContext;
     private final Logger logger;
-
+    private LoaderPolicy loaderPolicy;
 
     DeployerImpl(ModuleContext moduleContext, Logger logger) {
         this.moduleContext = moduleContext;
@@ -112,10 +112,13 @@ class DeployerImpl implements Deployer {
 
         List<File> scanAppLibFiles = new ArrayList<>();
         findLib(appDir, scanAppLibFiles);
+        File[] additionalLib = loaderPolicy.getAdditionalLib();
+        if (additionalLib != null) {
+            scanAppLibFiles.addAll(Arrays.asList(additionalLib));
+        }
         File[] appLibs = scanAppLibFiles.toArray(new File[0]);
 
-        boolean isSystemApp = DeployerConstants.APP_SYSTEM.equals(appDir.getName());
-        URLClassLoader loader = buildLoader(appLibs, isSystemApp);
+        URLClassLoader loader = buildLoader(appLibs);
         app.setLoader(loader);
 
         QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader);
@@ -412,7 +415,7 @@ class DeployerImpl implements Deployer {
         return libs;
     }
 
-    private URLClassLoader buildLoader(File[] appLibs, boolean isSystemApp) {
+    private URLClassLoader buildLoader(File[] appLibs) {
         URL[] urls = Arrays.stream(appLibs).map(file -> {
             try {
                 return file.toURI().toURL();
@@ -420,10 +423,8 @@ class DeployerImpl implements Deployer {
                 throw new RuntimeException(e);
             }
         }).toArray(URL[]::new);
-        return new URLClassLoader(urls,
-                isSystemApp
-                        ? QingzhouSystemApp.class.getClassLoader()
-                        : moduleContext.getLoader());
+
+        return new URLClassLoader(urls, loaderPolicy.getClassLoader());
     }
 
     static List<ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
@@ -468,5 +469,15 @@ class DeployerImpl implements Deployer {
         for (Class<?> c : checkClass.getInterfaces()) {
             findSuperDefaultActions(c, defaultActions);
         }
+    }
+
+    void setLoaderPolicy(LoaderPolicy loaderPolicy) {
+        this.loaderPolicy = loaderPolicy;
+    }
+
+    interface LoaderPolicy {
+        ClassLoader getClassLoader();
+
+        File[] getAdditionalLib();
     }
 }

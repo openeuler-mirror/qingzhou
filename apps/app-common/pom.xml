@@ -9,5 +9,5 @@
         <version>x</version>
     </parent>
 
-    <artifactId>Example</artifactId>
+    <artifactId>app-common</artifactId>
 </project>

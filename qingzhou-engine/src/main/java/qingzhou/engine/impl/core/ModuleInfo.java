@@ -11,9 +11,11 @@ import java.util.List;
 class ModuleInfo {
     private final EngineContext engineContext;
     private final File file;
+
+    final ModuleContextImpl moduleContext = new ModuleContextImpl(this);
+    final List<ModuleActivator> moduleActivators = new ArrayList<>();
+
     private URLClassLoader loader;
-    private final List<ModuleActivator> moduleActivators = new ArrayList<>();
-    private ModuleContextImpl moduleContext;
     private boolean started;
 
     ModuleInfo(File file, EngineContext engineContext) {
@@ -39,18 +41,6 @@ class ModuleInfo {
 
     void setLoader(URLClassLoader loader) {
         this.loader = loader;
-    }
-
-    List<ModuleActivator> getModuleActivators() {
-        return moduleActivators;
-    }
-
-    ModuleContextImpl getModuleContext() {
-        return moduleContext;
-    }
-
-    void setModuleContext(ModuleContextImpl moduleContext) {
-        this.moduleContext = moduleContext;
     }
 
     boolean isStarted() {
