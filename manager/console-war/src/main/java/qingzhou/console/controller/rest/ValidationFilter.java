@@ -10,6 +10,7 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
+        I18n.addKeyI18n("validation_action", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});
         I18n.addKeyI18n("validation_required", new String[]{"内容不能为空白", "en:The content cannot be blank"});
         I18n.addKeyI18n("validation_number", new String[]{"须是数字类型", "en:Must be a numeric type"});
         I18n.addKeyI18n("validation_min", new String[]{"数字不能小于%s", "en:The number cannot be less than %s"});
@@ -48,13 +50,25 @@ public class ValidationFilter implements Filter<RestContext> {
     public boolean doFilter(RestContext context) throws Exception {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
+        Response response = context.request.getResponse();
+        AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
+        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+        clipParameter(request, modelInfo);
+        Map<String, String> paramMap = request.getParameters();
+        if (Utils.notBlank(request.getId())) {
+            paramMap.put(modelInfo.getIdFieldName(), request.getId());
+        }
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+        if (!SecurityController.isShow(actionInfo.getShow(), paramMap::get)) {
+            String i18n = I18n.getKeyI18n("validation_action", actionInfo.getCode(), actionInfo.getShow());
+            response.setSuccess(false);
+            response.setMsg(i18n);
+            return false;
+        }
+
         boolean isAddAction = DeployerConstants.ACTION_ADD.equals(request.getAction());
         boolean isUpdateAction = DeployerConstants.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
-            AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
-            ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
-            clipParameter(request, modelInfo);
-            Map<String, String> paramMap = request.getParameters();
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                 String parameterVal = request.getParameter(field);
@@ -71,7 +85,6 @@ public class ValidationFilter implements Filter<RestContext> {
             }
         }
 
-        Response response = context.request.getResponse();
         if (!errorMsg.isEmpty()) {
             response.setSuccess(false);
             response.addData(errorMsg);
