@@ -215,7 +215,7 @@ public class User extends ModelBase implements Addable {
             code = DeployerConstants.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
-            show = "id!=qingzhou",
+            show = "name!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
