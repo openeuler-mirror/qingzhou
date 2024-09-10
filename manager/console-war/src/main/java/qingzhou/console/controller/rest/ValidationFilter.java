@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.api.Constants;
 import qingzhou.api.FieldType;
 import qingzhou.api.Response;
 import qingzhou.console.SecurityController;
@@ -69,8 +70,8 @@ public class ValidationFilter implements Filter<RestContext> {
             return false;
         }
 
-        boolean isAddAction = DeployerConstants.ACTION_ADD.equals(request.getAction());
-        boolean isUpdateAction = DeployerConstants.ACTION_UPDATE.equals(request.getAction());
+        boolean isAddAction = Constants.ACTION_ADD.equals(request.getAction());
+        boolean isUpdateAction = Constants.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);

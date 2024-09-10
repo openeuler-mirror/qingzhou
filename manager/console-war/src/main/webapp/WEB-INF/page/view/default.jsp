@@ -73,7 +73,7 @@
 	</div>
 
 	<%
-		if (modelInfo.getModelActionInfo(DeployerConstants.ACTION_LIST) != null) {
+		if (modelInfo.getModelActionInfo(Constants.ACTION_LIST) != null) {
 	%>
 	<div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
 		<div class="form-btn">

@@ -296,7 +296,7 @@
         logout: '<%=I18n.getKeyI18n("page.logout.confirm")%>',
         downloadTip: '<%=I18n.getKeyI18n("page.download.log.tip")%>',
         actionName_target: '<%=DeployerConstants.ACTION_MANAGE%>',
-        showAction: '<%=DeployerConstants.ACTION_SHOW%>',
+        showAction: '<%=Constants.ACTION_SHOW%>',
         downloadCheckAll: '<%=I18n.getKeyI18n("page.download.checkall")%>',
         downloadTaskTip: '<%=I18n.getKeyI18n("page.download.tasktip")%>',
         layerTitleOtp: '<%=I18n.getKeyI18n("page.layertitle.otp")%>',

@@ -1,20 +1,16 @@
 package qingzhou.app.system.setting;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
+import qingzhou.api.*;
 import qingzhou.api.type.Updatable;
 import qingzhou.app.system.Main;
 import qingzhou.config.Config;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 
 import java.util.Map;
 
 @Model(code = "security", icon = "shield",
         menu = Main.SETTING_MENU, order = 5,
-        entrance = DeployerConstants.ACTION_EDIT,
+        entrance = Constants.ACTION_EDIT,
         name = {"安全", "en:Security"},
         info = {"配置轻舟管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
 public class Security extends ModelBase implements Updatable {

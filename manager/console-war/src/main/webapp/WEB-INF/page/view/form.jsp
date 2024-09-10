@@ -2,8 +2,8 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-	boolean isEdit = Objects.equals(DeployerConstants.ACTION_EDIT, qzAction);
-	String submitActionName = isEdit ? DeployerConstants.ACTION_UPDATE : DeployerConstants.ACTION_ADD;
+	boolean isEdit = Objects.equals(Constants.ACTION_EDIT, qzAction);
+	String submitActionName = isEdit ? Constants.ACTION_UPDATE : Constants.ACTION_ADD;
 	List<String> passwordFields = new ArrayList<>();
 	String idFieldName = modelInfo.getIdFieldName();
 %>
@@ -243,9 +243,9 @@
 				<%
 					}
 
-					if (SecurityController.isActionShow(qzApp, qzModel, DeployerConstants.ACTION_LIST, model, currentUser)) {
+					if (SecurityController.isActionShow(qzApp, qzModel, Constants.ACTION_LIST, model, currentUser)) {
 				%>
-				<a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.ACTION_LIST)%>"
+				<a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Constants.ACTION_LIST)%>"
 				   btn-type="goback" class="btn">
 					<%=I18n.getKeyI18n("page.return")%>
 				</a>
@@ -261,16 +261,16 @@
 				<%
 					}
 
-					if (SecurityController.isActionShow(qzApp, qzModel, DeployerConstants.ACTION_DOWNLOAD, model, currentUser)) {
+					if (SecurityController.isActionShow(qzApp, qzModel, Constants.ACTION_DOWNLOAD, model, currentUser)) {
 				%>
-				<a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, DeployerConstants.ACTION_FILES + "/" + encodedId)%>'
+				<a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, Constants.ACTION_FILES + "/" + encodedId)%>'
 						<%
 							out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download/" + encodedId) + "'");
 						%>
-				   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + DeployerConstants.ACTION_FILES)%>'
-				   data-tip-arrow="top"
-				   btn-type="<%=DeployerConstants.ACTION_FILES%>" class="btn tooltips">
-					<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.ACTION_FILES)%>
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Constants.ACTION_FILES)%>'
+                   data-tip-arrow="top"
+                   btn-type="<%=Constants.ACTION_FILES%>" class="btn tooltips">
+					<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Constants.ACTION_FILES)%>
 				</a>
 				<%
 					}
