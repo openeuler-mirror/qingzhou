@@ -2,20 +2,13 @@ package qingzhou.command;
 
 import java.util.*;
 
-public class Admin extends CommandLineProcessor { // 由 Launcher 来调用
+public class Admin { // 由 Launcher 来调用
 
-    @Override
-    public String name() {
-        return "admin";
+    public static void main(String[] args) throws Exception {
+        new Admin().doCommand(args);
     }
 
-    @Override
-    public String info() {
-        return "The entry point for the execution of all commands";
-    }
-
-    @Override
-    public void doCommandLine(String[] args) throws Exception {
+    public void doCommand(String[] args) throws Exception {
         if (showHelp(args)) {
             return;
         }

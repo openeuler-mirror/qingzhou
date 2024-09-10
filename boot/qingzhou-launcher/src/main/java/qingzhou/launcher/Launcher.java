@@ -17,7 +17,7 @@ public class Launcher {
         try (URLClassLoader cmdMainLoader = buildClassLoader(libDir)) {
             Class<?> cmdMainClass = cmdMainLoader.loadClass("qingzhou.command.Admin");
             Object cmdMainObj = cmdMainClass.newInstance();
-            Method cmdMainMethod = cmdMainClass.getMethod("doCommandLine", String[].class);
+            Method cmdMainMethod = cmdMainClass.getMethod("main", String[].class);
             cmdMainMethod.invoke(cmdMainObj, new Object[]{args});
         }
     }

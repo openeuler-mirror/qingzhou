@@ -1,4 +1,4 @@
-package qingzhou.command.server;
+package qingzhou.command.instance;
 
 import qingzhou.command.CommandLineProcessor;
 import qingzhou.command.CommandUtil;
@@ -7,14 +7,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Server extends CommandLineProcessor {
-    public Server() {
+public class Instance extends CommandLineProcessor {
+    public Instance() {
         // 实现 CommandLineProcessor 接口，须有无参的公开构造方法
     }
 
     @Override
     public String name() {
-        return "server";
+        return "instance";
     }
 
     @Override

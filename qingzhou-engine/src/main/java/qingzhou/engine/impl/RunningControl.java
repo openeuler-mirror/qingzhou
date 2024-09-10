@@ -33,7 +33,7 @@ class RunningControl implements Process {
     }
 
     private boolean checkService() {
-        return false;// todo: 需可靠的校验方式，通信校验？
+        return false;
     }
 
     @Override
