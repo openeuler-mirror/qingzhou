@@ -64,7 +64,7 @@ class DefaultAction {
         }
         responseImpl.setPageNum(pageNum);
 
-        String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFormFieldList();
+        String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFieldsToList();
         List<Map<String, String>> result = ((Listable) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList);
         for (Map<String, String> data : result) {
             request.getResponse().addData(data);
@@ -92,7 +92,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_EDIT, icon = "edit", order = 1,
+            code = Constants.ACTION_EDIT, icon = "edit",
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {

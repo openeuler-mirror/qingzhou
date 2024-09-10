@@ -1,14 +1,12 @@
 package qingzhou.app.model;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
+import qingzhou.api.*;
 import qingzhou.api.type.Addable;
 import qingzhou.app.DataStore;
 import qingzhou.app.ExampleMain;
 import qingzhou.app.MemoryDataStore;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,6 +43,16 @@ public class TestModel extends ModelBase implements Addable {
             info = {"开关说明信息。",
                     "en:Switch description information."})
     public Boolean bool = false;
+
+    @ModelAction(
+            code = "test",
+            name = {"添加", "en:Add"},
+            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
+    public void test(Request request) throws Exception {
+        request.getResponse().addData(new HashMap<String,String>(){{
+            put("a","aaa");
+        }});
+    }
 
     @Override
     public void addData(Map<String, String> data) {

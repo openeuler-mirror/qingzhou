@@ -1,7 +1,6 @@
 package qingzhou.registry;
 
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ModelInfo {
@@ -32,8 +31,21 @@ public class ModelInfo {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
     }
 
+    public String[] getListActionNames() {
+        return Arrays.stream(modelActionInfos)
+                .filter(modelActionInfo -> modelActionInfo.getOrder() > 0)
+                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
+                .map(ModelActionInfo::getCode)
+                .toArray(String[]::new);
+    }
+
     public String[] getBatchActionNames() {
-        return Arrays.stream(modelActionInfos).filter(ModelActionInfo::isBatch).map(ModelActionInfo::getCode).toArray(String[]::new);
+        return Arrays.stream(modelActionInfos)
+                .filter(modelActionInfo -> modelActionInfo.getOrder() > 0)
+                .filter(ModelActionInfo::isBatch)
+                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
+                .map(ModelActionInfo::getCode)
+                .toArray(String[]::new);
     }
 
     public String[] getActionNames() {
@@ -53,12 +65,28 @@ public class ModelInfo {
         return null;
     }
 
-    public String[] getMonitorFieldNames() {
-        return Arrays.stream(modelFieldInfos).filter(ModelFieldInfo::isMonitor).map(ModelFieldInfo::getCode).toArray(String[]::new);
+    public Integer[] getFieldsIndexToList() {
+        List<Integer> index = new ArrayList<>();
+        for (int i = 0; i < modelFieldInfos.length; i++) {
+            ModelFieldInfo fieldInfo = modelFieldInfos[i];
+            if (fieldInfo.isMonitor()) continue;
+            if (fieldInfo.isList()) {
+                index.add(i);
+            }
+        }
+        return index.toArray(new Integer[0]);
     }
 
-    public String[] getFormFieldList() {
-        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> (!modelFieldInfo.isMonitor() && modelFieldInfo.isList())).map(ModelFieldInfo::getCode).toArray(String[]::new);
+    public String[] getFieldsToList() {
+        List<String> list = new ArrayList<>();
+        for (Integer i : getFieldsIndexToList()) {
+            list.add(modelFieldInfos[i].getCode());
+        }
+        return list.toArray(new String[0]);
+    }
+
+    public String[] getMonitorFieldNames() {
+        return Arrays.stream(modelFieldInfos).filter(ModelFieldInfo::isMonitor).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }
 
     public String[] getFormFieldNames() {
