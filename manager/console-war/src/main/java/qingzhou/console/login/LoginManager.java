@@ -211,7 +211,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
 
     private static String checkPassword(String user, String password) {
         try {
-            password = SystemController.decryptWithConsolePrivateKey(password, false);
+            password = SystemController.decryptWithConsolePrivateKey(password, true);
         } catch (Exception ignored) {
         }
 

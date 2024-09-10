@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.api.Constants;
 import qingzhou.api.Lang;
 import qingzhou.config.Console;
 import qingzhou.config.User;
@@ -23,12 +24,6 @@ public class ResetPassword implements Filter<RestContext> {
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {
-        if (DeployerConstants.MODEL_INDEX.equals(context.request.getModel())) {
-            if (DeployerConstants.ACTION_INDEX.equals(context.request.getAction())) {
-                return true;
-            }
-        }
-
         HttpServletRequest servletRequest = context.req;
         HttpServletResponse servletResponse = context.resp;
 
@@ -45,9 +40,17 @@ public class ResetPassword implements Filter<RestContext> {
             return true;
         }
 
+        // 不重置密码，允许进入主页
+        if (DeployerConstants.MODEL_INDEX.equals(context.request.getModel())) {
+            if (DeployerConstants.ACTION_INDEX.equals(context.request.getAction())) {
+                return true;
+            }
+        }
+
+        // 不重置密码，允许进入修改密码页
         if (DeployerConstants.MODEL_PASSWORD.equals(context.request.getModel())) {
-            if (DeployerConstants.ACTION_EDIT.equals(context.request.getAction())
-                    || DeployerConstants.ACTION_UPDATE.equals(context.request.getAction())) { // 允许访问重置密码的 uri
+            if (Constants.ACTION_EDIT.equals(context.request.getAction())
+                    || Constants.ACTION_UPDATE.equals(context.request.getAction())) { // 允许访问重置密码的 uri
                 return true;
             }
         }
@@ -64,7 +67,7 @@ public class ResetPassword implements Filter<RestContext> {
                 "/" + context.request.getView() +
                 "/" + DeployerConstants.APP_SYSTEM +
                 "/" + DeployerConstants.MODEL_PASSWORD +
-                "/" + DeployerConstants.ACTION_EDIT +
+                "/" + Constants.ACTION_EDIT +
                 "/" + user +
                 "?" + RESTController.MSG_FLAG + "=" + resetPwdInfo));
 

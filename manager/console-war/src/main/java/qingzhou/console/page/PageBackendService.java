@@ -1,5 +1,6 @@
 package qingzhou.console.page;
 
+import qingzhou.api.Constants;
 import qingzhou.api.FieldType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
@@ -171,7 +172,7 @@ public class PageBackendService {
         if (modelInfo == null) {
             return false;
         }
-        ModelActionInfo listAction = modelInfo.getModelActionInfo(DeployerConstants.ACTION_LIST);
+        ModelActionInfo listAction = modelInfo.getModelActionInfo(Constants.ACTION_LIST);
         ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
         return listAction != null && idField != null;
     }

@@ -5,6 +5,7 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
+import qingzhou.registry.ModelInfo;
 
 import javax.security.auth.Subject;
 import javax.servlet.*;
@@ -77,11 +78,14 @@ public class JmxHttpServletRequest implements HttpServletRequest {
     @Override
     public String getPathInfo() {
         String uri = "/" + DeployerConstants.jsonView + "/" + appName + "/" + modelName + "/" + actionName;
-        String idFieldName = SystemController.getModelInfo(appName, modelName).getIdFieldName();
-        if (Utils.notBlank(idFieldName)) {
-            String id = properties == null ? null : properties.getProperty(idFieldName);
-            if (Utils.notBlank(id)) {
-                uri = uri + "/" + RESTController.encodeId(id);
+        ModelInfo modelInfo = SystemController.getModelInfo(appName, modelName);
+        if (modelInfo != null) {
+            String idFieldName = modelInfo.getIdFieldName();
+            if (Utils.notBlank(idFieldName)) {
+                String id = properties == null ? null : properties.getProperty(idFieldName);
+                if (Utils.notBlank(id)) {
+                    uri = uri + "/" + RESTController.encodeId(id);
+                }
             }
         }
         return uri;

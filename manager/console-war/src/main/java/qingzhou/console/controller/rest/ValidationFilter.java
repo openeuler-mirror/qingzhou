@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.api.Constants;
 import qingzhou.api.FieldType;
 import qingzhou.api.Response;
 import qingzhou.console.SecurityController;
@@ -50,6 +51,7 @@ public class ValidationFilter implements Filter<RestContext> {
     public boolean doFilter(RestContext context) throws Exception {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
+
         Response response = context.request.getResponse();
         AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
         ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
@@ -58,6 +60,8 @@ public class ValidationFilter implements Filter<RestContext> {
         if (Utils.notBlank(request.getId())) {
             paramMap.put(modelInfo.getIdFieldName(), request.getId());
         }
+
+        // 拦截禁止删除等操作（如禁止通过 rest 接口删除 qingzhou  默认账户）
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
         if (!SecurityController.isShow(actionInfo.getShow(), paramMap::get)) {
             String i18n = I18n.getKeyI18n("validation_action", actionInfo.getCode(), actionInfo.getShow());
@@ -66,8 +70,8 @@ public class ValidationFilter implements Filter<RestContext> {
             return false;
         }
 
-        boolean isAddAction = DeployerConstants.ACTION_ADD.equals(request.getAction());
-        boolean isUpdateAction = DeployerConstants.ACTION_UPDATE.equals(request.getAction());
+        boolean isAddAction = Constants.ACTION_ADD.equals(request.getAction());
+        boolean isUpdateAction = Constants.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);

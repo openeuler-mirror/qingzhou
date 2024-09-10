@@ -18,7 +18,7 @@ import java.util.Map;
         info = {"测试模块的说明信息。",
                 "en:Description of the test module."})
 public class TestModel extends ModelBase implements Addable {
-    public static final DataStore dataStore = new MemoryDataStore();
+    public final DataStore dataStore = new MemoryDataStore();
 
     @ModelField(
             required = true,
@@ -36,11 +36,10 @@ public class TestModel extends ModelBase implements Addable {
             name = {"名称", "en:Name"},
             info = {"名称信息。",
                     "en:Name information."})
-    public int num;
+    public int num = 1;
 
     @ModelField(
             type = FieldType.bool,
-            required = true,
             list = true,
             name = {"开关", "en:Switch"},
             info = {"开关说明信息。",

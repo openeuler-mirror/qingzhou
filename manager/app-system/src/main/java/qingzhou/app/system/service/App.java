@@ -143,7 +143,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = DeployerConstants.ACTION_CREATE, icon = "plus-sign",
+            code = Constants.ACTION_CREATE, icon = "plus-sign",
             name = {"部署", "en:Deploy"},
             info = {"部署应用包到指定的轻舟实例上。",
                     "en:Deploy the application package to the specified Qingzhou instance."})
@@ -152,7 +152,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = DeployerConstants.ACTION_ADD, icon = "save",
+            code = Constants.ACTION_ADD, icon = "save",
             name = {"部署", "en:Deploy"},
             info = {"部署应用包到指定的轻舟实例上。",
                     "en:Deploy the application package to the specified Qingzhou instance."})
@@ -171,7 +171,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = DeployerConstants.ACTION_DELETE, icon = "trash",
+            code = Constants.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
             name = {"删除", "en:Delete"},

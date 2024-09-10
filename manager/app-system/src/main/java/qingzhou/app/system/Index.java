@@ -5,7 +5,7 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.ModuleContext;
 
 @Model(code = DeployerConstants.MODEL_INDEX, icon = "home",
-        entrance = DeployerConstants.ACTION_SHOW,
+        entrance = Constants.ACTION_SHOW,
         name = {"主页", "en:Home"},
         info = {"查看 QingZhou 平台的相关信息。", "en:Check out the relevant information of QingZhou platform."})
 public class Index extends ModelBase {
@@ -25,7 +25,7 @@ public class Index extends ModelBase {
     public String javaHome;
 
     @ModelAction(
-            code = DeployerConstants.ACTION_SHOW,
+            code = Constants.ACTION_SHOW,
             name = {"主页", "en:Home"},
             info = {"查看 QingZhou 平台的相关信息。",
                     "en:View QingZhou platform information."})

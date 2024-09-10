@@ -12,18 +12,6 @@ public interface DeployerConstants {
     String MODEL_APP = "app";
     String MODEL_PASSWORD = "password";
 
-    // api 级 action
-    String ACTION_CREATE = "create";
-    String ACTION_ADD = "add";
-    String ACTION_EDIT = "edit";
-    String ACTION_UPDATE = "update";
-    String ACTION_LIST = "list";
-    String ACTION_DELETE = "delete";
-    String ACTION_SHOW = "show";
-    String ACTION_MONITOR = "monitor";
-    String ACTION_FILES = "files";
-    String ACTION_DOWNLOAD = "download";
-
     // 系统内部 action
     String ACTION_CHECK = "check";
     String ACTION_REGISTER = "register";

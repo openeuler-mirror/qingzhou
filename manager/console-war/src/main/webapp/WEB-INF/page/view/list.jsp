@@ -44,12 +44,12 @@
 		<div class="table-tools tw-list-operate">
 			<div class="tools-group">
 				<%
-					if (SecurityController.isActionShow(qzApp, qzModel, DeployerConstants.ACTION_ADD, null, currentUser)) {
+					if (SecurityController.isActionShow(qzApp, qzModel, Constants.ACTION_ADD, null, currentUser)) {
 				%>
 				<a class="btn"
-				   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.ACTION_CREATE)%>">
+				   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Constants.ACTION_CREATE)%>">
 					<i class="icon icon-plus-sign"></i>
-					<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.ACTION_CREATE)%>
+					<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Constants.ACTION_CREATE)%>
 				</a>
 				<%
 					}
@@ -159,14 +159,14 @@
                     %>
 					<td>
 					<%
-						if (isFirst && SecurityController.isActionShow(qzApp, qzModel, DeployerConstants.ACTION_SHOW, modelData, currentUser)) {
+						if (isFirst && SecurityController.isActionShow(qzApp, qzModel, Constants.ACTION_SHOW, modelData, currentUser)) {
 							isFirst = false;
 							%>
 
-								<a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , DeployerConstants.ACTION_SHOW + "/" + encodedItemId)%>'
+								<a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , Constants.ACTION_SHOW + "/" + encodedItemId)%>'
 								   class="dataid tooltips"
-								   record-action-id="<%=DeployerConstants.ACTION_SHOW%>"
-								   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + DeployerConstants.ACTION_SHOW)%>'
+								   record-action-id="<%=Constants.ACTION_SHOW%>"
+								   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Constants.ACTION_SHOW)%>'
 								   data-tip-arrow="top"
 								   style="color:#4C638F;">
 									<%=value%>
@@ -204,8 +204,8 @@
 							   model-icon="<%=modelInfo.getIcon()%>" action-name="<%=actionKey%>"
 							   data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
 									<%
-										if (actionKey.equals(DeployerConstants.ACTION_FILES)) {
-											out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, DeployerConstants.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+										if (actionKey.equals(Constants.ACTION_FILES)) {
+											out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Constants.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
 										}
 										if (action.isBatch()) {
 											out.print(" act-ajax='true' act-confirm='"
@@ -239,7 +239,7 @@
 			<ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
 				recPerPage="<%=pageSize%>"
 				data-rec-total="<%=totalSize%>"
-				partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
+				partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Constants.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
 				style="margin-left:33%;color:black;margin-bottom:6px;">
 			</ul>
 		</div>

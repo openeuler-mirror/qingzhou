@@ -4,7 +4,6 @@ import qingzhou.api.*;
 import qingzhou.api.type.*;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -448,22 +447,22 @@ class DeployerImpl implements Deployer {
 
     static void findSuperDefaultActions(Class<?> checkClass, Set<String> defaultActions) {
         if (checkClass == Addable.class) {
-            defaultActions.add(DeployerConstants.ACTION_CREATE);
-            defaultActions.add(DeployerConstants.ACTION_ADD);
+            defaultActions.add(Constants.ACTION_CREATE);
+            defaultActions.add(Constants.ACTION_ADD);
         } else if (checkClass == Deletable.class) {
-            defaultActions.add(DeployerConstants.ACTION_DELETE);
+            defaultActions.add(Constants.ACTION_DELETE);
         } else if (checkClass == Downloadable.class) {
-            defaultActions.add(DeployerConstants.ACTION_FILES);
-            defaultActions.add(DeployerConstants.ACTION_DOWNLOAD);
+            defaultActions.add(Constants.ACTION_FILES);
+            defaultActions.add(Constants.ACTION_DOWNLOAD);
         } else if (checkClass == Listable.class) {
-            defaultActions.add(DeployerConstants.ACTION_LIST);
+            defaultActions.add(Constants.ACTION_LIST);
         } else if (checkClass == Monitorable.class) {
-            defaultActions.add(DeployerConstants.ACTION_MONITOR);
+            defaultActions.add(Constants.ACTION_MONITOR);
         } else if (checkClass == Showable.class) {
-            defaultActions.add(DeployerConstants.ACTION_SHOW);
+            defaultActions.add(Constants.ACTION_SHOW);
         } else if (checkClass == Updatable.class) {
-            defaultActions.add(DeployerConstants.ACTION_EDIT);
-            defaultActions.add(DeployerConstants.ACTION_UPDATE);
+            defaultActions.add(Constants.ACTION_EDIT);
+            defaultActions.add(Constants.ACTION_UPDATE);
         }
 
         for (Class<?> c : checkClass.getInterfaces()) {
