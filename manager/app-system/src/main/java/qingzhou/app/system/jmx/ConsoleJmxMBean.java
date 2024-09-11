@@ -7,4 +7,6 @@ import java.util.Properties;
  */
 public interface ConsoleJmxMBean {
     String invoke(String appName, String modelName, String actionName, Properties args) throws Exception;
+
+    String invoke(String appName, String modelName, String actionName, String args) throws Exception;
 }
