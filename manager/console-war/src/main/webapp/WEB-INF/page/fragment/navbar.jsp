@@ -29,7 +29,7 @@
                         <div class="searchBar">
                             <div class="sample">
                                 <input type="text" id="searchText" name="search"
-                                       placeholder="<%=I18n.getKeyI18n( "page.filter")%> : TODO">
+                                       placeholder="<%=I18n.getKeyI18n( "page.filter")%>">
                                 <a href="javascript:void(0);" class="btn btn-search"><i
                                         class="icon icon-search"></i></a>
                                 <div id="searchResult" class="search-list"></div>

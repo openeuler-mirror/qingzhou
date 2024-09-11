@@ -218,6 +218,7 @@
 </head>
 
 <%@ include file="../fragment/head.jsp" %>
+
 <body class="<%=(themeMode == null || themeMode.isEmpty()) ? "" : (themeMode + "-mode")%>" style="overflow:hidden;">
 <!--[if lt IE 8]>
     <div class="alert alert-danger"><%=I18n.getKeyI18n( "page.browser.outdated")%></div>

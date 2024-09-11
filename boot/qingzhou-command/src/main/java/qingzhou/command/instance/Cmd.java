@@ -1,4 +1,4 @@
-package qingzhou.command.server;
+package qingzhou.command.instance;
 
 import qingzhou.command.CommandUtil;
 

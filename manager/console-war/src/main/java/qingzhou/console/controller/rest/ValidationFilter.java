@@ -45,6 +45,7 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
         I18n.addKeyI18n("validation_email", new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
         I18n.addKeyI18n("validation_filePath", new String[]{"文件路径不支持以\\或者/结尾，不支持包含特殊字符和空格", "en:The file path cannot end with \\ or /, and cannot contain special characters or Spaces"});
+        I18n.addKeyI18n("validation_options", new String[]{"取值不在范围：%s", "en:The value is not in the range: %s"});
     }
 
     @Override
@@ -112,7 +113,8 @@ public class ValidationFilter implements Filter<RestContext> {
             new checkXSS(),
             new regularExpression(),
             new checkEmail(),
-            new checkFilePath()
+            new checkFilePath(),
+            new options()
     };
 
     private String[] validate(ValidationContext context) {
@@ -417,6 +419,16 @@ public class ValidationFilter implements Filter<RestContext> {
                 }
             }
             return null;
+        }
+    }
+
+    static class options implements Validator {
+        @Override
+        public String[] validate(ValidationContext context) {
+            String[] options = context.fieldInfo.getOptions();
+            if (options == null || options.length == 0) return null;
+            boolean match = Arrays.stream(options).anyMatch(s -> s.equals(context.parameterVal));
+            return match ? null : new String[]{"validation_options", Arrays.toString(options)};
         }
     }
 }

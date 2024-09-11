@@ -1,1 +1,3 @@
-call .\admin.bat server start %*
+@echo off
+
+call .\admin.bat instance start %*

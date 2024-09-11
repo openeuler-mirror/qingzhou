@@ -307,7 +307,13 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setInfo(modelField.info());
             modelFieldInfo.setGroup(modelField.group());
             modelFieldInfo.setType(modelField.type().name());
-            modelFieldInfo.setOptions(modelField.options());
+            List<String> options = new ArrayList<>();
+            for (String option : modelField.options()) {
+                if (Utils.notBlank(option)) {
+                    options.add(option);
+                }
+            }
+            modelFieldInfo.setOptions(options.toArray(new String[0]));
             modelFieldInfo.setRefModelClass(modelField.refModel());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setList(modelField.list());

@@ -1,1 +1,3 @@
-exec ./admin.sh server start "$@"
+#!/bin/sh
+
+exec ./admin.sh instance start "$@"

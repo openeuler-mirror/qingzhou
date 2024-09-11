@@ -1,13 +1,11 @@
 package qingzhou.console.page;
 
-import qingzhou.api.Constants;
-import qingzhou.api.FieldType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.SecurityController;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
@@ -30,23 +28,11 @@ public class PageBackendService {
     private PageBackendService() {
     }
 
-    public static ModelInfo getModelInfo(Request request) {
+    private static ModelInfo getModelInfo(Request request) {
         return SystemController.getModelInfo(SystemController.getAppName(request), request.getModel());
     }
 
-    public static String[] getActionNamesShowToList(Request request) {
-        ModelInfo modelInfo = getModelInfo(request);
-        return Arrays.stream(modelInfo.getModelActionInfos()).filter(modelActionInfo -> modelActionInfo.getOrder() >= 0).
-                filter(modelActionInfo -> modelActionInfo.getOrder() > 0)
-                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder)).map(ModelActionInfo::getCode).toArray(String[]::new);
-    }
-
-    public static String getFieldName(Request request, int fieldIndex) {
-        ModelInfo modelInfo = getModelInfo(request);
-        return modelInfo.getFormFieldList()[fieldIndex];
-    }
-
-    static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
+    private static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
         boolean isDefaultActive = DEFAULT_EXPAND_MENU_GROUP_NAME.equals(menu.getMenuName());
         String model = menu.getMenuName();
         String menuText = I18n.getStringI18n(menu.getI18ns());
@@ -64,7 +50,7 @@ public class PageBackendService {
         menuBuilder.append("</li>");
     }
 
-    static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, Request qzRequest, StringBuilder menuBuilder) {
+    private static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, Request qzRequest, StringBuilder menuBuilder) {
         String model = menu.getMenuName();
         String action = menu.getMenuAction();
         menuBuilder.append("<li class=\"treeview ").append((model.equals(qzRequest.getModel()) ? " active" : "")).append("\">");
@@ -167,16 +153,6 @@ public class PageBackendService {
         return result;
     }
 
-    public static boolean hasIDField(Request request) {
-        ModelInfo modelInfo = getModelInfo(request);
-        if (modelInfo == null) {
-            return false;
-        }
-        ModelActionInfo listAction = modelInfo.getModelActionInfo(Constants.ACTION_LIST);
-        ModelFieldInfo idField = modelInfo.getModelFieldInfo(modelInfo.getIdFieldName());
-        return listAction != null && idField != null;
-    }
-
     public static Map<String, String> modelFieldShowMap(Request request) {
         final ModelInfo modelInfo = getModelInfo(request);
         if (modelInfo == null) {
@@ -193,19 +169,6 @@ public class PageBackendService {
         return result;
     }
 
-    /**
-     * list.jsp 在使用
-     */
-    public static boolean isFilterSelect(Request request, int i) {
-        final ModelInfo modelInfo = getModelInfo(request);
-        if (modelInfo == null) {
-            return false;
-        }
-        ModelFieldInfo[] modelFieldInfos = modelInfo.getModelFieldInfos();
-        String fieldType = modelFieldInfos[i].getType();
-        return FieldType.radio.name().equals(fieldType) || FieldType.bool.name().equals(fieldType) || FieldType.select.name().equals(fieldType) || FieldType.checkbox.name().equals(fieldType) || FieldType.sortablecheckbox.name().equals(fieldType);
-    }
-
     public static boolean isFieldReadOnly(Request request, String fieldName) {
         final ModelInfo modelInfo = getModelInfo(request);
         if (modelInfo == null) {
@@ -219,50 +182,26 @@ public class PageBackendService {
     }
 
     /********************* 批量操作 start ************************/
-    public static ModelActionInfo[] listCommonOps(Request request, Response response, String loginUser) {
-        List<ModelActionInfo> actions = visitActions(request, response.getDataList(), loginUser);
-        actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
-
-        return actions.toArray(new ModelActionInfo[0]);
-    }
-
-    public static ModelActionInfo[] listModelBaseOps(Request request, Map<String, String> obj, String loginUser) {
-        List<ModelActionInfo> actions = visitActions(request, new ArrayList<Map<String, String>>() {{
-            add(obj);
-        }}, loginUser);
-        actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
-
-        return actions.toArray(new ModelActionInfo[0]);
-    }
-
-    private static List<ModelActionInfo> visitActions(Request request, List<Map<String, String>> dataList, String loginUser) {
-        final ModelInfo modelInfo = getModelInfo(request);
+    public static ModelActionInfo[] listBachActions(Request request, Response response, String loginUser) {
         List<ModelActionInfo> actions = new ArrayList<>();
-        if (modelInfo != null) {
-            boolean hasId = hasIDField(request);
-            if (hasId && !dataList.isEmpty()) {
-                for (String actionName : modelInfo.getBatchActionNames()) {
-                    boolean isShow = true;
-                    for (Map<String, String> data : dataList) {
-                        if (!SecurityController.isActionShow(request.getApp(), request.getModel(), actionName, data, loginUser)) {
-                            isShow = false;
-                            break;
-                        }
-                    }
-                    if (isShow) {
-                        ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                        actions.add(action);
-                    }
+
+        final ModelInfo modelInfo = getModelInfo(request);
+        for (String actionName : modelInfo.getBatchActionNames()) {
+            boolean isShow = true;
+            for (Map<String, String> data : response.getDataList()) {
+                if (!SecurityController.isActionShow(request.getApp(), request.getModel(), actionName, data, loginUser)) {
+                    isShow = false;
+                    break;
                 }
+            }
+            if (isShow) {
+                ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
+                actions.add(action);
             }
         }
 
-        return actions;
-    }
-
-    //公共操作列表
-    public static boolean needOperationColumn(Request request) {
-        return getActionNamesShowToList(request).length > 0;
+        actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
+        return actions.toArray(new ModelActionInfo[0]);
     }
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
