@@ -1,18 +1,11 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <form name="filterForm" id="filterForm" method="POST"
-      action="<%=RESTController.encodeURL( response, ViewManager.htmlView + "/" + qzApp + "/" + qzModel + "/" + Constants.ACTION_LIST)%>">
+      action="<%=RESTController.encodeURL( response, ViewManager.htmlView + "/" + qzApp + "/" + qzModel + "/" + Listable.ACTION_LIST)%>">
     <div class="row filterForm" style="margin-top: 10px; display: none;">
         <%
             for (String fieldName : fieldsToList) {
-                List<String> modelOptionsEntry = null;
-                try {
-                    String[] modelOptions = modelInfo.getFieldOptions(fieldName);
-                    if (modelOptions != null) {
-                        modelOptionsEntry = Arrays.stream(modelOptions).collect(Collectors.toList());
-                    }
-                } catch (Exception ignored) {
-                }
+                String[] modelOptionsEntry = SystemController.getOptions(qzApp, modelInfo.getModelFieldInfo(fieldName));
         %>
         <div class='col-md-2 col-sm-3 col-xs-4 list-page-padding-bottom'>
             <div class="input-control">
@@ -56,7 +49,7 @@
         <div class="col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
             <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0;">
                 <a class="btn"
-                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Constants.ACTION_LIST)%>"
+                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST)%>"
                    form="filterForm">
                     <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter")%>
                 </a>

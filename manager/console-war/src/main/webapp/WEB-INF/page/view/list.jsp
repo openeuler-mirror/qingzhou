@@ -27,12 +27,12 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    if (SecurityController.isActionShow(qzApp, qzModel, Constants.ACTION_ADD, null, currentUser)) {
+                    if (SecurityController.isActionShow(qzApp, qzModel, Addable.ACTION_ADD, null, currentUser)) {
                 %>
                 <a class="btn"
-                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Constants.ACTION_CREATE)%>">
+                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Addable.ACTION_CREATE)%>">
                     <i class="icon icon-plus-sign"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Constants.ACTION_CREATE)%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Addable.ACTION_CREATE)%>
                 </a>
                 <%
                     }
@@ -131,14 +131,14 @@
                 %>
                 <td>
                     <%
-                        if (isFirst && SecurityController.isActionShow(qzApp, qzModel, Constants.ACTION_EDIT, modelData, currentUser)) {
+                        if (isFirst && SecurityController.isActionShow(qzApp, qzModel, Updatable.ACTION_EDIT, modelData, currentUser)) {
                             isFirst = false;
                     %>
 
-                    <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , Constants.ACTION_EDIT + "/" + encodedItemId)%>'
+                    <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , Updatable.ACTION_EDIT + "/" + encodedItemId)%>'
                        class="dataid tooltips"
-                       record-action-id="<%=Constants.ACTION_EDIT%>"
-                       data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Constants.ACTION_EDIT)%>'
+                       record-action-id="<%=Updatable.ACTION_EDIT%>"
+                       data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Updatable.ACTION_EDIT)%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
                         <%=value%>
@@ -167,8 +167,8 @@
                             }
 
                             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                            boolean useJsonUri = actionName.equals(Constants.ACTION_FILES)
-                                    || actionName.equals(Constants.ACTION_DELETE);
+                            boolean useJsonUri = actionName.equals(Downloadable.ACTION_FILES)
+                                    || actionName.equals(Deletable.ACTION_DELETE);
                     %>
                     <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,
                             useJsonUri ? DeployerConstants.jsonView : ViewManager.htmlView,
@@ -177,8 +177,8 @@
                        model-icon="<%=modelInfo.getIcon()%>" action-name="<%=actionName%>"
                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
                             <%
-                                if (actionName.equals(Constants.ACTION_FILES)) {
-                                    out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Constants.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+                                if (actionName.equals(Downloadable.ACTION_FILES)) {
+                                    out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
                                 }
 
                                 if (useJsonUri) {
@@ -213,7 +213,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Constants.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
+                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>

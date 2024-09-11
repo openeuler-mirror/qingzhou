@@ -5,8 +5,7 @@
         readonly = " onclick='return false;' readonly";
     }
 
-    String[] radioOptions = modelInfo.getFieldOptions(fieldName);
-    for (String option : radioOptions) {
+    for (String option : SystemController.getOptions(qzApp, modelInfo.getModelFieldInfo(fieldName))) {
 %>
 <label class="radio-inline radio-label radio-anim">
     <input type="radio" name="<%=fieldName%>"

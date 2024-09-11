@@ -1,7 +1,7 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.Constants;
 import qingzhou.api.Lang;
+import qingzhou.api.type.Updatable;
 import qingzhou.config.Console;
 import qingzhou.config.User;
 import qingzhou.console.controller.I18n;
@@ -49,8 +49,8 @@ public class ResetPassword implements Filter<RestContext> {
 
         // 不重置密码，允许进入修改密码页
         if (DeployerConstants.MODEL_PASSWORD.equals(context.request.getModel())) {
-            if (Constants.ACTION_EDIT.equals(context.request.getAction())
-                    || Constants.ACTION_UPDATE.equals(context.request.getAction())) { // 允许访问重置密码的 uri
+            if (Updatable.ACTION_EDIT.equals(context.request.getAction())
+                    || Updatable.ACTION_UPDATE.equals(context.request.getAction())) { // 允许访问重置密码的 uri
                 return true;
             }
         }
@@ -67,7 +67,7 @@ public class ResetPassword implements Filter<RestContext> {
                 "/" + context.request.getView() +
                 "/" + DeployerConstants.APP_SYSTEM +
                 "/" + DeployerConstants.MODEL_PASSWORD +
-                "/" + Constants.ACTION_EDIT +
+                "/" + Updatable.ACTION_EDIT +
                 "/" + user +
                 "?" + RESTController.MSG_FLAG + "=" + resetPwdInfo));
 

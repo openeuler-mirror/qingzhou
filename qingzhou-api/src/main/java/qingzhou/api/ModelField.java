@@ -26,9 +26,9 @@ public @interface ModelField {
 
     boolean required() default false;
 
-    String[] options() default ""; // 字段的取值范围
+    String[] options() default ""; // 字段的取值范围，如果设置了 refModel 此值将被忽略
 
-    Class<? extends ModelBase> refModel() default ModelBase.class; // 若 refModel 有，则 options() 会列出指定 model 的所有 id
+    Class<? extends ModelBase> refModel() default ModelBase.class; // 使用指定的模块的所有数据id作为字段的取值范围
 
     long min() default Long.MIN_VALUE;
 

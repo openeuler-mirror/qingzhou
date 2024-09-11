@@ -55,7 +55,7 @@ public class ServiceManager {
         registry = LocateRegistry.createRegistry(jmxPort);
 
         String ipAndPort = jmxIp + ":" + jmxPort;
-        String jmxServiceUrl = String.format("service:jmx:rmi://%s/jndi/rmi://%s/server", ipAndPort, ipAndPort);
+        String jmxServiceUrl = String.format("service:jmx:rmi://%s/jndi/rmi://%s/qingzhou", ipAndPort, ipAndPort);
 
         JMXServiceURL serviceURL = new JMXServiceURL(jmxServiceUrl);
         Map<String, Object> env = new HashMap<>();

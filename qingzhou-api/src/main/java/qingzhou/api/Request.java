@@ -1,6 +1,6 @@
 package qingzhou.api;
 
-import java.util.Map;
+import java.util.Enumeration;
 
 /**
  * 请求接口定义了获取请求相关信息的方法。
@@ -42,6 +42,12 @@ public interface Request {
      */
     String getId();
 
+    // 获取未使用 @ModelField 标注的参数
+    String getNonModelParameter(String name);
+
+    // 获取未使用 @ModelField 标注的参数
+    Enumeration<String> getNonModelParameterNames();
+
     /**
      * Returns the value of a request parameter as a <code>String</code>, or
      * <code>null</code> if the parameter does not exist.
@@ -49,7 +55,7 @@ public interface Request {
      */
     String getParameter(String name);
 
-    Map<String, String> getParameters();
+    Enumeration<String> getParameterNames();
 
     String getParameterInSession(String name);
 

@@ -4,10 +4,7 @@ import qingzhou.api.Lang;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RequestImpl implements Request, Cloneable {
     private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
@@ -20,6 +17,7 @@ public class RequestImpl implements Request, Cloneable {
     private String id;
     private String userName;
     private Lang lang;
+    private final Map<String, String> nonModelParameters = new HashMap<>();
     private final Map<String, String> parameters = new HashMap<>();
     private final Map<String, String> parametersInSession = new HashMap<>();
 
@@ -49,11 +47,25 @@ public class RequestImpl implements Request, Cloneable {
     }
 
     @Override
+    public String getNonModelParameter(String name) {
+        return nonModelParameters.get(name);
+    }
+
+    @Override
+    public Enumeration<String> getNonModelParameterNames() {
+        return Collections.enumeration(nonModelParameters.keySet());
+    }
+
+    @Override
     public String getParameter(String name) {
         return parameters.get(name);
     }
 
     @Override
+    public Enumeration<String> getParameterNames() {
+        return Collections.enumeration(parameters.keySet());
+    }
+
     public Map<String, String> getParameters() {
         return parameters;
     }

@@ -2,7 +2,10 @@ package qingzhou.app.system.setting;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Addable;
+import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Updatable;
 import qingzhou.app.system.Main;
+import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
@@ -188,7 +191,7 @@ public class User extends ModelBase implements Addable {
         for (qingzhou.config.User user : Main.getService(Config.class).getConsole().getUser()) {
             users.add(Utils.getPropertiesFromObj(user));
         }
-        return users;
+        return ModelUtil.listData(users, pageNum, pageSize, fieldNames);
     }
 
     @Override
@@ -197,7 +200,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = Constants.ACTION_ADD,
+            code = Addable.ACTION_ADD,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
@@ -212,7 +215,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = Constants.ACTION_DELETE, icon = "trash",
+            code = Deletable.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
             show = "name!=qingzhou",
@@ -224,7 +227,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = Constants.ACTION_UPDATE,
+            code = Updatable.ACTION_UPDATE,
             name = {"更新", "en:Update"},
             info = {"更新账户信息。",
                     "en:Update your account information."})

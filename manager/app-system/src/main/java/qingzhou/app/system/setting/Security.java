@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Model(code = "security", icon = "shield",
         menu = Main.SETTING_MENU, order = 5,
-        entrance = Constants.ACTION_EDIT,
+        entrance = Updatable.ACTION_EDIT,
         name = {"安全", "en:Security"},
         info = {"配置轻舟管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
 public class Security extends ModelBase implements Updatable {
