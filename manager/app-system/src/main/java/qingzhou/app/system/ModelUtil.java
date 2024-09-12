@@ -1,9 +1,6 @@
 package qingzhou.app.system;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ModelUtil {
     public static List<Map<String, String>> listData(List<Map<String, String>> allData,
@@ -22,20 +19,24 @@ public class ModelUtil {
         return data;
     }
 
-    public static List<Map<String, String>> listData(List<String> allIds, Supplier supplier,
+    public static List<Map<String, String>> listData(String[] allIds, Supplier supplier,
                                                      int pageNum, int pageSize, String[] fieldNames) {
-        int totalSize = allIds.size();
+        int totalSize = allIds.length;
         int startIndex = (pageNum - 1) * pageSize;
         int endIndex = Math.min(startIndex + pageSize, totalSize);
-        List<String> subList = allIds.subList(startIndex, endIndex);
+        String[] subList = Arrays.copyOfRange(allIds, startIndex, endIndex);
 
         List<Map<String, String>> data = new ArrayList<>();
-        subList.forEach(a -> data.add(new HashMap<String, String>() {{
-            Map<String, String> data = supplier.get(a);
+        for (String id : subList) {
+            Map<String, String> result = new HashMap<>();
+
+            Map<String, String> idData = supplier.get(id);
             for (String fieldName : fieldNames) {
-                put(fieldName, data.get(fieldName));
+                result.put(fieldName, idData.get(fieldName));
             }
-        }}));
+
+            data.add(result);
+        }
         return data;
     }
 

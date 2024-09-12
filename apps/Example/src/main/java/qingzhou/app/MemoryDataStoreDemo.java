@@ -2,48 +2,56 @@ package qingzhou.app;
 
 import java.util.*;
 
-public class MemoryDataStore implements DataStore {
-    private final LinkedHashMap<String, Map<String, String>> dataList = new LinkedHashMap<>();
+public class MemoryDataStoreDemo {
+    private final String idKey;
+    private final List<Map<String, String>> dataList = new ArrayList<>();
 
-    @Override
+    public MemoryDataStoreDemo(String idKey) {
+        this.idKey = idKey;
+    }
+
     public void addData(String id, Map<String, String> data) {
-        dataList.put(id, data);
+        dataList.add(data);
     }
 
-    @Override
     public void deleteData(String id) {
-        dataList.remove(id);
+        dataList.removeIf(data -> data.get(idKey).equals(id));
     }
 
-    @Override
     public Map<String, String> showData(String id) {
-        return dataList.get(id);
+        for (Map<String, String> data : dataList) {
+            if (data.get(idKey).equals(id)) {
+                return data;
+            }
+        }
+        return null;
     }
 
-    @Override
     public void updateData(String id, Map<String, String> data) {
-        dataList.get(id).putAll(data);
+        showData(id).putAll(data);
     }
 
-    @Override
+    public String[] allIds() {
+        return dataList.stream().map(data -> data.get(idKey)).toArray(String[]::new);
+    }
+
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
         int fromIndex = (pageNum - 1) * pageSize;
         int toIndex = Math.min(pageNum * pageSize - 1, dataList.size());
 
         List<Map<String, String>> result = new ArrayList<>();
-        new ArrayList<>(dataList.keySet()).subList(fromIndex, toIndex).forEach(s -> {
-            Map<String, String> item = dataList.get(s);
+        for (String id : Arrays.copyOfRange(allIds(), fromIndex, toIndex)) {
+            Map<String, String> item = showData(id);
             result.add(new HashMap<String, String>() {{
                 for (String fieldName : fieldNames) {
                     put(fieldName, item.get(fieldName));
                 }
             }});
 
-        });
+        }
         return result;
     }
 
-    @Override
     public int totalSize() {
         return dataList.size();
     }

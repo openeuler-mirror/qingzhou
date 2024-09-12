@@ -29,6 +29,21 @@ public class App extends ModelBase implements Listable {
         return "name";
     }
 
+    @Override
+    public String[] allIds() {
+        List<String> allAppNames = new ArrayList<>();
+
+        Main.getService(Deployer.class).getAllApp().forEach(a -> {
+            if (DeployerConstants.APP_SYSTEM.equals(a)) return;
+            allAppNames.add(a);
+        });
+
+        Registry registry = Main.getService(Registry.class);
+        allAppNames.addAll(registry.getAllAppNames());
+
+        return allAppNames.toArray(new String[0]);
+    }
+
     @ModelField(
             required = true,
             createable = false, editable = false,
@@ -107,26 +122,12 @@ public class App extends ModelBase implements Listable {
 
     @Override
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
-        return ModelUtil.listData(listAllAppNames(), this::showData, pageNum, pageSize, fieldNames);
+        return ModelUtil.listData(allIds(), this::showData, pageNum, pageSize, fieldNames);
     }
 
     @Override
     public int totalSize() {
-        return listAllAppNames().size();
-    }
-
-    private List<String> listAllAppNames() {
-        List<String> allAppNames = new ArrayList<>();
-
-        Main.getService(Deployer.class).getAllApp().forEach(a -> {
-            if (DeployerConstants.APP_SYSTEM.equals(a)) return;
-            allAppNames.add(a);
-        });
-
-        Registry registry = Main.getService(Registry.class);
-        allAppNames.addAll(registry.getAllAppNames());
-
-        return allAppNames;
+        return allIds().length;
     }
 
     @ModelAction(

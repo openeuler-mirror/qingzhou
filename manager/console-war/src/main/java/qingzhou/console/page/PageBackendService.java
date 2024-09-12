@@ -8,6 +8,7 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
 
@@ -29,7 +30,7 @@ public class PageBackendService {
     }
 
     private static ModelInfo getModelInfo(Request request) {
-        return SystemController.getModelInfo(SystemController.getAppName(request), request.getModel());
+        return ((RequestImpl) request).getCachedModelInfo();
     }
 
     private static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
@@ -161,7 +162,7 @@ public class PageBackendService {
         Map<String, String> result = new HashMap<>();
         for (ModelFieldInfo e : modelInfo.getModelFieldInfos()) {
             String condition = e.getShow().trim();
-            if (!"".equals(condition)) {
+            if (!condition.isEmpty()) {
                 result.put(e.getCode(), condition);
             }
         }
