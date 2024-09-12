@@ -44,7 +44,7 @@ public class FileView implements View {
             RequestImpl req = request.clone();
             req.setNonModelParameter(DeployerConstants.DOWNLOAD_KEY, key);
             req.setNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
-            Response res = SystemController.getService(ActionInvoker.class).invokeOnce(req); // 续传
+            Response res = SystemController.getService(ActionInvoker.class).invokeSingle(req); // 续传
             if (res.isSuccess()) {
                 result = res.getDataList().get(0);
                 offset = Long.parseLong(result.get(DeployerConstants.DOWNLOAD_OFFSET));

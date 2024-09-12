@@ -16,7 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
-@Model(code = "user", icon = "user",
+@Model(code = DeployerConstants.MODEL_USER, icon = "user",
         menu = Main.SETTING_MENU, order = 1,
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
@@ -27,6 +27,11 @@ public class User extends ModelBase implements Addable {
     @Override
     public String idFieldName() {
         return idKey;
+    }
+
+    @Override
+    public String[] allIds() {
+        return Arrays.stream(Main.getService(Config.class).getConsole().getUser()).map(qingzhou.config.User::getName).toArray(String[]::new);
     }
 
     @Override

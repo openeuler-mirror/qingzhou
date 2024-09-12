@@ -461,6 +461,11 @@ class DeployerImpl implements Deployer {
             defaultActions.addAll(foundActions);
         }
 
+        Class<?> superClass = checkClass.getSuperclass();
+        if (superClass != null) {
+            findSuperDefaultActions(superClass, defaultActions);
+        }
+
         for (Class<?> c : checkClass.getInterfaces()) {
             findSuperDefaultActions(c, defaultActions);
         }

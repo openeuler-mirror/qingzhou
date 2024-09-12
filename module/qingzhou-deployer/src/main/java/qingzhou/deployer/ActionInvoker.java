@@ -8,7 +8,7 @@ import java.util.List;
 public interface ActionInvoker {
     List<Response> invokeOnInstances(Request request, String[] instances);
 
-    Response invokeOnce(Request request);
+    Response invokeSingle(Request request);
 
-    List<Response> invokeAuto(Request request);
+    List<Response> invokeAll(Request request);
 }

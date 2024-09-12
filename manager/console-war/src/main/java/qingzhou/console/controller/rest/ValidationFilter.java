@@ -11,8 +11,6 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
@@ -25,11 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
-        I18n.addKeyI18n("validation_action", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});
+        I18n.addKeyI18n("validation_id", new String[]{"已存在", "en:Already exists"});
         I18n.addKeyI18n("validation_required", new String[]{"内容不能为空白", "en:The content cannot be blank"});
         I18n.addKeyI18n("validation_number", new String[]{"须是数字类型", "en:Must be a numeric type"});
         I18n.addKeyI18n("validation_min", new String[]{"数字不能小于%s", "en:The number cannot be less than %s"});
@@ -54,13 +51,7 @@ public class ValidationFilter implements Filter<RestContext> {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
 
-        Response response = request.getResponse();
-        AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
-        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
-        separateParameters(request, modelInfo);
-        if (Utils.notBlank(request.getId())) {
-            request.setParameter(modelInfo.getIdFieldName(), request.getId());
-        }
+        ModelInfo modelInfo = request.getCachedModelInfo();
 
         boolean isAddAction = Addable.ACTION_ADD.equals(request.getAction());
         boolean isUpdateAction = Updatable.ACTION_UPDATE.equals(request.getAction());
@@ -68,7 +59,7 @@ public class ValidationFilter implements Filter<RestContext> {
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                 String parameterVal = request.getParameter(field);
-                ValidationContext vc = new ValidationContext(request, fieldInfo, parameterVal, isAddAction, isUpdateAction);
+                ValidationContext vc = new ValidationContext(request, modelInfo, fieldInfo, parameterVal, isAddAction, isUpdateAction);
                 String[] error = validate(vc);
                 if (error != null) {
                     Object[] params = null;
@@ -81,6 +72,7 @@ public class ValidationFilter implements Filter<RestContext> {
             }
         }
 
+        Response response = request.getResponse();
         if (!errorMsg.isEmpty()) {
             response.setSuccess(false);
             response.addData(errorMsg);
@@ -89,15 +81,8 @@ public class ValidationFilter implements Filter<RestContext> {
         return response.isSuccess();
     }
 
-    private void separateParameters(RequestImpl request, ModelInfo modelInfo) {
-        List<String> toRemove = request.getParameters().keySet().stream().filter(param -> Arrays.stream(modelInfo.getFormFieldNames()).noneMatch(s -> s.equals(param))).collect(Collectors.toList());
-        toRemove.forEach(p -> {
-            String v = request.removeParameter(p);
-            request.setNonModelParameter(p, v);
-        });
-    }
-
     Validator[] validators = {
+            new id(),
             new min(), new max(),
             new lengthMin(), new lengthMax(),
             new host(),
@@ -150,16 +135,39 @@ public class ValidationFilter implements Filter<RestContext> {
     static class ValidationContext {
         final RequestImpl request;
         final ModelFieldInfo fieldInfo;
+        final ModelInfo modelInfo;
         final String parameterVal;
         final boolean isAddAction;
         final boolean isUpdateAction;
 
-        ValidationContext(RequestImpl request, ModelFieldInfo fieldInfo, String parameterVal, boolean isAddAction, boolean isUpdateAction) {
+        ValidationContext(RequestImpl request, ModelInfo modelInfo, ModelFieldInfo fieldInfo, String parameterVal, boolean isAddAction, boolean isUpdateAction) {
             this.request = request;
+            this.modelInfo = modelInfo;
             this.fieldInfo = fieldInfo;
             this.parameterVal = parameterVal;
             this.isAddAction = isAddAction;
             this.isUpdateAction = isUpdateAction;
+        }
+    }
+
+    static class id implements Validator {
+
+        @Override
+        public String[] validate(ValidationContext context) {
+            if (context.isAddAction) {
+                if (context.fieldInfo.getCode().equals(context.modelInfo.getIdFieldName())) {
+                    List<String> allIds = SystemController.getAllIds(context.request.getApp(), context.request.getModel());
+                    if (allIds.contains(context.parameterVal)) {
+                        return new String[]{"validation_id"};
+                    }
+                }
+            }
+
+            if (context.parameterVal.contains(DeployerConstants.BATCH_ID_SEPARATOR)) {
+                return new String[]{"validation_unsupportedCharacters", DeployerConstants.BATCH_ID_SEPARATOR};
+            }
+
+            return null;
         }
     }
 

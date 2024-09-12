@@ -101,21 +101,25 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return null;
     }
 
+    public static List<String> getAllIds(String app, String model) {
+        List<String> idList = new ArrayList<>();
+        RequestImpl req = new RequestImpl();
+        req.setAppName(app);
+        req.setModelName(model);
+        req.setActionName(Listable.ACTION_ALL);
+        Response res = getService(ActionInvoker.class).invokeSingle(req); // 续传
+        if (res.isSuccess()) {
+            for (Map<String, String> map : res.getDataList()) {
+                idList.add(map.entrySet().iterator().next().getKey());
+            }
+        }
+        return idList;
+    }
+
     public static String[] getOptions(String app, ModelFieldInfo fieldInfo) {
         String refModel = fieldInfo.getRefModel();
         if (Utils.notBlank(refModel)) {
-            List<String> idList = new ArrayList<>();
-            RequestImpl req = new RequestImpl();
-            req.setAppName(app);
-            req.setModelName(refModel);
-            req.setActionName(Listable.ACTION_LIST_ALL);
-            Response res = getService(ActionInvoker.class).invokeOnce(req); // 续传
-            if (res.isSuccess()) {
-                for (Map<String, String> map : res.getDataList()) {
-                    idList.add(map.entrySet().iterator().next().getKey());
-                }
-            }
-            return idList.toArray(new String[0]);
+            return getAllIds(app, refModel).toArray(new String[0]);
         } else {
             return fieldInfo.getOptions();
         }

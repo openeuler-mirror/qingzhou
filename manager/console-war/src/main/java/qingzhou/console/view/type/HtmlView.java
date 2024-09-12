@@ -31,7 +31,7 @@ public class HtmlView implements View {
             request.setAppName(request.getId());
             request.setModelName(DeployerConstants.MODEL_HOME);
             request.setActionName(Showable.ACTION_SHOW);
-            Response response = SystemController.getService(ActionInvoker.class).invokeOnce(request);
+            Response response = SystemController.getService(ActionInvoker.class).invokeSingle(request);
             request.setResponse(response);
         }
         req.setAttribute(Request.class.getName(), request);
@@ -52,8 +52,8 @@ public class HtmlView implements View {
         return "text/html;charset=UTF-8";
     }
 
-    private String getPageForward(Request request) {
-        ModelActionInfo actionInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel()).getModelActionInfo(request.getAction());
+    private String getPageForward(RequestImpl request) {
+        ModelActionInfo actionInfo = request.getCachedModelInfo().getModelActionInfo(request.getAction());
         if (Utils.notBlank(actionInfo.getPage())) {
             return actionInfo.getPage();
         }

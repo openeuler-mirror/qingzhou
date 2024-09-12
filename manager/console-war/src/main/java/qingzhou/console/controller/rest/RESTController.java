@@ -20,11 +20,7 @@ import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
+import javax.servlet.http.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -34,11 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
@@ -111,7 +103,7 @@ public class RESTController extends HttpServlet {
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
-                List<Response> responseList = SystemController.getService(ActionInvoker.class).invokeAuto(restContext.request);
+                List<Response> responseList = SystemController.getService(ActionInvoker.class).invokeAll(restContext.request);
                 for (Response response : responseList) {
                     if (!response.isSuccess()) return false;
                 }
@@ -257,6 +249,8 @@ public class RESTController extends HttpServlet {
             }
             request.getParametersInSession().putAll(paramsInSession);
         }
+
+        request.setCachedModelInfo(modelInfo);
 
         return request;
     }

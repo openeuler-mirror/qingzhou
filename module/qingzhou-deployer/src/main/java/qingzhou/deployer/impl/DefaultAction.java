@@ -3,13 +3,7 @@ package qingzhou.deployer.impl;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
-import qingzhou.api.type.Addable;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Downloadable;
-import qingzhou.api.type.Listable;
-import qingzhou.api.type.Monitorable;
-import qingzhou.api.type.Showable;
-import qingzhou.api.type.Updatable;
+import qingzhou.api.type.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.ResponseImpl;
@@ -22,12 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 class DefaultAction {
     static final List<ModelActionInfo> allDefaultActionCache;
@@ -59,7 +48,16 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Listable.ACTION_LIST_ALL, icon = "list",
+            code = Listable.ACTION_CONTAINS, icon = "search",
+            name = {"查找", "en:Search"},
+            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
+    public void contains(Request request) {
+        Listable listable = (Listable) instance;
+        request.getResponse().setSuccess(listable.contains(request.getId()));
+    }
+
+    @ModelAction(
+            code = Listable.ACTION_ALL, icon = "list",
             name = {"列表所有", "en:List All"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void listAll(Request request) {

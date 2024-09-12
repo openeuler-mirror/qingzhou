@@ -70,7 +70,7 @@
                            href="<%=RESTController.encodeURL( response, (contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath) + DeployerConstants.REST_PREFIX + "/" + ViewManager.htmlView + "/" + DeployerConstants.APP_SYSTEM +"/" + DeployerConstants.MODEL_PASSWORD + "/" + Updatable.ACTION_EDIT)%>"
                            class="tooltips" data-tip='<%=currentUser%>' data-tip-arrow="bottom">
                             <span class="circle-bg">
-                                <i class="icon icon-<%=SystemController.getModelInfo(DeployerConstants.APP_SYSTEM, "user").getIcon()%>"></i>
+                                <i class="icon icon-<%=SystemController.getModelInfo(DeployerConstants.APP_SYSTEM, DeployerConstants.MODEL_USER).getIcon()%>"></i>
                             </span>
                         </a>
                     </li>

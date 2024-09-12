@@ -18,12 +18,11 @@
 
 <%
     String currentUser = LoginManager.getLoginUser(request);
-    Request qzRequest = (Request) request.getAttribute(Request.class.getName());
+    RequestImpl qzRequest = (RequestImpl) request.getAttribute(Request.class.getName());
     String qzApp = SystemController.getAppName(qzRequest);
     String qzModel = qzRequest.getModel();
     String qzAction = qzRequest.getAction();
-    AppInfo appInfo = SystemController.getAppInfo(qzApp);
-    ModelInfo modelInfo = SystemController.getModelInfo(qzApp, qzModel);
+    ModelInfo modelInfo = qzRequest.getCachedModelInfo();
     String id = qzRequest.getId();
     String encodedId = RESTController.encodeId(id);
     Response qzResponse = qzRequest.getResponse();

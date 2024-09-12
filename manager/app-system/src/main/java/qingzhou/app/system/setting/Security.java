@@ -1,6 +1,9 @@
 package qingzhou.app.system.setting;
 
-import qingzhou.api.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
 import qingzhou.api.type.Updatable;
 import qingzhou.app.system.Main;
 import qingzhou.config.Config;
@@ -9,7 +12,7 @@ import qingzhou.engine.util.Utils;
 import java.util.Map;
 
 @Model(code = "security", icon = "shield",
-        menu = Main.SETTING_MENU, order = 5,
+        menu = Main.SETTING_MENU, order = 3,
         entrance = Updatable.ACTION_EDIT,
         name = {"安全", "en:Security"},
         info = {"配置轻舟管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})

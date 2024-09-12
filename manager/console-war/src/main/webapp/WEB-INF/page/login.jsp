@@ -52,12 +52,13 @@
               action="<%=RESTController.encodeURL( response, contextPath + LoginManager.LOGIN_URI)%>"
               class="form-group" autocomplete="off">
             <div class="input-control has-icon-left">
-                <input value="<%=DeployerConstants.DEFAULT_USER_QINGZHOU%>" type="text" id="<%=LoginManager.LOGIN_USER%>"
+                <input value="<%=DeployerConstants.DEFAULT_USER_QINGZHOU%>" type="text"
+                       id="<%=LoginManager.LOGIN_USER%>"
                        name="<%=LoginManager.LOGIN_USER%>" required
                        class="form-control"
                        placeholder="<%=I18n.getKeyI18n( "page.login.user")%>" autofocus>
                 <label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;">
-                    <i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_SYSTEM).getModelInfo("user").getIcon()%> "></i>
+                    <i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_SYSTEM).getModelInfo(DeployerConstants.MODEL_USER).getIcon()%> "></i>
                 </label>
             </div>
             <div class="input-control has-icon-left">

@@ -10,6 +10,7 @@ public interface DeployerConstants {
     String MODEL_INDEX = "index";
     String MODEL_HOME = "home";
     String MODEL_APP = "app";
+    String MODEL_USER = "user";
     String MODEL_PASSWORD = "password";
 
     // 系统内部 action
@@ -36,4 +37,5 @@ public interface DeployerConstants {
     String REST_PREFIX = "/rest";
     String jsonView = "json";
     String CHECK_FINGERPRINT = "fingerprint";
+    String BATCH_ID_SEPARATOR = ",";
 }

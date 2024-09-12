@@ -96,14 +96,14 @@ class ActionInvokerImpl implements ActionInvoker {
     }
 
     @Override
-    public Response invokeOnce(Request request) {
+    public Response invokeSingle(Request request) {
         List<String> appInstances = getAppInstances(request.getApp());
         List<Response> responseList = invokeOnInstances(request, appInstances.get(0));
         return responseList.get(0);
     }
 
     @Override
-    public List<Response> invokeAuto(Request request) {
+    public List<Response> invokeAll(Request request) {
         List<String> appInstances = getAppInstances(request.getApp());
         return invokeOnInstances(request, appInstances.toArray(new String[0]));
     }

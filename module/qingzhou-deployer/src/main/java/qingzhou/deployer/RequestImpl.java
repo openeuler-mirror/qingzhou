@@ -3,12 +3,14 @@ package qingzhou.deployer;
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.registry.ModelInfo;
 
 import java.util.*;
 
 public class RequestImpl implements Request, Cloneable {
     private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
     private transient Response response = new ResponseImpl();
+    private transient ModelInfo cachedModelInfo = null;
 
     private String appName;
     private String modelName;
@@ -151,6 +153,14 @@ public class RequestImpl implements Request, Cloneable {
 
     public void setResponse(Response response) {
         this.response = response;
+    }
+
+    public ModelInfo getCachedModelInfo() {
+        return cachedModelInfo;
+    }
+
+    public void setCachedModelInfo(ModelInfo cachedModelInfo) {
+        this.cachedModelInfo = cachedModelInfo;
     }
 
     @Override
