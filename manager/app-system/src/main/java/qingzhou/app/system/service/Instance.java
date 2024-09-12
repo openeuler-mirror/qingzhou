@@ -7,6 +7,7 @@ import qingzhou.api.type.Downloadable;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Monitorable;
 import qingzhou.app.system.Main;
+import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Agent;
 import qingzhou.config.Config;
 import qingzhou.deployer.DeployerConstants;
@@ -100,13 +101,23 @@ public class Instance extends ModelBase implements Listable, Monitorable, Downlo
     }
 
     @Override
+    public String[] allIds() {
+        List<String> ids = new ArrayList<>();
+        ids.add(DeployerConstants.INSTANCE_LOCAL);
+        Registry registry = Main.getService(Registry.class);
+        registry.getAllInstanceNames().forEach(s -> {
+            InstanceInfo instanceInfo = registry.getInstanceInfo(s);
+            ids.add(instanceInfo.getName());
+        });
+        return ids.toArray(new String[0]);
+    }
+
+    @Override
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
         List<Map<String, String>> result = new ArrayList<>();
-
-        Registry registry = Main.getService(Registry.class);
-
         result.add(localInstance());
 
+        Registry registry = Main.getService(Registry.class);
         registry.getAllInstanceNames().forEach(s -> {
             InstanceInfo instanceInfo = registry.getInstanceInfo(s);
             result.add(new HashMap<String, String>() {{
@@ -115,7 +126,8 @@ public class Instance extends ModelBase implements Listable, Monitorable, Downlo
                 put("port", String.valueOf(instanceInfo.getPort()));
             }});
         });
-        return result;
+
+        return ModelUtil.listData(result, pageNum, pageSize, fieldNames);
     }
 
     @Override

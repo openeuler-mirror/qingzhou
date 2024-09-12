@@ -1,8 +1,8 @@
 package qingzhou.console.view.type;
 
-import qingzhou.api.Constants;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.api.type.*;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
@@ -30,7 +30,7 @@ public class HtmlView implements View {
         if (isManageAction) {
             request.setAppName(request.getId());
             request.setModelName(DeployerConstants.MODEL_HOME);
-            request.setActionName(Constants.ACTION_SHOW);
+            request.setActionName(Showable.ACTION_SHOW);
             Response response = SystemController.getService(ActionInvoker.class).invokeOnce(request);
             request.setResponse(response);
         }
@@ -59,14 +59,14 @@ public class HtmlView implements View {
         }
 
         switch (request.getAction()) {
-            case Constants.ACTION_LIST:
-            case Constants.ACTION_DELETE:
+            case Listable.ACTION_LIST:
+            case Deletable.ACTION_DELETE:
                 return "list";
-            case Constants.ACTION_CREATE:
-            case Constants.ACTION_EDIT:
+            case Addable.ACTION_CREATE:
+            case Updatable.ACTION_EDIT:
                 return "form";
-            case Constants.ACTION_SHOW:
-            case Constants.ACTION_MONITOR:
+            case Showable.ACTION_SHOW:
+            case Monitorable.ACTION_MONITOR:
                 return "show";
             case DeployerConstants.ACTION_INDEX:
                 return "sys/index";

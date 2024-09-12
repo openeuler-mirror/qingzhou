@@ -11,7 +11,6 @@ import qingzhou.deployer.RequestImpl;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,10 +42,8 @@ public class FileView implements View {
             if (offset < 0) break;
 
             RequestImpl req = request.clone();
-            Map<String, String> data = new HashMap<>();
-            data.put(DeployerConstants.DOWNLOAD_KEY, key);
-            data.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
-            req.setParameters(data);
+            req.setNonModelParameter(DeployerConstants.DOWNLOAD_KEY, key);
+            req.setNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             Response res = SystemController.getService(ActionInvoker.class).invokeOnce(req); // 续传
             if (res.isSuccess()) {
                 result = res.getDataList().get(0);

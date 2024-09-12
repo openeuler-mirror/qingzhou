@@ -1,6 +1,5 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.Constants;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
@@ -40,7 +39,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_SHOW, icon = "folder-open-alt",
+            code = Showable.ACTION_SHOW, icon = "folder-open-alt",
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request) throws Exception {
@@ -49,17 +48,35 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_LIST, icon = "list",
+            code = Listable.ACTION_LIST_ALL, icon = "list",
+            name = {"列表所有", "en:List All"},
+            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
+    public void listAll(Request request) {
+        Listable listable = (Listable) instance;
+        String[] ids = listable.allIds();
+        if (ids != null) {
+            for (String id : ids) {
+                request.getResponse().addData(new HashMap<String, String>() {{
+                    put(id, "");
+                }});
+            }
+        }
+    }
+
+    @ModelAction(
+            code = Listable.ACTION_LIST, icon = "list",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request) throws Exception {
         ResponseImpl responseImpl = (ResponseImpl) request.getResponse();
-        responseImpl.setTotalSize(((Listable) instance).totalSize());
-        responseImpl.setPageSize(10);
+
+        Listable listable = (Listable) instance;
+        responseImpl.setTotalSize(listable.totalSize());
+        responseImpl.setPageSize(listable.pageSize());
 
         int pageNum = 1;
         try {
-            pageNum = Integer.parseInt(request.getParameter("pageNum"));
+            pageNum = Integer.parseInt(request.getNonModelParameter("pageNum"));
         } catch (NumberFormatException ignored) {
         }
         responseImpl.setPageNum(pageNum);
@@ -72,7 +89,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_CREATE, icon = "plus-sign",
+            code = Addable.ACTION_CREATE, icon = "plus-sign",
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) throws Exception {
@@ -81,7 +98,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_ADD, icon = "save",
+            code = Addable.ACTION_ADD, icon = "save",
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
@@ -92,7 +109,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_EDIT, icon = "edit",
+            code = Updatable.ACTION_EDIT, icon = "edit",
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
@@ -100,7 +117,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_UPDATE, icon = "save",
+            code = Updatable.ACTION_UPDATE, icon = "save",
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
@@ -111,7 +128,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_DELETE, icon = "trash",
+            code = Deletable.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
             name = {"删除", "en:Delete"},
@@ -133,7 +150,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_MONITOR, icon = "line-chart", order = 2,
+            code = Monitorable.ACTION_MONITOR, icon = "line-chart", order = 2,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -169,7 +186,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_FILES, icon = "download-alt",
+            code = Downloadable.ACTION_FILES, icon = "download-alt",
             order = 8,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
@@ -202,7 +219,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Constants.ACTION_DOWNLOAD, icon = "download-alt",
+            code = Downloadable.ACTION_DOWNLOAD, icon = "download-alt",
             name = {"下载文件", "en:Download File"},
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files."})
@@ -211,7 +228,7 @@ class DefaultAction {
 
         String downloadKey = request.getParameter(DeployerConstants.DOWNLOAD_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
-            String downloadFileNames = request.getParameter("downloadFileNames");
+            String downloadFileNames = request.getNonModelParameter("downloadFileNames");
 
             // check
             if (downloadFileNames == null || downloadFileNames.trim().isEmpty()) {

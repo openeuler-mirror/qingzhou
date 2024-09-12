@@ -15,7 +15,7 @@ class ConsoleJmx implements ConsoleJmxMBean {
     }
 
     @Override
-    public String invoke(String appName, String modelName, String actionName, String args) throws Exception {
+    public String invoke(String appName, String modelName, String actionName, String args) {
         Properties props = new Properties();
         if (Utils.notBlank(args)) {
             String[] split = args.split("&");

@@ -1,7 +1,9 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Addable;
+import qingzhou.api.type.Listable;
+import qingzhou.api.type.Updatable;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
@@ -313,7 +315,9 @@ class DeployerImpl implements Deployer {
                     options.add(option);
                 }
             }
-            modelFieldInfo.setOptions(options.toArray(new String[0]));
+            if (!options.isEmpty()) {
+                modelFieldInfo.setOptions(options.toArray(new String[0]));
+            }
             modelFieldInfo.setRefModelClass(modelField.refModel());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setList(modelField.list());
@@ -452,28 +456,32 @@ class DeployerImpl implements Deployer {
     }
 
     static void findSuperDefaultActions(Class<?> checkClass, Set<String> defaultActions) {
-        if (checkClass == Addable.class) {
-            defaultActions.add(Constants.ACTION_CREATE);
-            defaultActions.add(Constants.ACTION_ADD);
-        } else if (checkClass == Deletable.class) {
-            defaultActions.add(Constants.ACTION_DELETE);
-        } else if (checkClass == Downloadable.class) {
-            defaultActions.add(Constants.ACTION_FILES);
-            defaultActions.add(Constants.ACTION_DOWNLOAD);
-        } else if (checkClass == Listable.class) {
-            defaultActions.add(Constants.ACTION_LIST);
-        } else if (checkClass == Monitorable.class) {
-            defaultActions.add(Constants.ACTION_MONITOR);
-        } else if (checkClass == Showable.class) {
-            defaultActions.add(Constants.ACTION_SHOW);
-        } else if (checkClass == Updatable.class) {
-            defaultActions.add(Constants.ACTION_EDIT);
-            defaultActions.add(Constants.ACTION_UPDATE);
+        Set<String> foundActions = findDefaultActions(checkClass);
+        if (foundActions != null) {
+            defaultActions.addAll(foundActions);
         }
 
         for (Class<?> c : checkClass.getInterfaces()) {
             findSuperDefaultActions(c, defaultActions);
         }
+    }
+
+    private static Set<String> findDefaultActions(Class<?> checkClass) {
+        if (!checkClass.isInterface()) return null;
+        if (checkClass.getPackage() != (Addable.class.getPackage())) return null;
+        if (!checkClass.getSimpleName().endsWith("able")) return null;
+
+        Set<String> defaultActions = new HashSet<>();
+        for (Field field : checkClass.getDeclaredFields()) {
+            if (field.getName().startsWith("ACTION_")) {
+                try {
+                    defaultActions.add((String) field.get(null));
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return defaultActions;
     }
 
     void setLoaderPolicy(LoaderPolicy loaderPolicy) {

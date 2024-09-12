@@ -5,6 +5,8 @@ import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.Request;
+import qingzhou.api.Response;
+import qingzhou.api.type.Listable;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.config.Security;
@@ -17,15 +19,14 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.JmxServiceAdapter;
+import qingzhou.deployer.*;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 import qingzhou.registry.Registry;
 
@@ -34,6 +35,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
@@ -95,6 +99,26 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         AppInfo appInfo = getAppInfo(appName);
         if (appInfo != null) return appInfo.getModelInfo(model);
         return null;
+    }
+
+    public static String[] getOptions(String app, ModelFieldInfo fieldInfo) {
+        String refModel = fieldInfo.getRefModel();
+        if (Utils.notBlank(refModel)) {
+            List<String> idList = new ArrayList<>();
+            RequestImpl req = new RequestImpl();
+            req.setAppName(app);
+            req.setModelName(refModel);
+            req.setActionName(Listable.ACTION_LIST_ALL);
+            Response res = getService(ActionInvoker.class).invokeOnce(req); // 续传
+            if (res.isSuccess()) {
+                for (Map<String, String> map : res.getDataList()) {
+                    idList.add(map.entrySet().iterator().next().getKey());
+                }
+            }
+            return idList.toArray(new String[0]);
+        } else {
+            return fieldInfo.getOptions();
+        }
     }
 
     public static <T> T getService(Class<T> type) {

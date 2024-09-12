@@ -1,8 +1,9 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.Constants;
 import qingzhou.api.FieldType;
 import qingzhou.api.Response;
+import qingzhou.api.type.Addable;
+import qingzhou.api.type.Updatable;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -53,31 +54,30 @@ public class ValidationFilter implements Filter<RestContext> {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
 
-        Response response = context.request.getResponse();
+        Response response = request.getResponse();
         AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
         ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
-        clipParameter(request, modelInfo);
-        Map<String, String> paramMap = request.getParameters();
+        separateParameters(request, modelInfo);
         if (Utils.notBlank(request.getId())) {
-            paramMap.put(modelInfo.getIdFieldName(), request.getId());
+            request.setParameter(modelInfo.getIdFieldName(), request.getId());
         }
 
         // 拦截禁止删除等操作（如禁止通过 rest 接口删除 qingzhou  默认账户）
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
-        if (!SecurityController.isShow(actionInfo.getShow(), paramMap::get)) {
+        if (!SecurityController.isShow(actionInfo.getShow(), request::getParameter)) {
             String i18n = I18n.getKeyI18n("validation_action", actionInfo.getCode(), actionInfo.getShow());
             response.setSuccess(false);
             response.setMsg(i18n);
             return false;
         }
 
-        boolean isAddAction = Constants.ACTION_ADD.equals(request.getAction());
-        boolean isUpdateAction = Constants.ACTION_UPDATE.equals(request.getAction());
+        boolean isAddAction = Addable.ACTION_ADD.equals(request.getAction());
+        boolean isUpdateAction = Updatable.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                 String parameterVal = request.getParameter(field);
-                ValidationContext vc = new ValidationContext(paramMap, modelInfo, fieldInfo, parameterVal, isAddAction, isUpdateAction);
+                ValidationContext vc = new ValidationContext(request, fieldInfo, parameterVal, isAddAction, isUpdateAction);
                 String[] error = validate(vc);
                 if (error != null) {
                     Object[] params = null;
@@ -98,9 +98,12 @@ public class ValidationFilter implements Filter<RestContext> {
         return response.isSuccess();
     }
 
-    private void clipParameter(RequestImpl request, ModelInfo modelInfo) {
+    private void separateParameters(RequestImpl request, ModelInfo modelInfo) {
         List<String> toRemove = request.getParameters().keySet().stream().filter(param -> Arrays.stream(modelInfo.getFormFieldNames()).noneMatch(s -> s.equals(param))).collect(Collectors.toList());
-        toRemove.forEach(request::removeParameter);
+        toRemove.forEach(p -> {
+            String v = request.removeParameter(p);
+            request.setNonModelParameter(p, v);
+        });
     }
 
     Validator[] validators = {
@@ -118,12 +121,11 @@ public class ValidationFilter implements Filter<RestContext> {
     };
 
     private String[] validate(ValidationContext context) {
-        Map<String, String> paramMap = context.params;
         ModelFieldInfo fieldInfo = context.fieldInfo;
 
-        boolean show = SecurityController.isShow(fieldInfo.getShow(), paramMap::get);
+        boolean show = SecurityController.isShow(fieldInfo.getShow(), context.request::getParameter);
         if (!show) { // 不再页面显示的属性，不需要校验，并删除之以免后续持久化了错误数据
-            paramMap.remove(fieldInfo.getCode());
+            context.request.removeParameter(fieldInfo.getCode());
             return null;
         }
 
@@ -155,16 +157,14 @@ public class ValidationFilter implements Filter<RestContext> {
     }
 
     static class ValidationContext {
-        final ModelInfo modelInfo;
+        final RequestImpl request;
         final ModelFieldInfo fieldInfo;
         final String parameterVal;
         final boolean isAddAction;
         final boolean isUpdateAction;
-        final Map<String, String> params;
 
-        ValidationContext(Map<String, String> params, ModelInfo modelInfo, ModelFieldInfo fieldInfo, String parameterVal, boolean isAddAction, boolean isUpdateAction) {
-            this.modelInfo = modelInfo;
-            this.params = params;
+        ValidationContext(RequestImpl request, ModelFieldInfo fieldInfo, String parameterVal, boolean isAddAction, boolean isUpdateAction) {
+            this.request = request;
             this.fieldInfo = fieldInfo;
             this.parameterVal = parameterVal;
             this.isAddAction = isAddAction;
@@ -325,7 +325,7 @@ public class ValidationFilter implements Filter<RestContext> {
 
             if (!context.isUpdateAction) return null;
 
-            context.params.remove(fieldInfo.getCode());
+            context.request.removeParameter(fieldInfo.getCode());
             return null;
         }
     }
@@ -425,7 +425,7 @@ public class ValidationFilter implements Filter<RestContext> {
     static class options implements Validator {
         @Override
         public String[] validate(ValidationContext context) {
-            String[] options = context.fieldInfo.getOptions();
+            String[] options = SystemController.getOptions(context.request.getApp(), context.fieldInfo);
             if (options == null || options.length == 0) return null;
             boolean match = Arrays.stream(options).anyMatch(s -> s.equals(context.parameterVal));
             return match ? null : new String[]{"validation_options", Arrays.toString(options)};

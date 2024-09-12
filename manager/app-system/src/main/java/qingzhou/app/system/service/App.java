@@ -1,8 +1,11 @@
 package qingzhou.app.system.service;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Addable;
+import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
 import qingzhou.app.system.Main;
+import qingzhou.app.system.ModelUtil;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -64,7 +67,6 @@ public class App extends ModelBase implements Listable {
     @ModelField(
             type = FieldType.checkbox,
             required = true,
-            options = {DeployerConstants.INSTANCE_LOCAL},
             refModel = Instance.class,
             list = true,
             name = {"部署实例", "en:Instance"},
@@ -105,14 +107,7 @@ public class App extends ModelBase implements Listable {
 
     @Override
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
-        List<String> allAppNames = listAllAppNames();
-        int totalSize = allAppNames.size();
-        int startIndex = (pageNum - 1) * pageSize;
-        int endIndex = Math.min(startIndex + pageSize, totalSize);
-        List<String> subList = allAppNames.subList(startIndex, endIndex);
-        List<Map<String, String>> data = new ArrayList<>();
-        subList.forEach(a -> data.add(showData(a)));
-        return data;
+        return ModelUtil.listData(listAllAppNames(), this::showData, pageNum, pageSize, fieldNames);
     }
 
     @Override
@@ -143,7 +138,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = Constants.ACTION_CREATE, icon = "plus-sign",
+            code = Addable.ACTION_CREATE, icon = "plus-sign",
             name = {"部署", "en:Deploy"},
             info = {"部署应用包到指定的轻舟实例上。",
                     "en:Deploy the application package to the specified Qingzhou instance."})
@@ -152,7 +147,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = Constants.ACTION_ADD, icon = "save",
+            code = Addable.ACTION_ADD, icon = "save",
             name = {"部署", "en:Deploy"},
             info = {"部署应用包到指定的轻舟实例上。",
                     "en:Deploy the application package to the specified Qingzhou instance."})
@@ -171,7 +166,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = Constants.ACTION_DELETE, icon = "trash",
+            code = Deletable.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
             name = {"删除", "en:Delete"},

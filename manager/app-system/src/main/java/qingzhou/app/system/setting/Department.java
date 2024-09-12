@@ -5,6 +5,7 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Addable;
 import qingzhou.app.system.Main;
+import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.engine.util.Utils;
@@ -77,7 +78,7 @@ public class Department extends ModelBase implements Addable {
             Map<String, String> departmentMap = Utils.getPropertiesFromObj(department);
             departments.add(departmentMap);
         }
-        return departments;
+        return ModelUtil.listData(departments, pageNum, pageSize, fieldNames);
     }
 
     @Override
