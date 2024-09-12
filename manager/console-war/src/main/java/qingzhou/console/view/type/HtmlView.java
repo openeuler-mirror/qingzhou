@@ -66,8 +66,9 @@ public class HtmlView implements View {
             case Updatable.ACTION_EDIT:
                 return "form";
             case Showable.ACTION_SHOW:
-            case Monitorable.ACTION_MONITOR:
                 return "show";
+            case Monitorable.ACTION_MONITOR:
+                return "monitor";
             case DeployerConstants.ACTION_INDEX:
                 return "sys/index";
             case DeployerConstants.ACTION_MANAGE:
