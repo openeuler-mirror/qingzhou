@@ -1,5 +1,6 @@
 package qingzhou.console.view.type;
 
+import qingzhou.api.MsgType;
 import qingzhou.api.Response;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
@@ -28,7 +29,7 @@ public class JsonView implements View {
 
     public static String responseErrorJson(HttpServletResponse response, String msg) throws IOException {
         StringBuilder json = new StringBuilder("{");
-        addStatus(json, false, msg);
+        addStatus(json, false, msg, MsgType.danger.name());
         json.append("}");
 
         response.setContentType(CONTENT_TYPE);
@@ -40,7 +41,7 @@ public class JsonView implements View {
     private static String convertToJson(Response response) {
         StringBuilder json = new StringBuilder("{");
 
-        addStatus(json, response.isSuccess(), response.getMsg());
+        addStatus(json, response.isSuccess(), response.getMsg(), response.getMsgType().name());
         json.append(",");
         addData(json, response);
 
@@ -48,8 +49,10 @@ public class JsonView implements View {
         return json.toString();
     }
 
-    private static void addStatus(StringBuilder json, boolean success, String message) {
+    private static void addStatus(StringBuilder json, boolean success, String message, String message_type) {
         addKV(json, "success", String.valueOf(success));
+        json.append(",");
+        addKV(json, "message_type", message_type);
         json.append(",");
         addKV(json, "message", message);
     }
