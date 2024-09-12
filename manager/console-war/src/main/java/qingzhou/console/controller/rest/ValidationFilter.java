@@ -62,15 +62,6 @@ public class ValidationFilter implements Filter<RestContext> {
             request.setParameter(modelInfo.getIdFieldName(), request.getId());
         }
 
-        // 拦截禁止删除等操作（如禁止通过 rest 接口删除 qingzhou  默认账户）
-        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
-        if (!SecurityController.isShow(actionInfo.getShow(), request::getParameter)) {
-            String i18n = I18n.getKeyI18n("validation_action", actionInfo.getCode(), actionInfo.getShow());
-            response.setSuccess(false);
-            response.setMsg(i18n);
-            return false;
-        }
-
         boolean isAddAction = Addable.ACTION_ADD.equals(request.getAction());
         boolean isUpdateAction = Updatable.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {

@@ -20,7 +20,11 @@ import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -30,7 +34,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
@@ -97,6 +105,7 @@ public class RESTController extends HttpServlet {
     private final Filter<RestContext>[] filters = new Filter[]{
             new ResetPassword(),
             new ParameterFilter(), // 解密前端的 password 类型的表单域
+            new ActionFilter(),
             new ValidationFilter(), // 参数校验
 
             // 执行具体的业务逻辑
