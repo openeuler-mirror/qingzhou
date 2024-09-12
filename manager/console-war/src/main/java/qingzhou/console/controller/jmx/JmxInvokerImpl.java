@@ -30,10 +30,6 @@ public class JmxInvokerImpl implements JmxServiceAdapter.JmxInvoker {
             return JmxInvokerImpl.class.getSimpleName() + " error: " + e.getMessage();
         } finally {
             I18n.resetI18nLang();
-
-            if (session != null) {
-                session.invalidate();
-            }
         }
     }
 }
