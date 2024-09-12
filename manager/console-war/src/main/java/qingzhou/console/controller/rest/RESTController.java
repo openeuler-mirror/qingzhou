@@ -236,7 +236,7 @@ public class RESTController extends HttpServlet {
             data.putAll(fileAttachments);
         }
 
-        request.setParameters(data);
+        data.forEach(request::setParameter);
 
         HttpSession session = req.getSession(false);
         if (session != null) {

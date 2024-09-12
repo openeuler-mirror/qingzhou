@@ -100,7 +100,10 @@ public class ValidationFilter implements Filter<RestContext> {
 
     private void separateParameters(RequestImpl request, ModelInfo modelInfo) {
         List<String> toRemove = request.getParameters().keySet().stream().filter(param -> Arrays.stream(modelInfo.getFormFieldNames()).noneMatch(s -> s.equals(param))).collect(Collectors.toList());
-        toRemove.forEach(request::removeParameter);
+        toRemove.forEach(p -> {
+            String v = request.removeParameter(p);
+            request.setNonModelParameter(p, v);
+        });
     }
 
     Validator[] validators = {

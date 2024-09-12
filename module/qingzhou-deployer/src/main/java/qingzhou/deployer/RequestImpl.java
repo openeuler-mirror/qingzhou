@@ -133,14 +133,12 @@ public class RequestImpl implements Request, Cloneable {
         return parameters.remove(parameterName);
     }
 
-    public void setParameter(String parameterName, String parameterValue) {
-        parameters.put(parameterName, parameterValue);
+    public void setNonModelParameter(String parameterName, String parameterValue) {
+        nonModelParameters.put(parameterName, parameterValue);
     }
 
-    public void setParameters(Map<String, String> parameters) {
-        if (parameters == null) return;
-
-        RequestImpl.this.parameters.putAll(parameters);
+    public void setParameter(String parameterName, String parameterValue) {
+        parameters.put(parameterName, parameterValue);
     }
 
     public Map<String, String> getParametersInSession() {
