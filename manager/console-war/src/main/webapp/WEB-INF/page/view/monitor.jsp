@@ -12,15 +12,16 @@
 
     <div class="infoPage" chartMonitor="<%=isMonitor && chartEnabled%>" data-url="<%=url%>">
         <%
-            if (isMonitor && chartEnabled) {
+        if (isMonitor && chartEnabled) {
         %>
+        <input type="hidden" name="monitorName" value="<%= encodedId %>">
         <div class="panel" style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
             <div class="panel-body" style="word-break: break-all">
                 <div class="block-bg" container="chart" style="height: 600px;width: 100%;"></div>
             </div>
         </div>
         <%
-            }
+        }
         %>
 
         <%
@@ -94,7 +95,8 @@
             for (Map.Entry<String, String> e : dataList.get(0).entrySet()) {
                 String key = e.getKey();
                 String i18n = I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + key);
-                keysBuilder.append("\"").append(key).append("\":\"").append(i18n).append("\",");
+                keysBuilder.append("\"").append(key).append("\":[\"").append(i18n).append("\",\"");
+                keysBuilder.append(I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + key)).append("\"],");
             }
             if (keysBuilder.indexOf(",") > 0) {
                 keysBuilder.deleteCharAt(keysBuilder.lastIndexOf(","));
