@@ -3,7 +3,13 @@ package qingzhou.deployer.impl;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Addable;
+import qingzhou.api.type.Deletable;
+import qingzhou.api.type.Downloadable;
+import qingzhou.api.type.Listable;
+import qingzhou.api.type.Monitorable;
+import qingzhou.api.type.Showable;
+import qingzhou.api.type.Updatable;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.ResponseImpl;
@@ -16,7 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 class DefaultAction {
     static final List<ModelActionInfo> allDefaultActionCache;
@@ -154,7 +165,7 @@ class DefaultAction {
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
-    public void monitor(Request request) {
+    public void monitor(Request request) throws Exception {
         Map<String, String> p = ((Monitorable) instance).monitorData();
 
         if (p == null || p.isEmpty()) {
@@ -162,6 +173,16 @@ class DefaultAction {
         }
         Map<String, String> monitorData = new HashMap<>();
         Map<String, String> infoData = new HashMap<>();
+
+        Map<String, String> data = ((Showable) instance).showData(request.getId());
+        String[] infoFieldNames = getAppInfo().getModelInfo(request.getModel()).getFormFieldNames();
+        for (String fieldName : infoFieldNames) {
+            String value = data.get(fieldName);
+            if (value == null) continue;
+
+            infoData.put(fieldName, value);
+        }
+
         String[] monitorFieldNames = getAppInfo().getModelInfo(request.getModel()).getMonitorFieldNames();
         for (String fieldName : monitorFieldNames) {
             ModelFieldInfo monitorField = getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
@@ -170,16 +191,11 @@ class DefaultAction {
 
             if (monitorField.isNumeric()) {
                 monitorData.put(fieldName, value);
+            } else {
+                infoData.put(fieldName, value);
             }
         }
 
-        String[] infoFieldNames = getAppInfo().getModelInfo(request.getModel()).getFormFieldNames();
-        for (String infoFieldName : infoFieldNames) {
-            String value = p.get(infoFieldName);
-            if (value == null) continue;
-
-            infoData.put(infoFieldName, value);
-        }
 
         request.getResponse().addData(monitorData);
         request.getResponse().addData(infoData);

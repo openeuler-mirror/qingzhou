@@ -434,8 +434,6 @@ function setOrReset() {
     bindEventForFormPage();
     // info.jsp 页面加载
     initInfoPage();
-    // monit.jsp 页面加载
-    initMonitPage();
     // grid.jsp 页面初始化
     if (document.querySelectorAll(".apps").length > 0) {
         var apps = document.querySelectorAll(".apps");
@@ -1276,92 +1274,6 @@ function initInfoPage() {
         })(myChart, chartOption, $(thisDiv).attr("data-url"), infoKeys, thisDiv, randId + i);
     });
 };
-/**************************************** monit.jsp - start *************************************************/
-function initMonitPage() {
-    var randId = new Date().getTime();
-    $(".bodyDiv>div.monitorPage[chartMonitor='true'][loaded!='true']").each(function (i) {
-        $(this).attr("loaded", "true");
-        var thisDiv = $(this);
-        var myChart = echarts.init($("div.block-bg[container='chart']", this)[0]);
-        var setTimeoutId;
-        $("div.btn-group>button", thisDiv).each(function () {
-            $(this).bind("click", function () {
-                $(this).siblings("button").removeClass("active");
-                $(this).addClass("active");
-                var id = $(this).prop("id");
-                if (id === "monitor-real-time") {
-                    requestMonitorData(myChart, defaultOption(), $(thisDiv).attr("data-url"), thisDiv, randId + i, function (fn) {
-                        setTimeoutId = window.setTimeout(fn, 2000);
-                    });
-                } else {
-                    var url = $(thisDiv).attr("data-url");
-                    var startTime;
-                    var endTime;
-                    if (id === "monitor-30-min") {
-                        startTime = formatDate(new Date(new Date().getTime() - 30 * 60000));
-                        endTime = formatDate(new Date());
-                    } else if (id === "monitor-2-hour") {
-                        startTime = formatDate(new Date(new Date().getTime() - 2 * 60 * 60000));
-                        endTime = formatDate(new Date());
-                    } else if (id === "monitor-customize") {
-                        startTime = $(this).siblings("div").find("input#monitor-startTime").val();
-                        endTime = $(this).siblings("div").find("input#monitor-endTime").val();
-                    }
-                    url = url + "&startTime=" + encodeURIComponent(startTime) + "&endTime=" + encodeURIComponent(endTime);
-                    requestMonitorData(myChart, defaultOption(), url, thisDiv, randId + i, function (fn) {
-                        clearTimeout(setTimeoutId);
-                    });
-                }
-            });
-        });
-        $("div.btn-group>div>input", thisDiv).each(function () {
-            $(this).bind("change", function () {
-                $("button#monitor-customize").removeClass("active");
-            });
-        });
-
-        requestMonitorData(myChart, defaultOption(), $(thisDiv).attr("data-url"), thisDiv, randId + i, function (fn) {
-            setTimeoutId = window.setTimeout(fn, 2000);
-        });
-    });
-};
-
-function formatDate(date) {
-    var year = date.getFullYear();
-    var month = ('0' + (date.getMonth() + 1)).slice(-2);
-    var day = ('0' + date.getDate()).slice(-2);
-    var hours = ('0' + date.getHours()).slice(-2);
-    var minutes = ('0' + date.getMinutes()).slice(-2);
-    var seconds = ('0' + date.getSeconds()).slice(-2);
-
-    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
-}
-
-function requestMonitorData(chartObj, option, url, restrictedArea, tempId, callback) {
-    $(restrictedArea).append("<span id=\"monitor-timer-" + tempId + "\" style=\"display:none;\"></span>");
-    var retryOption = {retryLimit: 10};
-    window.setTimeout(function fn(retryRemain) {
-        if (retryRemain === undefined) {
-            retryRemain = retryOption.retryLimit;
-        }
-        if (retryRemain > 0 && retryRemain <= retryOption.retryLimit && $("span#monitor-timer-" + tempId).length > 0) {
-            retryOption["retryRemain"] = retryRemain;
-            var bodyWidth = $(document.body).width();
-            if (bodyWidth <= 1200) {
-                option.legend.textStyle.fontSize = 11;
-                option.grid.top = "15%";
-            } else if (bodyWidth < 1600 && bodyWidth > 1200) {
-                option.legend.textStyle.fontSize = 12;
-                option.grid.top = "12%";
-            } else {
-                option.legend.textStyle.fontSize = 13;
-                option.grid.top = "10%";
-            }
-            monitorHandler(chartObj, option, url, restrictedArea, retryOption, fn, callback);
-        }
-    }, 10);
-}
-
 
 // 获取当前时间的分钟秒
 function getTime() {
@@ -1371,6 +1283,7 @@ function getTime() {
     var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
     return hours + ":" + minutes + ":" + seconds;
 };
+
 function defaultOption() {
     return {
         width: 'auto',
@@ -1424,39 +1337,11 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
                 if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
                     var models = [{
                         dataTime: getTime(),
-                        data: monitorData
+                        data: monitorData,
+                        models: data.data[1]
                     }];
                     addData(chartObj, chartOption, models, keys, restrictedArea);
                 }
-            } else {
-                showError(data.message);
-            }
-        },
-        error: function (e) {
-            handleError(e);
-        }
-    });
-};
-
-function monitorHandler(chartObj, chartOption, url, restrictedArea, retryOption, timerFn, callback) {
-    $.ajax({
-        type: "GET",
-        url: url,
-        dataType: 'json',
-        complete: function (xhr, status) {
-            if (status === "success") {
-                retryOption.retryRemain = retryOption.retryLimit;
-            } else {
-                retryOption.retryRemain--;
-            }
-            callback(function () {
-                timerFn(retryOption.retryRemain);
-            });
-        },
-        success: function (data) {
-            if (data.success === "true" || data.success === true) {
-                var monitorData = data.data[0];
-                addData(chartObj, chartOption, data.models, monitorData, restrictedArea);
             } else {
                 showError(data.message);
             }
@@ -1527,6 +1412,40 @@ function panelUpdate(datas, restrictedArea) {
             $($("td", this)[1]).text(data[$($("td", this)[0]).attr("field")]);
         });
     }
+    if (datas.length == 0) {
+        return;
+    }
+    $(".panel-body table tr", restrictedArea).each(function () {
+        var key = $($("td", this)[0]).attr("key");
+        var fieldName = $($("td", this)[0]).attr("field");
+        var text = undefined;
+
+        for (var i in datas) {
+            for (var k in datas[i]) {
+                if (k != "dataTime") {
+                    if (datas[i][k] instanceof Array) {
+                        if (datas[i][k].length > 0) {
+                            text = datas[i][k][0][fieldName];
+                        }
+                    } else if (datas[i][k] instanceof Object) {
+                        if (key !== undefined) {
+                            text = datas[i][k][key][fieldName];
+                        } else {
+                            text = datas[i][k][fieldName];
+                        }
+                    } else if (datas[i][k] instanceof String && k == fieldName) {
+                        text = datas[i][k];
+                    } else {
+                        continue;
+                    }
+                    if (text !== undefined) {
+                        $($("td", this)[1]).text(text);
+                        break;
+                    }
+                }
+            }
+        }
+    });
 };
 /**************************************** info.jsp - end *************************************************/
 /**
