@@ -1,5 +1,6 @@
 package qingzhou.console.view;
 
+import qingzhou.api.MsgType;
 import qingzhou.api.Response;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -40,6 +41,10 @@ public class ViewManager {
             String action = I18n.getModelI18n(appName, "model.action." + request.getModel() + "." + request.getAction());
             String operation = Objects.equals(model, action) ? model : model + SP + action;
             response.setMsg(operation + SP + msg);
+        }
+        // 完善响应的 msg type
+        if (response.getMsgType() == null) {
+            response.setMsgType(response.isSuccess() ? MsgType.success : MsgType.danger);
         }
 
         // 作出响应

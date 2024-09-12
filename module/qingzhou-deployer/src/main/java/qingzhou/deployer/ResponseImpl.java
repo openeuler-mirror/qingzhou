@@ -1,6 +1,7 @@
 package qingzhou.deployer;
 
 import qingzhou.api.ModelBase;
+import qingzhou.api.MsgType;
 import qingzhou.api.Response;
 
 import java.lang.reflect.Field;
@@ -13,6 +14,7 @@ import java.util.Map;
 public class ResponseImpl implements Response {
     private boolean success = true;
     private String msg;
+    private MsgType msgType;
     private final List<Map<String, String>> dataList = new ArrayList<>();
     private int totalSize = -1;
     private int pageSize = -1;
@@ -38,6 +40,16 @@ public class ResponseImpl implements Response {
     @Override
     public String getMsg() {
         return this.msg;
+    }
+
+    @Override
+    public void setMsgType(MsgType msgType) {
+        this.msgType = msgType;
+    }
+
+    @Override
+    public MsgType getMsgType() {
+        return this.msgType;
     }
 
     @Override

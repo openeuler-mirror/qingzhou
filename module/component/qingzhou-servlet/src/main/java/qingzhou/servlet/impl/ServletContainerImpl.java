@@ -6,6 +6,7 @@ import org.apache.catalina.Host;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.tomcat.util.modeler.Registry;
 import qingzhou.servlet.ServletContainer;
 
 import java.io.File;
@@ -21,6 +22,7 @@ public class ServletContainerImpl implements ServletContainer {
             // 为了 接管 tomcat 的日志系统
             Thread.currentThread().setContextClassLoader(TomcatLogDelegate.class.getClassLoader());
 
+            Registry.disableRegistry(); // 禁用 tomcat 的 Jmx MBean
             tomcat = new Tomcat();
             tomcat.setBaseDir(baseDir.getAbsolutePath());
             tomcat.setPort(port); // 设置默认连接器端口
