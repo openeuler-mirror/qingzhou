@@ -183,7 +183,7 @@
 <script>
     $(document).ready(function () {
         window.setTimeout(function () {
-            var common_msgIndex = showError("<%=common_msg%>");
+            var common_msgIndex = showMsg("<%=common_msg%>", "error");
                 // 记录最后一次通知弹窗
                 try {
                     $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);

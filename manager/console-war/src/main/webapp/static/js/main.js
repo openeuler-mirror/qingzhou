@@ -136,14 +136,23 @@ function autoAdaptTip() {
         document.body.removeChild(ruler);
     }
 };
-function showSuccess(title, callback) {
+function showMsg(title,type,callback) {
     var container = document.body;
     try {
         container = getRestrictedArea();
     } catch (e) {
     }
-    return cocoMessage.success({"msgWrapperContainer": container, msg: title, duration: 1800, onClose: callback});
+    var time = 5000;
+    if (type === "info") {
+        type = "success";
+        time = 1800;
+    } else if (type === "warn") {
+        type = "warning";
+        time = 1800;
+    }
+    return cocoMessage.resmsg({"msgWrapperContainer": container, msg: title, duration: time, onClose: callback},type);
 };
+//showinfo不能去，否则会和showmsg的type重复
 function showInfo(title, time) {
     var container = document.body;
     try {
@@ -152,22 +161,7 @@ function showInfo(title, time) {
     }
     return cocoMessage.info({"msgWrapperContainer": container, msg: title, duration: (time ? time : 0)});
 };
-function showTip(title) {
-    var container = document.body;
-    try {
-        container = getRestrictedArea();
-    } catch (e) {
-    }
-    return cocoMessage.warning({"msgWrapperContainer": container, msg: title, duration: 1800});
-};
-function showError(title) {
-    var container = document.body;
-    try {
-        container = getRestrictedArea();
-    } catch (e) {
-    }
-    return cocoMessage.error({"msgWrapperContainer": container, msg: title, duration: 5000});
-};
+
 function shakeTip(msg) {
     layer.msg(msg, function(){});
 };
@@ -760,9 +754,9 @@ function getSetting(key) {
  */
 function handleError(e, element) {
     if (e.status === 0) {
-        showError(getSetting("networkError"));
+        showMsg(getSetting("networkError"),"error");
     } else if (e.status === 403) {
-        showError("403, Access denied !");
+        showMsg("403, Access denied !","error");
         $("#mask-loading").hide();
     } else {
         if (e.status === 200 && e.responseText.indexOf("<!DOCTYPE html>") >= 0 && e.responseText.indexOf("loginForm") > 0) {
@@ -777,7 +771,7 @@ function handleError(e, element) {
                 window.location.href = loginUrl;
             }, function () {});
         } else {
-            showError(e.status + ":" + getSetting("pageErrorMsg"));
+            showMsg(e.status + ":" + getSetting("pageErrorMsg"),"error");
         }
     }
 };

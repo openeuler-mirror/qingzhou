@@ -678,7 +678,7 @@ function bindEventForFormPage() {
                     success: function (data) {
                         if (data.success === "true" || data.success === true) {
                             closeLayer(index);
-                            showSuccess(getSetting("bindSuccessOtp"));
+                            showMsg(getSetting("bindSuccessOtp"),data.message_type);
                         } else {
                             $("#verifyCodeOtpError").html(getSetting("bindFailOtp"));
                         }
@@ -784,7 +784,7 @@ function bindFormEvent() {
                         window.location.href = data.redirectURL;
                         return;
                     } else {
-                        showSuccess(data.message);
+                        showMsg(data.message,data.message_type);
                     }
                 } else {
                     $("#tempZone", thisForm).html("");
@@ -823,7 +823,7 @@ function bindFormEvent() {
                         $($("a", $(".nav.nav-tabs > li.tab-has-error").first()).attr("href")).addClass("active");
                         //$("html, body").animate({scrollTop: $(".has-error", thisForm).first().offset().top - 100}, 500);
                     } else {
-                        showError(data.message);
+                        showMsg(data.message,data.message_type);
                     }
                 }
             },
@@ -1136,10 +1136,8 @@ function confirm_method(url) {
         success: function (data) {
             if (data.success === "true" || data.success === true) {
                 $(".search-btn a", getRestrictedArea()).click();
-                showSuccess(data.message);
-            } else {
-                showError(data.message);
             }
+            showMsg(data.message, data.message_type);
         },
         error: function (e) {
             handleError(e);
@@ -1412,7 +1410,7 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
                     addData(chartObj, chartOption, models, keys, restrictedArea);
                 }
             } else {
-                showError(data.message);
+                showMsg(data.message, data.message_type);
             }
         },
         error: function (e) {

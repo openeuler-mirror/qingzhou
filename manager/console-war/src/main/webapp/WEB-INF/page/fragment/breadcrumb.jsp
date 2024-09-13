@@ -31,13 +31,9 @@
             type: "post",
             async: false,
             success: function (data) {
-                if (data.success) {
-                    showSuccess(data.message, function () {
-                        window.location.href = window.location.href;
-                    });
-                } else {
-                    showError(data.message);
-                }
+                showMsg(data.message, data.message_type, function () {
+                    window.location.href = window.location.href;
+                })
             }
         });
     }

@@ -1,6 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
+import qingzhou.api.MsgType;
 import qingzhou.api.Response;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -11,6 +12,7 @@ import qingzhou.crypto.Base32Coder;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
@@ -103,13 +105,80 @@ public class RESTController extends HttpServlet {
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
-                List<Response> responseList = SystemController.getService(ActionInvoker.class).invokeAll(restContext.request);
-                for (Response response : responseList) {
-                    if (!response.isSuccess()) return false;
+
+                //批量操作判断，过滤器结束后，进入模块 action 处理
+                if (restContext.batchIds != null) {
+                    invokeActionBatch(restContext);
+                } else {
+                    List<Response> responseList = SystemController.getService(ActionInvoker.class).invokeAll(restContext.request);
+                    for (Response response : responseList) {
+                        //todo 错误信息封装，和批量操作中的不能抽出共用
+                        if (!response.isSuccess()) return false;
+                    }
                 }
                 return true;
             }
     };
+
+    private void invokeActionBatch(RestContext restContext) {
+        ModelInfo modelInfo = SystemController.getAppInfo(SystemController.getAppName(restContext.request))
+                .getModelInfo(restContext.request.getModel());
+        String oid = restContext.req.getParameter(modelInfo.getIdFieldName());
+        int suc = 0;
+        int fail = 0;
+        StringBuilder errbuilder = new StringBuilder();
+        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        for (String id : oid.split(DeployerConstants.DEFAULT_DATA_SEPARATOR)) {
+            if (Utils.notBlank(id)) {
+                id = RESTController.decodeId(id);
+                restContext.request.setId(id);
+                List<Response> responseList = SystemController.getService(ActionInvoker.class).invokeAll(restContext.request);
+                for (Response response : responseList) {
+                    if (response.isSuccess()) {
+                        suc++;
+                    } else {
+                        String errMsg = response.getMsg();
+                        if (result.containsKey(errMsg)) {
+                            errbuilder.append(result.get(errMsg));
+                            errbuilder.append(DeployerConstants.DEFAULT_DATA_SEPARATOR);
+                            errbuilder.append(id);
+                            result.put(errMsg, errbuilder.toString());
+                            errbuilder.setLength(0);
+                        } else {
+                            result.put(errMsg, id);
+                        }
+                        fail++;
+                    }
+                }
+            }
+        }
+        restContext.request.setId(oid);
+        Response response = restContext.request.getResponse();
+        // 完善响应的 msg
+        if (response.getMsg() == null) {
+            String appName = SystemController.getAppName(restContext.request);
+            String SP = I18n.isZH() ? "" : " ";
+            String model = I18n.getModelI18n(appName, "model." + restContext.request.getModel());
+            String action = I18n.getModelI18n(appName, "model.action." + restContext.request.getModel() + "." + restContext.request.getAction());
+            String operation = Objects.equals(model, action) ? model : model + SP + action;
+            if (result.isEmpty()) {
+                String resultMsg = String.format(I18n.getKeyI18n("batch.ops.success"), suc);
+                response.setMsg(operation + SP + resultMsg);
+            } else {
+                response.setSuccess(suc > 0);
+                errbuilder.append(String.format(I18n.getKeyI18n("batch.ops.fail"), suc, fail));
+                for (Map.Entry<String, String> entry : result.entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue();
+                    errbuilder.append(value).append("= {").append(key).append("};");
+                }
+                response.setMsg(operation + SP + errbuilder.toString());
+                //批量操作有成功有失败响应提示为warning
+                response.setMsgType(MsgType.warn);
+            }
+        }
+    }
+
     private final ViewManager viewManager = new ViewManager();
 
     @Override
