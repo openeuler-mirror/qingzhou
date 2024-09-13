@@ -1,6 +1,7 @@
 package qingzhou.app.common;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Showable;
 
 @Model(code = "home", icon = "home",
         entrance = "show",
@@ -19,7 +20,7 @@ public class Home extends ModelBase {
     public String javaHome;
 
     @ModelAction(
-            code = "show",
+            code = Showable.ACTION_SHOW,
             name = {"首页", "en:Home"},
             info = {"进入此应用的默认首页。",
                     "en:Go to the default home of this app."})
