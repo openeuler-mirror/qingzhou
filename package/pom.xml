@@ -41,6 +41,12 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>Example</artifactId>
+            <version>x</version>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-launcher</artifactId>
             <version>x</version>
         </dependency>

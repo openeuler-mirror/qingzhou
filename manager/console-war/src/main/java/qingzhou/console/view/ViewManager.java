@@ -44,7 +44,7 @@ public class ViewManager {
         }
         // 完善响应的 msg type
         if (response.getMsgType() == null) {
-            response.setMsgType(response.isSuccess() ? MsgType.success : MsgType.danger);
+            response.setMsgType(response.isSuccess() ? MsgType.info : MsgType.error);
         }
 
         // 作出响应

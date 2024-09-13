@@ -24,7 +24,7 @@ public class ParameterFilter implements Filter<RestContext> {
         separateParameters(request);
         password(request);
         batchId(request, context);
-        idParameter(request, context);
+        resetId(request, context);
 
         return true;
     }
@@ -79,16 +79,18 @@ public class ParameterFilter implements Filter<RestContext> {
         }
     }
 
-    private void idParameter(RequestImpl request, RestContext context) {
+    private void resetId(RequestImpl request, RestContext context) {
         ModelInfo modelInfo = request.getCachedModelInfo();
         String idFieldName = modelInfo.getIdFieldName();
-        String idInForm = request.getParameter(idFieldName);
-        if (Utils.notBlank(idInForm)) {
-            request.setId(idInForm);
+        String idInUri = request.getId();
+        if (Utils.notBlank(idInUri)) { // rest 里面的 id 优先于消息体
+            if (context.batchIds == null) { // 非 batch 请求
+                request.setParameter(idFieldName, idInUri); // ValidationFilter 里面调用 SecurityController.isShow 需要用到此参数
+            }
         } else {
-            String idInUri = request.getId();
-            if (Utils.notBlank(idInUri) && context.batchIds == null) {// 非 batch 请求
-                request.setParameter(idFieldName, idInUri);
+            String idInForm = request.getParameter(idFieldName);
+            if (Utils.notBlank(idInForm)) {
+                request.setId(idInForm); // jmx 请求的 id 在 消息体里面，所以通过这里反设回去
             }
         }
     }

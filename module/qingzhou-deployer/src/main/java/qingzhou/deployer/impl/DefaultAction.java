@@ -240,9 +240,9 @@ class DefaultAction {
     public void download(Request request) throws Exception {
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 
-        String downloadKey = request.getParameter(DeployerConstants.DOWNLOAD_KEY);
+        String downloadKey = request.getNonModelParameter(DeployerConstants.DOWNLOAD_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
-            String downloadFileNames = request.getNonModelParameter("downloadFileNames");
+            String downloadFileNames = request.getNonModelParameter(DeployerConstants.DOWNLOAD_DOWNLOAD_FILE_NAMES);
 
             // check
             if (downloadFileNames == null || downloadFileNames.trim().isEmpty()) {
@@ -261,7 +261,7 @@ class DefaultAction {
         }
 
         long downloadOffset = 0;
-        String downloadOffsetParameter = request.getParameter(DeployerConstants.DOWNLOAD_OFFSET);
+        String downloadOffsetParameter = request.getNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET);
         if (downloadOffsetParameter != null && !downloadOffsetParameter.trim().isEmpty()) {
             downloadOffset = Long.parseLong(downloadOffsetParameter.trim());
         }

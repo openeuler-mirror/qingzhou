@@ -7,7 +7,7 @@ import qingzhou.registry.ModelInfo;
 
 import java.util.*;
 
-public class RequestImpl implements Request, Cloneable {
+public class RequestImpl implements Request {
     private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
     private transient Response response = new ResponseImpl();
     private transient ModelInfo cachedModelInfo = null;
@@ -161,12 +161,5 @@ public class RequestImpl implements Request, Cloneable {
 
     public void setCachedModelInfo(ModelInfo cachedModelInfo) {
         this.cachedModelInfo = cachedModelInfo;
-    }
-
-    @Override
-    public RequestImpl clone() throws CloneNotSupportedException {
-        RequestImpl clone = (RequestImpl) super.clone();
-        clone.parameters.putAll(this.parameters);
-        return clone;
     }
 }
