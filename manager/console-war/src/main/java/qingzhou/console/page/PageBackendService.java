@@ -188,10 +188,10 @@ public class PageBackendService {
 
         final ModelInfo modelInfo = getModelInfo(request);
         for (String actionName : modelInfo.getBatchActionNames()) {
-            boolean isShow = true;
+            boolean isShow = false;
             for (Map<String, String> data : response.getDataList()) {
-                if (!SecurityController.isActionShow(request.getApp(), request.getModel(), actionName, data, loginUser)) {
-                    isShow = false;
+                if (SecurityController.isActionShow(request.getApp(), request.getModel(), actionName, data, loginUser)) {
+                    isShow = true;
                     break;
                 }
             }

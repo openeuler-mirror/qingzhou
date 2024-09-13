@@ -90,10 +90,8 @@ public class ParameterFilter implements Filter<RestContext> {
             }
         } else {
             String idInForm = request.getParameter(idFieldName);
-            if (Utils.notBlank(idInForm)) {
-                if (!request.getAction().equals(Addable.ACTION_ADD)) {
-                    request.setId(idInForm); // jmx 请求的 id 在 消息体里面，所以通过这里反设回去
-                }
+            if (Utils.notBlank(idInForm) && !request.getAction().equals(Addable.ACTION_ADD)) {
+                request.setId(idInForm); // jmx 请求的 id 在 消息体里面，所以通过这里反设回去
             }
         }
     }

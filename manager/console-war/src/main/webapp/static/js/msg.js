@@ -96,17 +96,12 @@ function _typeof(obj) {
 
     var settings = {msgWrapperContainer: document.body, msg: "", duration: 0, showClose: false, onClose: function () {}};
     var cocoMessage = {
+        resmsg: function resmsg(config,type) {
+            return initConfig(config, type);
+        },
+
         info: function info(config) {
             return initConfig(config, "info");
-        },
-        success: function success(config) {
-            return initConfig(config, "success");
-        },
-        warning: function warning(config) {
-            return initConfig(config, "warning");
-        },
-        error: function error(config) {
-            return initConfig(config, "error");
         },
         loading: function loading(config) {
             return initConfig(config, "loading");
@@ -175,7 +170,7 @@ function _typeof(obj) {
         var iconObj = getIcon();
 
         if (type === "loading") {
-            msg = msg === "" ? "正在加载，请稍后" : msg;
+            msg = msg === "" ? "loading..." : msg;
             closable = showClose;
             duration = 0;
         }
