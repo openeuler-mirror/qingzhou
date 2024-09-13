@@ -30,8 +30,6 @@ public class FileView implements View {
         }
 
         Map<String, String> result = dataList.get(0);
-        String key = result.get(DeployerConstants.DOWNLOAD_KEY);
-        long offset = Long.parseLong(result.get(DeployerConstants.DOWNLOAD_OFFSET));
         while (true) {
             byte[] content = SystemController.getService(CryptoService.class).getBase64Coder().decode(result.get(DeployerConstants.DOWNLOAD_BLOCK));
 
@@ -39,15 +37,19 @@ public class FileView implements View {
             outputStream.write(content);
             outputStream.flush();
 
+            long offset = Long.parseLong(result.get(DeployerConstants.DOWNLOAD_OFFSET));
             if (offset < 0) break;
 
-            RequestImpl req = request.clone();
-            req.setNonModelParameter(DeployerConstants.DOWNLOAD_KEY, key);
+            RequestImpl req = new RequestImpl();
+            req.setAppName(request.getApp());
+            req.setModelName(request.getModel());
+            req.setActionName(request.getAction());
+            req.setId(request.getId());
+            req.setNonModelParameter(DeployerConstants.DOWNLOAD_KEY, result.get(DeployerConstants.DOWNLOAD_KEY));
             req.setNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             Response res = SystemController.getService(ActionInvoker.class).invokeSingle(req); // 续传
             if (res.isSuccess()) {
                 result = res.getDataList().get(0);
-                offset = Long.parseLong(result.get(DeployerConstants.DOWNLOAD_OFFSET));
             } else {
                 response.setSuccess(false);
                 response.setMsg(res.getMsg());

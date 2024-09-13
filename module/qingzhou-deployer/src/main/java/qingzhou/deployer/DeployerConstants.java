@@ -33,6 +33,7 @@ public interface DeployerConstants {
     String DOWNLOAD_KEY = "DOWNLOAD_KEY";
     String DOWNLOAD_OFFSET = "DOWNLOAD_OFFSET";
     String DOWNLOAD_BLOCK = "DOWNLOAD_BLOCK";
+    String DOWNLOAD_DOWNLOAD_FILE_NAMES = "downloadFileNames";
     String REST_PREFIX = "/rest";
     String jsonView = "json";
     String CHECK_FINGERPRINT = "fingerprint";

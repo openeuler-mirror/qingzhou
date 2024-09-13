@@ -22,6 +22,17 @@
     <dependencySets>
         <dependencySet>
             <includes>
+                <include>${project.groupId}:Example</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>/instances/instance1/apps/Example</outputDirectory>
+        </dependencySet>
+
+        <dependencySet>
+            <includes>
                 <include>${project.groupId}:qingzhou-launcher</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>

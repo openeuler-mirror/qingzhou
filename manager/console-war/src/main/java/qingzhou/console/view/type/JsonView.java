@@ -29,7 +29,7 @@ public class JsonView implements View {
 
     public static String responseErrorJson(HttpServletResponse response, String msg) throws IOException {
         StringBuilder json = new StringBuilder("{");
-        addStatus(json, false, msg, MsgType.danger.name());
+        addStatus(json, false, msg, MsgType.error.name());
         json.append("}");
 
         response.setContentType(CONTENT_TYPE);

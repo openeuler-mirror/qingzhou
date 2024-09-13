@@ -1,6 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.Response;
+import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
@@ -16,11 +17,46 @@ import java.util.*;
 
 public class ActionFilter implements Filter<RestContext> {
     static {
-        I18n.addKeyI18n("validation_action", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});
+        I18n.addKeyI18n("action_not_show", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});
+        I18n.addKeyI18n("action_not_exist", new String[]{"不存在", "en:Does not exist"});
     }
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {
+        boolean ok = doFilter0(context);
+        if (!ok) {
+            Response response = context.request.getResponse();
+            response.setSuccess(false);
+            String i18n = I18n.getKeyI18n("action_not_exist");
+            response.setMsg(i18n);
+        }
+        return ok;
+    }
+
+    private boolean doFilter0(RestContext context) {
+        if (!filterShow(context)) return false;
+
+        return filterExists(context);
+    }
+
+    private boolean filterExists(RestContext context) {
+        RequestImpl request = context.request;
+        String id = request.getId();
+        if (Utils.isBlank(id)) return true; // 非 rest id 操作，无需校验
+
+        ModelInfo modelInfo = request.getCachedModelInfo();
+        if (modelInfo.getModelActionInfo(Listable.ACTION_CONTAINS) == null) return true; // 不是 list 类型 model,无需 校验
+
+        RequestImpl tmp = new RequestImpl();
+        tmp.setAppName(request.getApp());
+        tmp.setModelName(request.getModel());
+        tmp.setActionName(Listable.ACTION_CONTAINS);
+        tmp.setId(id);
+        Response response = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+        return response.isSuccess();
+    }
+
+    private boolean filterShow(RestContext context) {
         RequestImpl request = context.request;
         ModelInfo modelInfo = request.getCachedModelInfo();
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
@@ -39,7 +75,7 @@ public class ActionFilter implements Filter<RestContext> {
 
             if (SecurityController.isShow(condition, new FindValue(id, request))) continue;
 
-            String i18n = I18n.getKeyI18n("validation_action", actionInfo.getCode(), actionInfo.getShow());
+            String i18n = I18n.getKeyI18n("action_not_show", actionInfo.getCode(), actionInfo.getShow());
             request.getResponse().setSuccess(false);
             request.getResponse().setMsg(i18n);
             return false;
