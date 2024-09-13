@@ -72,6 +72,9 @@ public class JsonView implements View {
             Map<String, String> data = dataList.get(i);
             boolean notFirst = false;
             for (Map.Entry<String, String> entry : data.entrySet()) {
+                if (null == entry.getValue()) {
+                    continue;
+                }
                 if (notFirst) {
                     json.append(",");
                 }
