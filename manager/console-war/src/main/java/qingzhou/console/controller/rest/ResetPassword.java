@@ -7,6 +7,7 @@ import qingzhou.config.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
@@ -28,6 +29,17 @@ public class ResetPassword implements Filter<RestContext> {
         HttpServletResponse servletResponse = context.resp;
 
         HttpSession session = servletRequest.getSession(false);
+        if (session == null) {
+            if (DeployerConstants.APP_SYSTEM.equals(context.request.getApp()) &&
+                    DeployerConstants.MODEL_MASTER.equals(context.request.getModel())) {
+                if (DeployerConstants.ACTION_CHECK.equals(context.request.getAction()) ||
+                        DeployerConstants.ACTION_REGISTER.equals(context.request.getAction())) {
+                    return true;
+                }
+            }
+            servletRequest.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(servletRequest, servletResponse);
+            return false;
+        }
 
         // 登陆时候检查一次，已重置过密码，本次会话不必再检查
         String RESET_OK_FLAG = "RESET_OK_FLAG";

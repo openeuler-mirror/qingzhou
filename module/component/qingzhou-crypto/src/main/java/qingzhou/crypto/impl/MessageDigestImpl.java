@@ -21,7 +21,7 @@ class MessageDigestImpl implements MessageDigest {
 
     @Override
     public String digest(String text, String algorithm, int saltLength, int iterations) {
-        byte[] salt = null;
+        byte[] salt = new byte[0];
         if (saltLength > 0) {
             salt = new byte[saltLength];
             random.nextBytes(salt);
