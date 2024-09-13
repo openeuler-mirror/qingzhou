@@ -29,7 +29,8 @@ public class HtmlView implements View {
         boolean isManageAction = isManageAction(request);
         if (isManageAction) {
             request.setAppName(request.getId());
-            request.setModelName(DeployerConstants.MODEL_HOME);
+            request.setModelName("home"); // qingzhou.app.common.Home 的 code
+            request.setCachedModelInfo(SystemController.getModelInfo(request.getApp(), request.getModel())); // 重新缓存
             request.setActionName(Showable.ACTION_SHOW);
             Response response = SystemController.getService(ActionInvoker.class).invokeSingle(request);
             request.setResponse(response);
