@@ -162,9 +162,9 @@ public class FileUtil {
         }
     }
 
-    public static void writeFile(File file, byte[] bytes) throws IOException {
+    public static void writeFile(File file, byte[] bytes, boolean append) throws IOException {
         mkdirs(file.getParentFile());
-        try (FileOutputStream fos = new FileOutputStream(file, true);) {
+        try (FileOutputStream fos = new FileOutputStream(file, append)) {
             fos.write(bytes);
         }
     }
