@@ -1,6 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
+import qingzhou.api.type.Addable;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
@@ -90,7 +91,9 @@ public class ParameterFilter implements Filter<RestContext> {
         } else {
             String idInForm = request.getParameter(idFieldName);
             if (Utils.notBlank(idInForm)) {
-                request.setId(idInForm); // jmx 请求的 id 在 消息体里面，所以通过这里反设回去
+                if (!request.getAction().equals(Addable.ACTION_ADD)) {
+                    request.setId(idInForm); // jmx 请求的 id 在 消息体里面，所以通过这里反设回去
+                }
             }
         }
     }

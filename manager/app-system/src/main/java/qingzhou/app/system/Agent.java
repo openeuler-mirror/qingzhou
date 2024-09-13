@@ -101,14 +101,14 @@ public class Agent extends ModelBase {
     @ModelAction(
             code = DeployerConstants.ACTION_UPLOAD,
             name = {"上传文件", "en:Upload File"},
-            info = {"应用模块表单文件上传。", "en:Upload the application module form file."})
+            info = {"代理上传文件操作。", "en:Proxy upload file operations."})
     public void upload(Request request) throws IOException {
-        String fileId = request.getParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID);
-        String fileName = request.getParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_NAME);
+        String fileId = request.getNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID);
+        String fileName = request.getNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_NAME);
         byte[] fileBytes = Main.getService(CryptoService.class).getBase64Coder().decode(
-                request.getParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_BYTES));
+                request.getNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_BYTES));
 
         File file = FileUtil.newFile(appContext.getTemp(), fileId, fileName);
-        FileUtil.writeFile(file, fileBytes);
+        FileUtil.writeFile(file, fileBytes, true);
     }
 }

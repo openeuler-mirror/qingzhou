@@ -1,5 +1,7 @@
 package qingzhou.registry;
 
+import qingzhou.api.FieldType;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -78,6 +80,10 @@ public class ModelInfo {
 
     public String[] getMonitorFieldNames() {
         return Arrays.stream(modelFieldInfos).filter(ModelFieldInfo::isMonitor).map(ModelFieldInfo::getCode).toArray(String[]::new);
+    }
+
+    public String[] getFileUploadFieldNames() {
+        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> !modelFieldInfo.isMonitor() && modelFieldInfo.getType().equals(FieldType.file.name())).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }
 
     public String[] getFormFieldNames() {
