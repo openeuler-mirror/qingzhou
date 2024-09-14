@@ -202,37 +202,38 @@ function closeLayer(index) {
 
 // start, for: ModelField注解 effectiveWhen()
 function bindEvent(conditions) {
-    var triggers = {};
-    for (var key in conditions) {
-        var condition = conditions[key];
-        var array;
-        if (condition.indexOf("&") >= 0) {
-            array = condition.split("\&");
-        } else {
-            array = condition.split("\|");
-        }
-
-        for (var i = 0; i < array.length; i++) {
-            var operator = array[i].search("!=") < 0 ? "=" : "!=";
-            var triggerItem = array[i].split(operator)[0];
+    const triggers = {};
+    // 处理每个条件
+    Object.keys(conditions).forEach(key => {
+        const condition = conditions[key];
+        const expressions = condition.includes("&") ? condition.split("&") : condition.split("|");
+        // 处理每个表达式
+        expressions.forEach(expression => {
+            const operator = expression.includes("!=") ? "!=" : "=";
+            const [triggerItem, val] = expression.split(operator);
+            // 初始化触发器
             if (!triggers[triggerItem]) {
                 triggers[triggerItem] = [];
             }
-            var json = {};
-            json[key] = condition;
+            // 创建并添加条件
+            const json = { [key]: condition };
             if (!contain(triggers[triggerItem], json)) {
                 triggers[triggerItem].push(json);
             }
-        }
-    }
-    for (var item in triggers) {
-        $("[name='" + item + "']", getRestrictedArea()).unbind("change").bind("change", function () {
+        });
+    });
+    // 绑定事件和触发初始状态
+    Object.keys(triggers).forEach(item => {
+        const elements = $(`[name='${item}']`, getRestrictedArea());
+        elements.off("change").on("change", function () {
             triggerTies(triggers[$(this).attr("name")]);
         });
         triggerTies(triggers[item]);
-    }
+    });
+
     autoAdaptTip();
-};
+}
+
 
 function contain(array, ele) {
     for (var i = 0; i < array.length; i++) {
