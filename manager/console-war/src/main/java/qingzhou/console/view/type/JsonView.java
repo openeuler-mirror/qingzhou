@@ -1,9 +1,10 @@
 package qingzhou.console.view.type;
 
-import qingzhou.api.MsgType;
+import qingzhou.api.MsgLevel;
 import qingzhou.api.Response;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
+import qingzhou.engine.util.Utils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -29,7 +30,7 @@ public class JsonView implements View {
 
     public static String responseErrorJson(HttpServletResponse response, String msg) throws IOException {
         StringBuilder json = new StringBuilder("{");
-        addStatus(json, false, msg, MsgType.error.name());
+        addStatus(json, false, msg, MsgLevel.error.name());
         json.append("}");
 
         response.setContentType(CONTENT_TYPE);
@@ -41,7 +42,8 @@ public class JsonView implements View {
     private static String convertToJson(Response response) {
         StringBuilder json = new StringBuilder("{");
 
-        addStatus(json, response.isSuccess(), response.getMsg(), response.getMsgType().name());
+        MsgLevel msgLevel = response.getMsgType() != null ? response.getMsgType() : MsgLevel.error;
+        addStatus(json, response.isSuccess(), response.getMsg(), msgLevel.name());
         json.append(",");
         addData(json, response);
 
@@ -49,10 +51,10 @@ public class JsonView implements View {
         return json.toString();
     }
 
-    private static void addStatus(StringBuilder json, boolean success, String message, String message_type) {
+    private static void addStatus(StringBuilder json, boolean success, String message, String msg_level) {
         addKV(json, "success", String.valueOf(success));
         json.append(",");
-        addKV(json, "message_type", message_type);
+        addKV(json, "msg_level", msg_level);
         json.append(",");
         addKV(json, "message", message);
     }
@@ -102,6 +104,7 @@ public class JsonView implements View {
     }
 
     private static String escapeChar(String json) {
+        if (Utils.isBlank(json)) return "";
         return json.replace("\t", " ") // for html ?
                 .replace("\\", "\\\\") // for windows 路径 & ITAIT-3687
                 .replace("\"", "\\\"")

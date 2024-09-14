@@ -46,9 +46,9 @@ public @interface ModelField {
 
     String[] unsupportedStrings() default {};
 
-    String pattern() default "";
+    String pattern() default ""; // 填值须要符合此正则表达式规则
 
-    boolean email() default false;
+    boolean email() default false; // 填值须是一个合法的邮箱地址
 
     boolean filePath() default false;
 

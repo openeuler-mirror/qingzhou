@@ -25,7 +25,6 @@ class DefaultAction {
         allDefaultActionCache = DeployerImpl.parseModelActionInfos(new AnnotationReader(DefaultAction.class));
     }
 
-    private final int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));
     private final AppImpl app;
     private final ModelBase instance;
 
@@ -285,7 +284,7 @@ class DefaultAction {
         boolean hasMore = false;
         try (RandomAccessFile raf = new RandomAccessFile(downloadFile, "r")) {
             raf.seek(offset);
-            byte[] block = new byte[DOWNLOAD_BLOCK_SIZE];
+            byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
             int read = raf.read(block);
             if (read > 0) { // ==0 表示上次正好读取到结尾
                 if (read == block.length) {

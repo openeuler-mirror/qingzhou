@@ -31,7 +31,7 @@
             type: "post",
             async: false,
             success: function (data) {
-                showMsg(data.message, data.message_type, function () {
+                showMsg(data.message, data.msg_level, function () {
                     window.location.href = window.location.href;
                 })
             }

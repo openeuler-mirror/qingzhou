@@ -7,7 +7,6 @@ import qingzhou.config.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
@@ -28,8 +27,8 @@ public class ResetPassword implements Filter<RestContext> {
         HttpServletRequest servletRequest = context.req;
         HttpServletResponse servletResponse = context.resp;
 
-        HttpSession session = servletRequest.getSession(false);
-        if (session == null) {
+        HttpSession session = servletRequest.getSession(true);
+        if (session == null) { // 远程实例注册
             if (DeployerConstants.APP_SYSTEM.equals(context.request.getApp()) &&
                     DeployerConstants.MODEL_MASTER.equals(context.request.getModel())) {
                 if (DeployerConstants.ACTION_CHECK.equals(context.request.getAction()) ||
@@ -37,7 +36,8 @@ public class ResetPassword implements Filter<RestContext> {
                     return true;
                 }
             }
-            servletRequest.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(servletRequest, servletResponse);
+
+            LoginManager.forwardToLoginJsp(servletRequest, servletResponse);
             return false;
         }
 

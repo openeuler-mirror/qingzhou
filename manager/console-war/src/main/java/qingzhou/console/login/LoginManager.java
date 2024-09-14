@@ -15,9 +15,11 @@ import qingzhou.crypto.TotpCipher;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -281,45 +283,46 @@ public class LoginManager implements Filter<SystemControllerContext> {
         HttpServletResponse response = context.resp;
         String checkPath = RESTController.getReqUri(request);
 
-        // 登录
-        if (checkPath.equals(LOGIN_URI)) {
-            try {
-                I18n.resetI18nLang(); // 确保登录页面（包括出错信息）都以默认i18n展示
-                webLogin(request, response);
-            } finally {
-                I18n.resetI18nLang();
-            }
-            return false;
-        }
+        switch (checkPath) {
+            // 登录
+            case LOGIN_URI:
+                try {
+                    I18n.resetI18nLang(); // 确保登录页面（包括出错信息）都以默认i18n展示
+                    webLogin(request, response);
+                } finally {
+                    I18n.resetI18nLang();
+                }
+                return false;
 
-        // 注销
-        if (checkPath.equals(LOGIN_PATH)) {
-            if (request.getParameter(LOGOUT_FLAG) != null) {
+
+            // 注销
+            case LOGIN_PATH:
+                if (request.getParameter(LOGOUT_FLAG) != null) {
+                    HttpSession session = request.getSession(false);
+                    if (session != null) {
+                        LoginManager.logout(request);
+                    }
+                }
+                forwardToLoginJsp(request, response);
+                return false;
+
+
+            // 主页
+            case "/":
                 HttpSession session = request.getSession(false);
                 if (session != null) {
-                    LoginManager.logout(request);
+                    response.sendRedirect(RESTController.encodeURL(response, request.getContextPath() + INDEX_PATH));
+                } else {
+                    forwardToLoginJsp(request, response);
                 }
-            }
-            request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
-            return false;
-        }
-
-        // 主页
-        if (checkPath.equals("/")) {
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                response.sendRedirect(RESTController.encodeURL(response, request.getContextPath() + INDEX_PATH));
-            } else {
-                request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
-            }
-            return false;
+                return false;
         }
 
         // 已登录，进入业务系统
         String loginUser = getLoginUser(request);
         if (loginUser != null) return true;
 
-        // 未登录，开放资源，放行
+        // 虽未登录，是开放资源，放行
         if (isOpenUris(checkPath)) return true;
 
         // 拦截未登录的请求
@@ -337,6 +340,10 @@ public class LoginManager implements Filter<SystemControllerContext> {
             }
         }
         return false;
+    }
+
+    public static void forwardToLoginJsp(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
     }
 
     public static class LoginFailedMsg {
