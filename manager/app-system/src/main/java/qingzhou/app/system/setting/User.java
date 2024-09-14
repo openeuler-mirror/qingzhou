@@ -36,11 +36,11 @@ public class User extends ModelBase implements Addable {
 
     @Override
     public void start() {
-        appContext.addI18n("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
-        appContext.addI18n("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
-        appContext.addI18n("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少 10 位。", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
-        appContext.addI18n("password.passwordContainsUsername", new String[]{"密码不能包含用户名", "en:A weak password, the password cannot contain the username"});
-        appContext.addI18n("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
+        getAppContext().addI18n("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
+        getAppContext().addI18n("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
+        getAppContext().addI18n("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少 10 位。", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
+        getAppContext().addI18n("password.passwordContainsUsername", new String[]{"密码不能包含用户名", "en:A weak password, the password cannot contain the username"});
+        getAppContext().addI18n("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
     }
 
     @ModelField(
@@ -138,7 +138,7 @@ public class User extends ModelBase implements Addable {
         String digestAlg = data.getOrDefault("digestAlg", defaultValue.digestAlg);
         String saltLength = data.getOrDefault("saltLength", String.valueOf(defaultValue.saltLength));
         String iterations = data.getOrDefault("iterations", String.valueOf(defaultValue.iterations));
-        MessageDigest messageDigest = appContext.getService(CryptoService.class).getMessageDigest();
+        MessageDigest messageDigest = getAppContext().getService(CryptoService.class).getMessageDigest();
         data.put("password", messageDigest.digest(data.get("password"),
                 digestAlg,
                 Integer.parseInt(saltLength),
@@ -167,7 +167,7 @@ public class User extends ModelBase implements Addable {
             String saltLength = data.getOrDefault("saltLength", splitOriginPwd[1]);
             String iterations = data.getOrDefault("iterations", splitOriginPwd[2]);
 
-            MessageDigest messageDigest = appContext.getService(CryptoService.class).getMessageDigest();
+            MessageDigest messageDigest = getAppContext().getService(CryptoService.class).getMessageDigest();
             data.put("password", messageDigest.digest(password,
                     digestAlg,
                     Integer.parseInt(saltLength),
@@ -212,11 +212,11 @@ public class User extends ModelBase implements Addable {
         String msg = checkPwd(request.getParameter("password"), request.getUser());
         if (msg != null) {
             request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(this.appContext.getI18n(msg));
+            request.getResponse().setMsg(getAppContext().getI18n(msg));
             return;
         }
 
-        appContext.callDefaultAction(request);
+        getAppContext().callDefaultAction(request);
     }
 
     @ModelAction(
@@ -228,7 +228,7 @@ public class User extends ModelBase implements Addable {
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) throws Exception {
-        appContext.callDefaultAction(request);
+        getAppContext().callDefaultAction(request);
     }
 
     @ModelAction(
@@ -241,7 +241,7 @@ public class User extends ModelBase implements Addable {
         if (DeployerConstants.DEFAULT_USER_QINGZHOU.equals(userId)) {
             if (!Boolean.parseBoolean(request.getParameter("active"))) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(this.appContext.getI18n("System.users.keep.active"));
+                request.getResponse().setMsg(getAppContext().getI18n("System.users.keep.active"));
                 return;
             }
         }
@@ -251,16 +251,16 @@ public class User extends ModelBase implements Addable {
             String msg = checkPwd(password, userId);
             if (msg != null) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(this.appContext.getI18n(msg));
+                request.getResponse().setMsg(getAppContext().getI18n(msg));
                 return;
             }
             if (!Objects.equals(password, request.getParameter("confirmPassword"))) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(this.appContext.getI18n("confirmPassword.different"));
+                request.getResponse().setMsg(getAppContext().getI18n("confirmPassword.different"));
             }
         }
 
-        appContext.callDefaultAction(request);
+        getAppContext().callDefaultAction(request);
     }
 
     private boolean passwordChanged(String password) {

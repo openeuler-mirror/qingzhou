@@ -90,7 +90,7 @@ public class App extends ModelBase implements Listable {
 
     @Override
     public void start() {
-        appContext.addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
+        getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
     }
 
     @Override
@@ -153,7 +153,7 @@ public class App extends ModelBase implements Listable {
             info = {"部署应用包到指定的轻舟实例上。",
                     "en:Deploy the application package to the specified Qingzhou instance."})
     public void add(Request request) {
-        RequestImpl tmpReq = buildAgentRequest(appContext.getRequestLang());
+        RequestImpl tmpReq = buildAgentRequest(getAppContext().getRequestLang());
         tmpReq.setActionName(DeployerConstants.ACTION_INSTALL);
 
         String app = Boolean.parseBoolean(request.getParameter("upload"))
@@ -177,7 +177,7 @@ public class App extends ModelBase implements Listable {
         String id = request.getId();
         Map<String, String> app = showData(id);
 
-        RequestImpl tmpReq = buildAgentRequest(appContext.getRequestLang());
+        RequestImpl tmpReq = buildAgentRequest(getAppContext().getRequestLang());
         tmpReq.setId(id);
         tmpReq.setActionName(DeployerConstants.ACTION_UNINSTALL);
 
