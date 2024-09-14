@@ -23,9 +23,9 @@ public interface Listable extends Showable {
      * 1. 其它模块中有字段通过 ModelField.refModel() 引用了本模块；
      * 2. 需要由轻舟平台在创建本模块数据时候，自动验证是否已经存在
      */
-    String[] allIds();
+    String[] allIds() throws Exception;
 
-    default boolean contains(String id) {
+    default boolean contains(String id) throws Exception {
         String[] ids = allIds();
         if (ids != null) {
             for (String s : ids) {
@@ -51,7 +51,7 @@ public interface Listable extends Showable {
      * 如果需要使用列表数据分页查看，则需要覆写此方法，表示所有数据的条数
      * 返回值小于 1 时无效
      */
-    default int totalSize() {
+    default int totalSize() throws Exception {
         String[] ids = allIds();
         return ids != null ? ids.length : -1;
     }

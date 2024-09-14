@@ -65,15 +65,15 @@ public class Password extends ModelBase {
 
     @Override
     public void start() {
-        appContext.addI18n("keyForOtp.bind", new String[]{"请先刷新动态密码",
+        getAppContext().addI18n("keyForOtp.bind", new String[]{"请先刷新动态密码",
                 "en:Please refresh the one-time password"});
-        appContext.addI18n("password.confirm.failed", new String[]{"确认密码与新密码不一致",
+        getAppContext().addI18n("password.confirm.failed", new String[]{"确认密码与新密码不一致",
                 "en:Confirm that the password does not match the new password"});
-        appContext.addI18n("password.original.failed", new String[]{"原始密码错误",
+        getAppContext().addI18n("password.original.failed", new String[]{"原始密码错误",
                 "en:The original password is wrong"});
-        appContext.addI18n("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变",
+        getAppContext().addI18n("password.change.not", new String[]{"新密码与原始密码是一样的，没有发生改变",
                 "en:The new password is the same as the original password and has not changed"});
-        appContext.addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，请勿设置最近使用过的密码",
+        getAppContext().addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，请勿设置最近使用过的密码",
                 "en:For security reasons, do not set a recently used password"});
     }
 
@@ -101,7 +101,7 @@ public class Password extends ModelBase {
             String error = checkError(request, baseData);
             if (error != null) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(appContext.getI18n(error));
+                request.getResponse().setMsg(getAppContext().getI18n(error));
                 return;
             }
 
@@ -128,7 +128,7 @@ public class Password extends ModelBase {
             String keyForOtp = baseData.get("keyForOtp");
             if (parsedBoolean && Utils.isBlank(keyForOtp)) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(appContext.getI18n("keyForOtp.bind"));
+                request.getResponse().setMsg(getAppContext().getI18n("keyForOtp.bind"));
                 return;
             }
         }
@@ -197,7 +197,7 @@ public class Password extends ModelBase {
         String reqCode = request.getParameter("otp");
         if (Utils.notBlank(reqCode)) {
             String keyForOtp = request.getParameterInSession(KEY_IN_SESSION_FLAG);
-            TotpCipher totpCipher = appContext.getService(CryptoService.class).getTotpCipher();
+            TotpCipher totpCipher = getAppContext().getService(CryptoService.class).getTotpCipher();
             result = totpCipher.verifyCode(keyForOtp, reqCode);
             if (result) {
                 Map<String, String> data = new HashMap<>();
