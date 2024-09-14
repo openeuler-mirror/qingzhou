@@ -26,7 +26,7 @@ public class Home extends ModelBase {
                     "en:Go to the default home of this app."})
     public void show(Request request) throws Exception {
         Home home = new Home();
-        home.appDir = appContext.getAppDir().getAbsolutePath();
+        home.appDir = getAppContext().getAppDir().getAbsolutePath();
         home.javaHome = System.getProperty("java.home");
         request.getResponse().addModelData(home);
     }

@@ -50,7 +50,7 @@ class DefaultAction {
             code = Listable.ACTION_CONTAINS, icon = "search",
             name = {"查找", "en:Search"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    public void contains(Request request) {
+    public void contains(Request request) throws Exception {
         Listable listable = (Listable) instance;
         request.getResponse().setSuccess(listable.contains(request.getId()));
     }
@@ -59,15 +59,14 @@ class DefaultAction {
             code = Listable.ACTION_ALL, icon = "list",
             name = {"列表所有", "en:List All"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    public void listAll(Request request) {
+    public void listAll(Request request) throws Exception {
         Listable listable = (Listable) instance;
         String[] ids = listable.allIds();
-        if (ids != null) {
-            for (String id : ids) {
-                request.getResponse().addData(new HashMap<String, String>() {{
-                    put(id, "");
-                }});
-            }
+        if (ids == null) return;
+        for (String id : ids) {
+            request.getResponse().addData(new HashMap<String, String>() {{
+                put(id, "");
+            }});
         }
     }
 
@@ -91,6 +90,7 @@ class DefaultAction {
 
         String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFieldsToList();
         List<Map<String, String>> result = ((Listable) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList);
+        if (result == null) return;
         for (Map<String, String> data : result) {
             request.getResponse().addData(data);
         }

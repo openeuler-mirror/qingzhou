@@ -22,11 +22,11 @@ import java.io.IOException;
 public class Agent extends ModelBase {
     @Override
     public void start() {
-        appContext.addI18n("app.exists", new String[]{"应用已存在，请更换为其它的应用名后重试",
+        getAppContext().addI18n("app.exists", new String[]{"应用已存在，请更换为其它的应用名后重试",
                 "en:If the application already exists, please change it to another application name and try again"});
-        appContext.addI18n("app.not.found", new String[]{"应用文件未找到",
+        getAppContext().addI18n("app.not.found", new String[]{"应用文件未找到",
                 "en:The app file was not found"});
-        appContext.addI18n("app.type.unknown", new String[]{"应用文件类型无法识别",
+        getAppContext().addI18n("app.type.unknown", new String[]{"应用文件类型无法识别",
                 "en:The app file type is not recognized"});
     }
 
@@ -38,11 +38,11 @@ public class Agent extends ModelBase {
         String fileId = request.getParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID);
         File srcFile = new File(fileId);
         if (!srcFile.exists()) {
-            File uploadDir = new File(appContext.getTemp(), fileId);
+            File uploadDir = new File(getAppContext().getTemp(), fileId);
             File[] listFiles = uploadDir.listFiles();
             if (listFiles == null || listFiles.length == 0) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(appContext.getI18n("app.not.found"));
+                request.getResponse().setMsg(getAppContext().getI18n("app.not.found"));
                 return;
             }
             srcFile = listFiles[0];
@@ -65,7 +65,7 @@ public class Agent extends ModelBase {
             FileUtil.unZipToDir(srcFile, app);
         } else {
             request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(appContext.getI18n("app.type.unknown"));
+            request.getResponse().setMsg(getAppContext().getI18n("app.type.unknown"));
             return;
         }
 
@@ -73,7 +73,7 @@ public class Agent extends ModelBase {
         App deployerApp = deployer.getApp(app.getName());
         if (deployerApp != null) {
             request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(appContext.getI18n("app.exists"));
+            request.getResponse().setMsg(getAppContext().getI18n("app.exists"));
             return;
         }
 
@@ -108,7 +108,7 @@ public class Agent extends ModelBase {
         byte[] fileBytes = Main.getService(CryptoService.class).getBase64Coder().decode(
                 request.getNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_BYTES));
 
-        File file = FileUtil.newFile(appContext.getTemp(), fileId, fileName);
+        File file = FileUtil.newFile(getAppContext().getTemp(), fileId, fileName);
         FileUtil.writeFile(file, fileBytes, true);
     }
 }

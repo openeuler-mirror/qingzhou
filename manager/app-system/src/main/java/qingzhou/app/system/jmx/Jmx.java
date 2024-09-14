@@ -1,6 +1,9 @@
 package qingzhou.app.system.jmx;
 
-import qingzhou.api.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
 import qingzhou.api.type.Updatable;
 import qingzhou.app.system.Main;
 import qingzhou.config.Config;
@@ -49,7 +52,7 @@ public class Jmx extends ModelBase implements Updatable {
                 ServiceManager.getInstance().init(jmx);
             }
         } catch (Exception e) {
-            appContext.getService(Logger.class).error(e.getMessage(), e);
+            getAppContext().getService(Logger.class).error(e.getMessage(), e);
         }
 
         Main.getService(ModuleContext.class).registerService(JmxServiceAdapter.class, JmxServiceAdapterImpl.getInstance());
@@ -60,7 +63,7 @@ public class Jmx extends ModelBase implements Updatable {
         try {
             ServiceManager.getInstance().destroy();
         } catch (Exception e) {
-            appContext.getService(Logger.class).error(e.getMessage(), e);
+            getAppContext().getService(Logger.class).error(e.getMessage(), e);
         }
     }
 

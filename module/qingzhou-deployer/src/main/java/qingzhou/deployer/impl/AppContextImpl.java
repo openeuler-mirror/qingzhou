@@ -1,9 +1,6 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.ActionFilter;
-import qingzhou.api.AppContext;
-import qingzhou.api.Lang;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
@@ -105,6 +102,16 @@ class AppContextImpl implements AppContext {
     @Override
     public void callDefaultAction(Request request) throws Exception {
         app.invokeDefault(request);
+    }
+
+    @Override
+    public String getModel(ModelBase modelBase) {
+        for (Map.Entry<String, ModelBase> e : app.getModelBaseMap().entrySet()) {
+            if (e.getValue() == modelBase) {
+                return e.getKey();
+            }
+        }
+        return null;
     }
 
     @Override
