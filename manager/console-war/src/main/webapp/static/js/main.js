@@ -245,65 +245,59 @@ function contain(array, ele) {
 };
 
 function triggerTies(json) {
-    for (var j = 0; j < json.length; j++) {
-        for (var k in json[j]) {
-            triggerAction(k, json[j][k]);
-        }
-    }
-};
+    json.forEach(item => {
+        Object.keys(item).forEach(key => {
+            triggerAction(key, item[key]);
+        });
+    });
+}
 
 function triggerAction(ele, condition) {
-    var array;
-    if (condition.indexOf("&") >= 0) {
-        array = condition.split("\&");
-    } else {
-        array = condition.split("\|");
-    }
-    for (var i = 0; i < array.length; i++) {
-        var notEq = array[i].search("!=") >= 0 ? true : false;
-        var operator = array[i].search("!=") < 0 ? "=" : "!=";
-        var item = array[i].split(operator)[0];
-        var val = array[i].split(operator)[1];
-        if (val.indexOf("'") > -1 || val.indexOf("\"") > -1) {
-            val = eval(val);
-        }
-        var target = $("[name='" + item + "']:selected", getRestrictedArea()).length > 0 ?
-                $("[name='" + item + "']:selected", getRestrictedArea()) : $("[name='" + item + "']:checked", getRestrictedArea());
-        if ($(target).length <= 0) {
+    const operators = condition.includes("&") ? "&" : "|";
+    const expressions = condition.split(operators);
+
+    let shouldHide = operators === "&";
+
+    expressions.forEach(expression => {
+        const notEq = expression.includes("!=");
+        const operator = notEq ? "!=" : "=";
+        const [item, val] = expression.split(operator);
+        const parsedVal = val.includes("'") || val.includes("\"") ? eval(val) : val;
+
+        // 优化目标元素查找
+        let target = $("[name='" + item + "']:selected", getRestrictedArea()).length > 0 ?
+            $("[name='" + item + "']:selected", getRestrictedArea()) : $("[name='" + item + "']:checked", getRestrictedArea());
+
+        if (!target.length) {
             target = $("[name='" + item + "']", getRestrictedArea());
-            if(target.length > 1) {
-                $("#form-item-" + ele, getRestrictedArea()).hide();// 有多个选项，且未选中时，则隐藏
-                continue;
-            }
         }
-        if ($(target).length <= 0) {
-            continue;
+
+        // 当有多个选项未选中时，隐藏目标表单项
+        if (target.length > 1 || !target.length) {
+            $("#form-item-" + ele, getRestrictedArea()).hide();
+            return;
         }
-        if (condition.indexOf("&") >= 0) {
-            if (compareVal($(target).val(), val, !notEq)) {
-                $("#form-item-" + ele, getRestrictedArea()).hide();
-                return;
-            }
+
+        // 通过 compareVal 进行比较并设置隐藏显示逻辑
+        const compareResult = compareVal(target.val(), parsedVal, !notEq);
+        if (operators === "&") {
+            shouldHide = shouldHide && compareResult;
         } else {
-            if (compareVal($(target).val(), val, notEq)) {
-                $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
-                return;
-            }
+            shouldHide = shouldHide || compareResult;
         }
-    }
-    if (condition.indexOf("&") >= 0) {
-        $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
-    } else {
+    });
+
+    if (shouldHide) {
         $("#form-item-" + ele, getRestrictedArea()).hide();
+    } else {
+        $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
     }
-};
+}
 
 function compareVal(value, val, notEq) {
-    if (notEq) {
-        return value !== val;
-    }
-    return value === val;
-};
+    return notEq ? value !== val : value === val;
+}
+
 
 function effectiveInfoFields(conditions) {
     var triggers = {};
