@@ -6,11 +6,11 @@ import qingzhou.app.ExampleMain;
 import qingzhou.app.AddableModelBase;
 
 
-@Model(code = "usermanagement", icon = "user",
-        menu = ExampleMain.SYSTEM_MANAGEMENT, order = 3,
-        name = {"用户管理", "en:User management"},
+@Model(code = "user", icon = "user",
+        menu = ExampleMain.SYSTEM_MANAGEMENT, order = 1,
+        name = {"用户", "en:User management"},
         info = {"用户管理", "en:User management."})
-public class UserManagementModel extends AddableModelBase {
+public class User extends AddableModelBase {
     @ModelField(
             required = true,
             list = true,
@@ -37,8 +37,7 @@ public class UserManagementModel extends AddableModelBase {
 
     @ModelField(
             type = FieldType.select,
-            refModel = PostManagementModel.class,
-            required = true,
+            refModel = Post.class,
             list = true,
             name = {"岗位", "en:Position"},
             info = {"岗位。", "en:Position."})
@@ -46,7 +45,7 @@ public class UserManagementModel extends AddableModelBase {
 
     @ModelField(
             type = FieldType.select,
-            refModel = DepartmentModel.class,
+            refModel = Department.class,
             list = true,
             name = {"归属部门", "en:Department "},
             info = {"归属部门。", "en:Department ."})

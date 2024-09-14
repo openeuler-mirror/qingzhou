@@ -7,7 +7,6 @@ import qingzhou.config.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
@@ -33,7 +32,8 @@ public class ResetPassword implements Filter<RestContext> {
             if (LoginManager.isOpenUris(RESTController.getReqUri(servletRequest))) {
                 return true;
             }
-            servletRequest.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(servletRequest, servletResponse);
+
+            LoginManager.forwardToLoginJsp(servletRequest, servletResponse);
             return false;
         }
 

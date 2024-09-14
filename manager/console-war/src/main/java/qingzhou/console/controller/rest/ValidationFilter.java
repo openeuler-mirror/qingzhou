@@ -156,7 +156,7 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             if (context.isAddAction) {
                 if (context.fieldInfo.getCode().equals(context.modelInfo.getIdFieldName())) {
-                    List<String> allIds = SystemController.getAllIds(context.request.getApp(), context.request.getModel());
+                    List<String> allIds = SystemController.getAllIds(context.request.getApp(), context.request.getModel(), context.fieldInfo);
                     if (allIds.contains(context.parameterVal)) {
                         return new String[]{"validation_id"};
                     }

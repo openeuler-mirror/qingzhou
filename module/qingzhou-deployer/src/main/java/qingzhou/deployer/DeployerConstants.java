@@ -38,4 +38,5 @@ public interface DeployerConstants {
     String jsonView = "json";
     String CHECK_FINGERPRINT = "fingerprint";
     String BATCH_ID_SEPARATOR = ",";
+    int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));
 }

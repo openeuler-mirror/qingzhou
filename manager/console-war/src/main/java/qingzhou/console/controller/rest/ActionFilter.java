@@ -1,6 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.Response;
+import qingzhou.api.type.Addable;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
 import qingzhou.console.SecurityController;
@@ -23,24 +24,15 @@ public class ActionFilter implements Filter<RestContext> {
 
     @Override
     public boolean doFilter(RestContext context) throws Exception {
-        boolean ok = doFilter0(context);
-        if (!ok) {
-            Response response = context.request.getResponse();
-            response.setSuccess(false);
-            String i18n = I18n.getKeyI18n("action_not_exist");
-            response.setMsg(i18n);
-        }
-        return ok;
+        if (!show(context)) return false;
+        return exists(context);
     }
 
-    private boolean doFilter0(RestContext context) {
-        if (!filterShow(context)) return false;
-
-        return filterExists(context);
-    }
-
-    private boolean filterExists(RestContext context) {
+    private boolean exists(RestContext context) {
         RequestImpl request = context.request;
+
+        if (request.getAction().equals(Addable.ACTION_ADD)) return true; // 添加是带有id的，但不用校验
+
         String id = request.getId();
         if (Utils.isBlank(id)) return true; // 非 rest id 操作，无需校验
 
@@ -52,11 +44,17 @@ public class ActionFilter implements Filter<RestContext> {
         tmp.setModelName(request.getModel());
         tmp.setActionName(Listable.ACTION_CONTAINS);
         tmp.setId(id);
-        Response response = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
-        return response.isSuccess();
+        Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+        boolean success = tmpResp.isSuccess();
+        if (!success) {
+            String i18n = I18n.getKeyI18n("action_not_exist");
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(i18n);
+        }
+        return success;
     }
 
-    private boolean filterShow(RestContext context) {
+    private boolean show(RestContext context) {
         RequestImpl request = context.request;
         ModelInfo modelInfo = request.getCachedModelInfo();
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());

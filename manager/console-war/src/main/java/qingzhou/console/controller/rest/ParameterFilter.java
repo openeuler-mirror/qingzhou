@@ -1,7 +1,6 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
-import qingzhou.api.type.Addable;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
@@ -24,8 +23,8 @@ public class ParameterFilter implements Filter<RestContext> {
         trim(request);
         separateParameters(request);
         password(request);
+        resetId(request);
         batchId(request, context);
-        resetId(request, context);
 
         return true;
     }
@@ -65,6 +64,20 @@ public class ParameterFilter implements Filter<RestContext> {
         }
     }
 
+    private void resetId(RequestImpl request) {
+        ModelInfo modelInfo = request.getCachedModelInfo();
+        String idFieldName = modelInfo.getIdFieldName();
+        String idInUri = request.getId();
+        if (Utils.notBlank(idInUri)) { // rest 里面的 id 优先于消息体
+            request.setParameter(idFieldName, idInUri); // ValidationFilter 里面调用 SecurityController.isShow 需要用到此参数
+        } else {
+            String idInForm = request.getParameter(idFieldName);
+            if (Utils.notBlank(idInForm)) {
+                request.setId(idInForm); // jmx 请求的 id 在 消息体里面，所以通过这里反设回去
+            }
+        }
+    }
+
     private void batchId(RequestImpl request, RestContext context) {
         String id = request.getId();
         if (id != null && id.contains(DeployerConstants.BATCH_ID_SEPARATOR)) {
@@ -77,22 +90,8 @@ public class ParameterFilter implements Filter<RestContext> {
             }
             context.batchIds = batchIds.toArray(new String[0]);
             request.setId(null); // 消掉原批量id
-        }
-    }
-
-    private void resetId(RequestImpl request, RestContext context) {
-        ModelInfo modelInfo = request.getCachedModelInfo();
-        String idFieldName = modelInfo.getIdFieldName();
-        String idInUri = request.getId();
-        if (Utils.notBlank(idInUri)) { // rest 里面的 id 优先于消息体
-            if (context.batchIds == null) { // 非 batch 请求
-                request.setParameter(idFieldName, idInUri); // ValidationFilter 里面调用 SecurityController.isShow 需要用到此参数
-            }
-        } else {
-            String idInForm = request.getParameter(idFieldName);
-            if (Utils.notBlank(idInForm) && !request.getAction().equals(Addable.ACTION_ADD)) {
-                request.setId(idInForm); // jmx 请求的 id 在 消息体里面，所以通过这里反设回去
-            }
+            String idFieldName = request.getCachedModelInfo().getIdFieldName();
+            request.removeParameter(idFieldName);
         }
     }
 }

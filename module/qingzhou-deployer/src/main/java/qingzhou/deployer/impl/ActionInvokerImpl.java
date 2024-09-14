@@ -17,6 +17,7 @@ import qingzhou.registry.ModelInfo;
 import qingzhou.registry.Registry;
 
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -73,8 +74,10 @@ class ActionInvokerImpl implements ActionInvoker {
                         cipher = crypto.getCipher(remoteKey);
                     }
 
-                    Response response = callRemoteInstance(instanceInfo.getHost(), instanceInfo.getPort(),
-                            fieldUploadFile, cipher);
+                    Response response = callRemoteInstance(
+                            request, fieldUploadFile,
+                            instanceInfo.getHost(), instanceInfo.getPort(),
+                            cipher);
                     responseList.add(response);
                 }
             } catch (Exception e) {
@@ -85,27 +88,46 @@ class ActionInvokerImpl implements ActionInvoker {
         return responseList;
     }
 
-    private Response callRemoteInstance(String host, int port, Map<String, File> fieldUploadFile, Cipher cipher) throws Exception {
+    private Response callRemoteInstance(Request request, Map<String, File> fieldUploadFile,
+                                        String host, int port, Cipher cipher) throws Exception {
         String remoteUrl = String.format("http://%s:%s", host, port);
 
-//        fieldUploadFile.entrySet().forEach(new Consumer<Map.Entry<String, File>>() {
-//            @Override
-//            public void accept(Map.Entry<String, File> e) {
-//                String field = e.getKey();
-//                File uploadFile = e.getValue();
-//                RequestImpl tmp = new RequestImpl();
-//                tmp.setAppName(DeployerConstants.APP_SYSTEM);
-//                tmp.setModelName(DeployerConstants.MODEL_AGENT);
-//                tmp.setActionName(DeployerConstants.ACTION_UPLOAD);
-//                tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID, );
-//                tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_NAME, );
-//                tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_BYTES, );
-//                sendRemote(xx, remoteUrl, cipher); // 发送附件
-//            }
-//        });
-//
-//        return sendRemote(xx, remoteUrl, cipher); // 发送请求
-        return null;
+        for (Map.Entry<String, File> e : fieldUploadFile.entrySet()) {
+            String field = e.getKey();
+            File file = e.getValue();
+            String uploadId = UUID.randomUUID().toString().replace("-", "");
+
+            RequestImpl tmp = new RequestImpl();
+            tmp.setAppName(DeployerConstants.APP_SYSTEM);
+            tmp.setModelName(DeployerConstants.MODEL_AGENT);
+            tmp.setActionName(DeployerConstants.ACTION_UPLOAD);
+            tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID, uploadId);
+            tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_NAME, file.getName());
+            try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+                byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
+                long offset = 0;
+                while (true) {
+                    raf.seek(offset);
+                    int read = raf.read(block);
+                    if (read > 0) { // ==0 表示上次正好读取到结尾
+                        byte[] sendBlock =
+                                read == DeployerConstants.DOWNLOAD_BLOCK_SIZE
+                                        ? block
+                                        : Arrays.copyOfRange(block, 0, read);
+                        tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_BYTES,
+                                crypto.getBase64Coder().encode(sendBlock));
+                        sendRemote(tmp, remoteUrl, cipher); // 发送附件
+                        offset = raf.getFilePointer();
+                    } else {
+                        break;
+                    }
+                }
+            }
+            // 上传成功后，更新为远程实例上的地址
+            ((RequestImpl) request).setParameter(field, uploadId);
+        }
+
+        return sendRemote(request, remoteUrl, cipher); // 发送请求
     }
 
     private Response sendRemote(Request request, String remoteUrl, Cipher cipher) throws Exception {

@@ -1,5 +1,5 @@
 package qingzhou.api;
 
-public enum MsgType {
+public enum MsgLevel {
     info, warn, error
 }

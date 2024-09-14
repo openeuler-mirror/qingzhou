@@ -6,10 +6,10 @@ import qingzhou.app.AddableModelBase;
 import qingzhou.app.ExampleMain;
 
 @Model(code = "department", icon = "sitemap",
-        menu = ExampleMain.SYSTEM_MANAGEMENT, order = 1,
+        menu = ExampleMain.SYSTEM_MANAGEMENT, order = 2,
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
-public class DepartmentModel extends AddableModelBase {
+public class Department extends AddableModelBase {
     @ModelField(
             required = true,
             list = true,

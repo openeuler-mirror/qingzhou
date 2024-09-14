@@ -678,7 +678,7 @@ function bindEventForFormPage() {
                     success: function (data) {
                         if (data.success === "true" || data.success === true) {
                             closeLayer(index);
-                            showMsg(getSetting("bindSuccessOtp"),data.message_type);
+                            showMsg(getSetting("bindSuccessOtp"), data.msg_level);
                         } else {
                             $("#verifyCodeOtpError").html(getSetting("bindFailOtp"));
                         }
@@ -784,7 +784,7 @@ function bindFormEvent() {
                         window.location.href = data.redirectURL;
                         return;
                     } else {
-                        showMsg(data.message,data.message_type);
+                        showMsg(data.message, data.msg_level);
                     }
                 } else {
                     $("#tempZone", thisForm).html("");
@@ -823,7 +823,7 @@ function bindFormEvent() {
                         $($("a", $(".nav.nav-tabs > li.tab-has-error").first()).attr("href")).addClass("active");
                         //$("html, body").animate({scrollTop: $(".has-error", thisForm).first().offset().top - 100}, 500);
                     } else {
-                        showMsg(data.message,data.message_type);
+                        showMsg(data.message, data.msg_level);
                     }
                 }
             },
@@ -1137,7 +1137,7 @@ function confirm_method(url) {
             if (data.success === "true" || data.success === true) {
                 $(".search-btn a", getRestrictedArea()).click();
             }
-            showMsg(data.message, data.message_type);
+            showMsg(data.message, data.msg_level);
         },
         error: function (e) {
             handleError(e);
@@ -1410,7 +1410,7 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
                     addData(chartObj, chartOption, models, keys, restrictedArea);
                 }
             } else {
-                showMsg(data.message, data.message_type);
+                showMsg(data.message, data.msg_level);
             }
         },
         error: function (e) {

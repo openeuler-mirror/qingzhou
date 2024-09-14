@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.api.Lang" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <header class="main-header">

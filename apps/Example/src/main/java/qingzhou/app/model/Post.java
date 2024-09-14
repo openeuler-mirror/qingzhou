@@ -6,11 +6,11 @@ import qingzhou.api.ModelField;
 import qingzhou.app.AddableModelBase;
 import qingzhou.app.ExampleMain;
 
-@Model(code = "postmanagement", icon = "stack",
-        menu = ExampleMain.SYSTEM_MANAGEMENT, order = 2,
-        name = {"岗位管理", "en:Post Management"},
+@Model(code = "post", icon = "stack",
+        menu = ExampleMain.SYSTEM_MANAGEMENT, order = 3,
+        name = {"岗位", "en:Post"},
         info = {"岗位管理。", "en:Post management."})
-public class PostManagementModel extends AddableModelBase {
+public class Post extends AddableModelBase {
     @ModelField(
             list = true,
             name = {"岗位名称", "en:Post Name"},
@@ -18,7 +18,6 @@ public class PostManagementModel extends AddableModelBase {
     public String name;
 
     @ModelField(
-            required = true,
             list = true,
             name = {"岗位编码", "en:Post Code"},
             info = {"岗位编码。", "en:Post code."})
@@ -27,7 +26,6 @@ public class PostManagementModel extends AddableModelBase {
     @ModelField(
             type = FieldType.radio,
             options = {"正常", "停用"},
-            required = true,
             list = true,
             name = {"岗位状态", "en:Post Status"},
             info = {"岗位状态。", "en:Post status."})

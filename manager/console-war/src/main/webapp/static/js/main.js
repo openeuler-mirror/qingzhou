@@ -754,9 +754,9 @@ function getSetting(key) {
  */
 function handleError(e, element) {
     if (e.status === 0) {
-        showMsg(getSetting("networkError"),"error");
+        showMsg(getSetting("networkError"), "error");
     } else if (e.status === 403) {
-        showMsg("403, Access denied !","error");
+        showMsg("403, Access denied !", "error");
         $("#mask-loading").hide();
     } else {
         if (e.status === 200 && e.responseText.indexOf("<!DOCTYPE html>") >= 0 && e.responseText.indexOf("loginForm") > 0) {
@@ -771,7 +771,7 @@ function handleError(e, element) {
                 window.location.href = loginUrl;
             }, function () {});
         } else {
-            showMsg(e.status + ":" + getSetting("pageErrorMsg"),"error");
+            showMsg(e.status + ":" + getSetting("pageErrorMsg"), "error");
         }
     }
 };

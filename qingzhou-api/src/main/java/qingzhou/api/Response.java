@@ -22,9 +22,9 @@ public interface Response {
 
     String getMsg();
 
-    void setMsgType(MsgType msgType);
+    void setMsgType(MsgLevel msgLevel);
 
-    MsgType getMsgType();
+    MsgLevel getMsgType();
 
     /**
      * 添加数据到响应中，数据以Map形式组织。

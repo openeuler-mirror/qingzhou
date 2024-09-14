@@ -73,9 +73,6 @@ public class I18n implements Filter<SystemControllerContext> {
         addKeyI18n("page.lang.switch", new String[]{"切换语言", "en:Switch The Language"});
         addKeyI18n("page.login.user", new String[]{"账户名称", "en:User"});
         addKeyI18n("page.login.password", new String[]{"账户密码", "en:Password"});
-
-        addKeyI18n("batch.ops.success", new String[]{"成功%s个", "en:Success %s"});
-        addKeyI18n("batch.ops.fail", new String[]{"成功%s个，失败%s个，失败详情：", "en:Success %s, failure %s, failure details:"});
     }
 
     @Override
