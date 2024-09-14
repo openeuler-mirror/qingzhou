@@ -263,7 +263,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
         return i18n != null ? i18n : msg;
     }
 
-    private static boolean isOpenUris(String checkUri) {
+    public static boolean isOpenUris(String checkUri) {
         if (checkUri.startsWith("/static/")) {
             for (String suffix : STATIC_RES_SUFFIX) {
                 if (checkUri.endsWith(suffix)) return true;

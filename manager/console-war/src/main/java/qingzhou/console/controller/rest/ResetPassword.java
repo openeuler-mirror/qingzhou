@@ -27,14 +27,10 @@ public class ResetPassword implements Filter<RestContext> {
         HttpServletRequest servletRequest = context.req;
         HttpServletResponse servletResponse = context.resp;
 
-        HttpSession session = servletRequest.getSession(true);
-        if (session == null) { // 远程实例注册
-            if (DeployerConstants.APP_SYSTEM.equals(context.request.getApp()) &&
-                    DeployerConstants.MODEL_MASTER.equals(context.request.getModel())) {
-                if (DeployerConstants.ACTION_CHECK.equals(context.request.getAction()) ||
-                        DeployerConstants.ACTION_REGISTER.equals(context.request.getAction())) {
-                    return true;
-                }
+        HttpSession session = servletRequest.getSession(false);
+        if (session == null) {
+            if (LoginManager.isOpenUris(RESTController.getReqUri(servletRequest))) {
+                return true;
             }
 
             LoginManager.forwardToLoginJsp(servletRequest, servletResponse);
