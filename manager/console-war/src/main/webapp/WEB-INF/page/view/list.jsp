@@ -56,7 +56,7 @@
                    data-tip='<%=titleStr%>'
                    class="btn batch-ops"
                    disabled="disabled" model-icon="<%=modelInfo.getIcon()%>"
-                   data-name="" data-id="" act-ajax='true' act-confirm='<%=operationConfirm%>" ?'>
+                   data-name="" data-id="" act-ajax='true' act-confirm='<%=operationConfirm%> ?'>
                     <i class="icon icon-<%=action.getIcon()%>"></i>
                     <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey)%>
                 </a>
