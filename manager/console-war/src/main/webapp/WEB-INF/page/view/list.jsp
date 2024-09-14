@@ -97,7 +97,7 @@
             <%
                 List<Map<String, String>> modelDataList = qzResponse.getDataList();
                 if (modelDataList.isEmpty()) {
-                    String dataEmpty = "<tr><td colspan='" + (actionsToList.length + (actionsToList.length > 0 ? 2 : 1)) + "' align='center'>"
+                    String dataEmpty = "<tr><td colspan='" + (fieldsToList.length + (actionsToList.length > 0 ? 2 : 1)) + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
                             + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getKeyI18n("page.none") + "</span></td>";
                     out.print(dataEmpty);
