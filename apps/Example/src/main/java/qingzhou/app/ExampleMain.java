@@ -23,7 +23,7 @@ public class ExampleMain implements QingzhouApp {
 
         appContext.addActionFilter(request -> {
             String msg = String.format("有请求进入，模块：%s，操作：%s", request.getModel(), request.getAction());
-            logger.info(msg);
+            logger.debug(msg);
             return null; // null 表示无异常
         });
     }

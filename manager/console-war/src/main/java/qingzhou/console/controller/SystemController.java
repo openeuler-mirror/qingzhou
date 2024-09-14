@@ -101,8 +101,13 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return null;
     }
 
-    public static List<String> getAllIds(String app, String model) {
+    public static List<String> getAllIds(String app, String model, ModelFieldInfo fieldInfo) {
         List<String> idList = new ArrayList<>();
+
+        if (!fieldInfo.isRequired()) {
+            idList.add("");
+        }
+
         RequestImpl req = new RequestImpl();
         req.setAppName(app);
         req.setModelName(model);
@@ -119,7 +124,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     public static String[] getOptions(String app, ModelFieldInfo fieldInfo) {
         String refModel = fieldInfo.getRefModel();
         if (Utils.notBlank(refModel)) {
-            return getAllIds(app, refModel).toArray(new String[0]);
+            return getAllIds(app, refModel, fieldInfo).toArray(new String[0]);
         } else {
             return fieldInfo.getOptions();
         }
