@@ -280,7 +280,7 @@
     var global_setting = {
         separa: ',',
         downdloadGroupSepara: '/',
-        downloadFileNames: 'downloadFileNames',
+        downloadFileNames: '<%=DeployerConstants.DOWNLOAD_FILE_NAMES%>',
         filesName: 'files',
         checkOtp: '<%=LoginManager.LOGIN_OTP%>',
         locale: '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',

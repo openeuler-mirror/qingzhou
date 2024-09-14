@@ -22,8 +22,10 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
+import qingzhou.registry.ModelInfo;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -134,6 +136,7 @@ public class Controller implements ModuleActivator {
 
             // 4. 处理
             App app = deployer.getApp(request.getApp());
+            preProcess(request, app);
             app.invoke(request);
 
             // 将 request 收集的 session 参数，通过 response 回传到调用端
@@ -145,6 +148,25 @@ public class Controller implements ModuleActivator {
 
             // 6. 数据加密，返回到客户端
             return cipher.encrypt(responseData);
+        }
+
+        private void preProcess(RequestImpl request, App app) {
+            ModelInfo modelInfo = request.getCachedModelInfo();
+            String[] uploadFieldNames = modelInfo.getFileUploadFieldNames();
+            if (uploadFieldNames == null) return;
+            for (String uploadField : uploadFieldNames) {
+                String uploadFile = request.getParameter(uploadField);
+                if (!uploadFile.startsWith(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG)) continue;
+
+                String uploadId = uploadFile.substring(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG.length());
+                File uploadDir = FileUtil.newFile(app.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, uploadId);
+                if (!uploadDir.isDirectory()) continue;
+
+                File[] listFiles = uploadDir.listFiles();
+                if (listFiles == null || listFiles.length != 1) continue;
+
+                request.setParameter(uploadField, listFiles[0].getAbsolutePath());
+            }
         }
     }
 
@@ -198,7 +220,7 @@ public class Controller implements ModuleActivator {
             String registerData = json.toJson(thisInstanceInfo);
 
             boolean registered = false;
-            String baseUri = masterUrl + DeployerConstants.REST_PREFIX + "/" + DeployerConstants.jsonView + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
+            String baseUri = masterUrl + DeployerConstants.REST_PREFIX + "/" + DeployerConstants.JSON_VIEW + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
             try {
                 String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
                 HttpResponse response = http.buildHttpClient().send(baseUri + DeployerConstants.ACTION_CHECK, new HashMap<String, String>() {{

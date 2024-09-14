@@ -48,7 +48,7 @@
                                 I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
                                 I18n.getModelI18n(qzApp, "model." + qzModel));
 
-                        String actionUrl = PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, actionKey);
+                        String actionUrl = PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, actionKey);
                 %>
                 <a id="<%=actionKey%>" action-name="<%=actionKey%>"
                    href="<%=actionUrl%>"
@@ -171,7 +171,7 @@
                                     || actionName.equals(Deletable.ACTION_DELETE);
                     %>
                     <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,
-                            useJsonUri ? DeployerConstants.jsonView : ViewManager.htmlView,
+                            useJsonUri ? DeployerConstants.JSON_VIEW : ViewManager.htmlView,
                             actionName + "/" + encodedItemId)%>" <%=actionTitle%>
                        class="tw-action-link tooltips" data-tip-arrow="top"
                        model-icon="<%=modelInfo.getIcon()%>" action-name="<%=actionName%>"
@@ -287,7 +287,7 @@
         $(".list-table  input[type='checkbox'][class='morecheck']", getRestrictedArea()).each(function () {
             if ($(this).prop("checked")) {
                 if ($(this).attr("value") !== undefined && $(this).attr("value") !== null && $(this).attr("value") !== "") {
-                    params = params + $(this).attr("value") + ","
+                    params = params + $(this).attr("value") + "<%=DeployerConstants.BATCH_ID_SEPARATOR%>"
                 }
             }
         });

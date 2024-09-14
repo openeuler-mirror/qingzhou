@@ -20,7 +20,7 @@ public class ViewManager {
 
     public ViewManager() {
         views.put(htmlView, new HtmlView());
-        views.put(DeployerConstants.jsonView, new JsonView());
+        views.put(DeployerConstants.JSON_VIEW, new JsonView());
         views.put(fileView, new FileView());
         views.put(imageView, new ImageView());
     }

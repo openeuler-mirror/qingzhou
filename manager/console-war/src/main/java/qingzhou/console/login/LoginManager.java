@@ -271,7 +271,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
         }
 
         // 远程实例注册
-        String baseUri = DeployerConstants.REST_PREFIX + "/" + DeployerConstants.jsonView + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
+        String baseUri = DeployerConstants.REST_PREFIX + "/" + DeployerConstants.JSON_VIEW + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
         return checkUri.equals(baseUri + DeployerConstants.ACTION_CHECK)
                 ||
                 checkUri.equals(baseUri + DeployerConstants.ACTION_REGISTER);

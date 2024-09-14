@@ -156,13 +156,12 @@ public class App extends ModelBase implements Listable {
         RequestImpl tmpReq = buildAgentRequest(getAppContext().getRequestLang());
         tmpReq.setActionName(DeployerConstants.ACTION_INSTALL);
 
-        String app = Boolean.parseBoolean(request.getParameter("upload"))
-                ? request.getParameter("file")
-                : request.getParameter("path");
-        tmpReq.setParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID, app);
+        // 和 qingzhou.app.system.Agent.install 里面的参数对应
+        tmpReq.setParameter("upload", request.getParameter("upload"));
+        tmpReq.setParameter("file", request.getParameter("file"));
+        tmpReq.setParameter("path", request.getParameter("path"));
 
         String instance = ((RequestImpl) request).removeParameter("instances");
-
         invokeOnInstances(tmpReq, instance, request);
     }
 

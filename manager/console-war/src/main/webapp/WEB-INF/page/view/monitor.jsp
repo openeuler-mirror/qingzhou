@@ -7,7 +7,7 @@
     <%
         boolean chartEnabled = !qzResponse.getDataList().isEmpty();
         boolean isMonitor = Monitorable.ACTION_MONITOR.equals(qzAction);
-        String url = PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, Monitorable.ACTION_MONITOR + (Utils.notBlank(encodedId) ? "/" + encodedId : ""));
+        String url = PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Monitorable.ACTION_MONITOR + (Utils.notBlank(encodedId) ? "/" + encodedId : ""));
     %>
 
     <div class="infoPage" chartMonitor="<%=isMonitor && chartEnabled%>" data-url="<%=url%>">

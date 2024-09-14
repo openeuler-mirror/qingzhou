@@ -13,7 +13,7 @@
 <%@ include file="../fragment/breadcrumb.jsp" %>
 
 <form name="pageForm" method="post" class="form-horizontal"
-      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
+      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
             Map<String, String> model = null;
@@ -263,7 +263,7 @@
 
                     if (SecurityController.isActionShow(qzApp, qzModel, Downloadable.ACTION_DOWNLOAD, model, currentUser)) {
                 %>
-                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.jsonView, Downloadable.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
+                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Downloadable.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
                         <%
                             out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
                         %>

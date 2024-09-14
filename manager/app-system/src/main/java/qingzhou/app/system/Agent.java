@@ -1,9 +1,6 @@
 package qingzhou.app.system;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
@@ -20,6 +17,25 @@ import java.io.IOException;
         info = {"执行管理节点下发的应用安装、卸载等指令。",
                 "en:Execute the commands issued by the management node to install and uninstall applications."})
 public class Agent extends ModelBase {
+    @ModelField(
+            type = FieldType.bool,
+            name = {"", "en:"},
+            info = {"", "en:"})
+    public Boolean upload = false;
+
+    @ModelField(
+            show = "upload=false",
+            name = {"", "en:"},
+            info = {"", "en:"})
+    public String path;
+
+    @ModelField(
+            show = "upload=true",
+            type = FieldType.file,
+            name = {"", "en:"},
+            info = {"", "en:"})
+    public String file;
+
     @Override
     public void start() {
         getAppContext().addI18n("app.exists", new String[]{"应用已存在，请更换为其它的应用名后重试",
@@ -35,17 +51,14 @@ public class Agent extends ModelBase {
             name = {"安装应用", "en:Install App"},
             info = {"在该实例上安装应用。", "en:Install the application on the instance."})
     public void install(Request request) throws Exception {
-        String fileId = request.getParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID);
-        File srcFile = new File(fileId);
+        String appFile = Boolean.parseBoolean(request.getParameter("upload"))
+                ? request.getParameter("file")
+                : request.getParameter("path");
+        File srcFile = new File(appFile);
         if (!srcFile.exists()) {
-            File uploadDir = new File(getAppContext().getTemp(), fileId);
-            File[] listFiles = uploadDir.listFiles();
-            if (listFiles == null || listFiles.length == 0) {
-                request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(getAppContext().getI18n("app.not.found"));
-                return;
-            }
-            srcFile = listFiles[0];
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(getAppContext().getI18n("app.not.found"));
+            return;
         }
 
         String fileName = srcFile.getName();
@@ -103,12 +116,12 @@ public class Agent extends ModelBase {
             name = {"上传文件", "en:Upload File"},
             info = {"代理上传文件操作。", "en:Proxy upload file operations."})
     public void upload(Request request) throws IOException {
-        String fileId = request.getNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID);
-        String fileName = request.getNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_NAME);
+        String fileId = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_ID);
+        String fileName = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_NAME);
         byte[] fileBytes = Main.getService(CryptoService.class).getBase64Coder().decode(
-                request.getNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_BYTES));
+                request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_BYTES));
 
-        File file = FileUtil.newFile(getAppContext().getTemp(), fileId, fileName);
+        File file = FileUtil.newFile(getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, fileId, fileName);
         FileUtil.writeFile(file, fileBytes, true);
     }
 }

@@ -101,8 +101,8 @@ class ActionInvokerImpl implements ActionInvoker {
             tmp.setAppName(DeployerConstants.APP_SYSTEM);
             tmp.setModelName(DeployerConstants.MODEL_AGENT);
             tmp.setActionName(DeployerConstants.ACTION_UPLOAD);
-            tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID, uploadId);
-            tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_NAME, file.getName());
+            tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_ID, uploadId);
+            tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_NAME, file.getName());
             try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
                 byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
                 long offset = 0;
@@ -114,7 +114,7 @@ class ActionInvokerImpl implements ActionInvoker {
                                 read == DeployerConstants.DOWNLOAD_BLOCK_SIZE
                                         ? block
                                         : Arrays.copyOfRange(block, 0, read);
-                        tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_BYTES,
+                        tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_BYTES,
                                 crypto.getBase64Coder().encode(sendBlock));
                         sendRemote(tmp, remoteUrl, cipher); // 发送附件
                         offset = raf.getFilePointer();
@@ -124,7 +124,7 @@ class ActionInvokerImpl implements ActionInvoker {
                 }
             }
             // 上传成功后，更新为远程实例上的地址
-            ((RequestImpl) request).setParameter(field, uploadId);
+            ((RequestImpl) request).setParameter(field, DeployerConstants.UPLOAD_FILE_PREFIX_FLAG + uploadId);
         }
 
         return sendRemote(request, remoteUrl, cipher); // 发送请求

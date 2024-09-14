@@ -241,7 +241,7 @@ class DefaultAction {
 
         String downloadKey = request.getNonModelParameter(DeployerConstants.DOWNLOAD_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
-            String downloadFileNames = request.getNonModelParameter(DeployerConstants.DOWNLOAD_DOWNLOAD_FILE_NAMES);
+            String downloadFileNames = request.getNonModelParameter(DeployerConstants.DOWNLOAD_FILE_NAMES);
 
             // check
             if (downloadFileNames == null || downloadFileNames.trim().isEmpty()) {
