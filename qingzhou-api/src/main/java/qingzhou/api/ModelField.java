@@ -17,6 +17,7 @@ public @interface ModelField {
     String group() default ""; // 设置字段所属的页面表单展示分组，默认为空字符串表示“其它”分组。
 
     String show() default ""; // 此字段有效的条件
+    String readonly() default "";
 
     boolean createable() default true; // 允许创建时指定值
 

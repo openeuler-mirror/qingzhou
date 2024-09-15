@@ -718,8 +718,10 @@ function bindEventForFormPage() {
 function bindFormEvent() {
     $("form[name='pageForm'][loaded!='true']").each(function () {
         var thisForm = $(this);
-        // 表单元素级联控制显示隐藏的事件绑定
-        bindEvent(eval("(" + $.trim($("textarea[name='eventConditions']", thisForm).val()) + ")"));
+        // 表单元素级联控制显示/隐藏，只读的事件绑定
+        var eventConditions = JSON.parse($.trim($("textarea[name='eventConditions']", thisForm).val()));
+        bindEvent(eventConditions);
+
         var passwordFields = $.trim($("textarea[name='passwordFields']", thisForm).val()).split(",");
         // form 表单异步提交(ajax form)
         $(this).attr("loaded", "true").ajaxForm({

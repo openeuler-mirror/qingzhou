@@ -26,6 +26,7 @@ public class ModelFieldInfo {
     private String[] unsupportedStrings;
     private String pattern;
     private String show;
+    private String readonly;
 
     public boolean isFilePath() {
         return filePath;
@@ -233,7 +234,12 @@ public class ModelFieldInfo {
     public String getShow() {
         return show;
     }
-
+    public String getReadOnly() {
+        return readonly;
+    }
+    public void setReadOnly(String readonly) {
+        this.readonly = readonly;
+    }
     public void setShow(String show) {
         this.show = show;
     }

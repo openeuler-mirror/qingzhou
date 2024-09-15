@@ -170,6 +170,22 @@ public class PageBackendService {
         return result;
     }
 
+    public static Map<String, String> modelFieldReadOnlyMap(Request request) {
+        final ModelInfo modelInfo = getModelInfo(request);
+        if (modelInfo == null) {
+            return new HashMap<>();
+        }
+        Map<String, String> result = new HashMap<>();
+        for (ModelFieldInfo e : modelInfo.getModelFieldInfos()) {
+            String condition = e.getReadOnly().trim();
+            if (!condition.isEmpty()) {
+                result.put(e.getCode(), condition);
+            }
+        }
+
+        return result;
+    }
+
     public static boolean isFieldReadOnly(Request request, String fieldName) {
         final ModelInfo modelInfo = getModelInfo(request);
         if (modelInfo == null) {

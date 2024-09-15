@@ -202,37 +202,47 @@ function closeLayer(index) {
 
 // start, for: ModelField注解 effectiveWhen()
 function bindEvent(conditions) {
-    var triggers = {};
-    for (var key in conditions) {
-        var condition = conditions[key];
-        var array;
-        if (condition.indexOf("&") >= 0) {
-            array = condition.split("\&");
-        } else {
-            array = condition.split("\|");
-        }
+    const triggers = {};
 
-        for (var i = 0; i < array.length; i++) {
-            var operator = array[i].search("!=") < 0 ? "=" : "!=";
-            var triggerItem = array[i].split(operator)[0];
-            if (!triggers[triggerItem]) {
-                triggers[triggerItem] = [];
-            }
-            var json = {};
-            json[key] = condition;
-            if (!contain(triggers[triggerItem], json)) {
-                triggers[triggerItem].push(json);
-            }
+    // 处理 show 和 readonly 两种事件类型
+    ["show", "readonly"].forEach(type => {
+        if (conditions[type]) {
+            Object.keys(conditions[type]).forEach(key => {
+                const condition = conditions[type][key];
+                const expressions = condition.includes("&") ? condition.split("&") : condition.split("|");
+
+                // 处理每个表达式
+                expressions.forEach(expression => {
+                    const operator = expression.includes("!=") ? "!=" : "=";
+                    const [triggerItem, val] = expression.split(operator).map(part => part.trim());
+
+                    // 初始化触发器对象
+                    if (!triggers[triggerItem]) {
+                        triggers[triggerItem] = [];
+                    }
+
+                    // 创建并添加条件
+                    const json = { [key]: condition, type: type };
+                    if (!contain(triggers[triggerItem], json)) {
+                        triggers[triggerItem].push(json);
+                    }
+                });
+            });
         }
-    }
-    for (var item in triggers) {
-        $("[name='" + item + "']", getRestrictedArea()).unbind("change").bind("change", function () {
+    });
+    // 绑定事件和触发初始状态
+    Object.keys(triggers).forEach(item => {
+        const elements = $(`[name='${item}']`, getRestrictedArea());
+        elements.off("change").on("change", function () {
             triggerTies(triggers[$(this).attr("name")]);
         });
         triggerTies(triggers[item]);
-    }
+    });
+
     autoAdaptTip();
-};
+}
+
+
 
 function contain(array, ele) {
     for (var i = 0; i < array.length; i++) {
@@ -244,65 +254,68 @@ function contain(array, ele) {
 };
 
 function triggerTies(json) {
-    for (var j = 0; j < json.length; j++) {
-        for (var k in json[j]) {
-            triggerAction(k, json[j][k]);
-        }
-    }
-};
+    json.forEach(item => {
+        const { type, ...rest } = item; // 事件类型 (show/readonly)
+        Object.keys(rest).forEach(key => {
+            triggerAction(key, rest[key], type);
+        });
+    });
+}
 
-function triggerAction(ele, condition) {
-    var array;
-    if (condition.indexOf("&") >= 0) {
-        array = condition.split("\&");
-    } else {
-        array = condition.split("\|");
-    }
-    for (var i = 0; i < array.length; i++) {
-        var notEq = array[i].search("!=") >= 0 ? true : false;
-        var operator = array[i].search("!=") < 0 ? "=" : "!=";
-        var item = array[i].split(operator)[0];
-        var val = array[i].split(operator)[1];
-        if (val.indexOf("'") > -1 || val.indexOf("\"") > -1) {
-            val = eval(val);
-        }
-        var target = $("[name='" + item + "']:selected", getRestrictedArea()).length > 0 ?
-                $("[name='" + item + "']:selected", getRestrictedArea()) : $("[name='" + item + "']:checked", getRestrictedArea());
-        if ($(target).length <= 0) {
+function triggerAction(ele, condition,type) {
+    const operators = condition.includes("&") ? "&" : "|";
+    const expressions = condition.split(operators);
+
+    let shouldHideOrRead = operators === "&";
+
+    expressions.forEach(expression => {
+        const notEq = expression.includes("!=");
+        const operator = notEq ? "!=" : "=";
+        const [item, val] = expression.split(operator);
+        const parsedVal = val.includes("'") || val.includes("\"") ? eval(val) : val;
+
+        // 优化目标元素查找
+        let target = $("[name='" + item + "']:selected", getRestrictedArea()).length > 0 ?
+            $("[name='" + item + "']:selected", getRestrictedArea()) : $("[name='" + item + "']:checked", getRestrictedArea());
+
+        if (!target.length) {
             target = $("[name='" + item + "']", getRestrictedArea());
-            if(target.length > 1) {
-                $("#form-item-" + ele, getRestrictedArea()).hide();// 有多个选项，且未选中时，则隐藏
-                continue;
-            }
         }
-        if ($(target).length <= 0) {
-            continue;
+
+        // 当有多个选项未选中时，隐藏目标表单项
+        if ((target.length > 1 || !target.length) && type === "show") {
+            $("#form-item-" + ele, getRestrictedArea()).hide();
+            return;
         }
-        if (condition.indexOf("&") >= 0) {
-            if (compareVal($(target).val(), val, !notEq)) {
-                $("#form-item-" + ele, getRestrictedArea()).hide();
-                return;
-            }
+
+        // 通过 compareVal 进行比较并设置隐藏显示逻辑
+        const compareResult = compareVal(target.val(), parsedVal, !notEq);
+        if (operators === "&") {
+            shouldHideOrRead = shouldHideOrRead && compareResult;
         } else {
-            if (compareVal($(target).val(), val, notEq)) {
-                $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
-                return;
-            }
+            shouldHideOrRead = shouldHideOrRead || compareResult;
+        }
+    });
+    if (type === "show"){
+        if (shouldHideOrRead) {
+            $("#form-item-" + ele, getRestrictedArea()).hide();
+        } else {
+            $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
+        }
+    }else if(type === "readonly"){
+        if (shouldHideOrRead) {
+            $("#form-item-" + ele, getRestrictedArea()).find("input").removeAttr("readonly");
+        } else {
+            $("#form-item-" + ele, getRestrictedArea()).find("input").attr("readonly","readonly");
         }
     }
-    if (condition.indexOf("&") >= 0) {
-        $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
-    } else {
-        $("#form-item-" + ele, getRestrictedArea()).hide();
-    }
-};
+
+}
 
 function compareVal(value, val, notEq) {
-    if (notEq) {
-        return value !== val;
-    }
-    return value === val;
-};
+    return notEq ? value !== val : value === val;
+}
+
 
 function effectiveInfoFields(conditions) {
     var triggers = {};

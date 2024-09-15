@@ -289,15 +289,31 @@
             // added by yuanwc for: ModelField 注解 show()
             StringBuilder conditionBuilder = new StringBuilder();
             conditionBuilder.append("{");
-            Map<String, String> conditions = PageBackendService.modelFieldShowMap(qzRequest);
-            for (Map.Entry<String, String> e : conditions.entrySet()) {
-                //e.getValue().replace(/\&\&/g, '&').replace(/\|\|/g, '|');
-                conditionBuilder.append("'").append(e.getKey()).append("' : '")
-                        .append(e.getValue().replaceAll("\\&\\&", "&").replaceAll("\\|\\|", "|")).append("',");
+
+            // 处理 show 条件
+            conditionBuilder.append("\"show\": {");
+            Map<String, String> showConditions = PageBackendService.modelFieldShowMap(qzRequest);
+            for (Map.Entry<String, String> entry : showConditions.entrySet()) {
+                conditionBuilder.append("\"").append(entry.getKey()).append("\": \"")
+                        .append(entry.getValue().replaceAll("\\&\\&", "&").replaceAll("\\|\\|", "|")).append("\",");
             }
-            if (conditionBuilder.indexOf(",") > 0) {
+            if (conditionBuilder.lastIndexOf(",") > 0) {
                 conditionBuilder.deleteCharAt(conditionBuilder.lastIndexOf(","));
             }
+            conditionBuilder.append("},");
+
+            // 处理 readonly 条件
+            conditionBuilder.append("\"readonly\": {");
+            Map<String, String> readonlyConditions = PageBackendService.modelFieldReadOnlyMap(qzRequest);
+            for (Map.Entry<String, String> entry : readonlyConditions.entrySet()) {
+                conditionBuilder.append("\"").append(entry.getKey()).append("\": \"")
+                        .append(entry.getValue()).append("\",");
+            }
+            if (!readonlyConditions.isEmpty()) {
+                conditionBuilder.deleteCharAt(conditionBuilder.lastIndexOf(","));
+            }
+            conditionBuilder.append("}");
+
             conditionBuilder.append("}");
             out.print(conditionBuilder.toString());
         %>
