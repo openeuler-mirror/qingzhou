@@ -72,7 +72,7 @@ public class Controller implements ModuleActivator {
         @Override
         public void exec() throws Exception {
             Agent agent = config.getAgent();
-            if (!agent.isEnabled()) return;
+            if (agent == null || !agent.isEnabled()) return;
 
             path = "/";
             server = http.buildHttpServer();
@@ -93,6 +93,7 @@ public class Controller implements ModuleActivator {
                         result = Utils.stackTraceToString(e.getStackTrace()).getBytes(StandardCharsets.UTF_8);
                         exchange.setStatus(500);
                     }
+                    if (result == null || result.length == 0) return;
 
                     try (OutputStream outputStream = exchange.getResponseBody()) {
                         outputStream.write(result);
@@ -119,6 +120,7 @@ public class Controller implements ModuleActivator {
 
             // 1. 获得请求的数据
             byte[] requestData = bos.toByteArray();
+            if (requestData.length == 0) return null;
 
             // 2. 数据解密，带认证
             if (agentKey == null) {
@@ -178,7 +180,7 @@ public class Controller implements ModuleActivator {
         @Override
         public void exec() {
             Agent agent = config.getAgent();
-            if (!agent.isEnabled()) return;
+            if (agent == null || !agent.isEnabled()) return;
 
             thisInstanceInfo = thisInstanceInfo();
             timer = new Timer();
@@ -228,7 +230,7 @@ public class Controller implements ModuleActivator {
                 }});
                 if (response.getResponseCode() == 200) {
                     Map resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
-                    List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get("data");
+                    List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get(DeployerConstants.JSON_DATA);
                     if (dataList != null && !dataList.isEmpty()) {
                         String checkResult = dataList.get(0).get(fingerprint);
                         registered = Boolean.parseBoolean(checkResult);

@@ -652,6 +652,7 @@ function bindEventForFormPage() {
 
     // 列表页及form页面下载(日志、快照等)
     tw.bindFill(".form-btn a[btn-type='monitor']", ".main-body", true, false);
+
     // form页面(修改密码动态密码二维码加载)
     $(".form-btn a[btn-type='qrOtp']").unbind("click").bind("click", function (e) {
         e.preventDefault();
@@ -696,10 +697,6 @@ function bindEventForFormPage() {
         $(this).css("cursor", "not-allowed").parent().css("cursor", "not-allowed");
     });
 
-// 移除：解决多个textare并排显示的样式问题
-//    $("textarea[readonly]").each(function (i, elem) {
-//        $(this).css("height", elem.scrollHeight);
-//    });
     bindFormEvent();
 
     // 日期组件设置
@@ -711,9 +708,6 @@ function bindEventForFormPage() {
         forceParse: 0,
         showMeridian: 1
     });
-    (function (json) {
-        effectiveInfoFields(eval("(" + (!json || json === '' ? "{}" : json) + ")"));
-    })($.trim($("textarea[name='eventConditionsInfoPage']", getRestrictedArea()).val()));
 };
 function bindFormEvent() {
     $("form[name='pageForm'][loaded!='true']").each(function () {

@@ -71,7 +71,7 @@ public class ActionFilter implements Filter<RestContext> {
         for (String id : checkIds) {
             if (Utils.isBlank(id)) continue;
 
-            if (SecurityController.isShow(condition, new FindValue(id, request))) continue;
+            if (SecurityController.checkRule(condition, new FindValue(id, request), true)) continue;
 
             String i18n = I18n.getKeyI18n("action_not_show", actionInfo.getCode(), actionInfo.getShow());
             request.getResponse().setSuccess(false);

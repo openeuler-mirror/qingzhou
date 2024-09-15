@@ -18,8 +18,6 @@ public interface DeployerConstants {
     // 系统内部 Action
     String ACTION_CHECK = "check";
     String ACTION_REGISTER = "register";
-    String ACTION_INSTALL = "install";
-    String ACTION_UNINSTALL = "uninstall";
     String ACTION_MANAGE = "manage";
     String ACTION_INDEX = "index";
     String ACTION_UPLOAD = "upload";
@@ -41,6 +39,7 @@ public interface DeployerConstants {
     String JSON_VIEW = "json";
 
     // 模块间通信参数
+    String JSON_DATA="data";
     String CHECK_FINGERPRINT = "fingerprint";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String BATCH_ID_SEPARATOR = ",";

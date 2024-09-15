@@ -169,7 +169,7 @@ public class ModuleLoading implements Process {
                     Class<?> serviceType = field.getType();
                     Object serviceObj = findService(serviceType);
                     if (serviceObj == null) {
-                        return serviceType;
+                        return service.optional()?null:serviceType;
                     }
 
                     field.setAccessible(true);

@@ -9,12 +9,17 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
-import qingzhou.engine.util.Utils;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.MenuInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -22,19 +27,14 @@ import java.util.stream.Collectors;
  * 目前是给 jsp 使用，后续可复用给前后端分离的 html 网页
  * 建议多使用 VO 类的对象，可便于后续转换为 json
  */
-public class PageBackendService {
-
-    private static final String DEFAULT_EXPAND_MENU_GROUP_NAME = "Service";
-
-    private PageBackendService() {
-    }
-
-    private static ModelInfo getModelInfo(Request request) {
-        return ((RequestImpl) request).getCachedModelInfo();
+public class PageUtil {
+    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
+        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
+        return response.encodeURL(url);
     }
 
     private static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
-        boolean isDefaultActive = DEFAULT_EXPAND_MENU_GROUP_NAME.equals(menu.getMenuName());
+        boolean isDefaultActive = "Service".equals(menu.getMenuName());
         String model = menu.getMenuName();
         String menuText = I18n.getStringI18n(menu.getI18ns());
         menuBuilder.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append(model.equals(curModel) ? " active" : "").append("\">");
@@ -123,7 +123,6 @@ public class PageBackendService {
                 subMenu.setMenuAction(modelInfo.getEntrance());
                 subMenu.setOrder(modelInfo.getOrder());
                 if (menuData != null) {
-                    subMenu.setParentMenu(parentMenu.getMenuName());
                     parentMenu.getChildren().add(subMenu);
                 } else {
                     menus.add(subMenu);
@@ -139,70 +138,10 @@ public class PageBackendService {
         return menus;
     }
 
-    public static Map<String, Map<String, ModelFieldInfo>> getGroupedModelFieldMap(Request request) {
-        Map<String, Map<String, ModelFieldInfo>> result = new LinkedHashMap<>();
-        ModelInfo modelInfo = getModelInfo(request);
-        for (ModelFieldInfo modelFieldInfo : modelInfo.getModelFieldInfos()) {
-            String group = modelFieldInfo.getGroup();
-            if (group == null) {
-                result.computeIfAbsent("", k -> new LinkedHashMap<>()).put(modelFieldInfo.getCode(), modelFieldInfo);
-            } else {
-                result.computeIfAbsent(group, k -> new LinkedHashMap<>()).put(modelFieldInfo.getCode(), modelFieldInfo);
-            }
-        }
-
-        return result;
-    }
-
-    public static Map<String, String> modelFieldShowMap(Request request) {
-        final ModelInfo modelInfo = getModelInfo(request);
-        if (modelInfo == null) {
-            return new HashMap<>();
-        }
-        Map<String, String> result = new HashMap<>();
-        for (ModelFieldInfo e : modelInfo.getModelFieldInfos()) {
-            String condition = e.getShow().trim();
-            if (!condition.isEmpty()) {
-                result.put(e.getCode(), condition);
-            }
-        }
-
-        return result;
-    }
-
-    public static Map<String, String> modelFieldReadOnlyMap(Request request) {
-        final ModelInfo modelInfo = getModelInfo(request);
-        if (modelInfo == null) {
-            return new HashMap<>();
-        }
-        Map<String, String> result = new HashMap<>();
-        for (ModelFieldInfo e : modelInfo.getModelFieldInfos()) {
-            String condition = e.getReadOnly().trim();
-            if (!condition.isEmpty()) {
-                result.put(e.getCode(), condition);
-            }
-        }
-
-        return result;
-    }
-
-    public static boolean isFieldReadOnly(Request request, String fieldName) {
-        final ModelInfo modelInfo = getModelInfo(request);
-        if (modelInfo == null) {
-            return false;
-        }
-        ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-        if (modelField.getLengthMax() < 1) {
-            return true;
-        }
-        return !modelField.isCreateable() && !modelField.isEditable();
-    }
-
-    /********************* 批量操作 start ************************/
     public static ModelActionInfo[] listBachActions(Request request, Response response, String loginUser) {
         List<ModelActionInfo> actions = new ArrayList<>();
 
-        final ModelInfo modelInfo = getModelInfo(request);
+        final ModelInfo modelInfo = ((RequestImpl) request).getCachedModelInfo();
         for (String actionName : modelInfo.getBatchActionNames()) {
             boolean isShow = false;
             for (Map<String, String> data : response.getDataList()) {
@@ -219,29 +158,5 @@ public class PageBackendService {
 
         actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
         return actions.toArray(new ModelActionInfo[0]);
-    }
-
-    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
-        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
-        return response.encodeURL(url);
-    }
-
-    public static Map<String, String> stringToMap(String str) {
-        Map<String, String> map = new LinkedHashMap<>();
-        if (Utils.isBlank(str)) {
-            return map;
-        }
-        String[] envArr = str.split(",");
-        for (String env : envArr) {
-            int i = env.indexOf("=");
-            if (i < 0) {
-                map.put(env, "");
-            } else {
-                String name = env.substring(0, i);
-                String value = env.substring(i + 1);
-                map.put(name, value);
-            }
-        }
-        return map;
     }
 }

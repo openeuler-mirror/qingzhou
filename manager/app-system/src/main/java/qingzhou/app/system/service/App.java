@@ -21,7 +21,7 @@ import java.util.Map;
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.SERVICE_MENU, order = 1,
         name = {"应用", "en:App"},
-        info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可部署在轻舟平台上，用于管理特定的业务系统。",
+        info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
 public class App extends ModelBase implements Listable {
     @Override
@@ -50,7 +50,7 @@ public class App extends ModelBase implements Listable {
             unsupportedStrings = {DeployerConstants.APP_SYSTEM},
             list = true,
             name = {"应用名称", "en:App Name"},
-            info = {"应用包的名称，表示该应用的业务系统种类，一种业务系统可部署在多个轻舟实例上，每一次的部署都会有唯一的 ID 与之对应。",
+            info = {"应用包的名称，表示该应用的业务系统种类，一种业务系统可安装在多个轻舟实例上，每一次的安装都会有唯一的 ID 与之对应。",
                     "en:The name of the application package indicates the type of business system of the application, and a business system can be deployed on multiple Qingzhou instances, and each deployment will have a unique ID corresponding to it."})
     public String name;
 
@@ -84,7 +84,7 @@ public class App extends ModelBase implements Listable {
             required = true,
             refModel = Instance.class,
             list = true,
-            name = {"部署实例", "en:Instance"},
+            name = {"安装实例", "en:Instance"},
             info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
     public String instances = DeployerConstants.INSTANCE_LOCAL;
 
@@ -121,7 +121,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
         return ModelUtil.listData(allIds(), this::showData, pageNum, pageSize, fieldNames);
     }
 
@@ -140,74 +140,61 @@ public class App extends ModelBase implements Listable {
 
     @ModelAction(
             code = Addable.ACTION_CREATE, icon = "plus-sign",
-            name = {"部署", "en:Deploy"},
-            info = {"部署应用包到指定的轻舟实例上。",
-                    "en:Deploy the application package to the specified Qingzhou instance."})
+            name = {"安装", "en:Install"},
+            info = {"安装应用包到指定的轻舟实例上。",
+                    "en:Install the application package to the specified Qingzhou instance."})
     public void create(Request request) throws Exception {
         request.getResponse().addModelData(new App());
     }
 
     @ModelAction(
             code = Addable.ACTION_ADD, icon = "save",
-            name = {"部署", "en:Deploy"},
-            info = {"部署应用包到指定的轻舟实例上。",
-                    "en:Deploy the application package to the specified Qingzhou instance."})
+            name = {"安装", "en:Install"},
+            info = {"安装应用包到指定的轻舟实例上。",
+                    "en:Install the application package to the specified Qingzhou instance."})
     public void add(Request request) {
-        RequestImpl tmpReq = buildAgentRequest(getAppContext().getRequestLang());
-        tmpReq.setActionName(DeployerConstants.ACTION_INSTALL);
-
-        // 和 qingzhou.app.system.Agent.install 里面的参数对应
-        tmpReq.setParameter("upload", request.getParameter("upload"));
-        tmpReq.setParameter("file", request.getParameter("file"));
-        tmpReq.setParameter("path", request.getParameter("path"));
-
-        String instance = ((RequestImpl) request).removeParameter("instances");
-        invokeOnInstances(tmpReq, instance, request);
+        String instances = ((RequestImpl) request).removeParameter("instances");
+        invokeOnInstances(request, instances);
     }
 
     @ModelAction(
             code = Deletable.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
-            name = {"删除", "en:Delete"},
-            info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
-                    "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
+            name = {"卸载", "en:UnInstall"},
+            info = {"卸载应用，注：卸载应用会删除应用包下的所有文件，且不可恢复。",
+                    "en:Uninstall the app, Note: Uninstalling the app will delete all the files under the app package and cannot be recovered."})
     public void delete(Request request) {
         String id = request.getId();
         Map<String, String> app = showData(id);
-
-        RequestImpl tmpReq = buildAgentRequest(getAppContext().getRequestLang());
-        tmpReq.setId(id);
-        tmpReq.setActionName(DeployerConstants.ACTION_UNINSTALL);
-
-        invokeOnInstances(tmpReq, app.get("instances"), request);
+        String instances = app.get("instances");
+        invokeOnInstances(request, instances);
     }
 
-    private void invokeOnInstances(Request tmpReq, String instance, Request request) {
-        List<Response> responseList = Main.getService(ActionInvoker.class)
-                .invokeOnInstances(tmpReq, instance.split(DeployerConstants.DEFAULT_DATA_SEPARATOR));
-        final StringBuilder[] error = {null};
-        responseList.forEach(response -> {
-            if (!response.isSuccess()) {
-                request.getResponse().setSuccess(false);
-                if (error[0] == null) {
-                    error[0] = new StringBuilder();
+    private void invokeOnInstances(Request request, String instances) {
+        RequestImpl requestImpl = (RequestImpl) request;
+        String originModel = request.getModel();
+        try {
+            requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
+            List<Response> responseList = Main.getService(ActionInvoker.class)
+                    .invokeOnInstances(request, instances.split(DeployerConstants.DEFAULT_DATA_SEPARATOR));
+            final StringBuilder[] error = {null};
+            responseList.forEach(response -> {
+                if (!response.isSuccess()) {
+                    request.getResponse().setSuccess(false);
+                    if (error[0] == null) {
+                        error[0] = new StringBuilder();
+                    }
+                    error[0].append(response.getMsg());
                 }
-                error[0].append(response.getMsg());
+            });
+
+            if (!request.getResponse().isSuccess()) {
+                String errorMsg = error[0].toString();
+                request.getResponse().setMsg(errorMsg);
             }
-        });
-
-        if (!request.getResponse().isSuccess()) {
-            String errorMsg = error[0].toString();
-            request.getResponse().setMsg(errorMsg);
+        } finally {
+            requestImpl.setModelName(originModel);
         }
-    }
-
-    private RequestImpl buildAgentRequest(Lang lang) {
-        RequestImpl tmpReq = new RequestImpl();
-        tmpReq.setAppName(DeployerConstants.APP_SYSTEM);
-        tmpReq.setModelName(DeployerConstants.MODEL_AGENT);
-        tmpReq.setI18nLang(lang);
-        return tmpReq;
     }
 }

@@ -7,7 +7,7 @@
     <%
         boolean chartEnabled = !qzResponse.getDataList().isEmpty();
         boolean isMonitor = Monitorable.ACTION_MONITOR.equals(qzAction);
-        String url = PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Monitorable.ACTION_MONITOR + (Utils.notBlank(encodedId) ? "/" + encodedId : ""));
+        String url = PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Monitorable.ACTION_MONITOR + (Utils.notBlank(encodedId) ? "/" + encodedId : ""));
     %>
 
     <div class="infoPage" chartMonitor="<%=isMonitor && chartEnabled%>" data-url="<%=url%>">
@@ -104,24 +104,6 @@
                 keysBuilder.append("}");
                 out.print(keysBuilder.toString());
             }
-        %>
-        </textarea>
-        <textarea name="eventConditionsInfoPage" rows="3" disabled="disabled" style="display:none;">
-        <%
-            // added by yuanwc for: ModelField 注解 effectiveWhen()
-            StringBuilder conditionBuilder = new StringBuilder();
-            conditionBuilder.append("{");
-            Map<String, String> conditions = PageBackendService.modelFieldShowMap(qzRequest);
-            for (Map.Entry<String, String> e : conditions.entrySet()) {
-                //e.getValue().replace(/\&\&/g, '&').replace(/\|\|/g, '|');
-                conditionBuilder.append("'").append(e.getKey()).append("' : '")
-                        .append(e.getValue().replaceAll("\\&\\&", "&").replaceAll("\\|\\|", "|")).append("',");
-            }
-            if (conditionBuilder.indexOf(",") > 0) {
-                conditionBuilder.deleteCharAt(conditionBuilder.lastIndexOf(","));
-            }
-            conditionBuilder.append("}");
-            out.print(conditionBuilder.toString());
         %>
         </textarea>
     </div>

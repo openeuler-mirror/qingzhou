@@ -8,7 +8,7 @@
 
     String[] fieldsToList = modelInfo.getFieldsToList();
     String[] actionsToList = modelInfo.getListActionNames();
-    ModelActionInfo[] batchActions = PageBackendService.listBachActions(qzRequest, qzResponse, currentUser);
+    ModelActionInfo[] batchActions = PageUtil.listBachActions(qzRequest, qzResponse, currentUser);
 
     int totalSize = qzResponse.getTotalSize();
     int pageNum = qzResponse.getPageNum();
@@ -30,7 +30,7 @@
                     if (SecurityController.isActionShow(qzApp, qzModel, Addable.ACTION_ADD, null, currentUser)) {
                 %>
                 <a class="btn"
-                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Addable.ACTION_CREATE)%>">
+                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Addable.ACTION_CREATE)%>">
                     <i class="icon icon-plus-sign"></i>
                     <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Addable.ACTION_CREATE)%>
                 </a>
@@ -48,7 +48,7 @@
                                 I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
                                 I18n.getModelI18n(qzApp, "model." + qzModel));
 
-                        String actionUrl = PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, actionKey);
+                        String actionUrl = PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, actionKey);
                 %>
                 <a id="<%=actionKey%>" action-name="<%=actionKey%>"
                    href="<%=actionUrl%>"
@@ -135,7 +135,7 @@
                             isFirst = false;
                     %>
 
-                    <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , Updatable.ACTION_EDIT + "/" + encodedItemId)%>'
+                    <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , Updatable.ACTION_EDIT + "/" + encodedItemId)%>'
                        class="dataid tooltips"
                        record-action-id="<%=Updatable.ACTION_EDIT%>"
                        data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Updatable.ACTION_EDIT)%>'
@@ -170,7 +170,7 @@
                             boolean useJsonUri = actionName.equals(Downloadable.ACTION_FILES)
                                     || actionName.equals(Deletable.ACTION_DELETE);
                     %>
-                    <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest,
+                    <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest,
                             useJsonUri ? DeployerConstants.JSON_VIEW : ViewManager.htmlView,
                             actionName + "/" + encodedItemId)%>" <%=actionTitle%>
                        class="tw-action-link tooltips" data-tip-arrow="top"
@@ -178,7 +178,7 @@
                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
                             <%
                                 if (actionName.equals(Downloadable.ACTION_FILES)) {
-                                    out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+                                    out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
                                 }
 
                                 if (useJsonUri) {
@@ -213,7 +213,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
+                partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>

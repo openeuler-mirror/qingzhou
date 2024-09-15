@@ -1,6 +1,7 @@
 package qingzhou.registry;
 
 import qingzhou.api.FieldType;
+import qingzhou.engine.util.Utils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -88,6 +89,44 @@ public class ModelInfo {
 
     public String[] getFormFieldNames() {
         return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> !modelFieldInfo.isMonitor()).map(ModelFieldInfo::getCode).toArray(String[]::new);
+    }
+
+    public Map<String, String> getShowMap() {
+        Map<String, String> data = new HashMap<>();
+        for (String field : getFormFieldNames()) {
+            ModelFieldInfo modelFieldInfo = getModelFieldInfo(field);
+            String show = modelFieldInfo.getShow();
+            if (Utils.notBlank(show)) {
+                data.put(field, show);
+            }
+        }
+        return data;
+    }
+
+    public Map<String, String> getReadOnlyMap() {
+        Map<String, String> data = new HashMap<>();
+        for (String field : getFormFieldNames()) {
+            ModelFieldInfo modelFieldInfo = getModelFieldInfo(field);
+            String readOnly = modelFieldInfo.getReadOnly();
+            if (Utils.notBlank(readOnly)) {
+                data.put(field, readOnly);
+            }
+        }
+        return data;
+    }
+
+    public Map<String, Map<String, ModelFieldInfo>> getGroupedModelFieldMap() {
+        Map<String, Map<String, ModelFieldInfo>> result = new LinkedHashMap<>();
+        for (ModelFieldInfo modelFieldInfo : modelFieldInfos) {
+            String group = modelFieldInfo.getGroup();
+            if (group == null) {
+                result.computeIfAbsent("", k -> new LinkedHashMap<>()).put(modelFieldInfo.getCode(), modelFieldInfo);
+            } else {
+                result.computeIfAbsent(group, k -> new LinkedHashMap<>()).put(modelFieldInfo.getCode(), modelFieldInfo);
+            }
+        }
+
+        return result;
     }
 
     public String getCode() {

@@ -248,7 +248,7 @@
                         <ul class="sidebar-menu" data-widget="tree">
                             <%
                                 // 菜单
-                                out.print(PageBackendService.buildMenuHtmlBuilder(request, response, qzRequest));
+                                out.print(PageUtil.buildMenuHtmlBuilder(request, response, qzRequest));
                             %>
                         </ul>
                     </div>

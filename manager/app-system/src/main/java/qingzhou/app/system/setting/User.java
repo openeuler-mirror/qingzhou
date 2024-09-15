@@ -109,6 +109,7 @@ public class User extends ModelBase implements Addable {
 
     @ModelField(
             type = FieldType.bool,
+            readonly = "name=qingzhou",
             list = true,
             name = {"启用", "en:Active"},
             info = {"若未启用，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
@@ -192,11 +193,7 @@ public class User extends ModelBase implements Addable {
 
     @Override
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
-        List<Map<String, String>> users = new ArrayList<>();
-        for (qingzhou.config.User user : Main.getService(Config.class).getConsole().getUser()) {
-            users.add(Utils.getPropertiesFromObj(user));
-        }
-        return ModelUtil.listData(users, pageNum, pageSize, fieldNames);
+        return ModelUtil.listData(allIds(), this::showData, pageNum, pageSize, fieldNames);
     }
 
     @Override

@@ -279,8 +279,8 @@ public class Utils {
         return scopeClasses;
     }
 
-    public static LinkedHashMap<String, String> streamToProperties(InputStream inputStream) throws Exception {
-        LinkedHashMap<String, String> data = new LinkedHashMap<>(); // 保持顺序
+    public static Properties streamToProperties(InputStream inputStream) throws Exception {
+        Properties data = new Properties(); // 保持顺序
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
         for (String line; (line = reader.readLine()) != null; ) {
             line = line.trim();
@@ -296,5 +296,24 @@ public class Utils {
             }
         }
         return data;
+    }
+
+    public static Map<String, String> stringToMap(String str, String SP) {
+        Map<String, String> map = new LinkedHashMap<>();
+        if (Utils.isBlank(str)) {
+            return map;
+        }
+        String[] envArr = str.split(SP);
+        for (String env : envArr) {
+            int i = env.indexOf("=");
+            if (i < 0) {
+                map.put(env, "");
+            } else {
+                String name = env.substring(0, i);
+                String value = env.substring(i + 1);
+                map.put(name, value);
+            }
+        }
+        return map;
     }
 }

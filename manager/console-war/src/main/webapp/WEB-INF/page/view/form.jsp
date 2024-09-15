@@ -13,14 +13,14 @@
 <%@ include file="../fragment/breadcrumb.jsp" %>
 
 <form name="pageForm" method="post" class="form-horizontal"
-      action="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
+      action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
             Map<String, String> model = null;
             List<Map<String, String>> models = qzResponse.getDataList();
             if (!models.isEmpty()) {
                 model = models.get(0);
-                Map<String, Map<String, ModelFieldInfo>> fieldMapWithGroup = PageBackendService.getGroupedModelFieldMap(qzRequest);
+                Map<String, Map<String, ModelFieldInfo>> fieldMapWithGroup = modelInfo.getGroupedModelFieldMap();
                 Set<String> groups = fieldMapWithGroup.keySet();
                 long suffixId = System.currentTimeMillis();
                 if (groups.size() > 1) {
@@ -64,15 +64,8 @@
                         if (!modelField.isCreateable() && !isEdit) {
                             continue;
                         }
-                        /*if (!modelField.isEditable() && isEdit) {
-                            continue;
-                        }*/
 
                         String fieldName = e.getKey();
-
-                       /* if (modelField.clientEncrypt()) {
-                            passwordFields.add(fieldName);
-                        }*/
 
                         String readonly = "";
                         if (!modelField.isEditable() && isEdit) {
@@ -83,9 +76,7 @@
                                 readonly = "readonly";
                             }
                         }
-                        if (PageBackendService.isFieldReadOnly(qzRequest, fieldName)) {
-                            readonly = "readonly";
-                        }
+
                         boolean required = fieldName.equals(idFieldName) || modelField.isRequired();
 
                         String fieldValue = String.valueOf(model.get(fieldName));// 需要在 isFieldReadOnly 之后，原因是 license 限制的 5 个并发会在其中被修改，总之最后读取值是最新的最准确的
@@ -245,7 +236,7 @@
 
                     if (SecurityController.isActionShow(qzApp, qzModel, Listable.ACTION_LIST, model, currentUser)) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST)%>"
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST)%>"
                    btn-type="goback" class="btn">
                     <%=I18n.getKeyI18n("page.return")%>
                 </a>
@@ -254,7 +245,7 @@
 
                     if (modelInfo.getModelActionInfo(DeployerConstants.ACTION_REFRESHKEY) != null) {
                 %>
-                <a href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, DeployerConstants.ACTION_REFRESHKEY)%>"
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, DeployerConstants.ACTION_REFRESHKEY)%>"
                    btn-type="qrOtp" class="btn">
                     <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.ACTION_REFRESHKEY)%>
                 </a>
@@ -263,9 +254,9 @@
 
                     if (SecurityController.isActionShow(qzApp, qzModel, Downloadable.ACTION_DOWNLOAD, model, currentUser)) {
                 %>
-                <a href='<%=PageBackendService.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Downloadable.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
+                <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Downloadable.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
                         <%
-                            out.print(" downloadfile='" + PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
+                            out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
                         %>
                    data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Downloadable.ACTION_FILES)%>'
                    data-tip-arrow="top"
@@ -292,7 +283,7 @@
 
             // 处理 show 条件
             conditionBuilder.append("\"show\": {");
-            Map<String, String> showConditions = PageBackendService.modelFieldShowMap(qzRequest);
+            Map<String, String> showConditions = modelInfo.getShowMap();
             for (Map.Entry<String, String> entry : showConditions.entrySet()) {
                 conditionBuilder.append("\"").append(entry.getKey()).append("\": \"")
                         .append(entry.getValue().replaceAll("\\&\\&", "&").replaceAll("\\|\\|", "|")).append("\",");
@@ -304,7 +295,7 @@
 
             // 处理 readonly 条件
             conditionBuilder.append("\"readonly\": {");
-            Map<String, String> readonlyConditions = PageBackendService.modelFieldReadOnlyMap(qzRequest);
+            Map<String, String> readonlyConditions = modelInfo.getReadOnlyMap();
             for (Map.Entry<String, String> entry : readonlyConditions.entrySet()) {
                 conditionBuilder.append("\"").append(entry.getKey()).append("\": \"")
                         .append(entry.getValue()).append("\",");

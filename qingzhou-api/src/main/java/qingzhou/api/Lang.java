@@ -6,8 +6,8 @@ package qingzhou.api;
 public enum Lang {
     // 定义了三种语言：简体中文、英文、繁体中文
     zh("zh", "简体"), // zh代表中文，info为"简体"
-    en("en", "English"), // en代表英文，info为"English"
-    tr("tr", "繁體"); // tr代表繁体中文，info为"繁體"
+    tr("tr", "繁體"), // tr代表繁体中文，info为"繁體"
+    en("en", "English"); // en代表英文，info为"English"
 
     // 枚举常量之间的分隔符
     public static final char SEPARATOR = ':';

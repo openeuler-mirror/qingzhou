@@ -5,7 +5,7 @@
     <div class="sidebar sidebar-scroll">
         <ul class="sidebar-menu" data-widget="tree">
             <%
-                out.print(PageBackendService.buildMenuHtmlBuilder(request, response, qzRequest));
+                out.print(PageUtil.buildMenuHtmlBuilder(request, response, qzRequest));
             %>
         </ul>
     </div>

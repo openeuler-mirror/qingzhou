@@ -7,6 +7,7 @@ import qingzhou.api.ModelField;
 import qingzhou.api.type.Updatable;
 import qingzhou.app.system.Main;
 import qingzhou.config.Config;
+import qingzhou.config.Console;
 import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -46,8 +47,10 @@ public class Jmx extends ModelBase implements Updatable {
 
     @Override
     public void start() {
+        Console console = Main.getService(Config.class).getConsole();
+        if (console == null) return;
         try {
-            qingzhou.config.Jmx jmx = Main.getService(Config.class).getConsole().getJmx();
+            qingzhou.config.Jmx jmx = console.getJmx();
             if (jmx.isEnabled()) {
                 ServiceManager.getInstance().init(jmx);
             }

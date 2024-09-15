@@ -49,7 +49,7 @@
         <div class="col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
             <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0;">
                 <a class="btn"
-                   href="<%=PageBackendService.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST)%>"
+                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST)%>"
                    form="filterForm">
                     <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter")%>
                 </a>

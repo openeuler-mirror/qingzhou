@@ -4,6 +4,7 @@ import qingzhou.api.MsgLevel;
 import qingzhou.api.Response;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -60,7 +61,7 @@ public class JsonView implements View {
     }
 
     private static void addData(StringBuilder json, Response response) {
-        json.append("\"").append("data").append("\"");
+        json.append("\"").append(DeployerConstants.JSON_DATA).append("\"");
         json.append(":");
         json.append("[");
 
