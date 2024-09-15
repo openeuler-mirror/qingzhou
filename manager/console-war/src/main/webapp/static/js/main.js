@@ -203,24 +203,32 @@ function closeLayer(index) {
 // start, for: ModelField注解 effectiveWhen()
 function bindEvent(conditions) {
     const triggers = {};
-    // 处理每个条件
-    Object.keys(conditions).forEach(key => {
-        const condition = conditions[key];
-        const expressions = condition.includes("&") ? condition.split("&") : condition.split("|");
-        // 处理每个表达式
-        expressions.forEach(expression => {
-            const operator = expression.includes("!=") ? "!=" : "=";
-            const [triggerItem, val] = expression.split(operator);
-            // 初始化触发器
-            if (!triggers[triggerItem]) {
-                triggers[triggerItem] = [];
-            }
-            // 创建并添加条件
-            const json = { [key]: condition };
-            if (!contain(triggers[triggerItem], json)) {
-                triggers[triggerItem].push(json);
-            }
-        });
+
+    // 处理 show 和 readonly 两种事件类型
+    ["show", "readonly"].forEach(type => {
+        if (conditions[type]) {
+            Object.keys(conditions[type]).forEach(key => {
+                const condition = conditions[type][key];
+                const expressions = condition.includes("&") ? condition.split("&") : condition.split("|");
+
+                // 处理每个表达式
+                expressions.forEach(expression => {
+                    const operator = expression.includes("!=") ? "!=" : "=";
+                    const [triggerItem, val] = expression.split(operator).map(part => part.trim());
+
+                    // 初始化触发器对象
+                    if (!triggers[triggerItem]) {
+                        triggers[triggerItem] = [];
+                    }
+
+                    // 创建并添加条件
+                    const json = { [key]: condition, type: type };
+                    if (!contain(triggers[triggerItem], json)) {
+                        triggers[triggerItem].push(json);
+                    }
+                });
+            });
+        }
     });
     // 绑定事件和触发初始状态
     Object.keys(triggers).forEach(item => {
@@ -235,6 +243,7 @@ function bindEvent(conditions) {
 }
 
 
+
 function contain(array, ele) {
     for (var i = 0; i < array.length; i++) {
         if (array[i] === ele) {
@@ -246,17 +255,18 @@ function contain(array, ele) {
 
 function triggerTies(json) {
     json.forEach(item => {
-        Object.keys(item).forEach(key => {
-            triggerAction(key, item[key]);
+        const { type, ...rest } = item; // 事件类型 (show/readonly)
+        Object.keys(rest).forEach(key => {
+            triggerAction(key, rest[key], type);
         });
     });
 }
 
-function triggerAction(ele, condition) {
+function triggerAction(ele, condition,type) {
     const operators = condition.includes("&") ? "&" : "|";
     const expressions = condition.split(operators);
 
-    let shouldHide = operators === "&";
+    let shouldHideOrRead = operators === "&";
 
     expressions.forEach(expression => {
         const notEq = expression.includes("!=");
@@ -273,7 +283,7 @@ function triggerAction(ele, condition) {
         }
 
         // 当有多个选项未选中时，隐藏目标表单项
-        if (target.length > 1 || !target.length) {
+        if ((target.length > 1 || !target.length) && type === "show") {
             $("#form-item-" + ele, getRestrictedArea()).hide();
             return;
         }
@@ -281,17 +291,25 @@ function triggerAction(ele, condition) {
         // 通过 compareVal 进行比较并设置隐藏显示逻辑
         const compareResult = compareVal(target.val(), parsedVal, !notEq);
         if (operators === "&") {
-            shouldHide = shouldHide && compareResult;
+            shouldHideOrRead = shouldHideOrRead && compareResult;
         } else {
-            shouldHide = shouldHide || compareResult;
+            shouldHideOrRead = shouldHideOrRead || compareResult;
         }
     });
-
-    if (shouldHide) {
-        $("#form-item-" + ele, getRestrictedArea()).hide();
-    } else {
-        $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
+    if (type === "show"){
+        if (shouldHideOrRead) {
+            $("#form-item-" + ele, getRestrictedArea()).hide();
+        } else {
+            $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
+        }
+    }else if(type === "readonly"){
+        if (shouldHideOrRead) {
+            $("#form-item-" + ele, getRestrictedArea()).find("input").removeAttr("readonly");
+        } else {
+            $("#form-item-" + ele, getRestrictedArea()).find("input").attr("readonly","readonly");
+        }
     }
+
 }
 
 function compareVal(value, val, notEq) {
