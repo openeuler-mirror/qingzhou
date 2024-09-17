@@ -91,7 +91,6 @@ class AnnotationReader {
         return null;
     }
 
-
     private static boolean equalMethod(Method m, Method other) {
         if (m.getName().equals(other.getName())) {
             if (!m.getReturnType().equals(other.getReturnType())) {

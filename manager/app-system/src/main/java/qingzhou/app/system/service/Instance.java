@@ -55,15 +55,6 @@ public class Instance extends ModelBase implements Listable, Monitorable {
     @ModelField(
             group = group_os,
             monitor = true,
-            list = true,
-            name = {"运行中", "en:Running"},
-            info = {"用以表示该实例是否正在运行。",
-                    "en:This indicates whether the instance is running."})
-    public Boolean running;
-
-    @ModelField(
-            group = group_os,
-            monitor = true,
             name = {"OS", "en:OS"}, info = {"操作系统的名称。", "en:The name of the operating system."})
     public String osName;
 
@@ -280,12 +271,15 @@ public class Instance extends ModelBase implements Listable, Monitorable {
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
     public void monitor(Request request) throws Exception {
         ModelUtil.invokeOnAgent(request, request.getId());
-        tempData.set(request.getResponse().getDataList().remove(0));
-        getAppContext().callDefaultAction(request);
+        List<Map<String, String>> dataList = request.getResponse().getDataList();
+        if (dataList.size() == 1) { // 不应为空，来自：qingzhou.app.system.Agent.monitor（xxx）
+            tempData.set(dataList.remove(0));
+        }
+        getAppContext().callDefaultAction(request); // 触发调用下面的 monitorData（使用 tempData）；
     }
 
     // 为了复用 DefaultAction 的 monitor 方法逻辑
-    private ThreadLocal<Map<String, String>> tempData = new ThreadLocal<>();
+    private final ThreadLocal<Map<String, String>> tempData = new ThreadLocal<>();
 
     @Override
     public Map<String, String> monitorData(String id) {

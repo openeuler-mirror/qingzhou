@@ -2,11 +2,10 @@ package qingzhou.deployer.impl;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.config.Config;
-import qingzhou.config.Security;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.*;
+import qingzhou.engine.util.Utils;
 import qingzhou.http.Http;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
@@ -25,16 +24,14 @@ class ActionInvokerImpl implements ActionInvoker {
     private final Deployer deployer;
     private final Registry registry;
     private final Json json;
-    private final Config config;
     private final CryptoService crypto;
     private final Http http;
     private final Logger logger;
 
-    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, Config config, CryptoService crypto, Http http, Logger logger) {
+    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, CryptoService crypto, Http http, Logger logger) {
         this.deployer = deployer;
         this.registry = registry;
         this.json = json;
-        this.config = config;
         this.crypto = crypto;
         this.http = http;
         this.logger = logger;
@@ -57,21 +54,23 @@ class ActionInvokerImpl implements ActionInvoker {
                 } else {
                     InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
                     if (cipher == null) {
-                        Security security = config.getConsole().getSecurity();
-                        String remoteKey = crypto.getPairCipher(security.getPublicKey(), security.getPrivateKey())
-                                .decryptWithPrivateKey(instanceInfo.getKey());
-
                         AppInfo appInfo = registry.getAppInfo(request.getApp());
-                        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+                        if (appInfo == null && request.getApp().equals(DeployerConstants.APP_SYSTEM)) {
+                            // 调用远程实例上的 system app，这个不是注册来的，故从本地获取其元数据
+                            appInfo = deployer.getApp(request.getApp()).getAppInfo();
+                        }
+                        ModelInfo modelInfo = Objects.requireNonNull(appInfo).getModelInfo(request.getModel());
                         String[] uploadFieldNames = modelInfo.getFileUploadFieldNames();
                         if (uploadFieldNames != null) {
                             for (String uploadField : uploadFieldNames) {
                                 String uploadFile = request.getParameter(uploadField);
-                                fieldUploadFile.put(uploadField, new File(uploadFile));
+                                if (Utils.notBlank(uploadFile)) {
+                                    fieldUploadFile.put(uploadField, new File(uploadFile));
+                                }
                             }
                         }
 
-                        cipher = crypto.getCipher(remoteKey);
+                        cipher = crypto.getCipher(instanceInfo.getKey());
                     }
 
                     Response response = callRemoteInstance(

@@ -136,7 +136,7 @@ public class RESTController extends HttpServlet {
         } else {
             response.setSuccess(suc > 0); // 至少有一个成功，则认为整体是成功的
 
-            LinkedHashMap<String, String> totalError = (LinkedHashMap<String, String>) totalResult[2];
+            Map<String, String> totalError = (Map<String, String>) totalResult[2];
             if (totalError.isEmpty()) {
                 response.setMsg(defaultMsg(response.isSuccess(), request)); // 以整体的成功与否来设置默认消息
             } else {
@@ -174,7 +174,7 @@ public class RESTController extends HttpServlet {
     private Object[] invoke(RestContext restContext) {
         int suc = 0;
         int fail = 0;
-        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        Map<String, String> result = new HashMap<>();
 
         RequestImpl request = restContext.request;
         List<Response> responseList = SystemController.getService(ActionInvoker.class).invokeAll(request);
@@ -203,7 +203,7 @@ public class RESTController extends HttpServlet {
     private Object[] invokeBatch(RestContext restContext) {
         int suc = 0;
         int fail = 0;
-        LinkedHashMap<String, String> result = new LinkedHashMap<>();
+        Map<String, String> result = new HashMap<>();
 
         StringBuilder errorMsg = new StringBuilder();
         for (String id : restContext.batchIds) {
@@ -211,7 +211,7 @@ public class RESTController extends HttpServlet {
             Object[] batchOne = invoke(restContext);
             suc += ((int) batchOne[0]);
             fail += ((int) batchOne[1]);
-            LinkedHashMap<String, String> oneMap = (LinkedHashMap<String, String>) batchOne[2];
+            Map<String, String> oneMap = (Map<String, String>) batchOne[2];
             for (String k : oneMap.keySet()) {
                 if (result.containsKey(k)) {
                     errorMsg.append(result.get(k));

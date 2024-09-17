@@ -432,8 +432,8 @@ function setOrReset() {
     resizeFilterForm();
     // form 表单页面事件操作
     bindEventForFormPage();
-    // info.jsp 页面加载
-    initInfoPage();
+    // monitor.jsp 页面加载
+    initMonitorPage();
     // grid.jsp 页面初始化
     if (document.querySelectorAll(".apps").length > 0) {
         var apps = document.querySelectorAll(".apps");
@@ -1233,8 +1233,8 @@ function downloadFiles(fileListUrl, downloadUrl) {
 };
 /**************************************** list.jsp - end *************************************************/
 
-/**************************************** info.jsp - start *************************************************/
-function initInfoPage() {
+/**************************************** monitor.jsp - start *************************************************/
+function initMonitorPage() {
     var randId = new Date().getTime();
     $(".bodyDiv>div.infoPage[chartMonitor='true'][loaded!='true']").each(function (i) {
         $(this).attr("loaded", "true");
@@ -1576,7 +1576,8 @@ function panelUpdate(monitorData, restrictedArea) {
         }
     });
 };
-/**************************************** info.jsp - end *************************************************/
+/**************************************** monitor.jsp - end *************************************************/
+
 /**
  * 绘制 / 结束绘制引导锚点
  * @param {boolean} off 关闭绘制锚点 true | false
