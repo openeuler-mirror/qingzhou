@@ -113,30 +113,34 @@ public class RESTController extends HttpServlet {
 
                 Object[] result;
                 //批量操作判断，过滤器结束后，进入模块 action 处理
-                if (restContext.batchIds != null) {
+                boolean isBatch = restContext.batchIds != null;
+                if (isBatch) {
                     result = invokeBatch(restContext);
                 } else {
                     result = invoke(restContext);
                 }
-                responseMsg(result, restContext.request);
+                responseMsg(result, restContext.request, isBatch);
                 return true;
             }
     };
 
-    private void responseMsg(Object[] totalResult, RequestImpl request) {
+    private void responseMsg(Object[] totalResult, RequestImpl request, boolean isBatch) {
         Response response = request.getResponse();
 
         int suc = ((int) totalResult[0]);
         int fail = ((int) totalResult[1]);
-
-        if (suc + fail <= 1) {  // 非批量操作，不需要重组响应信息
+        Map<String, String> totalError = (Map<String, String>) totalResult[2];
+        if (!isBatch) {  // 非批量操作，不需要重组响应信息
             if (response.getMsg() == null) { // 完善响应的 msg
-                response.setMsg(defaultMsg(response.isSuccess(), request));
+                if (fail == 1) {
+                    response.setMsg(totalError.isEmpty() ? "" : totalError.keySet().stream().findFirst().get());
+                    response.setMsgType(MsgLevel.error);
+                } else {
+                    response.setMsg(defaultMsg(response.isSuccess(), request));
+                }
             }
         } else {
             response.setSuccess(suc > 0); // 至少有一个成功，则认为整体是成功的
-
-            Map<String, String> totalError = (Map<String, String>) totalResult[2];
             if (totalError.isEmpty()) {
                 response.setMsg(defaultMsg(response.isSuccess(), request)); // 以整体的成功与否来设置默认消息
             } else {

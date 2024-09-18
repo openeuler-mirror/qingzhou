@@ -291,7 +291,6 @@
                 }
             }
         });
-        params = params.substring(0, params.length - 1);
         var str = url;
         if (str.indexOf("?") > -1) {
             url = str + "&<%=idFieldName%>=" + params;
