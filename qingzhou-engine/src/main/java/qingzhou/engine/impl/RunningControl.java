@@ -41,8 +41,7 @@ class RunningControl implements Process {
         try {
             FileUtil.forceDelete(running);
         } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.err.println(Utils.stackTraceToString(e.getStackTrace()));
+            System.err.println(Utils.exceptionToString(e));
         }
     }
 }

@@ -219,6 +219,11 @@ public class Utils {
         return localIps;
     }
 
+    public static String exceptionToString(Exception e) {
+        String stackTrace = stackTraceToString(e.getStackTrace());
+        return e.getMessage() + "\t" + stackTrace;
+    }
+
     public static String stackTraceToString(StackTraceElement[] stackTrace) {
         StringBuilder msg = new StringBuilder();
         String sp = System.lineSeparator();

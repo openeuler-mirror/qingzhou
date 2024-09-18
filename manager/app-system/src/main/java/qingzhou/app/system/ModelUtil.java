@@ -1,6 +1,7 @@
 package qingzhou.app.system;
 
 import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
@@ -13,8 +14,13 @@ public class ModelUtil {
         RequestImpl requestImpl = (RequestImpl) request;
         try {
             requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
-            Main.getService(ActionInvoker.class)
+            List<Response> responseList = Main.getService(ActionInvoker.class)
                     .invokeOnInstances(request, instance);
+            if (responseList.size() == 1) {
+                requestImpl.setResponse(responseList.get(0));
+            } else {
+                throw new IllegalStateException();
+            }
         } finally {
             requestImpl.setModelName(originModel);
         }

@@ -93,22 +93,25 @@ class Heartbeat implements Process {
         thisInstanceInfo.setAppInfos(appInfos.toArray(new AppInfo[0]));
         String registerData = json.toJson(thisInstanceInfo);
 
-        boolean registered = false;
+        HttpResponse response;
+        String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
         try {
-            String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
-            HttpResponse response = http.buildHttpClient().send(checkUrl, new HashMap<String, String>() {{
+            response = http.buildHttpClient().send(checkUrl, new HashMap<String, String>() {{
                 put(DeployerConstants.CHECK_FINGERPRINT, fingerprint);
             }});
-            if (response.getResponseCode() == 200) {
-                Map resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
-                List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get(DeployerConstants.JSON_DATA);
-                if (dataList != null && !dataList.isEmpty()) {
-                    String checkResult = dataList.get(0).get(fingerprint);
-                    registered = Boolean.parseBoolean(checkResult);
-                }
-            }
         } catch (Throwable e) {
-            logger.warn("An exception occurred during the registration process", e);
+            logger.warn("The registration check failed: " + e.getMessage());
+            return;
+        }
+
+        boolean registered = false;
+        if (response != null && response.getResponseCode() == 200) {
+            Map resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
+            List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get(DeployerConstants.JSON_DATA);
+            if (dataList != null && !dataList.isEmpty()) {
+                String checkResult = dataList.get(0).get(fingerprint);
+                registered = Boolean.parseBoolean(checkResult);
+            }
         }
         if (registered) return;
 

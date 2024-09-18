@@ -61,10 +61,17 @@ class Service implements Process {
                     result = process(inputStream);
                     exchange.setStatus(200);
                 } catch (Exception e) {
-                    result = Utils.stackTraceToString(e.getStackTrace()).getBytes(StandardCharsets.UTF_8);
+                    result = Utils.exceptionToString(e).getBytes(StandardCharsets.UTF_8);
                     exchange.setStatus(500);
                 }
                 if (result == null || result.length == 0) return;
+
+                // 加密数据，返回到客户端
+                try {
+                    result = agentCipher.encrypt(result);
+                } catch (Exception e) {
+                    result = Utils.exceptionToString(e).getBytes(StandardCharsets.UTF_8);
+                }
 
                 try (OutputStream outputStream = exchange.getResponseBody()) {
                     outputStream.write(result);
@@ -110,19 +117,18 @@ class Service implements Process {
         response.getParametersInSession().putAll(request.getParametersInSession());
 
         // 5. 响应数据
-        byte[] responseData = json.toJson(response).getBytes(DeployerConstants.ACTION_INVOKE_CHARSET);
-
-        // 6. 数据加密，返回到客户端
-        return agentCipher.encrypt(responseData);
+        return json.toJson(response).getBytes(DeployerConstants.ACTION_INVOKE_CHARSET);
     }
 
     private void preProcess(RequestImpl request, App app) {
+        request.setCachedModelInfo(app.getAppInfo().getModelInfo(request.getModel()));
         ModelInfo modelInfo = request.getCachedModelInfo();
         String[] uploadFieldNames = modelInfo.getFileUploadFieldNames();
         if (uploadFieldNames == null) return;
         for (String uploadField : uploadFieldNames) {
             String uploadFile = request.getParameter(uploadField);
-            if (!uploadFile.startsWith(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG)) continue;
+            if (Utils.isBlank(uploadFile) ||
+                    !uploadFile.startsWith(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG)) continue;
 
             String uploadId = uploadFile.substring(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG.length());
             File uploadDir = FileUtil.newFile(app.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, uploadId);

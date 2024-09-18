@@ -78,7 +78,7 @@ public class ModuleLoading implements Process {
                 try {
                     moduleInfo.getLoader().close();
                 } catch (IOException e) {
-                    String msg = Utils.stackTraceToString(e.getStackTrace());
+                    String msg = Utils.exceptionToString(e);
                     System.err.println(msg);
                 }
             });
@@ -169,7 +169,7 @@ public class ModuleLoading implements Process {
                     Class<?> serviceType = field.getType();
                     Object serviceObj = findService(serviceType);
                     if (serviceObj == null) {
-                        return service.optional()?null:serviceType;
+                        return service.optional() ? null : serviceType;
                     }
 
                     field.setAccessible(true);
