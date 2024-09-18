@@ -2,11 +2,10 @@ package qingzhou.deployer.impl;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.config.Config;
-import qingzhou.config.Security;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.*;
+import qingzhou.engine.util.Utils;
 import qingzhou.http.Http;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
@@ -25,16 +24,14 @@ class ActionInvokerImpl implements ActionInvoker {
     private final Deployer deployer;
     private final Registry registry;
     private final Json json;
-    private final Config config;
     private final CryptoService crypto;
     private final Http http;
     private final Logger logger;
 
-    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, Config config, CryptoService crypto, Http http, Logger logger) {
+    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, CryptoService crypto, Http http, Logger logger) {
         this.deployer = deployer;
         this.registry = registry;
         this.json = json;
-        this.config = config;
         this.crypto = crypto;
         this.http = http;
         this.logger = logger;
@@ -57,21 +54,23 @@ class ActionInvokerImpl implements ActionInvoker {
                 } else {
                     InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
                     if (cipher == null) {
-                        Security security = config.getConsole().getSecurity();
-                        String remoteKey = crypto.getPairCipher(security.getPublicKey(), security.getPrivateKey())
-                                .decryptWithPrivateKey(instanceInfo.getKey());
-
                         AppInfo appInfo = registry.getAppInfo(request.getApp());
-                        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+                        if (appInfo == null && request.getApp().equals(DeployerConstants.APP_SYSTEM)) {
+                            // 调用远程实例上的 system app，这个不是注册来的，故从本地获取其元数据
+                            appInfo = deployer.getApp(request.getApp()).getAppInfo();
+                        }
+                        ModelInfo modelInfo = Objects.requireNonNull(appInfo).getModelInfo(request.getModel());
                         String[] uploadFieldNames = modelInfo.getFileUploadFieldNames();
                         if (uploadFieldNames != null) {
                             for (String uploadField : uploadFieldNames) {
                                 String uploadFile = request.getParameter(uploadField);
-                                fieldUploadFile.put(uploadField, new File(uploadFile));
+                                if (Utils.notBlank(uploadFile)) {
+                                    fieldUploadFile.put(uploadField, new File(uploadFile));
+                                }
                             }
                         }
 
-                        cipher = crypto.getCipher(remoteKey);
+                        cipher = crypto.getCipher(instanceInfo.getKey());
                     }
 
                     Response response = callRemoteInstance(
@@ -101,8 +100,8 @@ class ActionInvokerImpl implements ActionInvoker {
             tmp.setAppName(DeployerConstants.APP_SYSTEM);
             tmp.setModelName(DeployerConstants.MODEL_AGENT);
             tmp.setActionName(DeployerConstants.ACTION_UPLOAD);
-            tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_ID, uploadId);
-            tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_NAME, file.getName());
+            tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_ID, uploadId);
+            tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_NAME, file.getName());
             try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
                 byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
                 long offset = 0;
@@ -114,7 +113,7 @@ class ActionInvokerImpl implements ActionInvoker {
                                 read == DeployerConstants.DOWNLOAD_BLOCK_SIZE
                                         ? block
                                         : Arrays.copyOfRange(block, 0, read);
-                        tmp.setNonModelParameter(DeployerConstants.INSTALLER_PARAMETER_FILE_BYTES,
+                        tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_BYTES,
                                 crypto.getBase64Coder().encode(sendBlock));
                         sendRemote(tmp, remoteUrl, cipher); // 发送附件
                         offset = raf.getFilePointer();
@@ -124,7 +123,7 @@ class ActionInvokerImpl implements ActionInvoker {
                 }
             }
             // 上传成功后，更新为远程实例上的地址
-            ((RequestImpl) request).setParameter(field, uploadId);
+            ((RequestImpl) request).setParameter(field, DeployerConstants.UPLOAD_FILE_PREFIX_FLAG + uploadId);
         }
 
         return sendRemote(request, remoteUrl, cipher); // 发送请求

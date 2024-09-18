@@ -1,26 +1,27 @@
 package qingzhou.app.system;
 
+import qingzhou.api.Request;
+import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+
 import java.util.*;
 
 public class ModelUtil {
-    public static List<Map<String, String>> listData(List<Map<String, String>> allData,
-                                                     int pageNum, int pageSize, String[] fieldNames) {
-        int totalSize = allData.size();
-        int startIndex = (pageNum - 1) * pageSize;
-        int endIndex = Math.min(startIndex + pageSize, totalSize);
-        List<Map<String, String>> subList = allData.subList(startIndex, endIndex);
-
-        List<Map<String, String>> data = new ArrayList<>();
-        subList.forEach(originData -> data.add(new HashMap<String, String>() {{
-            for (String fieldName : fieldNames) {
-                put(fieldName, originData.get(fieldName));
-            }
-        }}));
-        return data;
+    public static void invokeOnAgent(Request request, String... instance) {
+        String originModel = request.getModel();
+        RequestImpl requestImpl = (RequestImpl) request;
+        try {
+            requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
+            Main.getService(ActionInvoker.class)
+                    .invokeOnInstances(request, instance);
+        } finally {
+            requestImpl.setModelName(originModel);
+        }
     }
 
     public static List<Map<String, String>> listData(String[] allIds, Supplier supplier,
-                                                     int pageNum, int pageSize, String[] fieldNames) {
+                                                     int pageNum, int pageSize, String[] fieldNames) throws Exception {
         int totalSize = allIds.length;
         int startIndex = (pageNum - 1) * pageSize;
         int endIndex = Math.min(startIndex + pageSize, totalSize);
@@ -41,6 +42,6 @@ public class ModelUtil {
     }
 
     public interface Supplier {
-        Map<String, String> get(String id);
+        Map<String, String> get(String id) throws Exception;
     }
 }

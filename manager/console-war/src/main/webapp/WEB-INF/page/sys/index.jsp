@@ -248,7 +248,7 @@
                         <ul class="sidebar-menu" data-widget="tree">
                             <%
                                 // 菜单
-                                out.print(PageBackendService.buildMenuHtmlBuilder(request, response, qzRequest));
+                                out.print(PageUtil.buildMenuHtmlBuilder(request, response, qzRequest));
                             %>
                         </ul>
                     </div>
@@ -280,7 +280,7 @@
     var global_setting = {
         separa: ',',
         downdloadGroupSepara: '/',
-        downloadFileNames: 'downloadFileNames',
+        downloadFileNames: '<%=DeployerConstants.DOWNLOAD_FILE_NAMES%>',
         filesName: 'files',
         checkOtp: '<%=LoginManager.LOGIN_OTP%>',
         locale: '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',

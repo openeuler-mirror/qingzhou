@@ -38,7 +38,7 @@ public class Controller implements ModuleActivator {
     private CryptoService cryptoService;
     @Service
     private Json json;// RemoteClient会用到
-    @Service
+    @Service(optional = true) // console 禁用（远程受管实例）后，此对象为 null，optional = true
     private JmxServiceAdapter jmxServiceAdapter;
     @Service
     private ActionInvoker actionInvoker;
@@ -56,7 +56,7 @@ public class Controller implements ModuleActivator {
         moduleContext = context;
         console = config.getConsole();
 
-        if (!console.isEnabled()) return;
+        if (console == null || !console.isEnabled()) return;
 
         sequence = new ProcessSequence(
                 new StartServletContainer(),

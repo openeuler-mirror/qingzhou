@@ -12,12 +12,14 @@ import qingzhou.app.ExampleMain;
         info = {"岗位管理。", "en:Post management."})
 public class Post extends AddableModelBase {
     @ModelField(
+            required = true,
             list = true,
             name = {"岗位名称", "en:Post Name"},
             info = {"岗位名称。", "en:Post name."})
     public String name;
 
     @ModelField(
+            required = true,
             list = true,
             name = {"岗位编码", "en:Post Code"},
             info = {"岗位编码。", "en:Post code."})
@@ -40,6 +42,6 @@ public class Post extends AddableModelBase {
 
     @Override
     public String idFieldName() {
-        return "name";
+        return "postCode";
     }
 }

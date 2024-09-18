@@ -18,20 +18,18 @@ public class SecurityController {
 
         // action 是否存在
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
-        if (actionInfo==null) return false;
+        if (actionInfo == null) return false;
 
         // 检查用户的权限
         if (user == null) return false;
 
         // 检查数据约束
         if (data == null) return true;
-        return isShow(actionInfo.getShow(), data::get);
+        return checkRule(actionInfo.getShow(), data::get, true);
     }
 
-    public static boolean isShow(String condition, FieldValueRetriever retriever) {
-        if (Utils.isBlank(condition)) {
-            return true;
-        }
+    public static boolean checkRule(String condition, FieldValueRetriever retriever, boolean defaultSuccess) {
+        if (Utils.isBlank(condition)) return defaultSuccess;
 
         AndOrQueue queue = null;
         String[] split;
@@ -45,9 +43,7 @@ public class SecurityController {
                 queue = new AndOrQueue(true);
             }
         }
-        if (queue == null) {
-            return true;
-        }
+        if (queue == null) return defaultSuccess;
 
         String notEqStr = "!=";
         String eqStr = "=";

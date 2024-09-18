@@ -1,5 +1,7 @@
 package qingzhou.api.type;
 
+import qingzhou.api.Groups;
+
 import java.util.Map;
 
 /**
@@ -9,4 +11,9 @@ public interface Showable {
     String ACTION_SHOW = "show";
 
     Map<String, String> showData(String id) throws Exception;
+
+    // 字段分组
+    default Groups groups() {
+        return null;
+    }
 }

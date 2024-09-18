@@ -16,13 +16,6 @@ import java.lang.annotation.Target;
 public @interface ModelField {
     String group() default ""; // 设置字段所属的页面表单展示分组，默认为空字符串表示“其它”分组。
 
-    String show() default ""; // 此字段有效的条件
-    String readonly() default "";
-
-    boolean createable() default true; // 允许创建时指定值
-
-    boolean editable() default true; // 允许编辑此字段
-
     FieldType type() default FieldType.text; // 字段的显示类型
 
     boolean required() default false;
@@ -58,6 +51,14 @@ public @interface ModelField {
     boolean numeric() default false;  // 该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
 
     boolean list() default false; // 是否显示在列表中。
+
+    boolean createable() default true; // 允许创建时指定值
+
+    boolean editable() default true; // 允许编辑此字段
+
+    String show() default ""; // 表单元素级联控制显示/隐藏的事件绑定
+
+    String readonly() default ""; // 表单元素级联控制只读的事件绑定
 
     /**
      * 获取字段的国际化名称数组，用于多语言环境下展示在用户界面。

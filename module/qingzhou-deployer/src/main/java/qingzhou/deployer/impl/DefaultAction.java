@@ -11,6 +11,7 @@ import qingzhou.engine.util.FileUtil;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -162,37 +163,23 @@ class DefaultAction {
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
-    public void monitor(Request request) throws Exception {
-        Map<String, String> p = ((Monitorable) instance).monitorData();
+    public void monitor(Request request) {
+        Map<String, String> p = ((Monitorable) instance).monitorData(request.getId());
+        if (p == null || p.isEmpty()) return;
 
-        if (p == null || p.isEmpty()) {
-            return;
-        }
         Map<String, String> monitorData = new HashMap<>();
         Map<String, String> infoData = new HashMap<>();
 
-        Map<String, String> data = ((Showable) instance).showData(request.getId());
-        String[] infoFieldNames = getAppInfo().getModelInfo(request.getModel()).getFormFieldNames();
-        for (String fieldName : infoFieldNames) {
-            String value = data.get(fieldName);
-            if (value == null) continue;
-
-            infoData.put(fieldName, value);
-        }
-
-        String[] monitorFieldNames = getAppInfo().getModelInfo(request.getModel()).getMonitorFieldNames();
+        ModelInfo modelInfo = getAppInfo().getModelInfo(request.getModel());
+        String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
         for (String fieldName : monitorFieldNames) {
-            ModelFieldInfo monitorField = getAppInfo().getModelInfo(request.getModel()).getModelFieldInfo(fieldName);
-            String value = p.get(fieldName);
-            if (value == null) continue;
-
+            ModelFieldInfo monitorField = modelInfo.getModelFieldInfo(fieldName);
             if (monitorField.isNumeric()) {
-                monitorData.put(fieldName, value);
+                monitorData.put(fieldName, p.get(fieldName));
             } else {
-                infoData.put(fieldName, value);
+                infoData.put(fieldName, p.get(fieldName));
             }
         }
-
 
         request.getResponse().addData(monitorData);
         request.getResponse().addData(infoData);
@@ -241,7 +228,7 @@ class DefaultAction {
 
         String downloadKey = request.getNonModelParameter(DeployerConstants.DOWNLOAD_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
-            String downloadFileNames = request.getNonModelParameter(DeployerConstants.DOWNLOAD_DOWNLOAD_FILE_NAMES);
+            String downloadFileNames = request.getNonModelParameter(DeployerConstants.DOWNLOAD_FILE_NAMES);
 
             // check
             if (downloadFileNames == null || downloadFileNames.trim().isEmpty()) {
