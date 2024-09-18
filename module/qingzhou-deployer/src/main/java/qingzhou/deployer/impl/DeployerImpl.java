@@ -419,7 +419,9 @@ class DeployerImpl implements Deployer {
                         file = new File(parentFile, entry);
                     }
                 }
-                libs.add(file);
+                if (file.exists()) {
+                    libs.add(file);
+                }
             }
         }
         return libs;
