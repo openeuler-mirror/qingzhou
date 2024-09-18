@@ -24,6 +24,8 @@ public @interface ModelField {
 
     Class<? extends ModelBase> refModel() default ModelBase.class; // 使用指定的模块的所有数据id作为字段的取值范围
 
+    String separator() default ","; // 当使用 options() 或 refModel()，用以分割多值
+
     long min() default Long.MIN_VALUE;
 
     long max() default Long.MAX_VALUE;

@@ -4,8 +4,7 @@
 	<input type="hidden" name="<%=fieldName%>" value='<%=fieldValue%>'>
 	<ul class="sortable">
 		<%
-			String[] vals = (fieldValue == null ? "" : fieldValue).split(",");
-			for (String val : vals) {
+			for (String val : fieldValues) {
 		%>
 		<li class="droptarget" draggable="true">
 			<table class="table table-bordered">

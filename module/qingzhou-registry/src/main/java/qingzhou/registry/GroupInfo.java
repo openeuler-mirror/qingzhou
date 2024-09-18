@@ -6,10 +6,6 @@ public class GroupInfo {
     private String name;
     private String[] i18n;
 
-    public static GroupInfo other(){
-        return new GroupInfo("OTHERS", new String[]{"其他", "en:Other"});
-    }
-
     public GroupInfo(Group group) {
         this.name = group.name();
         this.i18n = group.i18n();

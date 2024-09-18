@@ -11,12 +11,13 @@ import qingzhou.servlet.ServletContainer;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 public class ServletContainerImpl implements ServletContainer {
     private Tomcat tomcat;
 
     @Override
-    public void start(int port, File baseDir) throws Exception {
+    public void start(int port, File baseDir, Properties properties) throws Exception {
         ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
         try {
             // 为了 接管 tomcat 的日志系统
@@ -28,8 +29,17 @@ public class ServletContainerImpl implements ServletContainer {
             tomcat.setPort(port); // 设置默认连接器端口
             tomcat.getHost().setParentClassLoader(Tomcat.class.getClassLoader());// 应用需要依赖 tomcat 里面的 javax.servlet api
             Connector connector = tomcat.getConnector();// 建立连接器
+
+            int setMaxPostSize = 104857600; // 100 MB
+            if (properties != null) {
+                String maxPostSize = properties.getProperty("maxPostSize");
+                if (maxPostSize != null) {
+                    setMaxPostSize = Integer.parseInt(maxPostSize);
+                }
+            }
             // 设置最大文件上传的大小
-            connector.setMaxPostSize(104857600);// 100 MB
+            connector.setMaxPostSize(setMaxPostSize);
+
             tomcat.start(); // 启动服务器
         } finally {
             Thread.currentThread().setContextClassLoader(oldLoader);

@@ -79,6 +79,9 @@
         "enabled": "false",
         "host": "",
         "port": "7000"
+      },
+      "servletProperties": {
+        "maxPostSize": "104857600"
       }
     },
     "agent": {

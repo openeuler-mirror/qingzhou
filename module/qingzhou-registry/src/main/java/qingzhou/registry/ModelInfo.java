@@ -61,12 +61,20 @@ public class ModelInfo {
 
     public Integer[] getFieldsIndexToList() {
         List<Integer> index = new ArrayList<>();
+        int idFieldIndex = -1;
         for (int i = 0; i < modelFieldInfos.length; i++) {
             ModelFieldInfo fieldInfo = modelFieldInfos[i];
-            if (fieldInfo.isMonitor()) continue;
-            if (fieldInfo.isList()) {
-                index.add(i);
+
+            if (fieldInfo.getCode().equals(idFieldName)) {
+                idFieldIndex = i;
+                continue;
             }
+            if (fieldInfo.isMonitor()) continue;
+
+            if (fieldInfo.isList()) index.add(i);
+        }
+        if (idFieldIndex >= 0) {
+            index.add(0, idFieldIndex);
         }
         return index.toArray(new Integer[0]);
     }
@@ -115,16 +123,19 @@ public class ModelInfo {
         return data;
     }
 
-    public Map<String, Map<String, ModelFieldInfo>> getGroupedModelFieldMap() {
+    public Map<String, Map<String, ModelFieldInfo>> getFormGroupedField() {
         Map<String, Map<String, ModelFieldInfo>> result = new LinkedHashMap<>();
-        for (ModelFieldInfo modelFieldInfo : modelFieldInfos) {
-            String group = modelFieldInfo.getGroup();
-            if (group == null) {
-                result.computeIfAbsent("", k -> new LinkedHashMap<>()).put(modelFieldInfo.getCode(), modelFieldInfo);
+        Map<String, ModelFieldInfo> defaultGroup = new LinkedHashMap<>();
+        for (String formField : getFormFieldNames()) {
+            ModelFieldInfo fieldInfo = getModelFieldInfo(formField);
+            String group = fieldInfo.getGroup();
+            if (Utils.isBlank(group)) {
+                defaultGroup.put(formField, fieldInfo);
             } else {
-                result.computeIfAbsent(group, k -> new LinkedHashMap<>()).put(modelFieldInfo.getCode(), modelFieldInfo);
+                result.computeIfAbsent(group, k -> new LinkedHashMap<>()).put(formField, fieldInfo);
             }
         }
+        result.put("", defaultGroup);
 
         return result;
     }

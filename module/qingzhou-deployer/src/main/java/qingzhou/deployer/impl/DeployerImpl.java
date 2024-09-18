@@ -3,7 +3,7 @@ package qingzhou.deployer.impl;
 import qingzhou.api.*;
 import qingzhou.api.type.Addable;
 import qingzhou.api.type.Listable;
-import qingzhou.api.type.Updatable;
+import qingzhou.api.type.Showable;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
@@ -259,9 +259,7 @@ class DeployerImpl implements Deployer {
             modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
             List<ModelActionInfo> methodModelActionInfoMap = parseModelActionInfos(annotation);
             modelInfo.setModelActionInfos(methodModelActionInfoMap.toArray(new ModelActionInfo[0]));
-            if (instance instanceof Updatable) {
-                modelInfo.setGroupInfos(getGroupInfo(instance));
-            }
+            modelInfo.setGroupInfos(getGroupInfo(instance));
             modelInfos.put(instance, modelInfo);
         }
 
@@ -288,9 +286,11 @@ class DeployerImpl implements Deployer {
 
     private GroupInfo[] getGroupInfo(ModelBase instance) {
         List<GroupInfo> groupInfoList = new ArrayList<>();
-        Groups groups = ((Updatable) instance).groups();
-        if (groups != null) {
-            groups.groups().stream().map(GroupInfo::new).forEach(groupInfoList::add);
+        if (instance instanceof Showable) {
+            Groups groups = ((Showable) instance).groups();
+            if (groups != null) {
+                groups.groups().stream().map(GroupInfo::new).forEach(groupInfoList::add);
+            }
         }
         return groupInfoList.toArray(new GroupInfo[0]);
     }
@@ -310,10 +310,9 @@ class DeployerImpl implements Deployer {
                     options.add(option);
                 }
             }
-            if (!options.isEmpty()) {
-                modelFieldInfo.setOptions(options.toArray(new String[0]));
-            }
+            modelFieldInfo.setOptions(options.toArray(new String[0]));
             modelFieldInfo.setRefModelClass(modelField.refModel());
+            modelFieldInfo.setSeparator(modelField.separator());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setList(modelField.list());
             modelFieldInfo.setMonitor(modelField.monitor());

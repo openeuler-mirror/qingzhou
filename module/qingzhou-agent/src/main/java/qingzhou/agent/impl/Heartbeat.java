@@ -73,7 +73,7 @@ class Heartbeat implements Process {
                     logger.error("Failed to register with Master: " + e.getMessage());
                 }
             }
-        }, 2000, 1000 * 30);
+        }, 2000, 1000 * 2);
     }
 
     @Override

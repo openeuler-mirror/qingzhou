@@ -13,10 +13,7 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.Registry;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.SERVICE_MENU, order = 1,
@@ -31,7 +28,7 @@ public class App extends ModelBase implements Listable {
 
     @Override
     public String[] allIds() {
-        List<String> allAppNames = new ArrayList<>();
+        Set<String> allAppNames = new HashSet<>();
 
         Main.getService(Deployer.class).getAllApp().forEach(a -> {
             if (DeployerConstants.APP_SYSTEM.equals(a)) return;
@@ -41,7 +38,9 @@ public class App extends ModelBase implements Listable {
         Registry registry = Main.getService(Registry.class);
         allAppNames.addAll(registry.getAllAppNames());
 
-        return allAppNames.toArray(new String[0]);
+        List<String> result = new ArrayList<>(allAppNames);
+        result.sort(String::compareTo);
+        return result.toArray(new String[0]);
     }
 
     @ModelField(
@@ -95,19 +94,22 @@ public class App extends ModelBase implements Listable {
 
     @Override
     public Map<String, String> showData(String id) {
-        AppInfo appInfo;
-        List<String> instances;
+        AppInfo appInfo = null;
+        List<String> instances = new ArrayList<>();
 
         qingzhou.deployer.App app = Main.getService(Deployer.class).getApp(id);
         if (app != null) {
             appInfo = app.getAppInfo();
             instances = new ArrayList<>();
             instances.add(DeployerConstants.INSTANCE_LOCAL);
-        } else {
-            Registry registry = Main.getService(Registry.class);
-            appInfo = registry.getAppInfo(id);
-            instances = registry.getAppInstanceNames(id);
         }
+
+        Registry registry = Main.getService(Registry.class);
+        if (appInfo == null) {
+            appInfo = registry.getAppInfo(id);
+        }
+        instances.addAll(registry.getAppInstanceNames(id));
+
 
         if (appInfo != null) {
             Map<String, String> appMap = new HashMap<>();
