@@ -1262,17 +1262,6 @@ function initMonitorPage() {
                 }
                 if (retryRemain > 0 && retryRemain <= retryOption.retryLimit && $("span#monitor-timer-" + tempId).length > 0) {
                     retryOption["retryRemain"] = retryRemain;
-                    var bodyWidth = $(document.body).width();
-                    if (bodyWidth <= 1200) {
-                        option.legend.textStyle.fontSize = 11;
-                        option.grid.top = "15%";
-                    } else if (bodyWidth < 1600 && bodyWidth > 1200) {
-                        option.legend.textStyle.fontSize = 12;
-                        option.grid.top = "12%";
-                    } else {
-                        option.legend.textStyle.fontSize = 13;
-                        option.grid.top = "10%";
-                    }
                     handler(chartObj, option, url, keys, restrictedArea, retryOption, fn);
                 }
             }, 10);
@@ -1331,7 +1320,7 @@ function defaultOption(infoKv) {
                 return res;
             }
         },
-        legend: {data: [], textStyle: {fontSize: 13}, align: 'auto',
+        legend: {data: [], textStyle: {fontSize: 13}, align: 'auto', top: 30,
             formatter: function(name) {
                 if (infoKv !== undefined && infoKv[name] !== undefined) {
                     return infoKv[name][0];
@@ -1533,7 +1522,7 @@ function setGrid(option,line_num_each_row) {
         height = Math.ceil(len / line_num_each_row) * 19;
     }
     option.legend.height = height + 18;
-    option.grid.top = 30 + height;
+    option.grid.top = 12 + option.legend.height + option.legend.top;
     option.legend.textStyle.fontsize = fontSize;
 }
 
