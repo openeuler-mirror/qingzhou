@@ -23,7 +23,7 @@
                 Map<String, Map<String, ModelFieldInfo>> fieldMapWithGroup = modelInfo.getGroupedModelFieldMap();
                 Set<String> groups = fieldMapWithGroup.keySet();
                 long suffixId = System.currentTimeMillis();
-                if (groups.size() > 1) {
+                if (groups.size() > 1 || (groups.size() == 1 && !groups.contains(""))) {
         %>
         <ul class="nav nav-tabs">
             <%
@@ -36,7 +36,7 @@
                    tabGroup="<%=group%>">
                     <%=I18n.getStringI18n((Arrays.stream(modelInfo.getGroupInfos())
                             .filter(groupInfo -> groupInfo.getName().equals(finalGroup))
-                            .findFirst().get().getI18n()))%>
+                            .findFirst().orElse(GroupInfo.other()).getI18n()))%>
                 </a>
             </li>
             <%
