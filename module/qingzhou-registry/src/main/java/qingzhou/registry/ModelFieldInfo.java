@@ -8,6 +8,7 @@ public class ModelFieldInfo {
     private String type;
     private String[] options;
     private String refModel;
+    private String separator;
     private transient Class<?> refModelClass;
     private String defaultValue;
     private boolean list;
@@ -125,6 +126,14 @@ public class ModelFieldInfo {
 
     public void setRefModelClass(Class<?> refModelClass) {
         this.refModelClass = refModelClass;
+    }
+
+    public String getSeparator() {
+        return separator;
+    }
+
+    public void setSeparator(String separator) {
+        this.separator = separator;
     }
 
     public boolean isMonitor() {

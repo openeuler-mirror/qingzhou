@@ -104,6 +104,7 @@ public class ValidationFilter implements Filter<RestContext> {
             context.request.removeParameter(fieldInfo.getCode());
             return null;
         }
+        // check readOnly 须放在 check show 后面，否则 remove 的参数会影响判定
         boolean readOnly = SecurityController.checkRule(fieldInfo.getReadOnly(), context.request::getParameter, false);
         if (readOnly) {
             context.request.removeParameter(fieldInfo.getCode());
@@ -159,17 +160,17 @@ public class ValidationFilter implements Filter<RestContext> {
 
         @Override
         public String[] validate(ValidationContext context) {
-            if (context.isAddAction) {
-                if (context.fieldInfo.getCode().equals(context.modelInfo.getIdFieldName())) {
-                    List<String> allIds = SystemController.getAllIds(context.request.getApp(), context.request.getModel(), context.fieldInfo);
-                    if (allIds.contains(context.parameterVal)) {
-                        return new String[]{"validation_id"};
-                    }
-                }
-            }
+            if (!context.fieldInfo.getCode().equals(context.modelInfo.getIdFieldName())) return null;
 
             if (context.parameterVal.contains(DeployerConstants.BATCH_ID_SEPARATOR)) {
                 return new String[]{"validation_unsupportedCharacters", DeployerConstants.BATCH_ID_SEPARATOR};
+            }
+
+            if (context.isAddAction) {
+                List<String> allIds = SystemController.getAllIds(context.request.getApp(), context.request.getModel(), context.fieldInfo);
+                if (allIds.contains(context.parameterVal)) {
+                    return new String[]{"validation_id"};
+                }
             }
 
             return null;
@@ -431,8 +432,14 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             String[] options = SystemController.getOptions(context.request.getApp(), context.fieldInfo);
             if (options == null || options.length == 0) return null;
-            boolean match = Arrays.stream(options).anyMatch(s -> s.equals(context.parameterVal));
-            return match ? null : new String[]{"validation_options", Arrays.toString(options)};
+            String[] vals = context.parameterVal.split(context.fieldInfo.getSeparator());
+            for (String v : vals) {
+                boolean match = Arrays.asList(options).contains(v);
+                if (!match) {
+                    return new String[]{"validation_options", Arrays.toString(options)};
+                }
+            }
+            return null;
         }
     }
 }

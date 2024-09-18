@@ -193,7 +193,7 @@ class DefaultAction {
                     "en:Gets a list of downloadable files for this component."})
     public void files(Request request) {
         String id = request.getId();
-        if (id.contains("..")) {
+        if (id != null && id.contains("..")) {
             throw new IllegalArgumentException();
         }
         File fileBase = ((Downloadable) instance).downloadData(id);
@@ -201,18 +201,23 @@ class DefaultAction {
         File[] files = fileBase.listFiles();
         if (files == null) return;
 
-        HashMap<String, String> map = new HashMap<>();
+        Map<String, String> map = new LinkedHashMap<>();
         for (File rootFile : files) {
             String downloadItem = rootFile.getName();
+            if (rootFile.isFile()) {
+                map.put(downloadItem, downloadItem + " (" + FileUtil.getFileSize(rootFile) + ")");
+            }
+        }
+        for (File rootFile : files) {
             if (rootFile.isDirectory()) {
                 File[] subFiles = rootFile.listFiles();
                 if (subFiles != null) {
+                    Arrays.sort(subFiles, Comparator.comparing(File::getName));
                     for (File subFile : subFiles) {
-                        map.put(downloadItem + "/" + subFile.getName(), subFile.getName() + " (" + FileUtil.getFileSize(subFile) + ")");
+                        map.put(rootFile.getName() + "/" + subFile.getName(),
+                                subFile.getName() + " (" + FileUtil.getFileSize(subFile) + ")");
                     }
                 }
-            } else if (rootFile.isFile()) {
-                map.put(downloadItem, downloadItem + " (" + FileUtil.getFileSize(rootFile) + ")");
             }
         }
         request.getResponse().addData(map);

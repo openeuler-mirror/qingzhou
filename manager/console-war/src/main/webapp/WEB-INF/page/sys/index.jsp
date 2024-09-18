@@ -307,7 +307,8 @@
         bindFailOtp: '<%=I18n.getKeyI18n("page.bindfail.otp")%>',
         passwordChangedMsg: '<%=I18n.getKeyI18n("page.password.changed")%>',
         searchHiddenTip: '<%=I18n.getKeyI18n("page.search.hidden")%>',
-        passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>'
+        passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>',
+        otherGroupName: '<%=I18n.getStringI18n(PageUtil.OTHER_GROUP.getI18n())%>'
     };
     var searchUrl = '<%=RESTController.encodeURL(response, contextPath + "/search")%>';
 </script>

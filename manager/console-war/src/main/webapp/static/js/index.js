@@ -466,7 +466,7 @@ function setOrReset() {
                     for (var i = 0; i < arr.length; i++) {
                         var model = arr[i].model, modelAction = arr[i].modelAction,
                             modelDefAction = arr[i].modelDefAction,
-                            modelFieldGroup = arr[i].modelFieldGroup ? arr[i].modelFieldGroup : "OTHERS",
+                            modelFieldGroup = arr[i].modelFieldGroup ? arr[i].modelFieldGroup : "otherGroupName",
                             modelField = arr[i].modelField, modelFieldName = arr[i].modelFieldName,
                             modelName = arr[i].modelName;
 

@@ -1,6 +1,7 @@
 package qingzhou.config;
 
 import java.util.Arrays;
+import java.util.Properties;
 
 public class Console {
     private boolean enabled;
@@ -10,6 +11,16 @@ public class Console {
     private User[] user;
     private Department[] department;
     private Jmx jmx;
+
+    public Properties getServletProperties() {
+        return servletProperties;
+    }
+
+    public void setServletProperties(Properties servletProperties) {
+        this.servletProperties = servletProperties;
+    }
+
+    private Properties servletProperties;
 
     public User getUser(String name) {
         if (user == null) return null;

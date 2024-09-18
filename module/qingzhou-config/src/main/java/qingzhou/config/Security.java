@@ -9,6 +9,15 @@ public class Security {
     private int failureCount;
     private int passwordMaxAge;
     private int passwordLimitRepeats;
+    private int maxFileUpload;
+
+    public int getMaxFileUpload() {
+        return maxFileUpload;
+    }
+
+    public void setMaxFileUpload(int maxFileUpload) {
+        this.maxFileUpload = maxFileUpload;
+    }
 
     public String getPublicKey() {
         return publicKey;

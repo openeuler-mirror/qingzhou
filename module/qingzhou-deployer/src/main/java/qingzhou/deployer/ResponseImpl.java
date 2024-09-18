@@ -99,7 +99,10 @@ public class ResponseImpl implements Response {
             try {
                 int modifiers = field.getModifiers();
                 if (Modifier.isPublic(modifiers) && !Modifier.isStatic(modifiers)) {
-                    map.put(field.getName(), String.valueOf(field.get(data)));
+                    Object val = field.get(data);
+                    if (val != null) {
+                        map.put(field.getName(), String.valueOf(val));
+                    }
                 }
             } catch (IllegalAccessException ignored) {
             }

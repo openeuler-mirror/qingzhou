@@ -77,7 +77,8 @@ public class Controller implements ModuleActivator {
         public void exec() throws Exception {
             servletContainer = servletService.createServletContainer();
             servletContainer.start(console.getPort(),
-                    new File(moduleContext.getTemp(), "servlet"));
+                    new File(moduleContext.getTemp(), "servlet"),
+                    console.getServletProperties());
         }
 
         @Override

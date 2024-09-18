@@ -43,7 +43,7 @@ public class Controller implements ModuleActivator {
                     logger.error(e.getMessage(), e);
                 }
             }
-        }, 2000, 1000 * 3);
+        }, 2000, 1000 * 2);
     }
 
     @Override

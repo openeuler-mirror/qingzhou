@@ -1,3 +1,4 @@
+<%@ page import="java.util.function.Predicate" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -16,27 +17,26 @@
       action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
-            Map<String, String> model = null;
             List<Map<String, String>> models = qzResponse.getDataList();
-            if (!models.isEmpty()) {
-                model = models.get(0);
-                Map<String, Map<String, ModelFieldInfo>> fieldMapWithGroup = modelInfo.getGroupedModelFieldMap();
-                Set<String> groups = fieldMapWithGroup.keySet();
-                long suffixId = System.currentTimeMillis();
-                if (groups.size() > 1 || (groups.size() == 1 && !groups.contains(""))) {
+            Map<String, String> modelData = models.get(0);
+            Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedField();
+            Set<String> groups = formGroup.keySet();
+            long suffixId = System.currentTimeMillis();
+            GroupInfo[] groupInfos = modelInfo.getGroupInfos();
+            if (!groups.iterator().next().isEmpty()) {
         %>
         <ul class="nav nav-tabs">
             <%
                 boolean isFirst = true;
                 for (String group : groups) {
-                    group = "".equals(group) ? "OTHERS" : group;
-                    String finalGroup = group;%>
+                    GroupInfo gInfo = null;
+                    if (groupInfos != null) {
+                        gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(null);
+                    }
+            %>
             <li <%=isFirst ? "class='active'" : ""%>>
                 <a data-tab href="#group-<%=group%>-<%=suffixId%>"
-                   tabGroup="<%=group%>">
-                    <%=I18n.getStringI18n((Arrays.stream(modelInfo.getGroupInfos())
-                            .filter(groupInfo -> groupInfo.getName().equals(finalGroup))
-                            .findFirst().orElse(GroupInfo.other()).getI18n()))%>
+                   tabGroup="<%=group%>"><%=gInfo != null ? I18n.getStringI18n(gInfo.getI18n()) : group%>
                 </a>
             </li>
             <%
@@ -44,46 +44,51 @@
                 }
             %>
         </ul>
-        <div class="tab-content" style="padding-top: 24px; padding-bottom: 12px;">
-            <%
+        <%
+            }
+            boolean isFirstGroup = true;
+            for (String group : groups) {
+                GroupInfo gInfo = null;
+                if (groupInfos != null) {
+                    gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(null);
                 }
-                boolean isFirstGroup = true;
-                for (String group : groups) {
-            %>
+        %>
+        <div class="tab-content" style="padding-top: 24px; padding-bottom: 12px;">
             <div class="tab-pane <%=isFirstGroup?"active":""%>"
-                 id="group-<%=("".equals(group) ? "OTHERS":group)%>-<%=suffixId%>"
-                 tabGroup="<%=("".equals(group) ? "OTHERS":group)%>">
+                 id="group-<%=group%>-<%=suffixId%>"
+                 tabGroup="<%=group%>">
                 <%
                     isFirstGroup = false;
-                    Map<String, ModelFieldInfo> groupFieldMap = fieldMapWithGroup.get(group);
-                    if (groupFieldMap == null) {
-                        continue;
-                    }
+                    Map<String, ModelFieldInfo> groupFieldMap = formGroup.get(group);
                     for (Map.Entry<String, ModelFieldInfo> e : groupFieldMap.entrySet()) {
+                        String fieldName = e.getKey();
                         ModelFieldInfo modelField = e.getValue();
+
                         if (!modelField.isCreateable() && !isEdit) {
                             continue;
                         }
 
-                        String fieldName = e.getKey();
-
                         String readonly = "";
                         if (!modelField.isEditable() && isEdit) {
                             readonly = "readonly";
-                        }
-                        if (fieldName.equals(idFieldName)) {
+                        } else if (fieldName.equals(idFieldName)) {
                             if (isEdit) {
+                                readonly = "readonly";
+                            }
+                        } else {
+                            boolean readOnly = SecurityController.checkRule(modelField.getReadOnly(), modelData::get, false);
+                            if (readOnly) {
                                 readonly = "readonly";
                             }
                         }
 
                         boolean required = fieldName.equals(idFieldName) || modelField.isRequired();
 
-                        String fieldValue = String.valueOf(model.get(fieldName));// 需要在 isFieldReadOnly 之后，原因是 license 限制的 5 个并发会在其中被修改，总之最后读取值是最新的最准确的
-                        List<String> fieldValues = fieldValue == null ? new ArrayList<>() : Arrays.asList(fieldValue.split(","));
-                        if (fieldValue == null || fieldValue.equals("null")) {
+                        String fieldValue = modelData.get(fieldName);
+                        if (fieldValue == null) {
                             fieldValue = "";
                         }
+                        List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
                 %>
                 <div class="form-group" id="form-item-<%=fieldName%>">
                     <label for="<%=fieldName%>" class="col-sm-4">
@@ -214,15 +219,12 @@
                 </div>
                 <%
                     }
-                    if (groups.size() > 1) {
                 %>
             </div>
-            <%
-                        }
-                    }
-                }
-            %>
         </div>
+        <%
+            }
+        %>
 
         <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
             <div class="form-btn">
@@ -234,7 +236,7 @@
                 <%
                     }
 
-                    if (SecurityController.isActionShow(qzApp, qzModel, Listable.ACTION_LIST, model, currentUser)) {
+                    if (SecurityController.isActionShow(qzApp, qzModel, Listable.ACTION_LIST, modelData, currentUser)) {
                 %>
                 <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST)%>"
                    btn-type="goback" class="btn">
@@ -252,7 +254,7 @@
                 <%
                     }
 
-                    if (SecurityController.isActionShow(qzApp, qzModel, Downloadable.ACTION_DOWNLOAD, model, currentUser)) {
+                    if (SecurityController.isActionShow(qzApp, qzModel, Downloadable.ACTION_DOWNLOAD, modelData, currentUser)) {
                 %>
                 <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Downloadable.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
                         <%
@@ -321,4 +323,3 @@
         </textarea>
     </div>
 </form>
-<%-- </div> --%>

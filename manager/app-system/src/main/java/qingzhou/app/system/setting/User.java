@@ -236,7 +236,8 @@ public class User extends ModelBase implements Addable {
     public void update(Request request) throws Exception {
         String userId = request.getId();
         if (DeployerConstants.DEFAULT_USER_QINGZHOU.equals(userId)) {
-            if (!Boolean.parseBoolean(request.getParameter("active"))) {
+            String active = request.getParameter("active");
+            if (active != null && !Boolean.parseBoolean(active)) {
                 request.getResponse().setSuccess(false);
                 request.getResponse().setMsg(getAppContext().getI18n("System.users.keep.active"));
                 return;
