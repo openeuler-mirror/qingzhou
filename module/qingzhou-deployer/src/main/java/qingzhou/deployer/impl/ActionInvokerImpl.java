@@ -134,8 +134,18 @@ class ActionInvokerImpl implements ActionInvoker {
         byte[] sendContent = cipher.encrypt(resultJson);
         HttpResponse response = http.buildHttpClient().send(remoteUrl, sendContent);
         byte[] responseBody = response.getResponseBody();
-        byte[] decryptedData = cipher.decrypt(responseBody);
-        return json.fromJson(new String(decryptedData, DeployerConstants.ACTION_INVOKE_CHARSET), ResponseImpl.class);
+        byte[] decryptedData;
+        try {
+            decryptedData = cipher.decrypt(responseBody);
+        } catch (Exception e) {
+            decryptedData = responseBody;
+        }
+        String result = new String(decryptedData, DeployerConstants.ACTION_INVOKE_CHARSET);
+        if (response.getResponseCode() == 200) {
+            return json.fromJson(result, ResponseImpl.class);
+        } else { // 远端出现异常，不会有 json
+            throw new IllegalStateException(result);
+        }
     }
 
     private Response buildErrorResponse(String instance, Exception e) {
