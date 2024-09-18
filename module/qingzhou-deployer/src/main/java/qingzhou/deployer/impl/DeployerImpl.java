@@ -290,12 +290,7 @@ class DeployerImpl implements Deployer {
         List<GroupInfo> groupInfoList = new ArrayList<>();
         Groups groups = ((Updatable) instance).groups();
         if (groups != null) {
-            groups.groups().forEach(group -> {
-                GroupInfo groupInfo = new GroupInfo();
-                groupInfo.setName(group.name());
-                groupInfo.setI18n(group.i18n());
-                groupInfoList.add(groupInfo);
-            });
+            groups.groups().stream().map(GroupInfo::new).forEach(groupInfoList::add);
         }
         return groupInfoList.toArray(new GroupInfo[0]);
     }
