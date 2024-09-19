@@ -1,4 +1,3 @@
-<%@ page import="java.util.function.Predicate" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -31,7 +30,7 @@
                 for (String group : groups) {
                     GroupInfo gInfo = null;
                     if (groupInfos != null) {
-                        gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(null);
+                        gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(PageUtil.OTHER_GROUP);
                     }
             %>
             <li <%=isFirst ? "class='active'" : ""%>>
@@ -46,14 +45,12 @@
         </ul>
         <%
             }
-            boolean isFirstGroup = true;
-            for (String group : groups) {
-                GroupInfo gInfo = null;
-                if (groupInfos != null) {
-                    gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(null);
-                }
         %>
         <div class="tab-content" style="padding-top: 24px; padding-bottom: 12px;">
+            <%
+                boolean isFirstGroup = true;
+                for (String group : groups) {
+            %>
             <div class="tab-pane <%=isFirstGroup?"active":""%>"
                  id="group-<%=group%>-<%=suffixId%>"
                  tabGroup="<%=group%>">
@@ -221,63 +218,63 @@
                     }
                 %>
             </div>
+            <%
+                }
+            %>
         </div>
-        <%
-            }
-        %>
+    </div>
+    <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
+        <div class="form-btn">
+            <%
+                if (SecurityController.isActionShow(qzApp, qzModel, submitActionName, null, currentUser)) {
+            %>
+            <input type="submit" class="btn"
+                   value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
+            <%
+                }
 
-        <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
-            <div class="form-btn">
-                <%
-                    if (SecurityController.isActionShow(qzApp, qzModel, submitActionName, null, currentUser)) {
-                %>
-                <input type="submit" class="btn"
-                       value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
-                <%
-                    }
+                if (SecurityController.isActionShow(qzApp, qzModel, Listable.ACTION_LIST, modelData, currentUser)) {
+            %>
+            <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST)%>"
+               btn-type="goback" class="btn">
+                <%=I18n.getKeyI18n("page.return")%>
+            </a>
+            <%
+                }
 
-                    if (SecurityController.isActionShow(qzApp, qzModel, Listable.ACTION_LIST, modelData, currentUser)) {
-                %>
-                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST)%>"
-                   btn-type="goback" class="btn">
-                    <%=I18n.getKeyI18n("page.return")%>
-                </a>
-                <%
-                    }
+                if (modelInfo.getModelActionInfo(DeployerConstants.ACTION_REFRESHKEY) != null) {
+            %>
+            <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, DeployerConstants.ACTION_REFRESHKEY)%>"
+               btn-type="qrOtp" class="btn">
+                <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.ACTION_REFRESHKEY)%>
+            </a>
+            <%
+                }
 
-                    if (modelInfo.getModelActionInfo(DeployerConstants.ACTION_REFRESHKEY) != null) {
-                %>
-                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.imageView, DeployerConstants.ACTION_REFRESHKEY)%>"
-                   btn-type="qrOtp" class="btn">
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.ACTION_REFRESHKEY)%>
-                </a>
-                <%
-                    }
+                if (SecurityController.isActionShow(qzApp, qzModel, Downloadable.ACTION_DOWNLOAD, modelData, currentUser)) {
+            %>
+            <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Downloadable.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
+                    <%
+                        out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
+                    %>
+               data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Downloadable.ACTION_FILES)%>'
+               data-tip-arrow="top"
+               btn-type="<%=Downloadable.ACTION_FILES%>" class="btn tooltips">
+                <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Downloadable.ACTION_FILES)%>
+            </a>
+            <%
+                }
+            %>
 
-                    if (SecurityController.isActionShow(qzApp, qzModel, Downloadable.ACTION_DOWNLOAD, modelData, currentUser)) {
-                %>
-                <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Downloadable.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
-                        <%
-                            out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
-                        %>
-                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Downloadable.ACTION_FILES)%>'
-                   data-tip-arrow="top"
-                   btn-type="<%=Downloadable.ACTION_FILES%>" class="btn tooltips">
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Downloadable.ACTION_FILES)%>
-                </a>
-                <%
-                    }
-                %>
-
-            </div>
         </div>
+    </div>
 
-        <div id="tempZone" style="display:none;"></div>
-        <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
+    <div id="tempZone" style="display:none;"></div>
+    <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
         <%=SystemController.getPublicKeyString()%>
         </textarea>
 
-        <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">
+    <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">
         <%
             // added by yuanwc for: ModelField 注解 show()
             StringBuilder conditionBuilder = new StringBuilder();
@@ -311,7 +308,7 @@
             out.print(conditionBuilder.toString());
         %>
         </textarea>
-        <textarea name="passwordFields" rows="3" disabled="disabled" style="display:none;">
+    <textarea name="passwordFields" rows="3" disabled="disabled" style="display:none;">
         <%
             for (int i = 0; i < passwordFields.size(); i++) {
                 if (i > 0) {
@@ -321,5 +318,5 @@
             }
         %>
         </textarea>
-    </div>
+
 </form>
