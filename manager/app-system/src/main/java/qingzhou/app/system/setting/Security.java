@@ -61,7 +61,7 @@ public class Security extends ModelBase implements Updatable {
     public Integer passwordLimitRepeats = 1;
 
     @ModelField(
-            required = false, type = FieldType.textarea,
+            type = FieldType.textarea,
             editable = false, createable = false,
             lengthMax = 1000,
             name = {"加密公钥", "en:Public Key"},
@@ -78,7 +78,7 @@ public class Security extends ModelBase implements Updatable {
     }
 
     @Override
-    public Map<String, String> showData(String id) throws Exception {
+    public Map<String, String> showData(String id) {
         qingzhou.config.Security security = Main.getService(Config.class).getConsole().getSecurity();
         return Utils.getPropertiesFromObj(security);
     }

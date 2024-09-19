@@ -10,7 +10,7 @@ public class MemoryDataStoreDemo {
         this.idKey = idKey;
     }
 
-    public void addData(String id, Map<String, String> data) {
+    public void addData(Map<String, String> data) {
         dataList.add(data);
     }
 
@@ -31,16 +31,18 @@ public class MemoryDataStoreDemo {
         showData(id).putAll(data);
     }
 
-    public String[] allIds() {
-        return dataList.stream().map(data -> data.get(idKey)).toArray(String[]::new);
+    public String[] allIds(Map<String, String> query) {
+        return dataList.stream().filter(data -> query(query, data))
+                .map(data -> data.get(idKey))
+                .toArray(String[]::new);
     }
 
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames, Map<String, String> query) {
         int fromIndex = (pageNum - 1) * pageSize;
-        int toIndex = Math.min(pageNum * pageSize - 1, dataList.size());
+        int toIndex = Math.min(fromIndex + pageSize, dataList.size());
 
         List<Map<String, String>> result = new ArrayList<>();
-        for (String id : Arrays.copyOfRange(allIds(), fromIndex, toIndex)) {
+        for (String id : Arrays.copyOfRange(allIds(query), fromIndex, toIndex)) {
             Map<String, String> item = showData(id);
             result.add(new HashMap<String, String>() {{
                 for (String fieldName : fieldNames) {
@@ -52,7 +54,22 @@ public class MemoryDataStoreDemo {
         return result;
     }
 
-    public int totalSize() {
-        return dataList.size();
+    public int totalSize(Map<String, String> query) {
+        return allIds(query).length;
+    }
+
+    public static boolean query(Map<String, String> query, Map<String, String> data) {
+        if (query == null) return true;
+
+        for (Map.Entry<String, String> e : query.entrySet()) {
+            String queryKey = e.getKey();
+            String queryValue = e.getValue();
+
+            String val = data.get(queryKey);
+            if (val == null || !val.contains(queryValue)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

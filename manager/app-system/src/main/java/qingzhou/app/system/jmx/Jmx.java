@@ -80,7 +80,7 @@ public class Jmx extends ModelBase implements Updatable {
     }
 
     @Override
-    public Map<String, String> showData(String id) throws Exception {
+    public Map<String, String> showData(String id) {
         Config config = Main.getService(Config.class);
         qingzhou.config.Jmx jmx = config.getConsole().getJmx();
         return Utils.getPropertiesFromObj(jmx);

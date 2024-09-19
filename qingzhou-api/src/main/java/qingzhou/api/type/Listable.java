@@ -23,37 +23,40 @@ public interface Listable extends Showable {
      * 1. 其它模块中有字段通过 ModelField.refModel() 引用了本模块；
      * 2. 需要由轻舟平台在创建本模块数据时候，自动验证是否已经存在
      */
-    String[] allIds() throws Exception;
+    String[] allIds(Map<String, String> query) throws Exception;
 
     default boolean contains(String id) throws Exception {
-        String[] ids = allIds();
-        if (ids != null) {
-            for (String s : ids) {
-                if (s.equals(id)) {
-                    return true;
-                }
-            }
-            return false;
-        }
+        if (id == null || id.isEmpty()) return false;
 
-        return false; // 当不能通过 allIds() 自行判断时，交给应用自行处理
+        String[] ids = allIds(null);
+        if (ids == null) return false;
+
+        for (String s : ids) {
+            if (s.equals(id)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * @param pageNum    查询此页的数据
      * @param pageSize   每页的数据条数
-     * @param fieldNames 查询出的每条数据的字段名称
+     * @param showFields 查询出的每条数据的字段名称
      *                   注：当 totalSize() 或 pageSize() 返回值 小于 1 时，请在实现内部忽略分页逻辑，转而返回所有数据
      */
-    List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception;
+    List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception;
 
     /**
      * 如果需要使用列表数据分页查看，则需要覆写此方法，表示所有数据的条数
      * 返回值小于 1 时无效
      */
-    default int totalSize() throws Exception {
-        String[] ids = allIds();
-        return ids != null ? ids.length : -1;
+    default int totalSize(Map<String, String> query) throws Exception {
+        if (query == null || query.isEmpty()) {
+            String[] ids = allIds(query);
+            return ids != null ? ids.length : -1;
+        }
+        return -1;
     }
 
     /**
