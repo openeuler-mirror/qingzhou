@@ -17,6 +17,8 @@ import qingzhou.registry.ModelInfo;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +46,7 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_email", new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
         I18n.addKeyI18n("validation_filePath", new String[]{"文件路径不支持以\\或者/结尾，不支持包含特殊字符和空格", "en:The file path cannot end with \\ or /, and cannot contain special characters or Spaces"});
         I18n.addKeyI18n("validation_options", new String[]{"取值不在范围：%s", "en:The value is not in the range: %s"});
+        I18n.addKeyI18n("validation_datetime", new String[]{"须符合时间格式：%s", "en:Must conform to the time format: %s"});
     }
 
     @Override
@@ -93,7 +96,8 @@ public class ValidationFilter implements Filter<RestContext> {
             new regularExpression(),
             new checkEmail(),
             new checkFilePath(),
-            new options()
+            new options(),
+            new datetime()
     };
 
     private String[] validate(ValidationContext context) {
@@ -440,6 +444,20 @@ public class ValidationFilter implements Filter<RestContext> {
                 }
             }
             return null;
+        }
+    }
+
+    static class datetime implements Validator {
+        @Override
+        public String[] validate(ValidationContext context) {
+            if (!FieldType.datetime.name().equals(context.fieldInfo.getType())) return null;
+
+            try {
+                new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).parse(context.parameterVal);
+                return null;
+            } catch (ParseException e) {
+                return new String[]{"validation_datetime", DeployerConstants.FIELD_DATETIME_FORMAT};
+            }
         }
     }
 }

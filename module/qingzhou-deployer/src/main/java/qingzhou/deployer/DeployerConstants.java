@@ -42,6 +42,7 @@ public interface DeployerConstants {
     String JSON_DATA="data";
     String CHECK_FINGERPRINT = "fingerprint";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    String FIELD_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String BATCH_ID_SEPARATOR = ",";
     String DEFAULT_DATA_SEPARATOR = ",";
 

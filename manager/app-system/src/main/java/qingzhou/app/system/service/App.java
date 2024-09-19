@@ -27,7 +27,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @Override
-    public String[] allIds() {
+    public String[] allIds(Map<String, String> query) {
         Set<String> allAppNames = new HashSet<>();
 
         Main.getService(Deployer.class).getAllApp().forEach(a -> {
@@ -39,6 +39,9 @@ public class App extends ModelBase implements Listable {
         allAppNames.addAll(registry.getAllAppNames());
 
         List<String> result = new ArrayList<>(allAppNames);
+
+        result.removeIf(id -> !ModelUtil.query(query, () -> showData(id)));
+
         result.sort(String::compareTo);
         return result.toArray(new String[0]);
     }
@@ -123,13 +126,8 @@ public class App extends ModelBase implements Listable {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
-        return ModelUtil.listData(allIds(), this::showData, pageNum, pageSize, fieldNames);
-    }
-
-    @Override
-    public int totalSize() {
-        return allIds().length;
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
+        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
     @ModelAction(

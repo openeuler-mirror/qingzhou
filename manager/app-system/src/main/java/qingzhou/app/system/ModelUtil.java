@@ -1,33 +1,26 @@
 package qingzhou.app.system;
 
-import qingzhou.api.Request;
-import qingzhou.api.Response;
-import qingzhou.deployer.ActionInvoker;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
-
 import java.util.*;
 
 public class ModelUtil {
-    public static void invokeOnAgent(Request request, String... instance) {
-        String originModel = request.getModel();
-        RequestImpl requestImpl = (RequestImpl) request;
-        try {
-            requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
-            List<Response> responseList = Main.getService(ActionInvoker.class)
-                    .invokeOnInstances(request, instance);
-            if (responseList.size() == 1) {
-                requestImpl.setResponse(responseList.get(0));
-            } else {
-                throw new IllegalStateException();
+    public static boolean query(Map<String, String> query, Supplier supplier) {
+        if (query == null) return true;
+
+        for (Map.Entry<String, String> e : query.entrySet()) {
+            String queryKey = e.getKey();
+            String queryValue = e.getValue();
+
+            Map<String, String> data = supplier.get();
+            String val = data.get(queryKey);
+            if (val == null || !val.contains(queryValue)) {
+                return false;
             }
-        } finally {
-            requestImpl.setModelName(originModel);
         }
+        return true;
     }
 
-    public static List<Map<String, String>> listData(String[] allIds, Supplier supplier,
-                                                     int pageNum, int pageSize, String[] fieldNames) throws Exception {
+    public static List<Map<String, String>> listData(String[] allIds, IdSupplier idSupplier,
+                                                     int pageNum, int pageSize, String[] fieldNames) {
         int totalSize = allIds.length;
         int startIndex = (pageNum - 1) * pageSize;
         int endIndex = Math.min(startIndex + pageSize, totalSize);
@@ -37,7 +30,7 @@ public class ModelUtil {
         for (String id : subList) {
             Map<String, String> result = new HashMap<>();
 
-            Map<String, String> idData = supplier.get(id);
+            Map<String, String> idData = idSupplier.get(id);
             for (String fieldName : fieldNames) {
                 result.put(fieldName, idData.get(fieldName));
             }
@@ -47,7 +40,11 @@ public class ModelUtil {
         return data;
     }
 
+    public interface IdSupplier {
+        Map<String, String> get(String id);
+    }
+
     public interface Supplier {
-        Map<String, String> get(String id) throws Exception;
+        Map<String, String> get();
     }
 }

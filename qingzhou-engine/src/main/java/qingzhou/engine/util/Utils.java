@@ -105,26 +105,30 @@ public class Utils {
         return value == null || value.trim().isEmpty();
     }
 
-    public static Map<String, String> getPropertiesFromObj(Object obj) throws Exception {
+    public static Map<String, String> getPropertiesFromObj(Object obj) {
         Map<String, String> properties = new HashMap<>();
-        BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
-        for (PropertyDescriptor p : beanInfo.getPropertyDescriptors()) {
-            Method readMethod = p.getReadMethod();
-            if (readMethod != null) {
-                Object val = readMethod.invoke(obj);
-                if (val != null) {
-                    if (val instanceof InetAddress) {
-                        val = ((InetAddress) val).getHostAddress();
-                    } else {
-                        Class<?> typeClass = readMethod.getReturnType();
-                        if (typeClass != String.class
-                                && !isPrimitive(typeClass)) {
-                            continue;
+        try {
+            BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
+            for (PropertyDescriptor p : beanInfo.getPropertyDescriptors()) {
+                Method readMethod = p.getReadMethod();
+                if (readMethod != null) {
+                    Object val = readMethod.invoke(obj);
+                    if (val != null) {
+                        if (val instanceof InetAddress) {
+                            val = ((InetAddress) val).getHostAddress();
+                        } else {
+                            Class<?> typeClass = readMethod.getReturnType();
+                            if (typeClass != String.class
+                                    && !isPrimitive(typeClass)) {
+                                continue;
+                            }
                         }
+                        properties.put(p.getName(), String.valueOf(val));
                     }
-                    properties.put(p.getName(), String.valueOf(val));
                 }
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return properties;
     }

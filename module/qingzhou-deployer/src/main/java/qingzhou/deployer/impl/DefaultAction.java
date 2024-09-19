@@ -8,6 +8,7 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
@@ -62,7 +63,8 @@ class DefaultAction {
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void listAll(Request request) throws Exception {
         Listable listable = (Listable) instance;
-        String[] ids = listable.allIds();
+        Map<String, String> query = queryParams(request);
+        String[] ids = listable.allIds(query);
         if (ids == null) return;
         for (String id : ids) {
             request.getResponse().addData(new HashMap<String, String>() {{
@@ -78,8 +80,10 @@ class DefaultAction {
     public void list(Request request) throws Exception {
         ResponseImpl responseImpl = (ResponseImpl) request.getResponse();
 
+        Map<String, String> query = queryParams(request);
+
         Listable listable = (Listable) instance;
-        responseImpl.setTotalSize(listable.totalSize());
+        responseImpl.setTotalSize(listable.totalSize(query));
         responseImpl.setPageSize(listable.pageSize());
 
         int pageNum = 1;
@@ -90,11 +94,24 @@ class DefaultAction {
         responseImpl.setPageNum(pageNum);
 
         String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFieldsToList();
-        List<Map<String, String>> result = ((Listable) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList);
+        List<Map<String, String>> result = ((Listable) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList, query);
         if (result == null) return;
         for (Map<String, String> data : result) {
             request.getResponse().addData(data);
         }
+    }
+
+    private Map<String, String> queryParams(Request request) {
+        Map<String, String> query = null;
+        ModelInfo modelInfo = getAppInfo().getModelInfo(request.getModel());
+        for (String fieldName : modelInfo.getFieldsToList()) {
+            String val = request.getParameter(fieldName);
+            if (Utils.notBlank(val)) {
+                if (query == null) query = new HashMap<>();
+                query.put(fieldName, val);
+            }
+        }
+        return query;
     }
 
     @ModelAction(

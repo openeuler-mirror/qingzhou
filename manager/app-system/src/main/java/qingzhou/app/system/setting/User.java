@@ -30,8 +30,11 @@ public class User extends ModelBase implements Addable {
     }
 
     @Override
-    public String[] allIds() {
-        return Arrays.stream(Main.getService(Config.class).getConsole().getUser()).map(qingzhou.config.User::getName).toArray(String[]::new);
+    public String[] allIds(Map<String, String> query) {
+        return Arrays.stream(Main.getService(Config.class).getConsole().getUser())
+                .filter(user -> ModelUtil.query(query, () -> Utils.getPropertiesFromObj(user)))
+                .map(qingzhou.config.User::getName)
+                .toArray(String[]::new);
     }
 
     @Override
@@ -122,8 +125,8 @@ public class User extends ModelBase implements Addable {
     public String info;
 
     @Override
-    public Map<String, String> showData(String id) throws Exception {
-        Map<String, String> data = Objects.requireNonNull(showDataForUser(id));
+    public Map<String, String> showData(String id) {
+        Map<String, String> data = showDataForUser(id);
         data.put("password", PASSWORD_FLAG);
         data.put("confirmPassword", PASSWORD_FLAG);
         return data;
@@ -192,13 +195,8 @@ public class User extends ModelBase implements Addable {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
-        return ModelUtil.listData(allIds(), this::showData, pageNum, pageSize, fieldNames);
-    }
-
-    @Override
-    public int totalSize() {
-        return Main.getService(Config.class).getConsole().getUser().length;
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
+        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
     @ModelAction(
@@ -265,7 +263,7 @@ public class User extends ModelBase implements Addable {
         return password != null && !password.equals(PASSWORD_FLAG);
     }
 
-    static Map<String, String> showDataForUser(String userId) throws Exception {
+    static Map<String, String> showDataForUser(String userId) {
         for (qingzhou.config.User user : Main.getService(Config.class).getConsole().getUser()) {
             if (user.getName().equals(userId)) {
                 Map<String, String> data = Utils.getPropertiesFromObj(user);

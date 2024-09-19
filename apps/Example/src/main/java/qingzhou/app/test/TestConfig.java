@@ -4,7 +4,6 @@ import qingzhou.api.*;
 import qingzhou.api.type.Monitorable;
 import qingzhou.api.type.Updatable;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -14,6 +13,8 @@ import java.util.Random;
         name = {"推送参数", "en:Push Parameter"},
         info = {"配置推送参数。", "en:Configure the push parameter."})
 public class TestConfig extends ModelBase implements Updatable, Monitorable {
+    private final Map<String, String> data = new HashMap<>();
+
     final String tab_SMTP = "SMTP";
     final String tab_DingTalk = "DingTalk";
     final String tab_WeChat = "WeChat";
@@ -34,62 +35,62 @@ public class TestConfig extends ModelBase implements Updatable, Monitorable {
 
     @ModelField(
             group = tab_WeChatPublic,
-            
+
             name = {"aaa", "en:aaa"}, info = {})
     public String aa;
     @ModelField(
-            
+
             name = {"bbb", "en:bbb"}, info = {})
     public int bb;
     @ModelField(
             group = tab_HTTPPush,
-            
+
             name = {"ccc", "en:ccc"}, info = {})
     public float cc;
 
     @ModelField(
             type = FieldType.bool,
-            
+
             name = {"bool", "en:bool"}, info = {})
     public boolean bool;
     @ModelField(
             type = FieldType.checkbox,
-            
+            options = {"a", "b", "c", "d", "e"},
             name = {"checkbox", "en:checkbox"}, info = {})
     public boolean checkbox;
     @ModelField(
             type = FieldType.datetime,
-            
+
             name = {"datetime", "en:datetime"}, info = {})
     public boolean datetime;
     @ModelField(
             type = FieldType.decimal,
-            
+
             name = {"decimal", "en:decimal"}, info = {})
     public boolean decimal;
     @ModelField(
             type = FieldType.kv,
-            
+
             name = {"kv", "en:kv"}, info = {})
     public boolean kv;
     @ModelField(
             type = FieldType.multiselect,
-            
+            options = {"a", "b", "c", "d", "e"},
             name = {"multiselect", "en:multiselect"}, info = {})
     public boolean multiselect;
     @ModelField(
             type = FieldType.radio,
-            
+            options = {"a", "b", "c", "d", "e"},
             name = {"radio", "en:radio"}, info = {})
     public boolean radio;
     @ModelField(
             type = FieldType.sortable,
-            
+            options = {"a", "b", "c", "d", "e"},
             name = {"sortable", "en:sortable"}, info = {})
     public boolean sortable;
     @ModelField(
             type = FieldType.sortablecheckbox,
-            
+            options = {"a", "b", "c", "d", "e"},
             name = {"sortablecheckbox", "en:sortablecheckbox"}, info = {})
     public boolean sortablecheckbox;
 
@@ -107,13 +108,13 @@ public class TestConfig extends ModelBase implements Updatable, Monitorable {
     }
 
     @Override
-    public void updateData(Map<String, String> data) throws Exception {
-
+    public void updateData(Map<String, String> data) {
+        this.data.putAll(data);
     }
 
     @Override
-    public Map<String, String> showData(String id) throws Exception {
-        return Collections.emptyMap();
+    public Map<String, String> showData(String id) {
+        return data;
     }
 
     @Override

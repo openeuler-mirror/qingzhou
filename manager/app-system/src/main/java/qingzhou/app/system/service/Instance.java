@@ -8,7 +8,9 @@ import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Agent;
 import qingzhou.config.Config;
+import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
@@ -198,7 +200,7 @@ public class Instance extends ModelBase implements Listable, Monitorable {
     }
 
     @Override
-    public String[] allIds() {
+    public String[] allIds(Map<String, String> query) {
         List<String> ids = new ArrayList<>();
         ids.add(DeployerConstants.INSTANCE_LOCAL);
         Registry registry = Main.getService(Registry.class);
@@ -206,18 +208,13 @@ public class Instance extends ModelBase implements Listable, Monitorable {
             InstanceInfo instanceInfo = registry.getInstanceInfo(s);
             ids.add(instanceInfo.getName());
         });
+        ids.removeIf(id -> !ModelUtil.query(query, () -> showData(id)));
         return ids.toArray(new String[0]);
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) throws Exception {
-        return ModelUtil.listData(allIds(), this::showData, pageNum, pageSize, fieldNames);
-    }
-
-    @Override
-    public int totalSize() {
-        return Main.getService(Registry.class).getAllAppNames().size()
-                + 1;// +1 local instance
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
+        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
     @Override
@@ -252,7 +249,7 @@ public class Instance extends ModelBase implements Listable, Monitorable {
             info = {"下载实例的日志信息。",
                     "en:Download the log information of the instance."})
     public void files(Request request) {
-        ModelUtil.invokeOnAgent(request, request.getId());
+        invokeOnAgent(request, request.getId());
     }
 
     @ModelAction(
@@ -261,7 +258,7 @@ public class Instance extends ModelBase implements Listable, Monitorable {
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files."})
     public void download(Request request) {
-        ModelUtil.invokeOnAgent(request, request.getId());
+        invokeOnAgent(request, request.getId());
     }
 
     @ModelAction(
@@ -270,7 +267,7 @@ public class Instance extends ModelBase implements Listable, Monitorable {
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
     public void monitor(Request request) throws Exception {
-        ModelUtil.invokeOnAgent(request, request.getId());
+        invokeOnAgent(request, request.getId());
         List<Map<String, String>> dataList = request.getResponse().getDataList();
         if (dataList.size() == 1) { // 不应为空，来自：qingzhou.app.system.Agent.monitor（xxx）
             tempData.set(dataList.remove(0));
@@ -286,5 +283,22 @@ public class Instance extends ModelBase implements Listable, Monitorable {
         Map<String, String> data = tempData.get();
         tempData.remove();
         return data;
+    }
+
+    private void invokeOnAgent(Request request, String... instance) {
+        String originModel = request.getModel();
+        RequestImpl requestImpl = (RequestImpl) request;
+        try {
+            requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
+            List<Response> responseList = Main.getService(ActionInvoker.class)
+                    .invokeOnInstances(request, instance);
+            if (responseList.size() == 1) {
+                requestImpl.setResponse(responseList.get(0));
+            } else {
+                throw new IllegalStateException();
+            }
+        } finally {
+            requestImpl.setModelName(originModel);
+        }
     }
 }

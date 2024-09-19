@@ -12,7 +12,7 @@ public class AddableModelBase extends ModelBase implements Addable {
 
     @Override
     public void addData(Map<String, String> data) {
-        testData.addData(data.get(idFieldName()), data);
+        testData.addData(data);
     }
 
     @Override
@@ -21,18 +21,18 @@ public class AddableModelBase extends ModelBase implements Addable {
     }
 
     @Override
-    public String[] allIds() {
-        return testData.allIds();
+    public String[] allIds(Map<String, String> query) {
+        return testData.allIds(query);
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames) {
-        return testData.listData(pageNum, pageSize, fieldNames);
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
+        return testData.listData(pageNum, pageSize, showFields, query);
     }
 
     @Override
-    public int totalSize() {
-        return testData.totalSize();
+    public int totalSize(Map<String, String> query) {
+        return testData.totalSize(query);
     }
 
     @Override
@@ -43,5 +43,10 @@ public class AddableModelBase extends ModelBase implements Addable {
     @Override
     public void updateData(Map<String, String> data) {
         testData.updateData(data.get(idFieldName()), data);
+    }
+
+    @Override
+    public int pageSize() {
+        return 3;
     }
 }
