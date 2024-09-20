@@ -3,10 +3,12 @@ package qingzhou.console.controller.rest;
 import qingzhou.api.FieldType;
 import qingzhou.api.Response;
 import qingzhou.api.type.Addable;
+import qingzhou.api.type.Listable;
 import qingzhou.api.type.Updatable;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
+import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
@@ -21,7 +23,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -171,8 +172,14 @@ public class ValidationFilter implements Filter<RestContext> {
             }
 
             if (context.isAddAction) {
-                List<String> allIds = SystemController.getAllIds(context.request.getApp(), context.request.getModel(), context.fieldInfo);
-                if (allIds.contains(context.parameterVal)) {
+                RequestImpl tmp = new RequestImpl();
+                tmp.setAppName(context.request.getApp());
+                tmp.setModelName(context.request.getModel());
+                tmp.setActionName(Listable.ACTION_CONTAINS);
+                tmp.setId(context.parameterVal);
+                Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+                boolean success = tmpResp.isSuccess();
+                if (success) {
                     return new String[]{"validation_id"};
                 }
             }

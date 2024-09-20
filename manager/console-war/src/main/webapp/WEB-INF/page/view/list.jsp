@@ -131,14 +131,15 @@
                 %>
                 <td>
                     <%
-                        if (isFirst && SecurityController.isActionShow(qzApp, qzModel, Updatable.ACTION_EDIT, modelData, currentUser)) {
+                        if (isFirst) {
                             isFirst = false;
+                            String actionName = SecurityController.isActionShow(qzApp, qzModel, Updatable.ACTION_EDIT, modelData, currentUser) ? Updatable.ACTION_EDIT : Showable.ACTION_SHOW;
                     %>
 
-                    <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , Updatable.ACTION_EDIT + "/" + encodedItemId)%>'
+                    <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , actionName + "/" + encodedItemId)%>'
                        class="dataid tooltips"
-                       record-action-id="<%=Updatable.ACTION_EDIT%>"
-                       data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Updatable.ACTION_EDIT)%>'
+                       record-action-id="<%=actionName%>"
+                       data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
                         <%=value%>

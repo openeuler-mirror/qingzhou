@@ -42,7 +42,6 @@ public class App extends ModelBase implements Listable {
 
         result.removeIf(id -> !ModelUtil.query(query, () -> showData(id)));
 
-        result.sort(String::compareTo);
         return result.toArray(new String[0]);
     }
 

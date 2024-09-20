@@ -38,18 +38,18 @@ public class MemoryDataStoreDemo {
     }
 
     public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames, Map<String, String> query) {
+        String[] ids = allIds(query);
         int fromIndex = (pageNum - 1) * pageSize;
-        int toIndex = Math.min(fromIndex + pageSize, dataList.size());
+        int endIndex = Math.min(fromIndex + pageSize, ids.length);
 
         List<Map<String, String>> result = new ArrayList<>();
-        for (String id : Arrays.copyOfRange(allIds(query), fromIndex, toIndex)) {
+        for (String id : Arrays.copyOfRange(ids, fromIndex, endIndex)) {
             Map<String, String> item = showData(id);
             result.add(new HashMap<String, String>() {{
                 for (String fieldName : fieldNames) {
                     put(fieldName, item.get(fieldName));
                 }
             }});
-
         }
         return result;
     }

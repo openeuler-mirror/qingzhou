@@ -9,7 +9,6 @@ public class Console {
     private int port;
     private Security security;
     private User[] user;
-    private Department[] department;
     private Jmx jmx;
 
     public Properties getServletProperties() {
@@ -25,11 +24,6 @@ public class Console {
     public User getUser(String name) {
         if (user == null) return null;
         return Arrays.stream(user).filter(user -> user.getName().equals(name)).findAny().orElse(null);
-    }
-
-    public Department getDepartment(String id) {
-        if (department == null) return null;
-        return Arrays.stream(department).filter(d -> d.getName().equals(id)).findAny().orElse(null);
     }
 
     public Jmx getJmx() {
@@ -78,14 +72,5 @@ public class Console {
 
     public void setUser(User[] user) {
         this.user = user;
-    }
-
-    public Department[] getDepartment() {
-        if (department == null) return new Department[0];
-        return department;
-    }
-
-    public void setDepartment(Department[] department) {
-        this.department = department;
     }
 }

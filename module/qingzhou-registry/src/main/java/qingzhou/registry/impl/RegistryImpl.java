@@ -67,6 +67,7 @@ class RegistryImpl implements Registry {
     public List<String> getAllAppNames() {
         List<String> appNames = new ArrayList<>();
         registryInfo.values().forEach(reg -> Arrays.stream(reg.instanceInfo.getAppInfos()).forEach(ap -> appNames.add(ap.getName())));
+        appNames.sort(String::compareTo);
         return appNames;
     }
 
