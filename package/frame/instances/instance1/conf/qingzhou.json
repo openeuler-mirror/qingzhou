@@ -81,7 +81,7 @@
         "port": "7000"
       },
       "servletProperties": {
-        "maxPostSize": "104857600"
+        "maxPostSize": "1048576000"
       }
     },
     "agent": {

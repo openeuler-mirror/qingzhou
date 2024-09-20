@@ -1,7 +1,7 @@
 package qingzhou.console.controller.jmx;
 
-import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.I18n;
+import qingzhou.console.controller.rest.RESTController;
 import qingzhou.deployer.JmxServiceAdapter;
 
 import javax.servlet.http.HttpSession;
@@ -14,7 +14,7 @@ public class JmxInvokerImpl implements JmxServiceAdapter.JmxInvoker {
 
     @Override
     public String invoke(String appName, String modelName, String actionName, Properties args) {
-        HttpSession session = null;
+        HttpSession session;
         try {
             JmxHttpServletRequest request = new JmxHttpServletRequest(appName, modelName, actionName, args);
             session = request.getSession(false);

@@ -101,7 +101,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return null;
     }
 
-    public static List<String> getAllIds(String app, String model, ModelFieldInfo fieldInfo) {
+    private static List<String> getAllIds(String app, String model, ModelFieldInfo fieldInfo) {
         List<String> idList = new ArrayList<>();
 
         if (!fieldInfo.isRequired()) {

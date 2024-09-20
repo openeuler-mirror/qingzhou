@@ -44,6 +44,7 @@ class ActionInvokerImpl implements ActionInvoker {
         Cipher cipher = null;
         Map<String, File> fieldUploadFile = new HashMap<>();
         for (String instance : onInstances) {
+            if (Utils.isBlank(instance)) continue;
             try {
                 if (instance.equals(DeployerConstants.INSTANCE_LOCAL)) {
                     App instanceApp = deployer.getApp(request.getApp());

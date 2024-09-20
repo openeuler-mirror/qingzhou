@@ -428,8 +428,6 @@ function setOrReset() {
     checkboxSortable();
     // 列表页面事件操作
     bindEventForListPage();
-    // 重绘搜索框
-    // resizeFilterForm();
     // form 表单页面事件操作
     bindEventForFormPage();
     // monitor.jsp 页面加载
@@ -1697,42 +1695,4 @@ function utf8_encode(string) {
         }
     }
     return utftext;
-}
-
-function resizeFilterForm() {
-    let screenWidth = window.innerWidth;
-    $(".filterForm").each(function () {
-        let divElements = $(this).children("div")
-        console.log(divElements.length, "@@@", screenWidth);
-        if (divElements.length > 0) {
-            for (let i = 0; i < divElements.length; i++) {
-                divElements[i].style.width = '';
-            }
-            if (screenWidth >= 1200 && divElements.length > 9) {
-                for (let i = 0; i < divElements.length; i++) {
-                    divElements[i].style.width = '12.5%';
-                }
-            } else if (screenWidth >= 1200 && divElements.length <= 9) {
-                for (let i = 0; i < divElements.length - 1; i++) {
-                    divElements[i].style.width = (92 / (divElements.length - 1)) + '%';
-                }
-                divElements[divElements.length - 1].style.width = '7%';
-            } else if (screenWidth >= 992 && screenWidth < 1200 && divElements.length <= 7) {
-                for (let i = 0; i < divElements.length - 1; i++) {
-                    divElements[i].style.width = (86 / (divElements.length - 1)) + '%';
-                }
-                divElements[divElements.length - 1].style.width = '14%';
-            } else if (screenWidth >= 768 && screenWidth < 992 && divElements.length <= 5) {
-                for (let i = 0; i < divElements.length; i++) {
-                    divElements[i].style.width = (80 / (divElements.length - 1)) + '%';
-                }
-                divElements[divElements.length - 1].style.width = '20%';
-            } else if (screenWidth < 768 && divElements.length <= 4) {
-                for (let i = 0; i < divElements.length - 1; i++) {
-                    divElements[i].style.width = (75 / (divElements.length - 1)) + '%';
-                }
-                divElements[divElements.length - 1].style.width = '25%';
-            }
-        }
-    });
 }
