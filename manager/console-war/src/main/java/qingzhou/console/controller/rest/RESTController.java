@@ -126,7 +126,10 @@ public class RESTController extends HttpServlet {
 
     private void responseMsg(Object[] totalResult, RequestImpl request, boolean isBatch) {
         Response response = request.getResponse();
-
+        List<Map<String, String>> dataList = response.getDataList();
+        if (dataList.isEmpty()) {
+            dataList.addAll((Collection<? extends Map<String, String>>) totalResult[3]);
+        }
         int suc = ((int) totalResult[0]);
         int fail = ((int) totalResult[1]);
         Map<String, String> totalError = (Map<String, String>) totalResult[2];
@@ -201,14 +204,14 @@ public class RESTController extends HttpServlet {
             }
         }
 
-        return new Object[]{suc, fail, result};
+        return new Object[]{suc, fail, result, responseList.get(0).getDataList()};
     }
 
     private Object[] invokeBatch(RestContext restContext) {
         int suc = 0;
         int fail = 0;
         Map<String, String> result = new HashMap<>();
-
+        List<Map<String, String>> dataList = null;
         StringBuilder errorMsg = new StringBuilder();
         for (String id : restContext.batchIds) {
             restContext.request.setId(id);
@@ -216,6 +219,9 @@ public class RESTController extends HttpServlet {
             suc += ((int) batchOne[0]);
             fail += ((int) batchOne[1]);
             Map<String, String> oneMap = (Map<String, String>) batchOne[2];
+            if (dataList == null) {
+                dataList = (List<Map<String, String>>) batchOne[3];
+            }
             for (String k : oneMap.keySet()) {
                 if (result.containsKey(k)) {
                     errorMsg.append(result.get(k));
@@ -229,7 +235,7 @@ public class RESTController extends HttpServlet {
             }
         }
 
-        return new Object[]{suc, fail, result};
+        return new Object[]{suc, fail, result, dataList};
     }
 
     private final ViewManager viewManager = new ViewManager();
