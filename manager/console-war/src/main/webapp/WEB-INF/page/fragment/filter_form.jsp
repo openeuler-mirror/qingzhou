@@ -2,7 +2,7 @@
 
 <form name="filterForm" id="filterForm" method="POST"
       action="<%=RESTController.encodeURL( response, ViewManager.htmlView + "/" + qzApp + "/" + qzModel + "/" + Listable.ACTION_LIST)%>">
-    <div class="row filterForm" style="margin-top: 10px; display: none;">
+    <div class="row filterForm" style="margin-top: 10px;">
         <%
             for (String fieldName : fieldsToList) {
                 String[] modelOptionsEntry = SystemController.getOptions(qzApp, modelInfo.getModelFieldInfo(fieldName));
@@ -10,7 +10,7 @@
         <div class='col-md-2 col-sm-3 col-xs-4 list-page-padding-bottom'>
             <div class="input-control">
                 <%
-                    if (modelOptionsEntry != null) {
+                    if (modelOptionsEntry != null && modelOptionsEntry.length != 0) {
                         String selectVal = "";
                         StringBuilder selectHtml = new StringBuilder("<ul class=\"list\">");
                         selectHtml.append("<li data-value=\"\" class=\"option\"></li>");
