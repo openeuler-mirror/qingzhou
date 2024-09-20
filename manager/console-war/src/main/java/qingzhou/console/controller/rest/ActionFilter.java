@@ -31,7 +31,10 @@ public class ActionFilter implements Filter<RestContext> {
     private boolean exists(RestContext context) {
         RequestImpl request = context.request;
 
-        if (request.getAction().equals(Addable.ACTION_ADD)) return true; // 添加是带有id的，但不用校验
+        if (request.getAction().equals(Addable.ACTION_ADD) // 添加是带有id的，但不用校验
+                || request.getAction().equals(Listable.ACTION_LIST)) {
+            return true;
+        }
 
         String id = request.getId();
         if (Utils.isBlank(id)) return true; // 非 rest id 操作，无需校验
