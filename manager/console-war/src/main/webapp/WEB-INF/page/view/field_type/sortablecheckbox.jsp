@@ -7,7 +7,9 @@
 %>
 <div class="checkbox-group sortable">
     <%
-        for (String option : SystemController.getOptions(qzApp, modelInfo.getModelFieldInfo(fieldName))) {
+        String[] options = SystemController.getOptions(qzApp, modelInfo.getModelFieldInfo(fieldName));
+        Arrays.sort(options, Comparator.comparingInt(fieldValues::indexOf));
+        for (String option : options) {
     %>
     <a draggable="true" href="javascript:void(0);">
         <input type="checkbox" name="<%=fieldName%>"

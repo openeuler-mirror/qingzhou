@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Random;
 
 @Model(code = "push_parameter", icon = "pencil",
-        entrance = Updatable.ACTION_EDIT,
+        entrance = Updatable.ACTION_EDIT, order = 1,
         name = {"推送参数", "en:Push Parameter"},
         info = {"配置推送参数。", "en:Configure the push parameter."})
 public class TestConfig extends ModelBase implements Updatable, Monitorable {

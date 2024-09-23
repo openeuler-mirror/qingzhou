@@ -986,7 +986,7 @@ function refreshDict() {
 /**************************************** sortablecheckbox.jsp - start *************************************************/
 function checkboxSortable() {
     $(".checkbox-group a").unbind("click").bind("click", function () {
-        $("input", this).attr("checked", !$("input:not([readonly]", this).attr("checked"));
+        $("input", this).attr("checked", !$("input:not([readonly])", this).attr("checked"));
         if ($(this).parent().is(".sortable")) {
             $("label", this).css({"cursor": ($("input", this).is(":checked")) ? "move" : "default"});
         }

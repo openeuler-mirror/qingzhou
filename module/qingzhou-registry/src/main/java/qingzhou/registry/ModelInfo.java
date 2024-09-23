@@ -135,7 +135,9 @@ public class ModelInfo {
                 result.computeIfAbsent(group, k -> new LinkedHashMap<>()).put(formField, fieldInfo);
             }
         }
-        result.put("", defaultGroup);
+        if (!defaultGroup.isEmpty()) {
+            result.put("", defaultGroup);
+        }
 
         return result;
     }
