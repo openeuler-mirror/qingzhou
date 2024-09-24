@@ -314,7 +314,6 @@
 
     <%-- 显示第一个应用的管理页面--%>
     <%
-    boolean useJsonUri = false;
     List<String> allApp = SystemController.getService(Deployer.class).getAllApp();
     String appName = null;
     if (allApp.size() > 1) {
@@ -342,7 +341,7 @@
             };
 
             var url = "<%=PageUtil.buildCustomUrl(request,response,qzRequest,
-            (useJsonUri ? DeployerConstants.JSON_VIEW : ViewManager.htmlView), DeployerConstants.MODEL_APP,DeployerConstants.ACTION_MANAGE + "/" + appName)%>"
+                       ViewManager.htmlView, DeployerConstants.MODEL_APP,DeployerConstants.ACTION_MANAGE + "/" + appName)%>"
             initializeManager(firstAppElement,url);
         });
   <%}%>

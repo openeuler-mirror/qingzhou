@@ -1096,7 +1096,7 @@ function bindEventForListPage() {
     tw.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", true, true);
 };
 
-function initializeAManager(element,url){
+function initializeManager(element,url){
     var tabHtml = "<li id=\"" + new Date().getTime() + "\" bind-id=\"" + element.attr("data-id") + "\">"
             + "<a href=\"javascript:void(0);\" href-attr=\"" + url + "\" rel=\"noopener noreferrer\">"
             + "    <i class=\"icon icon-" + element.attr("model-icon") + "\"></i>"
