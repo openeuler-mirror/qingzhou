@@ -229,7 +229,7 @@
 <main>
     <section class="tab-box">
         <ul preTab="defaultTab">
-            <li id="defaultTab" class="active" fixed="true">
+            <li id="defaultTab" fixed="true">
                 <a href="javascript:void(0);">
                     <i class="icon icon-resize"></i>
                     <label><%=I18n.getKeyI18n("page.index.centralized")%>
@@ -311,6 +311,40 @@
         otherGroupName: '<%=I18n.getStringI18n(PageUtil.OTHER_GROUP.getI18n())%>'
     };
     var searchUrl = '<%=RESTController.encodeURL(response, contextPath + "/search")%>';
+
+    <%-- 显示第一个应用的管理页面--%>
+    <%
+    List<String> allApp = SystemController.getService(Deployer.class).getAllApp();
+    String appName = null;
+    if (allApp.size() > 1) {
+        for (String name : allApp) {
+            if (!name.equals(DeployerConstants.APP_SYSTEM)) {//跳过系统应用
+                appName = name;
+                break;
+            }
+        }
+        //获取系统应用菜单图标
+        String icon = SystemController.getModelInfo(DeployerConstants.APP_SYSTEM, DeployerConstants.MODEL_APP).getIcon();
+    %>
+        $(document).ready(function() {
+            var firstAppId = "<%= DeployerConstants.MODEL_APP %>|<%= appName %>";
+            var firstAppName = "<%= appName %>";
+            var AppIcon = "<%= icon %>";
+
+            var firstAppElement = {
+               'data-id': firstAppId,
+               'data-name': firstAppName,
+               'model-icon': AppIcon,
+                attr: function(name) {
+                    return this[name];
+                }
+            };
+
+            var url = "<%=PageUtil.buildCustomUrl(request,response,qzRequest,
+                       ViewManager.htmlView, DeployerConstants.MODEL_APP,DeployerConstants.ACTION_MANAGE + "/" + appName)%>"
+            initializeManager(firstAppElement,url);
+        });
+  <%}%>
 </script>
 <script src="<%=contextPath%>/static/js/main.js"></script>
 <script src="<%=contextPath%>/static/js/index.js"></script>
