@@ -1080,25 +1080,7 @@ function bindEventForListPage() {
             return;
         }
         var url = $(this).attr("href");
-        var tabHtml = "<li id=\"" + new Date().getTime() + "\" bind-id=\"" + $(this).attr("data-id") + "\">"
-            + "<a href=\"javascript:void(0);\" href-attr=\"" + url + "\" rel=\"noopener noreferrer\">"
-            + "    <i class=\"icon icon-" + $(this).attr("model-icon") + "\"></i>"
-            + "    <label>" + $(this).attr("data-name") + "</label>"
-            + "    <span class=\"noticeNumber label label-badge\" style=\"display:none;\">0</span>"
-            + "</a>"
-            + "<label class=\"close\">"
-            + "    <i class=\"icon icon-times\"></i>"
-            + "</label>"
-            + "</li>";
-        $(".tab-box>ul").append(tabHtml);
-        $(".content-box>ul").append("<li></li>");
-        bindTabEvent();
-        $(".tab-box>ul>li").last().click();
-        tw.fill(url, {}, $(".content-box>ul>li").last(), false, this);
-        tw.bindFill("ul.sidebar-menu a", ".main-body", false, true);
-        $("ul[data-widget='tree']", $(".content-box>ul>li").last()).menuTree();
-        $("[data-toggle='push-menu']", $(".content-box>ul>li").last()).pushMenu({});
-        return false;
+        return initializeManager($(this),url);
     });
 
     // 列表页及form页面下载(日志、快照等)
@@ -1113,6 +1095,29 @@ function bindEventForListPage() {
     // 分页
     tw.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", true, true);
 };
+
+function initializeAManager(element,url){
+    var tabHtml = "<li id=\"" + new Date().getTime() + "\" bind-id=\"" + element.attr("data-id") + "\">"
+            + "<a href=\"javascript:void(0);\" href-attr=\"" + url + "\" rel=\"noopener noreferrer\">"
+            + "    <i class=\"icon icon-" + element.attr("model-icon") + "\"></i>"
+            + "    <label>" + element.attr("data-name") + "</label>"
+            + "    <span class=\"noticeNumber label label-badge\" style=\"display:none;\">0</span>"
+            + "</a>"
+            + "<label class=\"close\">"
+            + "    <i class=\"icon icon-times\"></i>"
+            + "</label>"
+            + "</li>";
+    $(".tab-box>ul").append(tabHtml);
+    $(".content-box>ul").append("<li></li>");
+    bindTabEvent();
+    $(".tab-box>ul>li").last().click();
+    tw.fill(url, {}, $(".content-box>ul>li").last(), false, element);
+    tw.bindFill("ul.sidebar-menu a", ".main-body", false, true);
+    $("ul[data-widget='tree']", $(".content-box>ul>li").last()).menuTree();
+    $("[data-toggle='push-menu']", $(".content-box>ul>li").last()).pushMenu({});
+    return false;
+}
+
 
 /**
  * @param url
