@@ -190,11 +190,13 @@ class DefaultAction {
         ModelInfo modelInfo = getAppInfo().getModelInfo(request.getModel());
         String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
         for (String fieldName : monitorFieldNames) {
+            String val = p.get(fieldName);
+            if (val == null) continue;
             ModelFieldInfo monitorField = modelInfo.getModelFieldInfo(fieldName);
             if (monitorField.isNumeric()) {
-                monitorData.put(fieldName, p.get(fieldName));
+                monitorData.put(fieldName, val);
             } else {
-                infoData.put(fieldName, p.get(fieldName));
+                infoData.put(fieldName, val);
             }
         }
 
