@@ -14,6 +14,8 @@ public interface Json {
 
     String setJson(String from, Properties properties, String... position);
 
+    String setJson(String from, String value, String key, String... position);
+
     String deleteJson(String from, Matcher matcher, String... position);
 
     interface Matcher {

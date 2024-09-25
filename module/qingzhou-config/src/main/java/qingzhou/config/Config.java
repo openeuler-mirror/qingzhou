@@ -1,5 +1,7 @@
 package qingzhou.config;
 
+import java.util.Properties;
+
 public interface Config {
     Console getConsole();
 
@@ -20,6 +22,10 @@ public interface Config {
     void deleteArg(String id) throws Exception;
 
     void setJmx(Jmx jmx) throws Exception;
+
+    void setServletProperties(Properties properties) throws Exception;
+    void setContextRoot(String contextRoot) throws Exception;
+    void setConsolePort(String port) throws Exception;
 
     void setSecurity(Security security) throws Exception;
 }

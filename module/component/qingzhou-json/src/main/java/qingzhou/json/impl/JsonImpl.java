@@ -53,6 +53,18 @@ public class JsonImpl implements Json {
     }
 
     @Override
+    public String setJson(String from, String value, String key, String... position) {
+        JsonElement root = JsonParser.parseString(from);
+
+        JsonObject jsonObject = root.getAsJsonObject();
+        for (String path : position) {
+            jsonObject = jsonObject.get(path).getAsJsonObject();
+        }
+        jsonObject.addProperty(key, value);
+        return gsonInstance().toJson(root);
+    }
+
+    @Override
     public String deleteJson(String from, Matcher matcher, String... position) {
         JsonElement root = JsonParser.parseString(from);
 

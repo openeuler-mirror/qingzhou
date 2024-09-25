@@ -66,6 +66,21 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
+    public void setServletProperties(Properties properties) throws Exception {
+        writeJson(properties, false, "module", "console", "servletProperties");
+    }
+
+    @Override
+    public void setContextRoot(String contextRoot) throws Exception {
+        writeJson(contextRoot, "contextRoot", "module", "console");
+    }
+
+    @Override
+    public void setConsolePort(String port) throws Exception {
+        writeJson(port, "port", "module", "console");
+    }
+
+    @Override
     public Jvm getJvm() {
         return readJsonFile(reader -> json.fromJson(reader, Jvm.class, "jvm"));
     }
@@ -93,6 +108,14 @@ public class JsonFileConfig implements Config {
         } else {
             result = this.json.setJson(json, properties, position);
         }
+
+        writeFile(result);
+    }
+
+    private void writeJson(String value, String key, String... position) throws Exception {
+        String result;
+        String json = FileUtil.fileToString(jsonFile);
+        result = this.json.setJson(json, value, key, position);
 
         writeFile(result);
     }
