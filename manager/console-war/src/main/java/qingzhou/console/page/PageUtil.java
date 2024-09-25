@@ -7,6 +7,7 @@ import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.ViewManager;
+import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.*;
@@ -27,10 +28,25 @@ import java.util.stream.Collectors;
 public class PageUtil {
     public static final GroupInfo OTHER_GROUP = new GroupInfo("OTHERS", new String[]{"其他", "en:Other"});
 
+    public static String getAppToShow() {
+        List<String> allApp = SystemController.getService(Deployer.class).getAllApp();
+        for (String s : allApp) {
+            if (!s.equals(DeployerConstants.APP_SYSTEM)) {
+                return s;
+            }
+        }
+        List<String> allAppNames = SystemController.getService(Registry.class).getAllAppNames();
+        if (!allAppNames.isEmpty()) {
+            return allAppNames.get(0);
+        }
+        return null;
+    }
+
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
         return response.encodeURL(url);
     }
+
     public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String model, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;
         return response.encodeURL(url);
