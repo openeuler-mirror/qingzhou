@@ -17,7 +17,12 @@
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
             List<Map<String, String>> models = qzResponse.getDataList();
-            Map<String, String> modelData = models.get(0);
+            Map<String, String> modelData;
+            if (!models.isEmpty()) {
+                modelData = models.get(0);
+            } else {
+                modelData = new HashMap<>();
+            }
             Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedField();
             Set<String> groups = formGroup.keySet();
             long suffixId = System.currentTimeMillis();

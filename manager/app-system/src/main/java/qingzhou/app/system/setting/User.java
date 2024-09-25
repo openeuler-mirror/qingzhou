@@ -32,7 +32,7 @@ public class User extends ModelBase implements Addable {
     @Override
     public String[] allIds(Map<String, String> query) {
         return Arrays.stream(Main.getService(Config.class).getConsole().getUser())
-                .filter(user -> ModelUtil.query(query, () -> Utils.getPropertiesFromObj(user)))
+                .filter(user -> ModelUtil.query(query, () -> ModelUtil.getPropertiesFromObj(user)))
                 .map(qingzhou.config.User::getName)
                 .toArray(String[]::new);
     }
@@ -152,7 +152,7 @@ public class User extends ModelBase implements Addable {
         insertPasswordModifiedTime(data);
 
         qingzhou.config.User u = new qingzhou.config.User();
-        Utils.setPropertiesToObj(u, data);
+        ModelUtil.setPropertiesToObj(u, data);
         Main.getService(Config.class).addUser(u);
     }
 
@@ -266,7 +266,7 @@ public class User extends ModelBase implements Addable {
     static Map<String, String> showDataForUser(String userId) {
         for (qingzhou.config.User user : Main.getService(Config.class).getConsole().getUser()) {
             if (user.getName().equals(userId)) {
-                Map<String, String> data = Utils.getPropertiesFromObj(user);
+                Map<String, String> data = ModelUtil.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
                 String digestAlg = passwords[0];
                 int saltLength = Integer.parseInt(passwords[1]);
@@ -288,7 +288,7 @@ public class User extends ModelBase implements Addable {
         if (PASSWORD_FLAG.equals(data.get("password"))) {
             data.remove("password");
         }
-        Utils.setPropertiesToObj(user, data);
+        ModelUtil.setPropertiesToObj(user, data);
         config.addUser(user);
     }
 

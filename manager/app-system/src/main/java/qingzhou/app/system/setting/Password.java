@@ -17,7 +17,8 @@ import java.util.Map;
 import java.util.Objects;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
-        menu = Main.SETTING_MENU, order = 2,
+        hidden = true,
+        menu = Main.SETTING_MENU,
         entrance = Updatable.ACTION_EDIT,
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",

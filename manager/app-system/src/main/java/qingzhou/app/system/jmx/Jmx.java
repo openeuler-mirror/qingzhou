@@ -6,17 +6,17 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Updatable;
 import qingzhou.app.system.Main;
+import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 
 import java.util.Map;
 
-@Model(code = "jmx", icon = "exchange",
-        menu = Main.SETTING_MENU, order = 4,
+@Model(code = "jmx", icon = "coffee",
+        menu = Main.SETTING_MENU, order = 3,
         entrance = Updatable.ACTION_EDIT,
         name = {"JMX", "en:JMX"},
         info = {"JMX 是 Java Management Extensions（Java管理扩展） 的缩写，它是 Java 平台上用于管理和监控应用程序、系统和网络资源的一种标准化的管理和监控框架。JMX 提供了一种标准的方式，通过这种方式，开发人员可以暴露应用程序中的各种管理和监控信息，然后可以使用 JMX 客户端工具或应用程序来访问和操作这些信息。开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 QingZhou 平台。",
@@ -74,7 +74,7 @@ public class Jmx extends ModelBase implements Updatable {
     public void updateData(Map<String, String> data) throws Exception {
         Config config = Main.getService(Config.class);
         qingzhou.config.Jmx jmx = config.getConsole().getJmx();
-        Utils.setPropertiesToObj(jmx, data);
+        ModelUtil.setPropertiesToObj(jmx, data);
         doJmxService(jmx); // 生效 jmx 服务
         config.setJmx(jmx); // 最后没问题再写入配置文件
     }
@@ -83,7 +83,7 @@ public class Jmx extends ModelBase implements Updatable {
     public Map<String, String> showData(String id) {
         Config config = Main.getService(Config.class);
         qingzhou.config.Jmx jmx = config.getConsole().getJmx();
-        return Utils.getPropertiesFromObj(jmx);
+        return ModelUtil.getPropertiesFromObj(jmx);
     }
 
     private void doJmxService(qingzhou.config.Jmx jmx) throws Exception {

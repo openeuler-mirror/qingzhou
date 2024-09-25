@@ -6,74 +6,54 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Updatable;
 import qingzhou.app.system.Main;
+import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
-import qingzhou.config.Console;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.engine.util.Utils;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
-@Model(code = DeployerConstants.MODEL_WEB,
-        icon = "cog",
-        menu = Main.SETTING_MENU,
-        order = 5,
+@Model(code = "web", icon = "link",
+        menu = Main.SETTING_MENU, order = 2,
         entrance = Updatable.ACTION_EDIT,
-        name = {"控制台参数", "en:Console parameters"},
-        info = {"管理控制台相关参数", "en:Management console related parameters"})
+        name = {"Web", "en:Web"},
+        info = {"设置控制台相关参数，如 HTTP、Servlet 等。注：这些参数变更后，在下次启动后生效。",
+                "en:Set console-related parameters, such as HTTP and servlets. Note: After these parameters are changed, they will take effect after the next startup."})
 public class Web extends ModelBase implements Updatable {
-    @ModelField(type = FieldType.number, port = true, required = true, name = {"端口", "en:port"}, info = {"控制台端口", "en:console port. "})
-    public Integer port = 9000;
+    @ModelField(
+            type = FieldType.number,
+            required = true,
+            port = true,
+            name = {"服务端口", "en:Port"},
+            info = {"设置控制台服务使用的端口。",
+                    "en:Set the port to be used by the console service."})
+    public Integer port;
 
-    @ModelField(required = true, name = {"访问上下文", "en:contextRoot"}, info = {"控制台的访问上下文(contextRoot)", "en:Console access context."})
-    public String contextRoot = "/console";
+    @ModelField(
+            required = true,
+            name = {"访问路径", "en:Context Root"},
+            info = {"设置访问控制台服务的根路径。",
+                    "en:Set the root path to access console services."})
+    public String contextRoot;
 
-
-    @ModelField(type = FieldType.kv, name = {"Servlet属性", "en:servlet Properties"}, info = {"Servlet属性", "en:servlet Properties."})
-    public String servletProperties;
+    @ModelField(
+            type = FieldType.number,
+            min = 1,
+            name = {"最大 POST 长度", "en:Max Post Size"},
+            info = {"设置接收 POST 数据的最大长度，单位：字节。",
+                    "en:Sets the maximum length of received POST data in bytes."})
+    public Integer maxPostSize;
 
     @Override
     public Map<String, String> showData(String id) {
-        Map<String, String> map = new HashMap<>();
         Config config = Main.getService(Config.class);
-        Console console = config.getConsole();
-        map.put("servletProperties", propertiesToString(console.getServletProperties()));
-        map.put("contextRoot", console.getContextRoot());
-        map.put("port", console.getPort() + "");
-        return map;
+        qingzhou.config.Web web = config.getConsole().getWeb();
+        return ModelUtil.getPropertiesFromObj(web);
     }
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
         Config config = Main.getService(Config.class);
-        if (!Utils.isBlank(data.get("servletProperties"))){
-            config.setServletProperties(stringToProperties(data.get("servletProperties")));
-        }
-        config.setContextRoot(data.get("contextRoot"));
-        config.setConsolePort(data.get("port"));
-    }
-
-    private String propertiesToString(Properties properties) {
-        StringBuilder servletPropertiesValue = new StringBuilder();
-        for (Object key : properties.keySet()) {
-            servletPropertiesValue.append(key.toString()).append("=").append(properties.getProperty(key.toString())).append(",");
-        }
-        String result = servletPropertiesValue.toString();
-        if (result.endsWith(",")) {
-            result = result.substring(0, result.length() - 1);
-        }
-        return result;
-    }
-
-    private Properties stringToProperties(String data) {
-        Properties properties = new Properties();
-        final String[] split = data.split(",");
-        for (String kv : split) {
-            String[] split1 = kv.split("=");
-            properties.put(split1[0], split1[1]);
-        }
-
-        return properties;
+        qingzhou.config.Web web = config.getConsole().getWeb();
+        ModelUtil.setPropertiesToObj(web, data);
+        config.setWeb(web); // 最后没问题再写入配置文件
     }
 }

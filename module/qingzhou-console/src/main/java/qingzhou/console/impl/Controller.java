@@ -21,6 +21,7 @@ import qingzhou.servlet.ServletContainer;
 import qingzhou.servlet.ServletService;
 
 import java.io.File;
+import java.util.Properties;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -76,9 +77,11 @@ public class Controller implements ModuleActivator {
         @Override
         public void exec() throws Exception {
             servletContainer = servletService.createServletContainer();
-            servletContainer.start(console.getPort(),
+            servletContainer.start(console.getWeb().getPort(),
                     new File(moduleContext.getTemp(), "servlet"),
-                    console.getServletProperties());
+                    new Properties() {{
+                        put("maxPostSize", console.getWeb().getMaxPostSize());
+                    }});
         }
 
         @Override
@@ -103,9 +106,9 @@ public class Controller implements ModuleActivator {
         private void exec0() {
             File consoleApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "console");
             String docBase = consoleApp.getAbsolutePath();
-            contextPath = console.getContextRoot();
+            contextPath = console.getWeb().getContextRoot();
             servletContainer.addWebapp(contextPath, docBase);
-            logger.info("Open a browser to access the QingZhou console: http://localhost:" + console.getPort() + contextPath);
+            logger.info("Open a browser to access the QingZhou console: http://localhost:" + console.getWeb().getPort() + contextPath);
         }
 
         @Override

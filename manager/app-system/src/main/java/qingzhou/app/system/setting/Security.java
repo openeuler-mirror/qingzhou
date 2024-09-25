@@ -6,13 +6,13 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Updatable;
 import qingzhou.app.system.Main;
+import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
-import qingzhou.engine.util.Utils;
 
 import java.util.Map;
 
 @Model(code = "security", icon = "shield",
-        menu = Main.SETTING_MENU, order = 3,
+        menu = Main.SETTING_MENU, order = 4,
         entrance = Updatable.ACTION_EDIT,
         name = {"安全", "en:Security"},
         info = {"配置轻舟管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
@@ -73,13 +73,13 @@ public class Security extends ModelBase implements Updatable {
     public void updateData(Map<String, String> data) throws Exception {
         Config config = Main.getService(Config.class);
         qingzhou.config.Security security = config.getConsole().getSecurity();
-        Utils.setPropertiesToObj(security, data);
+        ModelUtil.setPropertiesToObj(security, data);
         config.setSecurity(security);
     }
 
     @Override
     public Map<String, String> showData(String id) {
         qingzhou.config.Security security = Main.getService(Config.class).getConsole().getSecurity();
-        return Utils.getPropertiesFromObj(security);
+        return ModelUtil.getPropertiesFromObj(security);
     }
 }

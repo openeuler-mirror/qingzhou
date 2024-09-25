@@ -51,8 +51,16 @@
   "module": {
     "console": {
       "enabled": "true",
-      "port": "9000",
-      "contextRoot": "/console",
+      "web": {
+        "port": "9000",
+        "contextRoot": "/console",
+        "maxPostSize": "1048576000"
+      },
+      "jmx": {
+        "enabled": "false",
+        "host": "",
+        "port": "7000"
+      },
       "security": {
         "publicKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCh4JpnxULijNi2GUa8wQfMGSWdGQLwscYNkHirc+A3rWIVTIvbjbdKkay0cNsclO4C0y/eN7lFwlkTDz1kvI3zrNajYdXD55QXzYdpVdHwlh+MoX0AHvoNwNtE1SqZTUcxlcixD3NMGYNcSq3D5dgD42C3pzY2TsMkQs1VSeBcZwIDAQAB",
         "privateKey": "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKHgmmfFQuKM2LYZRrzBB8wZJZ0ZAvCxxg2QeKtz4DetYhVMi9uNt0qRrLRw2xyU7gLTL943uUXCWRMPPWS8jfOs1qNh1cPnlBfNh2lV0fCWH4yhfQAe+g3A20TVKplNRzGVyLEPc0wZg1xKrcPl2APjYLenNjZOwyRCzVVJ4FxnAgMBAAECgYBB4pq1tbH9Z3ok07DYznAQAAQxJqbttE15491ZWzZdMvKC3L7nw4xgi14RqwVjYrJk7/PBrEh6PhnnCgLg52WWqOt0mzg9tdPI4iODS8EyPZEU9BNIeCP8aDj45Jfa2UTQ0l0/EHh2aH59SrRuEz+8Dwx2azd//IEBOLW44KiO4QJBAPqTrPFglx3vn2svXhjxPhX5E7uC4AR/O0Hvz8vYtPPlJhxxAmLABFLGh1UaF99Im/RJUr02o0xCpf9xLs7QqS8CQQClYXyfg9mY2rUssN0BNz8OY8GKDR95vSJ/VCxBEsj8Y0W841k92vd02CXkV7go5r+ldJb1MIwyE30w4rWS3kJJAkEAz8UFQHvLsbnP4Os8xce6qDOIRhGluHTa6Lh0/1xn5leZ+zlFNiZrL0uISWtCYhTto2fs4BFe48vbomvx2PCxZwJAU/8Nkt8et5nthwNVXHa42hAkjn9XyzcavFz+FRb7aeTp2KQIAXijUn8tz6oV6QA5uklbGrFLo2tunFOpMS0dsQJBANrPu/U7/jJGp61TciTifBNRcWyG+WCCCHqHW3L1yB/AJZb/QpJ6KEC2T4AWJK8ccUjLkHm7QZkYS/OjgBNjKXc=",
@@ -74,15 +82,7 @@
           "keyForOtp": "",
           "passwordLastModified": ""
         }
-      ],
-      "jmx": {
-        "enabled": "false",
-        "host": "",
-        "port": "7000"
-      },
-      "servletProperties": {
-        "maxPostSize": "1048576000"
-      }
+      ]
     },
     "agent": {
       "enabled": "false",
