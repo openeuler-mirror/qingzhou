@@ -333,6 +333,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setReadOnly(modelField.readonly());
             modelFieldInfo.setEmail(modelField.email());
             modelFieldInfo.setFilePath(modelField.filePath());
+            modelFieldInfo.setLinkField(modelField.linkModel());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);

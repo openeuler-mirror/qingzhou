@@ -71,4 +71,9 @@ public @interface ModelField {
      * 获取字段的国际化描述信息数组，用于提供字段的详细说明信息。
      */
     String[] info();
+
+    /**
+     * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
+     */
+    String linkModel() default "";
 }

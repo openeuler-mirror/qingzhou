@@ -28,6 +28,7 @@ public class ModelFieldInfo {
     private String pattern;
     private String show;
     private String readonly;
+    private String linkField;
 
     public boolean isFilePath() {
         return filePath;
@@ -262,5 +263,13 @@ public class ModelFieldInfo {
 
     public void setEmail(boolean email) {
         this.email = email;
+    }
+
+    public String getLinkField() {
+        return linkField;
+    }
+
+    public void setLinkField(String linkField) {
+        this.linkField = linkField;
     }
 }
