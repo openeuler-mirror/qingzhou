@@ -1,11 +1,13 @@
 package qingzhou.registry;
 
+import java.util.List;
+
 public class InstanceInfo {
     private String name;
     private String host;
     private int port;
     private String key;
-    private AppInfo[] appInfos;
+    private List<AppInfo> appInfos;
 
     public String getName() {
         return name;
@@ -39,11 +41,11 @@ public class InstanceInfo {
         this.key = key;
     }
 
-    public AppInfo[] getAppInfos() {
+    public List<AppInfo> getAppInfos() {
         return appInfos;
     }
 
-    public void setAppInfos(AppInfo[] appInfos) {
+    public void setAppInfos(List<AppInfo> appInfos) {
         this.appInfos = appInfos;
     }
 }

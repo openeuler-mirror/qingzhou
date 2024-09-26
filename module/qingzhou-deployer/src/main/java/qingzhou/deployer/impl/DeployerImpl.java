@@ -1,16 +1,25 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import qingzhou.api.AppContext;
+import qingzhou.api.Groups;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingzhouApp;
 import qingzhou.api.type.Addable;
 import qingzhou.api.type.Listable;
 import qingzhou.api.type.Showable;
 import qingzhou.deployer.App;
+import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.GroupInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +27,16 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -33,9 +51,18 @@ class DeployerImpl implements Deployer {
     private final Logger logger;
     private LoaderPolicy loaderPolicy;
 
+    private List<AppListener> appListeners = new ArrayList<>();
+
     DeployerImpl(ModuleContext moduleContext, Logger logger) {
         this.moduleContext = moduleContext;
         this.logger = logger;
+    }
+
+    @Override
+    public void addAppListener(AppListener appListener) {
+        if (appListener != null) {
+            appListeners.add(appListener);
+        }
     }
 
     @Override
@@ -56,7 +83,7 @@ class DeployerImpl implements Deployer {
 
         // 注册完成
         apps.put(app.getAppInfo().getName(), app);
-
+        appListeners.forEach(AppListener::onAppAdded);
         logger.info("The app has been successfully installed: " + appDir.getName());
     }
 
