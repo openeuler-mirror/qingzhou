@@ -76,4 +76,10 @@ public @interface ModelField {
      * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
      */
     String linkModel() default "";
+
+    /**
+     * 用于样式转换，形式：{"当前字段值:color-success", "当前字段值:color-default"}
+     * color-success(绿色)、color-primary(蓝色)、color-default(灰色)、color-warning(黄色)、color-danger(浅红色)、color-info(深红色)
+     */
+    String[] color() default "";
 }

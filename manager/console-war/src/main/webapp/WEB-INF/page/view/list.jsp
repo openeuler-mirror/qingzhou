@@ -167,6 +167,10 @@
                     </a>
                     <%
                             } else {
+                                String[] color = modelInfo.getModelFieldInfo(field).getColor();
+                                if (color.length > 0) {
+                                    value = PageUtil.transform(color, value);
+                                }
                                 out.print(value);
                             }
                         }

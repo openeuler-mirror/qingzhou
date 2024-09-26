@@ -29,7 +29,14 @@ public class ModelFieldInfo {
     private String show;
     private String readonly;
     private String linkField;
+    private String[] color;
 
+    public String[] getColor() {
+        return color;
+    }
+    public void setColor(String[] color) {
+        this.color = color;
+    }
     public boolean isFilePath() {
         return filePath;
     }
