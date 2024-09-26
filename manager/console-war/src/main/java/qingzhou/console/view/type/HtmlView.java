@@ -31,7 +31,7 @@ public class HtmlView implements View {
             request.setAppName(request.getId());
             request.setModelName("home"); // qingzhou.app.common.Home 的 code
             request.setCachedModelInfo(SystemController.getModelInfo(request.getApp(), request.getModel())); // 重新缓存
-            request.setActionName(Showable.ACTION_SHOW);
+            request.setActionName(Show.ACTION_SHOW);
             Response response = SystemController.getService(ActionInvoker.class).invokeSingle(request);
             request.setResponse(response);
         }
@@ -60,15 +60,15 @@ public class HtmlView implements View {
         }
 
         switch (request.getAction()) {
-            case Listable.ACTION_LIST:
-            case Deletable.ACTION_DELETE:
+            case List.ACTION_LIST:
+            case Delete.ACTION_DELETE:
                 return "list";
-            case Addable.ACTION_CREATE:
-            case Updatable.ACTION_EDIT:
+            case Add.ACTION_CREATE:
+            case Update.ACTION_EDIT:
                 return "form";
-            case Showable.ACTION_SHOW:
+            case Show.ACTION_SHOW:
                 return "show";
-            case Monitorable.ACTION_MONITOR:
+            case Monitor.ACTION_MONITOR:
                 return "monitor";
             case DeployerConstants.ACTION_INDEX:
                 return "sys/index";

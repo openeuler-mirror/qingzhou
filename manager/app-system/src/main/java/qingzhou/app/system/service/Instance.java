@@ -1,9 +1,10 @@
 package qingzhou.app.system.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Downloadable;
-import qingzhou.api.type.Listable;
-import qingzhou.api.type.Monitorable;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Grouped;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Monitor;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Agent;
@@ -16,7 +17,6 @@ import qingzhou.registry.Registry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Model(code = "instance", icon = "stack",
@@ -24,7 +24,7 @@ import java.util.Map;
         name = {"实例", "en:Instance"},
         info = {"实例是应用部署的载体，为应用提供运行时环境。预置的 " + DeployerConstants.INSTANCE_LOCAL + " 实例表示当前正在访问的服务所在的实例，如集中管理端就运行在此实例上。",
                 "en:An instance is the carrier of application deployment and provides a runtime environment for the application. The provisioned " + DeployerConstants.INSTANCE_LOCAL + " instance indicates the instance where the service is currently accessed, such as the centralized management side running on this instance."})
-public class Instance extends ModelBase implements Listable, Monitorable {
+public class Instance extends ModelBase implements List, Monitor, Grouped {
     @ModelField(
             group = group_os,
             required = true,
@@ -195,13 +195,13 @@ public class Instance extends ModelBase implements Listable, Monitorable {
     }
 
     @Override
-    public String idFieldName() {
+    public String idField() {
         return "name";
     }
 
     @Override
     public String[] allIds(Map<String, String> query) {
-        List<String> ids = new ArrayList<>();
+        java.util.List<String> ids = new ArrayList<>();
         ids.add(DeployerConstants.INSTANCE_LOCAL);
         Registry registry = Main.getService(Registry.class);
         registry.getAllInstanceNames().forEach(s -> {
@@ -213,15 +213,14 @@ public class Instance extends ModelBase implements Listable, Monitorable {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
+    public java.util.List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
         return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
-    @Override
     public Map<String, String> showData(String id) {
         if (DeployerConstants.INSTANCE_LOCAL.equals(id)) {
             return new HashMap<String, String>() {{
-                put(idFieldName(), DeployerConstants.INSTANCE_LOCAL);
+                put(idField(), DeployerConstants.INSTANCE_LOCAL);
                 put("host", "localhost");
 
                 Config config = Main.getService(Config.class);
@@ -233,7 +232,7 @@ public class Instance extends ModelBase implements Listable, Monitorable {
         InstanceInfo instanceInfo = Main.getService(Registry.class).getInstanceInfo(id);
         if (instanceInfo != null) {
             return new HashMap<String, String>() {{
-                put(idFieldName(), instanceInfo.getName());
+                put(idField(), instanceInfo.getName());
                 put("host", instanceInfo.getHost());
                 put("port", String.valueOf(instanceInfo.getPort()));
             }};
@@ -243,7 +242,7 @@ public class Instance extends ModelBase implements Listable, Monitorable {
     }
 
     @ModelAction(
-            code = Downloadable.ACTION_FILES, icon = "download-alt",
+            code = Download.ACTION_FILES, icon = "download-alt",
             order = 8,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。",
@@ -253,7 +252,7 @@ public class Instance extends ModelBase implements Listable, Monitorable {
     }
 
     @ModelAction(
-            code = Downloadable.ACTION_DOWNLOAD, icon = "download-alt",
+            code = Download.ACTION_DOWNLOAD, icon = "download-alt",
             name = {"下载文件", "en:Download File"},
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files."})
@@ -262,13 +261,13 @@ public class Instance extends ModelBase implements Listable, Monitorable {
     }
 
     @ModelAction(
-            code = Monitorable.ACTION_MONITOR, icon = "line-chart", order = 2,
+            code = Monitor.ACTION_MONITOR, icon = "line-chart", order = 2,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
     public void monitor(Request request) throws Exception {
         invokeOnAgent(request, request.getId());
-        List<Map<String, String>> dataList = request.getResponse().getDataList();
+        java.util.List<Map<String, String>> dataList = request.getResponse().getDataList();
         if (dataList.size() == 1) { // 不应为空，来自：qingzhou.app.system.Agent.monitor（xxx）
             tempData.set(dataList.remove(0));
         }
@@ -290,7 +289,7 @@ public class Instance extends ModelBase implements Listable, Monitorable {
         RequestImpl requestImpl = (RequestImpl) request;
         try {
             requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
-            List<Response> responseList = Main.getService(ActionInvoker.class)
+            java.util.List<Response> responseList = Main.getService(ActionInvoker.class)
                     .invokeOnInstances(request, instance);
             if (responseList.size() == 1) {
                 requestImpl.setResponse(responseList.get(0));

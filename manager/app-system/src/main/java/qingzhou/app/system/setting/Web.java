@@ -4,7 +4,7 @@ import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Updatable;
+import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
@@ -13,11 +13,11 @@ import java.util.Map;
 
 @Model(code = "web", icon = "link",
         menu = Main.SETTING_MENU, order = 2,
-        entrance = Updatable.ACTION_EDIT,
+        entrance = Update.ACTION_EDIT,
         name = {"Web", "en:Web"},
         info = {"设置控制台相关参数，如 HTTP、Servlet 等。注：这些参数变更后，在下次启动后生效。",
                 "en:Set console-related parameters, such as HTTP and servlets. Note: After these parameters are changed, they will take effect after the next startup."})
-public class Web extends ModelBase implements Updatable {
+public class Web extends ModelBase implements Update {
     @ModelField(
             type = FieldType.number,
             required = true,
@@ -43,7 +43,7 @@ public class Web extends ModelBase implements Updatable {
     public Integer maxPostSize;
 
     @Override
-    public Map<String, String> showData(String id) {
+    public Map<String, String> editData(String id) {
         Config config = Main.getService(Config.class);
         qingzhou.config.Web web = config.getConsole().getWeb();
         return ModelUtil.getPropertiesFromObj(web);

@@ -23,8 +23,8 @@ public class ParameterFilter implements Filter<RestContext> {
         trim(request);
         separateParameters(request);
         password(request);
-
         batchId(request, context);
+
         return true;
     }
 
@@ -64,12 +64,11 @@ public class ParameterFilter implements Filter<RestContext> {
     }
 
     private void batchId(RequestImpl request, RestContext context) {
-        if (!Arrays.asList(request.getCachedModelInfo().getBatchActionNames()).contains(request.getAction())) {
-            return;
-        }
+        if (!Arrays.asList(request.getCachedModelInfo().getBatchActionNames()).contains(request.getAction())) return;
+
         ModelInfo modelInfo = request.getCachedModelInfo();
-        String idFieldName = modelInfo.getIdFieldName();
-        String id = request.getParameter(idFieldName);
+        String idField = modelInfo.getIdField();
+        String id = request.getParameter(idField);
         if (id != null && id.contains(DeployerConstants.BATCH_ID_SEPARATOR)) {
             Set<String> batchIds = new HashSet<>();
             String[] splitIds = id.split(DeployerConstants.BATCH_ID_SEPARATOR);
@@ -79,7 +78,7 @@ public class ParameterFilter implements Filter<RestContext> {
                 }
             }
             context.batchIds = batchIds.toArray(new String[0]);
-            request.removeParameter(idFieldName);
+            request.removeParameter(idField);
         }
     }
 }

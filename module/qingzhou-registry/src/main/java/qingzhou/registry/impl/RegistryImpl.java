@@ -7,7 +7,7 @@ import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -52,20 +52,6 @@ class RegistryImpl implements Registry {
     }
 
     @Override
-    public void removeAppInfo(String appName) {
-        for (RegisteredInfo registeredInfo : registryInfo.values()) {
-            Iterator<AppInfo> iterator = registeredInfo.instanceInfo.getAppInfos().iterator();
-            while (iterator.hasNext()) {
-                AppInfo appInfo = iterator.next();
-                if (appInfo.getName().equals(appName)) {
-                    iterator.remove();
-                    break;
-                }
-            }
-        }
-    }
-
-    @Override
     public List<String> getAllInstanceNames() {
         return new ArrayList<>(registryInfo.keySet());
     }
@@ -80,7 +66,7 @@ class RegistryImpl implements Registry {
     @Override
     public List<String> getAllAppNames() {
         List<String> appNames = new ArrayList<>();
-        registryInfo.values().forEach(reg -> reg.instanceInfo.getAppInfos().forEach(ap -> appNames.add(ap.getName())));
+        registryInfo.values().forEach(reg -> Arrays.stream(reg.instanceInfo.getAppInfos()).forEach(ap -> appNames.add(ap.getName())));
         appNames.sort(String::compareTo);
         return appNames;
     }

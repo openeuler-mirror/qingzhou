@@ -5,6 +5,7 @@
 <%@ page import="qingzhou.api.*" %>
 <%@ page import="qingzhou.engine.util.*" %>
 <%@ page import="qingzhou.api.type.*" %>
+<%@ page import="java.util.List" %>
 <%@ page import="qingzhou.console.*" %>
 <%@ page import="qingzhou.console.controller.*" %>
 <%@ page import="qingzhou.console.controller.rest.*" %>

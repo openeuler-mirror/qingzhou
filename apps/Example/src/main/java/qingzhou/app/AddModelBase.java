@@ -1,14 +1,14 @@
 package qingzhou.app;
 
 import qingzhou.api.ModelBase;
-import qingzhou.api.type.Addable;
+import qingzhou.api.type.General;
 
 import java.util.List;
 import java.util.Map;
 
-public class AddableModelBase extends ModelBase implements Addable {
+public class AddModelBase extends ModelBase implements General {
 
-    private final MemoryDataStoreDemo testData = new MemoryDataStoreDemo(idFieldName());
+    private final MemoryDataStoreDemo testData = new MemoryDataStoreDemo(idField());
 
     @Override
     public void addData(Map<String, String> data) {
@@ -44,7 +44,7 @@ public class AddableModelBase extends ModelBase implements Addable {
 
     @Override
     public void updateData(Map<String, String> data) {
-        testData.updateData(data.get(idFieldName()), data);
+        testData.updateData(data.get(idField()), data);
         ExampleMain.logger.info("updateData:" + data);
     }
 

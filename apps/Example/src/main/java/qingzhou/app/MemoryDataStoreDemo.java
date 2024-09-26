@@ -58,17 +58,21 @@ public class MemoryDataStoreDemo {
         return allIds(query).length;
     }
 
+    // 实现参考：qingzhou.app.system.ModelUtil.query
     public static boolean query(Map<String, String> query, Map<String, String> data) {
         if (query == null) return true;
 
+        // 实现参考：qingzhou.app.system.ModelUtil.query
         for (Map.Entry<String, String> e : query.entrySet()) {
             String queryKey = e.getKey();
             String queryValue = e.getValue();
+
             String val = data.get(queryKey);
-            if (val == null) return false;
-            if (queryValue.contains(",")) {
+
+            String querySP = ",";
+            if (queryValue.contains(querySP)) {
                 boolean found = false;
-                for (String q : queryValue.split("\\|")) {
+                for (String q : queryValue.split(querySP)) {
                     if (val.equals(q)) {
                         found = true;
                         break;

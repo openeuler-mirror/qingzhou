@@ -4,7 +4,7 @@
 
 <%
     String contextPath = request.getContextPath();
-    String idFieldName = modelInfo.getIdFieldName();
+    String idField = modelInfo.getIdField();
 
     String[] fieldsToList = modelInfo.getFieldsToList();
     String[] actionsToList = modelInfo.getListActionNames();
@@ -27,12 +27,12 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    if (SecurityController.isActionShow(qzApp, qzModel, Addable.ACTION_ADD, null, currentUser)) {
+                    if (SecurityController.isActionShow(qzApp, qzModel, Add.ACTION_ADD, null, currentUser)) {
                 %>
                 <a class="btn"
-                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Addable.ACTION_CREATE)%>">
+                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Add.ACTION_CREATE)%>">
                     <i class="icon icon-plus-sign"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Addable.ACTION_CREATE)%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Add.ACTION_CREATE)%>
                 </a>
                 <%
                     }
@@ -95,7 +95,7 @@
             </thead>
             <tbody>
             <%
-                List<Map<String, String>> modelDataList = qzResponse.getDataList();
+                java.util.List<Map<String, String>> modelDataList = qzResponse.getDataList();
                 if (modelDataList.isEmpty()) {
                     String dataEmpty = "<tr><td colspan='" + (fieldsToList.length + (actionsToList.length > 0 ? 2 : 1)) + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
@@ -104,7 +104,7 @@
                 } else {
                     int listOrder = (pageNum - 1) * pageSize;
                     for (Map<String, String> modelData : modelDataList) {
-                        String originUnEncodedId = modelData.get(idFieldName);
+                        String originUnEncodedId = modelData.get(idField);
                         String encodedItemId = RESTController.encodeId(originUnEncodedId);
             %>
             <tr>
@@ -113,8 +113,8 @@
                 %>
                 <td class="custom-checkbox">
                     <input type="checkbox"
-                           value="<%= RESTController.encodeId(modelData.get(idFieldName))%>"
-                           name="<%=idFieldName%>" <%= batchActions.length > 0 ? "class='morecheck'" : "disabled" %> />
+                           value="<%= RESTController.encodeId(modelData.get(idField))%>"
+                           name="<%=idField%>" <%= batchActions.length > 0 ? "class='morecheck'" : "disabled" %> />
                 </td>
                 <%
                     }
@@ -124,6 +124,7 @@
                 <%
                     boolean isFirst = true;
                     for (String field : fieldsToList) {
+                        ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                         String value = modelData.get(field);
                         if (value == null) {
                             value = "";
@@ -133,7 +134,13 @@
                     <%
                         if (isFirst) {
                             isFirst = false;
-                            String actionName = SecurityController.isActionShow(qzApp, qzModel, Updatable.ACTION_EDIT, modelData, currentUser) ? Updatable.ACTION_EDIT : Showable.ACTION_SHOW;
+                            String actionName = SecurityController.isActionShow(qzApp, qzModel, Update.ACTION_EDIT, modelData, currentUser)
+                                    ? Update.ACTION_EDIT
+                                    : (
+                                    SecurityController.isActionShow(qzApp, qzModel, Show.ACTION_SHOW, modelData, currentUser)
+                                            ? Show.ACTION_SHOW
+                                            : null);
+                            if (actionName != null) {
                     %>
 
                     <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , actionName + "/" + encodedItemId)%>'
@@ -142,40 +149,38 @@
                        data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
-                        <%=value%>
+                        <%=PageUtil.styleFieldValue(value, fieldInfo)%>
                     </a>
                     <%
-                    } else {
-                        ModelFieldInfo modelFieldInfo = modelInfo.getModelFieldInfo(field);
-                        String refmodelname = null;
-                        String reffieldname = null;
-                        if (Utils.notBlank(modelFieldInfo.getRefModel())) {
-                            refmodelname = modelFieldInfo.getRefModel();
-                            reffieldname = SystemController.getModelInfo(qzApp, refmodelname).getIdFieldName();
-                        } else if (Utils.notBlank(modelFieldInfo.getLinkField())) {
-                            refmodelname = modelFieldInfo.getLinkField().split("\\.")[0];
-                            reffieldname = modelFieldInfo.getLinkField().split("\\.")[1];
+                        } else {
+                            out.print(PageUtil.styleFieldValue(value, fieldInfo));
                         }
-                        if (refmodelname != null) {
+                    } else {
+                        String refModelName = null;
+                        String refFieldName = null;
+                        if (Utils.notBlank(fieldInfo.getLinkModel())) {
+                            String[] split = fieldInfo.getLinkModel().split("\\.");
+                            refModelName = split[0];
+                            refFieldName = split[1];
+                        } else if (Utils.notBlank(fieldInfo.getRefModel())) {
+                            refModelName = fieldInfo.getRefModel();
+                            refFieldName = SystemController.getModelInfo(qzApp, refModelName).getIdField();
+                        }
+                        if (refModelName != null && refFieldName != null) {
                     %>
-                    <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,ViewManager.htmlView, refmodelname, Listable.ACTION_LIST + "?" + reffieldname + "=" + value)%>'
-                       onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refmodelname%>")'
-                       class="dataid tooltips" record-action-id="<%=Listable.ACTION_LIST%>"
-                       data-tip='<%=I18n.getKeyI18n("model." + refmodelname)%>' data-tip-arrow="top"
+                    <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,ViewManager.htmlView, refModelName, qingzhou.api.type.List .ACTION_LIST + "?" + refFieldName + "=" + value)%>'
+                       onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'
+                       class="dataid tooltips" record-action-id="<%=qingzhou.api.type.List.ACTION_LIST%>"
+                       data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
                        style="color:#4C638F;">
-                        <%=value%>
+                        <%=PageUtil.styleFieldValue(value, fieldInfo)%>
                     </a>
                     <%
                             } else {
-                                String[] color = modelInfo.getModelFieldInfo(field).getColor();
-                                if (color.length > 0) {
-                                    value = PageUtil.transform(color, value);
-                                }
-                                out.print(value);
+                                out.print(PageUtil.styleFieldValue(value, fieldInfo));
                             }
                         }
                     %>
-
                 </td>
                 <%
                     }
@@ -195,8 +200,8 @@
                             }
 
                             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                            boolean useJsonUri = actionName.equals(Downloadable.ACTION_FILES)
-                                    || actionName.equals(Deletable.ACTION_DELETE);
+                            boolean useJsonUri = actionName.equals(Download.ACTION_FILES)
+                                    || actionName.equals(Delete.ACTION_DELETE);
                     %>
                     <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest,
                             useJsonUri ? DeployerConstants.JSON_VIEW : ViewManager.htmlView,
@@ -205,8 +210,8 @@
                        model-icon="<%=modelInfo.getIcon()%>" action-name="<%=actionName%>"
                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
                             <%
-                                if (actionName.equals(Downloadable.ACTION_FILES)) {
-                                    out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Downloadable.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+                                if (actionName.equals(Download.ACTION_FILES)) {
+                                    out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
                                 }
 
                                 if (useJsonUri) {
@@ -241,7 +246,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
+                partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, qingzhou.api.type.List.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>
@@ -285,6 +290,7 @@
             $(".batch-ops", getRestrictedArea()).removeAttr("disabled");
         }
     });
+
     $(".morecheck", getRestrictedArea()).click(function () {
         if (!$(this).prop("checked")) {
             $(this).removeAttr("checked", false);
@@ -321,9 +327,9 @@
         });
         var str = url;
         if (str.indexOf("?") > -1) {
-            url = str + "&<%=idFieldName%>=" + params;
+            url = str + "&<%=idField%>=" + params;
         } else {
-            url = str + "?<%=idFieldName%>=" + params;
+            url = str + "?<%=idField%>=" + params;
         }
         $("#" + action, getRestrictedArea()).attr("href", url);
     }

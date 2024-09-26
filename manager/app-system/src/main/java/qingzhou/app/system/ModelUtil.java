@@ -145,12 +145,14 @@ public class ModelUtil {
         for (Map.Entry<String, String> e : query.entrySet()) {
             String queryKey = e.getKey();
             String queryValue = e.getValue();
+
             Map<String, String> data = supplier.get();
             String val = data.get(queryKey);
-            if (val == null) return false;
-            if (queryValue.contains(",")) {
+
+            String querySP = ",";
+            if (queryValue.contains(querySP)) {
                 boolean found = false;
-                for (String q : queryValue.split("\\|")) {
+                for (String q : queryValue.split(querySP)) {
                     if (val.equals(q)) {
                         found = true;
                         break;

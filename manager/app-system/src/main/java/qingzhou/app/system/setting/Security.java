@@ -4,7 +4,7 @@ import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Updatable;
+import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
@@ -13,10 +13,10 @@ import java.util.Map;
 
 @Model(code = "security", icon = "shield",
         menu = Main.SETTING_MENU, order = 4,
-        entrance = Updatable.ACTION_EDIT,
+        entrance = Update.ACTION_EDIT,
         name = {"安全", "en:Security"},
         info = {"配置轻舟管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
-public class Security extends ModelBase implements Updatable {
+public class Security extends ModelBase implements Update {
     @ModelField(
             name = {"信任 IP", "en:Trusted IP"},
             info = {"指定信任的客户端 IP 地址，其值可为具体的 IP、匹配 IP 的正则表达式或通配符 IP（如：168.1.2.*，168.1.4.5-168.1.4.99）。远程的客户端只有在被设置为信任后，才可进行首次默认密码更改、文件上传等敏感操作。注：不设置表示只有安装机器受信任，设置为 * 表示信任所有机器。",
@@ -70,16 +70,16 @@ public class Security extends ModelBase implements Updatable {
     public String publicKey;
 
     @Override
+    public Map<String, String> editData(String id) {
+        qingzhou.config.Security security = Main.getService(Config.class).getConsole().getSecurity();
+        return ModelUtil.getPropertiesFromObj(security);
+    }
+
+    @Override
     public void updateData(Map<String, String> data) throws Exception {
         Config config = Main.getService(Config.class);
         qingzhou.config.Security security = config.getConsole().getSecurity();
         ModelUtil.setPropertiesToObj(security, data);
         config.setSecurity(security);
-    }
-
-    @Override
-    public Map<String, String> showData(String id) {
-        qingzhou.config.Security security = Main.getService(Config.class).getConsole().getSecurity();
-        return ModelUtil.getPropertiesFromObj(security);
     }
 }

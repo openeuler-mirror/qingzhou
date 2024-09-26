@@ -14,13 +14,7 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
+import java.util.*;
 
 class Heartbeat implements Process {
     private final Config config;
@@ -93,7 +87,7 @@ class Heartbeat implements Process {
                 appInfos.add(deployer.getApp(a).getAppInfo());
             }
         }
-        thisInstanceInfo.setAppInfos(appInfos);
+        thisInstanceInfo.setAppInfos(appInfos.toArray(new AppInfo[0]));
         String registerData = json.toJson(thisInstanceInfo);
 
         HttpResponse response;
@@ -113,7 +107,8 @@ class Heartbeat implements Process {
             try {
                 resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
             } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException(e);
+                logger.error(e.getMessage(), e);
+                return;
             }
             List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get(DeployerConstants.JSON_DATA);
             if (dataList != null && !dataList.isEmpty()) {

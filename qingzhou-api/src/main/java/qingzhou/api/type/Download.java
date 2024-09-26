@@ -5,7 +5,7 @@ import java.io.File;
 /**
  * 定义了与下载相关的操作。
  */
-public interface Downloadable {
+public interface Download {
     String ACTION_FILES = "files";
     String ACTION_DOWNLOAD = "download";
 

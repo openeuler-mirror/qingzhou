@@ -1,15 +1,8 @@
 package qingzhou.app.system.service;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
-import qingzhou.api.type.Addable;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Listable;
+import qingzhou.api.*;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.deployer.ActionInvoker;
@@ -19,21 +12,16 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.Registry;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.SERVICE_MENU, order = 1,
         name = {"应用", "en:App"},
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
-public class App extends ModelBase implements Listable {
+public class App extends ModelBase implements qingzhou.api.type.List {
     @Override
-    public String idFieldName() {
+    public String idField() {
         return "name";
     }
 
@@ -105,7 +93,6 @@ public class App extends ModelBase implements Listable {
         getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
     }
 
-    @Override
     public Map<String, String> showData(String id) {
         AppInfo appInfo = null;
         List<String> instances = new ArrayList<>();
@@ -126,7 +113,7 @@ public class App extends ModelBase implements Listable {
 
         if (appInfo != null) {
             Map<String, String> appMap = new HashMap<>();
-            appMap.put(idFieldName(), id);
+            appMap.put(idField(), id);
             appMap.put("path", appInfo.getFilePath());
             appMap.put("instances", String.join(DeployerConstants.DEFAULT_DATA_SEPARATOR, instances));
             return appMap;
@@ -149,7 +136,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = Addable.ACTION_CREATE, icon = "plus-sign",
+            code = Add.ACTION_CREATE, icon = "plus-sign",
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
@@ -158,17 +145,17 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = Addable.ACTION_ADD, icon = "save",
+            code = Add.ACTION_ADD, icon = "save",
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
     public void add(Request request) {
         String instances = ((RequestImpl) request).removeParameter("instances");
-        invokeOnInstances(request, instances.split(DeployerConstants.DEFAULT_DATA_SEPARATOR));
+        invokeOnInstances(request, instances);
     }
 
     @ModelAction(
-            code = Deletable.ACTION_DELETE, icon = "trash",
+            code = Delete.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
             name = {"卸载", "en:UnInstall"},
@@ -177,22 +164,17 @@ public class App extends ModelBase implements Listable {
     public void delete(Request request) {
         String id = request.getId();
         Map<String, String> app = showData(id);
-        String[] instances = app.get("instances").split(DeployerConstants.DEFAULT_DATA_SEPARATOR);
+        String instances = app.get("instances");
         invokeOnInstances(request, instances);
-        for (String instance : instances) {
-            if (!instance.equals(DeployerConstants.INSTANCE_LOCAL)) {
-                Main.getService(Registry.class).removeAppInfo(id);
-            }
-        }
     }
 
-    private void invokeOnInstances(Request request, String[] instances) {
+    private void invokeOnInstances(Request request, String instances) {
         RequestImpl requestImpl = (RequestImpl) request;
         String originModel = request.getModel();
         try {
             requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
             List<Response> responseList = Main.getService(ActionInvoker.class)
-                    .invokeOnInstances(request, instances);
+                    .invokeOnInstances(request, instances.split(DeployerConstants.DEFAULT_DATA_SEPARATOR));
             final StringBuilder[] error = {null};
             responseList.forEach(response -> {
                 if (!response.isSuccess()) {

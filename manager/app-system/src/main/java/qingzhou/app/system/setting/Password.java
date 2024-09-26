@@ -1,7 +1,7 @@
 package qingzhou.app.system.setting;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Updatable;
+import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
@@ -19,7 +19,7 @@ import java.util.Objects;
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         hidden = true,
         menu = Main.SETTING_MENU,
-        entrance = Updatable.ACTION_EDIT,
+        entrance = Update.ACTION_EDIT,
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
@@ -79,7 +79,7 @@ public class Password extends ModelBase {
     }
 
     @ModelAction(
-            code = Updatable.ACTION_EDIT,
+            code = Update.ACTION_EDIT,
             name = {"修改", "en:Edit"},
             info = {"修改当前登录账户的密码。",
                     "en:Change the password of the current login account."})
@@ -91,7 +91,7 @@ public class Password extends ModelBase {
     }
 
     @ModelAction(
-            code = Updatable.ACTION_UPDATE,
+            code = Update.ACTION_UPDATE,
             name = {"更新", "en:Update"},
             info = {"更新密码。", "en:Update the password."})
     public void update(Request request) throws Exception {

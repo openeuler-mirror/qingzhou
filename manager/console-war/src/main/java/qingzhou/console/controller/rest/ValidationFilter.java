@@ -2,9 +2,9 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.Response;
-import qingzhou.api.type.Addable;
-import qingzhou.api.type.Listable;
-import qingzhou.api.type.Updatable;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Update;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -57,8 +57,8 @@ public class ValidationFilter implements Filter<RestContext> {
 
         ModelInfo modelInfo = request.getCachedModelInfo();
 
-        boolean isAddAction = Addable.ACTION_ADD.equals(request.getAction());
-        boolean isUpdateAction = Updatable.ACTION_UPDATE.equals(request.getAction());
+        boolean isAddAction = Add.ACTION_ADD.equals(request.getAction());
+        boolean isUpdateAction = Update.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
@@ -165,7 +165,7 @@ public class ValidationFilter implements Filter<RestContext> {
 
         @Override
         public String[] validate(ValidationContext context) {
-            if (!context.fieldInfo.getCode().equals(context.modelInfo.getIdFieldName())) return null;
+            if (!context.fieldInfo.getCode().equals(context.modelInfo.getIdField())) return null;
 
             if (context.parameterVal.contains(DeployerConstants.BATCH_ID_SEPARATOR)) {
                 return new String[]{"validation_unsupportedCharacters", DeployerConstants.BATCH_ID_SEPARATOR};
@@ -175,7 +175,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 RequestImpl tmp = new RequestImpl();
                 tmp.setAppName(context.request.getApp());
                 tmp.setModelName(context.request.getModel());
-                tmp.setActionName(Listable.ACTION_CONTAINS);
+                tmp.setActionName(List.ACTION_CONTAINS);
                 tmp.setId(context.parameterVal);
                 Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
                 boolean success = tmpResp.isSuccess();
