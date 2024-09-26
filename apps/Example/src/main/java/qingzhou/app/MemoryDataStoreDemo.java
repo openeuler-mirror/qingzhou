@@ -64,12 +64,24 @@ public class MemoryDataStoreDemo {
         for (Map.Entry<String, String> e : query.entrySet()) {
             String queryKey = e.getKey();
             String queryValue = e.getValue();
-
             String val = data.get(queryKey);
-            if (val == null || !val.contains(queryValue)) {
-                return false;
+            if (val == null) return false;
+            if (queryValue.contains(",")) {
+                boolean found = false;
+                for (String q : queryValue.split("\\|")) {
+                    if (val.equals(q)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) return false;
+            } else {
+                if (!val.contains(queryValue)) {
+                    return false;
+                }
             }
         }
+
         return true;
     }
 }
