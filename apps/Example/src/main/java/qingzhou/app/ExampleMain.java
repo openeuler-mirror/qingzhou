@@ -20,6 +20,7 @@ public class ExampleMain implements QingzhouApp {
         logger.info("启动样例应用");
 
         appContext.addMenu(SYSTEM_MANAGEMENT, new String[]{"系统管理", "en: System Management"}, "cog", 1);
+        appContext.addMenu("test", new String[]{"系统管理", "en: System Management"}, "cog", 1,SYSTEM_MANAGEMENT);
 
         appContext.addActionFilter(request -> {
             String msg = String.format("有请求进入，模块：%s，操作：%s", request.getModel(), request.getAction());

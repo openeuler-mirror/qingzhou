@@ -110,7 +110,40 @@ public class PageUtil {
             }
         }
     }
+    private static MenuInfo find(String menuName, MenuInfo parent, List<MenuInfo> menuList) {
+        // 查找是否已经存在该菜单项
+        for (MenuInfo menuData : menuList) {
+            if (menuData.getName().equals(menuName)) {
+                return menuData; // 已经存在，直接返回
+            }
 
+        }
+        // 如果不存在，创建新的菜单项
+        return null;
+    }
+    private static MenuItem CreateMenuItem(String menuName, MenuItem parent, List<MenuItem> menuList,MenuInfo info) {
+        // 查找是否已经存在该菜单项
+        for (MenuItem menuData : menuList) {
+            if (menuData.getMenuName().equals(menuName)) {
+                return menuData; // 已经存在，直接返回
+            }
+
+        }
+
+        // 如果不存在，创建新的菜单项
+        MenuItem newMenu = new MenuItem();
+        newMenu.setMenuName(menuName);
+        newMenu.setMenuIcon(info.getIcon());
+        newMenu.setI18ns(info.getI18n());
+        newMenu.setOrder(info.getOrder());
+        if (parent != null) {
+            parent.getChildren().add(newMenu); // 将新创建的菜单项添加到父菜单的children中
+        } else {
+            menuList.add(newMenu); // 如果是顶级菜单，直接添加到菜单列表
+        }
+
+        return newMenu; // 返回新创建的菜单项
+    }
     public static List<MenuItem> getAppMenuList(Request request) {
         List<MenuItem> menus = new ArrayList<>();
         AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
@@ -118,44 +151,69 @@ public class PageUtil {
             return menus;
         }
 
+        // 分组：按菜单路径的第一级（最高级父菜单）进行分组
         Map<String, List<ModelInfo>> groupMap = appInfo.getModelInfos().stream()
                 .filter(modelInfo -> !modelInfo.isHidden())
-                .collect(Collectors.groupingBy(ModelInfo::getMenu));
+                .collect(Collectors.groupingBy(modelInfo -> {
+                    String[] menuParts = modelInfo.getMenu().split("/");
+                    return menuParts[0]; // 第一级菜单（最高级父菜单）
+                }));
 
         groupMap.forEach((menuGroup, models) -> {
             MenuInfo menuData = appInfo.getMenuInfo(menuGroup);
-            MenuItem parentMenu = new MenuItem();
+            MenuItem topMenu = new MenuItem();
             if (menuData != null) {
-                parentMenu.setMenuName(menuGroup);
-                parentMenu.setMenuIcon(menuData.getIcon());
-                parentMenu.setI18ns(menuData.getI18n());
-                parentMenu.setOrder(menuData.getOrder());
+                topMenu.setMenuName(menuGroup);
+                topMenu.setMenuIcon(menuData.getIcon());
+                topMenu.setI18ns(menuData.getI18n());
+                topMenu.setOrder(menuData.getOrder());
             }
 
+            // 对当前组中的 model 进行排序
             models.sort(Comparator.comparingInt(ModelInfo::getOrder));
 
             models.forEach(modelInfo -> {
+                // 分解路径，逐级构建菜单
+                String[] menuParts = modelInfo.getMenu().split("/");
+
+                // 每次都从顶级菜单开始
+                MenuItem currentMenu = topMenu;
+                MenuInfo currentMenuData = menuData;
+
+                // 遍历 menuParts，逐级查找或创建菜单
+                for (int i = 1; i < menuParts.length; i++) {
+                    currentMenuData = find(menuParts[i], currentMenuData, currentMenuData.getChildren());
+                    currentMenu = CreateMenuItem(menuParts[i],currentMenu,currentMenu.getChildren(),currentMenuData);
+                }
+
+                // 最终的子菜单
                 MenuItem subMenu = new MenuItem();
                 subMenu.setMenuName(modelInfo.getCode());
                 subMenu.setMenuIcon(modelInfo.getIcon());
                 subMenu.setI18ns(modelInfo.getName());
                 subMenu.setMenuAction(modelInfo.getEntrance());
                 subMenu.setOrder(modelInfo.getOrder());
+
+                // 将子菜单添加到正确的父菜单中
                 if (menuData != null) {
-                    parentMenu.getChildren().add(subMenu);
+                    currentMenu.getChildren().add(subMenu);
                 } else {
                     menus.add(subMenu);
                 }
             });
 
-            if (menuData != null && !parentMenu.getChildren().isEmpty()) {
-                menus.add(parentMenu);
+            // 将顶级菜单（及其子菜单）添加到菜单列表中
+            if (menuData != null) {
+                menus.add(topMenu);
             }
         });
+
+        // 对顶级菜单进行排序
         menus.sort(Comparator.comparingInt(MenuItem::getOrder));
 
         return menus;
     }
+
 
     public static ModelActionInfo[] listBachActions(Request request, Response response, String loginUser) {
         List<ModelActionInfo> actions = new ArrayList<>();
