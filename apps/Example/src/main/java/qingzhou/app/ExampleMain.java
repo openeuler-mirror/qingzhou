@@ -10,7 +10,7 @@ public class ExampleMain implements QingzhouApp {
     public static final String SYSTEM_MANAGEMENT = "SYSTEM_MANAGEMENT";
     public static AppContext appContext;
 
-    private Logger logger;
+    public static Logger logger;
 
     @Override
     public void start(AppContext appContext) {

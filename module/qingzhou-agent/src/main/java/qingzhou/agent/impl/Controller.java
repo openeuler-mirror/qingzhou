@@ -35,15 +35,16 @@ public class Controller implements ModuleActivator {
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
         Agent agent = config.getAgent();
-        if (agent == null) return;
+        if (agent == null || !agent.isEnabled()) return;
         String agentHost = getAgentHost(agent);
         int agentPort = agent.getAgentPort();
         String agentKey = getAgentKey(agent);
         Cipher agentCipher = cryptoService.getCipher(agentKey);
-
+        Heartbeat heartbeat = new Heartbeat(agentHost, agentPort, agentKey, config, json, deployer, logger, cryptoService, http);
         sequence = new ProcessSequence(
                 new qingzhou.agent.impl.Service(agentHost, agentPort, agentCipher, config, http, logger, json, deployer),
-                new Heartbeat(agentHost, agentPort, agentKey, config, json, deployer, logger, cryptoService, http)
+                () -> deployer.addAppListener(heartbeat::register),
+                heartbeat
         );
         sequence.exec();
     }
