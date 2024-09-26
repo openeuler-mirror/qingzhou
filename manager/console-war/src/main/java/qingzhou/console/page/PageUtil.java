@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
  */
 public class PageUtil {
     public static final GroupInfo OTHER_GROUP = new GroupInfo("OTHERS", new String[]{"其他", "en:Other"});
+    private static final String PREFIX_COLOR = "color-";
 
     public static String getAppToShow() {
         List<String> allApp = SystemController.getService(Deployer.class).getAllApp();
@@ -177,5 +178,24 @@ public class PageUtil {
 
         actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
         return actions.toArray(new ModelActionInfo[0]);
+    }
+
+    public static String transform(String[] conditions, String value) {
+        if (conditions == null) {
+            return value;
+        }
+
+        for (String condition : conditions) {
+            String[] array = condition.split(":");
+            if (array.length != 2) {
+                continue;
+            }
+            if (array[0].equals(value)) {
+                if (array[1].toLowerCase().startsWith(PREFIX_COLOR)) {
+                    return "<label class=\"label transformer label-" + array[1].substring(PREFIX_COLOR.length()) + "\">" + value + "</label>";
+                }
+            }
+        }
+        return value;
     }
 }

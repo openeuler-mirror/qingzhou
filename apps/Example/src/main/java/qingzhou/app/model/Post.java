@@ -28,6 +28,7 @@ public class Post extends AddableModelBase {
     @ModelField(
             type = FieldType.radio,
             options = {"正常", "停用"},
+            color = {"正常:color-success", "停用:color-danger"},
             list = true,
             name = {"岗位状态", "en:Post Status"},
             info = {"岗位状态。", "en:Post status."})
