@@ -1,6 +1,12 @@
 package qingzhou.app.system.service;
 
-import qingzhou.api.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Addable;
 import qingzhou.api.type.Deletable;
 import qingzhou.api.type.Listable;
@@ -13,7 +19,12 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.Registry;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.SERVICE_MENU, order = 1,
@@ -153,7 +164,7 @@ public class App extends ModelBase implements Listable {
                     "en:Install the application package to the specified Qingzhou instance."})
     public void add(Request request) {
         String instances = ((RequestImpl) request).removeParameter("instances");
-        invokeOnInstances(request, instances);
+        invokeOnInstances(request, instances.split(DeployerConstants.DEFAULT_DATA_SEPARATOR));
     }
 
     @ModelAction(
@@ -166,17 +177,22 @@ public class App extends ModelBase implements Listable {
     public void delete(Request request) {
         String id = request.getId();
         Map<String, String> app = showData(id);
-        String instances = app.get("instances");
+        String[] instances = app.get("instances").split(DeployerConstants.DEFAULT_DATA_SEPARATOR);
         invokeOnInstances(request, instances);
+        for (String instance : instances) {
+            if (!instance.equals(DeployerConstants.INSTANCE_LOCAL)) {
+                Main.getService(Registry.class).removeAppInfo(id);
+            }
+        }
     }
 
-    private void invokeOnInstances(Request request, String instances) {
+    private void invokeOnInstances(Request request, String[] instances) {
         RequestImpl requestImpl = (RequestImpl) request;
         String originModel = request.getModel();
         try {
             requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
             List<Response> responseList = Main.getService(ActionInvoker.class)
-                    .invokeOnInstances(request, instances.split(DeployerConstants.DEFAULT_DATA_SEPARATOR));
+                    .invokeOnInstances(request, instances);
             final StringBuilder[] error = {null};
             responseList.forEach(response -> {
                 if (!response.isSuccess()) {

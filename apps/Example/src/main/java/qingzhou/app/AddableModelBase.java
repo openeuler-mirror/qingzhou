@@ -13,11 +13,13 @@ public class AddableModelBase extends ModelBase implements Addable {
     @Override
     public void addData(Map<String, String> data) {
         testData.addData(data);
+        ExampleMain.logger.info("addData:" + data);
     }
 
     @Override
     public void deleteData(String id) {
         testData.deleteData(id);
+        ExampleMain.logger.info("deleteData:" + id);
     }
 
     @Override
@@ -43,6 +45,7 @@ public class AddableModelBase extends ModelBase implements Addable {
     @Override
     public void updateData(Map<String, String> data) {
         testData.updateData(data.get(idFieldName()), data);
+        ExampleMain.logger.info("updateData:" + data);
     }
 
     @Override

@@ -13,7 +13,14 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 
-import java.util.*;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
 
 class Heartbeat implements Process {
     private final Config config;
@@ -67,11 +74,7 @@ class Heartbeat implements Process {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                try {
-                    register();
-                } catch (Exception e) {
-                    logger.error("Failed to register with Master: " + e.getMessage());
-                }
+                register();
             }
         }, 2000, 1000 * 2);
     }
@@ -83,14 +86,14 @@ class Heartbeat implements Process {
         }
     }
 
-    private void register() throws Exception {
+    void register() {
         List<AppInfo> appInfos = new ArrayList<>();
         for (String a : deployer.getAllApp()) {
             if (!DeployerConstants.APP_SYSTEM.equals(a)) {
                 appInfos.add(deployer.getApp(a).getAppInfo());
             }
         }
-        thisInstanceInfo.setAppInfos(appInfos.toArray(new AppInfo[0]));
+        thisInstanceInfo.setAppInfos(appInfos);
         String registerData = json.toJson(thisInstanceInfo);
 
         HttpResponse response;
@@ -106,7 +109,12 @@ class Heartbeat implements Process {
 
         boolean registered = false;
         if (response != null && response.getResponseCode() == 200) {
-            Map resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
+            Map resultMap;
+            try {
+                resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
             List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get(DeployerConstants.JSON_DATA);
             if (dataList != null && !dataList.isEmpty()) {
                 String checkResult = dataList.get(0).get(fingerprint);
@@ -115,9 +123,13 @@ class Heartbeat implements Process {
         }
         if (registered) return;
 
-        http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
-            put("doRegister", registerData);
-        }});
+        try {
+            http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
+                put("doRegister", registerData);
+            }});
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private InstanceInfo thisInstanceInfo() {
