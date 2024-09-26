@@ -1,5 +1,6 @@
 var b64pad = "=";
 var b64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
 function hex2b64(h) {
     var i, c;
     var ret = "";
@@ -70,10 +71,12 @@ JSEncrypt.prototype.encryptLong2 = function (string) {
         return false;
     }
 };
+
 // 当前页面主活动区域
 function getActiveTabContent() {
     return $(".content-box>ul>li")[$(".tab-box>ul>li.active").index()];
 };
+
 // 绑定本机、集群、实例 Tab 标签事件
 function bindTabEvent() {
     var now = new Date().getTime();
@@ -97,6 +100,9 @@ function bindTabEvent() {
             e.preventDefault();
             if ($($this).hasClass("active")) {
                 var preTab = $("#" + $($this).parent().attr("preTab"));
+                if (preTab == undefined || preTab.attr("id") == $($this).attr("id")) {
+                    preTab = $("#defaultTab");
+                }
                 $(preTab).addClass("active");
                 $($(".content-box>ul>li")[$(preTab).index()]).removeClass("inactive").addClass("active");
             } else {
@@ -109,10 +115,12 @@ function bindTabEvent() {
         });
     });
 };
+
 // 获取限定区域
 function getRestrictedArea() {
     return getActiveTabContent();
 };
+
 function autoAdaptTip() {
     var mainBody = $(".main-body", getRestrictedArea());
     if (mainBody.length > 0) {
@@ -124,7 +132,7 @@ function autoAdaptTip() {
         var totalHeight = $(mainBody).prop("scrollHeight");
         var scrollTop = $(mainBody).scrollTop();
         var offsetTop = $(mainBody).offset().top;
-        $("form[name='pageForm'] span.tooltips:visible", mainBody).each(function() {
+        $("form[name='pageForm'] span.tooltips:visible", mainBody).each(function () {
             ruler.innerHTML = $(this).attr("data-tip");
             var top = scrollTop + $(this).offset().top - offsetTop;
             if ((totalHeight - top - 120) < ruler.offsetHeight) {
@@ -136,7 +144,8 @@ function autoAdaptTip() {
         document.body.removeChild(ruler);
     }
 };
-function showMsg(title,type,callback) {
+
+function showMsg(title, type, callback) {
     var container = document.body;
     try {
         container = getRestrictedArea();
@@ -150,8 +159,9 @@ function showMsg(title,type,callback) {
         type = "warning";
         time = 1800;
     }
-    return cocoMessage.resmsg({"msgWrapperContainer": container, msg: title, duration: time, onClose: callback},type);
+    return cocoMessage.resmsg({"msgWrapperContainer": container, msg: title, duration: time, onClose: callback}, type);
 };
+
 //showinfo不能去，否则会和showmsg的type重复
 function showInfo(title, time) {
     var container = document.body;
@@ -163,8 +173,10 @@ function showInfo(title, time) {
 };
 
 function shakeTip(msg) {
-    layer.msg(msg, function(){});
+    layer.msg(msg, function () {
+    });
 };
+
 function showConfirm(confirmMsg, options, yesFn, noFn) {
     var theme = $("#switch-mode-btn").attr("theme");
     if (theme != "") {
@@ -182,16 +194,20 @@ function showConfirm(confirmMsg, options, yesFn, noFn) {
         }
     });
 };
+
 function openLayer(options) {
-    var defaults = {area: ["600px", "360px"], yes: function () {
-        // do nothing
-    }};
+    var defaults = {
+        area: ["600px", "360px"], yes: function () {
+            // do nothing
+        }
+    };
     var theme = $("#switch-mode-btn").attr("theme");
     if (theme != "") {
         options["skin"] = "layer-" + theme;
     }
     return layer.open($.extend(defaults, options));
 };
+
 function closeLayer(index) {
     if (document.getElementById(index)) {
         cocoMessage.close(index);
@@ -222,7 +238,7 @@ function bindEvent(conditions) {
                     }
 
                     // 创建并添加条件
-                    const json = { [key]: condition, type: type };
+                    const json = {[key]: condition, type: type};
                     if (!contain(triggers[triggerItem], json)) {
                         triggers[triggerItem].push(json);
                     }
@@ -243,7 +259,6 @@ function bindEvent(conditions) {
 }
 
 
-
 function contain(array, ele) {
     for (var i = 0; i < array.length; i++) {
         if (array[i] === ele) {
@@ -255,14 +270,14 @@ function contain(array, ele) {
 
 function triggerTies(json) {
     json.forEach(item => {
-        const { type, ...rest } = item; // 事件类型 (show/readonly)
+        const {type, ...rest} = item; // 事件类型 (show/readonly)
         Object.keys(rest).forEach(key => {
             triggerAction(key, rest[key], type);
         });
     });
 }
 
-function triggerAction(ele, condition,type) {
+function triggerAction(ele, condition, type) {
     const operators = condition.includes("&") ? "&" : "|";
     const expressions = condition.split(operators);
 
@@ -296,17 +311,17 @@ function triggerAction(ele, condition,type) {
             shouldHideOrRead = shouldHideOrRead || compareResult;
         }
     });
-    if (type === "show"){
+    if (type === "show") {
         if (shouldHideOrRead) {
             $("#form-item-" + ele, getRestrictedArea()).hide();
         } else {
             $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
         }
-    }else if(type === "readonly"){
+    } else if (type === "readonly") {
         if (shouldHideOrRead) {
             $("#form-item-" + ele, getRestrictedArea()).find("input").removeAttr("readonly");
         } else {
-            $("#form-item-" + ele, getRestrictedArea()).find("input").attr("readonly","readonly");
+            $("#form-item-" + ele, getRestrictedArea()).find("input").attr("readonly", "readonly");
         }
     }
 
@@ -319,6 +334,7 @@ function compareVal(value, val, notEq) {
 /**
  * 下拉列表，可输入下拉列表
  */
+
 /*  jQuery Nice Select - v1.1.0
     https://github.com/hernansartorio/jquery-nice-select
     Made by Hernán Sartorio  */
@@ -369,7 +385,7 @@ function niceSelect() {
             $dropdown.focus();
         }
         if ((document.body.offsetHeight - $(this).offset().top) < $("ul.list", this).height()) {
-            $("ul.list", this).css({"margin-top" : (0 - $("ul.list", this).height() - 38) + "px"});
+            $("ul.list", this).css({"margin-top": (0 - $("ul.list", this).height() - 38) + "px"});
         }
     });
 
@@ -508,9 +524,10 @@ var tw = {
                         "btn": [getSetting("reloginBtnText"), getSetting("iknowBtnText")]
                     }, function () {
                         var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname))
-                                + "/" + window.location.pathname.replace("/", "").substring(0, window.location.pathname.replace("/", "").indexOf("/"));
+                            + "/" + window.location.pathname.replace("/", "").substring(0, window.location.pathname.replace("/", "").indexOf("/"));
                         window.location.href = loginUrl;
-                    }, function () {});
+                    }, function () {
+                    });
                     return;
                 }
                 if (html.indexOf("&lt;br&gt;") > 0) {
@@ -540,11 +557,18 @@ var tw = {
                     $(".main-body", getRestrictedArea()).css({"min-height": "100%", "height": "100%"});
                 } else if (browserInfo != {} && ((browserInfo.core === "Edge" && browserInfo.v <= 60.0) || (browserInfo.core === "IE" && browserInfo.v <= 11.0))) {
                     // ITAIT-4984 微软自研浏览器 Edge 样式特殊处理，解决滚动条样式问题
-                    $(".main-body", getRestrictedArea()).css({"min-height": "calc(-100px + 100%)", "height": "auto", "top": "100px", "bottom": "100px"});
+                    $(".main-body", getRestrictedArea()).css({
+                        "min-height": "calc(-100px + 100%)",
+                        "height": "auto",
+                        "top": "100px",
+                        "bottom": "100px"
+                    });
                 }
                 autoAdaptTip();
-                $("form[name='pageForm'] a[tabgroup]").bind("click", function() {
-                    window.setTimeout(function(){autoAdaptTip();}, 100);
+                $("form[name='pageForm'] a[tabgroup]").bind("click", function () {
+                    window.setTimeout(function () {
+                        autoAdaptTip();
+                    }, 100);
                 });
             }
         });
@@ -569,6 +593,7 @@ var tw = {
 /* tooltip */
 (function (window) {
     var bindings = [];
+
     function tooltip(ele, transitionObj, enterCallback, outCallback) {
         if (!ele || typeof ele !== "string") {
             console.error(new Error('The "tooltip" method requires the "class" of at least one parameter'));
@@ -584,8 +609,10 @@ var tw = {
         var tipContent = document.createElement("div");
         Array.prototype.slice.call(document.querySelectorAll(ele)).forEach(function (el) {
             var showEvent = function () {
-                var pos = el.getBoundingClientRect(), currenLeft = pos.left, currenTop = pos.top, currenWidth = pos.width, 
-                    currenHeight = pos.height, direction = (el.getAttribute("data-tip-arrow") || "top").replace(/_/g, "-");
+                var pos = el.getBoundingClientRect(), currenLeft = pos.left, currenTop = pos.top,
+                    currenWidth = pos.width,
+                    currenHeight = pos.height,
+                    direction = (el.getAttribute("data-tip-arrow") || "top").replace(/_/g, "-");
                 tipContentSetter(tipContent, el.getAttribute("data-tip"), direction);
                 var tipContentWidth = tipContent.offsetWidth, tipContentHeight = tipContent.offsetHeight;
                 switch (direction) {
@@ -650,6 +677,7 @@ var tw = {
             trigger.addEventListener("touchend", destroyEvent);
             bindings.push({"el": trigger, "touchstart": showEvent, "touchend": destroyEvent});
         });
+
         function tipContentSetter(tipContent, tip, direction) {
             tipContent.innerHTML = tip.replace(/</g, "&#60;").replace(/>/g, "&#62;").replace(/"/g, "&#34;").replace(/'/g, "&#39;");
             tipContent.className = "tw-tooltip tw-tooltip-" + direction;
@@ -660,6 +688,7 @@ var tw = {
             }
             typeof enterCallback === "function" ? enterCallback() : null;
         }
+
         function opacityTransition(ele, state) {
             timer && clearTimeout(timer);
             ele.style.setProperty("transition", "opacity " + time / 1000 + "s");
@@ -682,8 +711,10 @@ var tw = {
             }
         }
     }
+
     window.tooltip = tooltip;
 })(window);
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
  * 获取全局配置项
@@ -693,9 +724,10 @@ function getSetting(key) {
     var settings = eval("(typeof global_setting !== 'undefined') ? global_setting : {}");
     return settings[key] ? settings[key] : key;
 };
+
 /**
  * 统一处理ajax异常
- * @param {*} e 
+ * @param {*} e
  */
 function handleError(e, element) {
     if (e.status === 0) {
@@ -714,12 +746,14 @@ function handleError(e, element) {
                 var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname))
                     + "/" + window.location.pathname.replace("/", "").substring(0, window.location.pathname.replace("/", "").indexOf("/"));
                 window.location.href = loginUrl;
-            }, function () {});
+            }, function () {
+            });
         } else {
             showMsg(e.status + ":" + getSetting("pageErrorMsg"), "error");
         }
     }
 };
+
 /**
  * 获取浏览器名称及版本号信息
  * @returns {} 或 {"core": "xxx", "version": "xx.x"}
