@@ -1,9 +1,10 @@
 package qingzhou.app.model;
 
-import qingzhou.api.*;
-import qingzhou.app.ExampleMain;
-
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelField;
 import qingzhou.app.AddableModelBase;
+import qingzhou.app.ExampleMain;
 
 
 @Model(code = "user", icon = "user",
@@ -54,6 +55,7 @@ public class User extends AddableModelBase {
     @ModelField(
             type = FieldType.textarea,
             list = true,
+            linkModel = "department.email",
             name = {"备注", "en:Notes"},
             info = {"备注。", "en:Notes."})
     public String notes;

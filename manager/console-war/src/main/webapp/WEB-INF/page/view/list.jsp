@@ -145,10 +145,33 @@
                         <%=value%>
                     </a>
                     <%
-                        } else {
-                            out.print(value);
+                    } else {
+                        ModelFieldInfo modelFieldInfo = modelInfo.getModelFieldInfo(field);
+                        String refmodelname = null;
+                        String reffieldname = null;
+                        if (Utils.notBlank(modelFieldInfo.getRefModel())) {
+                            refmodelname = modelFieldInfo.getRefModel();
+                            reffieldname = SystemController.getModelInfo(qzApp, refmodelname).getIdFieldName();
+                        } else if (Utils.notBlank(modelFieldInfo.getLinkField())) {
+                            refmodelname = modelFieldInfo.getLinkField().split("\\.")[0];
+                            reffieldname = modelFieldInfo.getLinkField().split("\\.")[1];
+                        }
+                        if (refmodelname != null) {
+                    %>
+                    <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,ViewManager.htmlView, refmodelname, Listable.ACTION_LIST + "?" + reffieldname + "=" + value)%>'
+                       onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refmodelname%>")'
+                       class="dataid tooltips" record-action-id="<%=Listable.ACTION_LIST%>"
+                       data-tip='<%=I18n.getKeyI18n("model." + refmodelname)%>' data-tip-arrow="top"
+                       style="color:#4C638F;">
+                        <%=value%>
+                    </a>
+                    <%
+                            } else {
+                                out.print(value);
+                            }
                         }
                     %>
+
                 </td>
                 <%
                     }
