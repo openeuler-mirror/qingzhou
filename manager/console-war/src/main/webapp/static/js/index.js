@@ -199,6 +199,7 @@
 
         parent.addClass(ClassName.open);
         tree.slideDown(this.options.animationSpeed, function () {
+            // tree.find(Selector.open + " > " + Selector.treeview).slideDown();
             $(this.element).trigger(expandedEvent);
         }.bind(this));
     };
@@ -209,7 +210,7 @@
         //tree.find(Selector.open).removeClass(ClassName.openActive);
         parentLi.removeClass(ClassName.open);
         tree.slideUp(this.options.animationSpeed, function () {
-            tree.find(Selector.open + " > " + Selector.treeview).slideUp();
+            // tree.find(Selector.open + " > " + Selector.treeview).slideUp();
             $(this.element).trigger(collapsedEvent);
         }.bind(this));
     };

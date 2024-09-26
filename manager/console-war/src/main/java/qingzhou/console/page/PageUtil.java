@@ -110,7 +110,7 @@ public class PageUtil {
             }
         }
     }
-    private static MenuInfo find(String menuName, MenuInfo parent, List<MenuInfo> menuList) {
+    private static MenuInfo findMenu(String menuName, MenuInfo parent, List<MenuInfo> menuList) {
         // 查找是否已经存在该菜单项
         for (MenuInfo menuData : menuList) {
             if (menuData.getName().equals(menuName)) {
@@ -182,7 +182,7 @@ public class PageUtil {
 
                 // 遍历 menuParts，逐级查找或创建菜单
                 for (int i = 1; i < menuParts.length; i++) {
-                    currentMenuData = find(menuParts[i], currentMenuData, currentMenuData.getChildren());
+                    currentMenuData = findMenu(menuParts[i], currentMenuData, currentMenuData.getChildren());
                     currentMenu = CreateMenuItem(menuParts[i],currentMenu,currentMenu.getChildren(),currentMenuData);
                 }
 

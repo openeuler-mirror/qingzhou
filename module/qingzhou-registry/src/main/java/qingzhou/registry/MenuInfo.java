@@ -1,5 +1,7 @@
 package qingzhou.registry;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class MenuInfo {
@@ -7,12 +9,14 @@ public class MenuInfo {
     private String[] i18n;
     private String icon;
     private int order;
+    private List<MenuInfo> children; // 用于存储子菜单
 
     public MenuInfo(String name, String[] i18n, String icon, int order) {
         this.name = name;
         this.i18n = i18n;
         this.icon = icon;
         this.order = order;
+        this.children = new ArrayList<>(); // 初始化子菜单列表
     }
 
     public String getName() {
@@ -45,6 +49,10 @@ public class MenuInfo {
 
     public void setOrder(int order) {
         this.order = order;
+    }
+
+    public List<MenuInfo> getChildren() {
+        return children; // 添加 getter 方法
     }
 
     @Override
