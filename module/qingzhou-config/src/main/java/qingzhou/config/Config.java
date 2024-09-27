@@ -7,6 +7,8 @@ public interface Config {
 
     Jvm getJvm();
 
+    Registry getRegistry();
+
     void addUser(User user) throws Exception;
 
     void deleteUser(String id) throws Exception;

@@ -76,6 +76,11 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
+    public Registry getRegistry() {
+        return readJsonFile(reader -> json.fromJson(reader, Registry.class, "module", "registry"));
+    }
+
+    @Override
     public void setSecurity(Security security) throws Exception {
         writeJson(security, false, "module", "console", "security");
     }

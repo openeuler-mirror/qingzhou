@@ -1,5 +1,6 @@
 package qingzhou.registry.impl;
 
+import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -23,6 +24,9 @@ public class Controller implements ModuleActivator {
     @Service
     private CryptoService cryptoService;
 
+    @Service
+    private Config config;
+
     // 定时清理超时的自动注册实例
     private Timer timer;
 
@@ -38,12 +42,12 @@ public class Controller implements ModuleActivator {
             @Override
             public void run() {
                 try {
-                    registry.timerCheck();
+                    registry.timerCheck(config.getRegistry().getCheckTimeout());
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }
             }
-        }, 2000, 1000 * 2);
+        }, 2000, config.getRegistry().getPeriodicCheckInterval());
     }
 
     @Override
