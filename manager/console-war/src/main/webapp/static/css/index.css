@@ -167,6 +167,9 @@ label.checkbox-inline, label.radio-inline {padding-left: 0px; padding-right: 20p
 .sidebar-menu { bottom: 20px; margin-bottom: 20px;}
 .sidebar-menu hr {margin-top: 8px; margin-bottom: 8px; width: 210px; border: 0px; height: 1px; background: #dcdcdc;}
 .sidebar-menu>li {position: relative;}
+.sidebar-menu .treeview-menu li > a {
+    position: relative;
+}
 .sidebar-menu>li, .sidebar-menu>li>ul, .sidebar-menu>li>ul>li {padding-left: 0px;}
 .sidebar-menu li.header {height: 40px; color: #76838f; font-size: 15px; padding: 10px 25px 10px 15px;}
 .sidebar-menu a {color: var(--color-main-sidebar,#262626); text-decoration: none;}
@@ -181,7 +184,7 @@ label.checkbox-inline, label.radio-inline {padding-left: 0px; padding-right: 20p
 .sidebar-menu li>a>.pull-right-container {position: absolute; right: 10px; top: 50%; margin-top: -9px;}
 .sidebar-menu li>a>.pull-right-container>.icon-angle-down {width: auto; height: auto; padding: 0; margin-right: 10px; transition: transform .5s ease;}
 .sidebar-menu .menu-open>a>.pull-right-container>.icon-angle-down::before {color:black;transform: rotate(180deg);}
-.sidebar-menu>li>.treeview-menu { display: none;}
+.sidebar-menu>li .treeview-menu { display: none;}
 .sidebar-menu>li.active>.treeview-menu {display: block;}
 .sidebar-menu>li.expandsub>.treeview-menu {display: block;}
 .treeview-menu {padding-left: 0px;}
