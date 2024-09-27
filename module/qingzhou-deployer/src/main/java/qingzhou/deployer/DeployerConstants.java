@@ -10,6 +10,7 @@ public interface DeployerConstants {
     // Master 模块
     String MODEL_MASTER = "master";
     String MODEL_AGENT = "agent";
+    String MODEL_UPGRADE_AGENT = "upgrade_agent";
     String MODEL_INDEX = "index";
     String MODEL_APP = "app";
     String MODEL_USER = "user";

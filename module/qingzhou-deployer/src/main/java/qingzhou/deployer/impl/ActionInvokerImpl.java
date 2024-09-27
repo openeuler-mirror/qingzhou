@@ -41,6 +41,11 @@ class ActionInvokerImpl implements ActionInvoker {
     public List<Response> invokeOnInstances(Request request, String... onInstances) {
         List<Response> responseList = new ArrayList<>();
 
+        if (onInstances.length == 0) {
+            LinkedList<String> allInstanceNames = new LinkedList<>(registry.getAllInstanceNames());
+            allInstanceNames.addFirst(DeployerConstants.INSTANCE_LOCAL);
+            onInstances = allInstanceNames.toArray(allInstanceNames.toArray(new String[0]));
+        }
         Cipher cipher = null;
         Map<String, File> fieldUploadFile = new HashMap<>();
         for (String instance : onInstances) {

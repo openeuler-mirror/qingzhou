@@ -6,10 +6,9 @@ import qingzhou.api.type.Delete;
 import qingzhou.api.type.Show;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.VersionUtil;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
-
-import java.io.*;
+import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -75,13 +74,6 @@ public class Upgrade extends ModelBase implements Add, Delete, qingzhou.api.type
                     "en:Description of a version upgrade, which typically includes new features in that release, fixes for known issues, and so on."})
     public String releaseNotes;
 
-    @Override
-    public void start() {
-        getAppContext().addI18n("File.Not.Found", new String[]{"文件不存在", "en:file does not exist"});
-        getAppContext().addI18n("File.Type.Error", new String[]{"需要zip格式的文件", "en:A zip format file is required"});
-        getAppContext().addI18n("File.Name.Error", new String[]{"文件名不符合规则,需以version开头", "en:The file name does not comply with the rules and needs to start with version"});
-    }
-
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
             order = 9,
@@ -91,53 +83,18 @@ public class Upgrade extends ModelBase implements Add, Delete, qingzhou.api.type
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) throws Exception {
-        getAppContext().callDefaultAction(request);
+        invokeOnInstances(request);
     }
 
     @ModelAction(
-            code = Add.ACTION_CREATE, icon = "plus-sign",
+            code = Add.ACTION_ADD, icon = "plus-sign",
             name = {"升级", "en:upgrade"},
             info = {"指定一个可升级的包进行升级",
                     "en:Specify an upgradable package for upgrading."})
-    public void create(Request request) throws Exception {
-        request.getResponse().addModelData(new Upgrade());
+    public void add(Request request) {
+        invokeOnInstances(request);
     }
 
-    public void addData(Map<String, String> data) throws Exception {
-        String filePath;
-        String upload = data.get("upload");
-        if ("true".equals(upload)) {
-            filePath = data.get("file");
-        } else {
-            filePath = data.get("path");
-        }
-        File newFile = new File(filePath);
-        if (!newFile.exists()) {
-            throw new Exception(getAppContext().getI18n("File.Not.Found"));
-        }
-        String fileName = newFile.getName();
-        if (!fileName.toLowerCase().endsWith(".zip")) {
-            throw new Exception(getAppContext().getI18n("File.Type.Error"));
-        }
-
-        String version = VersionUtil.getVer(newFile.getName());
-        if (Utils.notBlank(version)) {
-            FileUtil.copyFileOrDirectory(newFile, new File(VersionUtil.getHomeDir().getCanonicalPath() + File.separator + "lib" + File.separator + newFile.getName()));
-        } else {
-            throw new Exception(getAppContext().getI18n("File.Name.Error"));
-        }
-    }
-
-    @Override
-    public void deleteData(String id) throws Exception {
-        String filePath = VersionUtil.getHomeDir().getCanonicalPath() + File.separator + "lib" + File.separator + VersionUtil.qzVerName + id;
-        File dir = new File(filePath);
-        FileUtil.forceDelete(dir);
-        File zip = new File(filePath + VersionUtil.format);
-        FileUtil.forceDelete(zip);
-    }
-
-    @Override
     public String[] allIds(Map<String, String> query) throws Exception {
         if (query != null) {
             List<Map<String, String>> collect = VersionUtil.versionList().stream().filter(map -> {
@@ -181,5 +138,43 @@ public class Upgrade extends ModelBase implements Add, Delete, qingzhou.api.type
             }
         }
         return null;
+    }
+
+
+    private void invokeOnInstances(Request request) {
+        RequestImpl requestImpl = (RequestImpl) request;
+        String originModel = request.getModel();
+        try {
+            requestImpl.setModelName(DeployerConstants.MODEL_UPGRADE_AGENT);
+            List<Response> responseList = Main.getService(ActionInvoker.class)
+                    .invokeOnInstances(request);
+            final StringBuilder[] error = {null};
+            responseList.forEach(response -> {
+                if (!response.isSuccess()) {
+                    request.getResponse().setSuccess(false);
+                    if (error[0] == null) {
+                        error[0] = new StringBuilder();
+                    }
+                    error[0].append(response.getMsg());
+                }
+            });
+
+            if (!request.getResponse().isSuccess()) {
+                String errorMsg = error[0].toString();
+                request.getResponse().setMsg(errorMsg);
+            }
+        } finally {
+            requestImpl.setModelName(originModel);
+        }
+    }
+
+    @Override
+    public void addData(Map<String, String> data) throws Exception {
+
+    }
+
+    @Override
+    public void deleteData(String id) throws Exception {
+
     }
 }
