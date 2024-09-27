@@ -57,14 +57,8 @@ public class VersionUtil {
                     Charset.defaultCharset().name());
         } catch (UnsupportedEncodingException ignored) {
         }
-        String flag = "/qingzhou/lib";
-        int i = jarPath.indexOf(flag);
-        String pre = jarPath.substring(0, i + 10);
-        try {
-            return new File(pre).getCanonicalFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        final File file = new File(jarPath);
+        return file.getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getParentFile();
     }
 
     public static int isLaterVersion(String v1, String v2) {
