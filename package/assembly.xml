@@ -16,7 +16,16 @@
             <excludes>
                 <exclude>**/.empty</exclude>
                 <exclude>**/.gitkeep</exclude>
+                <exclude>release-notes.txt</exclude>
             </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/frame</directory>
+            <includes>
+                <include>release-notes.txt</include>
+            </includes>
+            <outputDirectory>lib/version${project.version}</outputDirectory>
+            <fileMode>0755</fileMode>
         </fileSet>
     </fileSets>
 
