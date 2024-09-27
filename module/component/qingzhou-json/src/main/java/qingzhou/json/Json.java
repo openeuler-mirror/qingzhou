@@ -10,15 +10,13 @@ public interface Json {
 
     <T> T fromJson(Reader json, Class<T> classOfT, String... position);
 
-    String addJson(String from, Properties properties, String... position);
+    String addJson(String from, Properties toJson, String... position);
 
-    String setJson(String from, Properties properties, String... position);
-
-    String setJson(String from, String value, String key, String... position);
+    String setJson(String from, Properties toJson, String... position);
 
     String deleteJson(String from, Matcher matcher, String... position);
 
     interface Matcher {
-        boolean matches(Properties properties);
+        boolean matches(Properties check);
     }
 }

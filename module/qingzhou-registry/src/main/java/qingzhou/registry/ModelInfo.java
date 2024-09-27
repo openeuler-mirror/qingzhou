@@ -15,7 +15,7 @@ public class ModelInfo {
     private int order;
     private String entrance;
     private boolean hidden;
-    private String idFieldName;
+    private String idField;
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
@@ -65,7 +65,7 @@ public class ModelInfo {
         for (int i = 0; i < modelFieldInfos.length; i++) {
             ModelFieldInfo fieldInfo = modelFieldInfos[i];
 
-            if (fieldInfo.getCode().equals(idFieldName)) {
+            if (fieldInfo.getCode().equals(idField)) {
                 idFieldIndex = i;
                 continue;
             }
@@ -190,12 +190,12 @@ public class ModelInfo {
         this.hidden = hidden;
     }
 
-    public String getIdFieldName() {
-        return idFieldName;
+    public String getIdField() {
+        return idField;
     }
 
-    public void setIdFieldName(String idFieldName) {
-        this.idFieldName = idFieldName;
+    public void setIdField(String idField) {
+        this.idField = idField;
     }
 
     public String getMenu() {

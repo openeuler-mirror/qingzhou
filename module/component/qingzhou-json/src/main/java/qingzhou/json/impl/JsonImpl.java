@@ -14,74 +14,60 @@ public class JsonImpl implements Json {
     }
 
     @Override
-    public String addJson(String from, Properties properties, String... position) {
+    public String addJson(String from, Properties toJson, String... position) {
         JsonElement root = JsonParser.parseString(from);
+        JsonArray jsonArray = getJsonArray(root, position);
 
+        JsonObject addObject = new JsonObject();
+        for (String k : toJson.stringPropertyNames()) {
+            addObject.addProperty(k, toJson.getProperty(k));
+        }
+
+        jsonArray.add(addObject);
+        return gsonInstance().toJson(root);
+    }
+
+    private JsonArray getJsonArray(JsonElement root, String... position) {
         JsonObject jsonObject = root.getAsJsonObject();
         for (int i = 0; i < position.length - 1; i++) {
             jsonObject = jsonObject.get(position[i]).getAsJsonObject();
         }
         JsonArray jsonArray = jsonObject.getAsJsonArray(position[position.length - 1]);
-
-        JsonObject addObject = new JsonObject();
-        for (String key : properties.stringPropertyNames()) {
-            addObject.addProperty(key, properties.getProperty(key));
-        }
-
         if (jsonArray == null) {
             jsonArray = new JsonArray();
             jsonObject.add(position[position.length - 1], jsonArray);
         }
-        jsonArray.add(addObject);
-
-        return gsonInstance().toJson(root);
+        return jsonArray;
     }
 
     @Override
-    public String setJson(String from, Properties properties, String... position) {
+    public String setJson(String from, Properties toJson, String... position) {
         JsonElement root = JsonParser.parseString(from);
 
         JsonObject jsonObject = root.getAsJsonObject();
         for (String path : position) {
             jsonObject = jsonObject.get(path).getAsJsonObject();
         }
-        for (String key : properties.stringPropertyNames()) {
-            jsonObject.addProperty(key, properties.getProperty(key));
+        for (String k : toJson.stringPropertyNames()) {
+            jsonObject.addProperty(k, toJson.getProperty(k));
         }
 
-        return gsonInstance().toJson(root);
-    }
-
-    @Override
-    public String setJson(String from, String value, String key, String... position) {
-        JsonElement root = JsonParser.parseString(from);
-
-        JsonObject jsonObject = root.getAsJsonObject();
-        for (String path : position) {
-            jsonObject = jsonObject.get(path).getAsJsonObject();
-        }
-        jsonObject.addProperty(key, value);
         return gsonInstance().toJson(root);
     }
 
     @Override
     public String deleteJson(String from, Matcher matcher, String... position) {
         JsonElement root = JsonParser.parseString(from);
-
-        JsonObject jsonObject = root.getAsJsonObject();
-        for (int i = 0; i < position.length - 1; i++) {
-            jsonObject = jsonObject.get(position[i]).getAsJsonObject();
-        }
-        JsonArray jsonArray = jsonObject.getAsJsonArray(position[position.length - 1]);
+        JsonArray jsonArray = getJsonArray(root, position);
 
         Iterator<JsonElement> iterator = jsonArray.iterator();
         while (iterator.hasNext()) {
-            Properties properties = new Properties();
+            Properties check = new Properties();
             JsonObject asJsonObject = iterator.next().getAsJsonObject();
             for (String k : asJsonObject.keySet()) {
-                properties.setProperty(k, asJsonObject.get(k).getAsString());
+                check.put(k, asJsonObject.get(k).getAsString());
             }
-            if (matcher.matches(properties)) {
+            if (matcher.matches(check)) {
                 iterator.remove();
             }
         }
@@ -98,11 +84,14 @@ public class JsonImpl implements Json {
     public <T> T fromJson(Reader from, Class<T> classOfT, String... position) {
         JsonElement root = JsonParser.parseReader(from);
         JsonObject jsonObject = root.getAsJsonObject();
-        JsonArray jsonArray = new JsonArray();
-        for (String path : position) {
+        JsonArray jsonArray = null;
+        for (int i = 0; i < position.length; i++) {
+            String path = position[i];
             JsonElement jsonElement = jsonObject.get(path);
-            if (jsonElement == null) return null;
             if (jsonElement.isJsonArray()) {
+                if (i != position.length - 1) { // 数组类型仅限位于最后一层
+                    throw new IllegalStateException();
+                }
                 jsonArray = jsonElement.getAsJsonArray();
             } else {
                 jsonObject = jsonElement.getAsJsonObject();
@@ -111,8 +100,9 @@ public class JsonImpl implements Json {
 
         if (classOfT.isArray()) {
             return gsonInstance().fromJson(jsonArray, classOfT);
+        } else {
+            return gsonInstance().fromJson(jsonObject, classOfT);
         }
-        return gsonInstance().fromJson(jsonObject, classOfT);
     }
 
     private Gson gsonInstance() {

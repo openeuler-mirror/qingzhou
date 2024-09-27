@@ -1,29 +1,25 @@
 package qingzhou.config;
 
 import java.util.Arrays;
-import java.util.Properties;
 
 public class Console {
     private boolean enabled;
-    private String contextRoot;
-    private int port;
+    private Web web;
+    private Jmx jmx;
     private Security security;
     private User[] user;
-    private Jmx jmx;
-
-    public Properties getServletProperties() {
-        return servletProperties;
-    }
-
-    public void setServletProperties(Properties servletProperties) {
-        this.servletProperties = servletProperties;
-    }
-
-    private Properties servletProperties;
 
     public User getUser(String name) {
         if (user == null) return null;
         return Arrays.stream(user).filter(user -> user.getName().equals(name)).findAny().orElse(null);
+    }
+
+    public Web getWeb() {
+        return web;
+    }
+
+    public void setWeb(Web web) {
+        this.web = web;
     }
 
     public Jmx getJmx() {
@@ -40,22 +36,6 @@ public class Console {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }
-
-    public String getContextRoot() {
-        return contextRoot;
-    }
-
-    public void setContextRoot(String contextRoot) {
-        this.contextRoot = contextRoot;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
     }
 
     public Security getSecurity() {

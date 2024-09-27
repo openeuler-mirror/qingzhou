@@ -4,11 +4,7 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.*;
-import java.lang.reflect.Method;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -17,120 +13,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Utils {
-    public static void setPropertiesToObj(Object obj, Map<String, String> data) throws Exception {
-        for (Map.Entry<String, String> entry : data.entrySet()) {
-            setPropertyToObj(obj, entry.getKey(), String.valueOf(entry.getValue()));
-        }
-    }
-
-    public static void setPropertyToObj(Object obj, String key, String val) throws Exception {
-        if (obj == null || key == null || val == null) {
-            return;
-        }
-
-        BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
-        for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
-            if (!pd.getName().equals(key)) {
-                continue;
-            }
-            Method writeMethod = pd.getWriteMethod();
-            if (writeMethod == null) {
-                continue;
-            }
-
-            Class<?>[] parameterTypes = writeMethod.getParameterTypes();
-            if (parameterTypes.length == 1) {
-                Object arg = stringToType(val, parameterTypes[0]);
-                writeMethod.invoke(obj, arg);
-            } else {
-                throw new IllegalArgumentException("parameter types error");
-            }
-        }
-    }
-
-    public static Object stringToType(String value, Class<?> type) throws Exception {
-        if (value == null) {
-            return null;
-        }
-
-        if (type.equals(String.class)) {
-            return value;
-        }
-        if (type.equals(boolean.class) || type.equals(Boolean.class)) {
-            return Boolean.parseBoolean(value);
-        }
-
-        if (type == InetAddress.class) {
-            if (isBlank(value)) {
-                return null; // value=“” 时，会报转化类型异常。
-            }
-            return InetAddress.getByName(value);
-        }
-
-        if (type.equals(int.class) || type.equals(Integer.class)) {
-            if (isBlank(value)) {
-                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
-            }
-            return Integer.parseInt(value);
-        }
-        if (type.equals(long.class) || type.equals(Long.class)) {
-            if (isBlank(value)) {
-                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
-            }
-            return Long.parseLong(value);
-        }
-        if (type.equals(float.class) || type.equals(Float.class)) {
-            if (isBlank(value)) {
-                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
-            }
-            return Float.parseFloat(value);
-        }
-        if (type.equals(double.class) || type.equals(Double.class)) {
-            if (isBlank(value)) {
-                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
-            }
-            return Double.parseDouble(value);
-        }
-
-        // 其它类型是不支持的
-        // throw new IllegalArgumentException();
-        return null;
-    }
-
     public static boolean notBlank(String value) {
         return !isBlank(value);
     }
 
     public static boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
-    }
-
-    public static Map<String, String> getPropertiesFromObj(Object obj) {
-        Map<String, String> properties = new HashMap<>();
-        try {
-            BeanInfo beanInfo = Introspector.getBeanInfo(obj.getClass());
-            for (PropertyDescriptor p : beanInfo.getPropertyDescriptors()) {
-                Method readMethod = p.getReadMethod();
-                if (readMethod != null) {
-                    Object val = readMethod.invoke(obj);
-                    if (val != null) {
-                        if (val instanceof InetAddress) {
-                            val = ((InetAddress) val).getHostAddress();
-                        } else {
-                            Class<?> typeClass = readMethod.getReturnType();
-                            if (typeClass != String.class
-                                    && !isPrimitive(typeClass)) {
-                                continue;
-                            }
-                        }
-                        properties.put(p.getName(), String.valueOf(val));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return properties;
     }
 
     public static boolean isPrimitive(Class<?> clazz) {

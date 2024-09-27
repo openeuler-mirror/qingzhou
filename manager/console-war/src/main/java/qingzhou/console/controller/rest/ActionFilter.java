@@ -1,9 +1,9 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.Response;
-import qingzhou.api.type.Addable;
-import qingzhou.api.type.Listable;
-import qingzhou.api.type.Showable;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Show;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -31,8 +31,8 @@ public class ActionFilter implements Filter<RestContext> {
     private boolean exists(RestContext context) {
         RequestImpl request = context.request;
 
-        if (request.getAction().equals(Addable.ACTION_ADD) // 添加是带有id的，但不用校验
-                || request.getAction().equals(Listable.ACTION_LIST)) {
+        if (request.getAction().equals(Add.ACTION_ADD) // 添加是带有id的，但不用校验
+                || request.getAction().equals(List.ACTION_LIST)) {
             return true;
         }
 
@@ -40,12 +40,12 @@ public class ActionFilter implements Filter<RestContext> {
         if (Utils.isBlank(id)) return true; // 非 rest id 操作，无需校验
 
         ModelInfo modelInfo = request.getCachedModelInfo();
-        if (modelInfo.getModelActionInfo(Listable.ACTION_CONTAINS) == null) return true; // 不是 list 类型 model,无需 校验
+        if (modelInfo.getModelActionInfo(List.ACTION_CONTAINS) == null) return true; // 不是 list 类型 model,无需 校验
 
         RequestImpl tmp = new RequestImpl();
         tmp.setAppName(request.getApp());
         tmp.setModelName(request.getModel());
-        tmp.setActionName(Listable.ACTION_CONTAINS);
+        tmp.setActionName(List.ACTION_CONTAINS);
         tmp.setId(id);
         Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
         boolean success = tmpResp.isSuccess();
@@ -64,7 +64,7 @@ public class ActionFilter implements Filter<RestContext> {
         String condition = actionInfo.getShow();
         if (Utils.isBlank(condition)) return true;
 
-        List<String> checkIds = new ArrayList<>();
+        java.util.List<String> checkIds = new ArrayList<>();
         if (context.batchIds != null) {
             checkIds.addAll(Arrays.asList(context.batchIds));
         } else {
@@ -97,7 +97,7 @@ public class ActionFilter implements Filter<RestContext> {
 
         @Override
         public String getFieldValue(String fieldName) {
-            if (fieldName.equals(request.getCachedModelInfo().getIdFieldName())) return id;
+            if (fieldName.equals(request.getCachedModelInfo().getIdField())) return id;
 
             String parameter = request.getParameter(fieldName); // 优先使用 客户端参数
             if (parameter == null) {
@@ -105,7 +105,7 @@ public class ActionFilter implements Filter<RestContext> {
                     RequestImpl tmp = new RequestImpl();
                     tmp.setAppName(request.getApp());
                     tmp.setModelName(request.getModel());
-                    tmp.setActionName(Showable.ACTION_SHOW);
+                    tmp.setActionName(Show.ACTION_SHOW);
                     tmp.setId(id);
                     Response response = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
                     if (!response.getDataList().isEmpty()) {

@@ -1,13 +1,9 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.AppContext;
-import qingzhou.api.Groups;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingzhouApp;
-import qingzhou.api.type.Addable;
-import qingzhou.api.type.Listable;
-import qingzhou.api.type.Showable;
+import qingzhou.api.*;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Grouped;
+import qingzhou.api.type.List;
 import qingzhou.deployer.App;
 import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
@@ -15,11 +11,7 @@ import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.GroupInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
+import qingzhou.registry.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,16 +19,7 @@ import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -51,7 +34,7 @@ class DeployerImpl implements Deployer {
     private final Logger logger;
     private LoaderPolicy loaderPolicy;
 
-    private List<AppListener> appListeners = new ArrayList<>();
+    private final java.util.List<AppListener> appListeners = new ArrayList<>();
 
     DeployerImpl(ModuleContext moduleContext, Logger logger) {
         this.moduleContext = moduleContext;
@@ -60,9 +43,7 @@ class DeployerImpl implements Deployer {
 
     @Override
     public void addAppListener(AppListener appListener) {
-        if (appListener != null) {
-            appListeners.add(appListener);
-        }
+        appListeners.add(appListener);
     }
 
     @Override
@@ -82,8 +63,10 @@ class DeployerImpl implements Deployer {
         }
 
         // 注册完成
-        apps.put(app.getAppInfo().getName(), app);
-        appListeners.forEach(AppListener::onAppAdded);
+        String name = app.getAppInfo().getName();
+        apps.put(name, app);
+        appListeners.forEach(appListener -> appListener.onInstalled(name));
+
         logger.info("The app has been successfully installed: " + appDir.getName());
     }
 
@@ -123,10 +106,12 @@ class DeployerImpl implements Deployer {
             app.getLoader().close();
         } catch (Exception ignored) {
         }
+
+        appListeners.forEach(appListener -> appListener.onUninstalled(appName));
     }
 
     @Override
-    public List<String> getAllApp() {
+    public java.util.List<String> getAllApp() {
         return new ArrayList<>(apps.keySet());
     }
 
@@ -138,7 +123,7 @@ class DeployerImpl implements Deployer {
     private AppImpl buildApp(File appDir) throws Exception {
         AppImpl app = new AppImpl();
 
-        List<File> scanAppLibFiles = new ArrayList<>();
+        java.util.List<File> scanAppLibFiles = new ArrayList<>();
         findLib(appDir, scanAppLibFiles);
         File[] additionalLib = loaderPolicy.getAdditionalLib();
         if (additionalLib != null) {
@@ -179,7 +164,7 @@ class DeployerImpl implements Deployer {
         });
 
         // 追加默认的 Action 执行器
-        Map<String, List<ModelActionInfo>> addedDefaultActions = addDefaultAction(modelInfos);// 追加系统预置的 action
+        Map<String, java.util.List<ModelActionInfo>> addedDefaultActions = addDefaultAction(modelInfos);// 追加系统预置的 action
         addedDefaultActions.forEach((modelName, addedModelActions) -> {
             ModelBase[] findModelBase = new ModelBase[1];
             modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> findModelBase[0] = entry.getKey());
@@ -194,16 +179,16 @@ class DeployerImpl implements Deployer {
         return app;
     }
 
-    private Map<String, List<ModelActionInfo>> addDefaultAction(Map<ModelBase, ModelInfo> modelInfos) {
-        Map<String, List<ModelActionInfo>> addActionToModels = detectActionsToAdd(modelInfos);
+    private Map<String, java.util.List<ModelActionInfo>> addDefaultAction(Map<ModelBase, ModelInfo> modelInfos) {
+        Map<String, java.util.List<ModelActionInfo>> addActionToModels = detectActionsToAdd(modelInfos);
         mergeDefaultActions(modelInfos, addActionToModels);
         return addActionToModels;
     }
 
-    private Map<String, List<ModelActionInfo>> detectActionsToAdd(Map<ModelBase, ModelInfo> forModels) {
-        Map<String, List<ModelActionInfo>> addActionToModels = new HashMap<>();
+    private Map<String, java.util.List<ModelActionInfo>> detectActionsToAdd(Map<ModelBase, ModelInfo> forModels) {
+        Map<String, java.util.List<ModelActionInfo>> addActionToModels = new HashMap<>();
         for (Map.Entry<ModelBase, ModelInfo> entry : forModels.entrySet()) {
-            List<ModelActionInfo> added = new ArrayList<>();
+            java.util.List<ModelActionInfo> added = new ArrayList<>();
             Set<ModelActionInfo> selfActions = Arrays.stream(entry.getValue().getModelActionInfos()).collect(Collectors.toSet());
             ModelBase modelBase = entry.getKey();
             Set<String> detectedActionNames = new HashSet<>();
@@ -231,8 +216,8 @@ class DeployerImpl implements Deployer {
         return addActionToModels;
     }
 
-    private void mergeDefaultActions(Map<ModelBase, ModelInfo> modelInfos, Map<String, List<ModelActionInfo>> addActionToModels) {
-        for (Map.Entry<String, List<ModelActionInfo>> addedModelActionInfos : addActionToModels.entrySet()) {
+    private void mergeDefaultActions(Map<ModelBase, ModelInfo> modelInfos, Map<String, java.util.List<ModelActionInfo>> addActionToModels) {
+        for (Map.Entry<String, java.util.List<ModelActionInfo>> addedModelActionInfos : addActionToModels.entrySet()) {
             ModelInfo addedToModel = null;
             for (ModelInfo value : modelInfos.values()) {
                 if (value.getCode().equals(addedModelActionInfos.getKey())) {
@@ -240,7 +225,7 @@ class DeployerImpl implements Deployer {
                     break;
                 }
             }
-            List<ModelActionInfo> modelActionInfoList = new ArrayList<>(Arrays.asList(Objects.requireNonNull(addedToModel).getModelActionInfos()));
+            java.util.List<ModelActionInfo> modelActionInfoList = new ArrayList<>(Arrays.asList(Objects.requireNonNull(addedToModel).getModelActionInfos()));
             modelActionInfoList.addAll(addedModelActionInfos.getValue());
             addedToModel.setModelActionInfos(modelActionInfoList.toArray(new ModelActionInfo[0]));
         }
@@ -280,11 +265,11 @@ class DeployerImpl implements Deployer {
             } catch (InstantiationException e) {
                 throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
             }
-            if (instance instanceof Listable) {
-                modelInfo.setIdFieldName(((Listable) instance).idFieldName());
+            if (instance instanceof List) {
+                modelInfo.setIdField(((List) instance).idField());
             }
             modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
-            List<ModelActionInfo> methodModelActionInfoMap = parseModelActionInfos(annotation);
+            java.util.List<ModelActionInfo> methodModelActionInfoMap = parseModelActionInfos(annotation);
             modelInfo.setModelActionInfos(methodModelActionInfoMap.toArray(new ModelActionInfo[0]));
             modelInfo.setGroupInfos(getGroupInfo(instance));
             modelInfos.put(instance, modelInfo);
@@ -312,9 +297,9 @@ class DeployerImpl implements Deployer {
     }
 
     private GroupInfo[] getGroupInfo(ModelBase instance) {
-        List<GroupInfo> groupInfoList = new ArrayList<>();
-        if (instance instanceof Showable) {
-            Groups groups = ((Showable) instance).groups();
+        java.util.List<GroupInfo> groupInfoList = new ArrayList<>();
+        if (instance instanceof Grouped) {
+            Groups groups = ((Grouped) instance).groups();
             if (groups != null) {
                 groups.groups().stream().map(GroupInfo::new).forEach(groupInfoList::add);
             }
@@ -323,7 +308,7 @@ class DeployerImpl implements Deployer {
     }
 
     private ModelFieldInfo[] getModelFieldInfos(AnnotationReader annotation, ModelBase instance) {
-        List<ModelFieldInfo> modelFieldInfoList = new ArrayList<>();
+        java.util.List<ModelFieldInfo> modelFieldInfoList = new ArrayList<>();
         annotation.readModelField().forEach((field, modelField) -> {
             ModelFieldInfo modelFieldInfo = new ModelFieldInfo();
             modelFieldInfo.setCode(field.getName());
@@ -331,13 +316,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setInfo(modelField.info());
             modelFieldInfo.setGroup(modelField.group());
             modelFieldInfo.setType(modelField.type().name());
-            List<String> options = new ArrayList<>();
-            for (String option : modelField.options()) {
-                if (Utils.notBlank(option)) {
-                    options.add(option);
-                }
-            }
-            modelFieldInfo.setOptions(options.toArray(new String[0]));
+            modelFieldInfo.setOptions(modelField.options());
             modelFieldInfo.setRefModelClass(modelField.refModel());
             modelFieldInfo.setSeparator(modelField.separator());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
@@ -360,7 +339,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setReadOnly(modelField.readonly());
             modelFieldInfo.setEmail(modelField.email());
             modelFieldInfo.setFilePath(modelField.filePath());
-            modelFieldInfo.setLinkField(modelField.linkModel());
+            modelFieldInfo.setLinkModel(modelField.linkModel());
             modelFieldInfo.setColor(modelField.color());
             modelFieldInfoList.add(modelFieldInfo);
         });
@@ -404,7 +383,7 @@ class DeployerImpl implements Deployer {
         return new AppContextImpl(moduleContext, app);
     }
 
-    private void findLib(File libFile, List<File> libs) throws IOException {
+    private void findLib(File libFile, java.util.List<File> libs) throws IOException {
         libs.add(libFile);
 
         if (libFile.isDirectory()) {
@@ -421,8 +400,8 @@ class DeployerImpl implements Deployer {
         libs.addAll(parseManifestLib(libFile));
     }
 
-    private List<File> parseManifestLib(File appFile) throws IOException {
-        List<File> libs = new ArrayList<>();
+    private java.util.List<File> parseManifestLib(File appFile) throws IOException {
+        java.util.List<File> libs = new ArrayList<>();
         try (JarFile jarFile = new JarFile(appFile)) {
             Manifest manifest = jarFile.getManifest();
             Attributes mainAttributes = manifest.getMainAttributes();
@@ -462,8 +441,8 @@ class DeployerImpl implements Deployer {
         return new URLClassLoader(urls, loaderPolicy.getClassLoader());
     }
 
-    static List<ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
-        List<ModelActionInfo> modelActionInfos = new ArrayList<>();
+    static java.util.List<ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
+        java.util.List<ModelActionInfo> modelActionInfos = new ArrayList<>();
         annotation.readModelAction().forEach((method, modelAction) -> {
             if (modelAction.disable()) return;
             ModelActionInfo modelActionInfo = new ModelActionInfo();
@@ -499,8 +478,7 @@ class DeployerImpl implements Deployer {
 
     private static Set<String> findDefaultActions(Class<?> checkClass) {
         if (!checkClass.isInterface()) return null;
-        if (checkClass.getPackage() != (Addable.class.getPackage())) return null;
-        if (!checkClass.getSimpleName().endsWith("able")) return null;
+        if (checkClass.getPackage() != (Add.class.getPackage())) return null;
 
         Set<String> defaultActions = new HashSet<>();
         for (Field field : checkClass.getDeclaredFields()) {

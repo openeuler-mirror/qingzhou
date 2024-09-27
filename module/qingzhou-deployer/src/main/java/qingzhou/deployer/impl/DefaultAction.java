@@ -3,6 +3,7 @@ package qingzhou.deployer.impl;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
+import qingzhou.api.type.List;
 import qingzhou.api.type.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.DeployerConstants;
@@ -21,7 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 class DefaultAction {
-    static final List<ModelActionInfo> allDefaultActionCache;
+    static final java.util.List<ModelActionInfo> allDefaultActionCache;
 
     static {
         allDefaultActionCache = DeployerImpl.parseModelActionInfos(new AnnotationReader(DefaultAction.class));
@@ -40,31 +41,31 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Showable.ACTION_SHOW, icon = "folder-open-alt",
+            code = Show.ACTION_SHOW, icon = "folder-open-alt",
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request) throws Exception {
-        Map<String, String> data = ((Showable) instance).showData(request.getId());
+        Map<String, String> data = ((Show) instance).showData(request.getId());
         request.getResponse().addData(data);
     }
 
     @ModelAction(
-            code = Listable.ACTION_CONTAINS, icon = "search",
+            code = List.ACTION_CONTAINS, icon = "search",
             name = {"查找", "en:Search"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void contains(Request request) throws Exception {
-        Listable listable = (Listable) instance;
-        request.getResponse().setSuccess(listable.contains(request.getId()));
+        List list = (List) instance;
+        request.getResponse().setSuccess(list.contains(request.getId()));
     }
 
     @ModelAction(
-            code = Listable.ACTION_ALL, icon = "list",
+            code = List.ACTION_ALL, icon = "list",
             name = {"列表所有", "en:List All"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void listAll(Request request) throws Exception {
-        Listable listable = (Listable) instance;
+        List list = (List) instance;
         Map<String, String> query = queryParams(request);
-        String[] ids = listable.allIds(query);
+        String[] ids = list.allIds(query);
         if (ids == null) return;
         for (String id : ids) {
             request.getResponse().addData(new HashMap<String, String>() {{
@@ -74,7 +75,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Listable.ACTION_LIST, icon = "list",
+            code = List.ACTION_LIST, icon = "list",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request) throws Exception {
@@ -82,9 +83,9 @@ class DefaultAction {
 
         Map<String, String> query = queryParams(request);
 
-        Listable listable = (Listable) instance;
-        responseImpl.setTotalSize(listable.totalSize(query));
-        responseImpl.setPageSize(listable.pageSize());
+        List list = (List) instance;
+        responseImpl.setTotalSize(list.totalSize(query));
+        responseImpl.setPageSize(list.pageSize());
 
         int pageNum = 1;
         try {
@@ -94,7 +95,7 @@ class DefaultAction {
         responseImpl.setPageNum(pageNum);
 
         String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFieldsToList();
-        List<Map<String, String>> result = ((Listable) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList, query);
+        java.util.List<Map<String, String>> result = ((List) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList, query);
         if (result == null) return;
         for (Map<String, String> data : result) {
             request.getResponse().addData(data);
@@ -115,7 +116,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Addable.ACTION_CREATE, icon = "plus-sign",
+            code = Add.ACTION_CREATE, icon = "plus-sign",
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) throws Exception {
@@ -124,44 +125,45 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Addable.ACTION_ADD, icon = "save",
+            code = Add.ACTION_ADD, icon = "save",
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
         Map<String, String> properties = prepareParameters(request);
         if (request.getResponse().isSuccess()) {
-            ((Addable) instance).addData(properties);
+            ((Add) instance).addData(properties);
         }
     }
 
     @ModelAction(
-            code = Updatable.ACTION_EDIT, icon = "edit",
+            code = Update.ACTION_EDIT, icon = "edit",
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
-        show(request);
+        Map<String, String> data = ((Update) instance).editData(request.getId());
+        request.getResponse().addData(data);
     }
 
     @ModelAction(
-            code = Updatable.ACTION_UPDATE, icon = "save",
+            code = Update.ACTION_UPDATE, icon = "save",
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
         Map<String, String> properties = prepareParameters(request);
         if (request.getResponse().isSuccess()) {
-            ((Updatable) instance).updateData(properties);
+            ((Update) instance).updateData(properties);
         }
     }
 
     @ModelAction(
-            code = Deletable.ACTION_DELETE, icon = "trash",
+            code = Delete.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) throws Exception {
-        ((Deletable) instance).deleteData(request.getId());
+        ((Delete) instance).deleteData(request.getId());
     }
 
     private Map<String, String> prepareParameters(Request request) {
@@ -176,12 +178,12 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Monitorable.ACTION_MONITOR, icon = "line-chart", order = 2,
+            code = Monitor.ACTION_MONITOR, icon = "line-chart", order = 2,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
     public void monitor(Request request) {
-        Map<String, String> p = ((Monitorable) instance).monitorData(request.getId());
+        Map<String, String> p = ((Monitor) instance).monitorData(request.getId());
         if (p == null || p.isEmpty()) return;
 
         Map<String, String> monitorData = new HashMap<>();
@@ -205,7 +207,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Downloadable.ACTION_FILES, icon = "download-alt",
+            code = Download.ACTION_FILES, icon = "download-alt",
             order = 8,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
@@ -215,7 +217,7 @@ class DefaultAction {
         if (id != null && id.contains("..")) {
             throw new IllegalArgumentException();
         }
-        File fileBase = ((Downloadable) instance).downloadData(id);
+        File fileBase = ((Download) instance).downloadData(id);
         if (!fileBase.isDirectory()) return;
         File[] files = fileBase.listFiles();
         if (files == null) return;
@@ -243,7 +245,7 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Downloadable.ACTION_DOWNLOAD, icon = "download-alt",
+            code = Download.ACTION_DOWNLOAD, icon = "download-alt",
             name = {"下载文件", "en:Download File"},
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files."})
@@ -262,8 +264,8 @@ class DefaultAction {
             }
             if (downloadFileNames.contains("..")) throw new IllegalArgumentException();
 
-            File fileBase = ((Downloadable) instance).downloadData(request.getId());
-            List<File> downloadFiles = new ArrayList<>();
+            File fileBase = ((Download) instance).downloadData(request.getId());
+            java.util.List<File> downloadFiles = new ArrayList<>();
             for (String s : downloadFileNames.split(",")) {
                 downloadFiles.add(FileUtil.newFile(fileBase, s));//防止路径穿越：FileUtil.newFile
             }
@@ -327,7 +329,7 @@ class DefaultAction {
     }
 
     // 为支持大文件续传，下载必需有 key
-    private String buildDownloadKey(List<File> downloadFiles, File keyDir) throws IOException {
+    private String buildDownloadKey(java.util.List<File> downloadFiles, File keyDir) throws IOException {
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
         String keySP = "-";
 

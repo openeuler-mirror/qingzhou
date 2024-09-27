@@ -3,14 +3,14 @@ package qingzhou.app.model;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.app.AddableModelBase;
+import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
 @Model(code = "post", icon = "stack",
         menu = ExampleMain.SYSTEM_MANAGEMENT, order = 3,
         name = {"岗位", "en:Post"},
         info = {"岗位管理。", "en:Post management."})
-public class Post extends AddableModelBase {
+public class Post extends AddModelBase {
     @ModelField(
             required = true,
             list = true,
@@ -21,28 +21,25 @@ public class Post extends AddableModelBase {
     @ModelField(
             required = true,
             list = true,
-            name = {"岗位编码", "en:Post Code"},
-            info = {"岗位编码。", "en:Post code."})
+            name = {"岗位编码", "en:Post Code"})
     public String postCode;
 
     @ModelField(
             type = FieldType.radio,
             options = {"正常", "停用"},
-            color = {"正常:color-success", "停用:color-danger"},
+            color = {"正常:success", "停用:danger"},
             list = true,
-            name = {"岗位状态", "en:Post Status"},
-            info = {"岗位状态。", "en:Post status."})
+            name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
     @ModelField(
             type = FieldType.textarea,
             list = true,
-            name = {"备注", "en:Notes"},
-            info = {"备注。", "en:Notes."})
+            name = {"备注", "en:Notes"})
     public String notes;
 
     @Override
-    public String idFieldName() {
+    public String idField() {
         return "postCode";
     }
 }

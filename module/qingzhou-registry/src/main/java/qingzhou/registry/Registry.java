@@ -7,8 +7,6 @@ public interface Registry {
 
     void register(String registrationData); // 远程注册，数据为 json 格式
 
-    void removeAppInfo(String appName);
-
     List<String> getAllInstanceNames();
 
     InstanceInfo getInstanceInfo(String instanceName);

@@ -28,15 +28,17 @@ public class ModelFieldInfo {
     private String pattern;
     private String show;
     private String readonly;
-    private String linkField;
+    private String linkModel;
     private String[] color;
 
     public String[] getColor() {
         return color;
     }
+
     public void setColor(String[] color) {
         this.color = color;
     }
+
     public boolean isFilePath() {
         return filePath;
     }
@@ -272,11 +274,11 @@ public class ModelFieldInfo {
         this.email = email;
     }
 
-    public String getLinkField() {
-        return linkField;
+    public String getLinkModel() {
+        return linkModel;
     }
 
-    public void setLinkField(String linkField) {
-        this.linkField = linkField;
+    public void setLinkModel(String linkModel) {
+        this.linkModel = linkModel;
     }
 }
