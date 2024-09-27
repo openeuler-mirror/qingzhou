@@ -73,46 +73,20 @@ class AppContextImpl implements AppContext {
     }
 
     @Override
-    public void addMenu(String name, String[] i18n, String icon, int order,String... parent) {
-        Collection<MenuInfo> menuInfos = this.app.getAppInfo().getMenuInfos();
-        if (menuInfos == null) {
-            menuInfos = new HashSet<>();
-            this.app.getAppInfo().setMenuInfos(menuInfos);
-        }
+    public void addMenu(String name, String[] i18n, String icon, int order, String... parent) {
         MenuInfo newMenuInfo = new MenuInfo(name, i18n, icon, order);
-        if (parent.length == 0) {
-            // 添加到顶级菜单
-            menuInfos.add(newMenuInfo);
-        } else  {
-            // 查找父菜单并添加为子菜单
-            MenuInfo parentMenu = findParentMenu(menuInfos, parent[parent.length - 1]);
-            if (parentMenu != null) {
-                parentMenu.getChildren().add(newMenuInfo);
-            } else {
-                throw new IllegalArgumentException("Parent menu not found");
-            }
+
+        MenuInfo parentMenu = null;
+        if (parent.length > 0) {
+            parentMenu = app.getAppInfo().getMenuInfo(parent[parent.length - 1]);
         }
-//        else {
-//            throw new IllegalArgumentException("Only one parent menu can be specified");
-//        }
-    }
 
-    private MenuInfo findParentMenu(Collection<MenuInfo> menuInfos, String parentName) {
-        for (MenuInfo menuInfo : menuInfos) {
-            if (menuInfo.getName().equals(parentName)) {
-                return menuInfo; // 找到目标父菜单
-            } else if (!menuInfo.getChildren().isEmpty()) {
-                // 递归查找子菜单
-                MenuInfo found = findParentMenu(menuInfo.getChildren(), parentName);
-                if (found != null) {
-                    return found; // 找到目标父菜单
-                }
-            }
+        if (parentMenu != null) {
+            parentMenu.addChild(newMenuInfo);
+        } else {
+            app.getAppInfo().addMenuInfo(newMenuInfo);
         }
-        return null; // 未找到
     }
-
-
 
     @Override
     public <T> T getService(Class<T> clazz) {

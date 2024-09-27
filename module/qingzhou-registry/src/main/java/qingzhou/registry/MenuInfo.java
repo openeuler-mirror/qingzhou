@@ -1,7 +1,7 @@
 package qingzhou.registry;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class MenuInfo {
@@ -9,14 +9,13 @@ public class MenuInfo {
     private String[] i18n;
     private String icon;
     private int order;
-    private List<MenuInfo> children; // 用于存储子菜单
+    private MenuInfo[] children = new MenuInfo[0]; // 子菜单
 
     public MenuInfo(String name, String[] i18n, String icon, int order) {
         this.name = name;
         this.i18n = i18n;
         this.icon = icon;
         this.order = order;
-        this.children = new ArrayList<>(); // 初始化子菜单列表
     }
 
     public String getName() {
@@ -51,8 +50,16 @@ public class MenuInfo {
         this.order = order;
     }
 
-    public List<MenuInfo> getChildren() {
-        return children; // 添加 getter 方法
+    public void addChild(MenuInfo menuInfo) {
+        MenuInfo[] newChildren = new MenuInfo[children.length + 1];
+        System.arraycopy(children, 0, newChildren, 0, children.length);
+        newChildren[children.length] = menuInfo;
+        children = newChildren;
+        Arrays.sort(children, Comparator.comparingInt(MenuInfo::getOrder));
+    }
+
+    public MenuInfo[] getChildren() {
+        return children;
     }
 
     @Override

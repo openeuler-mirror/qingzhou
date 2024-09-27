@@ -44,7 +44,7 @@
 
     PushMenu.prototype.init = function () {
         if (this.options.expandOnHover
-                || ($("body").is(Selector.mini + Selector.layoutFixed))) {
+            || ($("body").is(Selector.mini + Selector.layoutFixed))) {
             this.expandOnHover();
             $("body").addClass(ClassName.expandFeature);
         }
@@ -292,12 +292,12 @@ $(document).ready(function () {
     });
 
     // 响应式小屏模式下，点击完菜单，自动隐藏左侧菜单栏
-    $(".sidebar li a").click(function(){
+    $(".sidebar li a").click(function () {
         if ($(document.body).hasClass("sidebar-open") && $(this).attr("href").indexOf("/") > -1) {
             $(document.body).toggleClass("sidebar-open");
         }
     });
-    $(document.body).click(function(e){
+    $(document.body).click(function (e) {
         if ($(document.body).hasClass("sidebar-open") && !$(e.target).hasClass(".sidebar-toggle") && $(e.target).parents(".sidebar-toggle").length === 0 && !$(e.target).hasClass(".main-sidebar") && $(e.target).parents(".main-sidebar").length === 0) {
             $(document.body).toggleClass("sidebar-open");
         }
@@ -309,7 +309,7 @@ $(document).ready(function () {
         $(".main-body").css({"min-height": "calc(-100px + 100%)", "height": "auto", "top": "100px", "bottom": "100px"});
     }
     //切换主题模式点击事件
-    $("#switch-mode-btn").click(function() {
+    $("#switch-mode-btn").click(function () {
         var icon = $("i", this);
         var $this = this;
         var themeUrl = $(this).attr("themeUrl");
@@ -367,7 +367,7 @@ $(document).ready(function () {
         $(".tab-box>ul>li[fixed='true']").click();
         var lis = $(".sidebar-menu .active", getRestrictedArea());
         lis.removeClass("menu-open active");
-        for(var i = 0; i < lis.length; i++){
+        for (var i = 0; i < lis.length; i++) {
             var uls = lis[i].querySelectorAll('ul');
             for (var j = 0; j < uls.length; j++) {
                 uls[j].style.display = 'none';
@@ -386,6 +386,7 @@ $(document).ready(function () {
         return false;
     });
 });
+
 /**
  * 设置(如绑定事件或设置初始值等) 或 重新设置
  */
@@ -446,7 +447,7 @@ function setOrReset() {
         }
     }
     // markdown 内容展示
-    $(".markedviewText").each(function() {
+    $(".markedviewText").each(function () {
         $(this).prev(".markedview").html(marked.parse($(this).val()));
     });
     // 菜单区域禁止鼠标右键
@@ -465,7 +466,7 @@ function setOrReset() {
                     for (var i = 0; i < arr.length; i++) {
                         var model = arr[i].model, modelAction = arr[i].modelAction,
                             modelDefAction = arr[i].modelDefAction,
-                            modelFieldGroup = arr[i].modelFieldGroup ? arr[i].modelFieldGroup : "otherGroupName",
+                            modelFieldGroup = arr[i].modelFieldGroup,
                             modelField = arr[i].modelField, modelFieldName = arr[i].modelFieldName,
                             modelName = arr[i].modelName;
 
@@ -595,7 +596,7 @@ function gotoTarget(model, action, group, field) {
             }
             $(".nav-tabs a[tabGroup='" + group + "']", getRestrictedArea()).click();
             var count = 12;
-            var interval = window.setInterval(function() {
+            var interval = window.setInterval(function () {
                 if (count > 0) {
                     var targetEle = $("label[for='" + field + "']", getRestrictedArea());
                     if ($(targetEle).length > 0) {
@@ -617,13 +618,14 @@ function gotoTarget(model, action, group, field) {
         }
     }
 };
+
 function shaking(el) {
     var maxDistance = 5; // 抖动偏移距离
     var interval = 12; // 抖动快慢，数字越小越快，太小DOM反应不过来，看不出动画
     var quarterCycle = 36; // 一次完整来回抖动的四分之一周期
     var curDistance = 0;
     var direction = 1;
-    var timer = setInterval(function() {
+    var timer = setInterval(function () {
         if (direction > 0) {
             curDistance++;
             if (curDistance === maxDistance) {
@@ -638,12 +640,13 @@ function shaking(el) {
         el.style.left = curDistance + "px";
         el.style.position = "relative";
     }, interval);
-    setTimeout(function() {
+    setTimeout(function () {
         clearInterval(timer);
         el.style.left = "0 px";
         el.style.position = "";
     }, maxDistance * interval * quarterCycle);
 }
+
 /**************************************** form.jsp - start *************************************************/
 function bindEventForFormPage() {
     // 返回按钮
@@ -662,16 +665,21 @@ function bindEventForFormPage() {
         }
         var imgSrc = keyUrl + urlSP + new Date().getTime();// 有时候会缓存二维码，刷不到最新的
         var html = "<div style='text-align:center;'>"
-                + "<img src='" + imgSrc + "' style='width:200px; height:200px; margin-top:20px; padding:6px;' onerror='this.src=\"./static/images/data-empty.svg\"'>"
-                + "<br><div class=\"input-control\" style=\"width: 200px;text-align: center;margin-left: 26%;\">"
-                + "<input id=\"randCode-OTP\" type=\"text\" class=\"form-control\" placeholder=\"" + getSetting("placeholderOtp") + "\"></div>"
-                + "<label id='verifyCodeOtpError' class=\"tw-error-info\" style=\"position:relative; margin-left:-68px; color:red;\"></label>"
-                + "</div>";
-        openLayer({area: ["450px", "400px"], shadeClose: true, title: getSetting("layerTitleOtp"), content: html, yes: function (index) {
+            + "<img src='" + imgSrc + "' style='width:200px; height:200px; margin-top:20px; padding:6px;' onerror='this.src=\"./static/images/data-empty.svg\"'>"
+            + "<br><div class=\"input-control\" style=\"width: 200px;text-align: center;margin-left: 26%;\">"
+            + "<input id=\"randCode-OTP\" type=\"text\" class=\"form-control\" placeholder=\"" + getSetting("placeholderOtp") + "\"></div>"
+            + "<label id='verifyCodeOtpError' class=\"tw-error-info\" style=\"position:relative; margin-left:-68px; color:red;\"></label>"
+            + "</div>";
+        openLayer({
+            area: ["450px", "400px"],
+            shadeClose: true,
+            title: getSetting("layerTitleOtp"),
+            content: html,
+            yes: function (index) {
                 var params = {};
                 params[getSetting("checkOtp")] = $.trim($("#randCode-OTP").val());
                 $.ajax({
-                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/"))  + "/confirmKey").replace("/image/", "/json/"),
+                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/")) + "/confirmKey").replace("/image/", "/json/"),
                     async: true,
                     data: params,
                     dataType: "json",
@@ -687,7 +695,8 @@ function bindEventForFormPage() {
                         handleError(e);
                     }
                 });
-            }});
+            }
+        });
         return false;
     });
 
@@ -708,6 +717,7 @@ function bindEventForFormPage() {
         showMeridian: 1
     });
 };
+
 function bindFormEvent() {
     $("form[name='pageForm'][loaded!='true']").each(function () {
         var thisForm = $(this);
@@ -945,6 +955,7 @@ function dragable() {
         e.preventDefault();
     });
 };
+
 /**************************************** sortable.jsp - end *************************************************/
 /**************************************** kv.jsp - start *************************************************/
 function addDictRow(alink, readonly) {
@@ -1073,7 +1084,7 @@ function bindEventForListPage() {
     });
     // 集群实例点击[管理]，打开新 Tab 并切换
     $("table a[action-name='" + getSetting("actionName_target") + "']")
-    .unbind("click").bind("click", function (e) {
+        .unbind("click").bind("click", function (e) {
         e.preventDefault();
         var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");
         if (tab.length > 0) {
@@ -1081,13 +1092,13 @@ function bindEventForListPage() {
             return;
         }
         var url = $(this).attr("href");
-        return initializeManager($(this),url);
+        return initializeManager($(this), url);
     });
 
     // 列表页及form页面下载(日志、快照等)
     $("table a[action-name='" + getSetting("filesName") + "'], a[btn-type='" + getSetting("filesName") + "']").unbind("click").bind("click", function (e) {
         e.preventDefault();
-        if($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0){
+        if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
             downloadFiles($(this).attr("href"), $(this).attr("downloadfile"));
         }
         return false;
@@ -1097,17 +1108,17 @@ function bindEventForListPage() {
     tw.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", true, true);
 };
 
-function initializeManager(element,url){
+function initializeManager(element, url) {
     var tabHtml = "<li id=\"" + new Date().getTime() + "\" bind-id=\"" + element.attr("data-id") + "\">"
-            + "<a href=\"javascript:void(0);\" href-attr=\"" + url + "\" rel=\"noopener noreferrer\">"
-            + "    <i class=\"icon icon-" + element.attr("model-icon") + "\"></i>"
-            + "    <label>" + element.attr("data-name") + "</label>"
-            + "    <span class=\"noticeNumber label label-badge\" style=\"display:none;\">0</span>"
-            + "</a>"
-            + "<label class=\"close\">"
-            + "    <i class=\"icon icon-times\"></i>"
-            + "</label>"
-            + "</li>";
+        + "<a href=\"javascript:void(0);\" href-attr=\"" + url + "\" rel=\"noopener noreferrer\">"
+        + "    <i class=\"icon icon-" + element.attr("model-icon") + "\"></i>"
+        + "    <label>" + element.attr("data-name") + "</label>"
+        + "    <span class=\"noticeNumber label label-badge\" style=\"display:none;\">0</span>"
+        + "</a>"
+        + "<label class=\"close\">"
+        + "    <i class=\"icon icon-times\"></i>"
+        + "</label>"
+        + "</li>";
     $(".tab-box>ul").append(tabHtml);
     $(".content-box>ul").append("<li></li>");
     bindTabEvent();
@@ -1235,6 +1246,7 @@ function downloadFiles(fileListUrl, downloadUrl) {
         }
     });
 };
+
 /**************************************** list.jsp - end *************************************************/
 
 /**************************************** monitor.jsp - start *************************************************/
@@ -1247,10 +1259,10 @@ function initMonitorPage() {
         var chartOption = defaultOption(infoKeys);
         var myChart = echarts.init($("div.block-bg[container='chart']", this)[0]);
         myChart.renderFlag = true;
-        myChart.on('mouseover', { seriesType: 'line' }, function () {
+        myChart.on('mouseover', {seriesType: 'line'}, function () {
             myChart.renderFlag = false;
         });
-        myChart.on('mouseout', { seriesType: 'line' }, function () {
+        myChart.on('mouseout', {seriesType: 'line'}, function () {
             myChart.renderFlag = true;
         });
         myChart.legendselect = {};
@@ -1289,8 +1301,9 @@ function defaultOption(infoKv) {
         tooltip: {
             trigger: 'axis',
             confine: true,
-            formatter:function(params){
+            formatter: function (params) {
                 let res = params[0].axisValueLabel;
+
                 function getMaxSeriesNameWidth(params) {//找到内容最长的，给所有属性设置固定width，避免第二列与第一列数据重叠
                     let maxWidth = 0;
                     for (let i = 0; i < params.length; i++) {
@@ -1302,21 +1315,23 @@ function defaultOption(infoKv) {
                     }
                     return maxWidth;
                 }
+
                 let maxSeriesNameWidth = getMaxSeriesNameWidth(params);
 
-                function getHtml(param){
-                    let str = '<div style="float: left; width: ' + (maxSeriesNameWidth + 70) + 'px;"><span style="background: '+param.color+'; width: 11px; height: 11px; border-radius: 11px;float: left; margin: 5px 3px;"></span>'+
-                        param.seriesName+':'+param.data+'&emsp;&emsp;</div>';
+                function getHtml(param) {
+                    let str = '<div style="float: left; width: ' + (maxSeriesNameWidth + 70) + 'px;"><span style="background: ' + param.color + '; width: 11px; height: 11px; border-radius: 11px;float: left; margin: 5px 3px;"></span>' +
+                        param.seriesName + ':' + param.data + '&emsp;&emsp;</div>';
                     return str;
                 }
-                let flag=false;
+
+                let flag = false;
                 res += '<div style="clear: both">';
                 for (let i = 0; i < params.length; i++) {
                     res += getHtml(params[i]);
-                    if (params.length>11 && i%2==1){
+                    if (params.length > 11 && i % 2 == 1) {
                         res += '</div><div style="clear: both">';
                     }
-                    if (params.length <=11){
+                    if (params.length <= 11) {
                         res += '</div><div style="clear: both">';
                     }
                 }
@@ -1324,8 +1339,9 @@ function defaultOption(infoKv) {
                 return res;
             }
         },
-        legend: {data: [], textStyle: {fontSize: 13}, align: 'auto', top: 30,
-            formatter: function(name) {
+        legend: {
+            data: [], textStyle: {fontSize: 13}, align: 'auto', top: 30,
+            formatter: function (name) {
                 if (infoKv !== undefined && infoKv[name] !== undefined) {
                     return infoKv[name][0];
                 }
@@ -1333,8 +1349,8 @@ function defaultOption(infoKv) {
             },
             tooltip: {
                 show: true,
-                    trigger: "item",
-                    formatter: function(option, a, b, c) {
+                trigger: "item",
+                formatter: function (option, a, b, c) {
                     if (infoKv !== undefined) {
                         for (var k in infoKv) {
                             if (infoKv[k][0] == option.name) {
@@ -1372,6 +1388,7 @@ function defaultOption(infoKv) {
         }
     };
 };
+
 function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, timerFn) {
     $.ajax({
         type: "GET",
@@ -1458,14 +1475,14 @@ function addData(chartObj, option, models, keys, restrictedArea) {
         option.yAxis.minInterval = 1;
     }
     var hiddenFieldValue = $("input[type='hidden'][name='monitorName']").val();
-    if(!option.title || !option.title.text || option.title.text.trim() === ''){
+    if (!option.title || !option.title.text || option.title.text.trim() === '') {
         if (hiddenFieldValue && hiddenFieldValue.trim() !== '') {
             option.title.text = hiddenFieldValue;
         }
     }
     let line_num_each_row = 6;// 图例中每行显示的线条数目
-    this.setpSeriesAndLegend(option,line_num_each_row);
-    this.setGrid(option,line_num_each_row);
+    this.setpSeriesAndLegend(option, line_num_each_row);
+    this.setGrid(option, line_num_each_row);
 
     if (chartObj.renderFlag === undefined || chartObj.renderFlag) {
         if (!$.isEmptyObject(chartObj.legendselect)) {
@@ -1478,7 +1495,7 @@ function addData(chartObj, option, models, keys, restrictedArea) {
     }
 }
 
-function setpSeriesAndLegend(option,line_num_each_row) {
+function setpSeriesAndLegend(option, line_num_each_row) {
     let seriesData = option.series;
 
     let newLegendData = [];
@@ -1506,7 +1523,7 @@ function setpSeriesAndLegend(option,line_num_each_row) {
     option.legend.data = newLegendData;
 }
 
-function setGrid(option,line_num_each_row) {
+function setGrid(option, line_num_each_row) {
     let legendData = option.legend.data;
     let len = legendData.length;
     var bodyWidth = $(document.body).width();
@@ -1569,6 +1586,7 @@ function panelUpdate(monitorData, restrictedArea) {
         }
     });
 };
+
 /**************************************** monitor.jsp - end *************************************************/
 
 /**
@@ -1643,6 +1661,7 @@ function markAnchor(off, image) {
         return false;// 解除在划动过程中鼠标样式改变的BUG
     };
 }
+
 /**
  * 生成随机id
  * @param {type} length

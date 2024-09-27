@@ -1,13 +1,11 @@
 <%@ page pageEncoding="UTF-8" %>
 
-<div class="infoPage">
-    <div class="block-bg">
-        <%
-            List<Map<String, String>> dataList = qzResponse.getDataList();
-            Map<String, String> infoData = dataList.get(0);
-        %>
-        <%@ include file="field.jsp" %>
-    </div>
+<div class="block-bg">
+    <%
+        List<Map<String, String>> dataList = qzResponse.getDataList();
+        Map<String, String> infoData = dataList.get(0);
+    %>
+    <%@ include file="field.jsp" %>
 </div>
 
 <%

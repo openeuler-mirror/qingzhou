@@ -2,7 +2,6 @@ package qingzhou.app.system.service;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.deployer.ActionInvoker;
@@ -20,6 +19,8 @@ import java.util.*;
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
 public class App extends ModelBase implements qingzhou.api.type.List {
+    public static final String instanceSP = ";";
+
     @Override
     public String idField() {
         return "name";
@@ -83,6 +84,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
             type = FieldType.checkbox,
             required = true,
             refModel = Instance.class,
+            separator = App.instanceSP,
             list = true,
             name = {"安装实例", "en:Instance"},
             info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
@@ -115,7 +117,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
             Map<String, String> appMap = new HashMap<>();
             appMap.put(idField(), id);
             appMap.put("path", appInfo.getFilePath());
-            appMap.put("instances", String.join(DeployerConstants.DEFAULT_DATA_SEPARATOR, instances));
+            appMap.put("instances", String.join(App.instanceSP, instances));
             return appMap;
         }
 
@@ -145,7 +147,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     }
 
     @ModelAction(
-            code = Add.ACTION_ADD, icon = "save",
+            code = DeployerConstants.AGENT_INSTALL_APP, icon = "save",
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
@@ -155,7 +157,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     }
 
     @ModelAction(
-            code = Delete.ACTION_DELETE, icon = "trash",
+            code = DeployerConstants.AGENT_UNINSTALL_APP, icon = "trash",
             order = 9,
             batch = true,
             name = {"卸载", "en:UnInstall"},
@@ -174,7 +176,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
         try {
             requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
             List<Response> responseList = Main.getService(ActionInvoker.class)
-                    .invokeOnInstances(request, instances.split(DeployerConstants.DEFAULT_DATA_SEPARATOR));
+                    .invokeOnInstances(request, instances.split(App.instanceSP));
             final StringBuilder[] error = {null};
             responseList.forEach(response -> {
                 if (!response.isSuccess()) {
@@ -182,7 +184,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
                     if (error[0] == null) {
                         error[0] = new StringBuilder();
                     }
-                    error[0].append(response.getMsg());
+                    error[0].append(response.getMsg()).append(" ");
                 }
             });
 

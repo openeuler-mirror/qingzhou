@@ -25,6 +25,8 @@ import java.util.Map;
         info = {"实例是应用部署的载体，为应用提供运行时环境。预置的 " + DeployerConstants.INSTANCE_LOCAL + " 实例表示当前正在访问的服务所在的实例，如集中管理端就运行在此实例上。",
                 "en:An instance is the carrier of application deployment and provides a runtime environment for the application. The provisioned " + DeployerConstants.INSTANCE_LOCAL + " instance indicates the instance where the service is currently accessed, such as the centralized management side running on this instance."})
 public class Instance extends ModelBase implements List, Monitor, Grouped {
+    private static final String ID_KEY = "name";
+
     @ModelField(
             group = group_os,
             required = true,
@@ -196,11 +198,15 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
 
     @Override
     public String idField() {
-        return "name";
+        return ID_KEY;
     }
 
     @Override
     public String[] allIds(Map<String, String> query) {
+        return allInstanceIds(query);
+    }
+
+    public static String[] allInstanceIds(Map<String, String> query) {
         java.util.List<String> ids = new ArrayList<>();
         ids.add(DeployerConstants.INSTANCE_LOCAL);
         Registry registry = Main.getService(Registry.class);
@@ -214,13 +220,13 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
 
     @Override
     public java.util.List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
-        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
+        return ModelUtil.listData(allIds(query), Instance::showData, pageNum, pageSize, showFields);
     }
 
-    public Map<String, String> showData(String id) {
+    private static Map<String, String> showData(String id) {
         if (DeployerConstants.INSTANCE_LOCAL.equals(id)) {
             return new HashMap<String, String>() {{
-                put(idField(), DeployerConstants.INSTANCE_LOCAL);
+                put(ID_KEY, DeployerConstants.INSTANCE_LOCAL);
                 put("host", "localhost");
 
                 Config config = Main.getService(Config.class);
@@ -232,7 +238,7 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
         InstanceInfo instanceInfo = Main.getService(Registry.class).getInstanceInfo(id);
         if (instanceInfo != null) {
             return new HashMap<String, String>() {{
-                put(idField(), instanceInfo.getName());
+                put(ID_KEY, instanceInfo.getName());
                 put("host", instanceInfo.getHost());
                 put("port", String.valueOf(instanceInfo.getPort()));
             }};

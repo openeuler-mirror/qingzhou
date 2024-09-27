@@ -42,12 +42,12 @@ public class Controller implements ModuleActivator {
             @Override
             public void run() {
                 try {
-                    registry.timerCheck(config.getRegistry().getCheckTimeout());
+                    registry.timerCheck(config.getRegistry().getInstanceTimeout());
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }
             }
-        }, 2000, config.getRegistry().getPeriodicCheckInterval());
+        }, 2000, 1000 * config.getRegistry().getInstanceInterval());
     }
 
     @Override

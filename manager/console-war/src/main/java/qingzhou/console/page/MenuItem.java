@@ -1,57 +1,52 @@
 package qingzhou.console.page;
 
+import qingzhou.registry.ModelInfo;
+
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-public class MenuItem {
-    private String menuName = "";
-    private String menuIcon = "";
-    private String menuAction = "#";
-    private String[] i18ns = new String[0];
+class MenuItem {
+    private String name = "";
+    private String icon = "";
+    private String[] i18n = new String[0];
     private final List<MenuItem> children = new ArrayList<>();
-    private int order = 0;
+    private final List<ModelInfo> modelInfos = new ArrayList<>();
 
-    String getMenuName() {
-        return menuName;
+    void addModelInfo(ModelInfo modelInfo) {
+        modelInfos.add(modelInfo);
+        modelInfos.sort(Comparator.comparingInt(ModelInfo::getOrder));
     }
 
-    void setMenuName(String menuName) {
-        this.menuName = menuName;
+    public List<ModelInfo> getModelInfos() {
+        return modelInfos;
     }
 
-    String getMenuIcon() {
-        return menuIcon;
+    String getName() {
+        return name;
     }
 
-    void setMenuIcon(String menuIcon) {
-        this.menuIcon = menuIcon;
+    void setName(String name) {
+        this.name = name;
     }
 
-    String getMenuAction() {
-        return menuAction;
+    String getIcon() {
+        return icon;
     }
 
-    void setMenuAction(String menuAction) {
-        this.menuAction = menuAction;
+    void setIcon(String icon) {
+        this.icon = icon;
     }
 
-    String[] getI18ns() {
-        return i18ns;
+    String[] getI18n() {
+        return i18n;
     }
 
-    void setI18ns(String[] i18ns) {
-        this.i18ns = i18ns;
+    void setI18n(String[] i18n) {
+        this.i18n = i18n;
     }
 
     List<MenuItem> getChildren() {
         return children;
-    }
-
-    int getOrder() {
-        return order;
-    }
-
-    void setOrder(int order) {
-        this.order = order;
     }
 }

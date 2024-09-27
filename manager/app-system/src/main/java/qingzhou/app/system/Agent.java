@@ -1,13 +1,6 @@
 package qingzhou.app.system;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
+import qingzhou.api.*;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
 import qingzhou.crypto.CryptoService;
@@ -19,11 +12,7 @@ import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.RuntimeMXBean;
-import java.lang.management.ThreadMXBean;
+import java.lang.management.*;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -36,24 +25,21 @@ import java.util.Map;
         info = {"", "en:"})
 public class Agent extends ModelBase implements Download {
     @ModelField(
-            show = "upload=true",
-            type = FieldType.file,
+            type = FieldType.file, // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
             name = {"", "en:"},
             info = {"", "en:"})
-    public String file;
+    public String file; // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
 
     @Override
     public void start() {
-        getAppContext().addI18n("app.exists", new String[]{"应用已存在，请更换为其它的应用名后重试",
-                "en:If the application already exists, please change it to another application name and try again"});
-        getAppContext().addI18n("app.not.found", new String[]{"应用文件未找到",
-                "en:The app file was not found"});
-        getAppContext().addI18n("app.type.unknown", new String[]{"应用文件类型无法识别",
-                "en:The app file type is not recognized"});
+        getAppContext().addI18n("file.exists", new String[]{"文件已存在，请更换为其它的文件后重试",
+                "en:The file already exists, please replace it with another file and try again"});
+        getAppContext().addI18n("file.not.found", new String[]{"文件未找到", "en:File not found"});
+        getAppContext().addI18n("file.type.unknown", new String[]{"文件类型无法识别", "en:The file type is not recognized"});
     }
 
     @ModelAction(
-            code = Add.ACTION_ADD,
+            code = DeployerConstants.AGENT_INSTALL_APP,
             name = {"", "en:"},
             info = {"", "en:"})
     public void installApp(Request request) throws Exception {
@@ -63,7 +49,7 @@ public class Agent extends ModelBase implements Download {
         File srcFile = new File(appFile);
         if (!srcFile.exists()) {
             request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(getAppContext().getI18n("app.not.found"));
+            request.getResponse().setMsg(getAppContext().getI18n("file.not.found"));
             return;
         }
 
@@ -84,7 +70,7 @@ public class Agent extends ModelBase implements Download {
             FileUtil.unZipToDir(srcFile, app);
         } else {
             request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(getAppContext().getI18n("app.type.unknown"));
+            request.getResponse().setMsg(getAppContext().getI18n("file.type.unknown"));
             return;
         }
 
@@ -92,7 +78,7 @@ public class Agent extends ModelBase implements Download {
         App deployerApp = deployer.getApp(app.getName());
         if (deployerApp != null) {
             request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(getAppContext().getI18n("app.exists"));
+            request.getResponse().setMsg(getAppContext().getI18n("file.exists"));
             return;
         }
 
@@ -105,7 +91,7 @@ public class Agent extends ModelBase implements Download {
     }
 
     @ModelAction(
-            code = Delete.ACTION_DELETE,
+            code = DeployerConstants.AGENT_UNINSTALL_APP,
             name = {"", "en:"},
             info = {"", "en:"})
     public void uninstallApp(Request request) throws Exception {
@@ -211,5 +197,51 @@ public class Agent extends ModelBase implements Download {
 
         File file = FileUtil.newFile(getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, fileId, fileName);
         FileUtil.writeFile(file, fileBytes, true);
+    }
+
+    private File getLibBase() {
+        return Main.getService(ModuleContext.class).getLibDir().getParentFile();
+    }
+
+    @ModelAction(
+            code = DeployerConstants.AGENT_INSTALL_VERSION,
+            name = {"", "en:"},
+            info = {"", "en:"})
+    public void installVersion(Request request) throws Exception {
+        String appFile = Boolean.parseBoolean(request.getParameter("upload"))
+                ? request.getParameter("file")
+                : request.getParameter("path");
+        File srcFile = new File(appFile);
+        if (!srcFile.exists()) {
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(getAppContext().getI18n("file.not.found"));
+            return;
+        }
+
+        String fileName = srcFile.getName();
+        if (!fileName.startsWith("version")
+                || !fileName.toLowerCase().endsWith(".zip")) {
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(getAppContext().getI18n("file.type.unknown"));
+            return;
+        }
+
+        File targetFile = new File(getLibBase(), fileName);
+        if (targetFile.exists()) {
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(getAppContext().getI18n("file.exists"));
+            return;
+        }
+
+        FileUtil.copyFileOrDirectory(srcFile, targetFile);
+    }
+
+    @ModelAction(
+            code = DeployerConstants.AGENT_UNINSTALL_VERSION,
+            name = {"", "en:"},
+            info = {"", "en:"})
+    public void deleteVersion(Request request) throws Exception {
+        FileUtil.forceDelete(new File(getLibBase(), request.getId()));
+        FileUtil.forceDelete(new File(getLibBase(), request.getId() + ".zip"));
     }
 }

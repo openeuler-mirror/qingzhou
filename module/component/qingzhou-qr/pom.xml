@@ -6,8 +6,9 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>component</artifactId>
-        <version>x</version>
+        <version>1.3.0</version>
     </parent>
+
     <artifactId>qingzhou-qr</artifactId>
 
     <dependencies>

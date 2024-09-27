@@ -145,7 +145,7 @@ class DeployerImpl implements Deployer {
         appInfo.setName(appDir.getName());
         appInfo.setFilePath(appDir.getAbsolutePath());
         Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader);
-        appInfo.setModelInfos(modelInfos.values());
+        modelInfos.values().forEach(appInfo::addModelInfo);
         app.setAppInfo(appInfo);
 
         AppContextImpl appContext = buildAppContext(app);
