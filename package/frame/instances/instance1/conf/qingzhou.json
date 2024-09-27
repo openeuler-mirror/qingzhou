@@ -92,6 +92,10 @@
       "agentPort": "5000",
       "agentKey": "",
       "attachments": {}
+    },
+    "registry": {
+      "checkTimeout": "30000",
+      "periodicCheckInterval": "2000"
     }
   }
 }

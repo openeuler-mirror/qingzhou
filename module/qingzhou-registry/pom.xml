@@ -32,6 +32,12 @@
             <artifactId>qingzhou-crypto</artifactId>
             <version>x</version>
         </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-config</artifactId>
+            <version>x</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
 </project>
