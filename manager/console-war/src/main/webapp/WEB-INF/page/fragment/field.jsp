@@ -2,7 +2,7 @@
 
 <div class="infoPage">
 	<%
-		Map<String,List<String>> groupData = new HashMap<>();
+		Map<String,List<String>> groupData = new LinkedHashMap<>();
 		for (String fieldName : infoData.keySet()) {
 			ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
 			List<String> fieldNames = groupData.get(modelField.getGroup());
