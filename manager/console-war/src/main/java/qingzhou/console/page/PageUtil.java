@@ -144,6 +144,15 @@ public class PageUtil {
 
         return newMenu; // 返回新创建的菜单项
     }
+    private static void Menusort(List<MenuItem> menuList) {
+        menuList.sort(Comparator.comparingInt(MenuItem::getOrder));
+        for (MenuItem menuItem : menuList) {
+            if (!menuItem.getChildren().isEmpty()){
+                Menusort(menuItem.getChildren());
+            }
+        }
+
+    }
     public static List<MenuItem> getAppMenuList(Request request) {
         List<MenuItem> menus = new ArrayList<>();
         AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
@@ -208,8 +217,8 @@ public class PageUtil {
             }
         });
 
-        // 对顶级菜单进行排序
-        menus.sort(Comparator.comparingInt(MenuItem::getOrder));
+        // 对各级菜单进行排序
+        Menusort(menus);
 
         return menus;
     }
