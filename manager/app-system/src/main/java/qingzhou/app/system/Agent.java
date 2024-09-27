@@ -1,10 +1,15 @@
 package qingzhou.app.system;
 
-import qingzhou.api.*;
-import qingzhou.api.type.Addable;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Downloadable;
-import qingzhou.api.type.Monitorable;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Monitor;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.App;
 import qingzhou.deployer.Deployer;
@@ -14,7 +19,11 @@ import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,7 +34,7 @@ import java.util.Map;
         hidden = true,
         name = {"实例代理", "en:Agent"},
         info = {"", "en:"})
-public class Agent extends ModelBase implements Downloadable {
+public class Agent extends ModelBase implements Download {
     @ModelField(
             show = "upload=true",
             type = FieldType.file,
@@ -44,7 +53,7 @@ public class Agent extends ModelBase implements Downloadable {
     }
 
     @ModelAction(
-            code = Addable.ACTION_ADD,
+            code = Add.ACTION_ADD,
             name = {"", "en:"},
             info = {"", "en:"})
     public void installApp(Request request) throws Exception {
@@ -96,7 +105,7 @@ public class Agent extends ModelBase implements Downloadable {
     }
 
     @ModelAction(
-            code = Deletable.ACTION_DELETE,
+            code = Delete.ACTION_DELETE,
             name = {"", "en:"},
             info = {"", "en:"})
     public void uninstallApp(Request request) throws Exception {
@@ -114,7 +123,7 @@ public class Agent extends ModelBase implements Downloadable {
     }
 
     @ModelAction(
-            code = Monitorable.ACTION_MONITOR,
+            code = Monitor.ACTION_MONITOR,
             name = {"", "en:"},
             info = {"", "en:"})
     public void monitor(Request request) {

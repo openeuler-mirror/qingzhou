@@ -184,14 +184,15 @@ class ActionInvokerImpl implements ActionInvoker {
         App deployerApp = deployer.getApp(app);
         if (deployerApp != null) {
             instances.add(DeployerConstants.INSTANCE_LOCAL);
-        } else {
-            registry.getAllInstanceNames().forEach(s -> {
-                InstanceInfo instanceInfo = registry.getInstanceInfo(s);
-                for (AppInfo appInfo : instanceInfo.getAppInfos()) {
-                    if (appInfo.getName().equals(app)) instances.add(s);
-                }
-            });
         }
+
+        registry.getAllInstanceNames().forEach(s -> {
+            InstanceInfo instanceInfo = registry.getInstanceInfo(s);
+            for (AppInfo appInfo : instanceInfo.getAppInfos()) {
+                if (appInfo.getName().equals(app)) instances.add(s);
+            }
+        });
+
         return instances;
     }
 }

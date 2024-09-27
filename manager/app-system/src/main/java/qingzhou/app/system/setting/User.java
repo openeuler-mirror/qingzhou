@@ -1,9 +1,10 @@
 package qingzhou.app.system.setting;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Addable;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Updatable;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.General;
+import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
@@ -20,19 +21,19 @@ import java.util.regex.Pattern;
         menu = Main.SETTING_MENU, order = 1,
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
-public class User extends ModelBase implements Addable {
+public class User extends ModelBase implements General {
     static final String idKey = "name";
     static final String PASSWORD_FLAG = "***************";
 
     @Override
-    public String idFieldName() {
+    public String idField() {
         return idKey;
     }
 
     @Override
     public String[] allIds(Map<String, String> query) {
         return Arrays.stream(Main.getService(Config.class).getConsole().getUser())
-                .filter(user -> ModelUtil.query(query, () -> Utils.getPropertiesFromObj(user)))
+                .filter(user -> ModelUtil.query(query, () -> ModelUtil.getPropertiesFromObj(user)))
                 .map(qingzhou.config.User::getName)
                 .toArray(String[]::new);
     }
@@ -152,7 +153,7 @@ public class User extends ModelBase implements Addable {
         insertPasswordModifiedTime(data);
 
         qingzhou.config.User u = new qingzhou.config.User();
-        Utils.setPropertiesToObj(u, data);
+        ModelUtil.setPropertiesToObj(u, data);
         Main.getService(Config.class).addUser(u);
     }
 
@@ -200,7 +201,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = Addable.ACTION_ADD,
+            code = Add.ACTION_ADD,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
@@ -215,7 +216,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = Deletable.ACTION_DELETE, icon = "trash",
+            code = Delete.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
             show = "name!=qingzhou",
@@ -227,7 +228,7 @@ public class User extends ModelBase implements Addable {
     }
 
     @ModelAction(
-            code = Updatable.ACTION_UPDATE,
+            code = Update.ACTION_UPDATE,
             name = {"更新", "en:Update"},
             info = {"更新账户信息。",
                     "en:Update your account information."})
@@ -266,7 +267,7 @@ public class User extends ModelBase implements Addable {
     static Map<String, String> showDataForUser(String userId) {
         for (qingzhou.config.User user : Main.getService(Config.class).getConsole().getUser()) {
             if (user.getName().equals(userId)) {
-                Map<String, String> data = Utils.getPropertiesFromObj(user);
+                Map<String, String> data = ModelUtil.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
                 String digestAlg = passwords[0];
                 int saltLength = Integer.parseInt(passwords[1]);
@@ -288,7 +289,7 @@ public class User extends ModelBase implements Addable {
         if (PASSWORD_FLAG.equals(data.get("password"))) {
             data.remove("password");
         }
-        Utils.setPropertiesToObj(user, data);
+        ModelUtil.setPropertiesToObj(user, data);
         config.addUser(user);
     }
 

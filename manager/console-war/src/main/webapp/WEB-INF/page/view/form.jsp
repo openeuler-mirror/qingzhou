@@ -2,10 +2,10 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-    boolean isEdit = Objects.equals(Updatable.ACTION_EDIT, qzAction);
-    String submitActionName = isEdit ? Updatable.ACTION_UPDATE : Addable.ACTION_ADD;
-    List<String> passwordFields = new ArrayList<>();
-    String idFieldName = modelInfo.getIdFieldName();
+    boolean isEdit = Objects.equals(Update.ACTION_EDIT, qzAction);
+    String submitActionName = isEdit ? Update.ACTION_UPDATE : Add.ACTION_ADD;
+    java.util.List<String> passwordFields = new ArrayList<>();
+    String idField = modelInfo.getIdField();
 %>
 
 <%-- <div class="bodyDiv"> --%>
@@ -16,8 +16,13 @@
       action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
     <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
         <%
-            List<Map<String, String>> models = qzResponse.getDataList();
-            Map<String, String> modelData = models.get(0);
+            java.util.List<Map<String, String>> models = qzResponse.getDataList();
+            Map<String, String> modelData;
+            if (!models.isEmpty()) {
+                modelData = models.get(0);
+            } else {
+                modelData = new HashMap<>();
+            }
             Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedField();
             Set<String> groups = formGroup.keySet();
             long suffixId = System.currentTimeMillis();
@@ -68,7 +73,7 @@
                         String readonly = "";
                         if (!modelField.isEditable() && isEdit) {
                             readonly = "readonly";
-                        } else if (fieldName.equals(idFieldName)) {
+                        } else if (fieldName.equals(idField)) {
                             if (isEdit) {
                                 readonly = "readonly";
                             }
@@ -79,13 +84,13 @@
                             }
                         }
 
-                        boolean required = fieldName.equals(idFieldName) || modelField.isRequired();
+                        boolean required = fieldName.equals(idField) || modelField.isRequired();
 
                         String fieldValue = modelData.get(fieldName);
                         if (fieldValue == null) {
                             fieldValue = "";
                         }
-                        List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
+                        java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
                 %>
                 <div class="form-group" id="form-item-<%=fieldName%>">
                     <label for="<%=fieldName%>" class="col-sm-4">
@@ -233,9 +238,9 @@
             <%
                 }
 
-                if (SecurityController.isActionShow(qzApp, qzModel, Listable.ACTION_LIST, modelData, currentUser)) {
+                if (SecurityController.isActionShow(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, modelData, currentUser)) {
             %>
-            <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Listable.ACTION_LIST)%>"
+            <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, qingzhou.api.type.List.ACTION_LIST)%>"
                btn-type="goback" class="btn">
                 <%=I18n.getKeyI18n("page.return")%>
             </a>
@@ -251,16 +256,16 @@
             <%
                 }
 
-                if (SecurityController.isActionShow(qzApp, qzModel, Downloadable.ACTION_DOWNLOAD, modelData, currentUser)) {
+                if (SecurityController.isActionShow(qzApp, qzModel, Download.ACTION_DOWNLOAD, modelData, currentUser)) {
             %>
-            <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Downloadable.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
+            <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, Download.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
                     <%
                         out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
                     %>
-               data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Downloadable.ACTION_FILES)%>'
+               data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Download.ACTION_FILES)%>'
                data-tip-arrow="top"
-               btn-type="<%=Downloadable.ACTION_FILES%>" class="btn tooltips">
-                <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Downloadable.ACTION_FILES)%>
+               btn-type="<%=Download.ACTION_FILES%>" class="btn tooltips">
+                <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Download.ACTION_FILES)%>
             </a>
             <%
                 }

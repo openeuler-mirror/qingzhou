@@ -4,24 +4,24 @@ import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Updatable;
+import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
+import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 
 import java.util.Map;
 
-@Model(code = "jmx", icon = "exchange",
-        menu = Main.SETTING_MENU, order = 4,
-        entrance = Updatable.ACTION_EDIT,
+@Model(code = "jmx", icon = "coffee",
+        menu = Main.SETTING_MENU, order = 3,
+        entrance = Update.ACTION_EDIT,
         name = {"JMX", "en:JMX"},
         info = {"JMX 是 Java Management Extensions（Java管理扩展） 的缩写，它是 Java 平台上用于管理和监控应用程序、系统和网络资源的一种标准化的管理和监控框架。JMX 提供了一种标准的方式，通过这种方式，开发人员可以暴露应用程序中的各种管理和监控信息，然后可以使用 JMX 客户端工具或应用程序来访问和操作这些信息。开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 QingZhou 平台。",
                 "en:JMX is an abbreviation for Java Management Extensions, which is a standardized management and monitoring framework for managing and monitoring applications, systems, and network resources on the Java platform. JMX provides a standard way for developers to expose various administrative and monitoring information in their applications, which can then be accessed and manipulated using JMX client tools or applications. After the JMX interface service is enabled, clients can manage the QingZhou platform through the java jmx protocol."})
-public class Jmx extends ModelBase implements Updatable {
+public class Jmx extends ModelBase implements Update {
     @ModelField(
             type = FieldType.bool,
             name = {"启用", "en:Enabled"},
@@ -71,19 +71,19 @@ public class Jmx extends ModelBase implements Updatable {
     }
 
     @Override
-    public void updateData(Map<String, String> data) throws Exception {
+    public Map<String, String> editData(String id) {
         Config config = Main.getService(Config.class);
         qingzhou.config.Jmx jmx = config.getConsole().getJmx();
-        Utils.setPropertiesToObj(jmx, data);
-        doJmxService(jmx); // 生效 jmx 服务
-        config.setJmx(jmx); // 最后没问题再写入配置文件
+        return ModelUtil.getPropertiesFromObj(jmx);
     }
 
     @Override
-    public Map<String, String> showData(String id) {
+    public void updateData(Map<String, String> data) throws Exception {
         Config config = Main.getService(Config.class);
         qingzhou.config.Jmx jmx = config.getConsole().getJmx();
-        return Utils.getPropertiesFromObj(jmx);
+        ModelUtil.setPropertiesToObj(jmx, data);
+        doJmxService(jmx); // 生效 jmx 服务
+        config.setJmx(jmx); // 最后没问题再写入配置文件
     }
 
     private void doJmxService(qingzhou.config.Jmx jmx) throws Exception {

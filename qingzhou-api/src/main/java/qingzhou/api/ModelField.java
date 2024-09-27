@@ -20,7 +20,15 @@ public @interface ModelField {
 
     boolean required() default false;
 
-    String[] options() default ""; // 字段的取值范围，如果设置了 refModel 此值将被忽略
+    String show() default ""; // 表单元素级联控制显示/隐藏的事件绑定
+
+    String readonly() default ""; // 表单元素级联控制只读的事件绑定
+
+    boolean createable() default true; // 允许创建时指定值
+
+    boolean editable() default true; // 允许编辑此字段
+
+    String[] options() default {}; // 字段的取值范围，如果设置了 refModel 此值将被忽略
 
     Class<? extends ModelBase> refModel() default ModelBase.class; // 使用指定的模块的所有数据id作为字段的取值范围
 
@@ -48,19 +56,22 @@ public @interface ModelField {
 
     boolean filePath() default false;
 
+    boolean list() default false; // 是否显示在列表中。
+
+    /**
+     * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
+     */
+    String linkModel() default "";
+
+    /**
+     * 用于样式转换，形式：{"当前字段值:color-success", "当前字段值:color-default"}
+     * color-success(绿色)、color-primary(蓝色)、color-default(灰色)、color-warning(黄色)、color-danger(浅红色)、color-info(深红色)
+     */
+    String[] color() default {};
+
     boolean monitor() default false; // 该属性为监视类型，而非表单项
 
     boolean numeric() default false;  // 该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
-
-    boolean list() default false; // 是否显示在列表中。
-
-    boolean createable() default true; // 允许创建时指定值
-
-    boolean editable() default true; // 允许编辑此字段
-
-    String show() default ""; // 表单元素级联控制显示/隐藏的事件绑定
-
-    String readonly() default ""; // 表单元素级联控制只读的事件绑定
 
     /**
      * 获取字段的国际化名称数组，用于多语言环境下展示在用户界面。
@@ -70,5 +81,5 @@ public @interface ModelField {
     /**
      * 获取字段的国际化描述信息数组，用于提供字段的详细说明信息。
      */
-    String[] info();
+    String[] info() default {};
 }

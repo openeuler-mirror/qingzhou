@@ -6,7 +6,7 @@ import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.type.Listable;
+import qingzhou.api.type.List;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.config.Security;
@@ -36,7 +36,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
@@ -101,8 +100,8 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return null;
     }
 
-    private static List<String> getAllIds(String app, String model, ModelFieldInfo fieldInfo) {
-        List<String> idList = new ArrayList<>();
+    private static java.util.List<String> getAllIds(String app, String model, ModelFieldInfo fieldInfo) {
+        java.util.List<String> idList = new ArrayList<>();
 
         if (!fieldInfo.isRequired()) {
             idList.add("");
@@ -111,7 +110,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         RequestImpl req = new RequestImpl();
         req.setAppName(app);
         req.setModelName(model);
-        req.setActionName(Listable.ACTION_ALL);
+        req.setActionName(List.ACTION_ALL);
         Response res = getService(ActionInvoker.class).invokeSingle(req); // 续传
         if (res.isSuccess()) {
             for (Map<String, String> map : res.getDataList()) {

@@ -4,6 +4,7 @@ import qingzhou.config.Agent;
 import qingzhou.config.Config;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
+import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -35,21 +36,26 @@ public class Controller implements ModuleActivator {
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
         Agent agent = config.getAgent();
-        if (agent == null) return;
+        if (agent == null || !agent.isEnabled()) return;
+
         String agentHost = getAgentHost(agent);
         int agentPort = agent.getAgentPort();
         String agentKey = getAgentKey(agent);
         Cipher agentCipher = cryptoService.getCipher(agentKey);
 
+        Heartbeat heartbeat = new Heartbeat(agentHost, agentPort, agentKey, config, json, deployer, logger, cryptoService, http);
         sequence = new ProcessSequence(
+                () -> deployer.addAppListener(new AppListenerImpl(heartbeat)),
                 new qingzhou.agent.impl.Service(agentHost, agentPort, agentCipher, config, http, logger, json, deployer),
-                new Heartbeat(agentHost, agentPort, agentKey, config, json, deployer, logger, cryptoService, http)
+                heartbeat
         );
         sequence.exec();
     }
 
     @Override
     public void stop() {
+        if (sequence == null) return;
+
         sequence.undo();
     }
 
@@ -68,5 +74,23 @@ public class Controller implements ModuleActivator {
         return agent.getAgentKey() == null || agent.getAgentKey().isEmpty()
                 ? cryptoService.generateKey()
                 : agent.getAgentKey();
+    }
+
+    private static class AppListenerImpl implements AppListener {
+        final Heartbeat heartbeat;
+
+        AppListenerImpl(Heartbeat heartbeat) {
+            this.heartbeat = heartbeat;
+        }
+
+        @Override
+        public void onInstalled(String appName) {
+            heartbeat.register();
+        }
+
+        @Override
+        public void onUninstalled(String appName) {
+            heartbeat.register();
+        }
     }
 }

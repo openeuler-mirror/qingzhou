@@ -1,9 +1,8 @@
 package qingzhou.app.system.service;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Addable;
-import qingzhou.api.type.Deletable;
-import qingzhou.api.type.Listable;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.deployer.ActionInvoker;
@@ -20,9 +19,9 @@ import java.util.*;
         name = {"应用", "en:App"},
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
-public class App extends ModelBase implements Listable {
+public class App extends ModelBase implements qingzhou.api.type.List {
     @Override
-    public String idFieldName() {
+    public String idField() {
         return "name";
     }
 
@@ -94,7 +93,6 @@ public class App extends ModelBase implements Listable {
         getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
     }
 
-    @Override
     public Map<String, String> showData(String id) {
         AppInfo appInfo = null;
         List<String> instances = new ArrayList<>();
@@ -115,7 +113,7 @@ public class App extends ModelBase implements Listable {
 
         if (appInfo != null) {
             Map<String, String> appMap = new HashMap<>();
-            appMap.put(idFieldName(), id);
+            appMap.put(idField(), id);
             appMap.put("path", appInfo.getFilePath());
             appMap.put("instances", String.join(DeployerConstants.DEFAULT_DATA_SEPARATOR, instances));
             return appMap;
@@ -138,7 +136,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = Addable.ACTION_CREATE, icon = "plus-sign",
+            code = Add.ACTION_CREATE, icon = "plus-sign",
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
@@ -147,7 +145,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = Addable.ACTION_ADD, icon = "save",
+            code = Add.ACTION_ADD, icon = "save",
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
@@ -157,7 +155,7 @@ public class App extends ModelBase implements Listable {
     }
 
     @ModelAction(
-            code = Deletable.ACTION_DELETE, icon = "trash",
+            code = Delete.ACTION_DELETE, icon = "trash",
             order = 9,
             batch = true,
             name = {"卸载", "en:UnInstall"},

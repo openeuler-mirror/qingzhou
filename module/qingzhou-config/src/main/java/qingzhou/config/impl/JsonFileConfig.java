@@ -61,23 +61,13 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
+    public void setWeb(Web web) throws Exception {
+        writeJson(web, false, "module", "console", "web");
+    }
+
+    @Override
     public void setJmx(Jmx jmx) throws Exception {
         writeJson(jmx, false, "module", "console", "jmx");
-    }
-
-    @Override
-    public void setServletProperties(Properties properties) throws Exception {
-        writeJson(properties, false, "module", "console", "servletProperties");
-    }
-
-    @Override
-    public void setContextRoot(String contextRoot) throws Exception {
-        writeJson(contextRoot, "contextRoot", "module", "console");
-    }
-
-    @Override
-    public void setConsolePort(String port) throws Exception {
-        writeJson(port, "port", "module", "console");
     }
 
     @Override
@@ -93,29 +83,21 @@ public class JsonFileConfig implements Config {
     public void deleteJson(String idKey, String idVal, String... position) throws IOException {
         String jsonAll = FileUtil.fileToString(jsonFile);
         String result = json.deleteJson(jsonAll,
-                p -> p.getProperty(idKey).equals(idVal),
+                p -> p.get(idKey).equals(idVal),
                 position);
         writeFile(result);
     }
 
     private void writeJson(Object obj, boolean isInArray, String... position) throws Exception {
-        Properties properties = this.json.fromJson(this.json.toJson(obj), Properties.class);
+        Properties toJson = this.json.fromJson(this.json.toJson(obj), Properties.class);
 
         String result;
         String json = FileUtil.fileToString(jsonFile);
         if (isInArray) {
-            result = this.json.addJson(json, properties, position);
+            result = this.json.addJson(json, toJson, position);
         } else {
-            result = this.json.setJson(json, properties, position);
+            result = this.json.setJson(json, toJson, position);
         }
-
-        writeFile(result);
-    }
-
-    private void writeJson(String value, String key, String... position) throws Exception {
-        String result;
-        String json = FileUtil.fileToString(jsonFile);
-        result = this.json.setJson(json, value, key, position);
 
         writeFile(result);
     }

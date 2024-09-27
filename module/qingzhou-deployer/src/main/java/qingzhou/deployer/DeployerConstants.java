@@ -13,7 +13,6 @@ public interface DeployerConstants {
     String MODEL_INDEX = "index";
     String MODEL_APP = "app";
     String MODEL_USER = "user";
-    String MODEL_WEB = "web";
     String MODEL_PASSWORD = "password";
 
     // 系统内部 Action
@@ -40,7 +39,7 @@ public interface DeployerConstants {
     String JSON_VIEW = "json";
 
     // 模块间通信参数
-    String JSON_DATA="data";
+    String JSON_DATA = "data";
     String CHECK_FINGERPRINT = "fingerprint";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String FIELD_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";

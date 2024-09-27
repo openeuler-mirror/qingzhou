@@ -245,4 +245,21 @@ public class PageUtil {
         actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
         return actions.toArray(new ModelActionInfo[0]);
     }
+
+    public static String styleFieldValue(String value, ModelFieldInfo fieldInfo) {
+        String[] colorInfo = fieldInfo.getColor();
+        if (colorInfo == null) return value;
+
+        for (String condition : colorInfo) {
+            String[] array = condition.split(":");
+            if (array.length != 2) {
+                continue;
+            }
+            if (array[0].equals(value)) {
+                return "<label class=\"label transformer label-" + array[1] + "\">" + value + "</label>";
+            }
+        }
+
+        return value;
+    }
 }

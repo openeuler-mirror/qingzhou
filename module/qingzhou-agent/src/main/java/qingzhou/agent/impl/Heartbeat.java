@@ -13,6 +13,7 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 class Heartbeat implements Process {
@@ -67,11 +68,7 @@ class Heartbeat implements Process {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                try {
-                    register();
-                } catch (Exception e) {
-                    logger.error("Failed to register with Master: " + e.getMessage());
-                }
+                register();
             }
         }, 2000, 1000 * 2);
     }
@@ -83,7 +80,7 @@ class Heartbeat implements Process {
         }
     }
 
-    private void register() throws Exception {
+    void register() {
         List<AppInfo> appInfos = new ArrayList<>();
         for (String a : deployer.getAllApp()) {
             if (!DeployerConstants.APP_SYSTEM.equals(a)) {
@@ -106,7 +103,13 @@ class Heartbeat implements Process {
 
         boolean registered = false;
         if (response != null && response.getResponseCode() == 200) {
-            Map resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
+            Map resultMap;
+            try {
+                resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
+            } catch (UnsupportedEncodingException e) {
+                logger.error(e.getMessage(), e);
+                return;
+            }
             List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get(DeployerConstants.JSON_DATA);
             if (dataList != null && !dataList.isEmpty()) {
                 String checkResult = dataList.get(0).get(fingerprint);
@@ -115,9 +118,13 @@ class Heartbeat implements Process {
         }
         if (registered) return;
 
-        http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
-            put("doRegister", registerData);
-        }});
+        try {
+            http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
+                put("doRegister", registerData);
+            }});
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private InstanceInfo thisInstanceInfo() {

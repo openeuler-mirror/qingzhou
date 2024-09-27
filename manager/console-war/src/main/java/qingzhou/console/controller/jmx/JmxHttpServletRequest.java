@@ -80,9 +80,9 @@ public class JmxHttpServletRequest implements HttpServletRequest {
         String uri = "/" + DeployerConstants.JSON_VIEW + "/" + appName + "/" + modelName + "/" + actionName;
         ModelInfo modelInfo = SystemController.getModelInfo(appName, modelName);
         if (modelInfo != null) {
-            String idFieldName = modelInfo.getIdFieldName();
-            if (Utils.notBlank(idFieldName)) {
-                String id = properties == null ? null : properties.getProperty(idFieldName);
+            String idField = modelInfo.getIdField();
+            if (Utils.notBlank(idField)) {
+                String id = properties == null ? null : properties.getProperty(idField);
                 if (Utils.notBlank(id)) {
                     uri = uri + "/" + RESTController.encodeId(id);
                 }

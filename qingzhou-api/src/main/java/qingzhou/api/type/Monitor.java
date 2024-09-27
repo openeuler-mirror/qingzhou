@@ -6,7 +6,7 @@ import java.util.Map;
  * 监控接口，定义了监控数据的获取方法。
  * 该接口用于让实现类提供监控数据，以供监控系统收集和处理。
  */
-public interface Monitorable {
+public interface Monitor {
     String ACTION_MONITOR = "monitor";
 
     /**
