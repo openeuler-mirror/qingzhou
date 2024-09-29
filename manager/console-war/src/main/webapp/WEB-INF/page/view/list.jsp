@@ -63,6 +63,16 @@
                 <%
                     }
                 %>
+<%--                <%
+                    {
+                        Map<String, String> modelData = new HashMap<>();
+                %>
+                <div style="display: none" custom-action-id="popup-<%=qzApp + "-" + qzModel%>">
+                    <%@ include file="../fragment/custom_form.jsp" %>
+                </div>
+                <%
+                    }
+                %>--%>
             </div>
         </div>
 
@@ -201,6 +211,7 @@
 
                             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                             boolean useJsonUri = actionName.equals(Download.ACTION_FILES)
+                                    || action.getShowFields().length > 0
                                     || actionName.equals(Delete.ACTION_DELETE);
                     %>
                     <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest,
@@ -212,6 +223,8 @@
                             <%
                                 if (actionName.equals(Download.ACTION_FILES)) {
                                     out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+                                } else if (action.getShowFields() != null && action.getShowFields().length != 0) {
+                                    out.print(" custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId + "'");
                                 }
 
                                 if (useJsonUri) {
@@ -228,6 +241,13 @@
                         <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
                     </a>
                     <%
+                        if (action.getShowFields() != null && action.getShowFields().length != 0) {
+                            %>
+                    <div style="display: none" custom-action-id="popup-<%=qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId%>">
+                        <%@ include file="../fragment/custom_form.jsp" %>
+                    </div>
+                    <%
+                        }
                         }
                     %>
                 </td>

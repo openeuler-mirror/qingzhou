@@ -1,10 +1,11 @@
 package qingzhou.app.model;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.*;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Model(code = "user", icon = "user",
@@ -35,7 +36,8 @@ public class User extends AddModelBase {
     public String sex;
 
     @ModelField(
-            type = FieldType.select,
+            group = "职位",
+            type= FieldType.select,
             refModel = Post.class,
             list = true,
             name = {"岗位", "en:Position"})
@@ -43,10 +45,16 @@ public class User extends AddModelBase {
 
     @ModelField(
             type = FieldType.select,
-            refModel = Department.class,
+            options = {"a", "b", "c", "d"},
+            // refModel = Department.class,
             list = true,
             name = {"归属部门", "en:Department "})
     public String department;
+
+    @ModelField(
+            show = "department=a",
+            name = {"test", "en:test"})
+    public String test;
 
     @ModelField(
             type = FieldType.textarea,
@@ -59,4 +67,37 @@ public class User extends AddModelBase {
     public String idField() {
         return "name";
     }
+
+    @ModelAction(
+            code = "test", icon = "trash",
+            order = 9,
+            showFields = {"name", "phoneNumber", "sex", "department", "test", "notes"},
+            name = {"测试", "en:Test"},
+            info = {"测试自定义action。",
+                    "en:Test custom action."})
+    public void test(Request request) {
+        String id = request.getId();
+        Response response = request.getResponse();
+        response.setSuccess(true);
+        response.setSuccess(false);
+        response.setMsg("ssasa");
+        Map<String, String> map = new HashMap<>();
+        map.put("name", "test");
+        map.put("id", id);
+        response.addData(map);
+    }
+
+    @ModelAction(
+            code = "test1", icon = "trash",
+            order = 9,
+            showFields = {"position", "phoneNumber", "sex"},
+            name = {"测试1", "en:Test1"},
+            info = {"测试自定义action。",
+                    "en:Test custom action."})
+    public void test1(Request request) {
+        String id = request.getId();
+        System.out.println(id);
+    }
+
+
 }

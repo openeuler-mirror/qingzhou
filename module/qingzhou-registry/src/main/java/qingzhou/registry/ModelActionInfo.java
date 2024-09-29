@@ -12,6 +12,7 @@ public class ModelActionInfo {
     private String show;
     private boolean batch;
     private String page;
+    private String[] showFields;
 
     public Method getMethod() {
         return method;
@@ -83,5 +84,13 @@ public class ModelActionInfo {
 
     public void setOrder(int order) {
         this.order = order;
+    }
+
+    public String[] getShowFields() {
+        return showFields;
+    }
+
+    public void setShowFields(String[] showFields) {
+        this.showFields = showFields;
     }
 }

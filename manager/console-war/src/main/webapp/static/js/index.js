@@ -1093,6 +1093,14 @@ function bindEventForListPage() {
         return false;
     });
 
+    $("table a[custom-action-id]").unbind("click").bind("click", function (e) {
+        e.preventDefault();
+        if($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0){
+            customAction($(this).attr("href"),$(this).attr("custom-action-id"),$(this).attr("data-tip"));
+        }
+        return false;
+    });
+
     // 分页
     tw.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", true, true);
 };
@@ -1234,7 +1242,43 @@ function downloadFiles(fileListUrl, downloadUrl) {
             handleError(e);
         }
     });
-};
+}
+
+function customAction(actionUrl, customActionId, title) {
+    let html  = $("div[custom-action-id='" + customActionId + "']", getRestrictedArea()).html();
+    html = "<form id='" + customActionId + "' method='post' class='form-horizontal'>" + html + "</form><hr style='margin-top: 4px;'><div id='custom-action-result' ></div>";
+    openLayer({
+        title: title,
+        area: ['700px', '500px'],
+        content: html,
+        btn: [getSetting("confirmBtnText"), getSetting("cancelBtnText")],
+        success: function (){
+            $('#' + customActionId + ' a[data-tab]').unbind("click").bind("click", function (e) {
+                const dataTarget = $(this).attr("data-target").substring(1);
+                console.log(dataTarget)
+                $('#' + customActionId + ' div#' + dataTarget + '[tab-pane]').tab('show');
+            });
+        },
+        yes: function () {
+            var formData = $('#' + customActionId).serializeArray();
+            const data = {};
+            formData.forEach(item => {
+                data[item.name] = item.value;
+            });
+            $.ajax({
+                type: "POST",
+                url: actionUrl,
+                data: data,
+                success: function (response) {
+                    $('#custom-action-result').html("<pre style='background-color: #333;color: #fff;padding: 10px;'>" + JSON.stringify(response, null, 4) + "</pre>");
+                },
+                error: function (error) {
+                    handleError(e);
+                }
+            });
+        }
+    });
+}
 /**************************************** list.jsp - end *************************************************/
 
 /**************************************** monitor.jsp - start *************************************************/
