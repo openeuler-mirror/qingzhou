@@ -10,6 +10,7 @@ import java.util.Map;
 class ModuleContextImpl implements ModuleContext {
     private final ModuleInfo moduleInfo;
 
+    Map<String, ?> config;
     ClassLoader apiLoader;
     final Map<Class<?>, Object> registeredServices = new HashMap<>();
     final Map<Class<?>, Object> injectedServices = new HashMap<>();
@@ -18,6 +19,11 @@ class ModuleContextImpl implements ModuleContext {
 
     ModuleContextImpl(ModuleInfo moduleInfo) {
         this.moduleInfo = moduleInfo;
+    }
+
+    @Override
+    public Map<String, ?> getConfig() {
+        return config;
     }
 
     @Override

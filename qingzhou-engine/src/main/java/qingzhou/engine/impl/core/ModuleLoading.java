@@ -29,6 +29,7 @@ public class ModuleLoading implements Process {
                 new BuildModuleInfo(),
                 new BuildModuleLoader(),
                 new BuildModuleActivator(),
+                new SetModuleConfig(),
                 new StartModule()
         );
     }
@@ -82,6 +83,16 @@ public class ModuleLoading implements Process {
                     System.err.println(msg);
                 }
             });
+        }
+    }
+
+    private class SetModuleConfig implements Process {
+
+        @Override
+        public void exec() throws Exception {
+            for (ModuleInfo moduleInfo : moduleInfoList) {
+                System.out.println("设置 json 转 map 的配置：" + moduleInfo.getName());
+            }
         }
     }
 
