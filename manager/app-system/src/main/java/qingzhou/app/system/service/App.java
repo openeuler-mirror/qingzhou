@@ -9,6 +9,7 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
 
 import java.util.*;
@@ -30,7 +31,8 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     public String[] allIds(Map<String, String> query) {
         Set<String> allAppNames = new HashSet<>();
 
-        Main.getService(Deployer.class).getAllApp().forEach(a -> {
+        Deployer deployer = Main.getService(Deployer.class);
+        deployer.getAllApp().forEach(a -> {
             if (DeployerConstants.APP_SYSTEM.equals(a)) return;
             allAppNames.add(a);
         });
@@ -43,7 +45,9 @@ public class App extends ModelBase implements qingzhou.api.type.List {
         result.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
             @Override
             public String getFieldSeparator(String field) {
-                return ","; // todo 动态获取分隔符
+                AppInfo appInfo = deployer.getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
+                ModelFieldInfo fieldInfo = appInfo.getModelInfo(DeployerConstants.MODEL_APP).getModelFieldInfo(field);
+                return fieldInfo.getSeparator();
             }
 
             @Override

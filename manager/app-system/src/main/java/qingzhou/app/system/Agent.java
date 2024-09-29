@@ -223,8 +223,6 @@ public class Agent extends ModelBase implements Download {
 
         File targetFile = new File(Main.getLibBase(), fileName);
         if (targetFile.exists()) {
-            request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(getAppContext().getI18n("file.exists"));
             return;
         }
 

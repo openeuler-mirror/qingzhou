@@ -142,11 +142,7 @@ class ActionInvokerImpl implements ActionInvoker {
             decryptedData = responseBody;
         }
         String result = new String(decryptedData, DeployerConstants.ACTION_INVOKE_CHARSET);
-        if (response.getResponseCode() == 200) {
-            return json.fromJson(result, ResponseImpl.class);
-        } else { // 远端出现异常，不会有 json
-            throw new IllegalStateException(result);
-        }
+        return json.fromJson(result, ResponseImpl.class);
     }
 
     private Response buildErrorResponse(String instance, Exception e) {

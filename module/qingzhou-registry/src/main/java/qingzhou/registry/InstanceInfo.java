@@ -1,8 +1,5 @@
 package qingzhou.registry;
 
-import java.util.Arrays;
-import java.util.Comparator;
-
 public class InstanceInfo {
     private String name;
     private String host;
@@ -46,11 +43,7 @@ public class InstanceInfo {
         return appInfos;
     }
 
-    public void addAppInfo(AppInfo appInfo) {
-        AppInfo[] newAppInfos = new AppInfo[appInfos.length + 1];
-        System.arraycopy(appInfos, 0, newAppInfos, 0, appInfos.length);
-        newAppInfos[appInfos.length] = appInfo;
-        appInfos = newAppInfos;
-        Arrays.sort(appInfos, Comparator.comparing(AppInfo::getName));
+    public void setAppInfos(AppInfo[] appInfos) {
+        this.appInfos = appInfos;
     }
 }

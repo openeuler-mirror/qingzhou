@@ -81,12 +81,16 @@ class Heartbeat implements Process {
     }
 
     void register() {
+        List<AppInfo> appInfos = new ArrayList<>();
         for (String a : deployer.getAllApp()) {
             if (!DeployerConstants.APP_SYSTEM.equals(a)) {
                 AppInfo appInfo = deployer.getApp(a).getAppInfo();
-                thisInstanceInfo.addAppInfo(appInfo);
+                appInfos.add(appInfo);
             }
         }
+        appInfos.sort(Comparator.comparing(AppInfo::getName));
+        thisInstanceInfo.setAppInfos(appInfos.toArray(new AppInfo[0]));
+
         String registerData = json.toJson(thisInstanceInfo);
 
         HttpResponse response;

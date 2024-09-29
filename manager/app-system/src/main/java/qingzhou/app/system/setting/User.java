@@ -10,8 +10,11 @@ import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
+import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelFieldInfo;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -37,7 +40,9 @@ public class User extends ModelBase implements General {
                 .filter(user -> ModelUtil.query(query, new ModelUtil.Supplier() {
                     @Override
                     public String getFieldSeparator(String field) {
-                        return ",";// todo
+                        AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
+                        ModelFieldInfo fieldInfo = appInfo.getModelInfo(DeployerConstants.MODEL_USER).getModelFieldInfo(field);
+                        return fieldInfo.getSeparator();
                     }
 
                     @Override

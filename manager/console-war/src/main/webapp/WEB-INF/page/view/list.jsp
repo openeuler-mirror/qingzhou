@@ -160,6 +160,7 @@
                     } else {
                         String refModelName = null;
                         String refFieldName = null;
+                        String refValue;
                         if (Utils.notBlank(fieldInfo.getLinkModel())) {
                             String[] split = fieldInfo.getLinkModel().split("\\.");
                             refModelName = split[0];
@@ -169,8 +170,10 @@
                             refFieldName = SystemController.getModelInfo(qzApp, refModelName).getIdField();
                         }
                         if (refModelName != null && refFieldName != null) {
+                            ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
+                            refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
                     %>
-                    <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,ViewManager.htmlView, refModelName, qingzhou.api.type.List .ACTION_LIST + "?" + refFieldName + "=" + value)%>'
+                    <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,ViewManager.htmlView, refModelName, qingzhou.api.type.List .ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
                        onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'
                        class="dataid tooltips" record-action-id="<%=qingzhou.api.type.List.ACTION_LIST%>"
                        data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
