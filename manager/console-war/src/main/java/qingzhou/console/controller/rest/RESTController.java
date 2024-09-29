@@ -357,7 +357,8 @@ public class RESTController extends HttpServlet {
                     }
                 }
 
-                data.put(k, String.join(",", v));
+                String sp = modelFieldInfo != null ? modelFieldInfo.getSeparator() : ",";
+                data.put(k, String.join(sp, v));
             }
         }
 

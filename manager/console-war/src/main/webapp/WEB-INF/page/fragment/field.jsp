@@ -5,7 +5,7 @@
     Map<String, List<String>> groupedFields = new LinkedHashMap<>();
     for (String fieldName : infoData.keySet()) {
         ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-        List<String> fields = groupedFields.computeIfAbsent(modelField.getGroup(), _ -> new ArrayList<>());
+        List<String> fields = groupedFields.computeIfAbsent(modelField.getGroup(), s -> new ArrayList<>());
         fields.add(fieldName);
     }
     boolean hasGroup = groupedFields.size() > 1 || Utils.notBlank(groupedFields.keySet().iterator().next());

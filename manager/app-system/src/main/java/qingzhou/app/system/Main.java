@@ -2,11 +2,20 @@ package qingzhou.app.system;
 
 import qingzhou.api.App;
 import qingzhou.api.AppContext;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
+import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.ModuleContext;
+
+import java.io.File;
+import java.util.List;
 
 @App
 public class Main extends QingzhouSystemApp {
+    public static final String QZ_VER_NAME = "version";
     public static final String SERVICE_MENU = "Service";
     public static final String SETTING_MENU = "Setting";
     private static Main main;
@@ -26,5 +35,39 @@ public class Main extends QingzhouSystemApp {
         if (type == ModuleContext.class) return (T) main.moduleContext;
 
         return main.moduleContext.getService(type);
+    }
+
+    public static File getLibBase() {
+        return Main.getService(ModuleContext.class).getLibDir().getParentFile();
+    }
+
+    public static void invokeAgentOnInstances(Request request, String action, String[] instances) {
+        RequestImpl requestImpl = (RequestImpl) request;
+        String originModel = request.getModel();
+        String originAction = request.getAction();
+        try {
+            requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
+            requestImpl.setActionName(action);
+            List<Response> responseList = Main.getService(ActionInvoker.class)
+                    .invokeOnInstances(request, instances);
+            final StringBuilder[] error = {null};
+            responseList.forEach(response -> {
+                if (!response.isSuccess()) {
+                    request.getResponse().setSuccess(false);
+                    if (error[0] == null) {
+                        error[0] = new StringBuilder();
+                    }
+                    error[0].append(response.getMsg()).append(" ");
+                }
+            });
+
+            if (!request.getResponse().isSuccess()) {
+                String errorMsg = error[0].toString();
+                request.getResponse().setMsg(errorMsg);
+            }
+        } finally {
+            requestImpl.setModelName(originModel);
+            requestImpl.setActionName(originAction);
+        }
     }
 }

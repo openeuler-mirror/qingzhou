@@ -15,6 +15,7 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -219,7 +220,7 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
     }
 
     @Override
-    public java.util.List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
+    public java.util.List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
         return ModelUtil.listData(allIds(query), Instance::showData, pageNum, pageSize, showFields);
     }
 
@@ -249,7 +250,7 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            order = 8,
+            list = true, order = 8,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。",
                     "en:Download the log information of the instance."})
@@ -267,7 +268,9 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
     }
 
     @ModelAction(
-            code = Monitor.ACTION_MONITOR, icon = "line-chart", order = 2,
+            code = Monitor.ACTION_MONITOR, icon = "line-chart",
+            list = true, order = 2,
+            page = "monitor",
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})

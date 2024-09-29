@@ -2,6 +2,7 @@ package qingzhou.engine.util;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
@@ -296,11 +297,11 @@ public class FileUtil {
 
     public static String fileToString(File file) throws IOException {
         StringBuilder content = new StringBuilder();
-        fileToLines(file).forEach(s -> content.append(s).append(System.lineSeparator()));
+        readLines(file).forEach(s -> content.append(s).append(System.lineSeparator()));
         return content.toString();
     }
 
-    public static List<String> fileToLines(File file) throws IOException {
+    public static List<String> readLines(File file) throws IOException {
         List<String> lineList = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8))) {
             String line;
@@ -309,6 +310,23 @@ public class FileUtil {
             }
         }
         return lineList;
+    }
+
+    public static List<String> readLines(final InputStream input, final Charset cs) throws IOException {
+        try (final InputStreamReader reader = new InputStreamReader(input, cs != null ? cs : StandardCharsets.UTF_8)) {
+            return readLines(reader);
+        }
+    }
+
+    public static List<String> readLines(final Reader input) throws IOException {
+        try (final BufferedReader reader = (input instanceof BufferedReader ? (BufferedReader) input : new BufferedReader(input))) {
+            final List<String> list = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                list.add(line);
+            }
+            return list;
+        }
     }
 
     public static void forceDelete(File file) throws IOException {

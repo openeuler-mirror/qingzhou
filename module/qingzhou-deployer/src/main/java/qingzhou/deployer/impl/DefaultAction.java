@@ -42,6 +42,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Show.ACTION_SHOW, icon = "folder-open-alt",
+            page = "show",
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request) throws Exception {
@@ -76,6 +77,7 @@ class DefaultAction {
 
     @ModelAction(
             code = List.ACTION_LIST, icon = "list",
+            page = "list",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request) throws Exception {
@@ -117,6 +119,8 @@ class DefaultAction {
 
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
+            head = true, order = -1,
+            page = "form",
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) throws Exception {
@@ -137,6 +141,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Update.ACTION_EDIT, icon = "edit",
+            page = "form",
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
@@ -157,7 +162,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            order = 9,
+            list = true, order = 9,
             batch = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
@@ -178,7 +183,9 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Monitor.ACTION_MONITOR, icon = "line-chart", order = 2,
+            code = Monitor.ACTION_MONITOR, icon = "line-chart",
+            list = true, order = 2,
+            page = "monitor",
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -208,7 +215,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            order = 8,
+            list = true, order = 8,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
                     "en:Gets a list of downloadable files for this component."})

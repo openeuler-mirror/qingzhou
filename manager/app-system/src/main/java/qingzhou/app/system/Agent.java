@@ -199,10 +199,6 @@ public class Agent extends ModelBase implements Download {
         FileUtil.writeFile(file, fileBytes, true);
     }
 
-    private File getLibBase() {
-        return Main.getService(ModuleContext.class).getLibDir().getParentFile();
-    }
-
     @ModelAction(
             code = DeployerConstants.AGENT_INSTALL_VERSION,
             name = {"", "en:"},
@@ -219,14 +215,13 @@ public class Agent extends ModelBase implements Download {
         }
 
         String fileName = srcFile.getName();
-        if (!fileName.startsWith("version")
-                || !fileName.toLowerCase().endsWith(".zip")) {
+        if (!fileName.startsWith(Main.QZ_VER_NAME)) {
             request.getResponse().setSuccess(false);
             request.getResponse().setMsg(getAppContext().getI18n("file.type.unknown"));
             return;
         }
 
-        File targetFile = new File(getLibBase(), fileName);
+        File targetFile = new File(Main.getLibBase(), fileName);
         if (targetFile.exists()) {
             request.getResponse().setSuccess(false);
             request.getResponse().setMsg(getAppContext().getI18n("file.exists"));
@@ -241,7 +236,10 @@ public class Agent extends ModelBase implements Download {
             name = {"", "en:"},
             info = {"", "en:"})
     public void deleteVersion(Request request) throws Exception {
-        FileUtil.forceDelete(new File(getLibBase(), request.getId()));
-        FileUtil.forceDelete(new File(getLibBase(), request.getId() + ".zip"));
+        String version = request.getId();
+        if (version.equals(getAppContext().getPlatformVersion())) return;
+
+        FileUtil.forceDelete(new File(Main.getLibBase(), Main.QZ_VER_NAME + version));
+        FileUtil.forceDelete(new File(Main.getLibBase(), Main.QZ_VER_NAME + version + ".zip"));
     }
 }

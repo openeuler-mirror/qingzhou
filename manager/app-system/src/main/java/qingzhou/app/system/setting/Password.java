@@ -80,6 +80,7 @@ public class Password extends ModelBase {
 
     @ModelAction(
             code = Update.ACTION_EDIT,
+            page = "form",
             name = {"修改", "en:Edit"},
             info = {"修改当前登录账户的密码。",
                     "en:Change the password of the current login account."})

@@ -20,7 +20,7 @@ public class ExampleMain implements QingzhouApp {
         logger = appContext.getService(Logger.class);
         logger.info("启动样例应用");
 
-        appContext.addMenu(MENU_1, new String[]{"一级菜单", "en:MENU_1"}, "yinyang", 1);
+        appContext.addMenu(MENU_1, new String[]{"一级菜单", "en:MENU_1"}, "folder-open", 1);
         appContext.addMenu(MENU_2, new String[]{"二级菜单", "en:MENU_2"}, "leaf", 1, MENU_1);
 
         appContext.addActionFilter(request -> {

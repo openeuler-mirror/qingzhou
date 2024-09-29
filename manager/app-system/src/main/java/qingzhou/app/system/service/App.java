@@ -2,9 +2,9 @@ package qingzhou.app.system.service;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
@@ -40,7 +40,17 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
         List<String> result = new ArrayList<>(allAppNames);
 
-        result.removeIf(id -> !ModelUtil.query(query, () -> showData(id)));
+        result.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
+            @Override
+            public String getFieldSeparator(String field) {
+                return ","; // todo 动态获取分隔符
+            }
+
+            @Override
+            public Map<String, String> get() {
+                return showData(id);
+            }
+        }));
 
         return result.toArray(new String[0]);
     }
@@ -131,7 +141,8 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
-            order = 1,
+            list = true, order = 1,
+            page = "sys/manage",
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request) {
@@ -139,6 +150,8 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
+            head = true, order = -1,
+            page = "form",
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
@@ -147,18 +160,18 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     }
 
     @ModelAction(
-            code = DeployerConstants.AGENT_INSTALL_APP, icon = "save",
+            code = Add.ACTION_ADD, icon = "save",
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
     public void add(Request request) {
         String instances = ((RequestImpl) request).removeParameter("instances");
-        invokeOnInstances(request, instances);
+        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_INSTALL_APP, instances.split(App.instanceSP));
     }
 
     @ModelAction(
-            code = DeployerConstants.AGENT_UNINSTALL_APP, icon = "trash",
-            order = 9,
+            code = Delete.ACTION_DELETE, icon = "trash",
+            list = true, order = 9,
             batch = true,
             name = {"卸载", "en:UnInstall"},
             info = {"卸载应用，注：卸载应用会删除应用包下的所有文件，且不可恢复。",
@@ -167,33 +180,6 @@ public class App extends ModelBase implements qingzhou.api.type.List {
         String id = request.getId();
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
-        invokeOnInstances(request, instances);
-    }
-
-    private void invokeOnInstances(Request request, String instances) {
-        RequestImpl requestImpl = (RequestImpl) request;
-        String originModel = request.getModel();
-        try {
-            requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
-            List<Response> responseList = Main.getService(ActionInvoker.class)
-                    .invokeOnInstances(request, instances.split(App.instanceSP));
-            final StringBuilder[] error = {null};
-            responseList.forEach(response -> {
-                if (!response.isSuccess()) {
-                    request.getResponse().setSuccess(false);
-                    if (error[0] == null) {
-                        error[0] = new StringBuilder();
-                    }
-                    error[0].append(response.getMsg()).append(" ");
-                }
-            });
-
-            if (!request.getResponse().isSuccess()) {
-                String errorMsg = error[0].toString();
-                request.getResponse().setMsg(errorMsg);
-            }
-        } finally {
-            requestImpl.setModelName(originModel);
-        }
+        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_UNINSTALL_APP, instances.split(App.instanceSP));
     }
 }

@@ -121,6 +121,11 @@ class AppContextImpl implements AppContext {
     }
 
     @Override
+    public String getPlatformVersion() {
+        return moduleContext.getPlatformVersion();
+    }
+
+    @Override
     public void addActionFilter(ActionFilter actionFilter) {
         actionFilters.add(actionFilter);
     }

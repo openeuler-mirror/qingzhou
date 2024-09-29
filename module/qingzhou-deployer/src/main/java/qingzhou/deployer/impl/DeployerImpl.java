@@ -452,6 +452,7 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setInfo(modelAction.info());
             modelActionInfo.setIcon(modelAction.icon());
             modelActionInfo.setOrder(modelAction.order());
+            modelActionInfo.setHead(modelAction.head());
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setBatch(modelAction.batch());
             modelActionInfo.setPage(modelAction.page());
