@@ -34,7 +34,17 @@ public class User extends ModelBase implements General {
     @Override
     public String[] allIds(Map<String, String> query) {
         return Arrays.stream(Main.getService(Config.class).getConsole().getUser())
-                .filter(user -> ModelUtil.query(query, () -> ModelUtil.getPropertiesFromObj(user)))
+                .filter(user -> ModelUtil.query(query, new ModelUtil.Supplier() {
+                    @Override
+                    public String getFieldSeparator(String field) {
+                        return ",";// todo
+                    }
+
+                    @Override
+                    public Map<String, String> get() {
+                        return ModelUtil.getPropertiesFromObj(user);
+                    }
+                }))
                 .map(qingzhou.config.User::getName)
                 .toArray(String[]::new);
     }
