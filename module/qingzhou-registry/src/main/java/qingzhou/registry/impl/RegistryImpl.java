@@ -100,7 +100,7 @@ class RegistryImpl implements Registry {
 
     // 周期执行，可进行过期清理等操作
     void timerCheck(long checkTimeout) {
-        long minLegalTime = System.currentTimeMillis() - checkTimeout;
+        long minLegalTime = System.currentTimeMillis() - 1000 * checkTimeout;
 
         List<String> toDelete = new ArrayList<>();
         for (Map.Entry<String, RegisteredInfo> entry : registryInfo.entrySet()) {

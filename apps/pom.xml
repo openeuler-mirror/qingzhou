@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>qingzhou-project</artifactId>
-        <version>x</version>
+        <version>1.3.0</version>
     </parent>
 
     <artifactId>apps</artifactId>
@@ -21,13 +21,13 @@
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-api</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-logger</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

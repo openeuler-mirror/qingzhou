@@ -169,7 +169,7 @@ public class RESTController extends HttpServlet {
     }
 
     private String defaultMsg(boolean success, Request request) {
-        String appName = SystemController.getAppName(request);
+        String appName = request.getApp();
         String SP = I18n.isZH() ? "" : " ";
         String msg = success ? I18n.getKeyI18n("msg.success") : I18n.getKeyI18n("msg.fail");
         String model = I18n.getModelI18n(appName, "model." + request.getModel());
@@ -322,7 +322,7 @@ public class RESTController extends HttpServlet {
             request.setId(RESTController.decodeId(id.toString()));
         }
         boolean actionFound = false;
-        ModelInfo modelInfo = SystemController.getAppInfo(SystemController.getAppName(request))
+        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp())
                 .getModelInfo(request.getModel());
         String[] actions = modelInfo.getActionNames();
         for (String name : actions) {
@@ -357,7 +357,8 @@ public class RESTController extends HttpServlet {
                     }
                 }
 
-                data.put(k, String.join(",", v));
+                String sp = modelFieldInfo != null ? modelFieldInfo.getSeparator() : ",";
+                data.put(k, String.join(sp, v));
             }
         }
 

@@ -3,7 +3,6 @@ package qingzhou.app.system;
 import qingzhou.api.*;
 import qingzhou.api.type.Show;
 import qingzhou.deployer.DeployerConstants;
-import qingzhou.engine.ModuleContext;
 
 @Model(code = DeployerConstants.MODEL_INDEX, icon = "home",
         entrance = Show.ACTION_SHOW,
@@ -27,19 +26,21 @@ public class Index extends ModelBase {
 
     @ModelAction(
             code = Show.ACTION_SHOW,
+            page = "show",
             name = {"主页", "en:Home"},
             info = {"查看 QingZhou 平台的相关信息。",
                     "en:View QingZhou platform information."})
     public void show(Request request) throws Exception {
         Index index = new Index();
         index.name = "QingZhou（轻舟）";
-        index.version = Main.getService(ModuleContext.class).getPlatformVersion();
+        index.version = getAppContext().getPlatformVersion();
         index.javaHome = System.getProperty("java.home");
         request.getResponse().addModelData(index);
     }
 
     @ModelAction(// NOTE: 这个方法用作是 Login 成功后 跳过的
             code = DeployerConstants.ACTION_INDEX,
+            page = "sys/index",
             name = {"主页", "en:Home"},
             info = {"进入 QingZhou 平台的主页。",
                     "en:View QingZhou platform information."})

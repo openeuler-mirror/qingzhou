@@ -2,7 +2,7 @@ package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Show;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
@@ -57,23 +57,6 @@ public class HtmlView implements View {
         ModelActionInfo actionInfo = request.getCachedModelInfo().getModelActionInfo(request.getAction());
         if (Utils.notBlank(actionInfo.getPage())) {
             return actionInfo.getPage();
-        }
-
-        switch (request.getAction()) {
-            case List.ACTION_LIST:
-            case Delete.ACTION_DELETE:
-                return "list";
-            case Add.ACTION_CREATE:
-            case Update.ACTION_EDIT:
-                return "form";
-            case Show.ACTION_SHOW:
-                return "show";
-            case Monitor.ACTION_MONITOR:
-                return "monitor";
-            case DeployerConstants.ACTION_INDEX:
-                return "sys/index";
-            case DeployerConstants.ACTION_MANAGE:
-                return "sys/manage";
         }
 
         return "default";

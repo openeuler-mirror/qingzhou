@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>manager</artifactId>
-        <version>x</version>
+        <version>1.3.0</version>
     </parent>
 
     <artifactId>app-system</artifactId>
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-deployer</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

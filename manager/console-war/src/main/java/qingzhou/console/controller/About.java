@@ -26,7 +26,7 @@ public class About implements Filter<SystemControllerContext> {
         if (byteCache == null) {
             String readmeDir = "static/readme/";
             String readmePath = context.req.getServletContext().getRealPath("/" + readmeDir + "/README.md");
-            List<String> fileLines = FileUtil.fileToLines(new File(readmePath));
+            List<String> fileLines = FileUtil.readLines(new File(readmePath));
             StringBuilder result = new StringBuilder();
             String begin = "![";
             String end = ")";

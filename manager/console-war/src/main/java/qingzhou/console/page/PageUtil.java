@@ -18,13 +18,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-/**
- * 为前端提供展示需要的数据，应包括：master 菜单数据、app菜单数据、表单 group 分组、国际化等
- * 目前是给 jsp 使用，后续可复用给前后端分离的 html 网页
- * 建议多使用 VO 类的对象，可便于后续转换为 json
- */
 public class PageUtil {
     public static final GroupInfo OTHER_GROUP = new GroupInfo("OTHERS", new String[]{"其他", "en:Other"});
 
@@ -51,178 +45,6 @@ public class PageUtil {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;
         return response.encodeURL(url);
     }
-
-    private static void printParentMenu(MenuItem menu, String curModel, StringBuilder menuBuilder, StringBuilder childrenBuilder) {
-        boolean isDefaultActive = "Service".equals(menu.getMenuName());
-        String model = menu.getMenuName();
-        String menuText = I18n.getStringI18n(menu.getI18ns());
-        menuBuilder.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append(model.equals(curModel) ? " active" : "").append("\">");
-        menuBuilder.append("<a href=\"javascript:void(0);\">");
-        menuBuilder.append(" <i class=\"icon icon-").append(menu.getMenuIcon()).append("\"></i>");
-        menuBuilder.append("<span>").append(menuText).append("</span>");
-        menuBuilder.append("<span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");
-        menuBuilder.append("</a>");
-        if (childrenBuilder != null && childrenBuilder.length() > 0) {
-            menuBuilder.append("<ul class=\"treeview-menu\">");
-            menuBuilder.append(childrenBuilder);
-            menuBuilder.append("</ul>");
-        }
-        menuBuilder.append("</li>");
-    }
-
-    private static void printChildrenMenu(MenuItem menu, HttpServletRequest request, HttpServletResponse response, String viewName, Request qzRequest, StringBuilder menuBuilder) {
-        String model = menu.getMenuName();
-        String action = menu.getMenuAction();
-        menuBuilder.append("<li class=\"treeview ").append((model.equals(qzRequest.getModel()) ? " active" : "")).append("\">");
-        String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + qzRequest.getApp() + "/" + model + "/" + action;
-        menuBuilder.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(model).append("'>");
-        menuBuilder.append("<i class='icon icon-").append(menu.getMenuIcon()).append("'></i>");
-        menuBuilder.append("<span>").append(I18n.getModelI18n(SystemController.getAppName(qzRequest), "model." + model)).append("</span>");
-        menuBuilder.append("</a>");
-        menuBuilder.append("</li>");
-    }
-
-    public static String buildMenuHtmlBuilder(HttpServletRequest request, HttpServletResponse response, Request qzRequest) {
-        StringBuilder builder = new StringBuilder();
-        List<MenuItem> models = getAppMenuList(qzRequest);
-        buildMenuHtmlBuilder(models, request, response, ViewManager.htmlView, qzRequest, builder, true);
-        String menus = builder.toString();
-        return String.format(menus, " ");
-    }
-
-    private static void buildMenuHtmlBuilder(List<MenuItem> models, HttpServletRequest request, HttpServletResponse response, String viewName, Request qzRequest, StringBuilder builder, boolean needFavoritesMenu) {
-        for (int i = 0; i < models.size(); i++) {
-            if (needFavoritesMenu && i == 1) {
-                builder.append("%s");
-            }
-            MenuItem menu = models.get(i);
-            StringBuilder childrenBuilder = new StringBuilder();
-            List<MenuItem> children = menu.getChildren();
-            if (children.isEmpty()) {
-                printChildrenMenu(menu, request, response, viewName, qzRequest, childrenBuilder);
-                builder.append(childrenBuilder);
-            } else {
-                StringBuilder parentBuilder = new StringBuilder();
-                buildMenuHtmlBuilder(children, request, response, viewName, qzRequest, childrenBuilder, false);
-                printParentMenu(menu, qzRequest.getModel(), parentBuilder, childrenBuilder);
-                builder.append(parentBuilder);
-            }
-        }
-    }
-    private static MenuInfo findMenu(String menuName, MenuInfo parent, List<MenuInfo> menuList) {
-        // 查找是否已经存在该菜单项
-        for (MenuInfo menuData : menuList) {
-            if (menuData.getName().equals(menuName)) {
-                return menuData; // 已经存在，直接返回
-            }
-
-        }
-        // 如果不存在，创建新的菜单项
-        return null;
-    }
-    private static MenuItem CreateMenuItem(String menuName, MenuItem parent, List<MenuItem> menuList,MenuInfo info) {
-        // 查找是否已经存在该菜单项
-        for (MenuItem menuData : menuList) {
-            if (menuData.getMenuName().equals(menuName)) {
-                return menuData; // 已经存在，直接返回
-            }
-
-        }
-
-        // 如果不存在，创建新的菜单项
-        MenuItem newMenu = new MenuItem();
-        newMenu.setMenuName(menuName);
-        newMenu.setMenuIcon(info.getIcon());
-        newMenu.setI18ns(info.getI18n());
-        newMenu.setOrder(info.getOrder());
-        if (parent != null) {
-            parent.getChildren().add(newMenu); // 将新创建的菜单项添加到父菜单的children中
-        } else {
-            menuList.add(newMenu); // 如果是顶级菜单，直接添加到菜单列表
-        }
-
-        return newMenu; // 返回新创建的菜单项
-    }
-    private static void Menusort(List<MenuItem> menuList) {
-        menuList.sort(Comparator.comparingInt(MenuItem::getOrder));
-        for (MenuItem menuItem : menuList) {
-            if (!menuItem.getChildren().isEmpty()){
-                Menusort(menuItem.getChildren());
-            }
-        }
-
-    }
-    public static List<MenuItem> getAppMenuList(Request request) {
-        List<MenuItem> menus = new ArrayList<>();
-        AppInfo appInfo = SystemController.getAppInfo(SystemController.getAppName(request));
-        if (appInfo == null) {
-            return menus;
-        }
-
-        // 分组：按菜单路径的第一级（最高级父菜单）进行分组
-        Map<String, List<ModelInfo>> groupMap = appInfo.getModelInfos().stream()
-                .filter(modelInfo -> !modelInfo.isHidden())
-                .collect(Collectors.groupingBy(modelInfo -> {
-                    String[] menuParts = modelInfo.getMenu().split("/");
-                    return menuParts[0]; // 第一级菜单（最高级父菜单）
-                }));
-
-        groupMap.forEach((menuGroup, models) -> {
-            MenuInfo menuData = appInfo.getMenuInfo(menuGroup);
-            MenuItem topMenu = new MenuItem();
-            if (menuData != null) {
-                topMenu.setMenuName(menuGroup);
-                topMenu.setMenuIcon(menuData.getIcon());
-                topMenu.setI18ns(menuData.getI18n());
-                topMenu.setOrder(menuData.getOrder());
-            }
-
-            // 对当前组中的 model 进行排序
-            models.sort(Comparator.comparingInt(ModelInfo::getOrder));
-
-            models.forEach(modelInfo -> {
-                // 分解路径，逐级构建菜单
-                String[] menuParts = modelInfo.getMenu().split("/");
-
-                // 每次都从顶级菜单开始
-                MenuItem currentMenu = topMenu;
-                MenuInfo currentMenuData = menuData;
-
-                // 遍历 menuParts，逐级查找或创建菜单
-                for (int i = 1; i < menuParts.length; i++) {
-                    currentMenuData = findMenu(menuParts[i], currentMenuData, currentMenuData.getChildren());
-                    currentMenu = CreateMenuItem(menuParts[i],currentMenu,currentMenu.getChildren(),currentMenuData);
-                }
-
-                // 最终的子菜单
-                MenuItem subMenu = new MenuItem();
-                subMenu.setMenuName(modelInfo.getCode());
-                subMenu.setMenuIcon(modelInfo.getIcon());
-                subMenu.setI18ns(modelInfo.getName());
-                subMenu.setMenuAction(modelInfo.getEntrance());
-                subMenu.setOrder(modelInfo.getOrder());
-
-                // 将子菜单添加到正确的父菜单中
-                if (menuData != null) {
-                    currentMenu.getChildren().add(subMenu);
-                } else {
-                    menus.add(subMenu);
-                }
-            });
-
-            // 将顶级菜单（及其子菜单）添加到菜单列表中
-            if (menuData != null) {
-                menus.add(topMenu);
-            }
-        });
-
-        // 对各级菜单进行排序
-        Menusort(menus);
-
-        return menus;
-    }
-
 
     public static ModelActionInfo[] listBachActions(Request request, Response response, String loginUser) {
         List<ModelActionInfo> actions = new ArrayList<>();
@@ -261,5 +83,97 @@ public class PageUtil {
         }
 
         return value;
+    }
+
+    public static String buildMenu(HttpServletRequest request, HttpServletResponse response, Request qzRequest) {
+        AppInfo appInfo = SystemController.getAppInfo(qzRequest.getApp());
+
+        MenuInfo[] rootMenuInfos = appInfo.getMenuInfos();
+        MenuItem[] rootMenuItems = new MenuItem[rootMenuInfos.length];
+        for (int i = 0; i < rootMenuInfos.length; i++) {
+            rootMenuItems[i] = createMenuItem(rootMenuInfos[i]);
+        }
+
+        List<ModelInfo> noMenuModels = new ArrayList<>();
+        for (ModelInfo modelInfo : appInfo.getModelInfos()) {
+            if (modelInfo.isHidden()) continue;
+            String menu = modelInfo.getMenu();
+            MenuItem modelParentMenu = findMenuItem(menu, rootMenuItems);
+            if (modelParentMenu != null) {
+                modelParentMenu.addModelInfo(modelInfo);
+            } else {
+                noMenuModels.add(modelInfo);
+            }
+        }
+
+        StringBuilder menuHtml = new StringBuilder();
+        for (ModelInfo noMenuModel : noMenuModels) {
+            menuHtml.append(buildModelMenu(noMenuModel, qzRequest, request, response));
+        }
+        for (MenuItem rootMenu : rootMenuItems) {
+            menuHtml.append(buildParentMenu(rootMenu, qzRequest, request, response));
+        }
+        return menuHtml.toString();
+    }
+
+    private static MenuItem findMenuItem(String name, MenuItem[] menuItems) {
+        for (MenuItem menuItem : menuItems) {
+            if (menuItem.getName().equals(name)) {
+                return menuItem;
+            }
+            MenuItem found = findMenuItem(name, menuItem.getChildren().toArray(new MenuItem[0]));
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    private static MenuItem createMenuItem(MenuInfo menuInfo) {
+        MenuItem menuItem = new MenuItem();
+        menuItem.setName(menuInfo.getName());
+        menuItem.setIcon(menuInfo.getIcon());
+        menuItem.setI18n(menuInfo.getI18n());
+        for (MenuInfo child : menuInfo.getChildren()) {
+            MenuItem childMenuItem = createMenuItem(child);
+            menuItem.getChildren().add(childMenuItem);
+        }
+        return menuItem;
+    }
+
+    private static String buildParentMenu(MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
+        StringBuilder menuHtml = new StringBuilder();
+        boolean isDefaultActive = "Service".equals(menuItem.getName());
+        menuHtml.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append("\">");
+        menuHtml.append("   <a href=\"javascript:void(0);\">");
+        menuHtml.append("       <i class=\"icon icon-").append(menuItem.getIcon()).append("\"></i>");
+        menuHtml.append("       <span>").append(I18n.getStringI18n(menuItem.getI18n())).append("</span>");
+        menuHtml.append("       <span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");
+        menuHtml.append("   </a>");
+
+        if (!menuItem.getChildren().isEmpty()) {
+            menuHtml.append("<ul class=\"treeview-menu\">");
+            menuItem.getChildren().forEach(subMenu -> menuHtml.append(buildParentMenu(subMenu, qzRequest, request, response)));
+            menuHtml.append("</ul>");
+        }
+
+        if (!menuItem.getModelInfos().isEmpty()) {
+            menuHtml.append("<ul class=\"treeview-menu\">");
+            menuItem.getModelInfos().forEach(subModel -> menuHtml.append(buildModelMenu(subModel, qzRequest, request, response)));
+            menuHtml.append("</ul>");
+        }
+        menuHtml.append("</li>");
+        return menuHtml.toString();
+    }
+
+    private static String buildModelMenu(ModelInfo modelInfo, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
+        StringBuilder menuHtml = new StringBuilder();
+        menuHtml.append("<li class=\"treeview ").append("\">");
+        String contextPath = request.getContextPath();
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + ViewManager.htmlView + "/" + qzRequest.getApp() + "/" + modelInfo.getCode() + "/" + modelInfo.getEntrance();
+        menuHtml.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(modelInfo.getCode()).append("'>");
+        menuHtml.append("<i class='icon icon-").append(modelInfo.getIcon()).append("'></i>");
+        menuHtml.append("<span>").append(I18n.getModelI18n(qzRequest.getApp(), "model." + modelInfo.getCode())).append("</span>");
+        menuHtml.append("</a>");
+        menuHtml.append("</li>");
+        return menuHtml.toString();
     }
 }
