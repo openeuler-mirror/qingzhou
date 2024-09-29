@@ -215,7 +215,17 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
             InstanceInfo instanceInfo = registry.getInstanceInfo(s);
             ids.add(instanceInfo.getName());
         });
-        ids.removeIf(id -> !ModelUtil.query(query, () -> showData(id)));
+        ids.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
+            @Override
+            public String getFieldSeparator(String field) {
+                return ",";// todo
+            }
+
+            @Override
+            public Map<String, String> get() {
+                return showData(id);
+            }
+        }));
         return ids.toArray(new String[0]);
     }
 
