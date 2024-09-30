@@ -8,7 +8,7 @@ import qingzhou.app.ExampleMain;
 
 
 @Model(code = "user", icon = "user",
-        menu = ExampleMain.MENU_1, order = 1,
+        menu = ExampleMain.MENU_2, order = 1,
         name = {"用户", "en:User management"},
         info = {"用户管理", "en:User management."})
 public class User extends AddModelBase {
