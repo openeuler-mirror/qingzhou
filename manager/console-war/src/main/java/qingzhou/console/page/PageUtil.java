@@ -111,7 +111,7 @@ public class PageUtil {
             menuHtml.append(buildModelMenu(noMenuModel, qzRequest, request, response));
         }
         for (MenuItem rootMenu : rootMenuItems) {
-            menuHtml.append(buildParentMenu(rootMenu, qzRequest, request, response));
+            menuHtml.append(buildParentMenu(0, rootMenu, qzRequest, request, response));
         }
         return menuHtml.toString();
     }
@@ -139,7 +139,7 @@ public class PageUtil {
         return menuItem;
     }
 
-    private static String buildParentMenu(MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
+    private static String buildParentMenu(int paddingLeft, MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
         StringBuilder menuHtml = new StringBuilder();
         boolean isDefaultActive = "Service".equals(menuItem.getName());
         menuHtml.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append("\">");
@@ -149,17 +149,26 @@ public class PageUtil {
         menuHtml.append("       <span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");
         menuHtml.append("   </a>");
 
-        if (!menuItem.getChildren().isEmpty()) {
-            menuHtml.append("<ul class=\"treeview-menu\">");
-            menuItem.getChildren().forEach(subMenu -> menuHtml.append(buildParentMenu(subMenu, qzRequest, request, response)));
-            menuHtml.append("</ul>");
+        boolean modelBuild = false;
+        if (!menuItem.getModelInfos().isEmpty()) {
+            menuHtml.append("<ul class=\"treeview-menu\" style=\"padding-left: ").append(paddingLeft).append("px;\">");
+            menuItem.getModelInfos().forEach(subModel -> menuHtml.append(buildModelMenu(subModel, qzRequest, request, response)));
+            modelBuild = true;
         }
 
-        if (!menuItem.getModelInfos().isEmpty()) {
-            menuHtml.append("<ul class=\"treeview-menu\">");
-            menuItem.getModelInfos().forEach(subModel -> menuHtml.append(buildModelMenu(subModel, qzRequest, request, response)));
+        if (!menuItem.getChildren().isEmpty()) {
+            if (!modelBuild) {
+                menuHtml.append("<ul class=\"treeview-menu\" style=\"padding-left: ").append(paddingLeft).append("px;\">");
+            }
+            menuItem.getChildren().forEach(subMenu -> menuHtml.append(buildParentMenu(paddingLeft + 25, subMenu, qzRequest, request, response)));
             menuHtml.append("</ul>");
+        } else {
+            if (modelBuild) {
+                menuHtml.append("</ul>");
+            }
         }
+
+
         menuHtml.append("</li>");
         return menuHtml.toString();
     }
