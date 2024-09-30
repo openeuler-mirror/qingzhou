@@ -1,10 +1,10 @@
 package qingzhou.app;
 
-import qingzhou.api.ModelBase;
-import qingzhou.api.type.General;
-
 import java.util.List;
 import java.util.Map;
+
+import qingzhou.api.ModelBase;
+import qingzhou.api.type.General;
 
 public class AddModelBase extends ModelBase implements General {
 

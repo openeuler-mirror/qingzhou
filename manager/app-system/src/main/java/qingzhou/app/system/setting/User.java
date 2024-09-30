@@ -1,6 +1,20 @@
 package qingzhou.app.system.setting;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
@@ -10,13 +24,11 @@ import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
+import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Pattern;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelFieldInfo;
 
 @Model(code = DeployerConstants.MODEL_USER, icon = "user",
         menu = Main.SETTING_MENU, order = 1,
@@ -37,7 +49,9 @@ public class User extends ModelBase implements General {
                 .filter(user -> ModelUtil.query(query, new ModelUtil.Supplier() {
                     @Override
                     public String getFieldSeparator(String field) {
-                        return ",";// todo
+                        AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
+                        ModelFieldInfo fieldInfo = appInfo.getModelInfo(DeployerConstants.MODEL_USER).getModelFieldInfo(field);
+                        return fieldInfo.getSeparator();
                     }
 
                     @Override

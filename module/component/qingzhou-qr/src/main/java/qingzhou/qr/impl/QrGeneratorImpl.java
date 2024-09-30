@@ -1,15 +1,15 @@
 package qingzhou.qr.impl;
 
-import io.nayuki.qrcodegen.QrCode;
-import io.nayuki.qrcodegen.QrSegment;
-import qingzhou.qr.QrGenerator;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import javax.imageio.ImageIO;
+
+import io.nayuki.qrcodegen.QrCode;
+import io.nayuki.qrcodegen.QrSegment;
+import qingzhou.qr.QrGenerator;
 
 public class QrGeneratorImpl implements QrGenerator {
     @Override

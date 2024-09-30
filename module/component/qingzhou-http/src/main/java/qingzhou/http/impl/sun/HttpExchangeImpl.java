@@ -1,10 +1,10 @@
 package qingzhou.http.impl.sun;
 
-import qingzhou.http.HttpExchange;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import qingzhou.http.HttpExchange;
 
 class HttpExchangeImpl implements HttpExchange {
     private final com.sun.net.httpserver.HttpExchange httpExchange;

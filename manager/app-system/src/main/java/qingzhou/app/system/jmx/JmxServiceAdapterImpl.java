@@ -1,9 +1,9 @@
 package qingzhou.app.system.jmx;
 
-import qingzhou.deployer.JmxServiceAdapter;
-
 import javax.management.NotificationListener;
 import javax.management.remote.JMXAuthenticator;
+
+import qingzhou.deployer.JmxServiceAdapter;
 
 class JmxServiceAdapterImpl implements JmxServiceAdapter {
     private static final JmxServiceAdapterImpl instance = new JmxServiceAdapterImpl();

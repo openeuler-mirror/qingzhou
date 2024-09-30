@@ -1,9 +1,10 @@
 package qingzhou.agent.impl;
 
-import qingzhou.config.Agent;
-import qingzhou.config.Config;
+import java.util.Map;
+
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.PairCipher;
 import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
 import qingzhou.engine.Module;
@@ -19,8 +20,6 @@ import qingzhou.logger.Logger;
 @Module
 public class Controller implements ModuleActivator {
     @Service
-    private Config config;
-    @Service
     private Json json;
     @Service
     private Http http;
@@ -35,18 +34,23 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        Agent agent = config.getAgent();
-        if (agent == null || !agent.isEnabled()) return;
+        Map<String, String> config = (Map<String, String>) moduleContext.getConfig();
+        if (config == null || !Boolean.parseBoolean(config.get("enabled"))) return;
 
-        String agentHost = getAgentHost(agent);
-        int agentPort = agent.getAgentPort();
-        String agentKey = getAgentKey(agent);
-        Cipher agentCipher = cryptoService.getCipher(agentKey);
+        String agentHost = getAgentHost(config.get("agentHost"));
+        int agentPort = Integer.parseInt(config.get("agentPort"));
 
-        Heartbeat heartbeat = new Heartbeat(agentHost, agentPort, agentKey, config, json, deployer, logger, cryptoService, http);
+        String generateKey = cryptoService.generateKey();
+
+        PairCipher pairCipher = cryptoService.getPairCipher(config.get("masterKey"), null);
+        String encryptedAgentKey = pairCipher.encryptWithPublicKey(generateKey);
+
+        Cipher agentCipher = cryptoService.getCipher(generateKey);
+
+        Heartbeat heartbeat = new Heartbeat(agentHost, agentPort, encryptedAgentKey, config, json, deployer, logger, cryptoService.getMessageDigest(), http);
         sequence = new ProcessSequence(
                 () -> deployer.addAppListener(new AppListenerImpl(heartbeat)),
-                new qingzhou.agent.impl.Service(agentHost, agentPort, agentCipher, config, http, logger, json, deployer),
+                new qingzhou.agent.impl.Service(agentHost, agentPort, agentCipher, http, logger, json, deployer),
                 heartbeat
         );
         sequence.exec();
@@ -59,8 +63,7 @@ public class Controller implements ModuleActivator {
         sequence.undo();
     }
 
-    private String getAgentHost(Agent agent) {
-        String agentHost = agent.getAgentHost();
+    private String getAgentHost(String agentHost) {
         if (agentHost == null
                 || agentHost.isEmpty()
                 || agentHost.equals("0.0.0.0")
@@ -68,12 +71,6 @@ public class Controller implements ModuleActivator {
             agentHost = Utils.getLocalIps().iterator().next();
         }
         return agentHost;
-    }
-
-    private String getAgentKey(Agent agent) {
-        return agent.getAgentKey() == null || agent.getAgentKey().isEmpty()
-                ? cryptoService.generateKey()
-                : agent.getAgentKey();
     }
 
     private static class AppListenerImpl implements AppListener {

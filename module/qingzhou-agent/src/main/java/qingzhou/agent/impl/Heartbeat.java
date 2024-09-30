@@ -1,8 +1,16 @@
 package qingzhou.agent.impl;
 
-import qingzhou.config.Agent;
-import qingzhou.config.Config;
-import qingzhou.crypto.CryptoService;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.UUID;
+
+import qingzhou.crypto.MessageDigest;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Process;
@@ -13,30 +21,27 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 
-import java.io.UnsupportedEncodingException;
-import java.util.*;
-
 class Heartbeat implements Process {
-    private final Config config;
+    private final Map<String, String> config;
     private final Json json;
     private final Deployer deployer;
     private final Logger logger;
-    private final CryptoService cryptoService;
+    private final MessageDigest messageDigest;
     private final Http http;
     private final String agentHost;
     private final int agentPort;
-    private final String agentKey;
+    private final String encryptedAgentKey;
 
-    Heartbeat(String agentHost, int agentPort, String agentKey, Config config, Json json, Deployer deployer, Logger logger, CryptoService cryptoService, Http http) {
+    Heartbeat(String agentHost, int agentPort, String encryptedAgentKey, Map<String, String> config, Json json, Deployer deployer, Logger logger, MessageDigest messageDigest, Http http) {
         this.config = config;
         this.json = json;
         this.deployer = deployer;
         this.logger = logger;
-        this.cryptoService = cryptoService;
+        this.messageDigest = messageDigest;
         this.http = http;
         this.agentHost = agentHost;
         this.agentPort = agentPort;
-        this.agentKey = agentKey;
+        this.encryptedAgentKey = encryptedAgentKey;
     }
 
     // 定时器设计目的：解决 master 未启动或者宕机重启等引起的注册失效问题
@@ -47,10 +52,7 @@ class Heartbeat implements Process {
 
     @Override
     public void exec() {
-        Agent agent = config.getAgent();
-        if (agent == null || !agent.isEnabled()) return;
-
-        String masterUrl = config.getAgent().getMasterUrl();
+        String masterUrl = config.get("masterUrl");
         if (masterUrl == null || masterUrl.trim().isEmpty()) {
             logger.error("Instance registration fails: \"masterUrl\" is not set correctly.");
             return;
@@ -81,16 +83,20 @@ class Heartbeat implements Process {
     }
 
     void register() {
+        List<AppInfo> appInfos = new ArrayList<>();
         for (String a : deployer.getAllApp()) {
             if (!DeployerConstants.APP_SYSTEM.equals(a)) {
                 AppInfo appInfo = deployer.getApp(a).getAppInfo();
-                thisInstanceInfo.addAppInfo(appInfo);
+                appInfos.add(appInfo);
             }
         }
+        appInfos.sort(Comparator.comparing(AppInfo::getName));
+        thisInstanceInfo.setAppInfos(appInfos.toArray(new AppInfo[0]));
+
         String registerData = json.toJson(thisInstanceInfo);
 
         HttpResponse response;
-        String fingerprint = cryptoService.getMessageDigest().fingerprint(registerData);
+        String fingerprint = messageDigest.fingerprint(registerData);
         try {
             response = http.buildHttpClient().send(checkUrl, new HashMap<String, String>() {{
                 put(DeployerConstants.CHECK_FINGERPRINT, fingerprint);
@@ -131,7 +137,7 @@ class Heartbeat implements Process {
         instanceInfo.setName(UUID.randomUUID().toString().replace("-", ""));
         instanceInfo.setHost(agentHost);
         instanceInfo.setPort(agentPort);
-        instanceInfo.setKey(agentKey);
+        instanceInfo.setKey(encryptedAgentKey);
         return instanceInfo;
     }
 }

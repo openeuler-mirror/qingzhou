@@ -1,15 +1,20 @@
 package qingzhou.config.impl;
 
-import qingzhou.config.*;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.json.Json;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.util.Properties;
+
+import qingzhou.config.Config;
+import qingzhou.config.Console;
+import qingzhou.config.Jmx;
+import qingzhou.config.Security;
+import qingzhou.config.User;
+import qingzhou.config.Web;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.json.Json;
 
 public class JsonFileConfig implements Config {
     private final Json json;
@@ -26,11 +31,6 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
-    public Agent getAgent() {
-        return readJsonFile(reader -> json.fromJson(reader, Agent.class, "module", "agent"));
-    }
-
-    @Override
     public void addUser(User user) throws Exception {
         writeJson(user, true, "module", "console", "user");
     }
@@ -41,18 +41,8 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
-    public void addEnv(Env env) throws Exception {
-        writeJson(env, true, "jvm", "env");
-    }
-
-    @Override
     public void deleteEnv(String id) throws Exception {
         deleteJson("name", id, "jvm", "env");
-    }
-
-    @Override
-    public void addArg(Arg arg) throws Exception {
-        writeJson(arg, true, "jvm", "arg");
     }
 
     @Override
@@ -68,16 +58,6 @@ public class JsonFileConfig implements Config {
     @Override
     public void setJmx(Jmx jmx) throws Exception {
         writeJson(jmx, false, "module", "console", "jmx");
-    }
-
-    @Override
-    public Jvm getJvm() {
-        return readJsonFile(reader -> json.fromJson(reader, Jvm.class, "jvm"));
-    }
-
-    @Override
-    public Registry getRegistry() {
-        return readJsonFile(reader -> json.fromJson(reader, Registry.class, "module", "registry"));
     }
 
     @Override

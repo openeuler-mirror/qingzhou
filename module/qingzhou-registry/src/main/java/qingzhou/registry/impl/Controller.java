@@ -1,6 +1,9 @@
 package qingzhou.registry.impl;
 
-import qingzhou.config.Config;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -9,9 +12,6 @@ import qingzhou.engine.Service;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -24,9 +24,6 @@ public class Controller implements ModuleActivator {
     @Service
     private CryptoService cryptoService;
 
-    @Service
-    private Config config;
-
     // 定时清理超时的自动注册实例
     private Timer timer;
 
@@ -37,17 +34,19 @@ public class Controller implements ModuleActivator {
         registry = new RegistryImpl(json, cryptoService);
         context.registerService(Registry.class, registry);
 
+        Map<String, String> config = (Map<String, String>) context.getConfig();
+
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 try {
-                    registry.timerCheck(config.getRegistry().getInstanceTimeout());
+                    registry.timerCheck(Long.parseLong(config.get("checkTimeout")));
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
                 }
             }
-        }, 2000, 1000 * config.getRegistry().getInstanceInterval());
+        }, 2000, 1000 * Long.parseLong(config.get("checkInterval")));
     }
 
     @Override

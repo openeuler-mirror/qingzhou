@@ -1,9 +1,5 @@
 package qingzhou.http.impl;
 
-import qingzhou.http.HttpClient;
-import qingzhou.http.HttpResponse;
-
-import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -16,6 +12,15 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Map;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import qingzhou.http.HttpClient;
+import qingzhou.http.HttpResponse;
 
 public class HttpClientImpl implements HttpClient {
     @Override

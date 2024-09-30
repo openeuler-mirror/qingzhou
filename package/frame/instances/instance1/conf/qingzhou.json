@@ -29,7 +29,7 @@
       },
       {
         "name": "-Djava.security.egd=file:/dev/./urandom",
-        "onlyForLinux": "true"
+        "forLinux": "true"
       },
       {
         "name": "-Djava.security.manager",
@@ -50,8 +50,8 @@
   },
   "module": {
     "registry": {
-      "instanceTimeout": "30",
-      "instanceInterval": "5"
+      "checkTimeout": "30",
+      "checkInterval": "5"
     },
     "console": {
       "enabled": "true",
@@ -90,12 +90,10 @@
     },
     "agent": {
       "enabled": "false",
-      "masterUrl": "http://localhost:9000/console",
-      "masterKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCh4JpnxULijNi2GUa8wQfMGSWdGQLwscYNkHirc+A3rWIVTIvbjbdKkay0cNsclO4C0y/eN7lFwlkTDz1kvI3zrNajYdXD55QXzYdpVdHwlh+MoX0AHvoNwNtE1SqZTUcxlcixD3NMGYNcSq3D5dgD42C3pzY2TsMkQs1VSeBcZwIDAQAB",
       "agentHost": "",
       "agentPort": "5000",
-      "agentKey": "",
-      "attachments": {}
+      "masterUrl": "http://localhost:9000/console",
+      "masterKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCh4JpnxULijNi2GUa8wQfMGSWdGQLwscYNkHirc+A3rWIVTIvbjbdKkay0cNsclO4C0y/eN7lFwlkTDz1kvI3zrNajYdXD55QXzYdpVdHwlh+MoX0AHvoNwNtE1SqZTUcxlcixD3NMGYNcSq3D5dgD42C3pzY2TsMkQs1VSeBcZwIDAQAB"
     }
   }
 }

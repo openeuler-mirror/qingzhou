@@ -1,13 +1,13 @@
 package qingzhou.crypto.impl;
 
-import qingzhou.crypto.Base64Coder;
-import qingzhou.crypto.MessageDigest;
-
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+
+import qingzhou.crypto.Base64Coder;
+import qingzhou.crypto.MessageDigest;
 
 class MessageDigestImpl implements MessageDigest {
     private final Base64Coder base64Coder;

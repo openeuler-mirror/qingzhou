@@ -1,6 +1,17 @@
 package qingzhou.engine.util;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -182,7 +193,7 @@ public class FileUtil {
         try (ZipFile zip = new ZipFile(srcFile, ZipFile.OPEN_READ, StandardCharsets.UTF_8)) {
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
                 ZipEntry entry = e.nextElement();
-                File targetFile = newFile(unZipDir, entry);
+                File targetFile = newEntryFile(unZipDir, entry);
                 if (entry.isDirectory()) {
                     if (!targetFile.exists()) {
                         boolean mkdirs = targetFile.mkdirs();
@@ -205,7 +216,7 @@ public class FileUtil {
         }
     }
 
-    private static File newFile(File destDir, ZipEntry entry) throws IOException {
+    private static File newEntryFile(File destDir, ZipEntry entry) throws IOException {
         File destFile = new File(destDir, entry.getName());
         if (!destFile.getCanonicalPath().startsWith(destDir.getCanonicalPath())) {
             throw new IOException("Entry is outside of target dir:" + entry.getName());
@@ -334,9 +345,10 @@ public class FileUtil {
             deleteDirectory(file);
         } else {
             if (file.exists() && !file.delete()) {
-                try {
-                    Thread.sleep(2000);// for #ITAIT-4164
-                } catch (InterruptedException ignored) {
+                try { // for #ITAIT-4164
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
                 if (!file.delete()) {
                     throw new IOException("Unable to delete file: " + file);

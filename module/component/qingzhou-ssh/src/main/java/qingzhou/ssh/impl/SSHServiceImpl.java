@@ -1,11 +1,11 @@
 package qingzhou.ssh.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import qingzhou.ssh.SSHClient;
 import qingzhou.ssh.SSHConfig;
 import qingzhou.ssh.SSHService;
-
-import java.util.ArrayList;
-import java.util.List;
 
 class SSHServiceImpl implements SSHService {
     private final List<SSHClientImpl> sshClientList = new ArrayList<>();

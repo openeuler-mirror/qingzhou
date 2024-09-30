@@ -1,14 +1,14 @@
 package qingzhou.crypto.impl;
 
-import qingzhou.crypto.Base16Coder;
-import qingzhou.crypto.Base32Coder;
-import qingzhou.crypto.TotpCipher;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import qingzhou.crypto.Base16Coder;
+import qingzhou.crypto.Base32Coder;
+import qingzhou.crypto.TotpCipher;
 
 class TotpCipherImpl implements TotpCipher {
     private final Base16Coder base16Coder;

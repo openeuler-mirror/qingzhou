@@ -1,6 +1,18 @@
 package qingzhou.app.system.service;
 
-import qingzhou.api.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
@@ -9,9 +21,8 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
-
-import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.SERVICE_MENU, order = 1,
@@ -30,7 +41,8 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     public String[] allIds(Map<String, String> query) {
         Set<String> allAppNames = new HashSet<>();
 
-        Main.getService(Deployer.class).getAllApp().forEach(a -> {
+        Deployer deployer = Main.getService(Deployer.class);
+        deployer.getAllApp().forEach(a -> {
             if (DeployerConstants.APP_SYSTEM.equals(a)) return;
             allAppNames.add(a);
         });
@@ -43,7 +55,9 @@ public class App extends ModelBase implements qingzhou.api.type.List {
         result.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
             @Override
             public String getFieldSeparator(String field) {
-                return ","; // todo 动态获取分隔符
+                AppInfo appInfo = deployer.getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
+                ModelFieldInfo fieldInfo = appInfo.getModelInfo(DeployerConstants.MODEL_APP).getModelFieldInfo(field);
+                return fieldInfo.getSeparator();
             }
 
             @Override

@@ -1,10 +1,10 @@
 package qingzhou.deployer;
 
-import qingzhou.api.Lang;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import qingzhou.api.Lang;
 
 public class I18nTool {
     private final Map<String, String[]> langMap = new HashMap<>();

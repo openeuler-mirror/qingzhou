@@ -1,5 +1,7 @@
 package qingzhou.app.system.setting;
 
+import java.util.Map;
+
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
@@ -8,8 +10,6 @@ import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
-
-import java.util.Map;
 
 @Model(code = "security", icon = "shield",
         menu = Main.SETTING_MENU, order = 4,

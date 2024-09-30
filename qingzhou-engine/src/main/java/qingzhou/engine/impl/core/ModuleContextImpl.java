@@ -1,15 +1,16 @@
 package qingzhou.engine.impl.core;
 
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
+
 class ModuleContextImpl implements ModuleContext {
     private final ModuleInfo moduleInfo;
 
+    Map<String, ?> config;
     ClassLoader apiLoader;
     final Map<Class<?>, Object> registeredServices = new HashMap<>();
     final Map<Class<?>, Object> injectedServices = new HashMap<>();
@@ -18,6 +19,11 @@ class ModuleContextImpl implements ModuleContext {
 
     ModuleContextImpl(ModuleInfo moduleInfo) {
         this.moduleInfo = moduleInfo;
+    }
+
+    @Override
+    public Map<String, ?> getConfig() {
+        return config;
     }
 
     @Override

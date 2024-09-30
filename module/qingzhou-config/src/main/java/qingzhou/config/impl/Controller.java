@@ -1,5 +1,7 @@
 package qingzhou.config.impl;
 
+import java.io.File;
+
 import qingzhou.config.Config;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -7,7 +9,6 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 import qingzhou.json.Json;
 
-import java.io.File;
 
 @Module
 public class Controller implements ModuleActivator {

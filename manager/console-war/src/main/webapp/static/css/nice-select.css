@@ -3,7 +3,7 @@
     Made by Hernán Sartorio  */
 .nice-select {
     -webkit-tap-highlight-color: transparent;
-    background-color: var(--bg-color-nice-select,#fff);
+    background-color: var(--bg-color-nice-select, #fff);
     border-radius: 1px;
     border: solid 1px #DCDCDC;
     box-sizing: border-box;
@@ -23,26 +23,39 @@
     -webkit-transition: all 0.2s ease-in-out;
     transition: all 0.2s ease-in-out;
     -webkit-user-select: none;
-       -moz-user-select: none;
-        -ms-user-select: none;
-            user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
     white-space: nowrap;
-    width: auto; 
+    width: auto;
 }
-.nice-select:focus{
+
+.nice-select:focus {
     border-color: #667A9F;
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(20, 92, 205, .6);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(20, 92, 205, .6);
 }
+
 .nice-select input {
     border: 0px;
-    height:80%;
-    width:100%;
+    height: 80%;
+    width: 100%;
     margin-top: 3px;
 }
-.nice-select input:focus{ border: 0px;outline: none; }
-.nice-select:hover { border-color: #dbdbdb; }
-.nice-select:active, .nice-select.open, .nice-select:focus { border-color: #999; }
+
+.nice-select input:focus {
+    border: 0px;
+    outline: none;
+}
+
+.nice-select:hover {
+    border-color: #dbdbdb;
+}
+
+.nice-select:active, .nice-select.open, .nice-select:focus {
+    border-color: #999;
+}
+
 .nice-select:after {
     border-bottom: 2px solid #999;
     border-right: 2px solid #999;
@@ -55,36 +68,74 @@
     right: 12px;
     top: 50%;
     -webkit-transform-origin: 66% 66%;
-        -ms-transform-origin: 66% 66%;
-            transform-origin: 66% 66%;
+    -ms-transform-origin: 66% 66%;
+    transform-origin: 66% 66%;
     -webkit-transform: rotate(45deg);
-        -ms-transform: rotate(45deg);
-            transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
     -webkit-transition: all 0.15s ease-in-out;
     transition: all 0.15s ease-in-out;
-    width: 5px; 
+    width: 5px;
 }
+
 .nice-select.open:after {
     -webkit-transform: rotate(-135deg);
-        -ms-transform: rotate(-135deg);
-            transform: rotate(-135deg); 
+    -ms-transform: rotate(-135deg);
+    transform: rotate(-135deg);
 }
+
 .nice-select.open .list {
-    opacity: 1; 
+    opacity: 1;
     pointer-events: auto;
     -webkit-transform: scale(1) translateY(0);
-        -ms-transform: scale(1) translateY(0);
-            transform: scale(1) translateY(0); 
+    -ms-transform: scale(1) translateY(0);
+    transform: scale(1) translateY(0);
 }
-.nice-select.disabled { border-color: #ededed; color: #999; pointer-events: none; }
-.nice-select.disabled:after { border-color: #cccccc; }
-.nice-select.wide { width: 100%; }
-.nice-select.wide .list { left: 0 !important; right: 0 !important; }
-.nice-select.right { float: right; }
-.nice-select.right .list { left: auto; right: 0; }
-.nice-select.small { font-size: 12px; height: 36px; line-height: 34px; }
-.nice-select.small:after {height: 4px; width: 4px; }
-.nice-select.small .option { line-height: 34px; min-height: 34px; }
+
+.nice-select.disabled {
+    border-color: #ededed;
+    color: #999;
+    pointer-events: none;
+}
+
+.nice-select.disabled:after {
+    border-color: #cccccc;
+}
+
+.nice-select.wide {
+    width: 100%;
+}
+
+.nice-select.wide .list {
+    left: 0 !important;
+    right: 0 !important;
+}
+
+.nice-select.right {
+    float: right;
+}
+
+.nice-select.right .list {
+    left: auto;
+    right: 0;
+}
+
+.nice-select.small {
+    font-size: 12px;
+    height: 36px;
+    line-height: 34px;
+}
+
+.nice-select.small:after {
+    height: 4px;
+    width: 4px;
+}
+
+.nice-select.small .option {
+    line-height: 34px;
+    min-height: 34px;
+}
+
 .nice-select .list {
     left: 0;
     top: 100%;
@@ -97,20 +148,24 @@
     pointer-events: none;
     position: absolute;
     border-radius: 1px;
-    background-color: var(--dark-black,#fff);
+    background-color: var(--dark-black, #fff);
     max-height: 200px;
     box-sizing: border-box;
     box-shadow: 0 0 0 1px rgba(68, 68, 68, 0.11);
     -webkit-transform-origin: 50% 0;
-        -ms-transform-origin: 50% 0;
-            transform-origin: 50% 0;
+    -ms-transform-origin: 50% 0;
+    transform-origin: 50% 0;
     -webkit-transform: scale(0.75) translateY(-21px);
-        -ms-transform: scale(0.75) translateY(-21px);
-            transform: scale(0.75) translateY(-21px);
+    -ms-transform: scale(0.75) translateY(-21px);
+    transform: scale(0.75) translateY(-21px);
     -webkit-transition: all 0.2s cubic-bezier(0.5, 0, 0, 1.25), opacity 0.15s ease-out;
     transition: all 0.2s cubic-bezier(0.5, 0, 0, 1.25), opacity 0.15s ease-out;
 }
-.nice-select .list:hover .option:not(:hover) { background-color: transparent !important; }
+
+.nice-select .list:hover .option:not(:hover) {
+    background-color: transparent !important;
+}
+
 .nice-select .option {
     outline: none;
     cursor: pointer;
@@ -124,9 +179,29 @@
     -webkit-transition: all 0.2s;
     transition: all 0.2s;
 }
-.nice-select .unmatch{display:none;}
-.nice-select .option:hover, .nice-select .option.focus, .nice-select .option.selected.focus { background-color: var(--dark-black,#f6f6f6); }
-.nice-select .option.selected {font-weight: bold; }
-.nice-select .option.disabled { background-color: transparent; color: #999; cursor: default; }
-.no-csspointerevents .nice-select .list { display: none; }
-.no-csspointerevents .nice-select.open .list { display: block; }
+
+.nice-select .unmatch {
+    display: none;
+}
+
+.nice-select .option:hover, .nice-select .option.focus, .nice-select .option.selected.focus {
+    background-color: var(--dark-black, #f6f6f6);
+}
+
+.nice-select .option.selected {
+    font-weight: bold;
+}
+
+.nice-select .option.disabled {
+    background-color: transparent;
+    color: #999;
+    cursor: default;
+}
+
+.no-csspointerevents .nice-select .list {
+    display: none;
+}
+
+.no-csspointerevents .nice-select.open .list {
+    display: block;
+}
