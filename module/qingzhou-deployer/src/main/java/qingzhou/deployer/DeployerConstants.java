@@ -12,6 +12,7 @@ public interface DeployerConstants {
     String MODEL_AGENT = "agent";
     String MODEL_INDEX = "index";
     String MODEL_APP = "app";
+    String MODEL_INSTANCE = "instance";
     String MODEL_USER = "user";
     String MODEL_PASSWORD = "password";
 

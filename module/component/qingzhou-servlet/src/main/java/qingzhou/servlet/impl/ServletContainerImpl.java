@@ -1,5 +1,9 @@
 package qingzhou.servlet.impl;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
+
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
@@ -8,10 +12,6 @@ import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.tomcat.util.modeler.Registry;
 import qingzhou.servlet.ServletContainer;
-
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.Properties;
 
 public class ServletContainerImpl implements ServletContainer {
     private Tomcat tomcat;

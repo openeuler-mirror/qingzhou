@@ -1,8 +1,8 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.Request;
-
 import java.lang.reflect.Method;
+
+import qingzhou.api.Request;
 
 interface ActionMethod {
     void invoke(Request request) throws Exception;

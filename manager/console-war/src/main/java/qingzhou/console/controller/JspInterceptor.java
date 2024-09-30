@@ -1,10 +1,10 @@
 package qingzhou.console.controller;
 
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
-
-import javax.servlet.http.HttpServletResponse;
 
 public class JspInterceptor implements Filter<SystemControllerContext> {
     @Override

@@ -1,5 +1,12 @@
 package qingzhou.console.page;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.console.SecurityController;
@@ -10,14 +17,13 @@ import qingzhou.console.view.ViewManager;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
-import qingzhou.registry.*;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.GroupInfo;
+import qingzhou.registry.MenuInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 public class PageUtil {
     public static final GroupInfo OTHER_GROUP = new GroupInfo("OTHERS", new String[]{"其他", "en:Other"});

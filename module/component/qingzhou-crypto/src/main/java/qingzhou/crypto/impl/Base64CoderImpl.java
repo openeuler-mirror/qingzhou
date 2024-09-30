@@ -1,9 +1,9 @@
 package qingzhou.crypto.impl;
 
-import qingzhou.crypto.Base64Coder;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+
+import qingzhou.crypto.Base64Coder;
 
 class Base64CoderImpl implements Base64Coder {
     @Override

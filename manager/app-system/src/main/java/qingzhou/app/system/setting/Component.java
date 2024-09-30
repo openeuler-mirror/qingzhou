@@ -1,34 +1,39 @@
 package qingzhou.app.system.setting;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelFieldInfo;
 
-
-import java.util.*;
-
-@Model(code = "component", icon = "branch",
+@Model(code = "component", icon = "cubes",
         menu = Main.SETTING_MENU,
-        order = 7,
-        name = {"公共组件", "en:Common Component"},
-        info = {"轻舟为应用提供了一系列公共组件，包括加密服务、JSON 文件处理、Servlet 服务、SSH 服务和二维码生成器等，以支持各种功能和服务。在使用这些公共组件时，需要调用appContext.getService(xxx.class)，其中参数为对应的公共组件类，以获取相应的组件对象。",
-                "en:Qingzhou provides a series of public components for applications, including encryption services, JSON file processing, servlet services, SSH services, " +
-                        "and QR code generators, to support various functions and services. When using these public components, you need to call appContext.getService(xxx.class), where the parameters are the corresponding public component classes, to get the corresponding component objects."}
+        order = 6,
+        name = {"公共组件", "en:Component"},
+        info = {"轻舟为应用提供了一系列开箱即用的公共组件，包括加密服务、JSON 文件处理、Servlet 服务、SSH 服务和二维码生成器等，以提高业务系统的开发效率。使用轻舟的公共组件非常方便，只需调用 AppContext 对象的 getService 方法传入组件类型，即可获得相应的组件对象。",
+                "en:Qingzhou provides a series of out-of-the-box public components for applications, including encryption services, JSON file processing, servlet services, SSH services, and QR code generators, etc., to improve the development efficiency of business systems. It is very convenient to use the public component of Qingzhou, just call the getService method of the AppContext object to pass in the component type, and the corresponding component object can be obtained."}
 )
 public class Component extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
             list = true,
-            name = {"组件名称", "en:Component id"},
-            info = {"组件名称", "en:Component id"})
+            name = {"组件名称", "en:Component Name"},
+            info = {"组件名称", "en:Component Name"})
     public String id;
 
     @ModelField(
             list = true,
             name = {"组件类型", "en:Component Type"},
             info = {"组件类型", "en:Component type"})
-    public String componentType;
+    public String type;
 
     @Override
     public String[] allIds(Map<String, String> query) {
@@ -37,7 +42,20 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
             ids.add(serviceType.getSimpleName());
         }
         List<String> result = new ArrayList<>(ids);
-        result.removeIf(id -> !ModelUtil.query(query, () -> showData(id)));
+        result.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
+            @Override
+            public String getFieldSeparator(String field) {
+                AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
+                ModelFieldInfo fieldInfo = appInfo.getModelInfo("component").getModelFieldInfo(field);
+                return fieldInfo.getSeparator();
+            }
+
+            @Override
+            public Map<String, String> get() {
+                return showData(id);
+            }
+        }));
+        result.sort(String::compareTo);
         return result.toArray(new String[0]);
     }
 
@@ -51,7 +69,7 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
             if (id.equals(serviceType.getSimpleName())) {
                 return new HashMap<String, String>() {{
                     put(idField(), serviceType.getSimpleName());
-                    put("componentType", serviceType.getName());
+                    put("type", serviceType.getName());
                 }};
             }
         }

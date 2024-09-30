@@ -1,8 +1,8 @@
 package qingzhou.app.system.jmx;
 
-import qingzhou.engine.util.Utils;
-
 import java.util.Properties;
+
+import qingzhou.engine.util.Utils;
 
 class ConsoleJmx implements ConsoleJmxMBean {
 

@@ -1,8 +1,8 @@
 package qingzhou.deployer;
 
+import java.util.Properties;
 import javax.management.NotificationListener;
 import javax.management.remote.JMXAuthenticator;
-import java.util.Properties;
 
 public interface JmxServiceAdapter {
     void registerJMXAuthenticator(JMXAuthenticator authenticator);

@@ -1,5 +1,7 @@
 package qingzhou.app.system.jmx;
 
+import java.util.Map;
+
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
@@ -12,8 +14,6 @@ import qingzhou.config.Console;
 import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
 import qingzhou.logger.Logger;
-
-import java.util.Map;
 
 @Model(code = "jmx", icon = "coffee",
         menu = Main.SETTING_MENU, order = 3,

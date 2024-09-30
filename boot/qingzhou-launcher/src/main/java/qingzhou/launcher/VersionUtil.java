@@ -1,6 +1,10 @@
 package qingzhou.launcher;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -85,13 +89,16 @@ class VersionUtil {
                 Launcher.log(msg);
                 try {
                     Thread.sleep(2000);
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
                 // 实际解压出的文件数少于期望的解压文件数量，则重新尝试一次
                 unZipToDir(verFile, libDir);
                 fileCountReal = sumFileCount(libDir) - 1;
                 if (fileCountReal < fileCountExpected) {
-                    msg = "The re-extracted version file may still be incomplete, it is recommended to check the package format of the version file or the JDK's decompression API to troubleshoot related issues.";
+                    msg = "The re-extracted version file may still be incomplete, "
+                            + "it is recommended to check the package format of the version file "
+                            + "or the JDK's decompression API to troubleshoot related issues.";
                     Launcher.log(msg);
                 }
             }
@@ -101,11 +108,12 @@ class VersionUtil {
     private File getHomeDir() {
         if (qingzhouHomeFile == null) {
             String jarPath = VersionUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            try {
-                jarPath = URLDecoder.decode( // 兼容中文路径
+            try { // 兼容中文路径
+                jarPath = URLDecoder.decode(
                         jarPath,
                         Charset.defaultCharset().name());
-            } catch (UnsupportedEncodingException ignored) {
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
             }
             String flag = "/bin/qingzhou-launcher.jar";
             int i = jarPath.indexOf(flag);

@@ -1,26 +1,34 @@
 package qingzhou.app.system.service;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import qingzhou.api.Group;
+import qingzhou.api.Groups;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Grouped;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Monitor;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.config.Agent;
-import qingzhou.config.Config;
 import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
+import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-@Model(code = "instance", icon = "stack",
+@Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
         menu = Main.SERVICE_MENU, order = 2,
         name = {"实例", "en:Instance"},
         info = {"实例是应用部署的载体，为应用提供运行时环境。预置的 " + DeployerConstants.INSTANCE_LOCAL + " 实例表示当前正在访问的服务所在的实例，如集中管理端就运行在此实例上。",
@@ -218,7 +226,9 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
         ids.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
             @Override
             public String getFieldSeparator(String field) {
-                return ",";// todo
+                AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
+                ModelFieldInfo fieldInfo = appInfo.getModelInfo(DeployerConstants.MODEL_INSTANCE).getModelFieldInfo(field);
+                return fieldInfo.getSeparator();
             }
 
             @Override
@@ -238,11 +248,8 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
         if (DeployerConstants.INSTANCE_LOCAL.equals(id)) {
             return new HashMap<String, String>() {{
                 put(ID_KEY, DeployerConstants.INSTANCE_LOCAL);
-                put("host", "localhost");
-
-                Config config = Main.getService(Config.class);
-                Agent agent = config.getAgent();
-                put("port", agent != null && agent.isEnabled() ? String.valueOf(agent.getAgentPort()) : "--");
+                put("host", "--");
+                put("port", "--");
             }};
         }
 

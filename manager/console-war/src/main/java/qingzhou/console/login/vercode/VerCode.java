@@ -1,24 +1,23 @@
 package qingzhou.console.login.vercode;
 
-import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.SystemControllerContext;
-import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.IPUtil;
-import qingzhou.engine.util.pattern.Filter;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import qingzhou.console.IPUtil;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.SystemControllerContext;
+import qingzhou.console.controller.rest.RESTController;
+import qingzhou.engine.util.pattern.Filter;
 
 public class VerCode implements Filter<SystemControllerContext> {
     public static final String LOGIN_CAPTCHA = "j_captcha";
     public static final String CAPTCHA_URI = "/captcha";
     public static final String SHOW_CAPTCHA_FLAG = "SHOW_CAPTCHA_FLAG";
-
 
     private static final Map<String, Map<String, String>> userVerCodes = new LinkedHashMap<String, Map<String, String>>() {
         @Override

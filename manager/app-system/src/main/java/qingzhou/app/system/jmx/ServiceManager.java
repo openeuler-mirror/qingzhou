@@ -1,15 +1,5 @@
 package qingzhou.app.system.jmx;
 
-import qingzhou.config.Jmx;
-import qingzhou.engine.util.Utils;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import javax.management.remote.JMXAuthenticator;
-import javax.management.remote.JMXConnectorServer;
-import javax.management.remote.JMXConnectorServerFactory;
-import javax.management.remote.JMXServiceURL;
-import javax.security.auth.Subject;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.rmi.registry.LocateRegistry;
@@ -18,6 +8,16 @@ import java.rmi.server.RMISocketFactory;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.remote.JMXAuthenticator;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
+import javax.security.auth.Subject;
+
+import qingzhou.config.Jmx;
+import qingzhou.engine.util.Utils;
 
 public class ServiceManager {
     private static final ServiceManager instance = new ServiceManager();

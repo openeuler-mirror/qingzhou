@@ -1,6 +1,24 @@
 package qingzhou.app.system;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
 import qingzhou.crypto.CryptoService;
@@ -9,15 +27,6 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.management.*;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_AGENT,
         hidden = true,
@@ -223,8 +232,6 @@ public class Agent extends ModelBase implements Download {
 
         File targetFile = new File(Main.getLibBase(), fileName);
         if (targetFile.exists()) {
-            request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(getAppContext().getI18n("file.exists"));
             return;
         }
 

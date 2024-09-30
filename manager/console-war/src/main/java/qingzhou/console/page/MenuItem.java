@@ -1,10 +1,10 @@
 package qingzhou.console.page;
 
-import qingzhou.registry.ModelInfo;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import qingzhou.registry.ModelInfo;
 
 class MenuItem {
     private String name = "";

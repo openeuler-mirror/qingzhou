@@ -1,5 +1,10 @@
 package qingzhou.console.view.type;
 
+import java.util.List;
+import java.util.Map;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.Response;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
@@ -8,11 +13,6 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-import java.util.List;
-import java.util.Map;
 
 public class FileView implements View {
     @Override

@@ -1,12 +1,12 @@
 package qingzhou.engine.impl.core;
 
-import qingzhou.engine.ModuleActivator;
-import qingzhou.engine.impl.EngineContext;
-
 import java.io.File;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+
+import qingzhou.engine.ModuleActivator;
+import qingzhou.engine.impl.EngineContext;
 
 class ModuleInfo {
     private final EngineContext engineContext;
@@ -28,7 +28,10 @@ class ModuleInfo {
     }
 
     String getName() {
-        return file.getName();
+        String fileName = file.getName();
+        int i = fileName.indexOf("-");
+        int j = fileName.indexOf(".");
+        return fileName.substring(i + 1, j);
     }
 
     File getFile() {

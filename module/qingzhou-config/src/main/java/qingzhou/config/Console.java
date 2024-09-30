@@ -14,6 +14,14 @@ public class Console {
         return Arrays.stream(user).filter(user -> user.getName().equals(name)).findAny().orElse(null);
     }
 
+    public User[] getUser() {
+        return user;
+    }
+
+    public void setUser(User[] user) {
+        this.user = user;
+    }
+
     public Web getWeb() {
         return web;
     }
@@ -44,13 +52,5 @@ public class Console {
 
     public void setSecurity(Security security) {
         this.security = security;
-    }
-
-    public User[] getUser() {
-        return user;
-    }
-
-    public void setUser(User[] user) {
-        this.user = user;
     }
 }

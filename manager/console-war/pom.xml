@@ -38,10 +38,10 @@
                                 <copy file="${project.basedir}/../../README.md"
                                       tofile="${project.build.directory}/${project.build.finalName}/static/readme/README.md"
                                       overwrite="true"/>
-<!--                                <copy todir="${project.build.directory}/${project.build.finalName}/static/readme/"-->
-<!--                                      overwrite="true">-->
-<!--                                    <fileset dir="${project.basedir}/../../doc/readme/"/>-->
-<!--                                </copy>-->
+                                <!--                                <copy todir="${project.build.directory}/${project.build.finalName}/static/readme/"-->
+                                <!--                                      overwrite="true">-->
+                                <!--                                    <fileset dir="${project.basedir}/../../doc/readme/"/>-->
+                                <!--                                </copy>-->
                             </target>
                         </configuration>
                     </execution>

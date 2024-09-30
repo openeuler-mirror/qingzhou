@@ -1,14 +1,14 @@
 package qingzhou.app.system;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.registry.Registry;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_MASTER,
         hidden = true,

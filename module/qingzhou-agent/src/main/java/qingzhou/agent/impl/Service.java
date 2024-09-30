@@ -1,9 +1,17 @@
 package qingzhou.agent.impl;
 
-import qingzhou.config.Agent;
-import qingzhou.config.Config;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
 import qingzhou.crypto.Cipher;
-import qingzhou.deployer.*;
+import qingzhou.deployer.App;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
@@ -14,14 +22,7 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.ModelInfo;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-
 class Service implements Process {
-    private final Config config;
     private final Http http;
     private final Logger logger;
     private final Json json;
@@ -33,11 +34,10 @@ class Service implements Process {
     private String path;
     private HttpServer server;
 
-    Service(String agentHost, int agentPort, Cipher agentCipher, Config config, Http http, Logger logger, Json json, Deployer deployer) {
+    Service(String agentHost, int agentPort, Cipher agentCipher, Http http, Logger logger, Json json, Deployer deployer) {
         this.agentHost = agentHost;
         this.agentPort = agentPort;
         this.agentCipher = agentCipher;
-        this.config = config;
         this.http = http;
         this.logger = logger;
         this.json = json;
@@ -46,9 +46,6 @@ class Service implements Process {
 
     @Override
     public void exec() throws Exception {
-        Agent agent = config.getAgent();
-        if (agent == null || !agent.isEnabled()) return;
-
         path = "/";
         server = http.buildHttpServer();
 

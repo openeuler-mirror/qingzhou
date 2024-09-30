@@ -1,5 +1,8 @@
 package qingzhou.console.impl;
 
+import java.io.File;
+import java.util.Properties;
+
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.console.ContextHelper;
@@ -19,9 +22,6 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletContainer;
 import qingzhou.servlet.ServletService;
-
-import java.io.File;
-import java.util.Properties;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -80,7 +80,7 @@ public class Controller implements ModuleActivator {
             servletContainer.start(console.getWeb().getPort(),
                     new File(moduleContext.getTemp(), "servlet"),
                     new Properties() {{
-                        put("maxPostSize", console.getWeb().getMaxPostSize());
+                        setProperty("maxPostSize", String.valueOf(console.getWeb().getMaxPostSize()));
                     }});
         }
 

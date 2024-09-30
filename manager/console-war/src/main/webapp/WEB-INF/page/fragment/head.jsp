@@ -18,40 +18,40 @@
 <%@ page import="qingzhou.deployer.*" %>
 
 <%
-    String currentUser = LoginManager.getLoginUser(request);
-    RequestImpl qzRequest = (RequestImpl) request.getAttribute(Request.class.getName());
-    String qzApp = qzRequest.getApp();
-    String qzModel = qzRequest.getModel();
-    String qzAction = qzRequest.getAction();
-    ModelInfo modelInfo = qzRequest.getCachedModelInfo();
-    String id = qzRequest.getId();
-    String encodedId = RESTController.encodeId(id);
-    Response qzResponse = qzRequest.getResponse();
-    String themeMode = (String) session.getAttribute(Theme.KEY_THEME_MODE);
+	String currentUser = LoginManager.getLoginUser(request);
+	RequestImpl qzRequest = (RequestImpl) request.getAttribute(Request.class.getName());
+	String qzApp = qzRequest.getApp();
+	String qzModel = qzRequest.getModel();
+	String qzAction = qzRequest.getAction();
+	ModelInfo modelInfo = qzRequest.getCachedModelInfo();
+	String id = qzRequest.getId();
+	String encodedId = RESTController.encodeId(id);
+	Response qzResponse = qzRequest.getResponse();
+	String themeMode = (String) session.getAttribute(Theme.KEY_THEME_MODE);
 %>
 
 <script type="text/javascript">
-    $(document).ready(function () {
-        // 新页面，首先关闭之前的通知消息弹窗
-        try {
-            $("#" + $(getActiveTabContent()).attr("showInfoIndex")).remove();
-            closeLayer($(getActiveTabContent()).attr("showInfoIndex"));
-        } catch (e) {
-            // login.jsp
-        }
-    });
+	$(document).ready(function () {
+		// 新页面，首先关闭之前的通知消息弹窗
+		try {
+			$("#" + $(getActiveTabContent()).attr("showInfoIndex")).remove();
+			closeLayer($(getActiveTabContent()).attr("showInfoIndex"));
+		} catch (e) {
+			// login.jsp
+		}
+	});
 </script>
 
 <%--公用“重定向页面”消息提示--%>
 <%
-    String common_msg = request.getParameter(RESTController.MSG_FLAG);
-    common_msg = LoginManager.retrieveI18nMsg(common_msg);
-    if (common_msg != null) {
+	String common_msg = request.getParameter(RESTController.MSG_FLAG);
+	common_msg = LoginManager.retrieveI18nMsg(common_msg);
+	if (common_msg != null) {
 %>
 <script>
-    $(document).ready(function () {
-        window.setTimeout(function () {
-            var common_msgIndex = showMsg("<%=common_msg%>", "error");
+	$(document).ready(function () {
+		window.setTimeout(function () {
+			var common_msgIndex = showMsg("<%=common_msg%>", "error");
             // 记录最后一次通知弹窗
             try {
                 $(getActiveTabContent()).attr("showInfoIndex", common_msgIndex);
@@ -62,15 +62,15 @@
     });
 </script>
 <%
-    }
+	}
 %>
 
 <%
-    if (!qzResponse.isSuccess()) {
+	if (!qzResponse.isSuccess()) {
 %>
 <script type="text/javascript">
-    $(document).ready(function () {
-        var forward_msgIndex = showMsg("<%=qzResponse.getMsg()%>", "error");
+	$(document).ready(function () {
+		var forward_msgIndex = showMsg("<%=qzResponse.getMsg()%>", "error");
         // 记录最后一次通知弹窗
         try {
             $(getActiveTabContent()).attr("showInfoIndex", forward_msgIndex);
@@ -80,5 +80,5 @@
     });
 </script>
 <%
-    }
+	}
 %>

@@ -1,8 +1,8 @@
 package qingzhou.crypto.impl;
 
-import qingzhou.crypto.Base32Coder;
-
 import java.util.Arrays;
+
+import qingzhou.crypto.Base32Coder;
 
 class Base32CoderImpl implements Base32Coder {
     private final char[] ALPHABET = {

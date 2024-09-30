@@ -1,11 +1,11 @@
 package qingzhou.console.login;
 
+import javax.servlet.http.HttpServletRequest;
+
 import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
-
-import javax.servlet.http.HttpServletRequest;
 
 public class LoginFreeFilter implements Filter<SystemControllerContext> {
     private final String LOGIN_FREE_FLAG = "LOGIN_FREE_FLAG";
