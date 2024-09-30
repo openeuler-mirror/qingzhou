@@ -7,7 +7,8 @@ import qingzhou.logger.Logger;
 
 @App
 public class ExampleMain implements QingzhouApp {
-    public static final String SYSTEM_MANAGEMENT = "SYSTEM_MANAGEMENT";
+    public static final String MENU_1 = "MENU_1";
+    public static final String MENU_2 = "MENU_2";
     public static AppContext appContext;
 
     public static Logger logger;
@@ -19,8 +20,8 @@ public class ExampleMain implements QingzhouApp {
         logger = appContext.getService(Logger.class);
         logger.info("启动样例应用");
 
-        appContext.addMenu(SYSTEM_MANAGEMENT, new String[]{"系统管理", "en: System Management"}, "cog", 1);
-        appContext.addMenu("test", new String[]{"系统管理", "en: System Management"}, "cog", 1,SYSTEM_MANAGEMENT);
+        appContext.addMenu(MENU_1, new String[]{"一级菜单", "en:MENU_1"}, "folder-open", 1);
+        appContext.addMenu(MENU_2, new String[]{"二级菜单", "en:MENU_2"}, "leaf", 1, MENU_1);
 
         appContext.addActionFilter(request -> {
             String msg = String.format("有请求进入，模块：%s，操作：%s", request.getModel(), request.getAction());

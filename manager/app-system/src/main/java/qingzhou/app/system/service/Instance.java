@@ -15,6 +15,7 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +26,8 @@ import java.util.Map;
         info = {"实例是应用部署的载体，为应用提供运行时环境。预置的 " + DeployerConstants.INSTANCE_LOCAL + " 实例表示当前正在访问的服务所在的实例，如集中管理端就运行在此实例上。",
                 "en:An instance is the carrier of application deployment and provides a runtime environment for the application. The provisioned " + DeployerConstants.INSTANCE_LOCAL + " instance indicates the instance where the service is currently accessed, such as the centralized management side running on this instance."})
 public class Instance extends ModelBase implements List, Monitor, Grouped {
+    private static final String ID_KEY = "name";
+
     @ModelField(
             group = group_os,
             required = true,
@@ -196,11 +199,15 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
 
     @Override
     public String idField() {
-        return "name";
+        return ID_KEY;
     }
 
     @Override
     public String[] allIds(Map<String, String> query) {
+        return allInstanceIds(query);
+    }
+
+    public static String[] allInstanceIds(Map<String, String> query) {
         java.util.List<String> ids = new ArrayList<>();
         ids.add(DeployerConstants.INSTANCE_LOCAL);
         Registry registry = Main.getService(Registry.class);
@@ -208,19 +215,29 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
             InstanceInfo instanceInfo = registry.getInstanceInfo(s);
             ids.add(instanceInfo.getName());
         });
-        ids.removeIf(id -> !ModelUtil.query(query, () -> showData(id)));
+        ids.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
+            @Override
+            public String getFieldSeparator(String field) {
+                return ",";// todo
+            }
+
+            @Override
+            public Map<String, String> get() {
+                return showData(id);
+            }
+        }));
         return ids.toArray(new String[0]);
     }
 
     @Override
-    public java.util.List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
-        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
+    public java.util.List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
+        return ModelUtil.listData(allIds(query), Instance::showData, pageNum, pageSize, showFields);
     }
 
-    public Map<String, String> showData(String id) {
+    private static Map<String, String> showData(String id) {
         if (DeployerConstants.INSTANCE_LOCAL.equals(id)) {
             return new HashMap<String, String>() {{
-                put(idField(), DeployerConstants.INSTANCE_LOCAL);
+                put(ID_KEY, DeployerConstants.INSTANCE_LOCAL);
                 put("host", "localhost");
 
                 Config config = Main.getService(Config.class);
@@ -232,7 +249,7 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
         InstanceInfo instanceInfo = Main.getService(Registry.class).getInstanceInfo(id);
         if (instanceInfo != null) {
             return new HashMap<String, String>() {{
-                put(idField(), instanceInfo.getName());
+                put(ID_KEY, instanceInfo.getName());
                 put("host", instanceInfo.getHost());
                 put("port", String.valueOf(instanceInfo.getPort()));
             }};
@@ -243,7 +260,7 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            order = 8,
+            list = true, order = 8,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。",
                     "en:Download the log information of the instance."})
@@ -261,7 +278,9 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
     }
 
     @ModelAction(
-            code = Monitor.ACTION_MONITOR, icon = "line-chart", order = 2,
+            code = Monitor.ACTION_MONITOR, icon = "line-chart",
+            list = true, order = 2,
+            page = "monitor",
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})

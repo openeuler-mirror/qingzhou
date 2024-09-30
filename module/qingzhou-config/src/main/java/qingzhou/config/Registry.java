@@ -1,22 +1,22 @@
 package qingzhou.config;
 
 public class Registry {
-    private long checkTimeout;
-    private long periodicCheckInterval;
+    private long instanceTimeout;
+    private long instanceInterval;
 
-    public long getCheckTimeout() {
-        return checkTimeout;
+    public long getInstanceTimeout() {
+        return instanceTimeout;
     }
 
-    public void setCheckTimeout(long checkTimeout) {
-        this.checkTimeout = checkTimeout;
+    public void setInstanceTimeout(long instanceTimeout) {
+        this.instanceTimeout = instanceTimeout;
     }
 
-    public long getPeriodicCheckInterval() {
-        return periodicCheckInterval;
+    public long getInstanceInterval() {
+        return instanceInterval;
     }
 
-    public void setPeriodicCheckInterval(long periodicCheckInterval) {
-        this.periodicCheckInterval = periodicCheckInterval;
+    public void setInstanceInterval(long instanceInterval) {
+        this.instanceInterval = instanceInterval;
     }
 }

@@ -4,7 +4,6 @@ import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
-import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.List;
 import qingzhou.config.Config;
@@ -79,10 +78,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             }
             return input;
         }
-    }
-
-    public static String getAppName(Request request) {
-        return request.getApp();
     }
 
     public static AppInfo getAppInfo(String appName) {

@@ -48,6 +48,7 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_filePath", new String[]{"文件路径不支持以\\或者/结尾，不支持包含特殊字符和空格", "en:The file path cannot end with \\ or /, and cannot contain special characters or Spaces"});
         I18n.addKeyI18n("validation_options", new String[]{"取值不在范围：%s", "en:The value is not in the range: %s"});
         I18n.addKeyI18n("validation_datetime", new String[]{"须符合时间格式：%s", "en:Must conform to the time format: %s"});
+        I18n.addKeyI18n("validation_readonly", new String[]{"当前状态下不支持写入", "en:Writes are not supported in the current state"});
     }
 
     @Override
@@ -98,7 +99,8 @@ public class ValidationFilter implements Filter<RestContext> {
             new checkEmail(),
             new checkFilePath(),
             new options(),
-            new datetime()
+            new datetime(),
+            new readonly()
     };
 
     private String[] validate(ValidationContext context) {
@@ -106,12 +108,6 @@ public class ValidationFilter implements Filter<RestContext> {
 
         boolean show = SecurityController.checkRule(fieldInfo.getShow(), context.request::getParameter, true);
         if (!show) { // 不再页面显示的属性，不需要校验，并删除之以免后续持久化了错误数据
-            context.request.removeParameter(fieldInfo.getCode());
-            return null;
-        }
-        // check readOnly 须放在 check show 后面，否则 remove 的参数会影响判定
-        boolean readOnly = SecurityController.checkRule(fieldInfo.getReadOnly(), context.request::getParameter, false);
-        if (readOnly) {
             context.request.removeParameter(fieldInfo.getCode());
             return null;
         }
@@ -341,7 +337,7 @@ public class ValidationFilter implements Filter<RestContext> {
 
             if (!context.isUpdateAction) return null;
 
-            context.request.removeParameter(fieldInfo.getCode());
+            // context.request.removeParameter(fieldInfo.getCode()); 有应用里需要这些参数，不能移除
             return null;
         }
     }
@@ -465,6 +461,19 @@ public class ValidationFilter implements Filter<RestContext> {
             } catch (ParseException e) {
                 return new String[]{"validation_datetime", DeployerConstants.FIELD_DATETIME_FORMAT};
             }
+        }
+    }
+
+    static class readonly implements Validator {
+        @Override
+        public String[] validate(ValidationContext context) {
+            String readOnly = context.fieldInfo.getReadOnly();
+            if (readOnly == null || readOnly.trim().isEmpty()) return null;
+
+            boolean checked = SecurityController.checkRule(readOnly, context.request::getParameter, false);
+            if (checked) return null;
+
+            return new String[]{"validation_readonly"};
         }
     }
 }

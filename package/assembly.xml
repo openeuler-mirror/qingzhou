@@ -11,18 +11,18 @@
     <fileSets>
         <fileSet>
             <directory>${project.basedir}/frame</directory>
-            <outputDirectory/>
-            <fileMode>0755</fileMode>
             <excludes>
                 <exclude>**/.empty</exclude>
                 <exclude>**/.gitkeep</exclude>
-                <exclude>release-notes.txt</exclude>
             </excludes>
+            <outputDirectory/>
+            <fileMode>0755</fileMode>
         </fileSet>
+
         <fileSet>
-            <directory>${project.basedir}/frame</directory>
+            <directory>${project.basedir}</directory>
             <includes>
-                <include>release-notes.txt</include>
+                <include>version-notes.md</include>
             </includes>
             <outputDirectory>lib/version${project.version}</outputDirectory>
             <fileMode>0755</fileMode>

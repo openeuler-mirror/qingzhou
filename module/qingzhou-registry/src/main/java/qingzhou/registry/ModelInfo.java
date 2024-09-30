@@ -33,6 +33,14 @@ public class ModelInfo {
                 .toArray(String[]::new);
     }
 
+    public String[] getHeadActionNames() {
+        return Arrays.stream(modelActionInfos)
+                .filter(ModelActionInfo::isHead)
+                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
+                .map(ModelActionInfo::getCode)
+                .toArray(String[]::new);
+    }
+
     public String[] getActionToListHead() {
         return Arrays.stream(modelActionInfos)
                 .filter(modelActionInfo -> modelActionInfo.getShowFields().length > 0 & modelActionInfo.isShowToListHead())
@@ -131,10 +139,14 @@ public class ModelInfo {
         return data;
     }
 
-    public Map<String, Map<String, ModelFieldInfo>> getFormGroupedField() {
+    public Map<String, Map<String, ModelFieldInfo>> getFormGroupedFields() {
+        return getGroupedFields(getFormFieldNames());
+    }
+
+    private Map<String, Map<String, ModelFieldInfo>> getGroupedFields(String[] fieldNames) {
         Map<String, Map<String, ModelFieldInfo>> result = new LinkedHashMap<>();
         Map<String, ModelFieldInfo> defaultGroup = new LinkedHashMap<>();
-        for (String formField : getFormFieldNames()) {
+        for (String formField : fieldNames) {
             ModelFieldInfo fieldInfo = getModelFieldInfo(formField);
             String group = fieldInfo.getGroup();
             if (Utils.isBlank(group)) {
@@ -143,6 +155,7 @@ public class ModelInfo {
                 result.computeIfAbsent(group, k -> new LinkedHashMap<>()).put(formField, fieldInfo);
             }
         }
+
         if (!defaultGroup.isEmpty()) {
             result.put("", defaultGroup);
         }

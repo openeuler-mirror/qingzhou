@@ -14,11 +14,14 @@ import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ActionFilter implements Filter<RestContext> {
     static {
-        I18n.addKeyI18n("action_not_show", new String[]{"不支持%s操作，未满足条件：%s", "en:The %s operation is not supported, the condition is not met: %s"});
+        I18n.addKeyI18n("action_not_show", new String[]{"不支持 %s %s，未满足条件：%s", "en:%s %s is not supported, condition not met: %s"});
         I18n.addKeyI18n("action_not_exist", new String[]{"不存在", "en:Does not exist"});
     }
 
@@ -76,7 +79,9 @@ public class ActionFilter implements Filter<RestContext> {
 
             if (SecurityController.checkRule(condition, new FindValue(id, request), true)) continue;
 
-            String i18n = I18n.getKeyI18n("action_not_show", actionInfo.getCode(), actionInfo.getShow());
+            String i18n = I18n.getKeyI18n("action_not_show",
+                    I18n.getModelI18n(request.getApp(), "model.action." + request.getModel() + "." + request.getAction()),
+                    id, condition);
             request.getResponse().setSuccess(false);
             request.getResponse().setMsg(i18n);
             return false;

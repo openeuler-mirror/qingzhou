@@ -6,6 +6,7 @@ import qingzhou.engine.util.Utils;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.*;
@@ -107,7 +108,7 @@ public class ModelUtil {
                             val = ((InetAddress) val).getHostAddress();
                         }
                         if (val instanceof Properties) {
-                            val = propertiesToString((Properties) val, STRING_PROPERTIES_SP);
+                            val = propertiesToString((Properties) val);
                         } else {
                             Class<?> typeClass = readMethod.getReturnType();
                             if (typeClass != String.class
@@ -125,7 +126,7 @@ public class ModelUtil {
         return properties;
     }
 
-    private static String propertiesToString(Properties properties, String SP) {
+    private static String propertiesToString(Properties properties) {
         if (properties == null) {
             return "";
         }
@@ -134,7 +135,7 @@ public class ModelUtil {
             sb.append(entry.getKey())
                     .append("=")
                     .append(entry.getValue())
-                    .append(SP);
+                    .append(STRING_PROPERTIES_SP);
         }
         return sb.toString();
     }
@@ -143,13 +144,13 @@ public class ModelUtil {
         if (query == null) return true;
 
         for (Map.Entry<String, String> e : query.entrySet()) {
-            String queryKey = e.getKey();
+            String queryField = e.getKey();
             String queryValue = e.getValue();
 
             Map<String, String> data = supplier.get();
-            String val = data.get(queryKey);
+            String val = data.get(queryField);
 
-            String querySP = ",";
+            String querySP = supplier.getFieldSeparator(queryField);
             if (queryValue.contains(querySP)) {
                 boolean found = false;
                 for (String q : queryValue.split(querySP)) {
@@ -169,7 +170,7 @@ public class ModelUtil {
     }
 
     public static List<Map<String, String>> listData(String[] allIds, IdSupplier idSupplier,
-                                                     int pageNum, int pageSize, String[] fieldNames) {
+                                                     int pageNum, int pageSize, String[] fieldNames) throws IOException {
         int totalSize = allIds.length;
         int startIndex = (pageNum - 1) * pageSize;
         int endIndex = Math.min(startIndex + pageSize, totalSize);
@@ -190,10 +191,12 @@ public class ModelUtil {
     }
 
     public interface IdSupplier {
-        Map<String, String> get(String id);
+        Map<String, String> get(String id) throws IOException;
     }
 
     public interface Supplier {
+        String getFieldSeparator(String field);
+
         Map<String, String> get();
     }
 }

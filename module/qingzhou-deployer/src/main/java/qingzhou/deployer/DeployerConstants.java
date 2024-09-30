@@ -10,7 +10,6 @@ public interface DeployerConstants {
     // Master 模块
     String MODEL_MASTER = "master";
     String MODEL_AGENT = "agent";
-    String MODEL_UPGRADE_AGENT = "upgrade_agent";
     String MODEL_INDEX = "index";
     String MODEL_APP = "app";
     String MODEL_USER = "user";
@@ -34,6 +33,10 @@ public interface DeployerConstants {
     String DOWNLOAD_OFFSET = "QINGZHOU_DOWNLOAD_OFFSET";
     String DOWNLOAD_BLOCK = "QINGZHOU_DOWNLOAD_BLOCK";
     String DOWNLOAD_FILE_NAMES = "QINGZHOU_DOWNLOAD_FILE_NAMES";
+    String AGENT_INSTALL_APP = "AGENT_INSTALL_APP";
+    String AGENT_UNINSTALL_APP = "AGENT_UNINSTALL_APP";
+    String AGENT_INSTALL_VERSION = "AGENT_INSTALL_VERSION";
+    String AGENT_UNINSTALL_VERSION = "AGENT_UNINSTALL_VERSION";
 
     // 控制台参数
     String REST_PREFIX = "/rest";

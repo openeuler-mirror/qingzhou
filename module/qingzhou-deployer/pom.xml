@@ -6,7 +6,7 @@
     <parent>
         <groupId>qingzhou</groupId>
         <artifactId>module</artifactId>
-        <version>x</version>
+        <version>1.3.0</version>
     </parent>
 
     <artifactId>qingzhou-deployer</artifactId>
@@ -15,42 +15,42 @@
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-api</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-registry</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-logger</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-config</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-qr</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-ssh</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-http</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-servlet</artifactId>
-            <version>x</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

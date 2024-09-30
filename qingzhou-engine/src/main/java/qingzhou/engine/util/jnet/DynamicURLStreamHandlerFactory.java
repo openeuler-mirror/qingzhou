@@ -48,7 +48,7 @@ public class DynamicURLStreamHandlerFactory extends ParentAwareURLStreamHandlerF
     }
 
     /**
-     * Pop the lastest url stream handler factory from the stack.
+     * Pop the latest url stream handler factory from the stack.
      */
     public static void pop() {
         ParentAwareURLStreamHandlerFactory factory = (ParentAwareURLStreamHandlerFactory) FACTORY.get();

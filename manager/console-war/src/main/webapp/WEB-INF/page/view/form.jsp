@@ -23,24 +23,23 @@
             } else {
                 modelData = new HashMap<>();
             }
-            Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedField();
+            Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedFields();
             Set<String> groups = formGroup.keySet();
             long suffixId = System.currentTimeMillis();
             GroupInfo[] groupInfos = modelInfo.getGroupInfos();
-            if (!groups.iterator().next().isEmpty()) {
+            boolean hasGroup = groups.size() > 1 || Utils.notBlank(groups.iterator().next());
+            if (hasGroup) {
         %>
         <ul class="nav nav-tabs">
             <%
                 boolean isFirst = true;
                 for (String group : groups) {
-                    GroupInfo gInfo = null;
-                    if (groupInfos != null) {
-                        gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(PageUtil.OTHER_GROUP);
-                    }
+                    GroupInfo gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(PageUtil.OTHER_GROUP);
             %>
             <li <%=isFirst ? "class='active'" : ""%>>
                 <a data-tab href="#group-<%=group%>-<%=suffixId%>"
-                   tabGroup="<%=group%>"><%=gInfo != null ? I18n.getStringI18n(gInfo.getI18n()) : group%>
+                   tabGroup="<%=group%>">
+                    <%=I18n.getStringI18n(gInfo.getI18n())%>
                 </a>
             </li>
             <%

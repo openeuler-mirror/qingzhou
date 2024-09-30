@@ -13,6 +13,7 @@ import qingzhou.crypto.MessageDigest;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -33,7 +34,17 @@ public class User extends ModelBase implements General {
     @Override
     public String[] allIds(Map<String, String> query) {
         return Arrays.stream(Main.getService(Config.class).getConsole().getUser())
-                .filter(user -> ModelUtil.query(query, () -> ModelUtil.getPropertiesFromObj(user)))
+                .filter(user -> ModelUtil.query(query, new ModelUtil.Supplier() {
+                    @Override
+                    public String getFieldSeparator(String field) {
+                        return ",";// todo
+                    }
+
+                    @Override
+                    public Map<String, String> get() {
+                        return ModelUtil.getPropertiesFromObj(user);
+                    }
+                }))
                 .map(qingzhou.config.User::getName)
                 .toArray(String[]::new);
     }
@@ -196,7 +207,7 @@ public class User extends ModelBase implements General {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
+    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
         return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
@@ -217,8 +228,9 @@ public class User extends ModelBase implements General {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            order = 9,
+            list = true, order = 9,
             batch = true,
+            page = "list",
             show = "name!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",

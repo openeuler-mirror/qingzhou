@@ -8,6 +8,7 @@ public class ModelActionInfo {
     private String[] name;
     private String[] info;
     private String icon;
+    private boolean head;
     private int order;
     private String show;
     private boolean batch;
@@ -77,6 +78,14 @@ public class ModelActionInfo {
 
     public void setIcon(String icon) {
         this.icon = icon;
+    }
+
+    public boolean isHead() {
+        return head;
+    }
+
+    public void setHead(boolean head) {
+        this.head = head;
     }
 
     public int getOrder() {

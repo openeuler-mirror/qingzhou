@@ -7,7 +7,7 @@ import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
 @Model(code = "post", icon = "stack",
-        menu = ExampleMain.SYSTEM_MANAGEMENT, order = 3,
+        menu = ExampleMain.MENU_1, order = 3,
         name = {"岗位", "en:Post"},
         info = {"岗位管理。", "en:Post management."})
 public class Post extends AddModelBase {

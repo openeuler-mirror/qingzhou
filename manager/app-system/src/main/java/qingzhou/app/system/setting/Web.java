@@ -36,6 +36,7 @@ public class Web extends ModelBase implements Update {
 
     @ModelField(
             type = FieldType.number,
+            required = true,
             min = 1,
             name = {"最大 POST 长度", "en:Max Post Size"},
             info = {"设置接收 POST 数据的最大长度，单位：字节。",

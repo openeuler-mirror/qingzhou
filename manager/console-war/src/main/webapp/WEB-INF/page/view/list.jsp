@@ -28,14 +28,16 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    if (SecurityController.isActionShow(qzApp, qzModel, Add.ACTION_ADD, null, currentUser)) {
+                    for (String action : modelInfo.getHeadActionNames()) {
+                        if (SecurityController.isActionShow(qzApp, qzModel, action, null, currentUser)) {
                 %>
                 <a class="btn"
-                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, Add.ACTION_CREATE)%>">
+                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, action)%>">
                     <i class="icon icon-plus-sign"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Add.ACTION_CREATE)%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + action)%>
                 </a>
                 <%
+                        }
                     }
 
                     // 支持批量操作的按钮

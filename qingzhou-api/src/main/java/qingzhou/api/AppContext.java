@@ -56,7 +56,7 @@ public interface AppContext {
      * @param icon  菜单项的图标。
      * @param order 菜单项的顺序。
      */
-    void addMenu(String name, String[] i18n, String icon, int order,String... parent);
+    void addMenu(String name, String[] i18n, String icon, int order, String... parent);
 
     /**
      * 获取本Module开放的Service，以及从其它Module注入的Service
@@ -71,4 +71,6 @@ public interface AppContext {
      * 获取此 ModelBase 的模块名，即 qingzhou.api.Model#code() 标注值
      */
     String getModel(ModelBase modelBase);
+
+    String getPlatformVersion();
 }

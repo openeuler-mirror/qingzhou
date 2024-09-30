@@ -20,7 +20,7 @@
 <%
     String currentUser = LoginManager.getLoginUser(request);
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(Request.class.getName());
-    String qzApp = SystemController.getAppName(qzRequest);
+    String qzApp = qzRequest.getApp();
     String qzModel = qzRequest.getModel();
     String qzAction = qzRequest.getAction();
     ModelInfo modelInfo = qzRequest.getCachedModelInfo();
