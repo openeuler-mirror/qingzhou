@@ -41,7 +41,9 @@
                     }
                     String fieldValue = infoData.get(fieldName);
                     fieldValue = fieldValue != null ? fieldValue : "";
-                    fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
+                    if (!FieldType.markdown.name().equals(modelField.getType())){
+                        fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
+                    }
             %>
             <tr row-item="<%=fieldName%>">
                 <td class="home-field-info" field="<%=fieldName%>">
@@ -59,8 +61,7 @@
                     <%
                         } else {
                             if (FieldType.markdown.name().equals(modelField.getType())) {
-                                out.print("<div class=\"markedview\"></div><textarea name=\"" + fieldName
-                                        + "\" class=\"markedviewText\" rows=\"3\">" + fieldValue + "</textarea>");
+                                out.print("<div class=\"markdownview\">"+ fieldValue +"</div>");
                             } else {
                                 out.print(PageUtil.styleFieldValue(fieldValue, modelField));
                             }
@@ -77,3 +78,16 @@
 <%
     }
 %>
+<script>
+    $(document).ready(function () {
+        //为所有class=markdownview的div内容做转化
+        const markdownViews = document.querySelectorAll('div.markdownview');
+
+        // 使用 forEach 循环遍历每个元素
+        markdownViews.forEach((element) => {
+            // 在这里对每个元素进行操作
+            let data = element.innerHTML;
+            element.innerHTML = marked.parse(data);
+        });
+    });
+</script>
