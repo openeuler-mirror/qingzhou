@@ -80,7 +80,7 @@ public class Controller implements ModuleActivator {
             servletContainer.start(console.getWeb().getPort(),
                     new File(moduleContext.getTemp(), "servlet"),
                     new Properties() {{
-                        put("maxPostSize", console.getWeb().getMaxPostSize());
+                        setProperty("maxPostSize", String.valueOf(console.getWeb().getMaxPostSize()));
                     }});
         }
 
