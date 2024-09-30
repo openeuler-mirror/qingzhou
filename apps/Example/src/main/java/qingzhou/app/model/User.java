@@ -59,4 +59,5 @@ public class User extends AddModelBase {
     public String idField() {
         return "name";
     }
+
 }
