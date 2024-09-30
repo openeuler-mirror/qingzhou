@@ -8,6 +8,7 @@
 
     String[] fieldsToList = modelInfo.getFieldsToList();
     String[] actionsToList = modelInfo.getListActionNames();
+    String[] actionsToHead = modelInfo.getActionToListHead();
     ModelActionInfo[] batchActions = PageUtil.listBachActions(qzRequest, qzResponse, currentUser);
 
     int totalSize = qzResponse.getTotalSize();
@@ -62,17 +63,29 @@
                 </a>
                 <%
                     }
-                %>
-<%--                <%
-                    {
+                    for (String actionName : actionsToHead) {
+                        ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
+                        String actionTitle = I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName);
+                        if (actionTitle != null) {
+                            actionTitle = "data-tip='" + actionTitle + "'";
+                        } else {
+                            actionTitle = "data-tip='" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName) + "'";
+                        }
                         Map<String, String> modelData = new HashMap<>();
+                        String customActionId = "popup-" + qzApp + "-" + qzModel + "-" + action.getCode();
                 %>
-                <div style="display: none" custom-action-id="popup-<%=qzApp + "-" + qzModel%>">
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, actionName)%>" <%=actionTitle%>
+                   class="btn" data-tip-arrow="top" action-name="<%=actionName%>"
+                   custom-action-id="<%=customActionId%>">
+                    <i class="icon icon-<%=action.getIcon()%>"></i>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
+                </a>
+                <div style="display: none" custom-action-id="<%=customActionId%>">
                     <%@ include file="../fragment/custom_form.jsp" %>
                 </div>
                 <%
                     }
-                %>--%>
+                %>
             </div>
         </div>
 

@@ -1093,7 +1093,7 @@ function bindEventForListPage() {
         return false;
     });
 
-    $("table a[custom-action-id]").unbind("click").bind("click", function (e) {
+    $("a[custom-action-id]").unbind("click").bind("click", function (e) {
         e.preventDefault();
         if($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0){
             customAction($(this).attr("href"),$(this).attr("custom-action-id"),$(this).attr("data-tip"));
@@ -1253,10 +1253,13 @@ function customAction(actionUrl, customActionId, title) {
         content: html,
         btn: [getSetting("confirmBtnText"), getSetting("cancelBtnText")],
         success: function (){
-            $('#' + customActionId + ' a[data-tab]').unbind("click").bind("click", function (e) {
-                const dataTarget = $(this).attr("data-target").substring(1);
-                console.log(dataTarget)
-                $('#' + customActionId + ' div#' + dataTarget + '[tab-pane]').tab('show');
+            $('#' + customActionId + ' a[data-tab]').each(function () {
+                const dataTarget = $(this).attr("href");
+                $(this).attr("href", dataTarget + "-popup");
+            });
+            $('#' + customActionId + ' div.tab-pane').each(function () {
+                const id = $(this).attr("id");
+                $(this).attr("id", id + "-popup");
             });
         },
         yes: function () {

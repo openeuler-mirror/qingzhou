@@ -13,6 +13,7 @@ public class ModelActionInfo {
     private boolean batch;
     private String page;
     private String[] showFields;
+    private boolean showToListHead;
 
     public Method getMethod() {
         return method;
@@ -92,5 +93,13 @@ public class ModelActionInfo {
 
     public void setShowFields(String[] showFields) {
         this.showFields = showFields;
+    }
+
+    public boolean isShowToListHead() {
+        return showToListHead;
+    }
+
+    public void setShowToListHead(boolean showToListHead) {
+        this.showToListHead = showToListHead;
     }
 }

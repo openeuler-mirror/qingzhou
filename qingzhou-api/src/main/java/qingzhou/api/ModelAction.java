@@ -35,4 +35,7 @@ public @interface ModelAction {
     String[] info();
 
     String[] showFields() default {};
+
+    boolean showToListHead() default false;
+
 }

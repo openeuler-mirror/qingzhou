@@ -33,6 +33,14 @@ public class ModelInfo {
                 .toArray(String[]::new);
     }
 
+    public String[] getActionToListHead() {
+        return Arrays.stream(modelActionInfos)
+                .filter(modelActionInfo -> modelActionInfo.getShowFields().length > 0 & modelActionInfo.isShowToListHead())
+                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
+                .map(ModelActionInfo::getCode)
+                .toArray(String[]::new);
+    }
+
     public String[] getBatchActionNames() {
         return Arrays.stream(modelActionInfos)
                 .filter(modelActionInfo -> modelActionInfo.getOrder() > 0)

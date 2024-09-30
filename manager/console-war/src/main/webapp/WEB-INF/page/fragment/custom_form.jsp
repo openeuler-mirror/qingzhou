@@ -4,6 +4,14 @@
     <%
       Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedField();
       Set<String> groups = formGroup.keySet();
+      Iterator<String> iterator = groups.iterator();
+      while (iterator.hasNext()) {
+        Map<String, ModelFieldInfo> groupFieldMap = formGroup.get(iterator.next());
+        Object[] overlap = ArrayUtils.overlap(groupFieldMap.keySet().toArray(), action.getShowFields());
+        if (overlap == null || overlap.length == 0) {
+          iterator.remove();
+        }
+      }
       long suffixId = System.currentTimeMillis();
       GroupInfo[] groupInfos = modelInfo.getGroupInfos();
       if (!groups.iterator().next().isEmpty()) {
@@ -18,7 +26,7 @@
           }
       %>
       <li <%=isFirstGroup ? "class='active'" : ""%>>
-        <a data-tab href="###" data-target="#group-<%=group%>-<%=suffixId%>" data-toggle="tab"
+        <a data-tab href="#group-<%=group%>-<%=suffixId%>" data-toggle="tab"
            tabGroup="<%=group%>"><%=gInfo != null ? I18n.getStringI18n(gInfo.getI18n()) : group%>
         </a>
       </li>
@@ -50,17 +58,6 @@
             ModelFieldInfo modelField = e.getValue();
 
             String readonly = "";
-            if (!modelField.isEditable()) {
-              readonly = "readonly";
-            } else if (fieldName.equals(idField)) {
-              readonly = "readonly";
-            } else {
-              boolean readOnly = SecurityController.checkRule(modelField.getReadOnly(), modelData::get, false);
-              if (readOnly) {
-                readonly = "readonly";
-              }
-            }
-
             String fieldValue = modelData.get(fieldName);
             if (fieldValue == null) {
               fieldValue = "";
