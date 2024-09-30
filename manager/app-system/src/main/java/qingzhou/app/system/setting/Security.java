@@ -12,10 +12,10 @@ import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
 
 @Model(code = "security", icon = "shield",
-        menu = Main.SETTING_MENU, order = 4,
+        menu = Main.Setting, order = 3,
         entrance = Update.ACTION_EDIT,
         name = {"安全", "en:Security"},
-        info = {"配置轻舟管理控制台的安全策略。", "en:Configure the security policy of QingZhou management console."})
+        info = {"配置轻舟管理控制台的安全策略。", "en:Configure the security policy of Qingzhou management console."})
 public class Security extends ModelBase implements Update {
     @ModelField(
             name = {"信任 IP", "en:Trusted IP"},
@@ -66,7 +66,7 @@ public class Security extends ModelBase implements Update {
             lengthMax = 1000,
             name = {"加密公钥", "en:Public Key"},
             info = {"为了能够管理远端的实例，需要将此密钥在远端的实例进行保存。此外，客户端通过 REST、JMX 等接口管理轻舟实例时，也需要使用此密钥对敏感数据进行加密后再传输。",
-                    "en:In order to manage the remote instance, you need to save the key in the remote instance. In addition, when clients manage QingZhou instances through interfaces such as REST and JMX, they also need to use this key to encrypt sensitive data before transmission."})
+                    "en:In order to manage the remote instance, you need to save the key in the remote instance. In addition, when clients manage Qingzhou instances through interfaces such as REST and JMX, they also need to use this key to encrypt sensitive data before transmission."})
     public String publicKey;
 
     @Override

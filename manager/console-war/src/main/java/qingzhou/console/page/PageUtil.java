@@ -94,60 +94,56 @@ public class PageUtil {
     public static String buildMenu(HttpServletRequest request, HttpServletResponse response, Request qzRequest) {
         AppInfo appInfo = SystemController.getAppInfo(qzRequest.getApp());
 
-        MenuInfo[] rootMenuInfos = appInfo.getMenuInfos();
-        MenuItem[] rootMenuItems = new MenuItem[rootMenuInfos.length];
-        for (int i = 0; i < rootMenuInfos.length; i++) {
-            rootMenuItems[i] = createMenuItem(rootMenuInfos[i]);
-        }
+        MenuItem rootMenu = new MenuItem();
 
-        List<ModelInfo> noMenuModels = new ArrayList<>();
+        List<MenuInfo> temp = new ArrayList<>(appInfo.getMenuInfos());
+
+        temp.forEach(menuInfo -> {
+            MenuItem menuItem = new MenuItem();
+            menuItem.setName(menuInfo.getName());
+            menuItem.setIcon(menuInfo.getIcon());
+            menuItem.setI18n(menuInfo.getI18n());
+            menuItem.setOrder(menuInfo.getOrder());
+
+            String parent = menuInfo.getParent();
+            MenuItem foundParent = rootMenu.findMenu(parent);
+            if (foundParent != null) {
+                foundParent.addMenuItem(menuItem);
+            } else {
+                rootMenu.addMenuItem(menuItem);
+            }
+        });
+
+        // 将 Model 菜单挂到 导航 菜单上
         for (ModelInfo modelInfo : appInfo.getModelInfos()) {
             if (modelInfo.isHidden()) continue;
             String menu = modelInfo.getMenu();
-            MenuItem modelParentMenu = findMenuItem(menu, rootMenuItems);
-            if (modelParentMenu != null) {
-                modelParentMenu.addModelInfo(modelInfo);
+            MenuItem foundParent = rootMenu.findMenu(menu);
+            if (foundParent != null) {
+                foundParent.addModelInfo(modelInfo);
             } else {
-                noMenuModels.add(modelInfo);
+                rootMenu.addModelInfo(modelInfo);
             }
         }
 
         StringBuilder menuHtml = new StringBuilder();
-        for (ModelInfo noMenuModel : noMenuModels) {
+        // 同一级别，Model 菜单排前面
+        for (ModelInfo noMenuModel : rootMenu.getSubModelList()) {
             menuHtml.append(buildModelMenu(noMenuModel, qzRequest, request, response));
         }
-        for (MenuItem rootMenu : rootMenuItems) {
-            menuHtml.append(buildParentMenu(0, rootMenu, qzRequest, request, response));
+        // 同一级别，导航 菜单排后面
+        for (MenuItem levelOneMenu : rootMenu.getSubMenuList()) {
+            menuHtml.append(buildParentMenu(0, levelOneMenu, qzRequest, request, response));
         }
         return menuHtml.toString();
     }
 
-    private static MenuItem findMenuItem(String name, MenuItem[] menuItems) {
-        for (MenuItem menuItem : menuItems) {
-            if (menuItem.getName().equals(name)) {
-                return menuItem;
-            }
-            MenuItem found = findMenuItem(name, menuItem.getChildren().toArray(new MenuItem[0]));
-            if (found != null) return found;
-        }
-        return null;
-    }
-
-    private static MenuItem createMenuItem(MenuInfo menuInfo) {
-        MenuItem menuItem = new MenuItem();
-        menuItem.setName(menuInfo.getName());
-        menuItem.setIcon(menuInfo.getIcon());
-        menuItem.setI18n(menuInfo.getI18n());
-        for (MenuInfo child : menuInfo.getChildren()) {
-            MenuItem childMenuItem = createMenuItem(child);
-            menuItem.getChildren().add(childMenuItem);
-        }
-        return menuItem;
-    }
-
-    private static String buildParentMenu(int paddingLeft, MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
+    private static String buildParentMenu(int level, MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
         StringBuilder menuHtml = new StringBuilder();
-        boolean isDefaultActive = "Service".equals(menuItem.getName());
+
+        // qingzhou.app.system.Main.XXX
+        boolean isDefaultActive = "Business".equals(menuItem.getName());
+
         menuHtml.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append("\">");
         menuHtml.append("   <a href=\"javascript:void(0);\">");
         menuHtml.append("       <i class=\"icon icon-").append(menuItem.getIcon()).append("\"></i>");
@@ -155,25 +151,28 @@ public class PageUtil {
         menuHtml.append("       <span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");
         menuHtml.append("   </a>");
 
-        boolean modelBuild = false;
-        if (!menuItem.getModelInfos().isEmpty()) {
+        int paddingLeft = level * 25;
+
+        boolean menuBegan = false;
+        if (!menuItem.getSubModelList().isEmpty()) {
             menuHtml.append("<ul class=\"treeview-menu\" style=\"padding-left: ").append(paddingLeft).append("px;\">");
-            menuItem.getModelInfos().forEach(subModel -> menuHtml.append(buildModelMenu(subModel, qzRequest, request, response)));
-            modelBuild = true;
+            menuBegan = true;
+
+            menuItem.getSubModelList().forEach(subModel -> menuHtml.append(buildModelMenu(subModel, qzRequest, request, response)));
         }
 
-        if (!menuItem.getChildren().isEmpty()) {
-            if (!modelBuild) {
+        if (!menuItem.getSubMenuList().isEmpty()) {
+            if (!menuBegan) {
                 menuHtml.append("<ul class=\"treeview-menu\" style=\"padding-left: ").append(paddingLeft).append("px;\">");
+                menuBegan = true;
             }
-            menuItem.getChildren().forEach(subMenu -> menuHtml.append(buildParentMenu(paddingLeft + 25, subMenu, qzRequest, request, response)));
-            menuHtml.append("</ul>");
-        } else {
-            if (modelBuild) {
-                menuHtml.append("</ul>");
-            }
+
+            menuItem.getSubMenuList().forEach(subMenu -> menuHtml.append(buildParentMenu(level + 1, subMenu, qzRequest, request, response)));
         }
 
+        if (menuBegan) {
+            menuHtml.append("</ul>");
+        }
 
         menuHtml.append("</li>");
         return menuHtml.toString();

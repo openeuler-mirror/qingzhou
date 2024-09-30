@@ -1,7 +1,7 @@
 package qingzhou.api;
 
 /**
- * QingZhou 应用抽象类，定义了应用的启动和停止操作。
+ * Qingzhou 应用抽象类，定义了应用的启动和停止操作。
  */
 public interface QingzhouApp {
 

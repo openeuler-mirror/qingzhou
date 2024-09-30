@@ -28,7 +28,7 @@ public class I18n implements Filter<SystemControllerContext> {
     private static final String lastUriKey = "lastUriKey";
 
     static {
-        addKeyI18n("page.index", new String[]{" QingZhou 平台", "en:QingZhou Platform"});
+        addKeyI18n("page.index", new String[]{" Qingzhou 平台", "en:Qingzhou Platform"});
         addKeyI18n("page.index.centralized", new String[]{"集中管理", "en:Centralized Management"});
         addKeyI18n("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
         addKeyI18n("page.action", new String[]{"操作", "en:Action"});

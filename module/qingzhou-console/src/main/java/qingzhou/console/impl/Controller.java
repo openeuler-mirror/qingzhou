@@ -108,7 +108,7 @@ public class Controller implements ModuleActivator {
             String docBase = consoleApp.getAbsolutePath();
             contextPath = console.getWeb().getContextRoot();
             servletContainer.addWebapp(contextPath, docBase);
-            logger.info("Open a browser to access the QingZhou console: http://localhost:" + console.getWeb().getPort() + contextPath);
+            logger.info("Open a browser to access the Qingzhou console: http://localhost:" + console.getWeb().getPort() + contextPath);
         }
 
         @Override

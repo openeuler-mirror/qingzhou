@@ -24,14 +24,14 @@ import qingzhou.api.type.Delete;
 import qingzhou.api.type.Show;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.app.system.service.App;
-import qingzhou.app.system.service.Instance;
+import qingzhou.app.system.business.App;
+import qingzhou.app.system.business.Instance;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.FileUtil;
 
 @Model(code = "version", icon = "upload-alt",
-        menu = Main.SETTING_MENU,
-        order = 5,
+        menu = Main.Setting,
+        order = 4,
         name = {"版本", "en:Product Version"},
         info = {"管理轻舟的运行版本，将轻舟升级到一个新的版本。注：升级包会立即下发，但在实例下次重启时生效。",
                 "en:Manage the running version of the light boat and upgrade the light boat to a new version. Note: The upgrade package is delivered immediately, but takes effect the next time the instance is restarted."})
@@ -53,6 +53,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelField(
             createable = false,
             list = true,
+            color = {"true:success", "false:default"},
             name = {"生效中", "en:Running"},
             info = {"此版本是否处于生效状态。", "en:Whether this version is in effect."})
     public String running;
@@ -164,6 +165,15 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     private List<String> getReleaseNotes(String id) throws IOException {
         File versionFile = new File(Main.getLibBase(), Main.QZ_VER_NAME + id);
         String releaseNoteFile = "version-notes.md";
+
+        if (versionFile.isDirectory()) {
+            File notesFile = new File(versionFile, releaseNoteFile);
+            if (notesFile.exists()) {
+                return FileUtil.readLines(notesFile);
+            }
+        }
+
+        versionFile = new File(Main.getLibBase(), Main.QZ_VER_NAME + id + ".zip");
         if (versionFile.isFile()) {
             if (versionFile.getName().toLowerCase().endsWith(".zip")) {
                 try (ZipFile zipFile = new ZipFile(versionFile)) {
@@ -173,12 +183,8 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
                     }
                 }
             }
-        } else if (versionFile.isDirectory()) {
-            File notesFile = new File(versionFile, releaseNoteFile);
-            if (notesFile.exists()) {
-                return FileUtil.readLines(notesFile);
-            }
         }
+
         return null;
     }
 

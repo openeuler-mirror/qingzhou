@@ -25,7 +25,7 @@ public class Home extends ModelBase {
 
     @ModelField(
             name = {"Java 环境", "en:Java Env"},
-            info = {"运行 QingZhou 实例的 Java 环境。", "en:The Java environment in which QingZhou instance is running."})
+            info = {"运行 Qingzhou 实例的 Java 环境。", "en:The Java environment in which Qingzhou instance is running."})
     public String javaHome;
 
     @ModelAction(

@@ -58,7 +58,7 @@ public class Controller implements ModuleActivator {
         deployer = new DeployerImpl(moduleContext, logger);
 
         moduleContext.registerService(Deployer.class, deployer);
-        moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, cryptoService, http, logger));
+        moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, cryptoService, http, logger, config));
 
         deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
             @Override

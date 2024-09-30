@@ -12,7 +12,7 @@ import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
 
 @Model(code = "web", icon = "link",
-        menu = Main.SETTING_MENU, order = 2,
+        menu = Main.Setting, order = 1,
         entrance = Update.ACTION_EDIT,
         name = {"Web", "en:Web"},
         info = {"设置控制台相关参数，如 HTTP、Servlet 等。注：这些参数变更后，在下次启动后生效。",

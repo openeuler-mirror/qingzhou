@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import qingzhou.api.FieldType;
@@ -255,5 +256,18 @@ public class ModelInfo {
 
     public void setModelActionInfos(ModelActionInfo[] modelActionInfos) {
         this.modelActionInfos = modelActionInfos;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ModelInfo modelInfo = (ModelInfo) o;
+        return Objects.equals(code, modelInfo.code);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(code);
     }
 }

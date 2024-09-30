@@ -1,48 +1,30 @@
 package qingzhou.registry;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 
 public class AppInfo {
     private String name;
     private String filePath;
-    private ModelInfo[] modelInfos = new ModelInfo[0];
-    private MenuInfo[] menuInfos = new MenuInfo[0];
+    private final Set<ModelInfo> modelInfos = new HashSet<>();
+    private final Set<MenuInfo> menuInfos = new HashSet<>();
 
-    public MenuInfo getMenuInfo(String name) {
-        if (menuInfos != null) {
-            for (MenuInfo menuInfo : menuInfos) {
-                if (menuInfo.getName().equals(name)) {
-                    return menuInfo;
-                }
-            }
+    public void addModelInfo(ModelInfo modelInfo) {
+        boolean added = modelInfos.add(modelInfo);
+        if (!added) {
+            throw new IllegalArgumentException("The same model already exists: " + modelInfo.getCode());
         }
-        return null;
     }
 
     public ModelInfo getModelInfo(String modelName) {
-        for (ModelInfo modelInfo : modelInfos) {
-            if (modelInfo.getCode().equals(modelName)) {
-                return modelInfo;
-            }
-        }
-        return null;
+        return modelInfos.stream().filter(modelInfo -> modelInfo.getCode().equals(modelName)).findAny().orElse(null);
     }
 
     public void addMenuInfo(MenuInfo menuInfo) {
-        MenuInfo[] newMenuInfos = new MenuInfo[menuInfos.length + 1];
-        System.arraycopy(menuInfos, 0, newMenuInfos, 0, menuInfos.length);
-        newMenuInfos[newMenuInfos.length - 1] = menuInfo;
-        menuInfos = newMenuInfos;
-        Arrays.sort(menuInfos, Comparator.comparingInt(MenuInfo::getOrder));
-    }
-
-    public void addModelInfo(ModelInfo modelInfo) {
-        ModelInfo[] newModelInfos = new ModelInfo[modelInfos.length + 1];
-        System.arraycopy(modelInfos, 0, newModelInfos, 0, modelInfos.length);
-        newModelInfos[newModelInfos.length - 1] = modelInfo;
-        modelInfos = newModelInfos;
-        Arrays.sort(modelInfos, Comparator.comparingInt(ModelInfo::getOrder));
+        boolean added = menuInfos.add(menuInfo);
+        if (!added) {
+            throw new IllegalArgumentException("The same menu already exists: " + menuInfo.getName());
+        }
     }
 
     public String getName() {
@@ -61,11 +43,11 @@ public class AppInfo {
         this.filePath = filePath;
     }
 
-    public ModelInfo[] getModelInfos() {
+    public Set<ModelInfo> getModelInfos() {
         return modelInfos;
     }
 
-    public MenuInfo[] getMenuInfos() {
+    public Set<MenuInfo> getMenuInfos() {
         return menuInfos;
     }
 }

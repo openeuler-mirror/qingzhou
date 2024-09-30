@@ -1,4 +1,4 @@
-package qingzhou.app.system.setting;
+package qingzhou.app.system.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,9 +15,9 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 
-@Model(code = "component", icon = "cubes",
-        menu = Main.SETTING_MENU,
-        order = 6,
+@Model(code = "component", icon = "bullseye",
+        menu = Main.Service,
+        order = 1,
         name = {"公共组件", "en:Component"},
         info = {"轻舟为应用提供了一系列开箱即用的公共组件，包括加密服务、JSON 文件处理、Servlet 服务、SSH 服务和二维码生成器等，以提高业务系统的开发效率。使用轻舟的公共组件非常方便，只需调用 AppContext 对象的 getService 方法传入组件类型，即可获得相应的组件对象。",
                 "en:Qingzhou provides a series of out-of-the-box public components for applications, including encryption services, JSON file processing, servlet services, SSH services, and QR code generators, etc., to improve the development efficiency of business systems. It is very convenient to use the public component of Qingzhou, just call the getService method of the AppContext object to pass in the component type, and the corresponding component object can be obtained."}

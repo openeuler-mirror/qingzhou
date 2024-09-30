@@ -47,7 +47,7 @@ public class Controller implements ModuleActivator {
 
         Cipher agentCipher = cryptoService.getCipher(generateKey);
 
-        Heartbeat heartbeat = new Heartbeat(agentHost, agentPort, encryptedAgentKey, config, json, deployer, logger, cryptoService.getMessageDigest(), http);
+        Heartbeat heartbeat = new Heartbeat(agentHost, agentPort, encryptedAgentKey, config, json, deployer, logger, cryptoService.getMessageDigest(), http, moduleContext);
         sequence = new ProcessSequence(
                 () -> deployer.addAppListener(new AppListenerImpl(heartbeat)),
                 new qingzhou.agent.impl.Service(agentHost, agentPort, agentCipher, http, logger, json, deployer),

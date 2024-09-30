@@ -64,8 +64,8 @@ public @interface ModelField {
     String linkModel() default "";
 
     /**
-     * 用于样式转换，形式：{"当前字段值:color-success", "当前字段值:color-default"}
-     * color-success(绿色)、color-primary(蓝色)、color-default(灰色)、color-warning(黄色)、color-danger(浅红色)、color-info(深红色)
+     * 用于样式转换，形式：{"当前字段值:success", "当前字段值:default"}
+     * success(绿色)、primary(蓝色)、default(灰色)、warning(黄色)、danger(浅红色)、info(深红色)
      */
     String[] color() default {};
 

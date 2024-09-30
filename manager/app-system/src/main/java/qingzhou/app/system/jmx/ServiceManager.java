@@ -41,7 +41,7 @@ public class ServiceManager {
     }
 
     void init(Jmx jmx) throws Exception {
-        objectName = new ObjectName("QingZhou:name=console");
+        objectName = new ObjectName("Qingzhou:name=console");
         mBeanServer = ManagementFactory.getPlatformMBeanServer();
         mBeanServer.registerMBean(new ConsoleJmx(), objectName);
 

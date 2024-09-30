@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.config.Config;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
@@ -40,14 +41,16 @@ class ActionInvokerImpl implements ActionInvoker {
     private final CryptoService crypto;
     private final Http http;
     private final Logger logger;
+    private final Config config;
 
-    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, CryptoService crypto, Http http, Logger logger) {
+    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, CryptoService crypto, Http http, Logger logger, Config config) {
         this.deployer = deployer;
         this.registry = registry;
         this.json = json;
         this.crypto = crypto;
         this.http = http;
         this.logger = logger;
+        this.config = config;
     }
 
     @Override
@@ -84,7 +87,9 @@ class ActionInvokerImpl implements ActionInvoker {
                             }
                         }
 
-                        cipher = crypto.getCipher(instanceInfo.getKey());
+                        String privateKey = config.getConsole().getSecurity().getPrivateKey();
+                        String agentKey = crypto.getPairCipher(null, privateKey).decryptWithPrivateKey(instanceInfo.getKey());
+                        cipher = crypto.getCipher(agentKey);
                     }
 
                     Response response = callRemoteInstance(
