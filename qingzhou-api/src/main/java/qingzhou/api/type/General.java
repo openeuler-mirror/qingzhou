@@ -1,8 +1,8 @@
 package qingzhou.api.type;
 
-import qingzhou.api.Groups;
-
 import java.util.Map;
+
+import qingzhou.api.Groups;
 
 public interface General extends Add, Delete, Update, List, Show, Grouped {
     @Override

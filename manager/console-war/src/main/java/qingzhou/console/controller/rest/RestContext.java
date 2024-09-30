@@ -1,9 +1,9 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.deployer.RequestImpl;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import qingzhou.deployer.RequestImpl;
 
 public class RestContext {
     public final HttpServletRequest req;

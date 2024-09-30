@@ -1,11 +1,11 @@
 package qingzhou.command.instance;
 
-import qingzhou.command.CommandLineProcessor;
-import qingzhou.command.CommandUtil;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import qingzhou.command.CommandLineProcessor;
+import qingzhou.command.CommandUtil;
 
 public class Instance extends CommandLineProcessor {
     public Instance() {

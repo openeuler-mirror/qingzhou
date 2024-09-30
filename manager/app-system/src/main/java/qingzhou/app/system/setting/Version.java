@@ -1,6 +1,24 @@
 package qingzhou.app.system.setting;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.Show;
@@ -10,13 +28,6 @@ import qingzhou.app.system.service.App;
 import qingzhou.app.system.service.Instance;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.FileUtil;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 @Model(code = "version", icon = "upload-alt",
         menu = Main.SETTING_MENU,

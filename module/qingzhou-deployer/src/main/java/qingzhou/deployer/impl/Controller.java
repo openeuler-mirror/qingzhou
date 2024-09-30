@@ -1,5 +1,8 @@
 package qingzhou.deployer.impl;
 
+import java.io.File;
+import java.util.Arrays;
+
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
@@ -18,9 +21,6 @@ import qingzhou.qr.QrGenerator;
 import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletService;
 import qingzhou.ssh.SSHService;
-
-import java.io.File;
-import java.util.Arrays;
 
 @Module
 public class Controller implements ModuleActivator {

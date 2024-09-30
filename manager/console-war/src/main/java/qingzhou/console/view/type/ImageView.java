@@ -1,12 +1,12 @@
 package qingzhou.console.view.type;
 
+import java.util.List;
+import java.util.Map;
+
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.crypto.CryptoService;
-
-import java.util.List;
-import java.util.Map;
 
 public class ImageView implements View {
     public static final String CONTENT_TYPE = "image/png";

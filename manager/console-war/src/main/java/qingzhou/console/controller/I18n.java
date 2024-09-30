@@ -1,5 +1,10 @@
 package qingzhou.console.controller;
 
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import qingzhou.api.Lang;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
@@ -12,11 +17,6 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.util.Map;
 
 public class I18n implements Filter<SystemControllerContext> {
     public static final String LANG_SWITCH_URI = "/lang";

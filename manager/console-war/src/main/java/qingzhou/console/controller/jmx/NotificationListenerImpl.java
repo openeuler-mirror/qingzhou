@@ -1,11 +1,11 @@
 package qingzhou.console.controller.jmx;
 
-import qingzhou.console.controller.SystemController;
-
 import javax.management.Notification;
 import javax.management.NotificationListener;
 import javax.management.remote.JMXConnectionNotification;
 import javax.servlet.http.HttpSession;
+
+import qingzhou.console.controller.SystemController;
 
 public class NotificationListenerImpl implements NotificationListener {
     @Override

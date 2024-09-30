@@ -13,10 +13,12 @@ public class CommandUtil {
     public static File getLibDir() {
         String jarPath = Admin.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         try {
-            jarPath = java.net.URLDecoder.decode( // 兼容中文路径
+            // 兼容中文路径
+            jarPath = java.net.URLDecoder.decode(
                     jarPath,
                     Charset.defaultCharset().name());
-        } catch (UnsupportedEncodingException ignored) {
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
         String flag = "/command/qingzhou-command.jar";
         int i = jarPath.indexOf(flag);
@@ -34,8 +36,7 @@ public class CommandUtil {
         return System.getProperty("os.name", "unknown").toLowerCase(Locale.ENGLISH).startsWith("win");
     }
 
-    public static String getJavaCmd(String JAVA_HOME) {
-        String javaHome = JAVA_HOME;
+    public static String getJavaCmd(String javaHome) {
         if (javaHome == null) {
             javaHome = System.getenv("JAVA_HOME");
         }

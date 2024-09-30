@@ -1,9 +1,9 @@
 package qingzhou.command.instance;
 
-import qingzhou.command.CommandUtil;
-
 import java.io.File;
 import java.util.List;
+
+import qingzhou.command.CommandUtil;
 
 public enum Cmd {
     start {
@@ -32,7 +32,8 @@ public enum Cmd {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
                     process.waitFor();
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }));
             process.waitFor();

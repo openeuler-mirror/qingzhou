@@ -1,16 +1,25 @@
 package qingzhou.command.instance;
 
-import qingzhou.command.CommandUtil;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
+import qingzhou.command.CommandUtil;
 
 class ConfigTool {
     private final File instanceDir;
@@ -53,15 +62,6 @@ class ConfigTool {
                 if (Boolean.parseBoolean(String.valueOf(arg.get("forLinux")))) continue;
             }
 
-            if (arg.get("supportedJRE") != null) {
-                String supportedJRE = String.valueOf(arg.get("supportedJRE"));
-                if (!supportedJRE.isEmpty()) {
-                    if (!isVerMatches(supportedJRE)) {
-                        continue;
-                    }
-                }
-            }
-
             commands.add(convertArg(String.valueOf(arg.get("name"))));
         }
 
@@ -74,55 +74,9 @@ class ConfigTool {
         commands.add("qingzhou.engine.impl.Main");
     }
 
-    private static boolean isVerMatches(String supportedJRE) {
-        int jreVer;
-        boolean minus = supportedJRE.endsWith("-");
-        boolean plus = supportedJRE.endsWith("+");
-        if (minus || plus) {
-            jreVer = Integer.parseInt(supportedJRE.substring(0, supportedJRE.length() - 1));
-        } else {
-            jreVer = Integer.parseInt(supportedJRE);
-        }
-
-        String ver = System.getProperty("java.specification.version");
-        if (ver != null && !ver.isEmpty()) {
-            int currentJreVer = parseJavaVersion(ver);
-            if (minus) {
-                if (currentJreVer > jreVer) {
-                    return false;
-                }
-            }
-            if (plus) {
-                if (currentJreVer < jreVer) {
-                    return false;
-                }
-            }
-            if (!minus && !plus) {
-                return currentJreVer == jreVer;
-            }
-        }
-
-        return true;
-    }
-
-    private static int parseJavaVersion(String ver) {
-        try {
-            if (ver.startsWith("1.")) {
-                ver = ver.substring(2);
-            }
-            int firstVer = ver.indexOf(".");
-            if (firstVer > 0) {
-                ver = ver.substring(0, firstVer);
-            }
-            return Integer.parseInt(ver);
-        } catch (Exception e) {
-            return 8;
-        }
-    }
-
     private Map parseFileConfig() throws Exception {
-        URL jsonURL = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
-        try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonURL})) {
+        URL jsonUrl = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
+        try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonUrl})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
             Method fromJson = loadedClass.getMethod("fromJson", Reader.class, Class.class, String[].class);

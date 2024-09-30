@@ -1,13 +1,13 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelField;
 
 class AnnotationReader {
     private final Class<?> clazz;

@@ -1,6 +1,18 @@
 package qingzhou.app.system.service;
 
-import qingzhou.api.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
@@ -11,8 +23,6 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
-
-import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.SERVICE_MENU, order = 1,

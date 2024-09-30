@@ -1,12 +1,12 @@
 package qingzhou.console.login.vercode;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.QuadCurve2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Random;
+import javax.imageio.ImageIO;
 
 /**
  * Captcha验证码

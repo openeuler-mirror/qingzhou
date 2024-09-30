@@ -1,5 +1,10 @@
 package qingzhou.console.view;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.type.FileView;
 import qingzhou.console.view.type.HtmlView;
@@ -9,11 +14,6 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.registry.ModelInfo;
-
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 public class ViewManager {
     public static final String htmlView = "html";

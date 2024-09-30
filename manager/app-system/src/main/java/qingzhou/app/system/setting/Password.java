@@ -1,6 +1,15 @@
 package qingzhou.app.system.setting;
 
-import qingzhou.api.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.config.Config;
@@ -11,10 +20,6 @@ import qingzhou.crypto.TotpCipher;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         hidden = true,

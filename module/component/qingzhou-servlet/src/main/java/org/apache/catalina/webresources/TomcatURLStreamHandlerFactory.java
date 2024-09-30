@@ -16,15 +16,15 @@
  */
 package org.apache.catalina.webresources;
 
-import org.apache.catalina.webresources.war.Handler;
-import qingzhou.engine.util.jnet.Installer;
-import qingzhou.engine.util.jnet.URLStreamHandlerFactoryWrapper;
-
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.apache.catalina.webresources.war.Handler;
+import qingzhou.engine.util.jnet.Installer;
+import qingzhou.engine.util.jnet.URLStreamHandlerFactoryWrapper;
 
 public class TomcatURLStreamHandlerFactory implements URLStreamHandlerFactory {
 

@@ -1,5 +1,8 @@
 package qingzhou.console.view.type;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.Show;
@@ -11,9 +14,6 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.ModelActionInfo;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public class HtmlView implements View {
     public static final String htmlPageBase = "/WEB-INF/page/";

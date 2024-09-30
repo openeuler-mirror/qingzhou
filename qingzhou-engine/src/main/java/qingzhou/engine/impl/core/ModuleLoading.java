@@ -1,5 +1,26 @@
 package qingzhou.engine.impl.core;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.Service;
@@ -8,14 +29,6 @@ import qingzhou.engine.impl.Main;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
 
 public class ModuleLoading implements Process {
     private final EngineContext engineContext;
@@ -53,7 +66,10 @@ public class ModuleLoading implements Process {
             if (moduleFiles == null) throw new IllegalStateException("Module Directory Not Found: " + moduleDir);
 
             for (File moduleFile : moduleFiles) {
-                moduleInfoList.add(new ModuleInfo(moduleFile, engineContext));
+                String fileName = moduleFile.getName();
+                if (fileName.startsWith("qingzhou-") && fileName.endsWith(".jar")) {
+                    moduleInfoList.add(new ModuleInfo(moduleFile, engineContext));
+                }
             }
         }
 
@@ -67,8 +83,8 @@ public class ModuleLoading implements Process {
 
         @Override
         public void exec() throws Exception {
-            URLClassLoader parentLoader = new URLClassLoader(new URL[]
-                    {new File(engineContext.getLibDir(), "qingzhou-api.jar").toURI().toURL()},
+            URLClassLoader parentLoader = new URLClassLoader(
+                    new URL[]{new File(engineContext.getLibDir(), "qingzhou-api.jar").toURI().toURL()},
                     Main.class.getClassLoader());
             new FilterLoading().setModuleLoader(moduleInfoList, parentLoader);
         }
@@ -90,8 +106,24 @@ public class ModuleLoading implements Process {
 
         @Override
         public void exec() throws Exception {
+            Map<String, ?> qzJson;
+            URL jsonUrl = Paths.get(engineContext.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
+            try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonUrl})) {
+                Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
+                Object instance = loadedClass.newInstance();
+                Method fromJson = loadedClass.getMethod("fromJson", Reader.class, Class.class, String[].class);
+                try (InputStream inputStream = Files.newInputStream(
+                        new File(new File(engineContext.getInstanceDir(), "conf"), "qingzhou.json").toPath())) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+                    qzJson = (Map<String, ?>) fromJson.invoke(instance, reader, Map.class, new String[]{"module"});
+                }
+            }
+
             for (ModuleInfo moduleInfo : moduleInfoList) {
-                System.out.println("设置 json 转 map 的配置：" + moduleInfo.getName());
+                Object c = qzJson.get(moduleInfo.getName());
+                if (c != null) {
+                    moduleInfo.moduleContext.config = new HashMap<>((Map<String, ?>) c);
+                }
             }
         }
     }
@@ -105,8 +137,8 @@ public class ModuleLoading implements Process {
                         new File[]{moduleInfo.getFile()},
                         Module.class, "qingzhou.", moduleInfo.getLoader());
                 for (String a : annotatedClasses) {
-                    Class<?> aClass = moduleInfo.getLoader().loadClass(a);
-                    ModuleActivator activator = (ModuleActivator) aClass.newInstance();
+                    Class<?> moduleClass = moduleInfo.getLoader().loadClass(a);
+                    ModuleActivator activator = (ModuleActivator) moduleClass.newInstance();
                     moduleInfo.moduleActivators.add(activator);
                 }
             }
@@ -129,7 +161,10 @@ public class ModuleLoading implements Process {
 
                 if (missingServiceModule.size() == toStartList.size()) {
                     StringBuilder error = new StringBuilder();
-                    missingServiceModule.forEach((key, value) -> error.append(key.getName()).append(" fails to start, missing Service: ").append(value).append(System.lineSeparator()));
+                    missingServiceModule.forEach((key, value) -> error
+                            .append(key.getName())
+                            .append(" fails to start, missing Service: ")
+                            .append(value).append(System.lineSeparator()));
                     throw new IllegalStateException(error.toString());
                 }
 

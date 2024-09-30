@@ -1,15 +1,15 @@
 package qingzhou.deployer;
 
-import qingzhou.api.ModelBase;
-import qingzhou.api.MsgLevel;
-import qingzhou.api.Response;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import qingzhou.api.ModelBase;
+import qingzhou.api.MsgLevel;
+import qingzhou.api.Response;
 
 public class ResponseImpl implements Response {
     private boolean success = true;

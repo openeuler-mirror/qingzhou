@@ -1,8 +1,5 @@
 package qingzhou.deployer;
 
-import qingzhou.api.Lang;
-import qingzhou.engine.util.Utils;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -10,6 +7,9 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import qingzhou.api.Lang;
+import qingzhou.engine.util.Utils;
 
 class CharMap {
     private static final Map<Character, Character> zh_tr_Map = new HashMap<>();
