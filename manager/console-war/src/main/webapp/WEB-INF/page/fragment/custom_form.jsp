@@ -2,7 +2,7 @@
 
   <div class="block-bg">
     <%
-      Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedField();
+      Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedFields();
       Set<String> groups = formGroup.keySet();
       Iterator<String> iterator = groups.iterator();
       while (iterator.hasNext()) {

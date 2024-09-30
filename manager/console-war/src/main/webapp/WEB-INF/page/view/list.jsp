@@ -24,20 +24,42 @@
 
 		<hr style="margin-top: 4px;">
 
-		<div class="table-tools tw-list-operate">
-			<div class="tools-group">
-				<%
-					for (String action : modelInfo.getHeadActionNames()) {
-						if (SecurityController.isActionShow(qzApp, qzModel, action, null, currentUser)) {
-				%>
-				<a class="btn"
-				   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, action)%>">
-					<i class="icon icon-plus-sign"></i>
-					<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + action)%>
-				</a>
-				<%
-						}
-					}
+        <div class="table-tools tw-list-operate">
+            <div class="tools-group">
+                <%
+                    for (String actionName : modelInfo.getHeadActionNames()) {
+                        if (SecurityController.isActionShow(qzApp, qzModel, actionName, null, currentUser)) {
+                            ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
+                            String actionTitle = I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName);
+                            if (actionTitle != null) {
+                                actionTitle = "data-tip='" + actionTitle + "'";
+                            } else {
+                                actionTitle = "data-tip='" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName) + "'";
+                            }
+                            boolean useJsonUri = action.getShowFields().length > 0;
+							String customActionId = "";
+							if (action.getShowFields().length > 0) {
+								customActionId = " custom-action-id='" + "popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "'";
+							}
+
+                %>
+                <a class="btn" data-tip-arrow="top" action-name="<%=actionName%>"  <%=actionTitle%> <%=customActionId%>
+                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, useJsonUri?DeployerConstants.JSON_VIEW:ViewManager.htmlView, actionName)%>"
+                >
+                    <i class="icon icon-<%=action.getIcon()%>"></i>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
+                </a>
+                <%
+                    if (action.getShowFields().length > 0) {
+                        Map<String, String> modelData = new HashMap<>();
+                %>
+                <div style="display: none" <%=customActionId%>>
+                    <%@ include file="../fragment/custom_form.jsp" %>
+                </div>
+                <%
+                            }
+                        }
+                    }
 
 					// 支持批量操作的按钮
 					for (ModelActionInfo action : batchActions) {
@@ -67,45 +89,6 @@
 				%>
 			</div>
 		</div>
-                        String actionUrl = PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, actionKey);
-                %>
-                <a id="<%=actionKey%>" action-name="<%=actionKey%>"
-                   href="<%=actionUrl%>"
-                   onclick='batchOps("<%=actionUrl%>","<%=actionKey%>")'
-                   data-tip='<%=titleStr%>'
-                   class="btn batch-ops"
-                   disabled="disabled" model-icon="<%=modelInfo.getIcon()%>"
-                   data-name="" data-id="" act-ajax='true' act-confirm='<%=operationConfirm%> ?'>
-                    <i class="icon icon-<%=action.getIcon()%>"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey)%>
-                </a>
-                <%
-                    }
-                    for (String actionName : actionsToHead) {
-                        ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                        String actionTitle = I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName);
-                        if (actionTitle != null) {
-                            actionTitle = "data-tip='" + actionTitle + "'";
-                        } else {
-                            actionTitle = "data-tip='" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName) + "'";
-                        }
-                        Map<String, String> modelData = new HashMap<>();
-                        String customActionId = "popup-" + qzApp + "-" + qzModel + "-" + action.getCode();
-                %>
-                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, actionName)%>" <%=actionTitle%>
-                   class="btn" data-tip-arrow="top" action-name="<%=actionName%>"
-                   custom-action-id="<%=customActionId%>">
-                    <i class="icon icon-<%=action.getIcon()%>"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
-                </a>
-                <div style="display: none" custom-action-id="<%=customActionId%>">
-                    <%@ include file="../fragment/custom_form.jsp" %>
-                </div>
-                <%
-                    }
-                %>
-            </div>
-        </div>
 
 		<table class="table table-striped table-hover list-table responseScroll">
 			<thead>
@@ -257,7 +240,7 @@
                             <%
                                 if (actionName.equals(Download.ACTION_FILES)) {
                                     out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
-                                } else if (action.getShowFields() != null && action.getShowFields().length != 0) {
+                                } else if (action.getShowFields().length > 0) {
                                     out.print(" custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId + "'");
                                 }
 
@@ -295,33 +278,7 @@
             %>
             </tbody>
         </table>
-								if (useJsonUri) {
-									out.print(" act-ajax='true' act-confirm='"
-											+ String.format(I18n.getKeyI18n("page.operationConfirm"),
-											I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName),
-											I18n.getModelI18n(qzApp, "model." + qzModel))
-											+ " " + originUnEncodedId + " ?"
-											+ "'");
-								}
-							%>
-					>
-						<i class="icon icon-<%=action.getIcon()%>"></i>
-						<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
-					</a>
-					<%
-						}
-					%>
-				</td>
-				<%
-					}
-				%>
-			</tr>
-			<%
-					}
-				}
-			%>
-			</tbody>
-		</table>
+
 
 		<div style="text-align: center; <%=(totalSize < 1) ? "display:none;" : ""%>">
 			<ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"

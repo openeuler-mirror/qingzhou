@@ -41,6 +41,4 @@ public @interface ModelAction {
 
     String[] showFields() default {};
 
-    boolean showToListHead() default false;
-
 }
