@@ -1,13 +1,13 @@
 package qingzhou.registry;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class AppInfo {
     private String name;
     private String filePath;
-    private final Set<ModelInfo> modelInfos = new HashSet<>();
-    private final Set<MenuInfo> menuInfos = new HashSet<>();
+    private final Set<ModelInfo> modelInfos = new LinkedHashSet<>();
+    private final Set<MenuInfo> menuInfos = new LinkedHashSet<>();
 
     public void addModelInfo(ModelInfo modelInfo) {
         boolean added = modelInfos.add(modelInfo);
