@@ -21,7 +21,12 @@ public @interface ModelAction {
 
     int order() default 0; // 设置该操作在列表页面上的显示次序，负数则表示不在页面上显示
 
-    boolean batch() default false; // 该操作是否支持批量处理
+    boolean batch() default false; // 该操作是否支持批量处理，对 list 为 true 的操作有效
+
+    /**
+     * 在list页面上，弹出表单页面，指定表单页面里显示的字段
+     */
+    String[] fields() default {};
 
     String page() default ""; // 由指定的视图处理
 
@@ -38,7 +43,4 @@ public @interface ModelAction {
      * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
      */
     String[] info();
-
-    String[] showFields() default {};
-
 }

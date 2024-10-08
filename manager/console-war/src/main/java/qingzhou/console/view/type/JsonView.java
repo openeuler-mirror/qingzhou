@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import qingzhou.api.MsgLevel;
+import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
@@ -18,7 +19,7 @@ public class JsonView implements View {
 
     @Override
     public void render(RestContext restContext) throws Exception {
-        String json = convertToJson(restContext.request.getResponse());
+        String json = convertToJson(restContext.request);
         PrintWriter writer = restContext.resp.getWriter();
         writer.write(json);
         writer.flush();
@@ -40,13 +41,14 @@ public class JsonView implements View {
         return json.toString();
     }
 
-    private static String convertToJson(Response response) {
+    private static String convertToJson(Request request) {
         StringBuilder json = new StringBuilder("{");
 
+        Response response = request.getResponse();
         MsgLevel msgLevel = response.getMsgType() != null ? response.getMsgType() : MsgLevel.error;
         addStatus(json, response.isSuccess(), response.getMsg(), msgLevel.name());
         json.append(",");
-        addData(json, response);
+        addData(json, request);
 
         json.append("}");
         return json.toString();
@@ -60,11 +62,12 @@ public class JsonView implements View {
         addKV(json, "message", message);
     }
 
-    private static void addData(StringBuilder json, Response response) {
+    private static void addData(StringBuilder json, Request request) {
         json.append("\"").append(DeployerConstants.JSON_DATA).append("\"");
         json.append(":");
         json.append("[");
 
+        Response response = request.getResponse();
         List<Map<String, String>> dataList = response.getDataList();
         for (int i = 0; i < dataList.size(); i++) {
             if (i > 0) {
@@ -90,12 +93,14 @@ public class JsonView implements View {
 
         json.append("]");
 
-        json.append(",");
-        json.append("\"").append(".page-info").append("\"");
-        json.append(":{\"totalSize\":\"").append(response.getTotalSize())
-                .append("\",\"pageSize\":\"").append(response.getPageSize())
-                .append("\",\"pageNum\":\"").append(response.getPageNum())
-                .append("\"}");
+        if (request.getAction().equals(qingzhou.api.type.List.ACTION_LIST)) {
+            json.append(",");
+            json.append("\"").append("page-info").append("\"");
+            json.append(":{\"totalSize\":\"").append(response.getTotalSize())
+                    .append("\",\"pageSize\":\"").append(response.getPageSize())
+                    .append("\",\"pageNum\":\"").append(response.getPageNum())
+                    .append("\"}");
+        }
     }
 
     private static void addKV(StringBuilder json, String k, String v) {

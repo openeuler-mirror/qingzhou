@@ -34,7 +34,15 @@ public class ModelInfo {
 
     public String[] getListActionNames() {
         return Arrays.stream(modelActionInfos)
-                .filter(modelActionInfo -> modelActionInfo.getOrder() > 0)
+                .filter(ModelActionInfo::isList)
+                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
+                .map(ModelActionInfo::getCode)
+                .toArray(String[]::new);
+    }
+
+    public String[] getBatchActionNames() {
+        return Arrays.stream(modelActionInfos)
+                .filter(action -> action.isList() && action.isBatch())
                 .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
                 .map(ModelActionInfo::getCode)
                 .toArray(String[]::new);
@@ -43,15 +51,6 @@ public class ModelInfo {
     public String[] getHeadActionNames() {
         return Arrays.stream(modelActionInfos)
                 .filter(ModelActionInfo::isHead)
-                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
-                .map(ModelActionInfo::getCode)
-                .toArray(String[]::new);
-    }
-
-    public String[] getBatchActionNames() {
-        return Arrays.stream(modelActionInfos)
-                .filter(modelActionInfo -> modelActionInfo.getOrder() > 0)
-                .filter(ModelActionInfo::isBatch)
                 .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
                 .map(ModelActionInfo::getCode)
                 .toArray(String[]::new);

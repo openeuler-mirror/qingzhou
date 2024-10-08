@@ -1,4 +1,3 @@
-<%@ page import="java.util.function.Function" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%

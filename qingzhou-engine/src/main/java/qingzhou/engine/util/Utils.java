@@ -11,12 +11,15 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,6 +31,34 @@ import javassist.CtClass;
 import javassist.LoaderClassPath;
 
 public class Utils {
+    public static Object[] overlap(Object[] arr1, Object[] arr2) {
+        if (arr1 == null || arr2 == null) {
+            return null;
+        }
+        List<Object> list = new ArrayList<>();
+        for (Object o1 : arr1) {
+            for (Object o2 : arr2) {
+                if (Objects.equals(o1, o2)) {
+                    list.add(o1);
+                    break;
+                }
+            }
+        }
+        return list.toArray();
+    }
+
+    public static boolean contains(Object[] array, Object obj) {
+        if (array == null) {
+            return false;
+        }
+        for (Object o : array) {
+            if (Objects.equals(o, obj)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean notBlank(String value) {
         return !isBlank(value);
     }

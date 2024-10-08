@@ -5,9 +5,9 @@
 <%
 	String contextPath = request.getContextPath();
 	String idField = modelInfo.getIdField();
-
 	String[] fieldsToList = modelInfo.getFieldsToList();
-	String[] actionsToList = modelInfo.getListActionNames();
+
+	String[] listActions = modelInfo.getListActionNames();
 	ModelActionInfo[] batchActions = PageUtil.listBachActions(qzRequest, qzResponse, currentUser);
 
 	int totalSize = qzResponse.getTotalSize();
@@ -24,49 +24,44 @@
 
 		<hr style="margin-top: 4px;">
 
-        <div class="table-tools tw-list-operate">
-            <div class="tools-group">
-                <%
-                    for (String actionName : modelInfo.getHeadActionNames()) {
-                        if (SecurityController.isActionShow(qzApp, qzModel, actionName, null, currentUser)) {
-                            ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                            String actionTitle = I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName);
-                            if (actionTitle != null) {
-                                actionTitle = "data-tip='" + actionTitle + "'";
-                            } else {
-                                actionTitle = "data-tip='" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName) + "'";
-                            }
-                            boolean useJsonUri = action.getShowFields().length > 0;
-							String customActionId = "";
-							if (action.getShowFields().length > 0) {
-								customActionId = " custom-action-id='" + "popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "'";
-							}
+		<div class="table-tools tw-list-operate">
+			<div class="tools-group">
+				<%
+					for (String actionName : modelInfo.getHeadActionNames()) {
+						if (!SecurityController.isActionShow(qzApp, qzModel, actionName, null, currentUser)) {
+							continue;
+						}
+						ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
 
-                %>
-                <a class="btn" data-tip-arrow="top" action-name="<%=actionName%>"  <%=actionTitle%> <%=customActionId%>
-                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, useJsonUri?DeployerConstants.JSON_VIEW:ViewManager.htmlView, actionName)%>"
-                >
-                    <i class="icon icon-<%=action.getIcon()%>"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
-                </a>
-                <%
-                    if (action.getShowFields().length > 0) {
-                        Map<String, String> modelData = new HashMap<>();
-                %>
-                <div style="display: none" <%=customActionId%>>
-                    <%@ include file="../fragment/custom_form.jsp" %>
-                </div>
-                <%
-                            }
-                        }
-                    }
+						String customActionId = "";
+						if (action.getFields() != null && action.getFields().length > 0) {
+							customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "'";
+						}
+
+				%>
+				<a class="btn" data-tip-arrow="top" action-name="<%=actionName%>" <%=customActionId%>
+				   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
+				   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, Utils.notBlank(customActionId)?DeployerConstants.JSON_VIEW:ViewManager.htmlView, actionName)%>"
+				>
+					<i class="icon icon-<%=action.getIcon()%>"></i>
+					<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
+				</a>
+				<%
+					if (Utils.notBlank(customActionId)) {
+						Map<String, String> modelData = new HashMap<>();
+				%>
+				<div style="display: none" <%=customActionId%>>
+					<%@ include file="../fragment/action_form.jsp" %>
+				</div>
+				<%
+						}
+					}
 
 					// 支持批量操作的按钮
 					for (ModelActionInfo action : batchActions) {
 						String actionKey = action.getCode();
-						String titleStr = I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionKey);
-						if (Utils.isBlank(titleStr)) {
-							titleStr = I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey);
+						if (!SecurityController.isActionShow(qzApp, qzModel, actionKey, null, currentUser)) {
+							continue;
 						}
 						String operationConfirm = String.format(I18n.getKeyI18n("page.operationConfirm"),
 								I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
@@ -77,7 +72,7 @@
 				<a id="<%=actionKey%>" action-name="<%=actionKey%>"
 				   href="<%=actionUrl%>"
 				   onclick='batchOps("<%=actionUrl%>","<%=actionKey%>")'
-				   data-tip='<%=titleStr%>'
+				   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionKey)%>'
 				   class="btn batch-ops"
 				   disabled="disabled" model-icon="<%=modelInfo.getIcon()%>"
 				   data-name="" data-id="" act-ajax='true' act-confirm='<%=operationConfirm%> ?'>
@@ -111,7 +106,7 @@
 				</th>
 				<%
 					}
-					if (actionsToList.length > 0) {
+					if (listActions.length > 0) {
 						out.print("<th>" + I18n.getKeyI18n("page.action") + "</th>");
 					}
 				%>
@@ -121,7 +116,7 @@
 			<%
 				java.util.List<Map<String, String>> modelDataList = qzResponse.getDataList();
 				if (modelDataList.isEmpty()) {
-					String dataEmpty = "<tr><td colspan='" + (fieldsToList.length + (actionsToList.length > 0 ? 2 : 1)) + "' align='center'>"
+					String dataEmpty = "<tr><td colspan='" + (1 + fieldsToList.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
 							+ "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
 							+ "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getKeyI18n("page.none") + "</span></td>";
 					out.print(dataEmpty);
@@ -136,9 +131,8 @@
 					if (batchActions.length > 0) {
 				%>
 				<td class="custom-checkbox">
-					<input type="checkbox"
-						   value="<%= RESTController.encodeId(modelData.get(idField))%>"
-						   name="<%=idField%>" <%= batchActions.length > 0 ? "class='morecheck'" : "disabled" %> />
+					<input type="checkbox" class='morecheck'
+						   value="<%=encodedItemId%>"/>
 				</td>
 				<%
 					}
@@ -211,74 +205,77 @@
 				</td>
 				<%
 					}
-					if (actionsToList.length > 0) {
+
+					if (listActions.length > 0) {
 				%>
 				<td>
 					<%
-						for (String actionName : actionsToList) {
+						for (String actionName : listActions) {
 							if (!SecurityController.isActionShow(qzApp, qzModel, actionName, modelData, currentUser)) {
 								continue;
 							}
-							String actionTitle = I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName);
-							if (actionTitle != null) {
-								actionTitle = "data-tip='" + actionTitle + "'";
-							} else {
-								actionTitle = "data-tip='" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName) + "'";
+							ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
+
+							String customActionId = "";
+							if (action.getFields() != null && action.getFields().length > 0) {
+								customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId + "'";
 							}
 
-                            ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                            boolean useJsonUri = actionName.equals(Download.ACTION_FILES)
-                                    || action.getShowFields().length > 0
-                                    || actionName.equals(Delete.ACTION_DELETE);
-                    %>
-                    <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest,
+							boolean useJsonUri = actionName.equals(Download.ACTION_FILES)
+									|| Utils.notBlank(customActionId)
+									|| actionName.equals(Delete.ACTION_DELETE);
+					%>
+					<a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest,
                             useJsonUri ? DeployerConstants.JSON_VIEW : ViewManager.htmlView,
-                            actionName + "/" + encodedItemId)%>" <%=actionTitle%>
-                       class="tw-action-link tooltips" data-tip-arrow="top"
-                       model-icon="<%=modelInfo.getIcon()%>" action-name="<%=actionName%>"
-                       data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
-                            <%
-                                if (actionName.equals(Download.ACTION_FILES)) {
-                                    out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
-                                } else if (action.getShowFields().length > 0) {
-                                    out.print(" custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId + "'");
-                                }
+                            actionName + "/" + encodedItemId)%>"
+					   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
+					   class="tw-action-link tooltips" data-tip-arrow="top"
+					   model-icon="<%=modelInfo.getIcon()%>" action-name="<%=actionName%>"
+					   data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
+							<%
+								if (actionName.equals(Download.ACTION_FILES)) {
+									out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+								}
 
-                                if (useJsonUri) {
-                                    out.print(" act-ajax='true' act-confirm='"
-                                            + String.format(I18n.getKeyI18n("page.operationConfirm"),
-                                            I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName),
-                                            I18n.getModelI18n(qzApp, "model." + qzModel))
-                                            + " " + originUnEncodedId + " ?"
-                                            + "'");
-                                }
-                            %>
-                    >
-                        <i class="icon icon-<%=action.getIcon()%>"></i>
-                        <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
-                    </a>
-                    <%
-                        if (action.getShowFields() != null && action.getShowFields().length != 0) {
-                            %>
-                    <div style="display: none" custom-action-id="popup-<%=qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId%>">
-                        <%@ include file="../fragment/custom_form.jsp" %>
-                    </div>
-                    <%
-                        }
-                        }
-                    %>
-                </td>
-                <%
-                    }
-                %>
-            </tr>
-            <%
-                    }
-                }
-            %>
-            </tbody>
-        </table>
+								if (Utils.notBlank(customActionId)) {
+									out.print(customActionId);
+								}
 
+								if (useJsonUri) {
+									out.print(" act-ajax='true' act-confirm='"
+											+ String.format(I18n.getKeyI18n("page.operationConfirm"),
+											I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName),
+											I18n.getModelI18n(qzApp, "model." + qzModel))
+											+ " " + originUnEncodedId + " ?"
+											+ "'");
+								}
+							%>
+					>
+						<i class="icon icon-<%=action.getIcon()%>"></i>
+						<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
+					</a>
+					<%
+						if (Utils.notBlank(customActionId)) {
+					%>
+					<div style="display: none"
+						 custom-action-id="popup-<%=qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId%>">
+						<%@ include file="../fragment/action_form.jsp" %>
+					</div>
+					<%
+							}
+						}
+					%>
+				</td>
+				<%
+					}
+				%>
+			</tr>
+			<%
+					}
+				}
+			%>
+			</tbody>
+		</table>
 
 		<div style="text-align: center; <%=(totalSize < 1) ? "display:none;" : ""%>">
 			<ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
@@ -288,78 +285,79 @@
 				style="margin-left:33%;color:black;margin-bottom:6px;">
 			</ul>
 		</div>
+
 	</div>
 </div>
 
 <script>
-	function difModelActive(omodel, nmodel) {
-		if (omodel !== nmodel) {
-			var omenuItemLink = $("ul.sidebar-menu li a[modelName='" + omodel + "']");
-			var nmenuItemLink = $("ul.sidebar-menu li a[modelName='" + nmodel + "']");
-			if (omenuItemLink.length > 0) {
-				if ($(omenuItemLink).parent().hasClass("treeview")) {
-					$(omenuItemLink).parents("li.treeview").removeClass("active");
-				} else {
-					$(omenuItemLink).parents("li.treeview").removeClass("menu-open active");
-				}
-				$(omenuItemLink).parents("ul.treeview-menu").hide();
-				$(omenuItemLink).parent().removeClass("active");
-			}
-			if (nmenuItemLink.length > 0) {
-				if ($(nmenuItemLink).parent().hasClass("treeview")) {
-					$(nmenuItemLink).parents("li.treeview").addClass("active");
-				} else {
-					$(nmenuItemLink).parents("li.treeview").addClass("menu-open active");
-				}
-				$(nmenuItemLink).parents("ul.treeview-menu").show();
-				$(nmenuItemLink).parent().addClass("active");
-			}
-		}
-	}
+    function difModelActive(omodel, nmodel) {
+        if (omodel !== nmodel) {
+            var omenuItemLink = $("ul.sidebar-menu li a[modelName='" + omodel + "']");
+            var nmenuItemLink = $("ul.sidebar-menu li a[modelName='" + nmodel + "']");
+            if (omenuItemLink.length > 0) {
+                if ($(omenuItemLink).parent().hasClass("treeview")) {
+                    $(omenuItemLink).parents("li.treeview").removeClass("active");
+                } else {
+                    $(omenuItemLink).parents("li.treeview").removeClass("menu-open active");
+                }
+                $(omenuItemLink).parents("ul.treeview-menu").hide();
+                $(omenuItemLink).parent().removeClass("active");
+            }
+            if (nmenuItemLink.length > 0) {
+                if ($(nmenuItemLink).parent().hasClass("treeview")) {
+                    $(nmenuItemLink).parents("li.treeview").addClass("active");
+                } else {
+                    $(nmenuItemLink).parents("li.treeview").addClass("menu-open active");
+                }
+                $(nmenuItemLink).parents("ul.treeview-menu").show();
+                $(nmenuItemLink).parent().addClass("active");
+            }
+        }
+    }
 
-	$(".allcheck", getRestrictedArea()).click(function () {
-		if (!$(this).prop("checked")) {
-			$(this).prop("checked", false);
-			$(".list-table td input[type='checkbox'][class='morecheck']", getRestrictedArea()).prop("checked", false);
-			$(".batch-ops", getRestrictedArea()).attr("disabled", "disabled");
-		} else {
-			$(this).prop("checked", "checked");
-			$(".list-table td input[type='checkbox'][class='morecheck']", getRestrictedArea()).prop("checked", "checked");
-			$(".batch-ops", getRestrictedArea()).removeAttr("disabled");
-		}
-	});
+    $(".allcheck", getRestrictedArea()).click(function () {
+        if (!$(this).prop("checked")) {
+            $(this).prop("checked", false);
+            $(".list-table td input[type='checkbox'][class='morecheck']", getRestrictedArea()).prop("checked", false);
+            $(".batch-ops", getRestrictedArea()).attr("disabled", "disabled");
+        } else {
+            $(this).prop("checked", "checked");
+            $(".list-table td input[type='checkbox'][class='morecheck']", getRestrictedArea()).prop("checked", "checked");
+            $(".batch-ops", getRestrictedArea()).removeAttr("disabled");
+        }
+    });
 
-	$(".morecheck", getRestrictedArea()).click(function () {
-		if (!$(this).prop("checked")) {
-			$(this).removeAttr("checked", false);
-			$(".allcheck", getRestrictedArea()).prop("checked", false);
-		} else {
-			$(this).prop("checked", "checked");
-			var isAll = true;
-			var morechecks = $(".morecheck", getRestrictedArea());
-			for (var i = 0; i < morechecks.length; i++) {
-				if (!morechecks[i].checked) {
-					isAll = false;
-					break;
-				}
-			}
-			if (isAll) {
-				$(".allcheck", getRestrictedArea()).prop("checked", "checked");
-			}
-		}
-		if ($('.morecheck:checkbox:checked', getRestrictedArea()).length > 0) {
-			$(".batch-ops", getRestrictedArea()).removeAttr("disabled");
-		} else {
-			$(".batch-ops", getRestrictedArea()).attr("disabled", "disabled");
-		}
-	});
+    $(".morecheck", getRestrictedArea()).click(function () {
+        if (!$(this).prop("checked")) {
+            $(this).removeAttr("checked", false);
+            $(".allcheck", getRestrictedArea()).prop("checked", false);
+        } else {
+            $(this).prop("checked", "checked");
+            var isAll = true;
+            var morechecks = $(".morecheck", getRestrictedArea());
+            for (var i = 0; i < morechecks.length; i++) {
+                if (!morechecks[i].checked) {
+                    isAll = false;
+                    break;
+                }
+            }
+            if (isAll) {
+                $(".allcheck", getRestrictedArea()).prop("checked", "checked");
+            }
+        }
+        if ($('.morecheck:checkbox:checked', getRestrictedArea()).length > 0) {
+            $(".batch-ops", getRestrictedArea()).removeAttr("disabled");
+        } else {
+            $(".batch-ops", getRestrictedArea()).attr("disabled", "disabled");
+        }
+    });
 
-	function batchOps(url, action) {
-		var params = "";
-		$(".list-table  input[type='checkbox'][class='morecheck']", getRestrictedArea()).each(function () {
-			if ($(this).prop("checked")) {
-				if ($(this).attr("value") !== undefined && $(this).attr("value") !== null && $(this).attr("value") !== "") {
-					params = params + $(this).attr("value") + "<%=DeployerConstants.BATCH_ID_SEPARATOR%>"
+    function batchOps(url, action) {
+        var params = "";
+        $(".list-table  input[type='checkbox'][class='morecheck']", getRestrictedArea()).each(function () {
+            if ($(this).prop("checked")) {
+                if ($(this).attr("value") !== undefined && $(this).attr("value") !== null && $(this).attr("value") !== "") {
+                    params = params + $(this).attr("value") + "<%=DeployerConstants.BATCH_ID_SEPARATOR%>"
                 }
             }
         });

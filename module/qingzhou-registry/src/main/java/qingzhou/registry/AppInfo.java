@@ -43,11 +43,13 @@ public class AppInfo {
         this.filePath = filePath;
     }
 
-    public Set<ModelInfo> getModelInfos() {
-        return modelInfos;
+    // 返回有序的模块列表
+    public ModelInfo[] getModelInfos() {
+        return modelInfos.toArray(new ModelInfo[0]);
     }
 
-    public Set<MenuInfo> getMenuInfos() {
-        return menuInfos;
+    // 返回有序的菜单列表
+    public MenuInfo[] getMenuInfos() {
+        return menuInfos.toArray(new MenuInfo[0]);
     }
 }

@@ -2,13 +2,15 @@ package qingzhou.app.model;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
 
 @Model(code = "user", icon = "user",
-        menu = ExampleMain.MENU_111, order = 1,
+        menu = ExampleMain.MENU_1, order = 1,
         name = {"用户", "en:User management"},
         info = {"用户管理", "en:User management."})
 public class User extends AddModelBase {
@@ -55,9 +57,28 @@ public class User extends AddModelBase {
             name = {"备注", "en:Notes"})
     public String notes;
 
+
+    @ModelAction(
+            code = "test", icon = "circle-arrow-up",
+            head = true, order = 1,
+            fields = "name,notes,a,b,",
+            name = {"弹出表单", "en:test"},
+            info = {"弹出表单", "en:test"})
+    public void test(Request request) throws Exception {
+    }
+
     @Override
     public String idField() {
         return "name";
     }
 
+    @ModelAction(
+            code = "share", icon = "share-alt",
+            page = "list",
+            head = true, order = 2,
+            name = {"头部按钮", "en:Share"},
+            info = {"头部按钮", "en:Share"})
+    public void share(Request request) throws Exception {
+        System.out.println("点击了头部按钮。。。");
+    }
 }
