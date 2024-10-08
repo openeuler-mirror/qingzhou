@@ -5,6 +5,7 @@ public class InstanceInfo {
     private String host;
     private int port;
     private String key;
+    private String version;
     private AppInfo[] appInfos = new AppInfo[0];
 
     public String getName() {
@@ -29,6 +30,14 @@ public class InstanceInfo {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public String getKey() {

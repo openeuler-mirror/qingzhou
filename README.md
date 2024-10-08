@@ -1,4 +1,4 @@
-# QingZhou（轻舟）Web管理软件开发平台
+# Qingzhou（轻舟）Web管理软件开发平台
 
 ## 项目简介
 
@@ -33,7 +33,7 @@ JDK >= 1.8
 
 > 看到类似如下的日志输出，则表示启动完成：
 >
-> Open a browser to access the QingZhou console: http://localhost:9000/console
+> Open a browser to access the Qingzhou console: http://localhost:9000/console
 
 3. **访问控制台**
 

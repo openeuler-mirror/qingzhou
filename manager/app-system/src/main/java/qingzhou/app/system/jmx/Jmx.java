@@ -16,17 +16,17 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.logger.Logger;
 
 @Model(code = "jmx", icon = "coffee",
-        menu = Main.SETTING_MENU, order = 3,
+        menu = Main.Setting, order = 2,
         entrance = Update.ACTION_EDIT,
         name = {"JMX", "en:JMX"},
-        info = {"JMX 是 Java Management Extensions（Java管理扩展） 的缩写，它是 Java 平台上用于管理和监控应用程序、系统和网络资源的一种标准化的管理和监控框架。JMX 提供了一种标准的方式，通过这种方式，开发人员可以暴露应用程序中的各种管理和监控信息，然后可以使用 JMX 客户端工具或应用程序来访问和操作这些信息。开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 QingZhou 平台。",
-                "en:JMX is an abbreviation for Java Management Extensions, which is a standardized management and monitoring framework for managing and monitoring applications, systems, and network resources on the Java platform. JMX provides a standard way for developers to expose various administrative and monitoring information in their applications, which can then be accessed and manipulated using JMX client tools or applications. After the JMX interface service is enabled, clients can manage the QingZhou platform through the java jmx protocol."})
+        info = {"JMX 是 Java Management Extensions（Java管理扩展） 的缩写，它是 Java 平台上用于管理和监控应用程序、系统和网络资源的一种标准化的管理和监控框架。JMX 提供了一种标准的方式，通过这种方式，开发人员可以暴露应用程序中的各种管理和监控信息，然后可以使用 JMX 客户端工具或应用程序来访问和操作这些信息。开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 Qingzhou 平台。",
+                "en:JMX is an abbreviation for Java Management Extensions, which is a standardized management and monitoring framework for managing and monitoring applications, systems, and network resources on the Java platform. JMX provides a standard way for developers to expose various administrative and monitoring information in their applications, which can then be accessed and manipulated using JMX client tools or applications. After the JMX interface service is enabled, clients can manage the Qingzhou platform through the java jmx protocol."})
 public class Jmx extends ModelBase implements Update {
     @ModelField(
             type = FieldType.bool,
             name = {"启用", "en:Enabled"},
-            info = {"功能开关，配置是否开启 QingZhou 的 JMX 接口服务。",
-                    "en:Function switch, configure whether to enable QingZhou JMX interface service."})
+            info = {"功能开关，配置是否开启 Qingzhou 的 JMX 接口服务。",
+                    "en:Function switch, configure whether to enable Qingzhou JMX interface service."})
     public Boolean enabled = false;
 
     @ModelField(

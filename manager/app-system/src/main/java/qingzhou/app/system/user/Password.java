@@ -1,4 +1,4 @@
-package qingzhou.app.system.setting;
+package qingzhou.app.system.user;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +23,7 @@ import qingzhou.qr.QrGenerator;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         hidden = true,
-        menu = Main.SETTING_MENU,
+        menu = Main.Setting,
         entrance = Update.ACTION_EDIT,
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",

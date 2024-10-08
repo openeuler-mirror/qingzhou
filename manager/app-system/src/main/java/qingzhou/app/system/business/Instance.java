@@ -1,4 +1,4 @@
-package qingzhou.app.system.service;
+package qingzhou.app.system.business;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,13 +23,14 @@ import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.engine.ModuleContext;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
 
 @Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
-        menu = Main.SERVICE_MENU, order = 2,
+        menu = Main.Business, order = 2,
         name = {"实例", "en:Instance"},
         info = {"实例是应用部署的载体，为应用提供运行时环境。预置的 " + DeployerConstants.INSTANCE_LOCAL + " 实例表示当前正在访问的服务所在的实例，如集中管理端就运行在此实例上。",
                 "en:An instance is the carrier of application deployment and provides a runtime environment for the application. The provisioned " + DeployerConstants.INSTANCE_LOCAL + " instance indicates the instance where the service is currently accessed, such as the centralized management side running on this instance."})
@@ -37,8 +38,6 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
     private static final String ID_KEY = "name";
 
     @ModelField(
-            group = group_os,
-            required = true,
             list = true,
             name = {"实例名称", "en:Instance Name"},
             info = {"表示该实例的名称，用于识别和管理该实例。",
@@ -46,9 +45,6 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
     public String name;
 
     @ModelField(
-            group = group_os,
-            required = true,
-            host = true,
             list = true,
             name = {"主机IP", "en:Host IP"},
             info = {"该实例所在服务器的域名或 IP 地址。",
@@ -56,14 +52,17 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
     public String host;
 
     @ModelField(
-            group = group_os,
-            required = true,
-            port = true,
             list = true,
             name = {"管理端口", "en:Management Port"},
             info = {"该实例所开放的管理端口，用以受理轻舟集中管理端发来的业务请求。",
                     "en:The management port opened by the instance is used to accept business requests from the centralized management end of Qingzhou."})
     public Integer port;
+
+    @ModelField(
+            list = true,
+            name = {"平台版本", "en:Version"},
+            info = {"该实例运行的轻舟版本。", "en:The Qingzhou version that the instance runs."})
+    public String version;
 
     @ModelField(
             group = group_os,
@@ -250,6 +249,7 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
                 put(ID_KEY, DeployerConstants.INSTANCE_LOCAL);
                 put("host", "--");
                 put("port", "--");
+                put("version", Main.getService(ModuleContext.class).getPlatformVersion());
             }};
         }
 
@@ -259,6 +259,7 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
                 put(ID_KEY, instanceInfo.getName());
                 put("host", instanceInfo.getHost());
                 put("port", String.valueOf(instanceInfo.getPort()));
+                put("version", instanceInfo.getVersion());
             }};
         }
 

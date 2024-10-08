@@ -16,8 +16,11 @@ import qingzhou.engine.ModuleContext;
 @App
 public class Main extends QingzhouSystemApp {
     public static final String QZ_VER_NAME = "version";
-    public static final String SERVICE_MENU = "Service";
-    public static final String SETTING_MENU = "Setting";
+
+    public static final String Business = "Business";
+    public static final String User = "User";
+    public static final String Setting = "Setting";
+    public static final String Service = "Service";
     private static Main main;
 
     @Override
@@ -27,8 +30,10 @@ public class Main extends QingzhouSystemApp {
         appContext.addI18n("validator.exist", new String[]{"已存在", "en:Already exists"});
         appContext.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
 
-        appContext.addMenu(Main.SERVICE_MENU, new String[]{"服务管理", "en:Service"}, "th-large", 1);
-        appContext.addMenu(Main.SETTING_MENU, new String[]{"系统设置", "en:System"}, "cog", 3);
+        appContext.addMenu(Main.Business, new String[]{"业务管理", "en:" + Main.Business}, "th-large", 1);
+        appContext.addMenu(Main.User, new String[]{"用户管理", "en:" + Main.User}, "group", 2);
+        appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}, "cog", 3);
+        appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}, "cubes", 4);
     }
 
     public static <T> T getService(Class<T> type) {

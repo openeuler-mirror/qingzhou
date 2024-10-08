@@ -20,7 +20,7 @@ class RunningControl implements Process {
         // 实例不可重复启动，因为端口和 temp 文件都会冲突
         running = FileUtil.newFile(engineContext.getInstanceDir(), "temp", "running");
         if (running.exists() && checkService()) {
-            throw new IllegalStateException("QingZhou is already starting");
+            throw new IllegalStateException("Qingzhou is already starting");
         }
 
         FileUtil.mkdirs(running.getParentFile());

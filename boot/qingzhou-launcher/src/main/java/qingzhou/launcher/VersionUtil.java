@@ -46,7 +46,7 @@ class VersionUtil {
         if (versionFile == null) {
             versionFile = new File(libDir, qzVerName);
             if (!versionFile.isDirectory()) {
-                throw new IllegalStateException("QingZhou " + qzVerName + " file not found !!!");
+                throw new IllegalStateException("Qingzhou " + qzVerName + " file not found !!!");
             }
         }
 

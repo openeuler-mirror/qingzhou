@@ -174,7 +174,7 @@ public class ModuleLoading implements Process {
 
         @Override
         public void undo() {
-            Collections.reverse(moduleStartedOrder); // QingZhou Loggoer module must be the last one to stop.
+            Collections.reverse(moduleStartedOrder); // Qingzhou Loggoer module must be the last one to stop.
             moduleStartedOrder.forEach(moduleInfo -> {
                 moduleInfo.setStarted(false);
                 moduleInfo.moduleActivators.forEach(ModuleActivator::stop);

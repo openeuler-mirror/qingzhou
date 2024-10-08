@@ -1,4 +1,4 @@
-package qingzhou.app.system.service;
+package qingzhou.app.system.business;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +25,7 @@ import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
-        menu = Main.SERVICE_MENU, order = 1,
+        menu = Main.Business, order = 1,
         name = {"应用", "en:App"},
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
@@ -100,7 +100,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
             type = FieldType.file,
             required = true,
             name = {"上传应用", "en:Upload Application"},
-            info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 QingZhou 应用文件，否则可能会导致安装失败。",
+            info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
                     "en:Upload an application file to the server, the file must be a *.jar type qingzhou application file, otherwise the installation may fail."})
     public String file;
 

@@ -92,6 +92,7 @@
       "enabled": "false",
       "agentHost": "",
       "agentPort": "5000",
+      "registerInterval": "2",
       "masterUrl": "http://localhost:9000/console",
       "masterKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCh4JpnxULijNi2GUa8wQfMGSWdGQLwscYNkHirc+A3rWIVTIvbjbdKkay0cNsclO4C0y/eN7lFwlkTDz1kvI3zrNajYdXD55QXzYdpVdHwlh+MoX0AHvoNwNtE1SqZTUcxlcixD3NMGYNcSq3D5dgD42C3pzY2TsMkQs1VSeBcZwIDAQAB"
     }

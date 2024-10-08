@@ -19,7 +19,7 @@ public class Instance extends CommandLineProcessor {
 
     @Override
     public String info() {
-        return "Manage QingZhou service";
+        return "Manage Qingzhou service";
     }
 
     @Override
@@ -59,7 +59,7 @@ public class Instance extends CommandLineProcessor {
         if (instance.startsWith(homeDir.getCanonicalPath())) {
             outputInfo = instanceDir.getName();
         }
-        CommandUtil.log("Ready to <" + cmdName + "> QingZhou: " + outputInfo);
+        CommandUtil.log("Ready to <" + cmdName + "> Qingzhou: " + outputInfo);
         Cmd cmd;
         try {
             cmd = Cmd.valueOf(cmdName);

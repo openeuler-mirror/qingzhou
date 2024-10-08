@@ -13,6 +13,7 @@ import java.util.UUID;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.http.Http;
 import qingzhou.http.HttpResponse;
@@ -31,8 +32,9 @@ class Heartbeat implements Process {
     private final String agentHost;
     private final int agentPort;
     private final String encryptedAgentKey;
+    private final ModuleContext moduleContext;
 
-    Heartbeat(String agentHost, int agentPort, String encryptedAgentKey, Map<String, String> config, Json json, Deployer deployer, Logger logger, MessageDigest messageDigest, Http http) {
+    Heartbeat(String agentHost, int agentPort, String encryptedAgentKey, Map<String, String> config, Json json, Deployer deployer, Logger logger, MessageDigest messageDigest, Http http, ModuleContext moduleContext) {
         this.config = config;
         this.json = json;
         this.deployer = deployer;
@@ -42,6 +44,7 @@ class Heartbeat implements Process {
         this.agentHost = agentHost;
         this.agentPort = agentPort;
         this.encryptedAgentKey = encryptedAgentKey;
+        this.moduleContext = moduleContext;
     }
 
     // 定时器设计目的：解决 master 未启动或者宕机重启等引起的注册失效问题
@@ -72,7 +75,7 @@ class Heartbeat implements Process {
             public void run() {
                 register();
             }
-        }, 2000, 1000 * 2);
+        }, 2000, 1000 * Long.parseLong(config.get("registerInterval")));
     }
 
     @Override
@@ -138,6 +141,7 @@ class Heartbeat implements Process {
         instanceInfo.setHost(agentHost);
         instanceInfo.setPort(agentPort);
         instanceInfo.setKey(encryptedAgentKey);
+        instanceInfo.setVersion(moduleContext.getPlatformVersion());
         return instanceInfo;
     }
 }
