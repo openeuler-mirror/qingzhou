@@ -281,7 +281,7 @@ function triggerAction(ele, condition, type) {
     const operators = condition.includes("&") ? "&" : "|";
     const expressions = condition.split(operators);
 
-    let shouldHideOrRead = operators === "&";
+    let shouldShowOrRead;
 
     expressions.forEach(expression => {
         const notEq = expression.includes("!=");
@@ -302,26 +302,33 @@ function triggerAction(ele, condition, type) {
             $("#form-item-" + ele, getRestrictedArea()).hide();
             return;
         }
-
-        // 通过 compareVal 进行比较并设置隐藏显示逻辑
-        const compareResult = compareVal(target.val(), parsedVal, !notEq);
-        if (operators === "&") {
-            shouldHideOrRead = shouldHideOrRead && compareResult;
+        let isSwitch = target.parent().attr("class").indexOf("switch") !== -1;
+        if (target.val() === "" && isSwitch){
+            target.val("false")
+        }
+        // compareVal 比较出来的值是表示是否显示
+        const compareResult = compareVal(target.val(), parsedVal, notEq);
+        if (shouldShowOrRead === undefined) {
+            shouldShowOrRead = compareResult;
         } else {
-            shouldHideOrRead = shouldHideOrRead || compareResult;
+            if (operators === "&") {
+                shouldShowOrRead = shouldShowOrRead && compareResult;
+            } else {
+                shouldShowOrRead = shouldShowOrRead || compareResult;
+            }
         }
     });
     if (type === "show") {
-        if (shouldHideOrRead) {
-            $("#form-item-" + ele, getRestrictedArea()).hide();
-        } else {
+        if (shouldShowOrRead) {
             $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
+        } else {
+            $("#form-item-" + ele, getRestrictedArea()).hide();
         }
     } else if (type === "readonly") {
-        if (shouldHideOrRead) {
-            $("#form-item-" + ele, getRestrictedArea()).find("input").removeAttr("readonly");
-        } else {
+        if (shouldShowOrRead) {
             $("#form-item-" + ele, getRestrictedArea()).find("input").attr("readonly", "readonly");
+        } else {
+            $("#form-item-" + ele, getRestrictedArea()).find("input").removeAttr("readonly");
         }
     }
 
