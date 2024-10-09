@@ -9,12 +9,12 @@ public class ModelActionInfo {
     private String[] info;
     private String icon;
     private boolean head;
+    private boolean list;
+    private boolean batch;
     private int order;
     private String show;
-    private boolean batch;
     private String page;
-    private String[] showFields;
-    private boolean showToListHead;
+    private String[] fields;
 
     public Method getMethod() {
         return method;
@@ -88,6 +88,14 @@ public class ModelActionInfo {
         this.head = head;
     }
 
+    public boolean isList() {
+        return list;
+    }
+
+    public void setList(boolean list) {
+        this.list = list;
+    }
+
     public int getOrder() {
         return order;
     }
@@ -96,19 +104,11 @@ public class ModelActionInfo {
         this.order = order;
     }
 
-    public String[] getShowFields() {
-        return showFields;
+    public String[] getFields() {
+        return fields;
     }
 
-    public void setShowFields(String[] showFields) {
-        this.showFields = showFields;
-    }
-
-    public boolean isShowToListHead() {
-        return showToListHead;
-    }
-
-    public void setShowToListHead(boolean showToListHead) {
-        this.showToListHead = showToListHead;
+    public void setFields(String[] fields) {
+        this.fields = fields;
     }
 }

@@ -5,7 +5,7 @@ import qingzhou.api.ModelField;
 import qingzhou.app.AddModelBase;
 
 @Model(code = "department", icon = "sitemap",
-        menu = qingzhou.app.ExampleMain.MENU_1, order = 1,
+        menu = qingzhou.app.ExampleMain.MENU_11, order = 1,
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
 public class Department extends AddModelBase {

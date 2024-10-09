@@ -469,10 +469,11 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setIcon(modelAction.icon());
             modelActionInfo.setOrder(modelAction.order());
             modelActionInfo.setHead(modelAction.head());
-            modelActionInfo.setShow(modelAction.show());
+            modelActionInfo.setList(modelAction.list());
             modelActionInfo.setBatch(modelAction.batch());
+            modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setPage(modelAction.page());
-            modelActionInfo.setShowFields(modelAction.showFields());
+            modelActionInfo.setFields(modelAction.fields());
             modelActionInfos.add(modelActionInfo);
         });
         return modelActionInfos;

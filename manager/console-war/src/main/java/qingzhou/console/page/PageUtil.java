@@ -1,9 +1,11 @@
 package qingzhou.console.page;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -96,8 +98,7 @@ public class PageUtil {
 
         MenuItem rootMenu = new MenuItem();
 
-        List<MenuInfo> temp = new ArrayList<>(appInfo.getMenuInfos());
-
+        Stream<MenuInfo> temp = Arrays.stream(appInfo.getMenuInfos());
         temp.forEach(menuInfo -> {
             MenuItem menuItem = new MenuItem();
             menuItem.setName(menuInfo.getName());
