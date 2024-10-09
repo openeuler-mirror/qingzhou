@@ -48,6 +48,8 @@ public interface DeployerConstants {
     String CHECK_FINGERPRINT = "fingerprint";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String FIELD_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    String CHANGED_KEY = "CHANGED_KEY";
+    String CHANGED_VAL = "CHANGED_VAL";
     String BATCH_ID_SEPARATOR = ",";
     String DEFAULT_DATA_SEPARATOR = ",";
 

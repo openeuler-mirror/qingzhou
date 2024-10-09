@@ -1,28 +1,11 @@
 package qingzhou.deployer.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Download;
+import qingzhou.api.Response;
 import qingzhou.api.type.List;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
+import qingzhou.api.type.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.ResponseImpl;
@@ -32,6 +15,12 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 class DefaultAction {
     static final java.util.List<ModelActionInfo> allDefaultActionCache;
@@ -69,6 +58,29 @@ class DefaultAction {
     public void contains(Request request) throws Exception {
         List list = (List) instance;
         request.getResponse().setSuccess(list.contains(request.getId()));
+    }
+
+    @ModelAction(
+            code = Update.ACTION_CHANGED, icon = "check-board",
+            name = {"校验", "en:Changed"},
+            info = {"校验指定的字段是否被改变。", "en:Verify whether the specified field has been changed."})
+    public void changed(Request request) throws Exception {
+        Update update = (Update) instance;
+        request.getResponse().setSuccess(update.changed(request.getId(),
+                request.getNonModelParameter(DeployerConstants.CHANGED_KEY),
+                request.getNonModelParameter(DeployerConstants.CHANGED_VAL)
+        ));
+    }
+
+    @ModelAction(
+            code = Validate.ACTION_VALIDATE, icon = "check-board",
+            name = {"校验", "en:Validate"},
+            info = {"校验指定的字段是否被改变。", "en:Verify whether the specified field has been changed."})
+    public void validate(Request request) throws Exception {
+        Validate validate = (Validate) instance;
+        Response response = request.getResponse();
+        response.addData(validate.validate(request));
+        response.setSuccess(response.getDataList().isEmpty());
     }
 
     @ModelAction(

@@ -1,10 +1,5 @@
 package qingzhou.console.view.type;
 
-import java.util.List;
-import java.util.Map;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-
 import qingzhou.api.Response;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
@@ -13,6 +8,11 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Map;
 
 public class FileView implements View {
     @Override
@@ -40,11 +40,7 @@ public class FileView implements View {
             long offset = Long.parseLong(result.get(DeployerConstants.DOWNLOAD_OFFSET));
             if (offset < 0) break;
 
-            RequestImpl req = new RequestImpl();
-            req.setAppName(request.getApp());
-            req.setModelName(request.getModel());
-            req.setActionName(request.getAction());
-            req.setId(request.getId());
+            RequestImpl req = new RequestImpl(request);
             req.setNonModelParameter(DeployerConstants.DOWNLOAD_KEY, result.get(DeployerConstants.DOWNLOAD_KEY));
             req.setNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             Response res = SystemController.getService(ActionInvoker.class).invokeSingle(req); // 续传

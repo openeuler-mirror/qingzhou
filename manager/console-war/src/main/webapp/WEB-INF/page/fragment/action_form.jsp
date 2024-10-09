@@ -3,7 +3,6 @@
 <%
 	java.util.List<String> passwordFields = new ArrayList<>();
 	Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedFields();
-	long suffixId = System.currentTimeMillis();
 %>
 
 <div class="block-bg">

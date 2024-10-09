@@ -1,17 +1,10 @@
 package qingzhou.registry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import qingzhou.api.FieldType;
 import qingzhou.engine.util.Utils;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ModelInfo {
     private String code;
@@ -23,6 +16,7 @@ public class ModelInfo {
     private String entrance;
     private boolean hidden;
     private String idField;
+    private boolean validate;
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
@@ -255,6 +249,14 @@ public class ModelInfo {
 
     public void setModelActionInfos(ModelActionInfo[] modelActionInfos) {
         this.modelActionInfos = modelActionInfos;
+    }
+
+    public boolean isValidate() {
+        return validate;
+    }
+
+    public void setValidate(boolean validate) {
+        this.validate = validate;
     }
 
     @Override

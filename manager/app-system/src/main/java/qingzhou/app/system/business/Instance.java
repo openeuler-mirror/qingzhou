@@ -1,18 +1,6 @@
 package qingzhou.app.system.business;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import qingzhou.api.Group;
-import qingzhou.api.Groups;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Grouped;
 import qingzhou.api.type.List;
@@ -28,6 +16,11 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
         menu = Main.Business, order = 2,
@@ -295,10 +288,9 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
     public void monitor(Request request) throws Exception {
         invokeOnAgent(request, request.getId());
         java.util.List<Map<String, String>> dataList = request.getResponse().getDataList();
-        if (dataList.size() == 1) { // 不应为空，来自：qingzhou.app.system.Agent.monitor（xxx）
-            tempData.set(dataList.remove(0));
-        }
+        tempData.set(dataList.remove(0)); // dataList 不应为空，来自：qingzhou.app.system.Agent.monitor（xxx）
         getAppContext().callDefaultAction(request); // 触发调用下面的 monitorData（使用 tempData）；
+        tempData.remove();
     }
 
     // 为了复用 DefaultAction 的 monitor 方法逻辑
@@ -306,9 +298,7 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
 
     @Override
     public Map<String, String> monitorData(String id) {
-        Map<String, String> data = tempData.get();
-        tempData.remove();
-        return data;
+        return tempData.get();
     }
 
     private void invokeOnAgent(Request request, String... instance) {
