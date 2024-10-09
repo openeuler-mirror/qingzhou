@@ -1,24 +1,9 @@
 package qingzhou.app.system.user;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.regex.Pattern;
-
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
+import qingzhou.api.*;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
-import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
@@ -30,11 +15,16 @@ import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Pattern;
+
 @Model(code = DeployerConstants.MODEL_USER, icon = "user",
         menu = Main.User, order = 1,
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
-public class User extends ModelBase implements General {
+public class User extends ModelBase implements General, Validate {
     static final String idKey = "name";
     static final String PASSWORD_FLAG = "***************";
 
@@ -66,7 +56,7 @@ public class User extends ModelBase implements General {
     @Override
     public void start() {
         getAppContext().addI18n("System.users.keep.active", new String[]{"系统内置用户需要保持启用", "en:System built-in users need to keep active"});
-        getAppContext().addI18n("confirmPassword.different", new String[]{"输入的确认密码与密码不一致", "en:Confirm that the password does not match the new password"});
+        getAppContext().addI18n("confirmPassword.different", new String[]{"账户密码与确认密码不一致", "en:The account password is inconsistent with the confirmation password"});
         getAppContext().addI18n("password.format", new String[]{"密码须包含大小写字母、数字、特殊符号，长度至少 10 位。", "en:Password must contain uppercase and lowercase letters, numbers, special symbols, and must be at least 10 characters long"});
         getAppContext().addI18n("password.passwordContainsUsername", new String[]{"密码不能包含用户名", "en:A weak password, the password cannot contain the username"});
         getAppContext().addI18n("password.continuousChars", new String[]{"密码不能包含三个或三个以上相同或连续的字符", "en:A weak password, the password cannot contain three or more same or consecutive characters"});
@@ -152,7 +142,7 @@ public class User extends ModelBase implements General {
 
     @Override
     public Map<String, String> showData(String id) {
-        Map<String, String> data = showDataForUser(id);
+        Map<String, String> data = showDataForUserInternal(id);
         data.put("password", PASSWORD_FLAG);
         data.put("confirmPassword", PASSWORD_FLAG);
         return data;
@@ -190,7 +180,7 @@ public class User extends ModelBase implements General {
         // 对新密码进行加密
         String password = data.remove("password");
         if (passwordChanged(password)) {
-            Map<String, String> originUser = showData(data.get(idKey));
+            Map<String, String> originUser = showDataForUserInternal(data.get(idKey));
 
             String[] splitOriginPwd = splitPwd(originUser.get("password"));
             String digestAlg = data.getOrDefault("digestAlg", splitOriginPwd[0]);
@@ -226,21 +216,6 @@ public class User extends ModelBase implements General {
     }
 
     @ModelAction(
-            code = Add.ACTION_ADD,
-            name = {"添加", "en:Add"},
-            info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    public void add(Request request) throws Exception {
-        String msg = checkPwd(request.getParameter("password"), request.getUser());
-        if (msg != null) {
-            request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(getAppContext().getI18n(msg));
-            return;
-        }
-
-        getAppContext().callDefaultAction(request);
-    }
-
-    @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
             list = true, order = 9,
             batch = true,
@@ -253,44 +228,11 @@ public class User extends ModelBase implements General {
         getAppContext().callDefaultAction(request);
     }
 
-    @ModelAction(
-            code = Update.ACTION_UPDATE,
-            name = {"更新", "en:Update"},
-            info = {"更新账户信息。",
-                    "en:Update your account information."})
-    public void update(Request request) throws Exception {
-        String userId = request.getId();
-        if (DeployerConstants.DEFAULT_USER_QINGZHOU.equals(userId)) {
-            String active = request.getParameter("active");
-            if (active != null && !Boolean.parseBoolean(active)) {
-                request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(getAppContext().getI18n("System.users.keep.active"));
-                return;
-            }
-        }
-
-        String password = request.getParameter("password");
-        if (passwordChanged(password)) {
-            String msg = checkPwd(password, userId);
-            if (msg != null) {
-                request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(getAppContext().getI18n(msg));
-                return;
-            }
-            if (!Objects.equals(password, request.getParameter("confirmPassword"))) {
-                request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(getAppContext().getI18n("confirmPassword.different"));
-            }
-        }
-
-        getAppContext().callDefaultAction(request);
-    }
-
     private boolean passwordChanged(String password) {
         return password != null && !password.equals(PASSWORD_FLAG);
     }
 
-    static Map<String, String> showDataForUser(String userId) {
+    static Map<String, String> showDataForUserInternal(String userId) {
         for (qingzhou.config.User user : Main.getService(Config.class).getConsole().getUser()) {
             if (user.getName().equals(userId)) {
                 Map<String, String> data = ModelUtil.getPropertiesFromObj(user);
@@ -404,5 +346,42 @@ public class User extends ModelBase implements General {
             }
         }
         return false;
+    }
+
+    @Override
+    public Map<String, String> validate(Request request) throws Exception {
+        Map<String, String> errors = new HashMap<>();
+        String password = request.getParameter("password");
+
+        boolean isAddOrUpdate = Boolean.parseBoolean(request.getNonModelParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER));
+        if (isAddOrUpdate) {
+            String msg = checkPwd(password, request.getUser());
+            if (msg != null) {
+                errors.put("password", getAppContext().getI18n(msg));
+            }
+        } else {
+            String userId = request.getId();
+            if (DeployerConstants.DEFAULT_USER_QINGZHOU.equals(userId)) {
+                String active = request.getParameter("active");
+                if (active != null && !Boolean.parseBoolean(active)) {
+                    errors.put("active", getAppContext().getI18n("System.users.keep.active"));
+                }
+            }
+
+            if (passwordChanged(password)) {
+                String msg = checkPwd(password, userId);
+                if (msg != null) {
+                    errors.put("password", getAppContext().getI18n(msg));
+                }
+            }
+        }
+
+        if (!Objects.equals(password, request.getParameter("confirmPassword"))) {
+            String error = getAppContext().getI18n("confirmPassword.different");
+            errors.put("password", error);
+            errors.put("confirmPassword", error);
+        }
+
+        return errors;
     }
 }

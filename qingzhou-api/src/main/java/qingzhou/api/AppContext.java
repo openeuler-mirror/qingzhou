@@ -51,11 +51,11 @@ public interface AppContext {
     /**
      * 添加菜单项。
      *
-     * @param name  菜单项的名称。
-     * @param i18n  菜单项的国际化信息数组。
-     * @param icon  菜单项的图标。
-     * @param order 菜单项的顺序。
-     * @parent parent 父菜单，0 个或 一个，若多个则只取第一个。
+     * @param name   菜单项的名称。
+     * @param i18n   菜单项的国际化信息数组。
+     * @param icon   菜单项的图标。
+     * @param order  菜单项的顺序。
+     * @param parent 父菜单，0 个或 一个，若多个则只取第一个。
      */
     void addMenu(String name, String[] i18n, String icon, int order, String... parent);
 

@@ -1,16 +1,11 @@
 package qingzhou.deployer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.registry.ModelInfo;
+
+import java.util.*;
 
 public class RequestImpl implements Request {
     private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
@@ -27,6 +22,19 @@ public class RequestImpl implements Request {
     private final Map<String, String> nonModelParameters = new HashMap<>();
     private final Map<String, String> parameters = new HashMap<>();
     private final Map<String, String> parametersInSession = new HashMap<>();
+
+    public RequestImpl() {
+    }
+
+    public RequestImpl(RequestImpl origin) {
+        this.appName = origin.appName;
+        this.modelName = origin.modelName;
+        this.actionName = origin.actionName;
+        this.viewName = origin.viewName;
+        this.id = origin.id;
+        this.userName = origin.userName;
+        this.lang = origin.lang;
+    }
 
     @Override
     public String getApp() {

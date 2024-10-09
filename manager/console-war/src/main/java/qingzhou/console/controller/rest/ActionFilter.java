@@ -45,11 +45,8 @@ public class ActionFilter implements Filter<RestContext> {
         ModelInfo modelInfo = request.getCachedModelInfo();
         if (modelInfo.getModelActionInfo(List.ACTION_CONTAINS) == null) return true; // 不是 list 类型 model,无需 校验
 
-        RequestImpl tmp = new RequestImpl();
-        tmp.setAppName(request.getApp());
-        tmp.setModelName(request.getModel());
+        RequestImpl tmp = new RequestImpl(request);
         tmp.setActionName(List.ACTION_CONTAINS);
-        tmp.setId(id);
         Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
         boolean success = tmpResp.isSuccess();
         if (!success) {
@@ -107,9 +104,7 @@ public class ActionFilter implements Filter<RestContext> {
             String parameter = request.getParameter(fieldName); // 优先使用 客户端参数
             if (parameter == null) {
                 if (originData == null) {
-                    RequestImpl tmp = new RequestImpl();
-                    tmp.setAppName(request.getApp());
-                    tmp.setModelName(request.getModel());
+                    RequestImpl tmp = new RequestImpl(request);
                     tmp.setActionName(Show.ACTION_SHOW);
                     tmp.setId(id);
                     Response response = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);

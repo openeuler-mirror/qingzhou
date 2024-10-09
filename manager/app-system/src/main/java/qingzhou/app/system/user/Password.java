@@ -91,7 +91,7 @@ public class Password extends ModelBase {
                     "en:Change the password of the current login account."})
     public void edit(Request request) throws Exception {
         Password password = new Password();
-        Map<String, String> loginUserPro = User.showDataForUser(request.getUser());
+        Map<String, String> loginUserPro = User.showDataForUserInternal(request.getUser());
         password.enableOtp = Boolean.parseBoolean(Objects.requireNonNull(loginUserPro).get("enableOtp"));
         request.getResponse().addModelData(password);
     }
@@ -102,7 +102,7 @@ public class Password extends ModelBase {
             info = {"更新密码。", "en:Update the password."})
     public void update(Request request) throws Exception {
         String loginUser = request.getUser();
-        Map<String, String> baseData = Objects.requireNonNull(User.showDataForUser(loginUser));
+        Map<String, String> baseData = Objects.requireNonNull(User.showDataForUserInternal(loginUser));
 
         if (Boolean.parseBoolean(request.getParameter("changePwd"))) {
             String error = checkError(request, baseData);

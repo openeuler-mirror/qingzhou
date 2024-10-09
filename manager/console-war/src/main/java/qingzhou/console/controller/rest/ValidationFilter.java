@@ -1,21 +1,11 @@
 package qingzhou.console.controller.rest;
 
-import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import qingzhou.api.FieldType;
 import qingzhou.api.Response;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -26,6 +16,17 @@ import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
@@ -73,6 +74,21 @@ public class ValidationFilter implements Filter<RestContext> {
                     }
                     String i18n = I18n.getKeyI18n(error[0], params);
                     errorMsg.put(field, i18n);
+                }
+            }
+
+            // 是否需要自定义校验
+            if (modelInfo.isValidate()) {
+                RequestImpl tmp = new RequestImpl(context.request);
+                tmp.setActionName(Validate.ACTION_VALIDATE);
+                context.request.getParameters().forEach(tmp::setParameter);
+                tmp.setNonModelParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER, String.valueOf(isAddAction));
+                Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+                if (!tmpResp.isSuccess()) {
+                    java.util.List<Map<String, String>> dataList = tmpResp.getDataList();
+                    if (!dataList.isEmpty()) {
+                        errorMsg.putAll(dataList.get(0));
+                    }
                 }
             }
         }
@@ -168,9 +184,7 @@ public class ValidationFilter implements Filter<RestContext> {
             }
 
             if (context.isAddAction) {
-                RequestImpl tmp = new RequestImpl();
-                tmp.setAppName(context.request.getApp());
-                tmp.setModelName(context.request.getModel());
+                RequestImpl tmp = new RequestImpl(context.request);
                 tmp.setActionName(List.ACTION_CONTAINS);
                 tmp.setId(context.parameterVal);
                 Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
@@ -467,13 +481,25 @@ public class ValidationFilter implements Filter<RestContext> {
     static class readonly implements Validator {
         @Override
         public String[] validate(ValidationContext context) {
+            if (context.isAddAction) return null;
+
             String readOnly = context.fieldInfo.getReadOnly();
             if (readOnly == null || readOnly.trim().isEmpty()) return null;
 
-            boolean checked = SecurityController.checkRule(readOnly, context.request::getParameter, false);
-            if (checked) return null;
+            boolean isReadOnly = SecurityController.checkRule(readOnly, context.request::getParameter, false);
+            if (isReadOnly) {
+                RequestImpl tmp = new RequestImpl(context.request);
+                tmp.setActionName(Update.ACTION_CHANGED);
+                tmp.setNonModelParameter(DeployerConstants.CHANGED_KEY, context.fieldInfo.getCode());
+                tmp.setNonModelParameter(DeployerConstants.CHANGED_VAL, context.parameterVal);
+                Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+                boolean changed = tmpResp.isSuccess();
+                if (!changed) {
+                    return new String[]{"validation_readonly"};
+                }
+            }
 
-            return new String[]{"validation_readonly"};
+            return null;
         }
     }
 }
