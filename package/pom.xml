@@ -16,6 +16,45 @@
         <finalName>qingzhou</finalName>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile-package</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>javac</executable>
+                            <arguments>
+                                <argument>-encoding</argument>
+                                <argument>UTF-8</argument>
+                                <argument>${project.basedir}/script/src/qingzhou/Package.java</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>run-package</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>-classpath</argument>
+                                <argument>${project.basedir}/script/src</argument>
+                                <argument>qingzhou.Package</argument>
+                                <argument>${project.basedir}/target/qingzhou/lib/version${project.version}</argument>
+                                <argument>${project.basedir}/target/qingzhou.zip</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
