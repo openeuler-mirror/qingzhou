@@ -1205,8 +1205,8 @@ function downloadFiles(fileListUrl, downloadUrl) {
                     html += "</div>";
                 }
             }
-            html += "<lable id='fileErrorMsg-" + randId + "' style='height: 20px; color: red; "
-                + (data.success === "true" ? "display: none;'>" : ("display: block;'>" + data.msg)) + "</lable>";
+            html += "<label id='fileErrorMsg-" + randId + "' style='height: 20px; color: red; "
+                + (data.success === "true" ? "display: none;'>" : ("display: block;'>" + data.msg)) + "</label>";
             html += "</form>";
 
             openLayer({
