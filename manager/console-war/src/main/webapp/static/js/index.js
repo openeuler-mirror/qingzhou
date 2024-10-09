@@ -1263,16 +1263,6 @@ function customAction(actionUrl, customActionId, title) {
         area: ['700px', '500px'],
         content: html,
         btn: [getSetting("confirmBtnText"), getSetting("cancelBtnText")],
-        success: function (){
-            $('#' + customActionId + ' a[data-tab]').each(function () {
-                const dataTarget = $(this).attr("href");
-                $(this).attr("href", dataTarget + "-popup");
-            });
-            $('#' + customActionId + ' div.tab-pane').each(function () {
-                const id = $(this).attr("id");
-                $(this).attr("id", id + "-popup");
-            });
-        },
         yes: function () {
             var formData = $('#' + customActionId).serializeArray();
             const data = {};

@@ -60,8 +60,9 @@ public class User extends AddModelBase {
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
+            list = true,
             head = true, order = 1,
-            fields = "name,notes,a,b,",
+            fields = {"name", "notes", "sex", "a", "b"},
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) throws Exception {
