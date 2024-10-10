@@ -1,5 +1,6 @@
 package qingzhou.api;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -53,4 +54,26 @@ public interface Response {
     void setContentType(String contentType);
 
     String getContentType();
+
+    void setHeader(String name, String value);
+
+    String getHeader(String name);
+
+    Collection<String> getHeaderNames();
+
+    /**
+     * Sets a response header with the given name and date-value. The date is
+     * specified in terms of milliseconds since the epoch. If the header had
+     * already been set, the new value overwrites the previous one. The
+     * <code>containsHeader</code> method can be used to test for the presence
+     * of a header before setting its value.
+     *
+     * @param name the name of the header to set
+     * @param date the assigned date value
+     */
+    void setDateHeader(String name, long date);
+
+    Long getDateHeader(String name);
+
+    Collection<String> getDateHeaderNames();
 }

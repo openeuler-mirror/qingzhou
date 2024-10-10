@@ -50,6 +50,8 @@ public interface DeployerConstants {
     String FIELD_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String CHANGED_KEY = "CHANGED_KEY";
     String CHANGED_VAL = "CHANGED_VAL";
+    String app_Started = "Started";
+    String app_Stopped = "Stopped";
     String BATCH_ID_SEPARATOR = ",";
     String DEFAULT_DATA_SEPARATOR = ",";
 
