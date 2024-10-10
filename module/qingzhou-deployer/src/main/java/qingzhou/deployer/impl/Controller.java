@@ -105,7 +105,7 @@ public class Controller implements ModuleActivator {
         String[] apps = deployer.getAllApp().toArray(new String[0]);
         Arrays.stream(apps).forEach(appName -> {
             try {
-                deployer.unInstallApp(appName);
+                deployer.unInstallApp(appName,true);
             } catch (Exception e) {
                 logger.warn("failed to stop app: " + appName, e);
             }

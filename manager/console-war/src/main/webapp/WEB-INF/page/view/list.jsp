@@ -223,7 +223,9 @@
 
 							boolean useJsonUri = actionName.equals(Download.ACTION_FILES)
 									|| Utils.notBlank(customActionId)
-									|| actionName.equals(Delete.ACTION_DELETE);
+									|| actionName.equals(Delete.ACTION_DELETE)
+									|| actionName.equals("start")
+									|| actionName.equals("stop");
 					%>
 					<a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest,
                             useJsonUri ? DeployerConstants.JSON_VIEW : ViewManager.htmlView,
