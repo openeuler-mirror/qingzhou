@@ -1,15 +1,12 @@
 package qingzhou.deployer;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import qingzhou.api.ModelBase;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Response;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 public class ResponseImpl implements Response {
     private boolean success = true;
@@ -21,6 +18,8 @@ public class ResponseImpl implements Response {
     private int pageNum = -1;
     private String contentType;
     private final Map<String, String> parametersInSession = new HashMap<>();
+    private final Map<String, String> headers = new LinkedHashMap<>();
+    private final Map<String, Long> dateHeaders = new LinkedHashMap<>();
 
     @Override
     public void setSuccess(boolean success) {
@@ -119,6 +118,36 @@ public class ResponseImpl implements Response {
     @Override
     public String getContentType() {
         return contentType;
+    }
+
+    @Override
+    public void setHeader(String name, String value) {
+        headers.put(name, value);
+    }
+
+    @Override
+    public String getHeader(String name) {
+        return headers.get(name);
+    }
+
+    @Override
+    public Collection<String> getHeaderNames() {
+        return headers.keySet();
+    }
+
+    @Override
+    public void setDateHeader(String name, long date) {
+        dateHeaders.put(name, date);
+    }
+
+    @Override
+    public Long getDateHeader(String name) {
+        return dateHeaders.get(name);
+    }
+
+    @Override
+    public Collection<String> getDateHeaderNames() {
+        return dateHeaders.keySet();
     }
 
     public Map<String, String> getParametersInSession() {

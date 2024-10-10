@@ -18,11 +18,11 @@ public @interface ModelField {
 
     String show() default ""; // 表单元素级联控制显示/隐藏的事件绑定
 
-    String readonly() default ""; // 表单元素级联控制只读的事件绑定
-
     FieldType type() default FieldType.text; // 字段的显示类型
 
     boolean required() default false;
+
+    String readonly() default ""; // 表单元素级联控制只读的事件绑定
 
     boolean create() default true; // 允许创建时指定值
 

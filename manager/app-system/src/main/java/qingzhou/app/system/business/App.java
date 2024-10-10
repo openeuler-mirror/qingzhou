@@ -1,18 +1,6 @@
 package qingzhou.app.system.business;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
@@ -23,6 +11,8 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
+
+import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.Business, order = 1,
@@ -114,6 +104,14 @@ public class App extends ModelBase implements qingzhou.api.type.List {
             info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
     public String instances = DeployerConstants.INSTANCE_LOCAL;
 
+    @ModelField(
+            list = true,
+            create = false, edit = false,
+            color = {DeployerConstants.app_Started + ":success", DeployerConstants.app_Stopped + ":default"},
+            name = {"状态", "en:State"},
+            info = {"指示应用的当前运行状态。", "en:Indicates the current running state of the app."})
+    public String state;
+
     @Override
     public void start() {
         getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
@@ -142,6 +140,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
             appMap.put(idField(), id);
             appMap.put("path", appInfo.getFilePath());
             appMap.put("instances", String.join(App.instanceSP, instances));
+            appMap.put("state", appInfo.getState());
             return appMap;
         }
 
@@ -157,6 +156,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
             list = true, order = 1,
             page = "sys/manage",
+            show = "state=" + DeployerConstants.app_Started,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request) {

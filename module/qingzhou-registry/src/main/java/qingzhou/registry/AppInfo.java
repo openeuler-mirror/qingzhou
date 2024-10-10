@@ -6,6 +6,7 @@ import java.util.Set;
 public class AppInfo {
     private String name;
     private String filePath;
+    private String state;
     private final Set<ModelInfo> modelInfos = new LinkedHashSet<>();
     private final Set<MenuInfo> menuInfos = new LinkedHashSet<>();
 
@@ -41,6 +42,14 @@ public class AppInfo {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 
     // 返回有序的模块列表

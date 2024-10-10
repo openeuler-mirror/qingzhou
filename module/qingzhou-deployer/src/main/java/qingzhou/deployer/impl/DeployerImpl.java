@@ -5,9 +5,9 @@ import qingzhou.api.type.Add;
 import qingzhou.api.type.Grouped;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Validate;
-import qingzhou.deployer.App;
 import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
-    private final Map<String, App> apps = new TreeMap<>();
+    private final Map<String, AppImpl> apps = new TreeMap<>();
 
     private final ModuleContext moduleContext;
     private final Logger logger;
@@ -52,6 +52,7 @@ class DeployerImpl implements Deployer {
         if (!appDir.isDirectory()) throw new IllegalArgumentException("The app file must be a directory");
 
         AppImpl app = buildApp(appDir);
+
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         // 启动应用
         try {
@@ -89,11 +90,12 @@ class DeployerImpl implements Deployer {
 
     private void startApp(AppImpl app) throws Exception {
         app.getQingzhouApp().start(app.getAppContext());
+        app.getAppInfo().setState(DeployerConstants.app_Started);
     }
 
     @Override
     public void unInstallApp(String appName) throws Exception {
-        AppImpl app = (AppImpl) apps.remove(appName);
+        AppImpl app = apps.remove(appName);
         if (app == null) return;
 
         app.getModelBaseMap().values().forEach(ModelBase::stop);
@@ -101,6 +103,7 @@ class DeployerImpl implements Deployer {
         QingzhouApp qingzhouApp = app.getQingzhouApp();
         if (qingzhouApp != null) {
             qingzhouApp.stop();
+            app.getAppInfo().setState(DeployerConstants.app_Stopped);
         }
 
         try {
@@ -117,7 +120,7 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public App getApp(String appName) {
+    public qingzhou.deployer.App getApp(String appName) {
         return apps.get(appName);
     }
 
