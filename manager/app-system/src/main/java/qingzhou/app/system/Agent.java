@@ -104,7 +104,7 @@ public class Agent extends ModelBase implements Download {
             name = {"", "en:"},
             info = {"", "en:"})
     public void uninstallApp(Request request) throws Exception {
-        Main.getService(Deployer.class).unInstallApp(request.getId());
+        Main.getService(Deployer.class).unInstallApp(request.getId(),true);
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
 
@@ -248,5 +248,24 @@ public class Agent extends ModelBase implements Download {
 
         FileUtil.forceDelete(new File(Main.getLibBase(), Main.QZ_VER_NAME + version));
         FileUtil.forceDelete(new File(Main.getLibBase(), Main.QZ_VER_NAME + version + ".zip"));
+    }
+    @ModelAction(
+            code = DeployerConstants.AGENT_START_APP,
+            name = {"", "en:"},
+            info = {"", "en:"})
+    public void startApp(Request request) throws Exception {
+        String name = request.getId();
+        File appDir = FileUtil.newFile(getAppsDir(), name);
+        Deployer deployer = Main.getService(Deployer.class);
+        deployer.installApp(appDir);
+    }
+
+    @ModelAction(
+            code = DeployerConstants.AGENT_STOP_APP,
+            name = {"", "en:"},
+            info = {"", "en:"})
+    public void stopApp(Request request) throws Exception {
+        Deployer deployer = Main.getService(Deployer.class);
+        deployer.unInstallApp(request.getId(),false);
     }
 }

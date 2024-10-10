@@ -94,8 +94,13 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public void unInstallApp(String appName) throws Exception {
-        AppImpl app = apps.remove(appName);
+    public void unInstallApp(String appName, boolean delete) throws Exception {
+        AppImpl app = null;
+        if (delete) {
+            app = apps.remove(appName);
+        } else {
+            app = apps.get(appName);
+        }
         if (app == null) return;
 
         app.getModelBaseMap().values().forEach(ModelBase::stop);

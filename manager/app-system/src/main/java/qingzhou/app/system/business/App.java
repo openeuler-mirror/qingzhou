@@ -196,4 +196,30 @@ public class App extends ModelBase implements qingzhou.api.type.List {
         String instances = app.get("instances");
         Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_UNINSTALL_APP, instances.split(App.instanceSP));
     }
+
+
+    @ModelAction(
+            code = "start", icon = "play",
+            list = true, order = 10,
+            name = {"启动", "en:start"},
+            info = {"启动应用",
+                    "en:Launch the application."})
+    public void startApp(Request request) throws Exception {
+        String id = request.getId();
+        Map<String, String> app = showData(id);
+        String instances = app.get("instances");
+        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_START_APP, instances.split(App.instanceSP));
+    }
+    @ModelAction(
+            code = "stop", icon = "stop",
+            list = true, order = 11,
+            name = {"停止", "en:end"},
+            info = {"停止应用",
+                    "en:stop the application."})
+    public void stopApp(Request request) throws Exception {
+        String id = request.getId();
+        Map<String, String> app = showData(id);
+        String instances = app.get("instances");
+        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_STOP_APP, instances.split(App.instanceSP));
+    }
 }
