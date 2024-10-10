@@ -130,7 +130,7 @@ public class PageUtil {
         StringBuilder menuHtml = new StringBuilder();
         // 同一级别，Model 菜单排前面
         for (ModelInfo noMenuModel : rootMenu.getSubModelList()) {
-            menuHtml.append(buildModelMenu(noMenuModel, qzRequest, request, response));
+            menuHtml.append(buildModelMenu(0, noMenuModel, qzRequest, request, response));
         }
         // 同一级别，导航 菜单排后面
         for (MenuItem levelOneMenu : rootMenu.getSubMenuList()) {
@@ -146,25 +146,25 @@ public class PageUtil {
         boolean isDefaultActive = "Business".equals(menuItem.getName());
 
         menuHtml.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append("\">");
-        menuHtml.append("   <a href=\"javascript:void(0);\">");
+        menuHtml.append("   <a href=\"javascript:void(0);\" style=\"text-indent:").append(level).append("px;\">");
         menuHtml.append("       <i class=\"icon icon-").append(menuItem.getIcon()).append("\"></i>");
         menuHtml.append("       <span>").append(I18n.getStringI18n(menuItem.getI18n())).append("</span>");
         menuHtml.append("       <span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");
         menuHtml.append("   </a>");
 
-        int paddingLeft = level * 25;
+        int menuTextLeft = level * 10;
 
         boolean menuBegan = false;
         if (!menuItem.getSubModelList().isEmpty()) {
-            menuHtml.append("<ul class=\"treeview-menu\" style=\"padding-left: ").append(paddingLeft).append("px;\">");
+            menuHtml.append("<ul class=\"treeview-menu\">");
             menuBegan = true;
 
-            menuItem.getSubModelList().forEach(subModel -> menuHtml.append(buildModelMenu(subModel, qzRequest, request, response)));
+            menuItem.getSubModelList().forEach(subModel -> menuHtml.append(buildModelMenu(menuTextLeft, subModel, qzRequest, request, response)));
         }
 
         if (!menuItem.getSubMenuList().isEmpty()) {
             if (!menuBegan) {
-                menuHtml.append("<ul class=\"treeview-menu\" style=\"padding-left: ").append(paddingLeft).append("px;\">");
+                menuHtml.append("<ul class=\"treeview-menu\">");
                 menuBegan = true;
             }
 
@@ -179,12 +179,12 @@ public class PageUtil {
         return menuHtml.toString();
     }
 
-    private static String buildModelMenu(ModelInfo modelInfo, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
+    private static String buildModelMenu(int menuTextLeft ,ModelInfo modelInfo, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
         StringBuilder menuHtml = new StringBuilder();
         menuHtml.append("<li class=\"treeview ").append("\">");
         String contextPath = request.getContextPath();
         String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + ViewManager.htmlView + "/" + qzRequest.getApp() + "/" + modelInfo.getCode() + "/" + modelInfo.getEntrance();
-        menuHtml.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(modelInfo.getCode()).append("'>");
+        menuHtml.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(modelInfo.getCode()).append("'").append("style=\" text-indent:").append(menuTextLeft).append("px;\"").append(">");
         menuHtml.append("<i class='icon icon-").append(modelInfo.getIcon()).append("'></i>");
         menuHtml.append("<span>").append(I18n.getModelI18n(qzRequest.getApp(), "model." + modelInfo.getCode())).append("</span>");
         menuHtml.append("</a>");

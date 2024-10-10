@@ -222,7 +222,7 @@
             that.toggle($(this), event);
             if ($(this).next(Selector.treeviewMenu).length === 0 && $(this).attr("href").indexOf("javascript:") < 0) {
                 $("li.active", that.element).removeClass("active");
-                $(this).parents("li").addClass("active");
+                $(this).parents("li").not(".treeview.menu-open").addClass("active");
             }
         });
     };

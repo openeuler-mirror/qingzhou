@@ -421,7 +421,6 @@ label.checkbox-inline, label.radio-inline {
 
 .sidebar-menu a > .icon {
     width: 20px;
-    display: inline-block;
     font-size: 16px;
 }
 
@@ -487,7 +486,7 @@ label.checkbox-inline, label.radio-inline {
     display: block;
 }
 
-.treeview-menu > li > a:focus,
+.treeview-menu > li:not(:has(a > span > i.icon.icon-angle-down)) > a:focus,/*带展开箭头的认为是父级菜单，不显示白色高亮 */
 .treeview-menu > li.active > a {
     color: #D6000F;
     background: var(--bg-color-main-body, #F7F8F9);
