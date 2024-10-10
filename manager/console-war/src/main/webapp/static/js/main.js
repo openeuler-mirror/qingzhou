@@ -77,6 +77,11 @@ function getActiveTabContent() {
     return $(".content-box>ul>li")[$(".tab-box>ul>li.active").index()];
 };
 
+// 获取限定区域
+function getRestrictedArea() {
+    return getActiveTabContent();
+};
+
 // 绑定本机、集群、实例 Tab 标签事件
 function bindTabEvent() {
     var now = new Date().getTime();
@@ -114,11 +119,6 @@ function bindTabEvent() {
             return false;
         });
     });
-};
-
-// 获取限定区域
-function getRestrictedArea() {
-    return getActiveTabContent();
 };
 
 function autoAdaptTip() {
@@ -219,7 +219,14 @@ function closeLayer(index) {
 // start, for: ModelField注解 effectiveWhen()
 function bindEvent(conditions) {
     const triggers = {};
-
+    const contain = function (array, ele) {
+        for (var i = 0; i < array.length; i++) {
+            if (array[i] === ele) {
+                return true;
+            }
+        }
+        return false;
+    };
     // 处理 show 和 readonly 两种事件类型
     ["show", "readonly"].forEach(type => {
         if (conditions[type]) {
@@ -246,9 +253,18 @@ function bindEvent(conditions) {
             });
         }
     });
+    var triggerTies = function (json) {
+        json.forEach(item => {
+            const {type, ...rest} = item; // 事件类型 (show/readonly)
+            Object.keys(rest).forEach(key => {
+                triggerAction(key, rest[key], type);
+            });
+        });
+    };
+    const restrictedArea = getRestrictedArea();
     // 绑定事件和触发初始状态
     Object.keys(triggers).forEach(item => {
-        const elements = $(`[name='${item}']`, getRestrictedArea());
+        const elements = $(`[name='${item}']`, restrictedArea);
         elements.off("change").on("change", function () {
             triggerTies(triggers[$(this).attr("name")]);
         });
@@ -256,30 +272,15 @@ function bindEvent(conditions) {
     });
 
     autoAdaptTip();
-}
-
-
-function contain(array, ele) {
-    for (var i = 0; i < array.length; i++) {
-        if (array[i] === ele) {
-            return true;
-        }
-    }
-    return false;
 };
-
-function triggerTies(json) {
-    json.forEach(item => {
-        const {type, ...rest} = item; // 事件类型 (show/readonly)
-        Object.keys(rest).forEach(key => {
-            triggerAction(key, rest[key], type);
-        });
-    });
-}
 
 function triggerAction(ele, condition, type) {
     const operators = condition.includes("&") ? "&" : "|";
     const expressions = condition.split(operators);
+    const compareVal = function (value, val, notEq) {
+        return notEq ? value !== val : value === val;
+    };
+    const restrictedArea = getRestrictedArea();
 
     let shouldShowOrRead;
 
@@ -290,16 +291,16 @@ function triggerAction(ele, condition, type) {
         const parsedVal = val.includes("'") || val.includes("\"") ? eval(val) : val;
 
         // 优化目标元素查找
-        let target = $("[name='" + item + "']:selected", getRestrictedArea()).length > 0 ?
-            $("[name='" + item + "']:selected", getRestrictedArea()) : $("[name='" + item + "']:checked", getRestrictedArea());
+        let target = $("[name='" + item + "']:selected", restrictedArea).length > 0 ?
+            $("[name='" + item + "']:selected", restrictedArea) : $("[name='" + item + "']:checked", restrictedArea);
 
         if (!target.length) {
-            target = $("[name='" + item + "']", getRestrictedArea());
+            target = $("[name='" + item + "']", restrictedArea);
         }
 
         // 当有多个选项未选中时，隐藏目标表单项
         if ((target.length > 1 || !target.length) && type === "show") {
-            $("#form-item-" + ele, getRestrictedArea()).hide();
+            $("#form-item-" + ele, restrictedArea).hide();
             return;
         }
         let isSwitch = target.parent().attr("class").indexOf("switch") !== -1;
@@ -320,31 +321,20 @@ function triggerAction(ele, condition, type) {
     });
     if (type === "show") {
         if (shouldShowOrRead) {
-            $("#form-item-" + ele, getRestrictedArea()).fadeIn(200);
+            $("#form-item-" + ele, restrictedArea).fadeIn(200);
         } else {
-            $("#form-item-" + ele, getRestrictedArea()).hide();
+            $("#form-item-" + ele, restrictedArea).hide();
         }
     } else if (type === "readonly") {
         if (shouldShowOrRead) {
-            $("#form-item-" + ele, getRestrictedArea()).find("input").attr("readonly", "readonly");
+            $("#form-item-" + ele, restrictedArea).find("input").attr("readonly", "readonly");
         } else {
-            $("#form-item-" + ele, getRestrictedArea()).find("input").removeAttr("readonly");
+            $("#form-item-" + ele, restrictedArea).find("input").removeAttr("readonly");
         }
     }
+};
 
-}
-
-function compareVal(value, val, notEq) {
-    return notEq ? value !== val : value === val;
-}
-
-/**
- * 下拉列表，可输入下拉列表
- */
-
-/*  jQuery Nice Select - v1.1.0
-    https://github.com/hernansartorio/jquery-nice-select
-    Made by Hernán Sartorio  */
+/*下拉列表，可输入下拉列表：jQuery Nice Select - v1.1.0 (Made by Hernán Sartorio, https://github.com/hernansartorio/jquery-nice-select)*/
 function niceSelect() {
     /* Event listeners */
     // Unbind existing events in case that the plugin has been initialized before
@@ -488,10 +478,11 @@ var tw = {
      * 页面跳转
      */
     goback: function (obj) {
-        if ($("[hidden-for-goback='true']", getRestrictedArea()).length > 0) {
+        const restrictedArea = getRestrictedArea();
+        if ($("[hidden-for-goback='true']", restrictedArea).length > 0) {
             $(obj).parents(".bodyDiv").prev(".breadcrumb[hidden-for-goback!='true']").remove();
             $(obj).parents(".bodyDiv").remove();
-            $("[hidden-for-goback='true']", getRestrictedArea()).removeAttr("hidden-for-goback").show();
+            $("[hidden-for-goback='true']", restrictedArea).removeAttr("hidden-for-goback").show();
         }
     },
     formToJson: function (formSelector) {
@@ -590,9 +581,10 @@ var tw = {
             if (url.indexOf("javascript:") === 0) {
                 return;
             }
-            var data = resetData ? {} : tw.formToJson($("form[name='filterForm']", getRestrictedArea()));
+            const restrictedArea = getRestrictedArea();
+            var data = resetData ? {} : tw.formToJson($("form[name='filterForm']", restrictedArea));
             // 优先使用 a 标签上 fill 属性值指定的 container
-            var targetContainer = $this.attr("fill") || $(container, getRestrictedArea());
+            var targetContainer = $this.attr("fill") || $(container, restrictedArea);
             tw.fill(url, data, targetContainer, append, $this);
         });
     }

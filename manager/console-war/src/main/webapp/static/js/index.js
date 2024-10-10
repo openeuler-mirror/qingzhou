@@ -261,10 +261,6 @@
 }(jQuery);
 
 $(document).ready(function () {
-    // 左侧菜单点击菜单事件
-    tw.bindFill("ul.sidebar-menu a", ".main-body", false, true);
-    // 集中管理、默认实例等 Tab 标签切换事件绑定
-    bindTabEvent();
     // 设置或重新设置（如事件绑定、赋初始值等）
     setOrReset();
     // 菜单展示优化
@@ -365,7 +361,8 @@ $(document).ready(function () {
     $("#reset-password-btn").unbind("click").bind("click", function (e) {
         e.preventDefault();
         $(".tab-box>ul>li[fixed='true']").click();
-        var lis = $(".sidebar-menu .active", getRestrictedArea());
+        const restrictedArea = getRestrictedArea();
+        var lis = $(".sidebar-menu .active", restrictedArea);
         lis.removeClass("menu-open active");
         for (var i = 0; i < lis.length; i++) {
             var uls = lis[i].querySelectorAll('ul');
@@ -373,9 +370,9 @@ $(document).ready(function () {
                 uls[j].style.display = 'none';
             }
         }
-        $(".sidebar-menu .expandsub", getRestrictedArea()).removeClass("menu-open expandsub");
+        $(".sidebar-menu .expandsub", restrictedArea).removeClass("menu-open expandsub");
         var matchPart = $(this).attr("href");
-        var menuItemLink = $("ul.sidebar-menu li a[href*='" + matchPart + "']", getRestrictedArea());
+        var menuItemLink = $("ul.sidebar-menu li a[href*='" + matchPart + "']", restrictedArea);
         if (menuItemLink.length > 0) {
             $(menuItemLink).parents("li.treeview").addClass("menu-open active");
             $(menuItemLink).parents("ul.treeview-menu").show();
@@ -391,6 +388,10 @@ $(document).ready(function () {
  * 设置(如绑定事件或设置初始值等) 或 重新设置
  */
 function setOrReset() {
+    // 左侧菜单点击菜单事件
+    tw.bindFill("ul.sidebar-menu a", ".main-body", false, true);
+    // 集中管理、默认实例等 Tab 标签切换事件绑定
+    bindTabEvent();
     // 布尔开关
     $(".switch-btn:not(.disallowed)").unbind("click").bind("click", function () {
         $(".switchedge", this).toggleClass("switch-bg");
@@ -571,6 +572,7 @@ function setOrReset() {
 
 function gotoTarget(model, action, group, field) {
     var boxes = new Array(".content-box>ul>li.active:first", ".content-box>ul>li:eq(1)", ".content-box>ul>li:eq(0)");
+    const restrictedArea = getRestrictedArea();
     for (var i = 0; i < boxes.length; i++) {
         var menuItemLink = $("ul.sidebar-menu li a[modelName='" + model + "']", $(boxes[i]));
         if (menuItemLink.length > 0) {
@@ -590,19 +592,19 @@ function gotoTarget(model, action, group, field) {
 
             if (action && action !== null && action !== "") {
                 if (action === "create") {
-                    var container = $("div.bodyDiv", getRestrictedArea());
-                    tw.fill("/console/rest/html/" + model + "/" + action + searchUrl.substring(searchUrl.indexOf("?")), {}, ($(container).length > 0 ? container : $(".main-body", getRestrictedArea())), false, menuItemLink);
+                    var container = $("div.bodyDiv", restrictedArea);
+                    tw.fill("/console/rest/html/" + model + "/" + action + searchUrl.substring(searchUrl.indexOf("?")), {}, ($(container).length > 0 ? container : $(".main-body", restrictedArea)), false, menuItemLink);
                 }
             }
-            $(".nav-tabs a[tabGroup='" + group + "']", getRestrictedArea()).click();
+            $(".nav-tabs a[tabGroup='" + group + "']", restrictedArea).click();
             var count = 12;
             var interval = window.setInterval(function () {
                 if (count > 0) {
-                    var targetEle = $("label[for='" + field + "']", getRestrictedArea());
+                    var targetEle = $("label[for='" + field + "']", restrictedArea);
                     if ($(targetEle).length > 0) {
                         window.clearInterval(interval);
                         if ($(targetEle).is(":visible")) {
-                            var scrollEle = $(".main-body", getRestrictedArea());
+                            var scrollEle = $(".main-body", restrictedArea);
                             $(scrollEle).animate({scrollTop: $(scrollEle).scrollTop() + $(targetEle).offset().top - $(scrollEle).offset().top} - 20, 1000);
                             shaking($(targetEle)[0]);
                         } else {
@@ -1004,7 +1006,8 @@ function checkboxSortable() {
         }
     });
     var draging = null;
-    $(".checkbox-group a input:not(:checked):first", getRestrictedArea()).closest("a").before($(".checkbox-group a input:checked", getRestrictedArea()).closest("a"));
+    const restrictedArea = getRestrictedArea();
+    $(".checkbox-group a input:not(:checked):first", restrictedArea).closest("a").before($(".checkbox-group a input:checked", restrictedArea).closest("a"));
     $(".checkbox-group a input:checked:not([readonly])").next().css({"cursor": "move"});
     $(".checkbox-group.sortable").unbind("selectstart,dragstart,drag,dragend,dragenter,dragover,dragleave,drop")
         .bind("selectstart", function (e) {
@@ -1056,8 +1059,9 @@ function bindEventForListPage() {
             var filterForm = document.getElementById("filterForm");
             var element = filterForm.getElementsByTagName("a")[0];
             var url = element.href;
-            var data = tw.formToJson($("form[name='filterForm']", getRestrictedArea()));
-            var targetContainer = $this.attr("fill") || $(".main-body", getRestrictedArea());
+            const restrictedArea = getRestrictedArea();
+            var data = tw.formToJson($("form[name='filterForm']", restrictedArea));
+            var targetContainer = $this.attr("fill") || $(".main-body", restrictedArea);
             tw.fill(url, data, targetContainer, false, this);
         }
     });
@@ -1137,7 +1141,6 @@ function initializeManager(element, url) {
     $("[data-toggle='push-menu']", $(".content-box>ul>li").last()).pushMenu({});
     return false;
 }
-
 
 /**
  * @param url
