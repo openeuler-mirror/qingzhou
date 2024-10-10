@@ -26,7 +26,7 @@ public class Cluster extends AddModelBase {
     }
 
     @ModelAction(
-            code = "org", icon = "location-arrow",
+            code = "user", icon = "location-arrow",
             list = true, order = 1,
             models = {"user"},
             name = {"用户", "en:User"},
