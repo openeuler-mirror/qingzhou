@@ -1,24 +1,6 @@
 package qingzhou.app.system;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.RuntimeMXBean;
-import java.lang.management.ThreadMXBean;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
 import qingzhou.crypto.CryptoService;
@@ -28,15 +10,22 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.*;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 @Model(code = DeployerConstants.MODEL_AGENT,
         hidden = true,
-        name = {"实例代理", "en:Agent"},
-        info = {"", "en:"})
+        name = {"实例代理", "en:Agent"})
 public class Agent extends ModelBase implements Download {
     @ModelField(
             type = FieldType.file, // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
-            name = {"", "en:"},
-            info = {"", "en:"})
+            name = {"", "en:"})
     public String file; // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
 
     @Override
@@ -49,8 +38,7 @@ public class Agent extends ModelBase implements Download {
 
     @ModelAction(
             code = DeployerConstants.AGENT_INSTALL_APP,
-            name = {"", "en:"},
-            info = {"", "en:"})
+            name = {"", "en:"})
     public void installApp(Request request) throws Exception {
         String appFile = Boolean.parseBoolean(request.getParameter("upload"))
                 ? request.getParameter("file")
@@ -101,10 +89,9 @@ public class Agent extends ModelBase implements Download {
 
     @ModelAction(
             code = DeployerConstants.AGENT_UNINSTALL_APP,
-            name = {"", "en:"},
-            info = {"", "en:"})
+            name = {"", "en:"})
     public void uninstallApp(Request request) throws Exception {
-        Main.getService(Deployer.class).unInstallApp(request.getId(),true);
+        Main.getService(Deployer.class).unInstallApp(request.getId());
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
     }
 
@@ -119,8 +106,7 @@ public class Agent extends ModelBase implements Download {
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR,
-            name = {"", "en:"},
-            info = {"", "en:"})
+            name = {"", "en:"})
     public void monitor(Request request) {
         OperatingSystemMXBean mxBean = ManagementFactory.getOperatingSystemMXBean();
 
@@ -196,8 +182,7 @@ public class Agent extends ModelBase implements Download {
 
     @ModelAction(
             code = DeployerConstants.ACTION_UPLOAD,
-            name = {"", "en:"},
-            info = {"", "en:"})
+            name = {"", "en:"})
     public void uploadTempFile(Request request) throws IOException {
         String fileId = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_ID);
         String fileName = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_NAME);
@@ -210,8 +195,7 @@ public class Agent extends ModelBase implements Download {
 
     @ModelAction(
             code = DeployerConstants.AGENT_INSTALL_VERSION,
-            name = {"", "en:"},
-            info = {"", "en:"})
+            name = {"", "en:"})
     public void installVersion(Request request) throws Exception {
         String appFile = Boolean.parseBoolean(request.getParameter("upload"))
                 ? request.getParameter("file")
@@ -240,8 +224,7 @@ public class Agent extends ModelBase implements Download {
 
     @ModelAction(
             code = DeployerConstants.AGENT_UNINSTALL_VERSION,
-            name = {"", "en:"},
-            info = {"", "en:"})
+            name = {"", "en:"})
     public void deleteVersion(Request request) throws Exception {
         String version = request.getId();
         if (version.equals(getAppContext().getPlatformVersion())) return;
@@ -249,23 +232,21 @@ public class Agent extends ModelBase implements Download {
         FileUtil.forceDelete(new File(Main.getLibBase(), Main.QZ_VER_NAME + version));
         FileUtil.forceDelete(new File(Main.getLibBase(), Main.QZ_VER_NAME + version + ".zip"));
     }
+
     @ModelAction(
             code = DeployerConstants.AGENT_START_APP,
-            name = {"", "en:"},
-            info = {"", "en:"})
+            name = {"", "en:"})
     public void startApp(Request request) throws Exception {
         String name = request.getId();
-        File appDir = FileUtil.newFile(getAppsDir(), name);
         Deployer deployer = Main.getService(Deployer.class);
-        deployer.installApp(appDir);
+        deployer.startApp(name);
     }
 
     @ModelAction(
             code = DeployerConstants.AGENT_STOP_APP,
-            name = {"", "en:"},
-            info = {"", "en:"})
+            name = {"", "en:"})
     public void stopApp(Request request) throws Exception {
         Deployer deployer = Main.getService(Deployer.class);
-        deployer.unInstallApp(request.getId(),false);
+        deployer.stopApp(request.getId());
     }
 }

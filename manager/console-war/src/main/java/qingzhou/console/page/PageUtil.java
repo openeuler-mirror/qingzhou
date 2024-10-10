@@ -20,7 +20,7 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
-import qingzhou.registry.GroupInfo;
+import qingzhou.registry.ItemInfo;
 import qingzhou.registry.MenuInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
@@ -28,7 +28,7 @@ import qingzhou.registry.ModelInfo;
 import qingzhou.registry.Registry;
 
 public class PageUtil {
-    public static final GroupInfo OTHER_GROUP = new GroupInfo("OTHERS", new String[]{"其他", "en:Other"});
+    public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
 
     public static String getAppToShow() {
         List<String> allApp = SystemController.getService(Deployer.class).getAllApp();

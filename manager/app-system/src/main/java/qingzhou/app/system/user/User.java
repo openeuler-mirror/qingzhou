@@ -3,6 +3,7 @@ package qingzhou.app.system.user;
 import qingzhou.api.*;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
+import qingzhou.api.type.Option;
 import qingzhou.api.type.Validate;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
@@ -24,7 +25,7 @@ import java.util.regex.Pattern;
         menu = Main.User, order = 1,
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
-public class User extends ModelBase implements General, Validate {
+public class User extends ModelBase implements General, Validate, Option {
     static final String idKey = "name";
     static final String PASSWORD_FLAG = "***************";
 
@@ -87,7 +88,6 @@ public class User extends ModelBase implements General, Validate {
 
     @ModelField(
             type = FieldType.select,
-            options = {"SHA-256", "SHA-384", "SHA-512"},
             name = {"摘要算法", "en:Digest Algorithm"},
             info = {"进行摘要加密所采用的算法。", "en:The algorithm used for digest encryption."}
     )
@@ -218,7 +218,7 @@ public class User extends ModelBase implements General, Validate {
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
             list = true, order = 9,
-            batch = true,
+            batch = true, ajax = true,
             page = "list",
             show = "name!=qingzhou",
             name = {"删除", "en:Delete"},
@@ -383,5 +383,13 @@ public class User extends ModelBase implements General, Validate {
         }
 
         return errors;
+    }
+
+    @Override
+    public Item[] optionData(String fieldName) {
+        if (fieldName.equals("digestAlg")) {
+            return Item.of(new String[]{"SHA-256", "SHA-384", "SHA-512"});
+        }
+        return null;
     }
 }

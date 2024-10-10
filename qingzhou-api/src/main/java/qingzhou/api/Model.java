@@ -26,5 +26,5 @@ public @interface Model {
 
     String[] name(); // 模型名称的国际化数组
 
-    String[] info(); // 模型描述信息的国际化数组
+    String[] info() default {}; // 模型描述信息的国际化数组
 }

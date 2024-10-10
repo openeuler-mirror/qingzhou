@@ -1,8 +1,5 @@
 package qingzhou.deployer.impl;
 
-import java.io.File;
-import java.util.Arrays;
-
 import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
@@ -21,6 +18,9 @@ import qingzhou.qr.QrGenerator;
 import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletService;
 import qingzhou.ssh.SSHService;
+
+import java.io.File;
+import java.util.Arrays;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -56,6 +56,7 @@ public class Controller implements ModuleActivator {
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
         deployer = new DeployerImpl(moduleContext, logger);
+        deployer.appsBase = FileUtil.newFile(moduleContext.getInstanceDir(), "apps");
 
         moduleContext.registerService(Deployer.class, deployer);
         moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, cryptoService, http, logger, config));
@@ -87,7 +88,7 @@ public class Controller implements ModuleActivator {
                 return commonApp.listFiles();
             }
         });
-        File[] files = FileUtil.newFile(moduleContext.getInstanceDir(), "apps").listFiles();
+        File[] files = deployer.appsBase.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (!file.isDirectory()) continue;
@@ -105,7 +106,7 @@ public class Controller implements ModuleActivator {
         String[] apps = deployer.getAllApp().toArray(new String[0]);
         Arrays.stream(apps).forEach(appName -> {
             try {
-                deployer.unInstallApp(appName,true);
+                deployer.unInstallApp(appName);
             } catch (Exception e) {
                 logger.warn("failed to stop app: " + appName, e);
             }

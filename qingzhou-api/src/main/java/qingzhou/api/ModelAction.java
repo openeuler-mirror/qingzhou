@@ -23,6 +23,8 @@ public @interface ModelAction {
 
     boolean batch() default false; // 该操作是否支持批量处理，对 list 为 true 的操作有效
 
+    boolean ajax() default false;
+
     /**
      * 在list页面上，弹出表单页面，指定表单页面里显示的字段
      */
@@ -44,5 +46,5 @@ public @interface ModelAction {
     /**
      * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
      */
-    String[] info();
+    String[] info() default {};
 }

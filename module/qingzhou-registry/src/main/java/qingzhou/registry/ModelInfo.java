@@ -20,7 +20,8 @@ public class ModelInfo {
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
-    private GroupInfo[] groupInfos;
+    private ItemInfo[] groupInfos;
+    private LinkedHashMap<String, ItemInfo[]> optionInfos;
 
     public ModelActionInfo getModelActionInfo(String actionName) {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
@@ -227,12 +228,20 @@ public class ModelInfo {
         this.order = order;
     }
 
-    public GroupInfo[] getGroupInfos() {
+    public ItemInfo[] getGroupInfos() {
         return groupInfos;
     }
 
-    public void setGroupInfos(GroupInfo[] groupInfos) {
+    public void setGroupInfos(ItemInfo[] groupInfos) {
         this.groupInfos = groupInfos;
+    }
+
+    public LinkedHashMap<String, ItemInfo[]> getOptionInfos() {
+        return optionInfos;
+    }
+
+    public void setOptionInfos(LinkedHashMap<String, ItemInfo[]> optionInfos) {
+        this.optionInfos = optionInfos;
     }
 
     public ModelFieldInfo[] getModelFieldInfos() {

@@ -1,17 +1,17 @@
 package qingzhou.registry;
 
-import qingzhou.api.Group;
+import qingzhou.api.Item;
 
-public class GroupInfo {
+public class ItemInfo {
     private String name;
     private String[] i18n;
 
-    public GroupInfo(Group group) {
-        this.name = group.name();
-        this.i18n = group.i18n();
+    public ItemInfo(Item item) {
+        this.name = item.name();
+        this.i18n = item.i18n();
     }
 
-    public GroupInfo(String name, String[] i18n) {
+    public ItemInfo(String name, String[] i18n) {
         this.name = name;
         this.i18n = i18n;
     }

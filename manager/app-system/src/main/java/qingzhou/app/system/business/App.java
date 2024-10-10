@@ -186,7 +186,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
             list = true, order = 9,
-            batch = true,
+            batch = true, ajax = true,
             name = {"卸载", "en:UnInstall"},
             info = {"卸载应用，注：卸载应用会删除应用包下的所有文件，且不可恢复。",
                     "en:Uninstall the app, Note: Uninstalling the app will delete all the files under the app package and cannot be recovered."})
@@ -197,26 +197,30 @@ public class App extends ModelBase implements qingzhou.api.type.List {
         Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_UNINSTALL_APP, instances.split(App.instanceSP));
     }
 
-
     @ModelAction(
             code = "start", icon = "play",
-            list = true, order = 10,
+            list = true, order = 2,
+            ajax = true,
+            show = "state=" + DeployerConstants.app_Stopped,
             name = {"启动", "en:start"},
             info = {"启动应用",
                     "en:Launch the application."})
-    public void startApp(Request request) throws Exception {
+    public void startApp(Request request) {
         String id = request.getId();
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
         Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_START_APP, instances.split(App.instanceSP));
     }
+
     @ModelAction(
             code = "stop", icon = "stop",
-            list = true, order = 11,
+            list = true, order = 3,
+            ajax = true,
+            show = "state=" + DeployerConstants.app_Started,
             name = {"停止", "en:end"},
             info = {"停止应用",
                     "en:stop the application."})
-    public void stopApp(Request request) throws Exception {
+    public void stopApp(Request request) {
         String id = request.getId();
         Map<String, String> app = showData(id);
         String instances = app.get("instances");

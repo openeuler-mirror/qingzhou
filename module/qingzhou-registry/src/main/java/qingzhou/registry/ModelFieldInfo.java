@@ -6,7 +6,6 @@ public class ModelFieldInfo {
     private String[] info;
     private String group;
     private String type;
-    private String[] options;
     private String refModel;
     private String separator;
     private transient Class<?> refModelClass;
@@ -112,14 +111,6 @@ public class ModelFieldInfo {
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    public String[] getOptions() {
-        return options;
-    }
-
-    public void setOptions(String[] options) {
-        this.options = options;
     }
 
     public String getRefModel() {

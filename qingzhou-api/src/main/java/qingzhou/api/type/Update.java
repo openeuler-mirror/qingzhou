@@ -16,6 +16,6 @@ public interface Update {
     void updateData(Map<String, String> data) throws Exception;
 
     default boolean changed(String id, String key, String val) throws Exception {
-        return Objects.equals(editData(id).get(key), val);
+        return !Objects.equals(editData(id).get(key), val);
     }
 }

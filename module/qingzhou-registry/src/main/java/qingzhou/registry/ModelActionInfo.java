@@ -11,6 +11,7 @@ public class ModelActionInfo {
     private boolean head;
     private boolean list;
     private boolean batch;
+    private boolean ajax;
     private int order;
     private String show;
     private String page;
@@ -62,6 +63,14 @@ public class ModelActionInfo {
 
     public void setBatch(boolean batch) {
         this.batch = batch;
+    }
+
+    public boolean isAjax() {
+        return ajax;
+    }
+
+    public void setAjax(boolean ajax) {
+        this.ajax = ajax;
     }
 
     public String getPage() {

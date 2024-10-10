@@ -2,7 +2,7 @@ package qingzhou.app.system.business;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Download;
-import qingzhou.api.type.Grouped;
+import qingzhou.api.type.Group;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Monitor;
 import qingzhou.app.system.Main;
@@ -27,7 +27,7 @@ import java.util.Map;
         name = {"实例", "en:Instance"},
         info = {"实例是应用部署的载体，为应用提供运行时环境。预置的 " + DeployerConstants.INSTANCE_LOCAL + " 实例表示当前正在访问的服务所在的实例，如集中管理端就运行在此实例上。",
                 "en:An instance is the carrier of application deployment and provides a runtime environment for the application. The provisioned " + DeployerConstants.INSTANCE_LOCAL + " instance indicates the instance where the service is currently accessed, such as the centralized management side running on this instance."})
-public class Instance extends ModelBase implements List, Monitor, Grouped {
+public class Instance extends ModelBase implements List, Monitor, Group {
     private static final String ID_KEY = "name";
 
     @ModelField(
@@ -190,11 +190,11 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
     private final String group_jvm = "jvm";
 
     @Override
-    public Groups groups() {
-        return Groups.of(
-                Group.of(group_os, new String[]{"操作系统", "en:Operating System"}),
-                Group.of(group_jvm, new String[]{"Java 虚拟机", "en:Java VM"})
-        );
+    public Item[] groupData() {
+        return new Item[]{
+                Item.of(group_os, new String[]{"操作系统", "en:Operating System"}),
+                Item.of(group_jvm, new String[]{"Java 虚拟机", "en:Java VM"})
+        };
     }
 
     @Override
@@ -262,6 +262,7 @@ public class Instance extends ModelBase implements List, Monitor, Grouped {
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
             list = true, order = 8,
+            ajax = true,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。",
                     "en:Download the log information of the instance."})

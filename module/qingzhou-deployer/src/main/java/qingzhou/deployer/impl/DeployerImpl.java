@@ -1,15 +1,14 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Grouped;
 import qingzhou.api.type.List;
-import qingzhou.api.type.Validate;
+import qingzhou.api.type.*;
 import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 import qingzhou.registry.*;
@@ -34,6 +33,7 @@ class DeployerImpl implements Deployer {
     private final ModuleContext moduleContext;
     private final Logger logger;
     private LoaderPolicy loaderPolicy;
+    File appsBase = null;
 
     private final java.util.List<AppListener> appListeners = new ArrayList<>();
 
@@ -94,13 +94,20 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public void unInstallApp(String appName, boolean delete) throws Exception {
-        AppImpl app = null;
-        if (delete) {
-            app = apps.remove(appName);
-        } else {
-            app = apps.get(appName);
-        }
+    public void unInstallApp(String appName) throws Exception {
+        stopApp(appName);
+        apps.remove(appName);
+    }
+
+    @Override
+    public void startApp(String appName) throws Exception {
+        File appDir = FileUtil.newFile(appsBase, appName);
+        installApp(appDir);
+    }
+
+    @Override
+    public void stopApp(String appName) throws Exception {
+        AppImpl app = apps.get(appName);
         if (app == null) return;
 
         app.getModelBaseMap().values().forEach(ModelBase::stop);
@@ -277,10 +284,12 @@ class DeployerImpl implements Deployer {
             if (instance instanceof List) {
                 modelInfo.setIdField(((List) instance).idField());
             }
-            modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
+            ModelFieldInfo[] modelFieldInfos = getModelFieldInfos(annotation, instance);
+            modelInfo.setModelFieldInfos(modelFieldInfos);
             java.util.List<ModelActionInfo> methodModelActionInfoMap = parseModelActionInfos(annotation);
             modelInfo.setModelActionInfos(methodModelActionInfoMap.toArray(new ModelActionInfo[0]));
             modelInfo.setGroupInfos(getGroupInfo(instance));
+            modelInfo.setOptionInfos(getOptionInfo(modelFieldInfos, instance));
             modelInfo.setValidate(instance instanceof Validate);
             modelInfos.put(instance, modelInfo);
         }
@@ -306,15 +315,29 @@ class DeployerImpl implements Deployer {
         return modelInfos;
     }
 
-    private GroupInfo[] getGroupInfo(ModelBase instance) {
-        java.util.List<GroupInfo> groupInfoList = new ArrayList<>();
-        if (instance instanceof Grouped) {
-            Groups groups = ((Grouped) instance).groups();
-            if (groups != null) {
-                groups.groups().stream().map(GroupInfo::new).forEach(groupInfoList::add);
+    private LinkedHashMap<String, ItemInfo[]> getOptionInfo(ModelFieldInfo[] modelFieldInfos, ModelBase instance) {
+        LinkedHashMap<String, ItemInfo[]> infoList = new LinkedHashMap<>();
+        if (instance instanceof Option) {
+            for (ModelFieldInfo fieldInfo : modelFieldInfos) {
+                String fieldName = fieldInfo.getCode();
+                Item[] items = ((Option) instance).optionData(fieldName);
+                if (items != null) {
+                    infoList.put(fieldName, Arrays.stream(items).map(ItemInfo::new).toArray(ItemInfo[]::new));
+                }
             }
         }
-        return groupInfoList.toArray(new GroupInfo[0]);
+        return infoList;
+    }
+
+    private ItemInfo[] getGroupInfo(ModelBase instance) {
+        java.util.List<ItemInfo> infoList = new ArrayList<>();
+        if (instance instanceof Group) {
+            Item[] items = ((Group) instance).groupData();
+            if (items != null) {
+                Arrays.stream(items).map(ItemInfo::new).forEach(infoList::add);
+            }
+        }
+        return infoList.toArray(new ItemInfo[0]);
     }
 
     private ModelFieldInfo[] getModelFieldInfos(AnnotationReader annotation, ModelBase instance) {
@@ -326,7 +349,6 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setInfo(modelField.info());
             modelFieldInfo.setGroup(modelField.group());
             modelFieldInfo.setType(modelField.type().name());
-            modelFieldInfo.setOptions(modelField.options());
             modelFieldInfo.setRefModelClass(modelField.refModel());
             modelFieldInfo.setSeparator(modelField.separator());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
@@ -465,6 +487,7 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setHead(modelAction.head());
             modelActionInfo.setList(modelAction.list());
             modelActionInfo.setBatch(modelAction.batch());
+            modelActionInfo.setAjax(modelAction.ajax());
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setPage(modelAction.page());
             modelActionInfo.setFields(modelAction.fields());
