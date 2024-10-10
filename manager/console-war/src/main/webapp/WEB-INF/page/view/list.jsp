@@ -177,8 +177,8 @@
 						String refModelName = null;
 						String refFieldName = null;
 						String refValue;
-						if (Utils.notBlank(fieldInfo.getLinkModel())) {
-							String[] split = fieldInfo.getLinkModel().split("\\.");
+						if (Utils.notBlank(fieldInfo.getLink())) {
+							String[] split = fieldInfo.getLink().split("\\.");
 							refModelName = split[0];
 							refFieldName = split[1];
 						} else if (Utils.notBlank(fieldInfo.getRefModel())) {

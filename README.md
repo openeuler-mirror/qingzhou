@@ -29,7 +29,7 @@ JDK >= 1.8
 启动轻舟有两种方式，**择其一**即可：
 
 - 在 `${轻舟的安装包}/bin` 下，执行对应平台的 start 脚本；
-- 执行命令：`java -jar ${轻舟的安装包}/bin/qingzhou-launcher.jar server start`
+- 执行命令：`java -jar ${轻舟的安装包}/bin/qingzhou-launcher.jar instance start`
 
 > 看到类似如下的日志输出，则表示启动完成：
 >

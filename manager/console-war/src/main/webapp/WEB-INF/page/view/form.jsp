@@ -65,12 +65,12 @@
 						String fieldName = e.getKey();
 						ModelFieldInfo modelField = e.getValue();
 
-						if (!modelField.isCreateable() && !isEdit) {
+						if (!modelField.isCreate() && !isEdit) {
 							continue;
 						}
 
 						String readonly = "";
-						if (!modelField.isEditable() && isEdit) {
+						if (!modelField.isEdit() && isEdit) {
 							readonly = "readonly";
 						} else if (fieldName.equals(idField)) {
 							if (isEdit) {

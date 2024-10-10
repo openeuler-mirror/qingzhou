@@ -24,9 +24,9 @@ public @interface ModelField {
 
     boolean required() default false;
 
-    boolean createable() default true; // 允许创建时指定值
+    boolean create() default true; // 允许创建时指定值
 
-    boolean editable() default true; // 允许编辑此字段
+    boolean edit() default true; // 允许编辑此字段
 
     String[] options() default {}; // 字段的取值范围，如果设置了 refModel 此值将被忽略
 
@@ -46,22 +46,22 @@ public @interface ModelField {
 
     boolean port() default false;
 
-    String unsupportedCharacters() default "";
+    String noChar() default "";
 
-    String[] unsupportedStrings() default {};
+    String[] noString() default {};
 
     String pattern() default ""; // 填值须要符合此正则表达式规则
 
     boolean email() default false; // 填值须是一个合法的邮箱地址
 
-    boolean filePath() default false;
+    boolean file() default false;
 
     boolean list() default false; // 是否显示在列表中。
 
     /**
      * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
      */
-    String linkModel() default "";
+    String link() default "";
 
     /**
      * 用于样式转换，形式：{"当前字段值:success", "当前字段值:default"}

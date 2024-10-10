@@ -1,24 +1,6 @@
 package qingzhou.app.system.setting;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.Show;
@@ -29,6 +11,13 @@ import qingzhou.app.system.business.Instance;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.FileUtil;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
 @Model(code = "version", icon = "upload-alt",
         menu = Main.Setting,
         order = 4,
@@ -37,21 +26,21 @@ import qingzhou.engine.util.FileUtil;
                 "en:Manage the running version of the light boat and upgrade the light boat to a new version. Note: The upgrade package is delivered immediately, but takes effect the next time the instance is restarted."})
 public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelField(
-            createable = false,
+            create = false,
             list = true,
             name = {"产品版本", "en:Product Version"},
             info = {"产品的版本号。", "en:Version number of the product."})
     public String version;
 
     @ModelField(
-            createable = false,
+            create = false,
             list = true,
             name = {"构建日期", "en:Build Date"},
             info = {"此版本的构建日期。", "en:The build date of this release."})
     public String buildDate;
 
     @ModelField(
-            createable = false,
+            create = false,
             list = true,
             color = {"true:success", "false:default"},
             name = {"生效中", "en:Running"},
@@ -60,7 +49,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
 
     @ModelField(
             type = FieldType.markdown,
-            createable = false,
+            create = false,
             name = {"发布说明", "en:Release Notes"},
             info = {"此版本的说明信息，通常会包括该版本的新增功能、修复已知问题等内容。",
                     "en:The description of this release, which usually includes new features in the release, fixes for known issues, and so on."})
@@ -76,7 +65,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelField(
             show = "upload=false",
             required = true,
-            filePath = true,
+            file = true,
             name = {"文件位置", "en:Path"},
             info = {"服务器上升级包的位置。注：须为 version*.zip 类型的文件。",
                     "en:The location of the upgrade package on the server. Note: It must be a file of type version*.zip."})
@@ -157,7 +146,11 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
             StringBuilder content = new StringBuilder();
             releaseNotes.forEach(s -> content.append(s).append(System.lineSeparator()));
             data.put("releaseNotes", content.toString());
-            data.put("buildDate", releaseNotes.get(releaseNotes.size() - 1));
+            String time = releaseNotes.get(releaseNotes.size() - 1);
+            String flag = "Build_Time: ";
+            if (time.startsWith(flag)) {
+                data.put("buildDate", time.substring(flag.length()));
+            }
         }
         return data;
     }

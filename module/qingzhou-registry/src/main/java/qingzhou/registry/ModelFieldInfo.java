@@ -14,8 +14,8 @@ public class ModelFieldInfo {
     private boolean list;
     private boolean monitor;
     private boolean numeric;
-    private boolean createable;
-    private boolean editable;
+    private boolean create;
+    private boolean edit;
     private boolean required;
     private long min;
     private long max;
@@ -23,12 +23,12 @@ public class ModelFieldInfo {
     private int lengthMax;
     private boolean host;
     private boolean port;
-    private String unsupportedCharacters;
-    private String[] unsupportedStrings;
+    private String noChar;
+    private String[] noString;
     private String pattern;
     private String show;
     private String readonly;
-    private String linkModel;
+    private String link;
     private String[] color;
 
     public String[] getColor() {
@@ -39,16 +39,16 @@ public class ModelFieldInfo {
         this.color = color;
     }
 
-    public boolean isFilePath() {
-        return filePath;
+    public boolean isFile() {
+        return file;
     }
 
-    public void setFilePath(boolean filePath) {
-        this.filePath = filePath;
+    public void setFile(boolean file) {
+        this.file = file;
     }
 
     private boolean email;
-    private boolean filePath;
+    private boolean file;
 
     public String getPattern() {
         return pattern;
@@ -162,20 +162,20 @@ public class ModelFieldInfo {
         this.numeric = numeric;
     }
 
-    public boolean isCreateable() {
-        return createable;
+    public boolean isCreate() {
+        return create;
     }
 
-    public void setCreateable(boolean createable) {
-        this.createable = createable;
+    public void setCreate(boolean create) {
+        this.create = create;
     }
 
-    public boolean isEditable() {
-        return editable;
+    public boolean isEdit() {
+        return edit;
     }
 
-    public void setEditable(boolean editable) {
-        this.editable = editable;
+    public void setEdit(boolean edit) {
+        this.edit = edit;
     }
 
     public boolean isRequired() {
@@ -234,20 +234,20 @@ public class ModelFieldInfo {
         this.port = port;
     }
 
-    public String getUnsupportedCharacters() {
-        return unsupportedCharacters;
+    public String getNoChar() {
+        return noChar;
     }
 
-    public void setUnsupportedCharacters(String unsupportedCharacters) {
-        this.unsupportedCharacters = unsupportedCharacters;
+    public void setNoChar(String noChar) {
+        this.noChar = noChar;
     }
 
-    public String[] getUnsupportedStrings() {
-        return unsupportedStrings;
+    public String[] getNoString() {
+        return noString;
     }
 
-    public void setUnsupportedStrings(String[] unsupportedStrings) {
-        this.unsupportedStrings = unsupportedStrings;
+    public void setNoString(String[] noString) {
+        this.noString = noString;
     }
 
     public String getShow() {
@@ -274,11 +274,11 @@ public class ModelFieldInfo {
         this.email = email;
     }
 
-    public String getLinkModel() {
-        return linkModel;
+    public String getLink() {
+        return link;
     }
 
-    public void setLinkModel(String linkModel) {
-        this.linkModel = linkModel;
+    public void setLink(String link) {
+        this.link = link;
     }
 }
