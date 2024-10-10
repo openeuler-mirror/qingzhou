@@ -26,21 +26,21 @@ import java.util.zip.ZipFile;
                 "en:Manage the running version of the light boat and upgrade the light boat to a new version. Note: The upgrade package is delivered immediately, but takes effect the next time the instance is restarted."})
 public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelField(
-            createable = false,
+            create = false,
             list = true,
             name = {"产品版本", "en:Product Version"},
             info = {"产品的版本号。", "en:Version number of the product."})
     public String version;
 
     @ModelField(
-            createable = false,
+            create = false,
             list = true,
             name = {"构建日期", "en:Build Date"},
             info = {"此版本的构建日期。", "en:The build date of this release."})
     public String buildDate;
 
     @ModelField(
-            createable = false,
+            create = false,
             list = true,
             color = {"true:success", "false:default"},
             name = {"生效中", "en:Running"},
@@ -49,7 +49,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
 
     @ModelField(
             type = FieldType.markdown,
-            createable = false,
+            create = false,
             name = {"发布说明", "en:Release Notes"},
             info = {"此版本的说明信息，通常会包括该版本的新增功能、修复已知问题等内容。",
                     "en:The description of this release, which usually includes new features in the release, fixes for known issues, and so on."})
@@ -65,7 +65,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelField(
             show = "upload=false",
             required = true,
-            filePath = true,
+            file = true,
             name = {"文件位置", "en:Path"},
             info = {"服务器上升级包的位置。注：须为 version*.zip 类型的文件。",
                     "en:The location of the upgrade package on the server. Note: It must be a file of type version*.zip."})

@@ -53,7 +53,7 @@ public class User extends AddModelBase {
     @ModelField(
             type = FieldType.textarea,
             list = true,
-            linkModel = "department.email",
+            link = "department.email",
             name = {"备注", "en:Notes"})
     public String notes;
 

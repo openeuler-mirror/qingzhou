@@ -71,8 +71,8 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelField(
             required = true,
-            createable = false, editable = false,
-            unsupportedStrings = {DeployerConstants.APP_SYSTEM},
+            create = false, edit = false,
+            noString = {DeployerConstants.APP_SYSTEM},
             list = true,
             name = {"应用名称", "en:App Name"},
             info = {"应用包的名称，表示该应用的业务系统种类，一种业务系统可安装在多个轻舟实例上，每一次的安装都会有唯一的 ID 与之对应。",
@@ -89,7 +89,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
             show = "upload=false",
             required = true,
-            filePath = true,
+            file = true,
             name = {"应用位置", "en:Application File"},
             info = {"服务器上应用程序的位置，通常是应用的程序包，注：须为 *.jar, *.zip 类型的文件或目录。",
                     "en:The location of the application on the server, usually the app package, Note: Must be a *.jar, *.zip file or directory."})

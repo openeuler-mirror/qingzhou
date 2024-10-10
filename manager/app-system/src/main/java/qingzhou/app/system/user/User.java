@@ -119,7 +119,7 @@ public class User extends ModelBase implements General, Validate {
     public Boolean changePwd = true;
 
     @ModelField(
-            createable = false, editable = false,
+            create = false, edit = false,
             list = true,
             name = {"密码最后修改时间", "en:Password Last Modified"},
             info = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}

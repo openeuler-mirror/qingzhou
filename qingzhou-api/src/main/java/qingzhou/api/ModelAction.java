@@ -30,6 +30,8 @@ public @interface ModelAction {
 
     String page() default ""; // 由指定的视图处理
 
+    String[] models() default {}; //  弹出子级管理页面
+
     String show() default ""; // 设置该操作的可用条件
 
     boolean disable() default false; // 是否禁用此 action

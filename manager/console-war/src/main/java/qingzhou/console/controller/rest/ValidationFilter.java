@@ -130,10 +130,10 @@ public class ValidationFilter implements Filter<RestContext> {
 
         // 处理空值情况
         if (context.parameterVal == null || context.parameterVal.isEmpty()) {
-            if (context.isAddAction && !fieldInfo.isCreateable()) {
+            if (context.isAddAction && !fieldInfo.isCreate()) {
                 return null;
             }
-            if (context.isUpdateAction && !fieldInfo.isEditable()) {
+            if (context.isUpdateAction && !fieldInfo.isEdit()) {
                 return null;
             }
             if (fieldInfo.isRequired()) {
@@ -303,8 +303,8 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            if (fieldInfo.getUnsupportedCharacters().isEmpty()) return null;
-            for (char c : fieldInfo.getUnsupportedCharacters().toCharArray()) {
+            if (fieldInfo.getNoChar().isEmpty()) return null;
+            for (char c : fieldInfo.getNoChar().toCharArray()) {
                 String s = String.valueOf(c);
                 if (context.parameterVal.contains(s)) {
                     return new String[]{"validation_unsupportedCharacters", s};
@@ -318,7 +318,7 @@ public class ValidationFilter implements Filter<RestContext> {
 
         @Override
         public String[] validate(ValidationContext context) {
-            for (String unsupportedString : context.fieldInfo.getUnsupportedStrings()) {
+            for (String unsupportedString : context.fieldInfo.getNoString()) {
                 for (String param : context.parameterVal.split(DeployerConstants.DEFAULT_DATA_SEPARATOR)) {
                     if (param.equals(unsupportedString)) {
                         return new String[]{"validation_unsupportedStrings"};
@@ -334,7 +334,7 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            if (fieldInfo.isCreateable()) return null;
+            if (fieldInfo.isCreate()) return null;
 
             if (!context.isAddAction) return null;
 
@@ -347,7 +347,7 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            if (fieldInfo.isEditable()) return null;
+            if (fieldInfo.isEdit()) return null;
 
             if (!context.isUpdateAction) return null;
 
@@ -431,7 +431,7 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             if (fieldInfo.getType().equals(FieldType.file.name())
-                    || fieldInfo.isFilePath()) {
+                    || fieldInfo.isFile()) {
                 String[] illegalCollections = {"|", "&", "~", "../", "./", "*", "?", "\"", "'", "<", ">", "(", ")", "[", "]", "{", "}", "^", " "};
                 for (String illegalCollection : illegalCollections) {
                     if (context.parameterVal.contains(illegalCollection)) {

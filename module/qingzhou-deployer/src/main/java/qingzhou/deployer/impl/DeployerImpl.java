@@ -325,8 +325,8 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setList(modelField.list());
             modelFieldInfo.setMonitor(modelField.monitor());
             modelFieldInfo.setNumeric(modelField.numeric());
-            modelFieldInfo.setCreateable(modelField.createable());
-            modelFieldInfo.setEditable(modelField.editable());
+            modelFieldInfo.setCreate(modelField.create());
+            modelFieldInfo.setEdit(modelField.edit());
             modelFieldInfo.setRequired(modelField.required());
             modelFieldInfo.setMin(modelField.min());
             modelFieldInfo.setMax(modelField.max());
@@ -335,13 +335,13 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setPattern(modelField.pattern());
             modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
-            modelFieldInfo.setUnsupportedCharacters(modelField.unsupportedCharacters());
-            modelFieldInfo.setUnsupportedStrings(modelField.unsupportedStrings());
+            modelFieldInfo.setNoChar(modelField.noChar());
+            modelFieldInfo.setNoString(modelField.noString());
             modelFieldInfo.setShow(modelField.show());
             modelFieldInfo.setReadOnly(modelField.readonly());
             modelFieldInfo.setEmail(modelField.email());
-            modelFieldInfo.setFilePath(modelField.filePath());
-            modelFieldInfo.setLinkModel(modelField.linkModel());
+            modelFieldInfo.setFile(modelField.file());
+            modelFieldInfo.setLink(modelField.link());
             modelFieldInfo.setColor(modelField.color());
             modelFieldInfoList.add(modelFieldInfo);
         });
