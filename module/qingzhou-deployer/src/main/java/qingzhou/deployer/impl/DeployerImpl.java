@@ -373,6 +373,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setFile(modelField.file());
             modelFieldInfo.setLink(modelField.link());
             modelFieldInfo.setColor(modelField.color());
+            modelFieldInfo.setShowMoreOnTop(modelField.showMoreOnTop());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);

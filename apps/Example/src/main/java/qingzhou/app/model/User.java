@@ -16,7 +16,7 @@ public class User extends AddModelBase implements Group, Option {
             group = "base",
             required = true,
             list = true,
-            color = {"admin:success"},
+            color = {"admin:#66de65"},
             name = {"用户名称", "en:Username"})
     public String name;
 

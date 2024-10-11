@@ -29,6 +29,15 @@ public class ModelFieldInfo {
     private String readonly;
     private String link;
     private String[] color;
+    private boolean showMoreOnTop;
+
+    public boolean isShowMoreOnTop() {
+        return showMoreOnTop;
+    }
+
+    public void setShowMoreOnTop(boolean showMoreOnTop) {
+        this.showMoreOnTop = showMoreOnTop;
+    }
 
     public String[] getColor() {
         return color;

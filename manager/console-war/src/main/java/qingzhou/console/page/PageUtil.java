@@ -86,7 +86,7 @@ public class PageUtil {
                 continue;
             }
             if (array[0].equals(value)) {
-                return "<label class=\"label transformer label-" + array[1] + "\">" + value + "</label>";
+                return "<span style=\"color:" + array[1] + "\">" + value + "</span>";
             }
         }
 
@@ -179,7 +179,7 @@ public class PageUtil {
         return menuHtml.toString();
     }
 
-    private static String buildModelMenu(int menuTextLeft ,ModelInfo modelInfo, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
+    private static String buildModelMenu(int menuTextLeft, ModelInfo modelInfo, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
         StringBuilder menuHtml = new StringBuilder();
         menuHtml.append("<li class=\"treeview ").append("\">");
         String contextPath = request.getContextPath();

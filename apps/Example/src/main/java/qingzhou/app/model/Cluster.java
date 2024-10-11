@@ -15,7 +15,7 @@ public class Cluster extends AddModelBase {
     @ModelField(
             required = true,
             list = true,
-            color = {"admin:success"},
+            color = {"admin:#66de65"},
             name = {"集群名称", "en:Username"})
     public String name;
 
