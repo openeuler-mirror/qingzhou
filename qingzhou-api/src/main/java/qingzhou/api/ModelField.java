@@ -68,12 +68,6 @@ public @interface ModelField {
      */
     String[] color() default {};
 
-    /**
-     * 列表显示时，文案太长禁止换行且用省略号代替，鼠标移上显示在上方
-     * @return
-     */
-    boolean showMoreOnTop() default false;
-
     boolean monitor() default false; // 该属性为监视类型，而非表单项
 
     boolean numeric() default false;  // 该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。

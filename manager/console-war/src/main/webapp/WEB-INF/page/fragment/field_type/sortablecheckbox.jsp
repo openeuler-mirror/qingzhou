@@ -23,7 +23,8 @@
     <a draggable="true" href="javascript:void(0);">
         <input checked type="checkbox" name="<%=fieldName%>"
                value="<%=field%>" <%=readonlyAttribute%> />
-        <label><%=I18n.getStringI18n(selectedItem.getI18n())%></label>
+        <label><%=I18n.getStringI18n(selectedItem.getI18n())%>
+        </label>
     </a>
     <%
                 // 移除已选项，避免重复输出
@@ -37,7 +38,8 @@
     <a draggable="true" href="javascript:void(0);">
         <input type="checkbox" name="<%=fieldName%>"
                value="<%=itemInfo.getName()%>" <%=readonlyAttribute%> />
-        <label><%=I18n.getStringI18n(itemInfo.getI18n())%></label>
+        <label><%=I18n.getStringI18n(itemInfo.getI18n())%>
+        </label>
     </a>
     <%
         }

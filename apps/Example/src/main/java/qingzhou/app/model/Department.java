@@ -31,6 +31,8 @@ public class Department extends AddModelBase {
 
     @ModelField(
             list = true,
+            color = {"AAAAA:#66de65",
+                    "BBBBB:#d6d4d4"},
             name = {"联系电话", "en:Department Phone"},
             info = {"该部门的联系电话。", "en:The department contact number."})
     public String phone;

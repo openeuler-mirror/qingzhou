@@ -1,15 +1,5 @@
 package qingzhou.console.login;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 import qingzhou.config.User;
 import qingzhou.console.IPUtil;
 import qingzhou.console.controller.I18n;
@@ -17,13 +7,22 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.vercode.VerCode;
-import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.TotpCipher;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class LoginManager implements Filter<SystemControllerContext> {
     public static final String LOGIN_PATH = "/login";
@@ -35,7 +34,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
     public static final String LOGIN_OTP = "otp";
 
     public static final String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
-    public static final String INDEX_PATH = DeployerConstants.REST_PREFIX + "/" + ViewManager.htmlView + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_INDEX + "/" + DeployerConstants.ACTION_INDEX;
+    public static final String INDEX_PATH = DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_INDEX + "/" + DeployerConstants.ACTION_INDEX;
 
     private static final String LOGIN_ERROR_MSG_KEY = "page.login.invalid";
     private static final String LOCKED_MSG_KEY = "page.login.locked";
@@ -271,7 +270,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
         }
 
         // 远程实例注册
-        String baseUri = DeployerConstants.REST_PREFIX + "/" + DeployerConstants.JSON_VIEW + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
+        String baseUri = DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
         return checkUri.equals(baseUri + DeployerConstants.ACTION_CHECK)
                 ||
                 checkUri.equals(baseUri + DeployerConstants.ACTION_REGISTER);

@@ -36,7 +36,6 @@ public class Post extends AddModelBase implements Option {
     @ModelField(
             type = FieldType.textarea,
             list = true,
-            showMoreOnTop = true,
             name = {"备注", "en:Notes"})
     public String notes;
 

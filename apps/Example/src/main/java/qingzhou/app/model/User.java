@@ -1,6 +1,7 @@
 package qingzhou.app.model;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Delete;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;

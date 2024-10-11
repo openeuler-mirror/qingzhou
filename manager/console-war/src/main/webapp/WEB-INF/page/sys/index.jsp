@@ -332,7 +332,7 @@
             }
         };
 
-        var url = "<%=PageUtil.buildCustomUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.MODEL_APP, DeployerConstants.ACTION_MANAGE + "/" + appName)%>"
+        var url = "<%=PageUtil.buildCustomUrl(request, response, qzRequest, HtmlView.FLAG, DeployerConstants.MODEL_APP, DeployerConstants.ACTION_MANAGE + "/" + appName)%>"
         initializeManager(firstAppElement, url);
     });
 	<%

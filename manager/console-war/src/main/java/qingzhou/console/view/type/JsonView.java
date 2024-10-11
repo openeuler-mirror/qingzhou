@@ -1,11 +1,5 @@
 package qingzhou.console.view.type;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
-import java.util.Map;
-import javax.servlet.http.HttpServletResponse;
-
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
@@ -14,7 +8,15 @@ import qingzhou.console.view.View;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
+import java.util.Map;
+
 public class JsonView implements View {
+    public static final String FLAG = DeployerConstants.JSON_VIEW_FLAG;
+
     public static final String CONTENT_TYPE = "application/json;charset=UTF-8";
 
     @Override

@@ -41,7 +41,7 @@
                 %>
                 <a class="btn" data-tip-arrow="top" action-name="<%=actionName%>" <%=customActionId%>
                    data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
-                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, Utils.notBlank(customActionId)?DeployerConstants.JSON_VIEW:ViewManager.htmlView, actionName)%>"
+                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, Utils.notBlank(customActionId)?JsonView.FLAG:HtmlView.FLAG, actionName)%>"
                 >
                     <i class="icon icon-<%=action.getIcon()%>"></i>
                     <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
@@ -67,7 +67,7 @@
                                 I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
                                 I18n.getModelI18n(qzApp, "model." + qzModel));
 
-                        String actionUrl = PageUtil.buildRequestUrl(request, response, qzRequest, DeployerConstants.JSON_VIEW, actionKey);
+                        String actionUrl = PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, actionKey);
                 %>
                 <a id="<%=actionKey%>" action-name="<%=actionKey%>"
                    href="<%=actionUrl%>"
@@ -161,7 +161,7 @@
                             if (actionName != null) {
                     %>
 
-                    <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView , actionName + "/" + encodedItemId)%>'
+                    <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , actionName + "/" + encodedItemId)%>'
                        class="dataid tooltips"
                        record-action-id="<%=actionName%>"
                        data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
@@ -189,7 +189,7 @@
                             ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
                             refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
                     %>
-                    <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,ViewManager.htmlView, refModelName, qingzhou.api.type.List .ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
+                    <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List .ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
                        onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'
                        class="dataid tooltips" record-action-id="<%=qingzhou.api.type.List.ACTION_LIST%>"
                        data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
@@ -198,8 +198,9 @@
                     </a>
                     <%
                             } else {
-                                if (fieldInfo.isShowMoreOnTop()) {
-                                    out.print("<span data-toggle=\"tooltip\" title=\"" + value + "\">" + (value.length() > 15 ? value.substring(0, 15) + "..." : value) + "</span>");
+                                int maxLenToShow = 15;
+                                if (value.length() > maxLenToShow) {
+                                    out.print("<span data-toggle=\"tooltip\" title=\"" + value + "\">" + value.substring(0, maxLenToShow) + "...</span>");
                                 } else {
                                     out.print(PageUtil.styleFieldValue(value, fieldInfo));
                                 }
@@ -228,7 +229,7 @@
                             boolean useJsonUri = action.isAjax() || Utils.notBlank(customActionId);
                     %>
                     <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest,
-                            useJsonUri ? DeployerConstants.JSON_VIEW : ViewManager.htmlView,
+                            useJsonUri ? JsonView.FLAG : HtmlView.FLAG,
                             actionName + "/" + encodedItemId)%>"
                        data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                        class="tw-action-link tooltips" data-tip-arrow="top"
@@ -236,7 +237,7 @@
                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
                             <%
                                 if (actionName.equals(Download.ACTION_FILES)) {
-                                    out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.fileView, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+                                    out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
                                 }
 
                                 if (Utils.notBlank(customActionId)) {
@@ -283,7 +284,7 @@
             <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
                 recPerPage="<%=pageSize%>"
                 data-rec-total="<%=totalSize%>"
-                partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, ViewManager.htmlView, qingzhou.api.type.List.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
+                partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
                 style="margin-left:33%;color:black;margin-bottom:6px;">
             </ul>
         </div>
