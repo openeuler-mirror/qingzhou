@@ -67,8 +67,8 @@ class DefaultAction {
     public void changed(Request request) throws Exception {
         Update update = (Update) instance;
         request.getResponse().setSuccess(update.changed(request.getId(),
-                request.getNonModelParameter(DeployerConstants.CHANGED_KEY),
-                request.getNonModelParameter(DeployerConstants.CHANGED_VAL)
+                request.getNonModelParameter(DeployerConstants.CHECK_KEY),
+                request.getNonModelParameter(DeployerConstants.CHECK_VAL)
         ));
     }
 
@@ -187,7 +187,7 @@ class DefaultAction {
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
             list = true, order = 9,
-            batch = true,
+            batch = true, ajax = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
@@ -240,6 +240,7 @@ class DefaultAction {
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
             list = true, order = 8,
+            ajax = true,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
                     "en:Gets a list of downloadable files for this component."})

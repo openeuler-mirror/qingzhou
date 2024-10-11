@@ -10,10 +10,10 @@
 	boolean hasGroup = groupedFields.size() > 1 || Utils.notBlank(groupedFields.keySet().iterator().next());
 
 	Double width = 99.6 / Math.min(3, groupedFields.size());
-	GroupInfo[] groupInfos = modelInfo.getGroupInfos();
+	ItemInfo[] groupInfos = modelInfo.getGroupInfos();
 	int i = 0;
 	for (String groupKey : groupedFields.keySet()) {
-		GroupInfo gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(groupKey)).findAny().orElse(PageUtil.OTHER_GROUP);
+		ItemInfo gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(groupKey)).findAny().orElse(PageUtil.OTHER_GROUP);
 		String panelClass = i % 2 == 0 ? "panel-success" : "panel-info";
 		i++;
 %>

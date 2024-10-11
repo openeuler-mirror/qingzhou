@@ -26,7 +26,7 @@
 			Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedFields();
 			Set<String> groups = formGroup.keySet();
 			long suffixId = System.currentTimeMillis();
-			GroupInfo[] groupInfos = modelInfo.getGroupInfos();
+			ItemInfo[] groupInfos = modelInfo.getGroupInfos();
 			boolean hasGroup = groups.size() > 1 || Utils.notBlank(groups.iterator().next());
 			if (hasGroup) {
 		%>
@@ -34,7 +34,7 @@
 			<%
 				boolean isFirst = true;
 				for (String group : groups) {
-					GroupInfo gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(PageUtil.OTHER_GROUP);
+					ItemInfo gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(PageUtil.OTHER_GROUP);
 			%>
 			<li <%=isFirst ? "class='active'" : ""%>>
 				<a data-tab href="#group-<%=group%>-<%=suffixId%>"

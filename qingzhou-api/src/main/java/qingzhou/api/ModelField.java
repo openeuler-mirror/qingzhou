@@ -28,8 +28,6 @@ public @interface ModelField {
 
     boolean edit() default true; // 允许编辑此字段
 
-    String[] options() default {}; // 字段的取值范围，如果设置了 refModel 此值将被忽略
-
     Class<? extends ModelBase> refModel() default ModelBase.class; // 使用指定的模块的所有数据id作为字段的取值范围
 
     String separator() default ","; // 当使用 options() 或 refModel()，用以分割多值

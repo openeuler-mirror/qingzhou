@@ -8,7 +8,11 @@ public interface Deployer {
 
     void installApp(File appDir) throws Exception;
 
-    void unInstallApp(String appName,boolean delete) throws Exception;
+    void unInstallApp(String appName) throws Exception;
+
+    void startApp(String appName) throws Exception;
+
+    void stopApp(String appName) throws Exception;
 
     List<String> getAllApp();
 

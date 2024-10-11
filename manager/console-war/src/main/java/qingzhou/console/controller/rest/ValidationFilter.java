@@ -14,6 +14,7 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
+import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
@@ -43,6 +44,7 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
         I18n.addKeyI18n("validation_unsupportedStrings", new String[]{"该值已被禁用", "en:This value is disabled"});
         I18n.addKeyI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
+        I18n.addKeyI18n("validation_editable", new String[]{"该属性不可编辑", "en:This property is not editable"});
         I18n.addKeyI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
         I18n.addKeyI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
         I18n.addKeyI18n("validation_email", new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
@@ -289,7 +291,10 @@ public class ValidationFilter implements Filter<RestContext> {
             if (!fieldInfo.isHost()) return null;
             // 兼容这个情况： newValue == 0.0.0.0aa
             try {
-                InetAddress.getByName(context.parameterVal).getHostAddress(); // ::1简写变成完整名称
+                String hostAddress = InetAddress.getByName(context.parameterVal).getHostAddress();// ::1简写变成完整名称
+                if (hostAddress == null) {
+                    return new String[]{"validation_host"};
+                }
             } catch (UnknownHostException ignored) {
                 return new String[]{"validation_host"};
             }
@@ -351,7 +356,10 @@ public class ValidationFilter implements Filter<RestContext> {
 
             if (!context.isUpdateAction) return null;
 
-            // context.request.removeParameter(fieldInfo.getCode()); 有应用里需要这些参数，不能移除
+            if (changed(context)) {
+                return new String[]{"validation_editable"};
+            }
+
             return null;
         }
     }
@@ -451,12 +459,11 @@ public class ValidationFilter implements Filter<RestContext> {
     static class options implements Validator {
         @Override
         public String[] validate(ValidationContext context) {
-            String[] options = SystemController.getOptions(context.request.getApp(), context.fieldInfo);
-            if (options == null || options.length == 0) return null;
+            ItemInfo[] options = SystemController.getOptions(context.request.getApp(), context.modelInfo, context.fieldInfo.getCode());
+            if (options.length == 0) return null;
             String[] vals = context.parameterVal.split(context.fieldInfo.getSeparator());
             for (String v : vals) {
-                boolean match = Arrays.asList(options).contains(v);
-                if (!match) {
+                if (Arrays.stream(options).noneMatch(itemInfo -> itemInfo.getName().equals(v))) {
                     return new String[]{"validation_options", Arrays.toString(options)};
                 }
             }
@@ -488,18 +495,22 @@ public class ValidationFilter implements Filter<RestContext> {
 
             boolean isReadOnly = SecurityController.checkRule(readOnly, context.request::getParameter, false);
             if (isReadOnly) {
-                RequestImpl tmp = new RequestImpl(context.request);
-                tmp.setActionName(Update.ACTION_CHANGED);
-                tmp.setNonModelParameter(DeployerConstants.CHANGED_KEY, context.fieldInfo.getCode());
-                tmp.setNonModelParameter(DeployerConstants.CHANGED_VAL, context.parameterVal);
-                Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
-                boolean changed = tmpResp.isSuccess();
-                if (!changed) {
+
+                if (changed(context)) {
                     return new String[]{"validation_readonly"};
                 }
             }
 
             return null;
         }
+    }
+
+    private static boolean changed(ValidationContext context) {
+        RequestImpl tmp = new RequestImpl(context.request);
+        tmp.setActionName(Update.ACTION_CHANGED);
+        tmp.setNonModelParameter(DeployerConstants.CHECK_KEY, context.fieldInfo.getCode());
+        tmp.setNonModelParameter(DeployerConstants.CHECK_VAL, context.parameterVal);
+        Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+        return tmpResp.isSuccess();
     }
 }

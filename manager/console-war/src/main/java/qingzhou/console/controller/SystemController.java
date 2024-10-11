@@ -1,19 +1,5 @@
 package qingzhou.console.controller;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Map;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
@@ -32,20 +18,21 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;
-import qingzhou.deployer.ActionInvoker;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.JmxServiceAdapter;
-import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.*;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
@@ -125,13 +112,20 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return idList;
     }
 
-    public static String[] getOptions(String app, ModelFieldInfo fieldInfo) {
+    public static ItemInfo[] getOptions(String qzApp, ModelInfo modelInfo, String fieldName) {
+        ItemInfo[] itemInfos = modelInfo.getOptionInfos().get(fieldName);
+        if (itemInfos != null && itemInfos.length > 0) {
+            return itemInfos;
+        }
+
+        ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(fieldName);
         String refModel = fieldInfo.getRefModel();
         if (Utils.notBlank(refModel)) {
-            return getAllIds(app, refModel, fieldInfo).toArray(new String[0]);
-        } else {
-            return fieldInfo.getOptions();
+            java.util.List<String> allIds = getAllIds(qzApp, refModel, fieldInfo);
+            return allIds.stream().map(s -> new ItemInfo(s, new String[]{s, "en:" + s})).toArray(ItemInfo[]::new);
         }
+
+        return new ItemInfo[0];
     }
 
     public static <T> T getService(Class<T> type) {

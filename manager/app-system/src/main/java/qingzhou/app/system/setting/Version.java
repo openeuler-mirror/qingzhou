@@ -127,7 +127,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
             list = true, order = 9,
-            batch = true,
+            batch = true, ajax = true,
             show = "running=false",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
