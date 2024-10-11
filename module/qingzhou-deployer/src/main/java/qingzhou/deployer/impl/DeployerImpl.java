@@ -353,6 +353,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setSeparator(modelField.separator());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setList(modelField.list());
+            modelFieldInfo.setSearch(modelField.search());
             modelFieldInfo.setMonitor(modelField.monitor());
             modelFieldInfo.setNumeric(modelField.numeric());
             modelFieldInfo.setCreate(modelField.create());

@@ -131,7 +131,7 @@ class DefaultAction {
     private Map<String, String> queryParams(Request request) {
         Map<String, String> query = null;
         ModelInfo modelInfo = getAppInfo().getModelInfo(request.getModel());
-        for (String fieldName : modelInfo.getFieldsToList()) {
+        for (String fieldName : modelInfo.getFieldsToListSearch()) {
             String val = request.getParameter(fieldName);
             if (Utils.notBlank(val)) {
                 if (query == null) query = new HashMap<>();

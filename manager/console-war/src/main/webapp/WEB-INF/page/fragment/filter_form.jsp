@@ -4,7 +4,7 @@
       action="<%=RESTController.encodeURL( response, ViewManager.htmlView + "/" + qzApp + "/" + qzModel + "/" + qingzhou.api.type.List.ACTION_LIST)%>">
     <div class="row filterForm" style="margin-top: 10px;">
         <%
-            for (String fieldName : fieldsToList) {
+            for (String fieldName : modelInfo.getFieldsToListSearch()) {
                 ItemInfo[] fieldOptions = SystemController.getOptions(qzApp, modelInfo, fieldName);
         %>
         <div class='col-md-2 col-sm-3 col-xs-4 list-page-padding-bottom'>
