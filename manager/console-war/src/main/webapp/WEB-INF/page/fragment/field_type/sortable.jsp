@@ -1,6 +1,5 @@
 <%@ page pageEncoding="UTF-8" %>
-
-<div class="form-control-sortable">
+<div class="form-control-sortable" separator="<%=modelField.getSeparator()%>">
 	<input type="hidden" name="<%=fieldName%>" value='<%=fieldValue%>'>
 	<ul class="sortable">
 		<%

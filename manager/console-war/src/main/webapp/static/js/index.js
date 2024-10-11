@@ -909,7 +909,8 @@ function refreshTable() {
         $("li", this).each(function (i) {
             var tdVal = $.trim($($("td", this).first()).text());
             if (tdVal !== "") {
-                value += tdVal + getSetting("separa");
+                //由sortable.jsp进行赋值separator的赋值
+                value += tdVal + $("input[type='hidden']", $("ul.sortable").parent()).parent().attr("separator");
             }
         });
         $("input[type='hidden']", $(this).parent()).val(value !== "" ? value.substring(0, value.length - 1) : value);
@@ -1007,7 +1008,6 @@ function checkboxSortable() {
     });
     var draging = null;
     const restrictedArea = getRestrictedArea();
-    $(".checkbox-group a input:not(:checked):first", restrictedArea).closest("a").before($(".checkbox-group a input:checked", restrictedArea).closest("a"));
     $(".checkbox-group a input:checked:not([readonly])").next().css({"cursor": "move"});
     $(".checkbox-group.sortable").unbind("selectstart,dragstart,drag,dragend,dragenter,dragover,dragleave,drop")
         .bind("selectstart", function (e) {
