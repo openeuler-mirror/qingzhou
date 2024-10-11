@@ -42,7 +42,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelField(
             create = false,
             list = true,
-            color = {"true:success", "false:default"},
+            color = {"true:#66de65", "false:#d6d4d4"},
             name = {"生效中", "en:Running"},
             info = {"此版本是否处于生效状态。", "en:Whether this version is in effect."})
     public String running;

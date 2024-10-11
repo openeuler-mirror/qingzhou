@@ -64,10 +64,15 @@ public @interface ModelField {
     String link() default "";
 
     /**
-     * 用于样式转换，形式：{"当前字段值:success", "当前字段值:default"}
-     * success(绿色)、primary(蓝色)、default(灰色)、warning(黄色)、danger(浅红色)、info(深红色)
+     * 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
      */
     String[] color() default {};
+
+    /**
+     * 列表显示时，文案太长禁止换行且用省略号代替，鼠标移上显示在上方
+     * @return
+     */
+    boolean showMoreOnTop() default false;
 
     boolean monitor() default false; // 该属性为监视类型，而非表单项
 

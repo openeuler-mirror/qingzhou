@@ -198,7 +198,11 @@
                     </a>
                     <%
                             } else {
-                                out.print(PageUtil.styleFieldValue(value, fieldInfo));
+                                if (fieldInfo.isShowMoreOnTop()) {
+                                    out.print("<span data-toggle=\"tooltip\" title=\"" + value + "\">" + (value.length() > 15 ? value.substring(0, 15) + "..." : value) + "</span>");
+                                } else {
+                                    out.print(PageUtil.styleFieldValue(value, fieldInfo));
+                                }
                             }
                         }
                     %>
@@ -367,4 +371,8 @@
         }
         $("#" + action, getRestrictedArea()).attr("href", url);
     }
+
+    $(document).ready(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    })
 </script>

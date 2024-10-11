@@ -107,7 +107,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
             list = true,
             create = false, edit = false,
-            color = {DeployerConstants.app_Started + ":success", DeployerConstants.app_Stopped + ":default"},
+            color = {DeployerConstants.app_Started + ":#66de65", DeployerConstants.app_Stopped + ":#d6d4d4"},
             name = {"状态", "en:State"},
             info = {"指示应用的当前运行状态。", "en:Indicates the current running state of the app."})
     public String state;
