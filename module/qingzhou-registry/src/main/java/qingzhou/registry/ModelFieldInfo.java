@@ -11,6 +11,7 @@ public class ModelFieldInfo {
     private transient Class<?> refModelClass;
     private String defaultValue;
     private boolean list;
+    private boolean search;
     private boolean monitor;
     private boolean numeric;
     private boolean create;
@@ -95,6 +96,14 @@ public class ModelFieldInfo {
 
     public void setList(boolean list) {
         this.list = list;
+    }
+
+    public boolean isSearch() {
+        return search;
+    }
+
+    public void setSearch(boolean search) {
+        this.search = search;
     }
 
     public String getGroup() {

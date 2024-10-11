@@ -88,9 +88,18 @@ public class ModelInfo {
         return index.toArray(new Integer[0]);
     }
 
+    public String[] getFieldsToListSearch() {
+        return getFieldsForList(true);
+    }
+
     public String[] getFieldsToList() {
+        return getFieldsForList(false);
+    }
+
+    public String[] getFieldsForList(boolean filterSearch) {
         List<String> list = new ArrayList<>();
         for (Integer i : getFieldsIndexToList()) {
+            if (filterSearch && !modelFieldInfos[i].isSearch()) continue;
             list.add(modelFieldInfos[i].getCode());
         }
         return list.toArray(new String[0]);

@@ -40,7 +40,7 @@ public class User extends AddModelBase implements Group, Option {
             group = "org",
             type = FieldType.select,
             refModel = Post.class,
-            list = true,
+            list = true, search = false,
             name = {"岗位", "en:Position"})
     public String position;
 
@@ -75,11 +75,10 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelField(
             type = FieldType.textarea,
-            list = true,
+            list = true, search = false,
             link = "department.email",
             name = {"备注", "en:Notes"})
     public String notes;
-
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
@@ -89,6 +88,7 @@ public class User extends AddModelBase implements Group, Option {
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
+        System.out.println(request.getParameterNames());
     }
 
     @Override
