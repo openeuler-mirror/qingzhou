@@ -1,18 +1,19 @@
 package qingzhou.deployer.impl;
 
-import java.net.URLClassLoader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import qingzhou.api.ActionFilter;
 import qingzhou.api.ModelBase;
 import qingzhou.api.QingzhouApp;
 import qingzhou.api.Request;
 import qingzhou.deployer.App;
+import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelActionInfo;
+
+import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 class AppImpl implements App {
     private URLClassLoader loader;
@@ -35,16 +36,19 @@ class AppImpl implements App {
 
     @Override
     public void invoke(Request request) throws Exception {
-        for (ActionFilter actionFilter : appContext.getActionFilters()) {
-            String msg = actionFilter.doFilter(request);
-            if (msg != null) {
-                request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(msg);
-                return;
+        Utils.doInThreadContextClassLoader(getLoader(), (Utils.InvokeInThreadContextClassLoader<Void>) () -> {
+            for (ActionFilter actionFilter : appContext.getActionFilters()) {
+                String msg = actionFilter.doFilter(request);
+                if (msg != null) {
+                    request.getResponse().setSuccess(false);
+                    request.getResponse().setMsg(msg);
+                    return null;
+                }
             }
-        }
 
-        invokeDirectly(request);
+            invokeDirectly(request);
+            return null;
+        });
     }
 
     void invokeDirectly(Request request) throws Exception {

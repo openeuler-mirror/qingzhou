@@ -1,50 +1,32 @@
 package qingzhou.engine.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
 public class Utils {
-    public static Object[] overlap(Object[] arr1, Object[] arr2) {
-        if (arr1 == null || arr2 == null) {
-            return null;
+    public static <T> T doInThreadContextClassLoader(ClassLoader useLoader, InvokeInThreadContextClassLoader<T> invoker) throws Exception {
+        if (useLoader == null) return invoker.invoke();
+
+        ClassLoader originLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(useLoader);
+            return invoker.invoke();
+        } finally {
+            Thread.currentThread().setContextClassLoader(originLoader);
         }
-        List<Object> list = new ArrayList<>();
-        for (Object o1 : arr1) {
-            for (Object o2 : arr2) {
-                if (Objects.equals(o1, o2)) {
-                    list.add(o1);
-                    break;
-                }
-            }
-        }
-        return list.toArray();
+    }
+
+    public interface InvokeInThreadContextClassLoader<T> {
+        T invoke() throws Exception;
     }
 
     public static boolean contains(Object[] array, Object obj) {
@@ -172,12 +154,10 @@ public class Utils {
     }
 
     public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, String scopePrefix, ClassLoader classLoader) throws Exception {
-        Collection<String> targetClasses = new HashSet<>();
-        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        try {
+        return Utils.doInThreadContextClassLoader(classLoader, () -> {
+            Collection<String> targetClasses = new HashSet<>();
             ClassPool classPool;
             if (classLoader != null) {
-                Thread.currentThread().setContextClassLoader(classLoader);
                 classPool = new ClassPool(true);
                 classPool.appendClassPath(new LoaderClassPath(classLoader));
             } else {
@@ -194,10 +174,8 @@ public class Utils {
                 } catch (Exception ignored) {
                 }
             });
-        } finally {
-            Thread.currentThread().setContextClassLoader(contextClassLoader);
-        }
-        return targetClasses;
+            return targetClasses;
+        });
     }
 
     private static Collection<String> getScopeClasses(File[] libs, String scopePrefix) throws IOException {

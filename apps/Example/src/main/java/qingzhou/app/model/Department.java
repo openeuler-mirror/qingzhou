@@ -1,5 +1,6 @@
 package qingzhou.app.model;
 
+import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
 import qingzhou.app.AddModelBase;
@@ -43,6 +44,13 @@ public class Department extends AddModelBase {
             name = {"电子邮箱", "en:Department Email"},
             info = {"可以与该部门取得联系的电子邮箱。", "en:An E-mail address where the department can be contacted."})
     public String email;
+
+    @ModelField(
+            type = FieldType.datetime,
+            list = true, search = true,
+            name = {"建立日期", "en:Date"}
+    )
+    public long buildDate;
 
     @Override
     public String idField() {

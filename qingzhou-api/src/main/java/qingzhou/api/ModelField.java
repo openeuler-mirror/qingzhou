@@ -58,6 +58,10 @@ public @interface ModelField {
 
     boolean search() default false; // 是否支持列头搜索
 
+    boolean detail() default false; // 点击此字段调整到详情页面，模块须支持 show
+
+    int widthPercent() default -1;
+
     /**
      * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
      */

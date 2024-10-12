@@ -1,11 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import qingzhou.api.FieldType;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.DeployerConstants;
@@ -15,6 +9,13 @@ import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class ParameterFilter implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
@@ -23,6 +24,7 @@ public class ParameterFilter implements Filter<RestContext> {
         trim(request);
         separateParameters(request);
         password(request);
+        datetime(request);
         batchId(request, context);
 
         return true;
@@ -44,6 +46,23 @@ public class ParameterFilter implements Filter<RestContext> {
             String v = request.removeParameter(p);
             request.setNonModelParameter(p, v);
         });
+    }
+
+    private void datetime(RequestImpl request) {
+        ModelInfo modelInfo = request.getCachedModelInfo();
+        for (String fieldName : modelInfo.getFormFieldNames()) {
+            ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
+            if (modelField.getType().equals(FieldType.datetime.name())) {
+                try {
+                    String val = request.getParameter(fieldName);
+                    if (Utils.notBlank(val)) {
+                        long time = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).parse(val).getTime();
+                        request.setParameter(fieldName, String.valueOf(time));
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
     }
 
     private void password(RequestImpl request) {

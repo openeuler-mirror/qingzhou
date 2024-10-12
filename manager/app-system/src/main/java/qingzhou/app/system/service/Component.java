@@ -1,10 +1,5 @@
 package qingzhou.app.system.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
@@ -14,6 +9,11 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Model(code = "component", icon = "bullseye",
         menu = Main.Service,
@@ -25,12 +25,14 @@ import qingzhou.registry.ModelFieldInfo;
 public class Component extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
             list = true, search = true,
+            widthPercent = 30,
             name = {"组件名称", "en:Component Name"},
             info = {"组件名称", "en:Component Name"})
     public String id;
 
     @ModelField(
             list = true, search = true,
+            widthPercent = 70,
             name = {"组件类型", "en:Component Type"},
             info = {"组件类型", "en:Component type"})
     public String type;

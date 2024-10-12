@@ -53,16 +53,12 @@ class DeployerImpl implements Deployer {
 
         AppImpl app = buildApp(appDir);
 
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        // 启动应用
-        try {
-            Thread.currentThread().setContextClassLoader(app.getLoader());
+        // 加载应用
+        Utils.doInThreadContextClassLoader(app.getLoader(), (Utils.InvokeInThreadContextClassLoader<Void>) () -> {
             startApp(app);
-            // 初始化各模块
             startModel(app);
-        } finally {
-            Thread.currentThread().setContextClassLoader(classLoader);
-        }
+            return null;
+        });
 
         // 注册完成
         String name = app.getAppInfo().getName();
@@ -357,6 +353,8 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setList(modelField.list());
             modelFieldInfo.setSearch(modelField.search());
+            modelFieldInfo.setDetail(modelField.detail());
+            modelFieldInfo.setWidthPercent(modelField.widthPercent());
             modelFieldInfo.setMonitor(modelField.monitor());
             modelFieldInfo.setNumeric(modelField.numeric());
             modelFieldInfo.setCreate(modelField.create());

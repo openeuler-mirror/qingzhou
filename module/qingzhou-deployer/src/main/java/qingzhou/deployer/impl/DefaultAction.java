@@ -164,6 +164,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Update.ACTION_EDIT, icon = "edit",
+            list = true, order = 1,
             page = "form",
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
