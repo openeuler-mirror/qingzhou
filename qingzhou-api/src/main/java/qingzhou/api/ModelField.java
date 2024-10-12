@@ -54,6 +54,8 @@ public @interface ModelField {
 
     boolean file() default false;
 
+    String[] echoGroup() default {};
+
     boolean list() default false; // 是否显示在列表中。
 
     boolean search() default false; // 是否支持列头搜索

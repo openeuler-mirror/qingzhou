@@ -32,6 +32,7 @@ public class ModelFieldInfo {
     private String readOnly;
     private String link;
     private String[] color;
+    private String[] echoGroup;
 
     public String[] getColor() {
         return color;
@@ -298,5 +299,13 @@ public class ModelFieldInfo {
 
     public void setLink(String link) {
         this.link = link;
+    }
+
+    public String[] getEchoGroup() {
+        return echoGroup;
+    }
+
+    public void setEchoGroup(String[] echoGroup) {
+        this.echoGroup = echoGroup;
     }
 }

@@ -24,6 +24,18 @@ public class ModelInfo {
     private ItemInfo[] groupInfos;
     private LinkedHashMap<String, ItemInfo[]> optionInfos;
 
+    public Map<String, String[]> getEchoGroupField() {
+        Map<String, String[]> result = new HashMap<>();
+        for (String formField : getFormFieldNames()) {
+            ModelFieldInfo fieldInfo = getModelFieldInfo(formField);
+            String[] echoGroup = fieldInfo.getEchoGroup();
+            if (echoGroup != null && echoGroup.length > 0) {
+                result.put(formField, echoGroup);
+            }
+        }
+        return result;
+    }
+
     public ModelActionInfo getModelActionInfo(String actionName) {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
     }

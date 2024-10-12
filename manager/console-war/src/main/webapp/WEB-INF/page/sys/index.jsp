@@ -307,8 +307,9 @@
         bindFailOtp: '<%=I18n.getKeyI18n("page.bindfail.otp")%>',
         passwordChangedMsg: '<%=I18n.getKeyI18n("page.password.changed")%>',
         searchHiddenTip: '<%=I18n.getKeyI18n("page.search.hidden")%>',
-        passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>'
-    };
+        passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>',
+		echoActionName: '<%=Echo.ACTION_ECHO%>'
+	};
     var searchUrl = '<%=RESTController.encodeURL(response, contextPath + "/search")%>';
 
 	<%-- 显示第一个应用的管理页面--%>
