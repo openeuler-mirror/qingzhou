@@ -1,10 +1,6 @@
 package qingzhou.app.system;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Show;
 import qingzhou.deployer.DeployerConstants;
 
@@ -30,7 +26,6 @@ public class Index extends ModelBase {
 
     @ModelAction(
             code = Show.ACTION_SHOW,
-            page = "show",
             name = {"主页", "en:Home"},
             info = {"查看 Qingzhou 平台的相关信息。",
                     "en:View Qingzhou platform information."})
@@ -44,7 +39,6 @@ public class Index extends ModelBase {
 
     @ModelAction(// NOTE: 这个方法用作是 Login 成功后 跳过的
             code = DeployerConstants.ACTION_INDEX,
-            page = "sys/index",
             name = {"主页", "en:Home"},
             info = {"进入 Qingzhou 平台的主页。",
                     "en:View Qingzhou platform information."})

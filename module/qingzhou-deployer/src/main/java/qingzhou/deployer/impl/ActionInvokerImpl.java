@@ -120,8 +120,7 @@ class ActionInvokerImpl implements ActionInvoker {
                                 read == DeployerConstants.DOWNLOAD_BLOCK_SIZE
                                         ? block
                                         : Arrays.copyOfRange(block, 0, read);
-                        tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_BYTES,
-                                crypto.getBase64Coder().encode(sendBlock));
+                        tmp.setByteParameter(sendBlock);
                         sendRemote(tmp, remoteUrl, cipher); // 发送附件
                         offset = raf.getFilePointer();
                     } else {

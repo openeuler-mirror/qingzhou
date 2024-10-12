@@ -43,7 +43,6 @@ class DefaultAction {
 
     @ModelAction(
             code = Show.ACTION_SHOW, icon = "folder-open-alt",
-            page = "show",
             name = {"查看", "en:Show"},
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request) throws Exception {
@@ -52,37 +51,24 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Echo.ACTION_ECHO, icon = "folder-open-alt",
+            code = Echo.ACTION_ECHO, icon = "reply",
             name = {"回显", "en:Echo"},
-            info = {"数据回显。", "en:Data Echo."})
-    public void dataEcho(Request request) throws Exception {
-        RequestImpl req = (RequestImpl) request;
-        Map<String, String> data = ((Echo) instance).dataEcho(getEchoGroup(req), prepareParameters(request));
-        request.getResponse().addData(data);
-    }
+            info = {"处理业务逻辑上的数据级联关系。",
+                    "en:Handle data cascading relationships in business logic."})
+    public void echo(Request req) {
+        RequestImpl request = (RequestImpl) req;
+        ModelInfo modelInfo = request.getCachedModelInfo();
 
-    private String[] getEchoGroup(RequestImpl req) {
-        HashSet<String> echoGroups = new HashSet<>();
-        ModelInfo cachedModelInfo = req.getCachedModelInfo();
-        //通过field去获取多个echogroup的合集
-        if (cachedModelInfo != null) {
-            Map<String, String> requestParameterMap = req.getParameters();
-            if (requestParameterMap.size() > 0) {
-                Map<String, String[]> echoGroupMap = cachedModelInfo.getEchoGroupField();
-                if (echoGroupMap.size() > 0) {
-                    for (Map.Entry<String, String[]> e : echoGroupMap.entrySet()) {
-                        String echoGroupField = e.getKey();
-                        String[] values = e.getValue();
-                        if (requestParameterMap.containsKey(echoGroupField) && Utils.notBlank(requestParameterMap.get(echoGroupField))) {
-                            if (values.length > 0) {
-                                echoGroups.addAll(Arrays.asList(values));
-                            }
-                        }
-                    }
-                }
-            }
+        Map<String, String> parameters = prepareParameters(request);
+
+        Set<String> groups = new HashSet<>();
+        for (String p : parameters.keySet()) {
+            String[] fieldEchoGroup = modelInfo.getModelFieldInfo(p).getEchoGroup();
+            groups.addAll(Arrays.asList(fieldEchoGroup));
         }
-        return echoGroups.toArray(new String[0]);
+
+        Map<String, String> data = ((Echo) instance).echoData(groups.toArray(new String[0]), parameters);
+        request.getResponse().addData(data);
     }
 
     @ModelAction(
@@ -135,7 +121,6 @@ class DefaultAction {
 
     @ModelAction(
             code = List.ACTION_LIST, icon = "list",
-            page = "list",
             name = {"列表", "en:List"},
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request) throws Exception {
@@ -178,7 +163,6 @@ class DefaultAction {
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
             head = true, order = -1,
-            page = "form",
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) throws Exception {
@@ -200,7 +184,6 @@ class DefaultAction {
     @ModelAction(
             code = Update.ACTION_EDIT, icon = "edit",
             list = true, order = 1,
-            page = "form",
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
@@ -244,7 +227,6 @@ class DefaultAction {
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
             list = true, order = 2,
-            page = "monitor",
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -302,7 +284,7 @@ class DefaultAction {
                 if (subFiles != null) {
                     Arrays.sort(subFiles, Comparator.comparing(File::getName));
                     for (File subFile : subFiles) {
-                        map.put(rootFile.getName() + "/" + subFile.getName(),
+                        map.put(rootFile.getName() + DeployerConstants.DOWNLOAD_FILE_GROUP_SP + subFile.getName(),
                                 subFile.getName() + " (" + FileUtil.getFileSize(subFile) + ")");
                     }
                 }

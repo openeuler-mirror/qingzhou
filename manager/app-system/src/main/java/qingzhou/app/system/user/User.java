@@ -219,7 +219,6 @@ public class User extends ModelBase implements General, Validate, Option {
             code = Delete.ACTION_DELETE, icon = "trash",
             list = true, order = 9,
             batch = true, ajax = true,
-            page = "list",
             show = "name!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",

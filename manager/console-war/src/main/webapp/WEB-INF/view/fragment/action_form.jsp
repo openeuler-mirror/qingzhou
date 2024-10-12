@@ -1,8 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-	java.util.List<String> passwordFields = new ArrayList<>();
-	Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedFields();
+    java.util.List<String> passwordFields = new ArrayList<>();
+    Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedFields();
 %>
 
 <div class="block-bg">
@@ -16,12 +16,13 @@
                         continue;
                     }
 
-					ModelFieldInfo modelField = e.getValue();
+                    ModelFieldInfo modelField = e.getValue();
 
-                    String echoGroup = String.join(",", modelField.getEchoGroup());
-					if (!"".equals(echoGroup)) {
-						echoGroup = "echoGroup='" + echoGroup.trim() + "'";
-					}
+                    String echoGroup = "";
+                    if (modelField.getEchoGroup().length > 0) {
+                        String echoGroups = String.join(",", modelField.getEchoGroup());
+                        echoGroup = "echoGroup='" + echoGroups + "'";
+                    }
 
                     String readonly = "";
                     String fieldValue = modelData.get(fieldName);

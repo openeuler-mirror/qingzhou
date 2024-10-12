@@ -19,6 +19,7 @@ public class RequestImpl implements Request {
     private String id;
     private String userName;
     private Lang lang;
+    private byte[] byteParameter;
     private final Map<String, String> nonModelParameters = new HashMap<>();
     private final Map<String, String> parameters = new HashMap<>();
     private final Map<String, String> parametersInSession = new HashMap<>();
@@ -174,5 +175,13 @@ public class RequestImpl implements Request {
 
     public void setCachedModelInfo(ModelInfo cachedModelInfo) {
         this.cachedModelInfo = cachedModelInfo;
+    }
+
+    public byte[] getByteParameter() {
+        return byteParameter;
+    }
+
+    public void setByteParameter(byte[] byteParameter) {
+        this.byteParameter = byteParameter;
     }
 }

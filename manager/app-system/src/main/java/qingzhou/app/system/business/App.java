@@ -155,7 +155,6 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
             list = true, order = 1,
-            page = "sys/manage",
             show = "state=" + DeployerConstants.app_Started,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
@@ -165,7 +164,6 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
             head = true, order = -1,
-            page = "form",
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
@@ -180,7 +178,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
                     "en:Install the application package to the specified Qingzhou instance."})
     public void add(Request request) {
         String instances = ((RequestImpl) request).removeParameter("instances");
-        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_INSTALL_APP, instances.split(App.instanceSP));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_INSTALL_APP, instances.split(App.instanceSP));
     }
 
     @ModelAction(
@@ -194,7 +192,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
         String id = request.getId();
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
-        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_UNINSTALL_APP, instances.split(App.instanceSP));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_UNINSTALL_APP, instances.split(App.instanceSP));
     }
 
     @ModelAction(
@@ -209,7 +207,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
         String id = request.getId();
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
-        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_START_APP, instances.split(App.instanceSP));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_START_APP, instances.split(App.instanceSP));
     }
 
     @ModelAction(
@@ -224,6 +222,6 @@ public class App extends ModelBase implements qingzhou.api.type.List {
         String id = request.getId();
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
-        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_STOP_APP, instances.split(App.instanceSP));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_STOP_APP, instances.split(App.instanceSP));
     }
 }

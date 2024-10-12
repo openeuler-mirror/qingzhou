@@ -77,7 +77,5 @@ public interface Response {
 
     Collection<String> getDateHeaderNames();
 
-    void setBodyBytes(byte[] bytes);
-
     void setDownloadName(String downloadName);
 }

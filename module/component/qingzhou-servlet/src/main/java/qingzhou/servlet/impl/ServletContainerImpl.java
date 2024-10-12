@@ -56,13 +56,15 @@ public class ServletContainerImpl implements ServletContainer {
         }
         context.setRequestCharacterEncoding(StandardCharsets.UTF_8.name());
 
-        final String webResources = properties.getProperty("webResources");
+        addWebResources(context, properties);
+    }
+
+    private void addWebResources(Context context, Properties properties) {
+        String webResources = properties.getProperty("webResources");
         if (webResources != null) {
-            for (final String alt : webResources.trim().split(",")) {
-                final String trim = alt.trim();
-                if (trim.isEmpty()) {
-                    continue;
-                }
+            for (String alt : webResources.trim().split(",")) {
+                String trim = alt.trim();
+                if (trim.isEmpty()) continue;
 
                 String mount = "/";
                 String dir = trim;
@@ -79,7 +81,7 @@ public class ServletContainerImpl implements ServletContainer {
                     FileUtil.mkdirs(appsDir);
                 }
 
-                final WebResourceRoot root = context.getResources();
+                WebResourceRoot root = context.getResources();
                 root.addPreResources(new DirResourceSet(root, mount, dir, "/"));
             }
         }

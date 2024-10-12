@@ -66,10 +66,12 @@
                         <configuration>
                             <executable>java</executable>
                             <arguments>
+                                <!--                                <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=7777</argument>-->
                                 <argument>-classpath</argument>
                                 <argument>${project.basedir}/target/archive-tmp</argument>
                                 <argument>qingzhou.Package</argument>
                                 <argument>${project.basedir}/target/qingzhou/lib/version${project.version}</argument>
+                                <argument>${DevMode}</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -189,4 +191,22 @@
             <version>${project.version}</version>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <properties>
+                <DevMode>false</DevMode>
+            </properties>
+        </profile>
+        <profile>
+            <id>develop</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <DevMode>true</DevMode>
+            </properties>
+        </profile>
+    </profiles>
 </project>

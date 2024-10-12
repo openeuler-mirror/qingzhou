@@ -62,7 +62,7 @@ public class Department extends AddModelBase implements Echo {
     }
 
     @Override
-    public Map<String, String> dataEcho(String[] echoGroup, Map<String, String> params) {
+    public Map<String, String> echoData(String[] echoGroup, Map<String, String> params) {
         Map<String, String> map = new HashMap<>();
         for (String s : echoGroup) {
             if (s.equals("aa")) {

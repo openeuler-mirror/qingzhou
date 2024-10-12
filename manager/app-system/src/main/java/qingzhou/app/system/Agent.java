@@ -1,27 +1,16 @@
 package qingzhou.app.system;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
-import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.*;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.RuntimeMXBean;
-import java.lang.management.ThreadMXBean;
+import java.lang.management.*;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -47,7 +36,7 @@ public class Agent extends ModelBase implements Download {
     }
 
     @ModelAction(
-            code = DeployerConstants.AGENT_INSTALL_APP,
+            code = DeployerConstants.ACTION_INSTALL_APP,
             name = {"", "en:"})
     public void installApp(Request request) throws Exception {
         String appFile = Boolean.parseBoolean(request.getParameter("upload"))
@@ -98,7 +87,7 @@ public class Agent extends ModelBase implements Download {
     }
 
     @ModelAction(
-            code = DeployerConstants.AGENT_UNINSTALL_APP,
+            code = DeployerConstants.ACTION_UNINSTALL_APP,
             name = {"", "en:"})
     public void uninstallApp(Request request) throws Exception {
         Main.getService(Deployer.class).unInstallApp(request.getId());
@@ -106,18 +95,20 @@ public class Agent extends ModelBase implements Download {
     }
 
     @ModelAction(
-            code = DeployerConstants.DOWNLOAD_REDIRECT_ACTION_NAME,
+            code = DeployerConstants.ACTION_DOWNLOAD_PAGE,
             name = {"", "en:"})
-    public void downloadRedirect(Request request) {
-        String redirect = request.getNonModelParameter(DeployerConstants.DOWNLOAD_REDIRECT_DIR_NAME);
-        String app = request.getNonModelParameter(DeployerConstants.DOWNLOAD_REDIRECT_APP_NAME);
-        File redirectPath = FileUtil.newFile(getAppsDir(), app, redirect);
-        if (redirectPath.exists()) {
+    public void downloadPage(Request request) throws IOException {
+        String app = request.getNonModelParameter(DeployerConstants.DOWNLOAD_PAGE_APP);
+        String dir = request.getNonModelParameter(DeployerConstants.DOWNLOAD_PAGE_DIR);
+        File appPageDir = FileUtil.newFile(getAppsDir(), app, dir);
+        if (appPageDir.exists()) {
+            File zipFile = FileUtil.newFile(Main.getService(ModuleContext.class).getTemp(), dir + ".zip");
             try {
-                File zipFile = FileUtil.newFile(Main.getService(ModuleContext.class).getTemp(), redirectPath.getName() + ".zip");
-                FileUtil.zipFiles(redirectPath, zipFile, true);
-                request.getResponse().setBodyBytes(Files.readAllBytes(zipFile.toPath()));
-            } catch (IOException ignored) {
+                FileUtil.zipFiles(appPageDir, zipFile, true);
+                ResponseImpl response = (ResponseImpl) request.getResponse();
+                response.setBodyBytes(Files.readAllBytes(zipFile.toPath()));
+            } finally {
+                FileUtil.forceDelete(zipFile);
             }
         }
     }
@@ -214,15 +205,14 @@ public class Agent extends ModelBase implements Download {
         String fileId = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_ID);
         String fileName = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_NAME);
         String appName = request.getNonModelParameter(DeployerConstants.UPLOAD_APP_NAME);
-        byte[] fileBytes = Main.getService(CryptoService.class).getBase64Coder().decode(
-                request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_BYTES));
+        byte[] fileBytes = ((RequestImpl) request).getByteParameter();
         App app = Main.getService(Deployer.class).getApp(appName);
         File file = FileUtil.newFile(app.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, fileId, fileName);
         FileUtil.writeFile(file, fileBytes, true);
     }
 
     @ModelAction(
-            code = DeployerConstants.AGENT_INSTALL_VERSION,
+            code = DeployerConstants.ACTION_INSTALL_VERSION,
             name = {"", "en:"})
     public void installVersion(Request request) throws Exception {
         String appFile = Boolean.parseBoolean(request.getParameter("upload"))
@@ -251,7 +241,7 @@ public class Agent extends ModelBase implements Download {
     }
 
     @ModelAction(
-            code = DeployerConstants.AGENT_UNINSTALL_VERSION,
+            code = DeployerConstants.ACTION_UNINSTALL_VERSION,
             name = {"", "en:"})
     public void deleteVersion(Request request) throws Exception {
         String version = request.getId();
@@ -262,7 +252,7 @@ public class Agent extends ModelBase implements Download {
     }
 
     @ModelAction(
-            code = DeployerConstants.AGENT_START_APP,
+            code = DeployerConstants.ACTION_START_APP,
             name = {"", "en:"})
     public void startApp(Request request) throws Exception {
         String name = request.getId();
@@ -271,7 +261,7 @@ public class Agent extends ModelBase implements Download {
     }
 
     @ModelAction(
-            code = DeployerConstants.AGENT_STOP_APP,
+            code = DeployerConstants.ACTION_STOP_APP,
             name = {"", "en:"})
     public void stopApp(Request request) throws Exception {
         Deployer deployer = Main.getService(Deployer.class);

@@ -1,16 +1,7 @@
 package qingzhou.app.model;
 
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
+import qingzhou.api.*;
+import qingzhou.api.type.*;
 import qingzhou.app.ExampleMain;
 
 import java.io.File;
@@ -32,9 +23,8 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     public String file;
 
     @ModelAction(code = "showhtml", icon = "share-alt", order = 1, name = {"Html", "en:Html"}, list = true,
-            redirect = "static/test.html", info = {"查看该组件的相关信息。", "en:View the information of this model."})
+            page = "static/test.html", info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void showHtml(Request request) {
-
     }
 
     @Override

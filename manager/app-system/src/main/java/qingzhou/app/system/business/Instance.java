@@ -282,7 +282,6 @@ public class Instance extends ModelBase implements List, Monitor, Group {
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
             list = true, order = 2,
-            page = "monitor",
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
