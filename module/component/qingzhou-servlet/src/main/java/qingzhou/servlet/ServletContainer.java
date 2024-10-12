@@ -6,7 +6,7 @@ import java.util.Properties;
 public interface ServletContainer {
     void start(int port, File baseDir, Properties properties) throws Exception;
 
-    void addWebapp(String contextPath, String docBase);
+    void addWebapp(String contextPath, String docBase, Properties properties);
 
     void removeApp(String contextPath);
 

@@ -1,14 +1,12 @@
 package qingzhou.console.impl;
 
-import java.io.File;
-import java.util.Properties;
-
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.console.ContextHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -22,6 +20,9 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletContainer;
 import qingzhou.servlet.ServletService;
+
+import java.io.File;
+import java.util.Properties;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -107,7 +108,9 @@ public class Controller implements ModuleActivator {
             File consoleApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "console");
             String docBase = consoleApp.getAbsolutePath();
             contextPath = console.getWeb().getContextRoot();
-            servletContainer.addWebapp(contextPath, docBase);
+            servletContainer.addWebapp(contextPath, docBase, new Properties() {{
+                setProperty("webResources", "/=" + FileUtil.newFile(moduleContext.getTemp(), DeployerConstants.APP_WEB_RESOURCES_ROOT_DIR).getAbsoluteFile());
+            }});
             logger.info("Open a browser to access the Qingzhou console: http://localhost:" + console.getWeb().getPort() + contextPath);
         }
 

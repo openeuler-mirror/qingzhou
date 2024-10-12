@@ -37,10 +37,16 @@ public class HtmlView implements View {
             request.setResponse(response);
         }
         req.setAttribute(Request.class.getName(), request);
-
-        String pageForward = isManageAction ? "sys/manage" : getPageForward(request);
-        String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
-        restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);
+        ModelActionInfo actionInfo = request.getCachedModelInfo().getModelActionInfo(request.getAction());
+        String pageForward = actionInfo.getRedirect();
+        if (Utils.notBlank(pageForward)) {
+            pageForward = "/" + request.getApp() + (pageForward.startsWith("/") ? actionInfo.getRedirect() : "/" + actionInfo.getRedirect());
+            restContext.req.getRequestDispatcher(pageForward).forward(restContext.req, restContext.resp);
+        } else {
+            pageForward = isManageAction ? "sys/manage" : getPageForward(request);
+            String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
+            restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);
+        }
     }
 
     private boolean isManageAction(Request request) {
