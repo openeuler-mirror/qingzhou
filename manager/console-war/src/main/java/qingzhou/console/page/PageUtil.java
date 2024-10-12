@@ -1,14 +1,6 @@
 package qingzhou.console.page;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import qingzhou.api.FieldType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.console.SecurityController;
@@ -19,13 +11,13 @@ import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ItemInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
@@ -77,6 +69,12 @@ public class PageUtil {
     }
 
     public static String styleFieldValue(String value, ModelFieldInfo fieldInfo) {
+        if (fieldInfo.getType().equals(FieldType.datetime.name())) {
+            Date date = new Date();
+            date.setTime(Long.parseLong(value));
+            value = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(date);
+        }
+
         String[] colorInfo = fieldInfo.getColor();
         if (colorInfo == null) return value;
 

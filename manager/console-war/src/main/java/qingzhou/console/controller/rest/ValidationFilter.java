@@ -21,9 +21,8 @@ import qingzhou.registry.ModelInfo;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -423,9 +422,10 @@ public class ValidationFilter implements Filter<RestContext> {
             if (!FieldType.datetime.name().equals(context.fieldInfo.getType())) return null;
 
             try {
-                new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).parse(context.parameterVal);
+                // 已转换在：qingzhou.console.controller.rest.ParameterFilter.datetime
+                new Date().setTime(Long.parseLong(context.parameterVal));
                 return null;
-            } catch (ParseException e) {
+            } catch (Exception e) {
                 return new String[]{"validation_datetime", DeployerConstants.FIELD_DATETIME_FORMAT};
             }
         }
