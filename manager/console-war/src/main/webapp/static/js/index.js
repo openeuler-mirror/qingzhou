@@ -1239,7 +1239,7 @@ function downloadFiles(fileListUrl, downloadUrl) {
                         $(checked).each(function (i) {
                             partUrl += $(this).val();
                             if (i < (checked.length - 1)) {
-                                partUrl += getSetting("separa");
+                                partUrl += getSetting("DOWNLOAD_FILE_NAMES_SP");
                             }
                         });
                         closeLayer(index);

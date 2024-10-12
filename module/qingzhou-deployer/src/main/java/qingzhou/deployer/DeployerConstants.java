@@ -55,6 +55,7 @@ public interface DeployerConstants {
     String app_Stopped = "Stopped";
     String BATCH_ID_SEPARATOR = ",";
     String DEFAULT_DATA_SEPARATOR = ",";
+    String DOWNLOAD_FILE_NAMES_SP = "/"; // |/\:*?"<> 这些都是 windows 平台u支持的文件名，linux 上 / 不支持文件名
 
     // 其它
     int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));

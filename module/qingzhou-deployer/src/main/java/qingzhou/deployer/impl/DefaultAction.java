@@ -297,7 +297,7 @@ class DefaultAction {
 
             File fileBase = ((Download) instance).downloadData(request.getId());
             java.util.List<File> downloadFiles = new ArrayList<>();
-            for (String s : downloadFileNames.split(",")) {
+            for (String s : downloadFileNames.split(DeployerConstants.DOWNLOAD_FILE_NAMES_SP)) {
                 downloadFiles.add(FileUtil.newFile(fileBase, s));//防止路径穿越：FileUtil.newFile
             }
             downloadKey = buildDownloadKey(downloadFiles, keyDir);

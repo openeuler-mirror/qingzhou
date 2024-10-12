@@ -278,7 +278,7 @@
 
 <script>
 	var global_setting = {
-		separa: ',',
+		DOWNLOAD_FILE_NAMES_SP: '<%=DeployerConstants.DOWNLOAD_FILE_NAMES_SP%>',
 		downdloadGroupSepara: '/',
 		downloadFileNames: '<%=DeployerConstants.DOWNLOAD_FILE_NAMES%>',
         filesName: 'files',
