@@ -62,7 +62,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
             required = true,
             create = false, edit = false,
-            noString = {DeployerConstants.APP_SYSTEM},
+            forbid = {DeployerConstants.APP_SYSTEM},
             list = true,
             name = {"应用名称", "en:App Name"},
             info = {"应用包的名称，表示该应用的业务系统种类，一种业务系统可安装在多个轻舟实例上，每一次的安装都会有唯一的 ID 与之对应。",

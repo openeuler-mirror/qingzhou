@@ -22,7 +22,7 @@ public @interface ModelField {
 
     boolean required() default false;
 
-    String readonly() default ""; // 表单元素级联控制只读的事件绑定
+    String readOnly() default ""; // 表单元素级联控制只读的事件绑定
 
     boolean create() default true; // 允许创建时指定值
 
@@ -44,9 +44,9 @@ public @interface ModelField {
 
     boolean port() default false;
 
-    String noChar() default "";
+    String[] forbid() default {};
 
-    String[] noString() default {};
+    String[] skip() default {};
 
     String pattern() default ""; // 填值须要符合此正则表达式规则
 

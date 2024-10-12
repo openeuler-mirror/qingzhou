@@ -41,8 +41,7 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_host", new String[]{"非法的IP地址或域名", "en:Illegal IP address or host name"});
         I18n.addKeyI18n("validation_port", new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
         I18n.addKeyI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
-        I18n.addKeyI18n("validation_unsupportedCharacters", new String[]{"不能包含字符：%s", "en:Cannot contain the char: %s"});
-        I18n.addKeyI18n("validation_unsupportedStrings", new String[]{"该值已被禁用", "en:This value is disabled"});
+        I18n.addKeyI18n("validation_forbid", new String[]{"该值已被禁用：%s", "en:This value is disabled: %s"});
         I18n.addKeyI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
         I18n.addKeyI18n("validation_editable", new String[]{"该属性不可编辑", "en:This property is not editable"});
         I18n.addKeyI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
@@ -110,8 +109,8 @@ public class ValidationFilter implements Filter<RestContext> {
             new lengthMin(), new lengthMax(),
             new host(),
             new port(),
-            new unsupportedCharacters(), new unsupportedStrings(),
-            new createable(), new editable(),
+            new forbid(),
+            new create(), new edit(),
             new checkXSS(),
             new regularExpression(),
             new checkEmail(),
@@ -182,7 +181,7 @@ public class ValidationFilter implements Filter<RestContext> {
             if (!context.fieldInfo.getCode().equals(context.modelInfo.getIdField())) return null;
 
             if (context.parameterVal.contains(DeployerConstants.BATCH_ID_SEPARATOR)) {
-                return new String[]{"validation_unsupportedCharacters", DeployerConstants.BATCH_ID_SEPARATOR};
+                return new String[]{"validation_forbid", DeployerConstants.BATCH_ID_SEPARATOR};
             }
 
             if (context.isAddAction) {
@@ -303,30 +302,14 @@ public class ValidationFilter implements Filter<RestContext> {
         }
     }
 
-    static class unsupportedCharacters implements Validator {
+    static class forbid implements Validator {
 
         @Override
         public String[] validate(ValidationContext context) {
-            ModelFieldInfo fieldInfo = context.fieldInfo;
-            if (fieldInfo.getNoChar().isEmpty()) return null;
-            for (char c : fieldInfo.getNoChar().toCharArray()) {
-                String s = String.valueOf(c);
-                if (context.parameterVal.contains(s)) {
-                    return new String[]{"validation_unsupportedCharacters", s};
-                }
-            }
-            return null;
-        }
-    }
-
-    static class unsupportedStrings implements Validator {
-
-        @Override
-        public String[] validate(ValidationContext context) {
-            for (String unsupportedString : context.fieldInfo.getNoString()) {
+            for (String forbidString : context.fieldInfo.getForbid()) {
                 for (String param : context.parameterVal.split(DeployerConstants.DEFAULT_DATA_SEPARATOR)) {
-                    if (param.equals(unsupportedString)) {
-                        return new String[]{"validation_unsupportedStrings"};
+                    if (param.equals(forbidString)) {
+                        return new String[]{"validation_forbid", forbidString};
                     }
                 }
             }
@@ -334,7 +317,7 @@ public class ValidationFilter implements Filter<RestContext> {
         }
     }
 
-    static class createable implements Validator {
+    static class create implements Validator {
 
         @Override
         public String[] validate(ValidationContext context) {
@@ -347,7 +330,7 @@ public class ValidationFilter implements Filter<RestContext> {
         }
     }
 
-    static class editable implements Validator {
+    static class edit implements Validator {
 
         @Override
         public String[] validate(ValidationContext context) {
@@ -368,53 +351,16 @@ public class ValidationFilter implements Filter<RestContext> {
 
         @Override
         public String[] validate(ValidationContext context) {
-            if (!checkIsXSS(context.parameterVal)) return null;
-            return new String[]{"validation_xss"};
-        }
-
-        final Pattern scriptPattern1 = Pattern.compile("vbscript:", Pattern.CASE_INSENSITIVE);
-
-        boolean checkIsXSS(String check) {
-            return !checkXssOk(check);
-        }
-
-        boolean checkXssLevel1(String check) {
-            if (check == null || check.trim().isEmpty()) {
-                return true;
-            } else {
-                String resultUrl = check.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-                if (!resultUrl.equals(check)) {
-                    return false;
-                } else {
-                    resultUrl = resultUrl.replaceAll("eval\\((.*)\\)", "");
-                    if (!resultUrl.equals(check)) {
-                        return false;
-                    } else {
-                        resultUrl = scriptPattern1.matcher(resultUrl).replaceAll("");
-                        if (!resultUrl.equals(check)) {
-                            return false;
-                        } else {
-                            return !resultUrl.contains("'") && !resultUrl.contains("\"") || resultUrl.indexOf(")") <= resultUrl.indexOf("(");
-                        }
+            String[] checks = {"vbscript:", "eval(", "(", ")", "<", ">", "[", "]", "\"", "'"};
+            for (String check : checks) {
+                if (context.parameterVal.contains(check)) {
+                    if (Arrays.stream(context.fieldInfo.getSkip()).noneMatch(s -> s.equals(check))) {
+                        return new String[]{"validation_xss"};
                     }
                 }
             }
-        }
 
-        boolean checkXssOk(String check) {
-            if (check == null || check.trim().isEmpty()) {
-                return true;
-            } else if (!checkXssLevel1(check)) {
-                return false;
-            } else {
-                String resultUrl = check.replaceAll("\\(", "&#40").replaceAll("\\)", "&#41");
-                if (!resultUrl.equals(check)) {
-                    return false;
-                } else {
-                    resultUrl = resultUrl.replaceAll("\\[", "&#91").replaceAll("]", "&#93");
-                    return resultUrl.equals(check);
-                }
-            }
+            return null;
         }
     }
 

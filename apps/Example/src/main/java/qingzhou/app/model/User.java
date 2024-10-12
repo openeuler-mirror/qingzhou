@@ -1,7 +1,6 @@
 package qingzhou.app.model;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Delete;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
@@ -78,6 +77,7 @@ public class User extends AddModelBase implements Group, Option {
             type = FieldType.textarea,
             list = true, search = false,
             link = "department.email",
+            skip = {">", "("},
             name = {"备注", "en:Notes"})
     public String notes;
 

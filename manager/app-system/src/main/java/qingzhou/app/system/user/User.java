@@ -128,7 +128,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             type = FieldType.bool,
-            readonly = "name=qingzhou",
+            readOnly = "name=qingzhou",
             list = true,
             name = {"启用", "en:Active"},
             info = {"若未启用，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})

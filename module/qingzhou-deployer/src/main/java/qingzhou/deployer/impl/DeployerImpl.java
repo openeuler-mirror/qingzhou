@@ -366,10 +366,10 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setPattern(modelField.pattern());
             modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
-            modelFieldInfo.setNoChar(modelField.noChar());
-            modelFieldInfo.setNoString(modelField.noString());
             modelFieldInfo.setShow(modelField.show());
-            modelFieldInfo.setReadOnly(modelField.readonly());
+            modelFieldInfo.setReadOnly(modelField.readOnly());
+            modelFieldInfo.setForbid(modelField.forbid());
+            modelFieldInfo.setSkip(modelField.skip());
             modelFieldInfo.setEmail(modelField.email());
             modelFieldInfo.setFile(modelField.file());
             modelFieldInfo.setLink(modelField.link());
