@@ -85,6 +85,11 @@
 
                         boolean required = fieldName.equals(idField) || modelField.isRequired();
 
+						String echoGroup = String.join(",", modelField.getEchoGroup());
+						if (echoGroup != null) {
+							echoGroup = "echoGroup='" + echoGroup + "'";
+						}
+
                         String fieldValue = modelData.get(fieldName);
                         if (fieldValue == null) {
                             fieldValue = "";
@@ -111,13 +116,13 @@
                             if (!readonly.isEmpty()) {
                                 if (FieldType.textarea.name().equals(modelField.getType())) {
                         %>
-                        <textarea rows="3" disabled="disabled" name="<%=fieldName%>" class="form-control"
+                        <textarea rows="3" disabled="disabled" name="<%=fieldName%>" <%=echoGroup%> class="form-control"
                                   readonly="readonly"><%=fieldValue%></textarea>
                         <%
                         } else {
                         %>
-                        <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
-                               class="form-control" readonly="readonly">
+                        <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>' <%=echoGroup%>
+							   class="form-control" readonly="readonly">
                         <%
                             }
                         } else {
@@ -225,13 +230,13 @@
         </textarea>
     <textarea name="passwordFields" rows="3" disabled="disabled" style="display:none;">
         <%
-            for (int i = 0; i < passwordFields.size(); i++) {
-                if (i > 0) {
-                    out.print(",");
-                }
-                out.print(passwordFields.get(i));
-            }
-        %>
+			for (int i = 0; i < passwordFields.size(); i++) {
+				if (i > 0) {
+					out.print(",");
+				}
+				out.print(passwordFields.get(i));
+			}
+		%>
         </textarea>
 
 </form>

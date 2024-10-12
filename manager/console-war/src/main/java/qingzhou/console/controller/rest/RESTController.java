@@ -106,7 +106,7 @@ public class RESTController extends HttpServlet {
             new ParameterFilter(), // 解密前端的 password 类型的表单域
             new ActionFilter(),
             new ValidationFilter(), // 参数校验
-
+            new EchoFilter(), // 数据回显
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;

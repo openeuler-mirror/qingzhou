@@ -707,6 +707,8 @@ function bindEventForFormPage() {
         $(this).css("cursor", "not-allowed").parent().css("cursor", "not-allowed");
     });
 
+    //绑定失去焦点数据回显事件
+    bindEchoItemEvent();
     bindFormEvent();
 
     // 日期组件设置
@@ -847,6 +849,43 @@ function bindFormEvent() {
     });
 };
 
+function bindEchoItemEvent() {
+    //查找当前表单下所有回显数据元素，添加失去焦点事件
+    var echoGroupElements = $("form[name='pageForm']").find('[echoGroup]');
+    echoGroupElements.each(function() {
+        $(this).unbind("blur").bind("blur", function (e) {
+            e.preventDefault();
+            var params = $("form[name='pageForm']").formToArray();
+            if ($(this).attr("echoGroup") !== undefined && $(this).attr("echoGroup") !== "") {
+                echoItem($("form[name='pageForm']", getRestrictedArea()), params, $(this).attr("name"));
+            }
+        });
+    });
+}
+
+function echoItem(thisForm, params, item) {
+    var action = $(thisForm).attr("action");
+    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName") ;
+    $.post(action, params, function (data, textStatus, jqXHR) {
+        if (data.success === "false") {
+            $("#form-item-" + item + " > div", thisForm).attr("error-key", item).addClass("has-error");
+            $("#form-item-" + item + " > div .tw-error-info", thisForm).html(data.msg !== "" ? data.msg : data.attachments[item]);
+        } else {
+            $("#form-item-" + item + " > div", thisForm).attr("error-key", item).removeClass("has-error");
+            $("#form-item-" + item + " > div .tw-error-info", thisForm).html("");
+            $(thisForm).find('[name]').each(function() {
+                var result = data.data[0];
+                if (result !== null) {
+                    for(let key in result) {
+                        if (key === $(this).attr("name")) {
+                            $(this).val(result[key]);
+                        }
+                    }
+                }
+            });
+        }
+    }, "json");
+}
 /**************************************** form.jsp - end *************************************************/
 
 /**************************************** sortable.jsp - start *************************************************/

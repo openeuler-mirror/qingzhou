@@ -5,7 +5,7 @@
 	switch (fieldType) {
 		case text:
 %>
-<input type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
+<input type="text" name="<%=fieldName%>" value='<%=fieldValue%>' <%=echoGroup%>
 	   class="form-control">
 <%
 		break;
@@ -13,7 +13,7 @@
 %>
 <input type="number" min="<%=modelField.getMin()%>"
 	   max="<%=(modelField.isPort()?"65535":modelField.getMax())%>"
-	   name="<%=fieldName%>" value='<%=fieldValue%>' class="form-control">
+	   name="<%=fieldName%>" value='<%=fieldValue%>' <%=echoGroup%> class="form-control">
 <%
 		break;
 	case decimal:%>
@@ -31,7 +31,7 @@
 		break;
 	case textarea:
 %>
-<textarea name="<%=fieldName%>" value='<%=fieldValue%>' class="form-control"
+<textarea name="<%=fieldName%>" value='<%=fieldValue%>' <%=echoGroup%> class="form-control"
 		  rows="3"><%=fieldValue%></textarea>
 <%
 		break;

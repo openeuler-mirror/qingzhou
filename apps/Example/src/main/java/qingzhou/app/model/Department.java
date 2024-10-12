@@ -3,13 +3,17 @@ package qingzhou.app.model;
 import qingzhou.api.FieldType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
+import qingzhou.api.type.Echo;
 import qingzhou.app.AddModelBase;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Model(code = "department", icon = "sitemap",
         menu = qingzhou.app.ExampleMain.MENU_11, order = 1,
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
-public class Department extends AddModelBase {
+public class Department extends AddModelBase implements Echo {
     @ModelField(
             required = true,
             list = true, search = true,
@@ -18,14 +22,14 @@ public class Department extends AddModelBase {
     public String name;
 
     @ModelField(
-            list = true, search = true,
+            list = true, search = true, echoGroup = {"aa"},
             name = {"上级部门", "en:Superior Department"},
             info = {"该部门所属的上级部门。",
                     "en:The superior department to which the department belongs."})
     public String superior = "";
 
     @ModelField(
-            list = true, search = true,
+            list = true, search = true, echoGroup = {"aa", "bb"},
             name = {"负责人", "en:Department Manager"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
     public String manager;
@@ -56,4 +60,23 @@ public class Department extends AddModelBase {
     public String idField() {
         return "name";
     }
+
+    @Override
+    public Map<String, String> dataEcho(String[] echoGroup, Map<String, String> params) {
+        Map<String, String> map = new HashMap<>();
+        for (String s : echoGroup) {
+            if (s.equals("aa")) {
+                String name = params.get("name");
+                String superior = params.get("superior");
+                map.put("email", name + "=" + superior);
+                map.put("phone", name + "&&&&&&");
+            } else if (s.equals("bb")) {
+                String name = params.get("name");
+                String manager = params.get("manager");
+                map.put("phone", name + "=" + manager);
+            }
+        }
+        return map;
+    }
+
 }

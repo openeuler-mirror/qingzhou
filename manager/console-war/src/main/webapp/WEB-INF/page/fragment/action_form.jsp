@@ -18,6 +18,11 @@
 
 					ModelFieldInfo modelField = e.getValue();
 
+                    String echoGroup = String.join(",", modelField.getEchoGroup());
+					if (!"".equals(echoGroup)) {
+						echoGroup = "echoGroup='" + echoGroup.trim() + "'";
+					}
+
                     String readonly = "";
                     String fieldValue = modelData.get(fieldName);
                     if (fieldValue == null) {
@@ -46,3 +51,4 @@
         %>
     </div>
 </div>
+

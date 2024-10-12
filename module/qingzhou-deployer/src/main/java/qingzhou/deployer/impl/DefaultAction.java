@@ -7,6 +7,7 @@ import qingzhou.api.Response;
 import qingzhou.api.type.List;
 import qingzhou.api.type.*;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
@@ -48,6 +49,40 @@ class DefaultAction {
     public void show(Request request) throws Exception {
         Map<String, String> data = ((Show) instance).showData(request.getId());
         request.getResponse().addData(data);
+    }
+
+    @ModelAction(
+            code = Echo.ACTION_ECHO, icon = "folder-open-alt",
+            name = {"回显", "en:Echo"},
+            info = {"数据回显。", "en:Data Echo."})
+    public void dataEcho(Request request) throws Exception {
+        RequestImpl req = (RequestImpl) request;
+        Map<String, String> data = ((Echo) instance).dataEcho(getEchoGroup(req), prepareParameters(request));
+        request.getResponse().addData(data);
+    }
+
+    private String[] getEchoGroup(RequestImpl req) {
+        HashSet<String> echoGroups = new HashSet<>();
+        ModelInfo cachedModelInfo = req.getCachedModelInfo();
+        //通过field去获取多个echogroup的合集
+        if (cachedModelInfo != null) {
+            Map<String, String> requestParameterMap = req.getParameters();
+            if (requestParameterMap.size() > 0) {
+                Map<String, String[]> echoGroupMap = cachedModelInfo.getEchoGroupField();
+                if (echoGroupMap.size() > 0) {
+                    for (Map.Entry<String, String[]> e : echoGroupMap.entrySet()) {
+                        String echoGroupField = e.getKey();
+                        String[] values = e.getValue();
+                        if (requestParameterMap.containsKey(echoGroupField) && Utils.notBlank(requestParameterMap.get(echoGroupField))) {
+                            if (values.length > 0) {
+                                echoGroups.addAll(Arrays.asList(values));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return echoGroups.toArray(new String[0]);
     }
 
     @ModelAction(
