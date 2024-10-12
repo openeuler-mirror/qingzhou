@@ -15,7 +15,6 @@ public class ModelActionInfo {
     private int order;
     private String show;
     private String page;
-    private String redirect;
     private String[] fields;
 
     public Method getMethod() {
@@ -80,14 +79,6 @@ public class ModelActionInfo {
 
     public void setPage(String page) {
         this.page = page;
-    }
-
-    public String getRedirect() {
-        return redirect;
-    }
-
-    public void setRedirect(String redirect) {
-        this.redirect = redirect;
     }
 
     public String getIcon() {

@@ -125,7 +125,6 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelAction(
             code = "share", icon = "share-alt",
-            page = "list",
             head = true, order = 2,
             name = {"头部按钮", "en:Share"},
             info = {"头部按钮", "en:Share"})

@@ -153,7 +153,6 @@ public class ResponseImpl implements Response {
         return dateHeaders.keySet();
     }
 
-    @Override
     public void setBodyBytes(byte[] bytes) {
         bodyBytes = bytes;
     }

@@ -109,7 +109,7 @@ public class Controller implements ModuleActivator {
             String docBase = consoleApp.getAbsolutePath();
             contextPath = console.getWeb().getContextRoot();
             servletContainer.addWebapp(contextPath, docBase, new Properties() {{
-                setProperty("webResources", "/=" + FileUtil.newFile(moduleContext.getTemp(), DeployerConstants.APP_WEB_RESOURCES_ROOT_DIR).getAbsoluteFile());
+                setProperty("webResources", "/=" + FileUtil.newFile(moduleContext.getTemp(), DeployerConstants.DOWNLOAD_PAGE_ROOT_DIR).getAbsoluteFile());
             }});
             logger.info("Open a browser to access the Qingzhou console: http://localhost:" + console.getWeb().getPort() + contextPath);
         }

@@ -80,7 +80,6 @@ public class Password extends ModelBase {
 
     @ModelAction(
             code = Update.ACTION_EDIT,
-            page = "form",
             name = {"修改", "en:Edit"},
             info = {"修改当前登录账户的密码。",
                     "en:Change the password of the current login account."})
@@ -183,7 +182,7 @@ public class Password extends ModelBase {
         String qrCode = "otpauth://totp/" + loginUser + "?secret=" + keyForOtp;
         QrGenerator qrGenerator = Main.getService(QrGenerator.class);
         byte[] bytes = qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
-        request.getResponse().setBodyBytes(bytes);
+//        request.getResponse().setBodyBytes(bytes); // todo 用 downloadStream 来替代
     }
 
     @ModelAction(

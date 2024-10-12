@@ -114,7 +114,6 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
             head = true, order = -1,
-            page = "form",
             name = {"升级", "en:Upgrade"},
             info = {"将轻舟升级到一个新的版本。", "en:Upgrade the light boat to a new version."})
     public void create(Request request) throws Exception {
@@ -126,7 +125,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
             name = {"升级", "en:Upgrade"},
             info = {"将轻舟升级到一个新的版本。", "en:Upgrade the light boat to a new version."})
     public void add(Request request) {
-        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_INSTALL_VERSION, Instance.allInstanceIds(null));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_INSTALL_VERSION, Instance.allInstanceIds(null));
     }
 
     @ModelAction(
@@ -138,7 +137,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) {
-        Main.invokeAgentOnInstances(request, DeployerConstants.AGENT_UNINSTALL_VERSION, Instance.allInstanceIds(null));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_UNINSTALL_VERSION, Instance.allInstanceIds(null));
     }
 
     @Override

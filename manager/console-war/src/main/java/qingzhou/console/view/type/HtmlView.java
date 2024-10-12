@@ -2,7 +2,7 @@ package qingzhou.console.view.type;
 
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.type.Show;
+import qingzhou.api.type.*;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class HtmlView implements View {
-    public static final String htmlPageBase = "/WEB-INF/page/";
+    public static final String htmlPageBase = "/WEB-INF/view/";
     public static final String FLAG = "html";
 
     @Override
@@ -38,13 +38,13 @@ public class HtmlView implements View {
         }
         req.setAttribute(Request.class.getName(), request);
         ModelActionInfo actionInfo = request.getCachedModelInfo().getModelActionInfo(request.getAction());
-        String pageForward = actionInfo.getRedirect();
-        if (Utils.notBlank(pageForward)) {
-            pageForward = "/" + request.getApp() + (pageForward.startsWith("/") ? actionInfo.getRedirect() : "/" + actionInfo.getRedirect());
-            restContext.req.getRequestDispatcher(pageForward).forward(restContext.req, restContext.resp);
+        String redirectPage = actionInfo.getPage();
+        if (Utils.notBlank(redirectPage)) {
+            redirectPage = "/" + request.getApp() + (redirectPage.startsWith("/") ? redirectPage : "/" + redirectPage);
+            restContext.req.getRequestDispatcher(redirectPage).forward(restContext.req, restContext.resp);
         } else {
-            pageForward = isManageAction ? "sys/manage" : getPageForward(request);
-            String forwardToPage = HtmlView.htmlPageBase + (pageForward.contains("/") ? (pageForward + ".jsp") : ("view/" + pageForward + ".jsp"));
+            String forwardView = isManageAction ? "sys/manage" : getForwardView(request);
+            String forwardToPage = HtmlView.htmlPageBase + (forwardView.contains("/") ? (forwardView + ".jsp") : ("type/" + forwardView + ".jsp"));
             restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);
         }
     }
@@ -60,10 +60,22 @@ public class HtmlView implements View {
         return "text/html;charset=UTF-8";
     }
 
-    private String getPageForward(RequestImpl request) {
-        ModelActionInfo actionInfo = request.getCachedModelInfo().getModelActionInfo(request.getAction());
-        if (Utils.notBlank(actionInfo.getPage())) {
-            return actionInfo.getPage();
+    private String getForwardView(RequestImpl request) {
+        switch (request.getAction()) {
+            case Show.ACTION_SHOW:
+                return "show";
+            case Add.ACTION_CREATE:
+            case Update.ACTION_EDIT:
+                return "form";
+            case List.ACTION_LIST:
+            case Delete.ACTION_DELETE:
+                return "list";
+            case Monitor.ACTION_MONITOR:
+                return "monitor";
+            case DeployerConstants.ACTION_INDEX:
+                return "sys/index";
+            case DeployerConstants.ACTION_MANAGE:
+                return "sys/manage";
         }
 
         return "default";

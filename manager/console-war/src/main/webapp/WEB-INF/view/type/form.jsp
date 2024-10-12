@@ -85,10 +85,11 @@
 
                         boolean required = fieldName.equals(idField) || modelField.isRequired();
 
-						String echoGroup = String.join(",", modelField.getEchoGroup());
-						if (echoGroup != null) {
-							echoGroup = "echoGroup='" + echoGroup + "'";
-						}
+                        String echoGroup = "";
+                        if (modelField.getEchoGroup().length > 0) {
+                            String echoGroups = String.join(",", modelField.getEchoGroup());
+                            echoGroup = "echoGroup='" + echoGroups + "'";
+                        }
 
                         String fieldValue = modelData.get(fieldName);
                         if (fieldValue == null) {

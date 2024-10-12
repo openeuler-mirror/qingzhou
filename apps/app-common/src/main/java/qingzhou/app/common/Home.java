@@ -1,10 +1,6 @@
 package qingzhou.app.common;
 
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Show;
 
 @Model(code = "home", icon = "home",
@@ -30,7 +26,6 @@ public class Home extends ModelBase {
 
     @ModelAction(
             code = Show.ACTION_SHOW,
-            page = "show",
             name = {"首页", "en:Home"},
             info = {"进入此应用的默认首页。",
                     "en:Go to the default home of this app."})

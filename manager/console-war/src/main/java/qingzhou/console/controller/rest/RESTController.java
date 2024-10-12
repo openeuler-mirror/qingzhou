@@ -117,7 +117,7 @@ public class RESTController extends HttpServlet {
             new ActionFilter(),
             new ValidationFilter(), // 参数校验
             new EchoFilter(), // 数据回显
-            new RedirectFilter(), // 下载远端重定向资源
+            new PageFilter(), // 下载远端重定向资源
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
