@@ -60,6 +60,27 @@ public class User extends AddModelBase implements Group, Option {
     public String subjects1;
 
     @ModelField(
+            type = FieldType.checkbox,
+            list = true,
+            separator = "@",
+            refModel = Post.class,
+            name = {"checkbox", "en:1"})
+    public String checkbox;
+    @ModelField(
+            type = FieldType.multiselect,
+            list = true,
+            separator = "@",
+            refModel = Post.class,
+            name = {"multiselect", "en:1"})
+    public String multiselect;
+    @ModelField(
+            type = FieldType.kv,
+            list = true,
+            separator = "@",
+            name = {"kv", "en:1"})
+    public String kv;
+
+    @ModelField(
             type = FieldType.sortablecheckbox,
             list = true,
             separator = "#",
