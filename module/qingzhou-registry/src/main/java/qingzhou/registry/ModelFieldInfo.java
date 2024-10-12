@@ -12,6 +12,8 @@ public class ModelFieldInfo {
     private String defaultValue;
     private boolean list;
     private boolean search;
+    private boolean detail;
+    private int widthPercent;
     private boolean monitor;
     private boolean numeric;
     private boolean create;
@@ -104,6 +106,22 @@ public class ModelFieldInfo {
 
     public void setSearch(boolean search) {
         this.search = search;
+    }
+
+    public boolean isDetail() {
+        return detail;
+    }
+
+    public void setDetail(boolean detail) {
+        this.detail = detail;
+    }
+
+    public int getWidthPercent() {
+        return widthPercent;
+    }
+
+    public void setWidthPercent(int widthPercent) {
+        this.widthPercent = widthPercent;
     }
 
     public String getGroup() {
