@@ -3,10 +3,13 @@ package qingzhou.servlet.impl;
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
+import org.apache.catalina.WebResourceRoot;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.webresources.DirResourceSet;
 import org.apache.tomcat.util.modeler.Registry;
+import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.servlet.ServletContainer;
 
@@ -45,13 +48,41 @@ public class ServletContainerImpl implements ServletContainer {
     }
 
     @Override
-    public void addWebapp(String contextPath, String docBase) {
+    public void addWebapp(String contextPath, String docBase, Properties properties) {
         Context context = tomcat.addWebapp(contextPath, docBase);// 指定部署应用的信息
         // 添加Multipart配置
         if (context instanceof StandardContext) {
             context.setAllowCasualMultipartParsing(true);
         }
         context.setRequestCharacterEncoding(StandardCharsets.UTF_8.name());
+
+        final String webResources = properties.getProperty("webResources");
+        if (webResources != null) {
+            for (final String alt : webResources.trim().split(",")) {
+                final String trim = alt.trim();
+                if (trim.isEmpty()) {
+                    continue;
+                }
+
+                String mount = "/";
+                String dir = trim;
+                int i = trim.indexOf("=");
+                if (i > 0) {
+                    mount = trim.substring(0, i);
+                    dir = trim.substring(i + 1);
+                }
+                if (Utils.isBlank(mount)) {
+                    mount = "/";
+                }
+                File appsDir = new File(dir);
+                if (!appsDir.exists()) {
+                    FileUtil.mkdirs(appsDir);
+                }
+
+                final WebResourceRoot root = context.getResources();
+                root.addPreResources(new DirResourceSet(root, mount, dir, "/"));
+            }
+        }
     }
 
     @Override

@@ -25,6 +25,7 @@ public interface DeployerConstants {
     String ACTION_REFRESHKEY = "refreshKey";
 
     // 内部通信参数
+    String UPLOAD_APP_NAME = "QINGZHOU_UPLOAD_APP_NAME";
     String UPLOAD_FILE_ID = "QINGZHOU_UPLOAD_FILE_ID";
     String UPLOAD_FILE_NAME = "QINGZHOU_UPLOAD_FILE_NAME";
     String UPLOAD_FILE_BYTES = "QINGZHOU_UPLOAD_FILE_BYTES";
@@ -33,6 +34,9 @@ public interface DeployerConstants {
     String DOWNLOAD_KEY = "QINGZHOU_DOWNLOAD_KEY";
     String DOWNLOAD_OFFSET = "QINGZHOU_DOWNLOAD_OFFSET";
     String DOWNLOAD_FILE_NAMES = "QINGZHOU_DOWNLOAD_FILE_NAMES";
+    String DOWNLOAD_REDIRECT_ACTION_NAME = "downloadRedirect";
+    String DOWNLOAD_REDIRECT_APP_NAME = "DOWNLOAD_REDIRECT_APP_NAME";
+    String DOWNLOAD_REDIRECT_DIR_NAME = "DOWNLOAD_REDIRECT_DIR_NAME";
     String AGENT_INSTALL_APP = "AGENT_INSTALL_APP";
     String AGENT_UNINSTALL_APP = "AGENT_UNINSTALL_APP";
     String AGENT_START_APP = "AGENT_START_APP";
@@ -59,4 +63,6 @@ public interface DeployerConstants {
 
     // 其它
     int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));
+
+    String APP_WEB_RESOURCES_ROOT_DIR = "apps";
 }

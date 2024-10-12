@@ -516,7 +516,7 @@ var tw = {
                 $(".tw-tooltip").remove();
             },
             success: function (html) {
-                if (html.indexOf("<!DOCTYPE html>") >= 0 && html.indexOf("loginForm")) {
+                if (html.indexOf("<!DOCTYPE html>") >= 0 && html.indexOf("loginForm") > -1) {
                     showConfirm(getSetting("notLogin"), {
                         "title": getSetting("pageConfirmTitle"),
                         "btn": [getSetting("reloginBtnText"), getSetting("iknowBtnText")]

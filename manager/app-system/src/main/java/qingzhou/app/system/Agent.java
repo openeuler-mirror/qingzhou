@@ -1,6 +1,11 @@
 package qingzhou.app.system;
 
-import qingzhou.api.*;
+import qingzhou.api.FieldType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
 import qingzhou.crypto.CryptoService;
@@ -12,7 +17,12 @@ import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -93,6 +103,23 @@ public class Agent extends ModelBase implements Download {
     public void uninstallApp(Request request) throws Exception {
         Main.getService(Deployer.class).unInstallApp(request.getId());
         FileUtil.forceDelete(FileUtil.newFile(getAppsDir(), request.getId()));
+    }
+
+    @ModelAction(
+            code = DeployerConstants.DOWNLOAD_REDIRECT_ACTION_NAME,
+            name = {"", "en:"})
+    public void downloadRedirect(Request request) {
+        String redirect = request.getNonModelParameter(DeployerConstants.DOWNLOAD_REDIRECT_DIR_NAME);
+        String app = request.getNonModelParameter(DeployerConstants.DOWNLOAD_REDIRECT_APP_NAME);
+        File redirectPath = FileUtil.newFile(getAppsDir(), app, redirect);
+        if (redirectPath.exists()) {
+            try {
+                File zipFile = FileUtil.newFile(Main.getService(ModuleContext.class).getTemp(), redirectPath.getName() + ".zip");
+                FileUtil.zipFiles(redirectPath, zipFile, true);
+                request.getResponse().setBodyBytes(Files.readAllBytes(zipFile.toPath()));
+            } catch (IOException ignored) {
+            }
+        }
     }
 
     private File getAppsDir() {
@@ -186,10 +213,11 @@ public class Agent extends ModelBase implements Download {
     public void uploadTempFile(Request request) throws IOException {
         String fileId = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_ID);
         String fileName = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_NAME);
+        String appName = request.getNonModelParameter(DeployerConstants.UPLOAD_APP_NAME);
         byte[] fileBytes = Main.getService(CryptoService.class).getBase64Coder().decode(
                 request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_BYTES));
-
-        File file = FileUtil.newFile(getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, fileId, fileName);
+        App app = Main.getService(Deployer.class).getApp(appName);
+        File file = FileUtil.newFile(app.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, fileId, fileName);
         FileUtil.writeFile(file, fileBytes, true);
     }
 

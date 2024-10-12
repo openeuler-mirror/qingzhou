@@ -34,6 +34,8 @@ public @interface ModelAction {
 
     String[] models() default {}; //  弹出子级管理页面
 
+    String redirect() default ""; // 跳转到指定的页面，注：app根目录后的相对路径
+
     String show() default ""; // 设置该操作的可用条件
 
     boolean disable() default false; // 是否禁用此 action

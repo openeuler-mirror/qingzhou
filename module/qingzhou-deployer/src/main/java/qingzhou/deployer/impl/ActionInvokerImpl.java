@@ -108,6 +108,7 @@ class ActionInvokerImpl implements ActionInvoker {
             tmp.setActionName(DeployerConstants.ACTION_UPLOAD);
             tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_ID, uploadId);
             tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_NAME, file.getName());
+            tmp.setNonModelParameter(DeployerConstants.UPLOAD_APP_NAME, request.getApp());
             try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
                 byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
                 long offset = 0;
