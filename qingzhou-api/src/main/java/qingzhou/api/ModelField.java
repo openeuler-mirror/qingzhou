@@ -22,7 +22,7 @@ public @interface ModelField {
 
     boolean required() default false;
 
-    String readonly() default ""; // 表单元素级联控制只读的事件绑定
+    String readOnly() default ""; // 表单元素级联控制只读的事件绑定
 
     boolean create() default true; // 允许创建时指定值
 
@@ -44,9 +44,9 @@ public @interface ModelField {
 
     boolean port() default false;
 
-    String noChar() default "";
+    String[] forbid() default {};
 
-    String[] noString() default {};
+    String[] skip() default {};
 
     String pattern() default ""; // 填值须要符合此正则表达式规则
 
@@ -56,7 +56,7 @@ public @interface ModelField {
 
     boolean list() default false; // 是否显示在列表中。
 
-    boolean search() default true; // 是否支持搜索，在 list() 为 true 时有效
+    boolean search() default false; // 是否支持列头搜索
 
     /**
      * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
@@ -67,12 +67,6 @@ public @interface ModelField {
      * 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
      */
     String[] color() default {};
-
-    /**
-     * 列表显示时，文案太长禁止换行且用省略号代替，鼠标移上显示在上方
-     * @return
-     */
-    boolean showMoreOnTop() default false;
 
     boolean monitor() default false; // 该属性为监视类型，而非表单项
 

@@ -1,11 +1,9 @@
 package qingzhou.console.view;
 
 import qingzhou.console.controller.rest.RestContext;
-import qingzhou.console.view.type.FileView;
+import qingzhou.console.view.type.DownloadView;
 import qingzhou.console.view.type.HtmlView;
-import qingzhou.console.view.type.ImageView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.registry.ModelInfo;
@@ -17,16 +15,12 @@ import java.util.List;
 import java.util.Map;
 
 public class ViewManager {
-    public static final String htmlView = "html";
-    public static final String fileView = "file";
-    public static final String imageView = "image";
     private final Map<String, View> views = new HashMap<>();
 
     public ViewManager() {
-        views.put(htmlView, new HtmlView());
-        views.put(DeployerConstants.JSON_VIEW, new JsonView());
-        views.put(fileView, new FileView());
-        views.put(imageView, new ImageView());
+        views.put(HtmlView.FLAG, new HtmlView());
+        views.put(JsonView.FLAG, new JsonView());
+        views.put(DownloadView.FLAG, new DownloadView());
     }
 
     public void render(RestContext restContext) throws Exception {

@@ -1,18 +1,6 @@
 package qingzhou.deployer.impl;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import qingzhou.api.ActionFilter;
-import qingzhou.api.AppContext;
-import qingzhou.api.Lang;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
@@ -25,6 +13,9 @@ import qingzhou.registry.MenuInfo;
 import qingzhou.servlet.ServletService;
 import qingzhou.ssh.SSHService;
 
+import java.io.File;
+import java.util.*;
+
 class AppContextImpl implements AppContext {
     private final ModuleContext moduleContext;
     private final List<ActionFilter> actionFilters = new ArrayList<>();
@@ -34,11 +25,16 @@ class AppContextImpl implements AppContext {
     private File appTemp;
     private File appDir;
 
-    private Lang requestLang;
+    private Request currentRequest;
 
     AppContextImpl(ModuleContext moduleContext, AppImpl app) {
         this.moduleContext = moduleContext;
         this.app = app;
+    }
+
+    @Override
+    public Request getCurrentRequest() {
+        return currentRequest;
     }
 
     @Override
@@ -70,16 +66,12 @@ class AppContextImpl implements AppContext {
 
     @Override
     public String getI18n(String key, Object... args) {
-        return getI18n(getRequestLang(), key, args);
+        return getI18n(getCurrentRequest().getLang(),
+                key, args);
     }
 
-    @Override
-    public Lang getRequestLang() {
-        return requestLang;
-    }
-
-    public void setRequestLang(Lang requestLang) {
-        this.requestLang = requestLang;
+    public void setCurrentRequest(Request currentRequest) {
+        this.currentRequest = currentRequest;
     }
 
     @Override

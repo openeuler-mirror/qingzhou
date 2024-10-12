@@ -1,5 +1,15 @@
 package qingzhou.console.controller.jmx;
 
+import org.apache.catalina.session.StandardSession;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.view.type.JsonView;
+import qingzhou.engine.util.Utils;
+import qingzhou.registry.ModelInfo;
+
+import javax.security.auth.Subject;
+import javax.servlet.*;
+import javax.servlet.http.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -8,37 +18,7 @@ import java.rmi.server.ServerNotActiveException;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.Principal;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import javax.security.auth.Subject;
-import javax.servlet.AsyncContext;
-import javax.servlet.DispatcherType;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpUpgradeHandler;
-import javax.servlet.http.Part;
-
-import org.apache.catalina.session.StandardSession;
-import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.rest.RESTController;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.engine.util.Utils;
-import qingzhou.registry.ModelInfo;
+import java.util.*;
 
 public class JmxHttpServletRequest implements HttpServletRequest {
     private final String appName;
@@ -97,7 +77,7 @@ public class JmxHttpServletRequest implements HttpServletRequest {
 
     @Override
     public String getPathInfo() {
-        String uri = "/" + DeployerConstants.JSON_VIEW + "/" + appName + "/" + modelName + "/" + actionName;
+        String uri = "/" + JsonView.FLAG + "/" + appName + "/" + modelName + "/" + actionName;
         ModelInfo modelInfo = SystemController.getModelInfo(appName, modelName);
         if (modelInfo != null) {
             String idField = modelInfo.getIdField();

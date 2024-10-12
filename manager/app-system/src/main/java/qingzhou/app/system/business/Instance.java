@@ -31,28 +31,28 @@ public class Instance extends ModelBase implements List, Monitor, Group {
     private static final String ID_KEY = "name";
 
     @ModelField(
-            list = true,
+            list = true, search = true,
             name = {"实例名称", "en:Instance Name"},
             info = {"表示该实例的名称，用于识别和管理该实例。",
                     "en:Indicates the name of the instance, which is used to identify and manage the instance."})
     public String name;
 
     @ModelField(
-            list = true,
+            list = true, search = true,
             name = {"主机IP", "en:Host IP"},
             info = {"该实例所在服务器的域名或 IP 地址。",
                     "en:The domain name or IP address of the server where the instance resides."})
     public String host;
 
     @ModelField(
-            list = true,
+            list = true, search = true,
             name = {"管理端口", "en:Management Port"},
             info = {"该实例所开放的管理端口，用以受理轻舟集中管理端发来的业务请求。",
                     "en:The management port opened by the instance is used to accept business requests from the centralized management end of Qingzhou."})
     public Integer port;
 
     @ModelField(
-            list = true,
+            list = true, search = true,
             name = {"平台版本", "en:Version"},
             info = {"该实例运行的轻舟版本。", "en:The Qingzhou version that the instance runs."})
     public String version;

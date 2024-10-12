@@ -8,7 +8,7 @@ import javax.servlet.http.HttpSession;
 import qingzhou.api.Lang;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.view.ViewManager;
+import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.util.Utils;
@@ -127,7 +127,7 @@ public class I18n implements Filter<SystemControllerContext> {
         I18n.resetI18nLang();
         try {
             String requestURI = context.req.getRequestURI();
-            if (requestURI.contains(DeployerConstants.REST_PREFIX + "/" + ViewManager.htmlView)) {
+            if (requestURI.contains(DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG)) {
                 // 如果没有这个判断，在查看折线图页面，发送的最后请求是 json数据，就会跳转错误
                 HttpSession s = context.req.getSession(false);
                 if (s != null) {

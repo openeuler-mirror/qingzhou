@@ -1,15 +1,6 @@
 package qingzhou.app.system.user;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
-import qingzhou.api.FieldType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.config.Config;
@@ -20,6 +11,10 @@ import qingzhou.crypto.TotpCipher;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         hidden = true,
@@ -63,7 +58,7 @@ public class Password extends ModelBase {
 
     @ModelField(
             type = FieldType.bool,
-            list = true,
+            list = true, search = true,
             name = {"动态密码", "en:One-time password"},
             info = {"用户开启动态密码，在登录系统时，输入动态密码，可免输入账户密码。",
                     "en:When the user turns on the one-time password, when logging in to the system, enter the one-time password, and the account password is not required."})
@@ -181,18 +176,14 @@ public class Password extends ModelBase {
         String keyForOtp = totpCipher.generateKey();
         request.setParameterInSession(KEY_IN_SESSION_FLAG, keyForOtp);
 
-        String format = "PNG";
+        String format = "png";
         request.getResponse().setContentType("image/" + format);
 
         String loginUser = request.getUser();
         String qrCode = "otpauth://totp/" + loginUser + "?secret=" + keyForOtp;
         QrGenerator qrGenerator = Main.getService(QrGenerator.class);
         byte[] bytes = qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
-        // 二维码返回到浏览器
-        String body = Main.getService(CryptoService.class).getBase64Coder().encode(bytes);
-        request.getResponse().addData(new HashMap<String, String>() {{
-            put("FOR-FileView", body);
-        }});
+        request.getResponse().setBodyBytes(bytes);
     }
 
     @ModelAction(
@@ -201,7 +192,7 @@ public class Password extends ModelBase {
             info = {"验证并刷新动态密码。", "en:Verify and refresh the OTP."})
     public void confirmKey(Request request) throws Exception {
         boolean result = false;
-        String reqCode = request.getParameter("otp");
+        String reqCode = request.getNonModelParameter("otp");
         if (Utils.notBlank(reqCode)) {
             String keyForOtp = request.getParameterInSession(KEY_IN_SESSION_FLAG);
             TotpCipher totpCipher = getAppContext().getService(CryptoService.class).getTotpCipher();

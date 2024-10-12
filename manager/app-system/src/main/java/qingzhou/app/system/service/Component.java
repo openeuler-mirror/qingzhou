@@ -24,13 +24,13 @@ import qingzhou.registry.ModelFieldInfo;
 )
 public class Component extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
-            list = true,
+            list = true, search = true,
             name = {"组件名称", "en:Component Name"},
             info = {"组件名称", "en:Component Name"})
     public String id;
 
     @ModelField(
-            list = true,
+            list = true, search = true,
             name = {"组件类型", "en:Component Type"},
             info = {"组件类型", "en:Component type"})
     public String type;

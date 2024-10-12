@@ -23,22 +23,13 @@ public class ModelFieldInfo {
     private int lengthMax;
     private boolean host;
     private boolean port;
-    private String noChar;
-    private String[] noString;
+    private String[] forbid;
+    private String[] skip;
     private String pattern;
     private String show;
-    private String readonly;
+    private String readOnly;
     private String link;
     private String[] color;
-    private boolean showMoreOnTop;
-
-    public boolean isShowMoreOnTop() {
-        return showMoreOnTop;
-    }
-
-    public void setShowMoreOnTop(boolean showMoreOnTop) {
-        this.showMoreOnTop = showMoreOnTop;
-    }
 
     public String[] getColor() {
         return color;
@@ -243,20 +234,20 @@ public class ModelFieldInfo {
         this.port = port;
     }
 
-    public String getNoChar() {
-        return noChar;
+    public String[] getSkip() {
+        return skip;
     }
 
-    public void setNoChar(String noChar) {
-        this.noChar = noChar;
+    public void setSkip(String[] skip) {
+        this.skip = skip;
     }
 
-    public String[] getNoString() {
-        return noString;
+    public String[] getForbid() {
+        return forbid;
     }
 
-    public void setNoString(String[] noString) {
-        this.noString = noString;
+    public void setForbid(String[] forbid) {
+        this.forbid = forbid;
     }
 
     public String getShow() {
@@ -264,11 +255,11 @@ public class ModelFieldInfo {
     }
 
     public String getReadOnly() {
-        return readonly;
+        return readOnly;
     }
 
-    public void setReadOnly(String readonly) {
-        this.readonly = readonly;
+    public void setReadOnly(String readOnly) {
+        this.readOnly = readOnly;
     }
 
     public void setShow(String show) {

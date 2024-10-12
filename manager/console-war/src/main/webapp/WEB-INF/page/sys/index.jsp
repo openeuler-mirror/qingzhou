@@ -278,7 +278,7 @@
 
 <script>
 	var global_setting = {
-		separa: ',',
+		DOWNLOAD_FILE_NAMES_SP: '<%=DeployerConstants.DOWNLOAD_FILE_NAMES_SP%>',
 		downdloadGroupSepara: '/',
 		downloadFileNames: '<%=DeployerConstants.DOWNLOAD_FILE_NAMES%>',
         filesName: 'files',
@@ -332,7 +332,7 @@
             }
         };
 
-        var url = "<%=PageUtil.buildCustomUrl(request, response, qzRequest, ViewManager.htmlView, DeployerConstants.MODEL_APP, DeployerConstants.ACTION_MANAGE + "/" + appName)%>"
+        var url = "<%=PageUtil.buildCustomUrl(request, response, qzRequest, HtmlView.FLAG, DeployerConstants.MODEL_APP, DeployerConstants.ACTION_MANAGE + "/" + appName)%>"
         initializeManager(firstAppElement, url);
     });
 	<%

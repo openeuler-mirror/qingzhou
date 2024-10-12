@@ -20,6 +20,9 @@ public class ResponseImpl implements Response {
     private final Map<String, String> parametersInSession = new HashMap<>();
     private final Map<String, String> headers = new LinkedHashMap<>();
     private final Map<String, Long> dateHeaders = new LinkedHashMap<>();
+    private byte[] bodyBytes;
+    private String downloadName;
+    private final Map<String, String> parameters = new HashMap<>();
 
     @Override
     public void setSuccess(boolean success) {
@@ -150,7 +153,29 @@ public class ResponseImpl implements Response {
         return dateHeaders.keySet();
     }
 
+    @Override
+    public void setBodyBytes(byte[] bytes) {
+        bodyBytes = bytes;
+    }
+
+    public byte[] getBodyBytes() {
+        return bodyBytes;
+    }
+
+    public String getDownloadName() {
+        return downloadName;
+    }
+
+    @Override
+    public void setDownloadName(String downloadName) {
+        this.downloadName = downloadName;
+    }
+
     public Map<String, String> getParametersInSession() {
         return parametersInSession;
+    }
+
+    public Map<String, String> getParameters() {
+        return parameters;
     }
 }

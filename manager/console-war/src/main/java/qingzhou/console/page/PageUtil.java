@@ -15,7 +15,7 @@ import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.view.ViewManager;
+import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
@@ -183,7 +183,7 @@ public class PageUtil {
         StringBuilder menuHtml = new StringBuilder();
         menuHtml.append("<li class=\"treeview ").append("\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + ViewManager.htmlView + "/" + qzRequest.getApp() + "/" + modelInfo.getCode() + "/" + modelInfo.getEntrance();
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + qzRequest.getApp() + "/" + modelInfo.getCode() + "/" + modelInfo.getEntrance();
         menuHtml.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(modelInfo.getCode()).append("'").append("style=\" text-indent:").append(menuTextLeft).append("px;\"").append(">");
         menuHtml.append("<i class='icon icon-").append(modelInfo.getIcon()).append("'></i>");
         menuHtml.append("<span>").append(I18n.getModelI18n(qzRequest.getApp(), "model." + modelInfo.getCode())).append("</span>");

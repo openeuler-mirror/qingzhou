@@ -1,15 +1,5 @@
 package qingzhou.agent.impl;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
-
 import qingzhou.crypto.MessageDigest;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -21,6 +11,9 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
+
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 
 class Heartbeat implements Process {
     private final Map<String, String> config;
@@ -63,7 +56,7 @@ class Heartbeat implements Process {
         if (masterUrl.endsWith("/")) {
             masterUrl = masterUrl.substring(0, masterUrl.length() - 1);
         }
-        String baseUri = masterUrl + DeployerConstants.REST_PREFIX + "/" + DeployerConstants.JSON_VIEW + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
+        String baseUri = masterUrl + DeployerConstants.REST_PREFIX + "/" + DeployerConstants.JSON_VIEW_FLAG + "/" + DeployerConstants.APP_SYSTEM + "/" + DeployerConstants.MODEL_MASTER + "/";
         checkUrl = baseUri + DeployerConstants.ACTION_CHECK;
         registerUrl = baseUri + DeployerConstants.ACTION_REGISTER;
 

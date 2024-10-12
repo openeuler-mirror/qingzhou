@@ -7,6 +7,8 @@ import java.util.Collection;
  * 应用上下文接口，提供应用元数据、平台信息获取，以及服务定位、临时文件管理、国际化信息、菜单管理和动作过滤器管理等功能。
  */
 public interface AppContext {
+    Request getCurrentRequest();
+
     /**
      * 获取应用程序目录的文件对象。
      *
@@ -42,11 +44,6 @@ public interface AppContext {
      * 根据 getRequestLang() 返回值查找 i18n
      */
     String getI18n(String key, Object... args);
-
-    /**
-     * 同 qingzhou.api.Request#getLang()
-     */
-    Lang getRequestLang();
 
     /**
      * 添加菜单项。

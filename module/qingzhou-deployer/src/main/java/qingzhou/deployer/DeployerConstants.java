@@ -32,7 +32,6 @@ public interface DeployerConstants {
     String UPLOAD_FILE_TEMP_SUB_DIR = "QINGZHOU_UPLOAD_FILE_TEMP_SUB_DIR";
     String DOWNLOAD_KEY = "QINGZHOU_DOWNLOAD_KEY";
     String DOWNLOAD_OFFSET = "QINGZHOU_DOWNLOAD_OFFSET";
-    String DOWNLOAD_BLOCK = "QINGZHOU_DOWNLOAD_BLOCK";
     String DOWNLOAD_FILE_NAMES = "QINGZHOU_DOWNLOAD_FILE_NAMES";
     String AGENT_INSTALL_APP = "AGENT_INSTALL_APP";
     String AGENT_UNINSTALL_APP = "AGENT_UNINSTALL_APP";
@@ -43,7 +42,7 @@ public interface DeployerConstants {
 
     // 控制台参数
     String REST_PREFIX = "/rest";
-    String JSON_VIEW = "json";
+    String JSON_VIEW_FLAG = "json";
 
     // 模块间通信参数
     String JSON_DATA = "data";
@@ -56,6 +55,7 @@ public interface DeployerConstants {
     String app_Stopped = "Stopped";
     String BATCH_ID_SEPARATOR = ",";
     String DEFAULT_DATA_SEPARATOR = ",";
+    String DOWNLOAD_FILE_NAMES_SP = "/"; // |/\:*?"<> 这些都是 windows 平台u支持的文件名，linux 上 / 不支持文件名
 
     // 其它
     int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));

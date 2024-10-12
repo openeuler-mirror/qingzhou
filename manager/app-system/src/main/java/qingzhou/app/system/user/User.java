@@ -65,7 +65,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             required = true,
-            list = true,
+            list = true, search = true,
             name = {"账户名称", "en:User Name"},
             info = {"用于登录系统的用户名。", "en:The username used to log in to the system."})
     public String name;
@@ -120,7 +120,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             create = false, edit = false,
-            list = true,
+            list = true, search = true,
             name = {"密码最后修改时间", "en:Password Last Modified"},
             info = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}
     )
@@ -128,14 +128,14 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             type = FieldType.bool,
-            readonly = "name=qingzhou",
-            list = true,
+            readOnly = "name=qingzhou",
+            list = true, search = true,
             name = {"启用", "en:Active"},
             info = {"若未启用，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
     public Boolean active = true;
 
     @ModelField(
-            list = true,
+            list = true, search = true,
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;

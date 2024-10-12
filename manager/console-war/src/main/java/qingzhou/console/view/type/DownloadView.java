@@ -1,55 +1,60 @@
 package qingzhou.console.view.type;
 
-import qingzhou.api.Response;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
-import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
+import qingzhou.engine.util.Utils;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
 import java.util.Map;
 
-public class FileView implements View {
+public class DownloadView implements View {
+    public static final String FLAG = "download";
+
     @Override
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
-        Response response = request.getResponse();
-        String fileName = (request.getId() == null || "".equals(request.getId())) ? (request.getModel() + "-" + System.currentTimeMillis()) : request.getId();
-        HttpServletResponse servletResponse = restContext.resp;
-        servletResponse.setHeader("Content-disposition", "attachment; filename=" + fileName + ".zip");
-
-        List<Map<String, String>> dataList = response.getDataList();
-        if (dataList.isEmpty()) {
-            response.setSuccess(false);
-            return;
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        String downloadName = response.getDownloadName();
+        if (Utils.isBlank(downloadName)) {
+            downloadName = request.getId();
         }
+        if (Utils.isBlank(downloadName)) {
+            downloadName = request.getModel() + "-" + System.currentTimeMillis();
+        }
+        HttpServletResponse servletResponse = restContext.resp;
+        servletResponse.setHeader("Content-disposition", "attachment; filename=" + downloadName);
 
-        Map<String, String> result = dataList.get(0);
+        byte[] content = response.getBodyBytes();
+        Map<String, String> result = response.getParameters();
         while (true) {
-            byte[] content = SystemController.getService(CryptoService.class).getBase64Coder().decode(result.get(DeployerConstants.DOWNLOAD_BLOCK));
-
             ServletOutputStream outputStream = servletResponse.getOutputStream();
             outputStream.write(content);
             outputStream.flush();
 
-            long offset = Long.parseLong(result.get(DeployerConstants.DOWNLOAD_OFFSET));
-            if (offset < 0) break;
+            // 判断是否需要续传
+            String s = result.get(DeployerConstants.DOWNLOAD_OFFSET);
+            if (s == null) break;
+            long offset = Long.parseLong(s);
+            if (offset <= 0) break;
 
+            // 要续传
             RequestImpl req = new RequestImpl(request);
             req.setNonModelParameter(DeployerConstants.DOWNLOAD_KEY, result.get(DeployerConstants.DOWNLOAD_KEY));
             req.setNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
-            Response res = SystemController.getService(ActionInvoker.class).invokeSingle(req); // 续传
+            ResponseImpl res = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(req);
             if (res.isSuccess()) {
-                result = res.getDataList().get(0);
+                content = res.getBodyBytes();
+                result = res.getParameters();
             } else {
                 response.setSuccess(false);
                 response.setMsg(res.getMsg());
-                return;
+                break;
             }
         }
     }

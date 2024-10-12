@@ -6,7 +6,6 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.List;
 import qingzhou.api.type.*;
-import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
@@ -298,7 +297,7 @@ class DefaultAction {
 
             File fileBase = ((Download) instance).downloadData(request.getId());
             java.util.List<File> downloadFiles = new ArrayList<>();
-            for (String s : downloadFileNames.split(",")) {
+            for (String s : downloadFileNames.split(DeployerConstants.DOWNLOAD_FILE_NAMES_SP)) {
                 downloadFiles.add(FileUtil.newFile(fileBase, s));//防止路径穿越：FileUtil.newFile
             }
             downloadKey = buildDownloadKey(downloadFiles, keyDir);
@@ -310,18 +309,15 @@ class DefaultAction {
             downloadOffset = Long.parseLong(downloadOffsetParameter.trim());
         }
 
-        Map<String, String> downloadedStatus = downloadFile(downloadKey, downloadOffset, keyDir);
-        if (downloadedStatus != null) {
-            request.getResponse().addData(downloadedStatus);
-        }
+        downloadFile((ResponseImpl) request.getResponse(), downloadKey, downloadOffset, keyDir);
     }
 
     // 为支持大文件续传，下载必需有 key
-    private Map<String, String> downloadFile(String key, long offset, File baseDir) throws Exception {
-        if (key == null || key.trim().isEmpty() || !new File(baseDir, key).exists()) return null;
-        if (offset < 0) return null;
+    private void downloadFile(ResponseImpl response, String key, long offset, File baseDir) throws Exception {
+        if (key == null || key.trim().isEmpty() || !new File(baseDir, key).exists()) return;
+        if (offset < 0) return;
 
-        Map<String, String> result = new HashMap<>();
+        Map<String, String> result = response.getParameters();
         File downloadFile = new File(baseDir, key);
         result.put(DeployerConstants.DOWNLOAD_KEY, key);
 
@@ -343,8 +339,8 @@ class DefaultAction {
                     System.arraycopy(block, 0, byteRead, 0, read);
                 }
 
-                CryptoService cryptoService = app.getAppContext().getService(CryptoService.class);
-                result.put(DeployerConstants.DOWNLOAD_BLOCK, cryptoService.getBase64Coder().encode(byteRead));
+                response.setBodyBytes(byteRead);
+                response.setDownloadName(key + ".zip");
                 offset = raf.getFilePointer();
             }
         }
@@ -356,8 +352,6 @@ class DefaultAction {
             File temp = FileUtil.newFile(baseDir, key);
             FileUtil.forceDelete(temp);
         }
-
-        return result;
     }
 
     // 为支持大文件续传，下载必需有 key

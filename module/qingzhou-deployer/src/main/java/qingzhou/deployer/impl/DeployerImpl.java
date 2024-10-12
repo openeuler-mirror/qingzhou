@@ -291,6 +291,9 @@ class DeployerImpl implements Deployer {
             modelInfo.setGroupInfos(getGroupInfo(instance));
             modelInfo.setOptionInfos(getOptionInfo(modelFieldInfos, instance));
             modelInfo.setValidate(instance instanceof Validate);
+            if (instance instanceof List) {
+                modelInfo.setListPageSequence(((List) instance).listPageSequence());
+            }
             modelInfos.put(instance, modelInfo);
         }
 
@@ -366,15 +369,14 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setPattern(modelField.pattern());
             modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
-            modelFieldInfo.setNoChar(modelField.noChar());
-            modelFieldInfo.setNoString(modelField.noString());
             modelFieldInfo.setShow(modelField.show());
-            modelFieldInfo.setReadOnly(modelField.readonly());
+            modelFieldInfo.setReadOnly(modelField.readOnly());
+            modelFieldInfo.setForbid(modelField.forbid());
+            modelFieldInfo.setSkip(modelField.skip());
             modelFieldInfo.setEmail(modelField.email());
             modelFieldInfo.setFile(modelField.file());
             modelFieldInfo.setLink(modelField.link());
             modelFieldInfo.setColor(modelField.color());
-            modelFieldInfo.setShowMoreOnTop(modelField.showMoreOnTop());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);

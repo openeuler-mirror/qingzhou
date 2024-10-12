@@ -51,11 +51,8 @@ public interface List {
      * 返回值小于 1 时无效
      */
     default int totalSize(Map<String, String> query) throws Exception {
-        if (query == null || query.isEmpty()) {
-            String[] ids = allIds(query);
-            return ids != null ? ids.length : -1;
-        }
-        return -1;
+        String[] ids = allIds(query);
+        return ids != null ? ids.length : -1;
     }
 
     /**
@@ -64,5 +61,9 @@ public interface List {
      */
     default int pageSize() {
         return 10;
+    }
+
+    default boolean listPageSequence() {
+        return true;
     }
 }
