@@ -909,8 +909,7 @@ function refreshTable() {
         $("li", this).each(function (i) {
             var tdVal = $.trim($($("td", this).first()).text());
             if (tdVal !== "") {
-                //由sortable.jsp进行赋值separator的赋值
-                value += tdVal + $("input[type='hidden']", $("ul.sortable").parent()).parent().attr("separator");
+                value += tdVal + $(this).parent().parent().attr("separator");
             }
         });
         $("input[type='hidden']", $(this).parent()).val(value !== "" ? value.substring(0, value.length - 1) : value);
@@ -988,7 +987,7 @@ function refreshDict() {
             var trInputs = $("input", this);
             if (trInputs.length === 2) {
                 var entry = $.trim($(trInputs[0]).val()) + "=" + $(trInputs[1]).val();
-                value += entry + getSetting("separa");
+                value += entry + $(this).parent().parent().parent().attr("separator");
             }
         });
         value = value !== "" ? base64Encode(value.substring(0, value.length - 1)) : value;
