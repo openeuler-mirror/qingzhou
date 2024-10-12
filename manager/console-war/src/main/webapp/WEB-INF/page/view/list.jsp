@@ -164,12 +164,9 @@
                     <%
                         if (isFirst) {
                             isFirst = false;
-                            String actionName = SecurityController.isActionShow(qzApp, qzModel, Update.ACTION_EDIT, modelData, currentUser)
-                                    ? Update.ACTION_EDIT
-                                    : (
-                                    SecurityController.isActionShow(qzApp, qzModel, Show.ACTION_SHOW, modelData, currentUser)
-                                            ? Show.ACTION_SHOW
-                                            : null);
+                            String actionName = SecurityController.isActionShow(qzApp, qzModel, Show.ACTION_SHOW, modelData, currentUser)
+                                    ? Show.ACTION_SHOW
+                                    : null;
                             if (actionName != null) {
                     %>
 

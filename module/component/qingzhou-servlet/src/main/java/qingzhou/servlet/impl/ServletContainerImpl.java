@@ -1,9 +1,5 @@
 package qingzhou.servlet.impl;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.Properties;
-
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
@@ -11,18 +7,20 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.tomcat.util.modeler.Registry;
+import qingzhou.engine.util.Utils;
 import qingzhou.servlet.ServletContainer;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 public class ServletContainerImpl implements ServletContainer {
     private Tomcat tomcat;
 
     @Override
     public void start(int port, File baseDir, Properties properties) throws Exception {
-        ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
-        try {
-            // 为了 接管 tomcat 的日志系统
-            Thread.currentThread().setContextClassLoader(TomcatLogDelegate.class.getClassLoader());
-
+        // doInThreadContextClassLoader 为了 接管 tomcat 的日志系统
+        Utils.doInThreadContextClassLoader(TomcatLogDelegate.class.getClassLoader(), (Utils.InvokeInThreadContextClassLoader<Void>) () -> {
             Registry.disableRegistry(); // 禁用 tomcat 的 Jmx MBean
             tomcat = new Tomcat();
             tomcat.setBaseDir(baseDir.getAbsolutePath());
@@ -41,9 +39,9 @@ public class ServletContainerImpl implements ServletContainer {
             connector.setMaxPostSize(setMaxPostSize);
 
             tomcat.start(); // 启动服务器
-        } finally {
-            Thread.currentThread().setContextClassLoader(oldLoader);
-        }
+
+            return null;
+        });
     }
 
     @Override
