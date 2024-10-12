@@ -114,7 +114,7 @@ a:focus {
 
 /* reset style*/
 label.checkbox-inline, label.radio-inline {
-    padding-left: 0px;
+    padding-left: 0;
     padding-right: 20px;
 }
 
@@ -131,7 +131,7 @@ label.checkbox-inline, label.radio-inline {
 }
 
 .home-table td {
-    border-bottom: 0px !important;
+    border-bottom: 0 !important;
 }
 
 .home-table .home-field-info {
@@ -182,8 +182,7 @@ label.checkbox-inline, label.radio-inline {
 /*页面区块背景色*/
 .block-bg {
     background: var(--bg-color-block, #FFFFFF);
-    padding: 12px 16px;
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 /* header */
@@ -194,7 +193,7 @@ label.checkbox-inline, label.radio-inline {
 
 .main-header .navbar { /*min-height: 54px;*/
     border-radius: 0;
-    border: 0px solid red;
+    border: 0 solid red;
     background-color: #23292e; /*opacity: 0.92;*/
 }
 
@@ -212,7 +211,7 @@ label.checkbox-inline, label.radio-inline {
     line-height: 30px;
     color: #fff;
     font-size: 20px;
-    padding: 10px 0px;
+    padding: 10px 0;
     text-align: center;
     background: #23292e;
     border-bottom: 1px solid #272E3D;
@@ -241,7 +240,7 @@ label.checkbox-inline, label.radio-inline {
 }
 
 .sidebar-collapse .navbar-brand {
-    width: 0px;
+    width: 0;
 }
 
 .sidebar-collapse .navbar-brand .logo-mini {
@@ -359,7 +358,7 @@ label.checkbox-inline, label.radio-inline {
     top: 0;
     left: 0;
     margin-top: 100px;
-    padding-top: 0px;
+    padding-top: 0;
     padding-bottom: 125px;
     z-index: 810;
     color: var(--color-main-sidebar, rgba(163, 175, 183, .9));
@@ -386,7 +385,7 @@ label.checkbox-inline, label.radio-inline {
     margin-top: 8px;
     margin-bottom: 8px;
     width: 210px;
-    border: 0px;
+    border: 0;
     height: 1px;
     background: #dcdcdc;
 }
@@ -400,7 +399,7 @@ label.checkbox-inline, label.radio-inline {
 }
 
 .sidebar-menu > li, .sidebar-menu > li > ul, .sidebar-menu > li > ul > li {
-    padding-left: 0px;
+    padding-left: 0;
 }
 
 .sidebar-menu li.header {
@@ -478,7 +477,7 @@ label.checkbox-inline, label.radio-inline {
 }
 
 .treeview-menu {
-    padding-left: 0px;
+    padding-left: 0;
 }
 
 .treeview-menu > li > a {
@@ -532,7 +531,7 @@ label.checkbox-inline, label.radio-inline {
 }
 
 .sidebar-collapse .locate-t {
-    top: 0px;
+    top: 0;
 }
 
 .sidebar-collapse .locate-b {
@@ -558,12 +557,12 @@ label.checkbox-inline, label.radio-inline {
     z-index: 800;
     width: calc(100% - 238px);
     height: 100%;
-    border: 0px;
+    border: 0;
     left: 2px;
     overflow-x: hidden;
     overflow-y: auto;
     background-color: var(--bg-color-main-body, #F7F8F9);
-    padding: 0px 16px 100px 16px;
+    padding: 0 16px 100px 16px;
 }
 
 /* firefox hack */
@@ -673,12 +672,12 @@ label.checkbox-inline, label.radio-inline {
     }
 
     .main-sidebar {
-        padding-bottom: 0px;
+        padding-bottom: 0;
     }
 
     .main-body {
         width: 100%;
-        margin-left: 0px;
+        margin-left: 0;
     }
 }
 
@@ -715,7 +714,7 @@ label.checkbox-inline, label.radio-inline {
 }
 
 .model-info span {
-    padding-left: 0px;
+    padding-left: 0;
     font-family: PingFangSC-Semibold;
     font-size: 20px;
     font-weight: bold;
@@ -803,7 +802,7 @@ label.checkbox-label input:checked + .checkbox-i:after {
     font-size: 13px;
     line-height: 13px;
     position: absolute;
-    top: 0px;
+    top: 0;
     left: 1px;
 }
 
@@ -845,8 +844,8 @@ label.checkbox-label.checkbox-anim .checkbox-i {
     width: 17px;
     height: 18px;
     transition: 0.4s;
-    margin-left: 0px;
-    margin-right: 0px;
+    margin-left: 0;
+    margin-right: 0;
     margin-top: -1px;
     border-radius: 100%;
     background-color: white;
@@ -1006,7 +1005,7 @@ tw-tooltip-bottom-left:before {
     width: 100%;
     height: 50px;
     margin-top: 50px;
-    border: 0px;
+    border: 0;
     background: var(--bg-color-tab-box, white);
     font-weight: 500;
 }
@@ -1017,7 +1016,7 @@ tw-tooltip-bottom-left:before {
     color: var(--color-main-sidebar, #262626);
     /* font-weight: 500; */
     float: left;
-    margin: 11px 0px 11px 12px;
+    margin: 11px 0 11px 12px;
     background: var(--bg-color-tb-li, #DDDFE3);
     border-radius: 3px;
     border-right: 1px solid rgba(255, 255, 255, 0.2);
@@ -1070,8 +1069,8 @@ tw-tooltip-bottom-left:before {
 }
 
 .content-box {
-    border: 0px;
-    padding: 0px 0px;
+    border: 0;
+    padding: 0 0;
 }
 
 .content-box > ul > li.active {
@@ -1085,8 +1084,8 @@ tw-tooltip-bottom-left:before {
 /*遮层加载动画*/
 .mask-loading {
     position: absolute;
-    top: 0px;
-    left: 0px;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     opacity: 0.5;
@@ -1121,14 +1120,14 @@ tw-tooltip-bottom-left:before {
 /*ZUI 样式覆写及自定义样式*/
 .nav-tabs { /*background: var(--dark-black,#FFFFFF); */
     opacity: 0.9;
-    border-radius: 0px;
+    border-radius: 0;
     border: 1px solid #EFEEEE;
 }
 
 .nav.nav-tabs li {
-    border-left: 0px;
+    border-left: 0;
     border-right: 1px solid #EFEEEE;
-    border-bottom: 0px;
+    border-bottom: 0;
     min-width: 100px;
     text-align: center;
 }
@@ -1147,8 +1146,8 @@ tw-tooltip-bottom-left:before {
 .nav.nav-tabs li.active a {
     color: #D6000F;
     border-bottom: 2px solid #DF2525;
-    border-radius: 0px;
-    margin-right: 0px;
+    border-radius: 0;
+    margin-right: 0;
 }
 
 .nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover {
@@ -1213,13 +1212,13 @@ tw-tooltip-bottom-left:before {
 }
 
 .block-bg .tab-content > .tab-pane {
-    padding: 0px 20px;
+    padding: 0 20px;
 }
 
 .dashboard-rect {
     width: 204px;
     height: 92px;
-    border: 0px;
+    border: 0;
     background: #F5F7F9;
     display: inline-block;
     padding: 16px 24px;
@@ -1244,41 +1243,16 @@ tw-tooltip-bottom-left:before {
     margin-right: 6px;
 }
 
-.noticeNumber {
-    width: 10px;
-    height: 13px;
-    top: 12px;
-    font-size: 9px;
-    padding-top: 0.5px;
-    padding-top: 3px\9 \0;
-    text-align: center;
-    background-color: #f34b51;
-}
-
-/* firefox hack */
-@-moz-document url-prefix() {
-    .noticeNumber {
-        padding-top: 3px;
-    }
-}
-
-/* IE10、IE11 hack */
-@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
-    .noticeNumber {
-        padding-top: 3px;
-    }
-}
-
 .form-group input:read-only {
     cursor: default;
-    border: 0px;
+    border: 0;
     background: var(--bg-color-form-read-only, #FFF);
     box-shadow: none;
 }
 
 .form-group textarea:read-only {
     cursor: default;
-    border: 0px;
+    border: 0;
     background: var(--dark-black, #FFF);
     box-shadow: none;
     resize: none;
@@ -1532,7 +1506,7 @@ a.cancelfavorites:active {
     text-align: center;
     font-size: 24px;
     background-color: #fafafa;
-    border: 0px solid;
+    border: 0 solid;
     border-radius: 5px;
     -webkit-transition: all 0.2s ease-out;
     -moz-transition: all 0.2s ease-out;

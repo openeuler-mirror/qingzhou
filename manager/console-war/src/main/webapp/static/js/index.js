@@ -1125,7 +1125,6 @@ function initializeManager(element, url) {
         + "<a href=\"javascript:void(0);\" href-attr=\"" + url + "\" rel=\"noopener noreferrer\">"
         + "    <i class=\"icon icon-" + element.attr("model-icon") + "\"></i>"
         + "    <label>" + element.attr("data-name") + "</label>"
-        + "    <span class=\"noticeNumber label label-badge\" style=\"display:none;\">0</span>"
         + "</a>"
         + "<label class=\"close\">"
         + "    <i class=\"icon icon-times\"></i>"

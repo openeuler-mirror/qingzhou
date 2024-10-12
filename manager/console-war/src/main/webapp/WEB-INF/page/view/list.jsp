@@ -20,9 +20,17 @@
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
     <div class="block-bg">
+        <%
+            String[] fieldsToListSearch = modelInfo.getFieldsToListSearch();
+        %>
         <%@ include file="../fragment/filter_form.jsp" %>
-
+        <%
+            if (fieldsToListSearch.length > 0) {
+        %>
         <hr style="margin-top: 4px;">
+        <%
+            }
+        %>
 
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
@@ -96,10 +104,12 @@
                 </th>
                 <%
                     }
+                    if (modelInfo.isListPageSequence()) {
                 %>
                 <th class="sequence"><%=I18n.getKeyI18n("page.list.order")%>
                 </th>
                 <%
+                    }
                     for (String field : fieldsToList) {
                 %>
                 <th><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
@@ -116,7 +126,7 @@
             <%
                 java.util.List<Map<String, String>> modelDataList = qzResponse.getDataList();
                 if (modelDataList.isEmpty()) {
-                    String dataEmpty = "<tr><td colspan='" + (1 + fieldsToList.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
+                    String dataEmpty = "<tr><td colspan='" + ((modelInfo.isListPageSequence() ? 1 : 0) + fieldsToList.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
                             + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getKeyI18n("page.none") + "</span></td>";
                     out.print(dataEmpty);
@@ -136,10 +146,12 @@
                 </td>
                 <%
                     }
+                    if (modelInfo.isListPageSequence()) {
                 %>
                 <td class="sequence"><%=++listOrder%>
                 </td>
                 <%
+                    }
                     boolean isFirst = true;
                     for (String field : fieldsToList) {
                         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);

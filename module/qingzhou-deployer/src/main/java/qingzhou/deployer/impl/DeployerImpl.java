@@ -291,6 +291,9 @@ class DeployerImpl implements Deployer {
             modelInfo.setGroupInfos(getGroupInfo(instance));
             modelInfo.setOptionInfos(getOptionInfo(modelFieldInfos, instance));
             modelInfo.setValidate(instance instanceof Validate);
+            if (instance instanceof List) {
+                modelInfo.setListPageSequence(((List) instance).listPageSequence());
+            }
             modelInfos.put(instance, modelInfo);
         }
 

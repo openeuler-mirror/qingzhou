@@ -15,15 +15,15 @@ public class User extends AddModelBase implements Group, Option {
     @ModelField(
             group = "base",
             required = true,
-            list = true,
-            color = {"admin:#66de65"},
+            list = true, search = true,
+            color = {"admin:Green"},
             name = {"用户名称", "en:Username"})
     public String name;
 
     @ModelField(
             group = "base",
             required = true,
-            list = true,
+            list = true, search = true,
             pattern = "^\\+?[1-9]\\d{1,14}$",
             name = {"手机号码", "en:Mobile Phone Number"})
     public String phoneNumber;
@@ -32,7 +32,7 @@ public class User extends AddModelBase implements Group, Option {
             group = "base",
             type = FieldType.radio,
             required = true,
-            list = true,
+            list = true, search = true,
             name = {"用户性别", "en:User Gender"})
     public String sex;
 
@@ -40,7 +40,7 @@ public class User extends AddModelBase implements Group, Option {
             group = "org",
             type = FieldType.select,
             refModel = Post.class,
-            list = true, search = false,
+            list = true, search = true,
             name = {"岗位", "en:Position"})
     public String position;
 
@@ -48,55 +48,55 @@ public class User extends AddModelBase implements Group, Option {
             group = "org",
             type = FieldType.select,
             refModel = Department.class,
-            list = true,
+            list = true, search = true,
             name = {"归属部门", "en:Department "})
     public String department;
 
     @ModelField(
             type = FieldType.sortable,
-            list = true,
+            list = true, search = true,
             separator = "@",
             name = {"项目1", "en:1"})
     public String subjects1;
 
     @ModelField(
             type = FieldType.checkbox,
-            list = true,
+            list = true, search = true,
             separator = "@",
             refModel = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
     @ModelField(
             type = FieldType.multiselect,
-            list = true,
+            list = true, search = true,
             separator = "@",
             refModel = Post.class,
             name = {"multiselect", "en:1"})
     public String multiselect;
     @ModelField(
             type = FieldType.kv,
-            list = true,
+            list = true, search = true,
             separator = "@",
             name = {"kv", "en:1"})
     public String kv;
 
     @ModelField(
             type = FieldType.sortablecheckbox,
-            list = true,
+            list = true, search = true,
             separator = "#",
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
             type = FieldType.sortablecheckbox,
-            list = true,
+            list = true, search = true,
             separator = "#",
             name = {"项目3", "en:3"})
     public String subjects3;
 
     @ModelField(
             type = FieldType.textarea,
-            list = true, search = false,
+            list = true, search = true,
             link = "department.email",
             skip = {">", "("},
             name = {"备注", "en:Notes"})
@@ -116,6 +116,11 @@ public class User extends AddModelBase implements Group, Option {
     @Override
     public String idField() {
         return "name";
+    }
+
+    @Override
+    public boolean listPageSequence() {
+        return false;
     }
 
     @ModelAction(

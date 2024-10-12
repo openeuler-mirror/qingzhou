@@ -56,7 +56,7 @@ public @interface ModelField {
 
     boolean list() default false; // 是否显示在列表中。
 
-    boolean search() default true; // 是否支持搜索，在 list() 为 true 时有效
+    boolean search() default false; // 是否支持列头搜索
 
     /**
      * 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数

@@ -27,22 +27,22 @@ import java.util.zip.ZipFile;
 public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelField(
             create = false,
-            list = true,
+            list = true, search = true,
             name = {"产品版本", "en:Product Version"},
             info = {"产品的版本号。", "en:Version number of the product."})
     public String version;
 
     @ModelField(
             create = false,
-            list = true,
+            list = true, search = true,
             name = {"构建日期", "en:Build Date"},
             info = {"此版本的构建日期。", "en:The build date of this release."})
     public String buildDate;
 
     @ModelField(
             create = false,
-            list = true,
-            color = {"true:#66de65", "false:#d6d4d4"},
+            list = true, search = true,
+            color = {"true:Green", "false:Gray"},
             name = {"生效中", "en:Running"},
             info = {"此版本是否处于生效状态。", "en:Whether this version is in effect."})
     public String running;
@@ -83,6 +83,11 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @Override
     public String idField() {
         return "version";
+    }
+
+    @Override
+    public boolean listPageSequence() {
+        return false;
     }
 
     @Override

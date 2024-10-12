@@ -15,27 +15,27 @@ import qingzhou.app.ExampleMain;
 public class Post extends AddModelBase implements Option {
     @ModelField(
             required = true,
-            list = true,
+            list = true, search = true,
             name = {"岗位名称", "en:Post Name"},
             info = {"岗位名称。", "en:Post name."})
     public String name;
 
     @ModelField(
             required = true,
-            list = true,
+            list = true, search = true,
             name = {"岗位编码", "en:Post Code"})
     public String postCode;
 
     @ModelField(
             type = FieldType.radio,
-            color = {"正常:#66de65", "停用:#fb4404"},
-            list = true,
+            color = {"yes:Green", "no:Red"},
+            list = true, search = true,
             name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
     @ModelField(
             type = FieldType.textarea,
-            list = true,
+            list = true, search = true,
             name = {"备注", "en:Notes"})
     public String notes;
 

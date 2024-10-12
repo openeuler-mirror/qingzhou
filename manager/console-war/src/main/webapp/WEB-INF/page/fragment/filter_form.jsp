@@ -1,16 +1,20 @@
 <%@ page pageEncoding="UTF-8" %>
 
+<%
+    if (fieldsToListSearch.length > 0) {
+%>
+
 <form name="filterForm" id="filterForm" method="POST"
       action="<%=RESTController.encodeURL( response, HtmlView.FLAG + "/" + qzApp + "/" + qzModel + "/" + qingzhou.api.type.List.ACTION_LIST)%>">
     <div class="row filterForm" style="margin-top: 10px;">
         <%
-            for (String fieldName : modelInfo.getFieldsToListSearch()) {
+            for (String fieldName : fieldsToListSearch) {
                 ItemInfo[] fieldOptions = SystemController.getOptions(qzApp, modelInfo, fieldName);
         %>
         <div class='col-md-2 col-sm-3 col-xs-4 list-page-padding-bottom'>
             <div class="input-control">
                 <%
-                    if (fieldOptions != null && fieldOptions.length != 0) {
+                    if (fieldOptions.length != 0) {
                         String selectVal = "";
                         StringBuilder selectHtml = new StringBuilder("<ul class=\"list\">");
                         selectHtml.append("<li data-value=\"\" class=\"option\"></li>");
@@ -59,3 +63,7 @@
         </div>
     </div>
 </form>
+
+<%
+    }
+%>

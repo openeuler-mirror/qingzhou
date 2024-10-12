@@ -17,6 +17,7 @@ public class ModelInfo {
     private boolean hidden;
     private String idField;
     private boolean validate;
+    private boolean listPageSequence;
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
@@ -89,17 +90,18 @@ public class ModelInfo {
     }
 
     public String[] getFieldsToListSearch() {
-        return getFieldsForList(true);
+        List<String> list = new ArrayList<>();
+        for (ModelFieldInfo fieldInfo : modelFieldInfos) {
+            if (fieldInfo.isSearch()) {
+                list.add(fieldInfo.getCode());
+            }
+        }
+        return list.toArray(new String[0]);
     }
 
     public String[] getFieldsToList() {
-        return getFieldsForList(false);
-    }
-
-    public String[] getFieldsForList(boolean filterSearch) {
         List<String> list = new ArrayList<>();
         for (Integer i : getFieldsIndexToList()) {
-            if (filterSearch && !modelFieldInfos[i].isSearch()) continue;
             list.add(modelFieldInfos[i].getCode());
         }
         return list.toArray(new String[0]);
@@ -275,6 +277,14 @@ public class ModelInfo {
 
     public void setValidate(boolean validate) {
         this.validate = validate;
+    }
+
+    public boolean isListPageSequence() {
+        return listPageSequence;
+    }
+
+    public void setListPageSequence(boolean listPageSequence) {
+        this.listPageSequence = listPageSequence;
     }
 
     @Override

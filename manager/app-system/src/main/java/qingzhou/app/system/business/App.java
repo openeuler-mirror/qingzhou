@@ -63,7 +63,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
             required = true,
             create = false, edit = false,
             forbid = {DeployerConstants.APP_SYSTEM},
-            list = true,
+            list = true, search = true,
             name = {"应用名称", "en:App Name"},
             info = {"应用包的名称，表示该应用的业务系统种类，一种业务系统可安装在多个轻舟实例上，每一次的安装都会有唯一的 ID 与之对应。",
                     "en:The name of the application package indicates the type of business system of the application, and a business system can be deployed on multiple Qingzhou instances, and each deployment will have a unique ID corresponding to it."})
@@ -99,15 +99,15 @@ public class App extends ModelBase implements qingzhou.api.type.List {
             required = true,
             refModel = Instance.class,
             separator = App.instanceSP,
-            list = true,
+            list = true, search = true,
             name = {"安装实例", "en:Instance"},
             info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
     public String instances = DeployerConstants.INSTANCE_LOCAL;
 
     @ModelField(
-            list = true,
+            list = true, search = true,
             create = false, edit = false,
-            color = {DeployerConstants.app_Started + ":#66de65", DeployerConstants.app_Stopped + ":#d6d4d4"},
+            color = {DeployerConstants.app_Started + ":Green", DeployerConstants.app_Stopped + ":Gray"},
             name = {"状态", "en:State"},
             info = {"指示应用的当前运行状态。", "en:Indicates the current running state of the app."})
     public String state;
