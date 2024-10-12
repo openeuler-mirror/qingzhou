@@ -1,6 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 
-<div class="form-control-kv">
+<div class="form-control-kv" separator="<%=modelField.getSeparator()%>">
 	<input type="hidden" name="<%=fieldName%>" value='<%=fieldValue%>'>
 	<table class="kv table table-bordered">
 		<tr>
