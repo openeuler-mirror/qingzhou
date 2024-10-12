@@ -770,6 +770,7 @@ function bindFormEvent() {
                 }
                 $(".tab-has-error", thisForm).removeClass("tab-has-error");
                 $(".form-group .tw-error-info", thisForm).html("");
+                $(".has-error", thisForm).removeClass("has-error");
                 $("select[multiple='multiple']", thisForm).multipleSelect("refresh");
                 return true;
             },
