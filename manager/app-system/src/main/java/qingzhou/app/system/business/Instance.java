@@ -31,7 +31,7 @@ public class Instance extends ModelBase implements List, Monitor, Group {
     private static final String ID_KEY = "name";
 
     @ModelField(
-            list = true, search = true,
+            search = true,
             name = {"实例名称", "en:Instance Name"},
             info = {"表示该实例的名称，用于识别和管理该实例。",
                     "en:Indicates the name of the instance, which is used to identify and manage the instance."})

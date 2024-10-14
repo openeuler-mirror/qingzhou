@@ -14,7 +14,7 @@ import qingzhou.app.ExampleMain;
 public class Cluster extends AddModelBase {
     @ModelField(
             required = true,
-            list = true, search = true,
+            search = true,
             color = {"admin:Green"},
             name = {"集群名称", "en:Username"})
     public String name;

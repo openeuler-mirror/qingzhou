@@ -65,7 +65,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             required = true,
-            list = true, search = true,
+            search = true,
             name = {"账户名称", "en:User Name"},
             info = {"用于登录系统的用户名。", "en:The username used to log in to the system."})
     public String name;
@@ -136,6 +136,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             list = true, search = true,
+            detail = true,
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;

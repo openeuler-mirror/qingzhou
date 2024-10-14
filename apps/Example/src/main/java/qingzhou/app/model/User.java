@@ -15,7 +15,7 @@ public class User extends AddModelBase implements Group, Option {
     @ModelField(
             group = "base",
             required = true,
-            list = true, search = true,
+            search = true,
             color = {"admin:Green"},
             name = {"用户名称", "en:Username"})
     public String name;
@@ -61,35 +61,30 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelField(
             type = FieldType.checkbox,
-            list = true, search = true,
             separator = "@",
             refModel = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
     @ModelField(
             type = FieldType.multiselect,
-            list = true, search = true,
             separator = "@",
             refModel = Post.class,
             name = {"multiselect", "en:1"})
     public String multiselect;
     @ModelField(
             type = FieldType.kv,
-            list = true, search = true,
             separator = "@",
             name = {"kv", "en:1"})
     public String kv;
 
     @ModelField(
             type = FieldType.sortablecheckbox,
-            list = true, search = true,
             separator = "#",
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
             type = FieldType.sortablecheckbox,
-            list = true, search = true,
             separator = "#",
             name = {"项目3", "en:3"})
     public String subjects3;

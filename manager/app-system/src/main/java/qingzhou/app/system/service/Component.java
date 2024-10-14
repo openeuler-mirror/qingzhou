@@ -24,7 +24,7 @@ import java.util.Map;
 )
 public class Component extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
-            list = true, search = true,
+            search = true,
             widthPercent = 30,
             name = {"组件名称", "en:Component Name"},
             info = {"组件名称", "en:Component Name"})
