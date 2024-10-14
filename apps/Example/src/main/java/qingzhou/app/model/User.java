@@ -54,7 +54,7 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelField(
             type = FieldType.sortable,
-            list = true, search = true,
+            list = true,
             separator = "@",
             name = {"项目1", "en:1"})
     public String subjects1;
