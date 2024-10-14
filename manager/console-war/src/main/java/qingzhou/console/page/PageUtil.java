@@ -70,35 +70,42 @@ public class PageUtil {
     }
 
     public static String styleFieldValue(String value, ModelFieldInfo fieldInfo) {
-        if (fieldInfo.getType().equals(FieldType.datetime.name())) {
-            Date date = new Date();
-            date.setTime(Long.parseLong(value));
-            value = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(date);
-        }
+        if (Utils.isBlank(value)) return value;
 
-        String[] colorInfo = fieldInfo.getColor();
-        if (colorInfo == null) return value;
+        try {
+            if (fieldInfo.getType().equals(FieldType.datetime.name())) {
+                Date date = new Date();
 
-        String colorStyle = "";
-        for (String condition : colorInfo) {
-            String[] array = condition.split(":");
-            if (array.length != 2) {
-                continue;
+                date.setTime(Long.parseLong(value));
+                value = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(date);
             }
-            if (array[0].equals(value)) {
-                colorStyle = "color:" + array[1];
-            }
-        }
-        int maxLenToShow = 15;
-        if (value.length() > maxLenToShow) {
-            return "<span style=\" "+ colorStyle +" \" data-toggle=\"tooltip\" title=\"" + value + "\">" + value.substring(0, maxLenToShow) + "...</span>";
-        } else {
-            if (Utils.notBlank(colorStyle)) {
-                return "<span style=\"" + colorStyle + "\">" + value + "</span>";
-            }
-        }
 
-        return value;
+            String[] colorInfo = fieldInfo.getColor();
+            if (colorInfo == null) return value;
+
+            String colorStyle = "";
+            for (String condition : colorInfo) {
+                String[] array = condition.split(":");
+                if (array.length != 2) {
+                    continue;
+                }
+                if (array[0].equals(value)) {
+                    colorStyle = "color:" + array[1];
+                }
+            }
+            int maxLenToShow = fieldInfo.getShowLength();
+            if (value.length() > maxLenToShow) {
+                return "<span style=\" " + colorStyle + " \" data-toggle=\"tooltip\" title=\"" + value + "\">" + value.substring(0, maxLenToShow) + "...</span>";
+            } else {
+                if (Utils.notBlank(colorStyle)) {
+                    return "<span style=\"" + colorStyle + "\">" + value + "</span>";
+                }
+            }
+
+            return value;
+        } catch (Exception e) {
+            return value;
+        }
     }
 
     public static String buildMenu(HttpServletRequest request, HttpServletResponse response, Request qzRequest) {

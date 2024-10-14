@@ -9,14 +9,11 @@ import qingzhou.logger.Logger;
 public class ExampleMain implements QingzhouApp {
     public static final String MENU_1 = "MENU_1";
     public static final String MENU_11 = "MENU_11";
-    public static AppContext appContext;
 
     public static Logger logger;
 
     @Override
     public void start(AppContext appContext) {
-        ExampleMain.appContext = appContext;
-
         logger = appContext.getService(Logger.class);
         logger.info("启动样例应用");
 

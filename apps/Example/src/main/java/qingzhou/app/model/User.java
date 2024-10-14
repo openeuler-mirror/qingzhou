@@ -123,9 +123,15 @@ public class User extends AddModelBase implements Group, Option {
         return false;
     }
 
+    @Override
+    public String[] disableBatchActions() {
+        return new String[]{"delete"};
+    }
+
     @ModelAction(
             code = "share", icon = "share-alt",
             head = true, order = 2,
+            page = "list",// todo 如何跳转到qingzhou的action上？
             name = {"头部按钮", "en:Share"},
             info = {"头部按钮", "en:Share"})
     public void share(Request request) {

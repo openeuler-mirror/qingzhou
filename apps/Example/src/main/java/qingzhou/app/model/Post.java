@@ -30,13 +30,13 @@ public class Post extends AddModelBase implements Option {
             type = FieldType.radio,
             color = {"yes:Green", "no:Red"},
             list = true, search = true,
-            detail = true,
             widthPercent = 50,
             name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
     @ModelField(
             type = FieldType.textarea,
+            color = {"12345678901234456789:Green", "00:Red"},
             list = true, search = true,
             name = {"备注", "en:Notes"})
     public String notes;

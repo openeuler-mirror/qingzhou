@@ -18,6 +18,7 @@ public class ModelInfo {
     private String idField;
     private boolean validate;
     private boolean listPageSequence;
+    private String[] disableBatchActions;
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
@@ -38,7 +39,21 @@ public class ModelInfo {
 
     public String[] getBatchActionNames() {
         return Arrays.stream(modelActionInfos)
-                .filter(action -> action.isList() && action.isBatch())
+                .filter(action -> {
+                    boolean isBatch = action.isList() && action.isBatch();
+                    if (!isBatch) return false;
+
+                    String[] disableBatchActions = getDisableBatchActions();
+                    if (disableBatchActions != null) {
+                        for (String disableBatchAction : disableBatchActions) {
+                            if (action.getCode().equals(disableBatchAction)) {
+                                return false;
+                            }
+                        }
+                    }
+
+                    return true;
+                })
                 .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
                 .map(ModelActionInfo::getCode)
                 .toArray(String[]::new);
@@ -285,6 +300,14 @@ public class ModelInfo {
 
     public void setListPageSequence(boolean listPageSequence) {
         this.listPageSequence = listPageSequence;
+    }
+
+    public String[] getDisableBatchActions() {
+        return disableBatchActions;
+    }
+
+    public void setDisableBatchActions(String[] disableBatchActions) {
+        this.disableBatchActions = disableBatchActions;
     }
 
     @Override
