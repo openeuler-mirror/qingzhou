@@ -9,44 +9,17 @@
     <div class="row filterForm" style="margin-top: 10px;">
         <%
             for (String fieldName : fieldsToListSearch) {
-                ItemInfo[] fieldOptions = SystemController.getOptions(qzApp, modelInfo, fieldName);
         %>
         <div class='col-md-2 col-sm-3 col-xs-4 list-page-padding-bottom'>
             <div class="input-control">
                 <%
-                    if (fieldOptions.length != 0) {
-                        String selectVal = "";
-                        StringBuilder selectHtml = new StringBuilder("<ul class=\"list\">");
-                        selectHtml.append("<li data-value=\"\" class=\"option\"></li>");
-                        String inputParam = request.getParameter(fieldName);
-                        for (ItemInfo itemInfo : fieldOptions) {
-                            String option = itemInfo.getName();
-                            String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
-                            boolean setSelect = Objects.equals(inputParam, option);
-                            if (setSelect) {
-                                selectVal = option;
-                                selectHtml.append("<li data-value=\"").append(option).append("\" class=\"option selected focus\">").append(optionI18n).append("</li>");
-                            } else {
-                                selectHtml.append("<li data-value=\"").append(option).append("\" class=\"option\">").append(optionI18n).append("</li>");
-                            }
-                        }
-                        selectHtml.append("</ul>");
-
-                        selectHtml.insert(0, "<input type=\"text\" name=\"" + fieldName + "\" value=\"" + selectVal + "\" placeholder=\"" + I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName) + "\" >");
-                        selectHtml = new StringBuilder("<div class=\"form-control nice-select wide\">" + selectHtml + "</div>");
-
-                        out.print(selectHtml.toString());
-                    } else {
-                        String showHtml = request.getParameter(fieldName);
-                        if (showHtml == null) {
-                            showHtml = "";
-                        }
+                    String showHtml = request.getParameter(fieldName);
+                    if (showHtml == null) {
+                        showHtml = "";
+                    }
                 %>
                 <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control"
                        placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>">
-                <%
-                    }
-                %>
             </div>
         </div>
         <%
