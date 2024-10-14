@@ -16,7 +16,7 @@ import java.util.Map;
 public class Department extends AddModelBase implements Echo {
     @ModelField(
             required = true,
-            list = true, search = true,
+            search = true,
             name = {"部门名称", "en:Department Name"},
             info = {"该部门的详细名称。", "en:The name of the department."})
     public String name;

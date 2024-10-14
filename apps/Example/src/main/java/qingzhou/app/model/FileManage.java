@@ -16,7 +16,7 @@ import java.util.Map;
 public class FileManage extends ModelBase implements Add, Show, List, Delete, Download {
     public static final String FILE_BASEDIR = "files";
 
-    @ModelField(required = true, create = false, edit = false, list = true, name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
+    @ModelField(required = true, create = false, edit = false, name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
     public String name;
 
     @ModelField(type = FieldType.file, required = true, list = true, name = {"上传文件", "en:Upload File"}, info = {"上传一个文件到服务器，文件须是 *.html类型的。", "en:Upload a file to the server of type *.html."})
@@ -34,28 +34,12 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
 
     @Override
     public File downloadData(String id) {
-        return new File(new File(ExampleMain.appContext.getAppDir(), FILE_BASEDIR), id);
-    }
-
-    @ModelAction(code = Add.ACTION_ADD, icon = "save", name = {"添加", "en:Add"}, info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
-    public void add(Request request) throws Exception {
-        String file = request.getParameter("file");
-        File srcFile = new File(file);
-        if (!srcFile.exists()) {
-            request.getResponse().setSuccess(false);
-            return;
-        }
-
-        String fileName = srcFile.getName();
-
-        File path = new File(new File(ExampleMain.appContext.getAppDir(), FILE_BASEDIR), fileName.substring(0, fileName.indexOf(".")));
-        Files.createDirectories(path.toPath());
-        Files.copy(srcFile.toPath(), new File(path, fileName).toPath());
+        return new File(new File(getAppContext().getAppDir(), FILE_BASEDIR), id);
     }
 
     @Override
     public Map<String, String> showData(String id) throws Exception {
-        File path = new File(ExampleMain.appContext.getAppDir(), FILE_BASEDIR);
+        File path = new File(getAppContext().getAppDir(), FILE_BASEDIR);
         if (path.exists()) {
             for (File file : path.listFiles()) {
                 if (!file.isDirectory()) {
@@ -65,7 +49,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
                 if (id.equals(fileName)) {
                     return new HashMap<String, String>() {{
                         put("name", fileName);
-                        put("file", file.getAbsolutePath().replace(ExampleMain.appContext.getAppDir().getAbsolutePath(), ""));
+                        put("file", file.getAbsolutePath().replace(getAppContext().getAppDir().getAbsolutePath(), ""));
                     }};
                 }
             }
@@ -75,7 +59,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
 
     @Override
     public String[] allIds(Map<String, String> query) {
-        File path = new File(ExampleMain.appContext.getAppDir(), FILE_BASEDIR);
+        File path = new File(getAppContext().getAppDir(), FILE_BASEDIR);
         java.util.List<String> ids = new ArrayList<>();
         if (path.exists()) {
             for (File file : path.listFiles()) {
@@ -116,12 +100,23 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
 
     @Override
     public void addData(Map<String, String> data) throws Exception {
+        String file = data.get("file");
+        File srcFile = new File(file);
+        if (!srcFile.exists()) {
+            getAppContext().getCurrentRequest().getResponse().setSuccess(false);
+            return;
+        }
 
+        String fileName = srcFile.getName();
+
+        File path = new File(new File(getAppContext().getAppDir(), FILE_BASEDIR), fileName.substring(0, fileName.indexOf(".")));
+        Files.createDirectories(path.toPath());
+        Files.copy(srcFile.toPath(), new File(path, fileName).toPath());
     }
 
     @Override
     public void deleteData(String id) throws Exception {
-        File path = new File(ExampleMain.appContext.getAppDir(), FILE_BASEDIR);
+        File path = new File(getAppContext().getAppDir(), FILE_BASEDIR);
         if (path.exists()) {
             for (File file : path.listFiles()) {
                 if (!file.isDirectory()) {

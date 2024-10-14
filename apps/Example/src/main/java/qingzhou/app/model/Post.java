@@ -15,13 +15,14 @@ import qingzhou.app.ExampleMain;
 public class Post extends AddModelBase implements Option {
     @ModelField(
             required = true,
-            list = true, search = true,
+            search = true,
             name = {"岗位名称", "en:Post Name"},
             info = {"岗位名称。", "en:Post name."})
     public String name;
 
     @ModelField(
             required = true,
+            widthPercent = 10,
             list = true, search = true,
             name = {"岗位编码", "en:Post Code"})
     public String postCode;
@@ -30,13 +31,13 @@ public class Post extends AddModelBase implements Option {
             type = FieldType.radio,
             color = {"yes:Green", "no:Red"},
             list = true, search = true,
-            detail = true,
-            widthPercent = 50,
+            widthPercent = 20,
             name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
     @ModelField(
             type = FieldType.textarea,
+            color = {"12345678901234456789:Green", "00:Red"},
             list = true, search = true,
             name = {"备注", "en:Notes"})
     public String notes;

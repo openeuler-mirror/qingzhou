@@ -119,7 +119,7 @@
                     for (String field : fieldsToList) {
                         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                         int width;
-                        if (fieldInfo.getWidthPercent() != -1) {
+                        if (fieldInfo.getWidthPercent() > 0) {
                             width = fieldInfo.getWidthPercent();
                         } else {
                             width = 100 / (fieldsToList.length + otherTh);
@@ -165,7 +165,6 @@
                 </td>
                 <%
                     }
-                    boolean isFirst = true;
                     for (String field : fieldsToList) {
                         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                         String value = modelData.get(field);
@@ -175,8 +174,7 @@
                 %>
                 <td>
                     <%
-                        if (isFirst || fieldInfo.isDetail()) {
-                            isFirst = false;
+                        if ((field.equals(idField)) || fieldInfo.isDetail()) {
                             String actionName = SecurityController.isActionShow(qzApp, qzModel, Show.ACTION_SHOW, modelData, currentUser)
                                     ? Show.ACTION_SHOW
                                     : null;

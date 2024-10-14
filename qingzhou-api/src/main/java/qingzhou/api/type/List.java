@@ -66,4 +66,8 @@ public interface List {
     default boolean listPageSequence() {
         return true;
     }
+
+    default String[] disableBatchActions() {
+        return null;
+    }
 }

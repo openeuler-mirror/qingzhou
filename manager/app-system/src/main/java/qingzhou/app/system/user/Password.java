@@ -58,7 +58,6 @@ public class Password extends ModelBase {
 
     @ModelField(
             type = FieldType.bool,
-            list = true, search = true,
             name = {"动态密码", "en:One-time password"},
             info = {"用户开启动态密码，在登录系统时，输入动态密码，可免输入账户密码。",
                     "en:When the user turns on the one-time password, when logging in to the system, enter the one-time password, and the account password is not required."})
