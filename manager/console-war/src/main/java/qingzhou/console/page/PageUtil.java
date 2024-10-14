@@ -11,6 +11,7 @@ import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -78,13 +79,22 @@ public class PageUtil {
         String[] colorInfo = fieldInfo.getColor();
         if (colorInfo == null) return value;
 
+        String colorStyle = "";
         for (String condition : colorInfo) {
             String[] array = condition.split(":");
             if (array.length != 2) {
                 continue;
             }
             if (array[0].equals(value)) {
-                return "<span style=\"color:" + array[1] + "\">" + value + "</span>";
+                colorStyle = "color:" + array[1];
+            }
+        }
+        int maxLenToShow = 15;
+        if (value.length() > maxLenToShow) {
+            return "<span style=\" "+ colorStyle +" \" data-toggle=\"tooltip\" title=\"" + value + "\">" + value.substring(0, maxLenToShow) + "...</span>";
+        } else {
+            if (Utils.notBlank(colorStyle)) {
+                return "<span style=\"" + colorStyle + "\">" + value + "</span>";
             }
         }
 
