@@ -27,7 +27,7 @@ import java.util.zip.ZipFile;
 public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     @ModelField(
             create = false,
-            list = true, search = true, detail = true,
+            search = true,
             name = {"产品版本", "en:Product Version"},
             info = {"产品的版本号。", "en:Version number of the product."})
     public String version;

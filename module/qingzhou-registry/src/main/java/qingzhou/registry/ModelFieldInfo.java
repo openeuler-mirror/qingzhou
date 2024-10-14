@@ -11,6 +11,7 @@ public class ModelFieldInfo {
     private transient Class<?> refModelClass;
     private String defaultValue;
     private boolean list;
+    private int showLength;
     private boolean search;
     private boolean detail;
     private int widthPercent;
@@ -99,6 +100,14 @@ public class ModelFieldInfo {
 
     public void setList(boolean list) {
         this.list = list;
+    }
+
+    public int getShowLength() {
+        return showLength;
+    }
+
+    public void setShowLength(int showLength) {
+        this.showLength = showLength;
     }
 
     public boolean isSearch() {

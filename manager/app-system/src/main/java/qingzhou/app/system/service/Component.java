@@ -24,7 +24,7 @@ import java.util.Map;
 )
 public class Component extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
-            list = true, search = true,
+            search = true,
             widthPercent = 30,
             name = {"组件名称", "en:Component Name"},
             info = {"组件名称", "en:Component Name"})
@@ -32,6 +32,7 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
 
     @ModelField(
             list = true, search = true,
+            showLength = 100,
             widthPercent = 70,
             name = {"组件类型", "en:Component Type"},
             info = {"组件类型", "en:Component type"})

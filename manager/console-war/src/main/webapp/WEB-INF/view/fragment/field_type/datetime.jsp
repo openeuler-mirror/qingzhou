@@ -3,7 +3,7 @@
 
 <%
     Date date = new Date();
-    if (!fieldValue.equals("0")) {
+    if (Utils.notBlank(fieldValue) && !fieldValue.equals("0")) {
         date.setTime(Long.parseLong(fieldValue));
         fieldValue = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(date);
     } else {

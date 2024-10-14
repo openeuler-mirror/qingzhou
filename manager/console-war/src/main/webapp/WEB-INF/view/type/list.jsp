@@ -97,7 +97,9 @@
             <thead>
             <tr style="height:20px;">
                 <%
+                    int otherTh = 0;
                     if (batchActions.length > 0) {
+                        otherTh += 1;
                 %>
                 <th class="custom-checkbox">
                     <input type="checkbox" class="allcheck"/>
@@ -105,14 +107,25 @@
                 <%
                     }
                     if (modelInfo.isListPageSequence()) {
+                        otherTh += 1;
                 %>
                 <th class="sequence"><%=I18n.getKeyI18n("page.list.order")%>
                 </th>
                 <%
                     }
+                    if (listActions.length > 0) {
+                        otherTh += 1;
+                    }
                     for (String field : fieldsToList) {
+                        ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
+                        int width;
+                        if (fieldInfo.getWidthPercent() > 0) {
+                            width = fieldInfo.getWidthPercent();
+                        } else {
+                            width = 100 / (fieldsToList.length + otherTh);
+                        }
                 %>
-                <th><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
+                <th style="width: <%=width%>%"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
                 </th>
                 <%
                     }
@@ -152,7 +165,6 @@
                 </td>
                 <%
                     }
-                    boolean isFirst = true;
                     for (String field : fieldsToList) {
                         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                         String value = modelData.get(field);
@@ -162,8 +174,7 @@
                 %>
                 <td>
                     <%
-                        if (isFirst) {
-                            isFirst = false;
+                        if ((field.equals(idField)) || fieldInfo.isDetail()) {
                             String actionName = SecurityController.isActionShow(qzApp, qzModel, Show.ACTION_SHOW, modelData, currentUser)
                                     ? Show.ACTION_SHOW
                                     : null;
@@ -207,12 +218,7 @@
                     </a>
                     <%
                             } else {
-                                int maxLenToShow = 15;
-                                if (value.length() > maxLenToShow) {
-                                    out.print("<span data-toggle=\"tooltip\" title=\"" + value + "\">" + value.substring(0, maxLenToShow) + "...</span>");
-                                } else {
-                                    out.print(PageUtil.styleFieldValue(value, fieldInfo));
-                                }
+                                out.print(PageUtil.styleFieldValue(value, fieldInfo));
                             }
                         }
                     %>
