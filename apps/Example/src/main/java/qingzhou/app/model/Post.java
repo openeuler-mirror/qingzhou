@@ -30,6 +30,8 @@ public class Post extends AddModelBase implements Option {
             type = FieldType.radio,
             color = {"yes:Green", "no:Red"},
             list = true, search = true,
+            detail = true,
+            widthPercent = 50,
             name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
