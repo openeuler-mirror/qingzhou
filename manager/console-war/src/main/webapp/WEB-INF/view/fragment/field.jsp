@@ -56,14 +56,14 @@
                         if (fieldValue.startsWith("http") && !fieldValue.startsWith("http-")) {
                     %>
                     <a target="_blank" href="<%=fieldValue%>">
-                        <%=PageUtil.styleFieldValue(fieldValue, modelField)%>
+                        <%=fieldValue%>
                     </a>
                     <%
                         } else {
                             if (FieldType.markdown.name().equals(modelField.getType())) {
                                 out.print("<div class=\"markdownview\">" + fieldValue + "</div>");
                             } else {
-                                out.print(PageUtil.styleFieldValue(fieldValue, modelField));
+                                out.print(fieldValue);
                             }
                         }
                     %>
