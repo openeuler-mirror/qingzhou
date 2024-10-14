@@ -1116,10 +1116,18 @@ function bindEventForListPage() {
     $("a[act-ajax='true']").unbind("click").bind("click", function (e) {
         e.preventDefault();
         var actUrl = $(this).attr("href");
+        var bindId = $(this).attr("data-id");
         showConfirm($(this).attr("act-confirm"), {
             "title": getSetting("pageConfirmTitle"),
             "btn": [getSetting("confirmBtnText"), getSetting("cancelBtnText")]
         }, function (index) {
+            if (actUrl.indexOf("app/delete") != -1){
+                $("label.close").each(function () {
+                    if ($(this).parent().attr("bind-id") === bindId){
+                        $(this).click();
+                    }
+                });
+            }
             closeLayer(index);
             confirm_method(actUrl);
         });
