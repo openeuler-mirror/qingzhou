@@ -32,7 +32,6 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
 
     @ModelField(
             list = true, search = true,
-            showLength = 100,
             widthPercent = 70,
             name = {"组件类型", "en:Component Type"},
             info = {"组件类型", "en:Component type"})

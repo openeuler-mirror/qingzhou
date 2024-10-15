@@ -149,6 +149,8 @@ public class User extends AddModelBase implements Group, Option {
                 };
             case "subjects3":
                 return Item.of(new String[]{"a", "b", "c", "d", "e"});
+            case "position":
+                return Item.of(new String[]{"a", "b", "c"});
         }
 
         return null;

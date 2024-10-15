@@ -125,26 +125,27 @@ class DefaultAction {
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request) throws Exception {
         ResponseImpl responseImpl = (ResponseImpl) request.getResponse();
-
-        Map<String, String> query = queryParams(request);
-
-        List list = (List) instance;
-        responseImpl.setTotalSize(list.totalSize(query));
-        responseImpl.setPageSize(list.pageSize());
-
         int pageNum = 1;
         try {
             pageNum = Integer.parseInt(request.getNonModelParameter("pageNum"));
         } catch (NumberFormatException ignored) {
         }
-        responseImpl.setPageNum(pageNum);
+        List list = (List) instance;
+        int pageSize = list.pageSize();
 
+        Map<String, String> query = queryParams(request);
         String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFieldsToList();
-        java.util.List<Map<String, String>> result = ((List) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList, query);
+        java.util.List<Map<String, String>> result = list.listData(pageNum, pageSize, fieldNamesToList, query);
         if (result == null) return;
+
         for (Map<String, String> data : result) {
             request.getResponse().addData(data);
         }
+        int totalSize = list.totalSize(query);
+
+        responseImpl.setTotalSize(totalSize);
+        responseImpl.setPageSize(pageSize);
+        responseImpl.setPageNum(pageNum);
     }
 
     private Map<String, String> queryParams(Request request) {

@@ -58,7 +58,7 @@ public @interface ModelField {
 
     boolean list() default false; // 是否显示在列表中。
 
-    int showLength() default 15; // 列表页面上，最多显示的字符数，超出后隐藏并悬浮显示全值
+    int ignore() default -1; // 列表页面上，最多显示的字符数，超出后隐藏并悬浮显示全值
 
     boolean search() default false; // 是否支持列头搜索
 

@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class LoginManager implements Filter<SystemControllerContext> {
     public static final String LOGIN_PATH = "/login";
@@ -361,5 +362,9 @@ public class LoginManager implements Filter<SystemControllerContext> {
         public String getRedirectUri() {
             return redirectUri;
         }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(UUID.randomUUID().toString().length());
     }
 }

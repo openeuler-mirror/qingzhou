@@ -11,7 +11,7 @@ public class ModelFieldInfo {
     private transient Class<?> refModelClass;
     private String defaultValue;
     private boolean list;
-    private int showLength;
+    private int ignore;
     private boolean search;
     private boolean detail;
     private int widthPercent;
@@ -102,12 +102,12 @@ public class ModelFieldInfo {
         this.list = list;
     }
 
-    public int getShowLength() {
-        return showLength;
+    public int getIgnore() {
+        return ignore;
     }
 
-    public void setShowLength(int showLength) {
-        this.showLength = showLength;
+    public void setIgnore(int ignore) {
+        this.ignore = ignore;
     }
 
     public boolean isSearch() {
