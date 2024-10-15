@@ -386,6 +386,11 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
+    public String[] dynamicOptionFields() {
+        return new String[0];
+    }
+
+    @Override
     public Item[] optionData(String fieldName) {
         if (fieldName.equals("digestAlg")) {
             return Item.of(new String[]{"SHA-256", "SHA-384", "SHA-512"});

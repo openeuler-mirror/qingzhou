@@ -17,7 +17,7 @@ public class User extends AddModelBase implements Group, Option {
             search = true,
             color = {"admin:Green"},
             name = {"用户名称", "en:Username"})
-    public String name;
+    public String id;
 
     @ModelField(
             group = "base",
@@ -106,11 +106,6 @@ public class User extends AddModelBase implements Group, Option {
     }
 
     @Override
-    public String idField() {
-        return "name";
-    }
-
-    @Override
     public boolean listPageSequence() {
         return false;
     }
@@ -128,6 +123,11 @@ public class User extends AddModelBase implements Group, Option {
             info = {"头部按钮", "en:Share"})
     public void share(Request request) {
         System.out.println("点击了头部按钮。。。");
+    }
+
+    @Override
+    public String[] dynamicOptionFields() {
+        return null;
     }
 
     @Override

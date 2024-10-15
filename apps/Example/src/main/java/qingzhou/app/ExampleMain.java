@@ -17,8 +17,8 @@ public class ExampleMain implements QingzhouApp {
         logger = appContext.getService(Logger.class);
         logger.info("启动样例应用");
 
-        appContext.addMenu(MENU_1, new String[]{"一级菜单", "en:1"}, "folder-open", 1);
-        appContext.addMenu(MENU_11, new String[]{"二级菜单", "en:11"}, "leaf", 1, MENU_1);
+        appContext.addMenu(MENU_1, new String[]{"一级菜单", "en:1"}).setIcon("folder-open").setOrder(1);
+        appContext.addMenu(MENU_11, new String[]{"二级菜单", "en:11"}).setIcon("leaf").setOrder(1).setParent(MENU_1);
 
         appContext.addActionFilter(request -> {
             String msg = String.format("有请求进入，模块：%s，操作：%s", request.getModel(), request.getAction());

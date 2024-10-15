@@ -4,7 +4,6 @@ import qingzhou.api.*;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.Utils;
 import qingzhou.http.Http;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
@@ -75,16 +74,10 @@ class AppContextImpl implements AppContext {
     }
 
     @Override
-    public void addMenu(String name, String[] i18n, String icon, int order, String... parent) {
-        String parentMenu = null;
-        for (String menu : parent) {
-            if (Utils.notBlank(menu)) {
-                parentMenu = menu;
-                break;
-            }
-        }
-        MenuInfo newMenuInfo = new MenuInfo(name, i18n, icon, order, parentMenu);
+    public Menu addMenu(String name, String[] i18n) {
+        MenuInfo newMenuInfo = new MenuInfo(name, i18n);
         app.getAppInfo().addMenuInfo(newMenuInfo);
+        return new MenuImpl(newMenuInfo);
     }
 
     @Override

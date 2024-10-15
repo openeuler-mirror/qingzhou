@@ -49,8 +49,13 @@ public class Post extends AddModelBase implements Option {
     }
 
     @Override
-    public boolean hideIdField() throws Exception {
+    public boolean hideIdField() {
         return true;
+    }
+
+    @Override
+    public String[] dynamicOptionFields() {
+        return new String[]{"postStatus"};
     }
 
     @Override

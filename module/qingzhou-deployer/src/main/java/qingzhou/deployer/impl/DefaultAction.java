@@ -61,13 +61,21 @@ class DefaultAction {
 
         Map<String, String> parameters = prepareParameters(request);
 
-        Set<String> groups = new HashSet<>();
+        Map<String, Map<String, String>> echoParameters = new LinkedHashMap<>();
         for (String p : parameters.keySet()) {
             String[] fieldEchoGroup = modelInfo.getModelFieldInfo(p).getEchoGroup();
-            groups.addAll(Arrays.asList(fieldEchoGroup));
+            for (String group : fieldEchoGroup) {
+                Map<String, String> groupParameters = echoParameters.computeIfAbsent(group, k -> new LinkedHashMap<>());
+                groupParameters.put(p, parameters.get(p));
+            }
         }
 
-        Map<String, String> data = ((Echo) instance).echoData(groups.toArray(new String[0]), parameters);
+        Echo echo = (Echo) instance;
+        Map<String, String> data = new HashMap<>();
+        echoParameters.forEach((group, groupParameters) -> {
+            Map<String, String> echoResult = echo.echoData(group, groupParameters);
+            data.putAll(echoResult);
+        });
         request.getResponse().addData(data);
     }
 

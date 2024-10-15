@@ -9,12 +9,9 @@ public class MenuInfo {
     private int order;
     private String parent;
 
-    public MenuInfo(String name, String[] i18n, String icon, int order, String parent) {
+    public MenuInfo(String name, String[] i18n) {
         this.name = name;
         this.i18n = i18n;
-        this.icon = icon;
-        this.order = order;
-        this.parent = parent;
     }
 
     public String getName() {
