@@ -158,12 +158,13 @@ class DefaultAction {
                 query.put(fieldName, val);
             }
         }
-        return query;
+
+        return query != null ? query : ((List) instance).searchParameters();
     }
 
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
-            head = true, order = -1,
+            head = true, order = 1,
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) throws Exception {
@@ -205,7 +206,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            list = true, order = 9,
+            list = true, order = 100,
             batch = true, ajax = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
@@ -227,7 +228,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
-            list = true, order = 2,
+            list = true, order = 5,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -257,7 +258,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            list = true, order = 8,
+            list = true, order = 10,
             ajax = true,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",

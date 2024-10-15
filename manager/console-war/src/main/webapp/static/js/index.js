@@ -1082,7 +1082,7 @@ function bindEventForListPage() {
             recPerPage: Number($(this).attr("recPerPage")),
             recTotal: Number($(this).attr("data-rec-total")),
             linkCreator: function (page, pager) {
-                var uri = partLinkUri + page;// + '&' + $("#filterForm").serialize()
+                var uri = partLinkUri + page;
                 return encodeURI(uri);
             },
             lang: getSetting("pageLang")

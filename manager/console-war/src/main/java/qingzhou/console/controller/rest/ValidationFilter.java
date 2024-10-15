@@ -136,7 +136,8 @@ public class ValidationFilter implements Filter<RestContext> {
             if (context.isUpdateAction && !fieldInfo.isEdit()) {
                 return null;
             }
-            if (fieldInfo.isRequired()) {
+            if (fieldInfo.getCode().equals(context.modelInfo.getIdField())
+                    || fieldInfo.isRequired()) {
                 return new String[]{"validation_required"};
             } else {
                 return null;

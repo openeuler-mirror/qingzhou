@@ -291,6 +291,7 @@ class DeployerImpl implements Deployer {
                 List listInstance = (List) instance;
                 modelInfo.setListPageSequence(listInstance.listPageSequence());
                 modelInfo.setDisableBatchActions(listInstance.disableBatchActions());
+                modelInfo.setSearchParameters(listInstance.searchParameters());
             }
             modelInfos.put(instance, modelInfo);
         }
