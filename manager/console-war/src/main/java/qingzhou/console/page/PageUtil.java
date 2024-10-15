@@ -93,9 +93,9 @@ public class PageUtil {
                     colorStyle = "color:" + array[1];
                 }
             }
-            int maxLenToShow = fieldInfo.getShowLength();
-            if (value.length() > maxLenToShow) {
-                return "<span style=\" " + colorStyle + " \" data-toggle=\"tooltip\" title=\"" + value + "\">" + value.substring(0, maxLenToShow) + "...</span>";
+            int ignore = fieldInfo.getIgnore();
+            if (ignore > 0 && value.length() > ignore) {
+                return "<span style=\" " + colorStyle + " \" data-toggle=\"tooltip\" title=\"" + value + "\">" + value.substring(0, ignore) + "...</span>";
             } else {
                 if (Utils.notBlank(colorStyle)) {
                     return "<span style=\"" + colorStyle + "\">" + value + "</span>";

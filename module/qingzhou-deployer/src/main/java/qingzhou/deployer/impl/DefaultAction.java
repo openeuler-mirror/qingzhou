@@ -61,13 +61,21 @@ class DefaultAction {
 
         Map<String, String> parameters = prepareParameters(request);
 
-        Set<String> groups = new HashSet<>();
+        Map<String, Map<String, String>> echoParameters = new LinkedHashMap<>();
         for (String p : parameters.keySet()) {
             String[] fieldEchoGroup = modelInfo.getModelFieldInfo(p).getEchoGroup();
-            groups.addAll(Arrays.asList(fieldEchoGroup));
+            for (String group : fieldEchoGroup) {
+                Map<String, String> groupParameters = echoParameters.computeIfAbsent(group, k -> new LinkedHashMap<>());
+                groupParameters.put(p, parameters.get(p));
+            }
         }
 
-        Map<String, String> data = ((Echo) instance).echoData(groups.toArray(new String[0]), parameters);
+        Echo echo = (Echo) instance;
+        Map<String, String> data = new HashMap<>();
+        echoParameters.forEach((group, groupParameters) -> {
+            Map<String, String> echoResult = echo.echoData(group, groupParameters);
+            data.putAll(echoResult);
+        });
         request.getResponse().addData(data);
     }
 
@@ -125,26 +133,27 @@ class DefaultAction {
             info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
     public void list(Request request) throws Exception {
         ResponseImpl responseImpl = (ResponseImpl) request.getResponse();
-
-        Map<String, String> query = queryParams(request);
-
-        List list = (List) instance;
-        responseImpl.setTotalSize(list.totalSize(query));
-        responseImpl.setPageSize(list.pageSize());
-
         int pageNum = 1;
         try {
             pageNum = Integer.parseInt(request.getNonModelParameter("pageNum"));
         } catch (NumberFormatException ignored) {
         }
-        responseImpl.setPageNum(pageNum);
+        List list = (List) instance;
+        int pageSize = list.pageSize();
 
+        Map<String, String> query = queryParams(request);
         String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFieldsToList();
-        java.util.List<Map<String, String>> result = ((List) instance).listData(responseImpl.getPageNum(), responseImpl.getPageSize(), fieldNamesToList, query);
+        java.util.List<Map<String, String>> result = list.listData(pageNum, pageSize, fieldNamesToList, query);
         if (result == null) return;
+
         for (Map<String, String> data : result) {
             request.getResponse().addData(data);
         }
+        int totalSize = list.totalSize(query);
+
+        responseImpl.setTotalSize(totalSize);
+        responseImpl.setPageSize(pageSize);
+        responseImpl.setPageNum(pageNum);
     }
 
     private Map<String, String> queryParams(Request request) {
@@ -157,12 +166,13 @@ class DefaultAction {
                 query.put(fieldName, val);
             }
         }
-        return query;
+
+        return query != null ? query : ((List) instance).searchParameters();
     }
 
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
-            head = true, order = -1,
+            head = true, order = 1,
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) throws Exception {
@@ -204,7 +214,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            list = true, order = 9,
+            list = true, order = 100,
             batch = true, ajax = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
@@ -226,7 +236,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
-            list = true, order = 2,
+            list = true, order = 5,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -256,7 +266,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            list = true, order = 8,
+            list = true, order = 10,
             ajax = true,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",

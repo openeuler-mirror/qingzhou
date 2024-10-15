@@ -291,6 +291,8 @@ class DeployerImpl implements Deployer {
                 List listInstance = (List) instance;
                 modelInfo.setListPageSequence(listInstance.listPageSequence());
                 modelInfo.setDisableBatchActions(listInstance.disableBatchActions());
+                modelInfo.setSearchParameters(listInstance.searchParameters());
+                modelInfo.setHideIdField(listInstance.hideIdField());
             }
             modelInfos.put(instance, modelInfo);
         }
@@ -354,7 +356,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setSeparator(modelField.separator());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setList(modelField.list());
-            modelFieldInfo.setShowLength(modelField.showLength());
+            modelFieldInfo.setIgnore(modelField.ignore());
             modelFieldInfo.setSearch(modelField.search());
             modelFieldInfo.setDetail(modelField.detail());
             modelFieldInfo.setWidthPercent(modelField.widthPercent());

@@ -117,6 +117,12 @@
                         otherTh += 1;
                     }
                     for (String field : fieldsToList) {
+                        String hideIdStyle = "";
+                        if (field.equals(idField)) {
+                            if (modelInfo.isHideIdField()) {
+                                hideIdStyle = "; display: none";
+                            }
+                        }
                         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                         int width;
                         if (fieldInfo.getWidthPercent() > 0) {
@@ -125,7 +131,7 @@
                             width = 100 / (fieldsToList.length + otherTh);
                         }
                 %>
-                <th style="width: <%=width%>%"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
+                <th style="width: <%=width%> <%=hideIdStyle%>"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
                 </th>
                 <%
                     }
@@ -166,13 +172,20 @@
                 <%
                     }
                     for (String field : fieldsToList) {
+                        String hideIdStyle = "";
+                        if (field.equals(idField)) {
+                            if (modelInfo.isHideIdField()) {
+                                hideIdStyle = "display: none";
+                            }
+                        }
+
                         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                         String value = modelData.get(field);
                         if (value == null) {
                             value = "";
                         }
                 %>
-                <td>
+                <td style="<%=hideIdStyle%>">
                     <%
                         if ((field.equals(idField)) || fieldInfo.isDetail()) {
                             String actionName = SecurityController.isActionShow(qzApp, qzModel, Show.ACTION_SHOW, modelData, currentUser)

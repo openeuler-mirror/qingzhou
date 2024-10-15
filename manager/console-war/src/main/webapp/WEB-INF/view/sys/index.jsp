@@ -281,7 +281,7 @@
         DOWNLOAD_FILE_NAMES_SP: '<%=DeployerConstants.DOWNLOAD_FILE_NAMES_SP%>',
         downdloadGroupSepara: '<%=DeployerConstants.DOWNLOAD_FILE_GROUP_SP%>',
         downloadFileNames: '<%=DeployerConstants.DOWNLOAD_FILE_NAMES%>',
-        filesName: 'files',
+        filesName: '<%=Download.ACTION_FILES%>',
         checkOtp: '<%=LoginManager.LOGIN_OTP%>',
         locale: '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',
         pageLang: '<%=(I18n.isZH() ? "zh_cn" : "en")%>',
