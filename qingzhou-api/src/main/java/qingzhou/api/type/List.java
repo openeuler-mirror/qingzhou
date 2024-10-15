@@ -77,4 +77,8 @@ public interface List {
     default Map<String, String> searchParameters() {
         return null;
     }
+
+    default boolean hideIdField() throws Exception {
+        return false;
+    }
 }

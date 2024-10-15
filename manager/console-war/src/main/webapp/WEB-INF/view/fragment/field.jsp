@@ -19,7 +19,7 @@
         i++;
 %>
 <div class="panel <%=panelClass%>"
-     style="border-radius: 2px; border-color:#EFEEEE;width: <%=width%>%;display: inline-block">
+     style="border-radius: 2px; border-color:#EFEEEE;width: <%=width%>;display: inline-block">
     <%
         if (hasGroup) {
     %>

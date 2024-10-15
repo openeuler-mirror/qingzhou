@@ -13,19 +13,20 @@ import qingzhou.app.ExampleMain;
         name = {"岗位", "en:Post"},
         info = {"岗位管理。", "en:Post management."})
 public class Post extends AddModelBase implements Option {
-    @ModelField(
-            required = true,
-            search = true,
-            name = {"岗位名称", "en:Post Name"},
-            info = {"岗位名称。", "en:Post name."})
-    public String name;
 
     @ModelField(
             required = true,
             widthPercent = 10,
-            list = true, search = true,
+            search = true,
             name = {"岗位编码", "en:Post Code"})
     public String postCode;
+
+    @ModelField(
+            required = true, detail = true,
+            search = true, list = true,
+            name = {"岗位名称", "en:Post Name"},
+            info = {"岗位名称。", "en:Post name."})
+    public String name;
 
     @ModelField(
             type = FieldType.radio,
@@ -45,6 +46,11 @@ public class Post extends AddModelBase implements Option {
     @Override
     public String idField() {
         return "postCode";
+    }
+
+    @Override
+    public boolean hideIdField() throws Exception {
+        return true;
     }
 
     @Override

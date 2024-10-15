@@ -25,6 +25,7 @@ public class ModelInfo {
     private ItemInfo[] groupInfos;
     private LinkedHashMap<String, ItemInfo[]> optionInfos;
     private Map<String, String> searchParameters;
+    private boolean hideIdField;
 
     public ModelActionInfo getModelActionInfo(String actionName) {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
@@ -317,6 +318,14 @@ public class ModelInfo {
 
     public void setSearchParameters(Map<String, String> searchParameters) {
         this.searchParameters = searchParameters;
+    }
+
+    public boolean isHideIdField() {
+        return hideIdField;
+    }
+
+    public void setHideIdField(boolean hideIdField) {
+        this.hideIdField = hideIdField;
     }
 
     @Override
