@@ -3,6 +3,7 @@ package qingzhou.deployer;
 import qingzhou.api.ModelBase;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Response;
+import qingzhou.registry.ItemInfo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -23,6 +24,7 @@ public class ResponseImpl implements Response {
     private byte[] bodyBytes;
     private String downloadName;
     private final Map<String, String> parameters = new HashMap<>();
+    private ItemInfo[] itemInfos;
 
     @Override
     public void setSuccess(boolean success) {
@@ -176,5 +178,13 @@ public class ResponseImpl implements Response {
 
     public Map<String, String> getParameters() {
         return parameters;
+    }
+
+    public ItemInfo[] getItemInfos() {
+        return itemInfos;
+    }
+
+    public void setItemInfos(ItemInfo[] itemInfos) {
+        this.itemInfos = itemInfos;
     }
 }

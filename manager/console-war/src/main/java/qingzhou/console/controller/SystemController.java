@@ -6,6 +6,7 @@ import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.Response;
 import qingzhou.api.type.List;
+import qingzhou.api.type.Option;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.config.Security;
@@ -126,9 +127,36 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     public static ItemInfo[] getOptions(String qzApp, ModelInfo modelInfo, String fieldName) {
-        ItemInfo[] itemInfos = modelInfo.getOptionInfos().get(fieldName);
-        if (itemInfos != null && itemInfos.length > 0) {
-            return itemInfos;
+        ItemInfo[] options = getOptions0(qzApp, modelInfo, fieldName);
+        return options != null ? options : new ItemInfo[0];
+    }
+
+    private static ItemInfo[] getOptions0(String qzApp, ModelInfo modelInfo, String fieldName) {
+        String[] dynamicOptionFields = modelInfo.getDynamicOptionFields();
+        if (dynamicOptionFields != null) {
+            for (String dynamicOptionField : dynamicOptionFields) {
+                if (fieldName.equals(dynamicOptionField)) {
+                    RequestImpl req = new RequestImpl();
+                    req.setAppName(qzApp);
+                    req.setModelName(modelInfo.getCode());
+                    req.setActionName(Option.ACTION_OPTION);
+                    req.setParameter(Option.FIELD_NAME_PARAMETER, fieldName);
+                    ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
+                    return res.getItemInfos();
+                }
+            }
+        }
+
+        String[] staticOptionFields = modelInfo.getStaticOptionFields();
+        if (staticOptionFields != null) {
+            for (String staticOptionField : staticOptionFields) {
+                if (fieldName.equals(staticOptionField)) {
+                    ItemInfo[] itemInfos = modelInfo.getOptionInfos().get(fieldName);
+                    if (itemInfos != null && itemInfos.length > 0) {
+                        return itemInfos;
+                    }
+                }
+            }
         }
 
         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(fieldName);
