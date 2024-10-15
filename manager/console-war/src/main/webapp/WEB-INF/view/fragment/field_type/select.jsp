@@ -15,7 +15,7 @@
         String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
         if (Objects.equals(fieldValue, option)) {
             selectVal = option;
-            selectText = option;
+            selectText = optionI18n;
             tabIndex = index;
             selectHtml += "<li data-value=\"" + option + "\" class=\"option selected focus\" format=\"" + option + "\">" + optionI18n + "</li>";
         } else {

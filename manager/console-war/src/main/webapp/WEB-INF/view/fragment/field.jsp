@@ -60,11 +60,7 @@
                     </a>
                     <%
                         } else {
-                            if (FieldType.markdown.name().equals(modelField.getType())) {
-                                out.print("<div class=\"markdownview\">" + fieldValue + "</div>");
-                            } else {
-                                out.print(fieldValue);
-                            }
+                            out.print(PageUtil.getDisplayValue(fieldValue, qzApp, modelInfo, modelField));
                         }
                     %>
                 </td>

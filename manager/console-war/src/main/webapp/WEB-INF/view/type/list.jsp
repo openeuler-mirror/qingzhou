@@ -187,11 +187,11 @@
                        data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                        data-tip-arrow="top"
                        style="color:#4C638F;">
-                        <%=PageUtil.styleFieldValue(value, fieldInfo)%>
+                        <%=PageUtil.styleFieldValue(value, fieldInfo, qzApp, modelInfo)%>
                     </a>
                     <%
                         } else {
-                            out.print(PageUtil.styleFieldValue(value, fieldInfo));
+                            out.print(PageUtil.styleFieldValue(value, fieldInfo, qzApp, modelInfo));
                         }
                     } else {
                         String refModelName = null;
@@ -205,7 +205,7 @@
                             refModelName = fieldInfo.getRefModel();
                             refFieldName = SystemController.getModelInfo(qzApp, refModelName).getIdField();
                         }
-                        if (refModelName != null && refFieldName != null) {
+                        if (Utils.notBlank(value) && refModelName != null && refFieldName != null) {
                             ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
                             refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
                     %>
@@ -214,11 +214,11 @@
                        class="dataid tooltips" record-action-id="<%=qingzhou.api.type.List.ACTION_LIST%>"
                        data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
                        style="color:#4C638F;">
-                        <%=PageUtil.styleFieldValue(value, fieldInfo)%>
+                        <%=PageUtil.styleFieldValue(value, fieldInfo, qzApp, modelInfo)%>
                     </a>
                     <%
                             } else {
-                                out.print(PageUtil.styleFieldValue(value, fieldInfo));
+                                out.print(PageUtil.styleFieldValue(value, fieldInfo, qzApp, modelInfo));
                             }
                         }
                     %>
