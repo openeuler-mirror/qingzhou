@@ -343,10 +343,11 @@
 
 
 </script>
+<script src="<%=contextPath%>/static/js/qz.js"></script>
 <script src="<%=contextPath%>/static/js/main.js"></script>
 <script src="<%=contextPath%>/static/js/index.js"></script>
 <script>
-    tooltip(".tooltips", {transition: true, time: 200});
+    qz.tooltip(".tooltips", {transition: true, time: 200});
 </script>
 </body>
 </html>

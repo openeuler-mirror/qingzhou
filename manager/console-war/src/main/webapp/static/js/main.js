@@ -1,3 +1,259 @@
++function ($) {
+    "use strict";
+    var DataKey = "lte.pushmenu";
+    var Default = {
+        collapseScreenSize: 767,
+        expandOnHover: false,
+        expandTransitionDelay: 10
+    };
+    var Selector = {
+        collapsed: ".sidebar-collapse",
+        open: ".sidebar-open",
+        mainSidebar: ".main-sidebar",
+        contentWrapper: ".content-wrapper",
+        searchInput: ".sidebar-form .form-control",
+        button: "[data-toggle='push-menu']",
+        mini: ".sidebar-mini",
+        expanded: ".sidebar-expanded-on-hover",
+        layoutFixed: ".fixed"
+    };
+    var ClassName = {
+        collapsed: "sidebar-collapse",
+        open: "sidebar-open",
+        mini: "sidebar-mini",
+        expanded: "sidebar-expanded-on-hover",
+        expandFeature: "sidebar-mini-expand-feature",
+        layoutFixed: "fixed"
+    };
+    var Event = {
+        expanded: "expanded.pushMenu",
+        collapsed: "collapsed.pushMenu"
+    };
+
+    // PushMenu Class Definition
+    // =========================
+    var PushMenu = function (options) {
+        this.options = options;
+        this.init();
+    };
+
+    PushMenu.prototype.init = function () {
+        if (this.options.expandOnHover || ($("body").is(Selector.mini + Selector.layoutFixed))) {
+            this.expandOnHover();
+            $("body").addClass(ClassName.expandFeature);
+        }
+
+        $(Selector.contentWrapper).click(function () {
+            // Enable hide menu when clicking on the content-wrapper on small screens
+            if ($(window).width() <= this.options.collapseScreenSize && $("body").hasClass(ClassName.open)) {
+                this.close();
+            }
+        }.bind(this));
+
+        // __Fix for android devices
+        $(Selector.searchInput).click(function (e) {
+            e.stopPropagation();
+        });
+    };
+
+    PushMenu.prototype.toggle = function () {
+        var windowWidth = $(window).width();
+        var isOpen = !$("body").hasClass(ClassName.collapsed);
+
+        if (windowWidth <= this.options.collapseScreenSize) {
+            isOpen = $("body").hasClass(ClassName.open);
+        }
+
+        if (!isOpen) {
+            var windowWidth = $(window).width();
+            if (windowWidth > this.options.collapseScreenSize) {
+                $("body").removeClass(ClassName.collapsed);
+            } else {
+                $("body").addClass(ClassName.open);
+            }
+        } else {
+            var windowWidth = $(window).width();
+            if (windowWidth > this.options.collapseScreenSize) {
+                $("body").addClass(ClassName.collapsed);
+            } else {
+                $("body").removeClass(ClassName.open + " " + ClassName.collapsed);
+            }
+        }
+    };
+
+    // PushMenu Plugin Definition
+    // ==========================
+    function Plugin(option) {
+        return this.each(function () {
+            var $this = $(this);
+            var data = $this.data(DataKey);
+
+            if (!data) {
+                var options = $.extend({}, Default, $this.data(), typeof option === "object" && option);
+                $this.data(DataKey, (data = new PushMenu(options)));
+            }
+
+            if (option === "toggle") {
+                data.toggle();
+            }
+        });
+    }
+
+    var old = $.fn.pushMenu;
+
+    $.fn.pushMenu = Plugin;
+    $.fn.pushMenu.Constructor = PushMenu;
+
+    // No Conflict Mode
+    // ================
+    $.fn.pushMenu.noConflict = function () {
+        $.fn.pushMenu = old;
+        return this;
+    };
+
+    // Data API
+    // ========
+    $(document).on("click", Selector.button, function (e) {
+        e.preventDefault();
+        Plugin.call($(this), "toggle");
+    });
+    $(window).on("load", function () {
+        Plugin.call($(Selector.button));
+    });
+}(jQuery);
+
++function ($) {
+    "use strict";
+
+    var DataKey = "lte.tree";
+    var Default = {
+        animationSpeed: 10,
+        accordion: true,
+        followLink: true,
+        trigger: ".treeview a"
+    };
+    var Selector = {
+        tree: ".tree",
+        treeview: ".treeview",
+        treeviewMenu: ".treeview-menu",
+        open: ".menu-open, .active",
+        li: "li",
+        data: "[data-widget='tree']",
+        active: ".active"
+    };
+    var ClassName = {
+        open: "menu-open",
+        tree: "tree",
+        openActive: "menu-open active"
+    };
+    var Event = {
+        collapsed: "collapsed.tree",
+        expanded: "expanded.tree"
+    };
+
+    // Tree Class Definition
+    // =====================
+    var Tree = function (element, options) {
+        this.element = element;
+        this.options = options;
+        //$(this.element).addClass(ClassName.tree);
+        //$(Selector.treeview + Selector.active, this.element).addClass(ClassName.open);
+        $(Selector.treeviewMenu + " " + Selector.active).parents(Selector.treeview).addClass(ClassName.openActive);
+        this._setUpListeners();
+    };
+
+    Tree.prototype.toggle = function (link, event) {
+        var treeviewMenu = link.next(Selector.treeviewMenu);
+        var parentLi = link.parent();
+        if (!parentLi.is(Selector.treeview)) {
+            return;
+        }
+
+        if (!this.options.followLink || link.attr("href") === "#" || link.attr("href").indexOf("javascript:") === 0) {
+            event.preventDefault();
+        }
+
+        if ($(".treeview-menu", parentLi).length > 0) {
+            parentLi.removeClass("expandsub");
+            if (parentLi.hasClass(ClassName.open)) {
+                this.collapse(treeviewMenu, parentLi);
+            } else {
+                this.expand(treeviewMenu, parentLi);
+            }
+        }
+    };
+
+    Tree.prototype.expand = function (tree, parent) {
+        var expandedEvent = $.Event(Event.expanded);
+        if (this.options.accordion) {
+            var openMenuLi = parent.siblings(Selector.open);
+            var openTree = openMenuLi.children(Selector.treeviewMenu);
+            this.collapse(openTree, openMenuLi);
+        }
+
+        parent.addClass(ClassName.open);
+        tree.slideDown(this.options.animationSpeed, function () {
+            // tree.find(Selector.open + " > " + Selector.treeview).slideDown();
+            $(this.element).trigger(expandedEvent);
+        }.bind(this));
+    };
+
+    Tree.prototype.collapse = function (tree, parentLi) {
+        var collapsedEvent = $.Event(Event.collapsed);
+
+        //tree.find(Selector.open).removeClass(ClassName.openActive);
+        parentLi.removeClass(ClassName.open);
+        tree.slideUp(this.options.animationSpeed, function () {
+            // tree.find(Selector.open + " > " + Selector.treeview).slideUp();
+            $(this.element).trigger(collapsedEvent);
+        }.bind(this));
+    };
+
+    // Private
+    Tree.prototype._setUpListeners = function () {
+        var that = this;
+        $(this.element).on("click", this.options.trigger, function (event) {
+            that.toggle($(this), event);
+            if ($(this).next(Selector.treeviewMenu).length === 0 && $(this).attr("href").indexOf("javascript:") < 0) {
+                $("li.active", that.element).removeClass("active");
+                $(this).parents("li").not(".treeview.menu-open").addClass("active");
+            }
+        });
+    };
+
+    // Plugin Definition
+    // =================
+    function Plugin(option) {
+        return this.each(function () {
+            var $this = $(this);
+            var data = $this.data(DataKey);
+            if (!data) {
+                var options = $.extend({}, Default, $this.data(), typeof option === "object" && option);
+                $this.data(DataKey, new Tree($this, options));
+            }
+        });
+    }
+
+    var old = $.fn.menuTree;
+    $.fn.menuTree = Plugin;
+    $.fn.menuTree.Constructor = Tree;
+
+    // No Conflict Mode
+    // ================
+    $.fn.menuTree.noConflict = function () {
+        $.fn.menuTree = old;
+        return this;
+    };
+
+    // Tree Data API
+    // =============
+    $(window).on("load", function () {
+        $(Selector.data).each(function () {
+            Plugin.call($(this));
+        });
+    });
+}(jQuery);
+
 var b64pad = "=";
 var b64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -19,6 +275,49 @@ function hex2b64(h) {
         ret += b64pad;
     }
     return ret;
+};
+
+function base64Encode(input) {
+    keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+    var output = "";
+    var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+    var i = 0;
+    input = utf8_encode(input);
+    while (i < input.length) {
+        chr1 = input.charCodeAt(i++);
+        chr2 = input.charCodeAt(i++);
+        chr3 = input.charCodeAt(i++);
+        enc1 = chr1 >> 2;
+        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+        enc4 = chr3 & 63;
+        if (isNaN(chr2)) {
+            enc3 = enc4 = 64;
+        } else if (isNaN(chr3)) {
+            enc4 = 64;
+        }
+        output = output + keyStr.charAt(enc1) + keyStr.charAt(enc2) + keyStr.charAt(enc3) + keyStr.charAt(enc4);
+    }
+    return output;
+};
+
+function utf8_encode(string) {
+    string = string.replace(/\r\n/g, "\n");
+    var utftext = "";
+    for (var n = 0; n < string.length; n++) {
+        var c = string.charCodeAt(n);
+        if (c < 128) {
+            utftext += String.fromCharCode(c);
+        } else if ((c > 127) && (c < 2048)) {
+            utftext += String.fromCharCode((c >> 6) | 192);
+            utftext += String.fromCharCode((c & 63) | 128);
+        } else {
+            utftext += String.fromCharCode((c >> 12) | 224);
+            utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+            utftext += String.fromCharCode((c & 63) | 128);
+        }
+    }
+    return utftext;
 };
 
 JSEncrypt.prototype.encryptLong2 = function (string) {
@@ -72,76 +371,32 @@ JSEncrypt.prototype.encryptLong2 = function (string) {
     }
 };
 
-// 当前页面主活动区域
-function getActiveTabContent() {
-    return $(".content-box>ul>li")[$(".tab-box>ul>li.active").index()];
-};
-
-// 获取限定区域
-function getRestrictedArea() {
-    return getActiveTabContent();
-};
-
-// 绑定本机、集群、实例 Tab 标签事件
-function bindTabEvent() {
-    var now = new Date().getTime();
-    $(".tab-box>ul>li").each(function (i) {
-        var $this = this;
-        $(this).unbind("click").bind("click", function (e) {
-            e.preventDefault();
-            if ($($this).hasClass("active") || (e.target.tagName === "LABEL" && $(e.target).hasClass("close"))) {
-                return false;
-            }
-            var activeTab = $(".tab-box li.active");
-            $(this).parent().attr("preTab", $(activeTab).attr("id"));
-            $(activeTab).removeClass("active");
-            $($(".content-box>ul>li")[$(activeTab).index()]).removeClass("active").addClass("inactive");
-            $(this).addClass("active");
-            $($(".content-box>ul>li")[$(this).index()]).removeClass("inactive").addClass("active");
-            autoAdaptTip();
-            return false;
-        });
-        $(".close", this).unbind("click").bind("click", function (e) {
-            e.preventDefault();
-            if ($($this).hasClass("active")) {
-                var preTab = $("#" + $($this).parent().attr("preTab"));
-                if (preTab == undefined || preTab.attr("id") == $($this).attr("id")) {
-                    preTab = $("#defaultTab");
-                }
-                $(preTab).addClass("active");
-                $($(".content-box>ul>li")[$(preTab).index()]).removeClass("inactive").addClass("active");
-            } else {
-                $($this).parent().attr("preTab", $(".tab-box li.active").attr("id"));
-            }
-            $($(".content-box>ul>li")[$($this).index()]).remove();
-            $($this).remove();
-            autoAdaptTip();
-            return false;
-        });
-    });
-};
-
-function autoAdaptTip() {
-    var mainBody = $(".main-body", getRestrictedArea());
-    if (mainBody.length > 0) {
-        var ruler = document.createElement("div");
-        ruler.style.fontSize = "13px";
-        ruler.style.maxWidth = "320px";
-        ruler.style.visibility = "hidden";
-        document.body.appendChild(ruler);
-        var totalHeight = $(mainBody).prop("scrollHeight");
-        var scrollTop = $(mainBody).scrollTop();
-        var offsetTop = $(mainBody).offset().top;
-        $("form[name='pageForm'] span.tooltips:visible", mainBody).each(function () {
-            ruler.innerHTML = $(this).attr("data-tip");
-            var top = scrollTop + $(this).offset().top - offsetTop;
-            if ((totalHeight - top - 120) < ruler.offsetHeight) {
-                $(this).attr("data-tip-arrow", "top-right");
-            } else {
-                $(this).attr("data-tip-arrow", "bottom-right");
-            }
-        });
-        document.body.removeChild(ruler);
+/**
+ * 统一处理ajax异常
+ * @param {*} e
+ */
+function handleError(e) {
+    if (e.status === 0) {
+        showMsg(getSetting("networkError"), "error");
+    } else if (e.status === 403) {
+        showMsg("403, Access denied !", "error");
+        $("#mask-loading").hide();
+    } else {
+        if (e.status === 200 && e.responseText.indexOf("<!DOCTYPE html>") >= 0 && e.responseText.indexOf("loginForm") > 0) {
+            $("#mask-loading").hide();
+            $(".btn").removeAttr("disabled");
+            showConfirm(getSetting("notLogin"), {
+                "title": getSetting("pageConfirmTitle"),
+                "btn": [getSetting("reloginBtnText"), getSetting("iknowBtnText")]
+            }, function () {
+                var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname))
+                    + "/" + window.location.pathname.replace("/", "").substring(0, window.location.pathname.replace("/", "").indexOf("/"));
+                window.location.href = loginUrl;
+            }, function () {
+            });
+        } else {
+            showMsg(e.status + ":" + getSetting("pageErrorMsg"), "error");
+        }
     }
 };
 
@@ -305,7 +560,7 @@ function triggerAction(ele, condition, type) {
         }
         let isSwitch = target.parent().attr("class").indexOf("switch") !== -1;
         if (target.val() === "" && isSwitch){
-            target.val("false")
+            target.val("false");
         }
         // compareVal 比较出来的值是表示是否显示
         const compareResult = compareVal(target.val(), parsedVal, notEq);
@@ -469,338 +724,4 @@ function niceSelect() {
     if (style.pointerEvents !== "auto") {
         $("html").addClass("no-csspointerevents");
     }
-};
-// end
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-var tw = {
-    /**
-     * 页面跳转
-     */
-    goback: function (obj) {
-        const restrictedArea = getRestrictedArea();
-        if ($("[hidden-for-goback='true']", restrictedArea).length > 0) {
-            $(obj).parents(".bodyDiv").prev(".breadcrumb[hidden-for-goback!='true']").remove();
-            $(obj).parents(".bodyDiv").remove();
-            $("[hidden-for-goback='true']", restrictedArea).removeAttr("hidden-for-goback").show();
-        }
-    },
-    formToJson: function (formSelector) {
-        var paramArray = $(formSelector).serializeArray();
-        var jsonObj = {};
-        $(paramArray).each(function (i, element) {
-            if ($.trim(element.value) !== "") {
-                jsonObj[element.name] = element.value;
-            }
-        });
-        return jsonObj;
-    },
-    /**
-     * ajax 填充 html 片段
-     * container 参数支持任意 jquery 选择器语法，例如："#id"、".content-box .edit-profile"
-     */
-    fill: function (url, data, container, append, element) {
-        $("#mask-loading").show();
-        $.ajax({
-            url: url,
-            data: data,
-            cache: false,
-            async: false,
-            dataType: "html",
-            type: (data && data != {} ? "POST" : "GET"),
-            error: function (e) {
-                handleError(e, element);
-            },
-            complete: function () {
-                $("#mask-loading").hide();
-                $(".tw-tooltip").remove();
-            },
-            success: function (html) {
-                if (html.indexOf("<!DOCTYPE html>") >= 0 && html.indexOf("loginForm") > -1) {
-                    showConfirm(getSetting("notLogin"), {
-                        "title": getSetting("pageConfirmTitle"),
-                        "btn": [getSetting("reloginBtnText"), getSetting("iknowBtnText")]
-                    }, function () {
-                        var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname))
-                            + "/" + window.location.pathname.replace("/", "").substring(0, window.location.pathname.replace("/", "").indexOf("/"));
-                        window.location.href = loginUrl;
-                    }, function () {
-                    });
-                    return;
-                }
-                if (html.indexOf("&lt;br&gt;") > 0) {
-                    var array = html.split("&lt;br&gt;");
-                    var newHtml = "";
-                    for (var i = 0; i < array.length; i++) {
-                        newHtml += array[i] + "<br>";
-                    }
-                    html = newHtml;
-                }
-                if (append) {
-                    $(container).children().each(function () {
-                        if (!$(this).is(":hidden")) {
-                            $(this).attr("hidden-for-goback", "true").hide();
-                        }
-                    });
-                    $(container).append(html);
-                } else {
-                    $(container).html(html);
-                    $(".form-btn a.btn[btn-type='goback'][href='javascript:void(0);']", $(container)).parents(".block-bg").hide();
-                }
-                setOrReset();
-                tooltip(".tooltips", {transition: true, time: 200});
-                var browserInfo = browserNV();
-                // 火狐浏览器特殊适配89.0版本开始浏览器通用，89版本之前，采用css中定义的hack设置
-                if (browserInfo != {} && browserInfo.core === "Firefox" && browserInfo.v >= 89.0) {
-                    $(".main-body", getRestrictedArea()).css({"min-height": "100%", "height": "100%"});
-                } else if (browserInfo != {} && ((browserInfo.core === "Edge" && browserInfo.v <= 60.0) || (browserInfo.core === "IE" && browserInfo.v <= 11.0))) {
-                    // ITAIT-4984 微软自研浏览器 Edge 样式特殊处理，解决滚动条样式问题
-                    $(".main-body", getRestrictedArea()).css({
-                        "min-height": "calc(-100px + 100%)",
-                        "height": "auto",
-                        "top": "100px",
-                        "bottom": "100px"
-                    });
-                }
-                autoAdaptTip();
-                $("form[name='pageForm'] a[tabgroup]").bind("click", function () {
-                    window.setTimeout(function () {
-                        autoAdaptTip();
-                    }, 100);
-                });
-            }
-        });
-    },
-    bindFill: function (selector, container, append, resetData) {
-        $(selector).unbind("click").bind("click", function (e) {
-            e.preventDefault();
-            // e.target.href 或者 $(e.target).attr("href")
-            var $this = $(this);
-            var url = $this.attr("href") || $this.attr("url");
-            // 跳过 href="javascript:void(0);"
-            if (url.indexOf("javascript:") === 0) {
-                return;
-            }
-            const restrictedArea = getRestrictedArea();
-            var data = resetData ? {} : tw.formToJson($("form[name='filterForm']", restrictedArea));
-            // 优先使用 a 标签上 fill 属性值指定的 container
-            var targetContainer = $this.attr("fill") || $(container, restrictedArea);
-            tw.fill(url, data, targetContainer, append, $this);
-        });
-    }
-};
-/* tooltip */
-(function (window) {
-    var bindings = [];
-
-    function tooltip(ele, transitionObj, enterCallback, outCallback) {
-        if (!ele || typeof ele !== "string") {
-            console.error(new Error('The "tooltip" method requires the "class" of at least one parameter'));
-            return;
-        }
-        var transition = transitionObj && ({}).constructor.name === "Object" && transitionObj.transition || false;
-        var time = transitionObj && ({}).constructor.name === "Object" && transitionObj.time || 200, timer = null;
-        while (bindings.length > 0) {
-            var item = bindings.pop();
-            item["el"].removeEventListener("touchstart", item["touchstart"]);
-            item["el"].removeEventListener("touchend", item["touchend"]);
-        }
-        var tipContent = document.createElement("div");
-        Array.prototype.slice.call(document.querySelectorAll(ele)).forEach(function (el) {
-            var showEvent = function () {
-                var pos = el.getBoundingClientRect(), currenLeft = pos.left, currenTop = pos.top,
-                    currenWidth = pos.width,
-                    currenHeight = pos.height,
-                    direction = (el.getAttribute("data-tip-arrow") || "top").replace(/_/g, "-");
-                tipContentSetter(tipContent, el.getAttribute("data-tip"), direction);
-                var tipContentWidth = tipContent.offsetWidth, tipContentHeight = tipContent.offsetHeight;
-                switch (direction) {
-                    case "top":
-                        tipContent.style.left = (currenLeft + currenWidth / 2 - tipContentWidth / 2) + "px";
-                        tipContent.style.top = (currenTop - tipContentHeight - 7) + "px";
-                        break;
-                    case "left":
-                        tipContent.style.left = (currenLeft - tipContentWidth - 7) + "px";
-                        tipContent.style.top = (currenTop + currenHeight / 2 - tipContentHeight / 2) + "px";
-                        break;
-                    case "right":
-                        tipContent.style.left = (currenLeft + currenWidth + 7) + "px";
-                        tipContent.style.top = (currenTop + currenHeight / 2 - tipContentHeight / 2) + "px";
-                        break;
-                    case "bottom":
-                        tipContent.style.left = (currenLeft + currenWidth / 2 - tipContentWidth / 2) + "px";
-                        tipContent.style.top = (currenTop + currenHeight + 7) + "px";
-                        break;
-                    case "top-left":
-                        tipContent.style.left = (currenLeft - tipContentWidth + currenWidth / 2 + 7) + "px";
-                        tipContent.style.top = (currenTop - tipContentHeight - 7) + "px";
-                        break;
-                    case "top-right":
-                        tipContent.style.left = (currenLeft + currenWidth - currenWidth / 2 - 11) + "px";
-                        tipContent.style.top = (currenTop - tipContentHeight - 7) + "px";
-                        break;
-                    case "bottom-left":
-                        tipContent.style.left = (currenLeft - tipContentWidth + currenWidth / 2 + 7) + "px";
-                        tipContent.style.top = (currenTop + currenHeight + 7) + "px";
-                        break;
-                    case "bottom-right":
-                        tipContent.style.left = (currenLeft + currenWidth / 2 - 11) + "px";
-                        tipContent.style.top = (currenTop + currenHeight + 7) + "px";
-                }
-            };
-            var destroyEvent = function () {
-                var oldTipContent = document.querySelector(".tw-tooltip");
-                if (oldTipContent) {
-                    if (transition === true) {
-                        return opacityTransition(oldTipContent, "leave");
-                    }
-                    document.body.removeChild(oldTipContent);
-                    typeof outCallback === "function" ? outCallback() : null;
-                }
-            };
-            var trigger = el;
-            if (el.hasAttribute("disabled")) {
-                if (el.parentNode.getAttribute("tooltipWrapper") !== "true") {
-                    var newParent = document.createElement("span");
-                    newParent.setAttribute("tooltipWrapper", "true");
-                    el.parentNode.insertBefore(newParent, el);
-                    newParent.appendChild(el);
-                    trigger = newParent;
-                } else {
-                    trigger = el.parentNode;
-                }
-            }
-            trigger.onmouseenter = showEvent;
-            trigger.onmouseleave = destroyEvent;
-            trigger.addEventListener("touchstart", showEvent);
-            trigger.addEventListener("touchend", destroyEvent);
-            bindings.push({"el": trigger, "touchstart": showEvent, "touchend": destroyEvent});
-        });
-
-        function tipContentSetter(tipContent, tip, direction) {
-            tipContent.innerHTML = tip.replace(/</g, "&#60;").replace(/>/g, "&#62;").replace(/"/g, "&#34;").replace(/'/g, "&#39;");
-            tipContent.className = "tw-tooltip tw-tooltip-" + direction;
-            document.body.appendChild(tipContent);
-            if (transition === true) {
-                opacityTransition(tipContent, "enter");
-                return;
-            }
-            typeof enterCallback === "function" ? enterCallback() : null;
-        }
-
-        function opacityTransition(ele, state) {
-            timer && clearTimeout(timer);
-            ele.style.setProperty("transition", "opacity " + time / 1000 + "s");
-            ele.style.setProperty("-webkit-transition", "opacity " + time / 1000 + "s");
-            if (state === "enter") {
-                ele.style.opacity = 0;
-                timer = setTimeout(function () {
-                    ele.style.opacity = 1;
-                    typeof enterCallback === "function" ? enterCallback() : null;
-                }, 0);
-            } else if (state === "leave") {
-                ele.style.opacity = 0;
-                typeof outCallback === "function" ? outCallback() : null;
-                timer = setTimeout(function () {
-                    try {
-                        document.body.removeChild(ele);
-                    } catch (e) {
-                    }
-                }, time);
-            }
-        }
-    }
-
-    window.tooltip = tooltip;
-})(window);
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/**
- * 获取全局配置项
- * @param key 配置 key
- */
-function getSetting(key) {
-    var settings = eval("(typeof global_setting !== 'undefined') ? global_setting : {}");
-    return settings[key] ? settings[key] : key;
-};
-
-/**
- * 统一处理ajax异常
- * @param {*} e
- */
-function handleError(e, element) {
-    if (e.status === 0) {
-        showMsg(getSetting("networkError"), "error");
-    } else if (e.status === 403) {
-        showMsg("403, Access denied !", "error");
-        $("#mask-loading").hide();
-    } else {
-        if (e.status === 200 && e.responseText.indexOf("<!DOCTYPE html>") >= 0 && e.responseText.indexOf("loginForm") > 0) {
-            $("#mask-loading").hide();
-            $(".btn").removeAttr("disabled");
-            showConfirm(getSetting("notLogin"), {
-                "title": getSetting("pageConfirmTitle"),
-                "btn": [getSetting("reloginBtnText"), getSetting("iknowBtnText")]
-            }, function () {
-                var loginUrl = window.location.href.substring(0, window.location.href.indexOf(window.location.pathname))
-                    + "/" + window.location.pathname.replace("/", "").substring(0, window.location.pathname.replace("/", "").indexOf("/"));
-                window.location.href = loginUrl;
-            }, function () {
-            });
-        } else {
-            showMsg(e.status + ":" + getSetting("pageErrorMsg"), "error");
-        }
-    }
-};
-
-/**
- * 获取浏览器名称及版本号信息
- * @returns {} 或 {"core": "xxx", "version": "xx.x"}
- */
-function browserNV() {
-    var agent = navigator.userAgent;
-    var regStr_ie = /MSIE [\d.]+/gi;
-    var regStr_ff = /Firefox\/[\d.]+/gi;
-    var regStr_edge = /Edge\/[\d.]+/gi;
-    var regStr_edg = /Edg\/[\d.]+/gi;
-    var regStr_chrome = /Chrome\/[\d.]+/gi;
-    var regStr_saf = /Safari\/[\d.]+/gi;
-    var nv = navigator.userAgent.indexOf('Trident') > -1 && navigator.userAgent.indexOf("rv:11.0") > -1 ? "IE:11.0" : "";
-    if (agent.indexOf("MSIE") > 0) {// IE
-        nv = agent.match(regStr_ie).toString();
-    } else if (agent.indexOf("Firefox") > 0) {// Firefox
-        nv = agent.match(regStr_ff).toString();
-    } else if (agent.indexOf("Chrome") > 0 && agent.indexOf("Edge/") > 0) {// Edge(Microsoft)
-        nv = agent.match(regStr_edge).toString();
-    } else if (agent.indexOf("Chrome") > 0 && agent.indexOf("Edg/") > 0) {// Edge(Base Chrominum)
-        nv = agent.match(regStr_edg).toString();
-    } else if (agent.indexOf("Chrome") > 0) { // Chrome
-        nv = agent.match(regStr_chrome).toString();
-    } else if (agent.indexOf("Safari") > 0 && agent.indexOf("Chrome") < 0) {// Safari
-        nv = agent.match(regStr_saf).toString();
-    }
-    if (nv.indexOf("Edg/") > -1) {
-        nv = nv.replace("Edg/", "Edge/");
-    }
-    //Here does not display "/"
-    if (nv.indexOf("Edge") !== -1 || nv.indexOf("Firefox") !== -1 || nv.indexOf("Chrome") !== -1 || nv.indexOf("Safari") !== -1) {
-        nv = nv.replace("/", ":");
-    }
-    //Here does not display space
-    if (nv.indexOf("MSIE") !== -1) {
-        //MSIE replace IE & trim space
-        nv = nv.replace("MSIE", "IE").replace(/\s/g, ":");
-    }
-    if (nv === "") {
-        return {};
-    }
-    var v = "";
-    var array = nv.split(":")[1].split(".");
-    for (var i = 0; i < array.length; i++) {
-        if (i === 1) {
-            v += ".";
-        }
-        v += array[i];
-    }
-    return nv === "" ? {} : {"core": nv.split(":")[0], "version": nv.split(":")[1], "v": Number(v)};
 };

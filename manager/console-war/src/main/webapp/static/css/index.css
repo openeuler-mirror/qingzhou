@@ -1576,3 +1576,28 @@ a.cancelfavorites:active {
     background: #333333;
     color: #fff;
 }
+
+.tab-wrapper{margin: 0 auto;font-size: 14px;}
+.tab-header{width:100%; height: 39px;line-height: 39px;float:left;overflow: hidden;position: relative;background: #f2f2f2;border-bottom: solid 1px #dddddd;}
+.tab-body{position: relative;top: 15px;bottom: 0;left: 0;right: 0;overflow:auto;margin:0 0 0 10px;padding:1px;}
+
+.tab-btn{position:absolute;width:40px;height:39px;text-align:center;color:#999;z-index:2;top:0;margin-top:3px;background:#f2f2f2;border:0;outline:0;cursor:pointer;}
+.tab-btn i{font-size:20px;}
+.tab-btn.btn-left{left: 0;border-right: solid 1px #ccc;}
+.tab-btn.btn-right{right: 80px;border-left: solid 1px #ccc;}
+.tab-btn.mintab{right: 40px;border-left: solid 1px #ccc;}
+.tab-btn.destroy{right: 0px;border-left: solid 1px #ccc;}
+.tab-btn.mintab:hover, .tab-btn.destroy:hover{color:black;}
+
+.tab-nav{margin-left:40px;width:100000px;height:40px;line-height:40px;overflow:hidden;}
+.tab-nav-box{float:left;margin-left:0px;}
+.tab-nav-box span{display:block;color: #999;cursor: default;border-right: solid 1px #ddd;padding: 0 20px;float:left;}
+.tab-nav-box span:hover{color: #333;}
+.tab-nav-box span.active{color: #33AECC;background: #fff;}
+.tab-nav-box span i{color:#ccc;font-size:12px;/*vertical-align:top;*/position:absolute;top:5px;}
+.tab-nav-box span i:hover{color:#FF5722;}
+.tab-nav-box span.active i:hover{color: #FF5722;}
+.tab-nav-box .tab-nav-item{transition: all .3s ease-out 0s;-webkit-transition: all .3s ease-out 0s;}
+
+.switch-arrow{position:absolute; right:20px; cursor:pointer;top: 50%;z-index: 9999;}
+.switch-close{position:absolute; right:20px;margin-top:25px;top:50%;cursor:pointer;z-index: 9999;}
