@@ -69,16 +69,11 @@ public class PageUtil {
         return actions.toArray(new ModelActionInfo[0]);
     }
 
-    public static String styleFieldValue(String value, ModelFieldInfo fieldInfo) {
+    public static String styleFieldValue(String value, ModelFieldInfo fieldInfo, String qzApp, ModelInfo modelInfo) {
         if (Utils.isBlank(value)) return value;
 
         try {
-            if (fieldInfo.getType().equals(FieldType.datetime.name())) {
-                Date date = new Date();
-
-                date.setTime(Long.parseLong(value));
-                value = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(date);
-            }
+            value = getDisplayValue(value, qzApp, modelInfo, fieldInfo);
 
             String[] colorInfo = fieldInfo.getColor();
             if (colorInfo == null) return value;
@@ -106,6 +101,46 @@ public class PageUtil {
         } catch (Exception e) {
             return value;
         }
+    }
+
+    public static String getDisplayValue(String value, String qzApp, ModelInfo modelInfo, ModelFieldInfo fieldInfo) {
+        FieldType fieldType = FieldType.valueOf(fieldInfo.getType());
+        switch (fieldType) {
+            case markdown:
+                value = "<div class=\"markdownview\">" + value + "</div>";
+                break;
+            case datetime:
+                Date date = new Date();
+                date.setTime(Long.parseLong(value));
+                value = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(date);
+                break;
+            case radio:
+            case select:
+                for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldInfo.getCode())) {
+                    String option = itemInfo.getName();
+                    String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
+                    if (Objects.equals(value, option)) {
+                        value = optionI18n;
+                        break;
+                    }
+                }
+                break;
+            case multiselect:
+            case checkbox:
+            case sortablecheckbox:
+                String[] split = value.split(fieldInfo.getSeparator());
+                List<String> list = new ArrayList<>(split.length);
+                for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldInfo.getCode())) {
+                    String option = itemInfo.getName();
+                    String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
+                    if (Utils.contains(split, option)) {
+                        list.add(optionI18n);
+                    }
+                }
+                value = String.join(fieldInfo.getSeparator(), list);
+                break;
+        }
+        return value;
     }
 
     public static String buildMenu(HttpServletRequest request, HttpServletResponse response, Request qzRequest) {
