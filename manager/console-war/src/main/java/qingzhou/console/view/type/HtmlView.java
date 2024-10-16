@@ -68,7 +68,6 @@ public class HtmlView implements View {
             case Update.ACTION_EDIT:
                 return "form";
             case List.ACTION_LIST:
-            case Delete.ACTION_DELETE:
                 return "list";
             case Monitor.ACTION_MONITOR:
                 return "monitor";

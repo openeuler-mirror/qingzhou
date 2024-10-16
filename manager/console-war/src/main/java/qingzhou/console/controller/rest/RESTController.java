@@ -19,15 +19,12 @@ import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
+import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
+import javax.servlet.http.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -37,13 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
@@ -195,7 +186,7 @@ public class RESTController extends HttpServlet {
         Map<String, String> result = new HashMap<>();
 
         RequestImpl request = restContext.request;
-        List<Response> responseList = SystemController.getService(ActionInvoker.class).invokeAll(request);
+        List<Response> responseList = SystemController.getService(ActionInvoker.class).invoke(request);
         StringBuilder errorMsg = new StringBuilder();
         for (Response response : responseList) {
             if (response.isSuccess()) {
@@ -332,18 +323,11 @@ public class RESTController extends HttpServlet {
             }
             request.setId(RESTController.decodeId(id.toString()));
         }
-        boolean actionFound = false;
-        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp())
-                .getModelInfo(request.getModel());
-        String[] actions = modelInfo.getActionNames();
-        for (String name : actions) {
-            if (name.equals(request.getAction())) {
-                actionFound = true;
-                break;
-            }
-        }
 
-        if (!actionFound) {
+        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
+
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+        if (actionInfo == null) {
             String msg = "Not Found: " + req.getRequestURI();
             JsonView.responseErrorJson(resp, msg);
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, msg);

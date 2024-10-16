@@ -11,19 +11,19 @@ class MenuImpl implements Menu {
     }
 
     @Override
-    public Menu setIcon(String icon) {
+    public Menu icon(String icon) {
         this.newMenuInfo.setIcon(icon);
         return this;
     }
 
     @Override
-    public Menu setOrder(int order) {
+    public Menu order(int order) {
         this.newMenuInfo.setOrder(order);
         return this;
     }
 
     @Override
-    public Menu setParent(String parent) {
+    public Menu parent(String parent) {
         this.newMenuInfo.setParent(parent);
         return this;
     }

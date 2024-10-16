@@ -79,12 +79,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     public static AppInfo getAppInfo(String appName) {
-        // 优先找本地，master和instance都在本地
-        App app = getService(Deployer.class).getApp(appName);
-        if (app != null) return app.getAppInfo();
-
-        // 再找远程
-        return getService(Registry.class).getAppInfo(appName);
+        return getService(Deployer.class).getAppInfo(appName);
     }
 
     public static java.util.List<String> getAppInstances(String appName) {

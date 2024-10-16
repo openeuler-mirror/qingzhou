@@ -21,7 +21,6 @@ public class Cluster extends AddModelBase {
 
     @ModelAction(
             code = "user", icon = "location-arrow",
-            list = true, order = 1,
             models = {"user"},
             name = {"用户", "en:User"},
             info = {"打开只有用户菜单的管理页面。", "en:Go to the page."})
@@ -30,10 +29,14 @@ public class Cluster extends AddModelBase {
 
     @ModelAction(
             code = "org", icon = "location-arrow",
-            list = true, order = 1,
             models = {"department", "post"},
             name = {"组织", "en:Org"},
             info = {"打开有部门和岗位菜单的管理页面，默认展开第一个，即部门，的模块入口页面。", "en:Go to the page."})
     public void org(Request request) {
+    }
+
+    @Override
+    public String[] listActions() {
+        return new String[]{"user", "org"};
     }
 }

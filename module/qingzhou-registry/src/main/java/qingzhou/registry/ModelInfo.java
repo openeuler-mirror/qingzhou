@@ -17,62 +17,42 @@ public class ModelInfo {
     private boolean hidden;
     private String idField;
     private boolean validate;
-    private boolean listPageSequence;
-    private String[] disableBatchActions;
+    private boolean showOrderNumber;
+    private boolean showBatchOption;
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
     private ItemInfo[] groupInfos;
     private LinkedHashMap<String, ItemInfo[]> optionInfos;
-    private Map<String, String> searchParameters;
-    private boolean hideIdField;
+    private Map<String, String> filterValues;
+    private boolean showIdField;
     private String[] staticOptionFields;
     private String[] dynamicOptionFields;
+    private String[] headActions;
+    private String[] listActions;
 
     public ModelActionInfo getModelActionInfo(String actionName) {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
     }
 
     public String[] getListActionNames() {
-        return Arrays.stream(modelActionInfos)
-                .filter(ModelActionInfo::isList)
-                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
-                .map(ModelActionInfo::getCode)
-                .toArray(String[]::new);
-    }
-
-    public String[] getBatchActionNames() {
-        return Arrays.stream(modelActionInfos)
-                .filter(action -> {
-                    boolean isBatch = action.isList() && action.isBatch();
-                    if (!isBatch) return false;
-
-                    String[] disableBatchActions = getDisableBatchActions();
-                    if (disableBatchActions != null) {
-                        for (String disableBatchAction : disableBatchActions) {
-                            if (action.getCode().equals(disableBatchAction)) {
-                                return false;
-                            }
-                        }
-                    }
-
-                    return true;
-                })
-                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
-                .map(ModelActionInfo::getCode)
-                .toArray(String[]::new);
+        return existsActions(listActions);
     }
 
     public String[] getHeadActionNames() {
-        return Arrays.stream(modelActionInfos)
-                .filter(ModelActionInfo::isHead)
-                .sorted(Comparator.comparingInt(ModelActionInfo::getOrder))
-                .map(ModelActionInfo::getCode)
-                .toArray(String[]::new);
+        return existsActions(headActions);
     }
 
-    public String[] getActionNames() {
-        return Arrays.stream(modelActionInfos).map(ModelActionInfo::getCode).toArray(String[]::new);
+    private String[] existsActions(String[] scope) {
+        if (scope == null) return null;
+
+        List<String> fountActions = new ArrayList<>();
+        for (String action : scope) {
+            if (getModelActionInfo(action) != null) {
+                fountActions.add(action);
+            }
+        }
+        return fountActions.toArray(new String[0]);
     }
 
     public Map<String, String> getFormFieldDefaultValues() {
@@ -298,36 +278,36 @@ public class ModelInfo {
         this.validate = validate;
     }
 
-    public boolean isListPageSequence() {
-        return listPageSequence;
+    public boolean isShowOrderNumber() {
+        return showOrderNumber;
     }
 
-    public void setListPageSequence(boolean listPageSequence) {
-        this.listPageSequence = listPageSequence;
+    public void setShowOrderNumber(boolean showOrderNumber) {
+        this.showOrderNumber = showOrderNumber;
     }
 
-    public String[] getDisableBatchActions() {
-        return disableBatchActions;
+    public boolean isShowBatchOption() {
+        return showBatchOption;
     }
 
-    public void setDisableBatchActions(String[] disableBatchActions) {
-        this.disableBatchActions = disableBatchActions;
+    public void setShowBatchOption(boolean showBatchOption) {
+        this.showBatchOption = showBatchOption;
     }
 
-    public Map<String, String> getSearchParameters() {
-        return searchParameters;
+    public Map<String, String> getFilterValues() {
+        return filterValues;
     }
 
-    public void setSearchParameters(Map<String, String> searchParameters) {
-        this.searchParameters = searchParameters;
+    public void setFilterValues(Map<String, String> filterValues) {
+        this.filterValues = filterValues;
     }
 
-    public boolean isHideIdField() {
-        return hideIdField;
+    public boolean isShowIdField() {
+        return showIdField;
     }
 
-    public void setHideIdField(boolean hideIdField) {
-        this.hideIdField = hideIdField;
+    public void setShowIdField(boolean showIdField) {
+        this.showIdField = showIdField;
     }
 
     public String[] getStaticOptionFields() {
@@ -344,6 +324,14 @@ public class ModelInfo {
 
     public void setDynamicOptionFields(String[] dynamicOptionFields) {
         this.dynamicOptionFields = dynamicOptionFields;
+    }
+
+    public void setListActions(String[] listActions) {
+        this.listActions = listActions;
+    }
+
+    public void setHeadActions(String[] headActions) {
+        this.headActions = headActions;
     }
 
     @Override

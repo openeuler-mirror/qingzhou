@@ -178,12 +178,11 @@ class DefaultAction {
             }
         }
 
-        return query != null ? query : ((List) instance).searchParameters();
+        return query != null ? query : ((List) instance).filterValues();
     }
 
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
-            head = true, order = 1,
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) throws Exception {
@@ -204,7 +203,6 @@ class DefaultAction {
 
     @ModelAction(
             code = Update.ACTION_EDIT, icon = "edit",
-            list = true, order = 1,
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
@@ -225,13 +223,23 @@ class DefaultAction {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            list = true, order = 100,
-            batch = true, ajax = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) throws Exception {
         ((Delete) instance).deleteData(request.getId());
+    }
+
+    @ModelAction(
+            code = Stream.ACTION_STREAM, icon = "download-alt",
+            name = {"导出", "en:Export"},
+            info = {"导出指定的文件流。", "en:Export the specified file stream."})
+    public void export(Request request) {
+        Stream stream = (Stream) instance;
+        Stream.StreamSupplier streamSupplier = stream.downloadStream(request.getId());
+        if (streamSupplier == null) return;
+
+        downloadStream(request, streamSupplier);
     }
 
     private Map<String, String> prepareParameters(Request request) {
@@ -247,7 +255,6 @@ class DefaultAction {
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
-            list = true, order = 5,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -277,8 +284,6 @@ class DefaultAction {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            list = true, order = 10,
-            ajax = true,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
                     "en:Gets a list of downloadable files for this component."})
@@ -320,6 +325,7 @@ class DefaultAction {
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files."})
     public void download(Request request) throws Exception {
+        ResponseImpl response = (ResponseImpl) request.getResponse();
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 
         String downloadKey = request.getNonModelParameter(DeployerConstants.DOWNLOAD_KEY);
@@ -328,8 +334,8 @@ class DefaultAction {
 
             // check
             if (downloadFileNames == null || downloadFileNames.trim().isEmpty()) {
-                request.getResponse().setMsg("No file name found.");
-                request.getResponse().setSuccess(false);
+                response.setMsg("No file name found.");
+                response.setSuccess(false);
                 return;
             }
             if (downloadFileNames.contains("..")) throw new IllegalArgumentException();
@@ -341,56 +347,39 @@ class DefaultAction {
             }
             downloadKey = buildDownloadKey(downloadFiles, keyDir);
         }
+        if (downloadKey.trim().isEmpty() || !new File(keyDir, downloadKey).exists()) return;
 
-        long downloadOffset = 0;
-        String downloadOffsetParameter = request.getNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET);
-        if (downloadOffsetParameter != null && !downloadOffsetParameter.trim().isEmpty()) {
-            downloadOffset = Long.parseLong(downloadOffsetParameter.trim());
-        }
+        response.setDownloadName(downloadKey + ".zip");
+        String finalDownloadKey = downloadKey;
+        downloadStream(request, new Stream.StreamSupplier() {
+            private final File temp = FileUtil.newFile(keyDir, finalDownloadKey);
+            private final RandomAccessFile raf = new RandomAccessFile(temp, "r");
 
-        downloadFile((ResponseImpl) request.getResponse(), downloadKey, downloadOffset, keyDir);
-    }
-
-    // 为支持大文件续传，下载必需有 key
-    private void downloadFile(ResponseImpl response, String key, long offset, File baseDir) throws Exception {
-        if (key == null || key.trim().isEmpty() || !new File(baseDir, key).exists()) return;
-        if (offset < 0) return;
-
-        Map<String, String> result = response.getParameters();
-        File downloadFile = new File(baseDir, key);
-        result.put(DeployerConstants.DOWNLOAD_KEY, key);
-
-        byte[] byteRead;
-        boolean hasMore = false;
-        try (RandomAccessFile raf = new RandomAccessFile(downloadFile, "r")) {
-            raf.seek(offset);
-            byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
-            int read = raf.read(block);
-            if (read > 0) { // ==0 表示上次正好读取到结尾
-                if (read == block.length) {
-                    byteRead = block;
-
-                    if (raf.getFilePointer() < raf.length() - 1) {
-                        hasMore = true;
-                    }
-                } else {
-                    byteRead = new byte[read];
-                    System.arraycopy(block, 0, byteRead, 0, read);
-                }
-
-                response.setBodyBytes(byteRead);
-                response.setDownloadName(key + ".zip");
-                offset = raf.getFilePointer();
+            @Override
+            public int read(byte[] block, long offset) throws IOException {
+                raf.seek(offset);
+                return raf.read(block);
             }
-        }
 
-        if (hasMore) {
-            result.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
-        } else {
-            result.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(-1L));
-            File temp = FileUtil.newFile(baseDir, key);
-            FileUtil.forceDelete(temp);
-        }
+            @Override
+            public String downloadKey() {
+                return finalDownloadKey;
+            }
+
+            @Override
+            public void finished() {
+                try {
+                    raf.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    FileUtil.forceDelete(temp);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     // 为支持大文件续传，下载必需有 key
@@ -437,5 +426,47 @@ class DefaultAction {
             FileUtil.forceDelete(tempDir);
         }
         return key;
+    }
+
+    private void downloadStream(Request request, Stream.StreamSupplier supplier) {
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+
+        long offset = 0;
+        String downloadOffsetParameter = request.getNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET);
+        if (downloadOffsetParameter != null && !downloadOffsetParameter.trim().isEmpty()) {
+            offset = Long.parseLong(downloadOffsetParameter.trim());
+        }
+        if (offset < 0) return;
+
+        Map<String, String> result = response.getParameters();
+        result.put(DeployerConstants.DOWNLOAD_KEY, supplier.downloadKey());
+
+        byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
+        int read = 0;
+        try {
+            read = supplier.read(block, offset);
+            if (read > 0) { // ==0 表示上次正好读取到结尾
+                offset += read;
+
+                byte[] byteRead;
+                if (read == block.length) {
+                    byteRead = block;
+                } else {
+                    byteRead = new byte[read];
+                    System.arraycopy(block, 0, byteRead, 0, read);
+                }
+                response.setBodyBytes(byteRead);
+            }
+        } catch (Exception e) {
+            supplier.finished();
+            e.printStackTrace();
+        } finally {
+            if (read != block.length) {
+                offset = -1L;
+                supplier.finished();
+            }
+        }
+
+        result.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
     }
 }

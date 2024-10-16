@@ -63,22 +63,31 @@ public interface List {
         return 10;
     }
 
-    default boolean listPageSequence() {
-        return true;
+    default String[] headActions() {
+        return new String[]{Add.ACTION_CREATE};
     }
 
-    default String[] disableBatchActions() {
-        return null;
+    default String[] listActions() {
+        return new String[]{Update.ACTION_EDIT, Delete.ACTION_DELETE};
     }
 
     /**
      * 设置进入列表页面默认的搜索条件
      */
-    default Map<String, String> searchParameters() {
+    default Map<String, String> filterValues() {
         return null;
     }
 
-    default boolean hideIdField() {
+    default boolean showIdField() {
+        return true;
+    }
+
+    default boolean showOrderNumber() {
+        return true;
+    }
+
+
+    default boolean showBatchOption() {
         return false;
     }
 }

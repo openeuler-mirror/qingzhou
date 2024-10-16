@@ -15,7 +15,7 @@
                 <%
                     String showHtml = request.getParameter(fieldName);
                     if (showHtml == null) {
-                        Map<String, String> searchParameters = modelInfo.getSearchParameters();
+                        Map<String, String> searchParameters = modelInfo.getFilterValues();
                         if (searchParameters != null) {
                             showHtml = searchParameters.get(fieldName);
                         }

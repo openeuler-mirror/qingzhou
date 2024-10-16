@@ -2,15 +2,12 @@ package qingzhou.console.page;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.Request;
-import qingzhou.api.Response;
-import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
 
@@ -45,28 +42,6 @@ public class PageUtil {
     public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String model, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;
         return response.encodeURL(url);
-    }
-
-    public static ModelActionInfo[] listBachActions(Request request, Response response, String loginUser) {
-        List<ModelActionInfo> actions = new ArrayList<>();
-
-        final ModelInfo modelInfo = ((RequestImpl) request).getCachedModelInfo();
-        for (String actionName : modelInfo.getBatchActionNames()) {
-            boolean isShow = false;
-            for (Map<String, String> data : response.getDataList()) {
-                if (SecurityController.isActionShow(request.getApp(), request.getModel(), actionName, data, loginUser)) {
-                    isShow = true;
-                    break;
-                }
-            }
-            if (isShow) {
-                ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-                actions.add(action);
-            }
-        }
-
-        actions.sort(Comparator.comparingInt(ModelActionInfo::getOrder));
-        return actions.toArray(new ModelActionInfo[0]);
     }
 
     public static String styleFieldValue(String value, ModelFieldInfo fieldInfo, String qzApp, ModelInfo modelInfo) {

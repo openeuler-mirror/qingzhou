@@ -86,7 +86,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     }
 
     @Override
-    public boolean listPageSequence() {
+    public boolean showOrderNumber() {
         return false;
     }
 
@@ -113,7 +113,6 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
 
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
-            head = true, order = -1,
             name = {"升级", "en:Upgrade"},
             info = {"将轻舟升级到一个新的版本。", "en:Upgrade the light boat to a new version."})
     public void create(Request request) throws Exception {
@@ -130,8 +129,6 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            list = true, order = 9,
-            batch = true, ajax = true,
             show = "running=false",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",

@@ -154,16 +154,19 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
-            list = true, order = 1,
             show = "state=" + DeployerConstants.app_Started,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request) {
     }
 
+    @Override
+    public String[] listActions() {
+        return new String[]{DeployerConstants.ACTION_MANAGE, "start", "stop", Delete.ACTION_DELETE};
+    }
+
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
-            head = true, order = -1,
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
@@ -183,8 +186,6 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            list = true, order = 9,
-            batch = true, ajax = true,
             name = {"卸载", "en:UnInstall"},
             info = {"卸载应用，注：卸载应用会删除应用包下的所有文件，且不可恢复。",
                     "en:Uninstall the app, Note: Uninstalling the app will delete all the files under the app package and cannot be recovered."})
@@ -197,8 +198,6 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelAction(
             code = "start", icon = "play",
-            list = true, order = 2,
-            ajax = true,
             show = "state=" + DeployerConstants.app_Stopped,
             name = {"启动", "en:start"},
             info = {"启动应用",
@@ -212,8 +211,6 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelAction(
             code = "stop", icon = "stop",
-            list = true, order = 3,
-            ajax = true,
             show = "state=" + DeployerConstants.app_Started,
             name = {"停止", "en:end"},
             info = {"停止应用",

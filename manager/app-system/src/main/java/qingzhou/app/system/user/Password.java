@@ -1,6 +1,7 @@
 package qingzhou.app.system.user;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Stream;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.config.Config;
@@ -12,6 +13,7 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -23,7 +25,7 @@ import java.util.Objects;
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
-public class Password extends ModelBase {
+public class Password extends ModelBase implements Stream {
     private final String KEY_IN_SESSION_FLAG = "keyForOtp";
 
     @ModelField(
@@ -181,7 +183,7 @@ public class Password extends ModelBase {
         String qrCode = "otpauth://totp/" + loginUser + "?secret=" + keyForOtp;
         QrGenerator qrGenerator = Main.getService(QrGenerator.class);
         byte[] bytes = qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
-//        request.getResponse().setBodyBytes(bytes); // todo 用 downloadStream 来替代
+        request.getResponse().setBodyBytes(bytes); // todo 用 downloadStream 来替代
     }
 
     @ModelAction(
@@ -203,5 +205,10 @@ public class Password extends ModelBase {
             }
         }
         request.getResponse().setSuccess(result);
+    }
+
+    @Override
+    public InputStream downloadStream(String id) {
+        return null;
     }
 }

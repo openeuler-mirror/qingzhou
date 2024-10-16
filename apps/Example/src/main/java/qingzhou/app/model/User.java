@@ -87,6 +87,11 @@ public class User extends AddModelBase implements Group, Option {
     public String subjects3;
 
     @ModelField(
+            edit = false,
+            name = {"创建后不可编辑", "en:"})
+    public String noEdit;
+
+    @ModelField(
             type = FieldType.textarea,
             list = true, search = true,
             link = "department.email",
@@ -96,8 +101,6 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            list = true,
-            head = true, order = 2,
             fields = {"name", "notes", "gender", "a", "b"},
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
@@ -106,18 +109,17 @@ public class User extends AddModelBase implements Group, Option {
     }
 
     @Override
-    public boolean listPageSequence() {
-        return false;
+    public String[] listActions() {
+        return new String[]{"test"};
     }
 
     @Override
-    public String[] disableBatchActions() {
-        return new String[]{"delete"};
+    public boolean showOrderNumber() {
+        return false;
     }
 
     @ModelAction(
             code = "share", icon = "share-alt",
-            head = true, order = 2,
             page = "list",// todo 如何跳转到qingzhou的action上？
             name = {"头部按钮", "en:Share"},
             info = {"头部按钮", "en:Share"})

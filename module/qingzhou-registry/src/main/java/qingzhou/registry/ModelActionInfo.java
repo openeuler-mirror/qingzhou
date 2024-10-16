@@ -8,11 +8,7 @@ public class ModelActionInfo {
     private String[] name;
     private String[] info;
     private String icon;
-    private boolean head;
-    private boolean list;
-    private boolean batch;
-    private boolean ajax;
-    private int order;
+    private boolean distribute;
     private String show;
     private String page;
     private String[] fields;
@@ -57,20 +53,12 @@ public class ModelActionInfo {
         this.show = show;
     }
 
-    public boolean isBatch() {
-        return batch;
+    public boolean isDistribute() {
+        return distribute;
     }
 
-    public void setBatch(boolean batch) {
-        this.batch = batch;
-    }
-
-    public boolean isAjax() {
-        return ajax;
-    }
-
-    public void setAjax(boolean ajax) {
-        this.ajax = ajax;
+    public void setDistribute(boolean distribute) {
+        this.distribute = distribute;
     }
 
     public String getPage() {
@@ -87,30 +75,6 @@ public class ModelActionInfo {
 
     public void setIcon(String icon) {
         this.icon = icon;
-    }
-
-    public boolean isHead() {
-        return head;
-    }
-
-    public void setHead(boolean head) {
-        this.head = head;
-    }
-
-    public boolean isList() {
-        return list;
-    }
-
-    public void setList(boolean list) {
-        this.list = list;
-    }
-
-    public int getOrder() {
-        return order;
-    }
-
-    public void setOrder(int order) {
-        this.order = order;
     }
 
     public String[] getFields() {

@@ -8,7 +8,6 @@
     String[] fieldsToList = modelInfo.getFieldsToList();
 
     String[] listActions = modelInfo.getListActionNames();
-    ModelActionInfo[] batchActions = PageUtil.listBachActions(qzRequest, qzResponse, currentUser);
 
     int totalSize = qzResponse.getTotalSize();
     int pageNum = qzResponse.getPageNum();
@@ -64,31 +63,6 @@
                 <%
                         }
                     }
-
-                    // 支持批量操作的按钮
-                    for (ModelActionInfo action : batchActions) {
-                        String actionKey = action.getCode();
-                        if (!SecurityController.isActionShow(qzApp, qzModel, actionKey, null, currentUser)) {
-                            continue;
-                        }
-                        String operationConfirm = String.format(I18n.getKeyI18n("page.operationConfirm"),
-                                I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
-                                I18n.getModelI18n(qzApp, "model." + qzModel));
-
-                        String actionUrl = PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, actionKey);
-                %>
-                <a id="<%=actionKey%>" action-name="<%=actionKey%>"
-                   href="<%=actionUrl%>"
-                   onclick='batchOps("<%=actionUrl%>","<%=actionKey%>")'
-                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionKey)%>'
-                   class="btn batch-ops"
-                   disabled="disabled" model-icon="<%=modelInfo.getIcon()%>"
-                   data-name="" data-id="" act-ajax='true' act-confirm='<%=operationConfirm%> ?'>
-                    <i class="icon icon-<%=action.getIcon()%>"></i>
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey)%>
-                </a>
-                <%
-                    }
                 %>
             </div>
         </div>
@@ -98,7 +72,7 @@
             <tr style="height:20px;">
                 <%
                     int otherTh = 0;
-                    if (batchActions.length > 0) {
+                    if (modelInfo.isShowBatchOption()) {
                         otherTh += 1;
                 %>
                 <th class="custom-checkbox">
@@ -106,7 +80,7 @@
                 </th>
                 <%
                     }
-                    if (modelInfo.isListPageSequence()) {
+                    if (modelInfo.isShowOrderNumber()) {
                         otherTh += 1;
                 %>
                 <th class="sequence"><%=I18n.getKeyI18n("page.list.order")%>
@@ -117,10 +91,11 @@
                         otherTh += 1;
                     }
                     for (String field : fieldsToList) {
-                        String hideIdStyle = "";
+                        String ifHideStyle = "";
                         if (field.equals(idField)) {
-                            if (modelInfo.isHideIdField()) {
-                                hideIdStyle = "; display: none";
+                            ifHideStyle = "; display: none";
+                            if (modelInfo.isShowIdField()) {
+                                ifHideStyle = "";
                             }
                         }
                         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
@@ -131,7 +106,7 @@
                             width = 100 / (fieldsToList.length + otherTh);
                         }
                 %>
-                <th style="width: <%=width%> <%=hideIdStyle%>"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
+                <th style="width: <%=width%> <%=ifHideStyle%>"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
                 </th>
                 <%
                     }
@@ -145,7 +120,7 @@
             <%
                 java.util.List<Map<String, String>> modelDataList = qzResponse.getDataList();
                 if (modelDataList.isEmpty()) {
-                    String dataEmpty = "<tr><td colspan='" + ((modelInfo.isListPageSequence() ? 1 : 0) + fieldsToList.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
+                    String dataEmpty = "<tr><td colspan='" + ((modelInfo.isShowBatchOption() ? 1 : 0) + (modelInfo.isShowOrderNumber() ? 1 : 0) + fieldsToList.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
                             + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getKeyI18n("page.none") + "</span></td>";
                     out.print(dataEmpty);
@@ -157,7 +132,7 @@
             %>
             <tr>
                 <%
-                    if (batchActions.length > 0) {
+                    if (modelInfo.isShowBatchOption()) {
                 %>
                 <td class="custom-checkbox">
                     <input type="checkbox" class='morecheck'
@@ -165,17 +140,18 @@
                 </td>
                 <%
                     }
-                    if (modelInfo.isListPageSequence()) {
+                    if (modelInfo.isShowOrderNumber()) {
                 %>
                 <td class="sequence"><%=++listOrder%>
                 </td>
                 <%
                     }
                     for (String field : fieldsToList) {
-                        String hideIdStyle = "";
+                        String hideStyle = "";
                         if (field.equals(idField)) {
-                            if (modelInfo.isHideIdField()) {
-                                hideIdStyle = "display: none";
+                            hideStyle = "display: none";
+                            if (modelInfo.isShowIdField()) {
+                                hideStyle = "";
                             }
                         }
 
@@ -185,7 +161,7 @@
                             value = "";
                         }
                 %>
-                <td style="<%=hideIdStyle%>">
+                <td style="<%=hideStyle%>">
                     <%
                         if ((field.equals(idField)) || fieldInfo.isDetail()) {
                             String actionName = SecurityController.isActionShow(qzApp, qzModel, Show.ACTION_SHOW, modelData, currentUser)
@@ -265,7 +241,7 @@
                        data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
                             <%
                                 if (actionName.equals(Download.ACTION_FILES)) {
-                                    out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+                                    out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, StreamView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
                                 }
 
                                 if (Utils.notBlank(customActionId)) {
