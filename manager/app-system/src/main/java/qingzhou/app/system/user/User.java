@@ -386,8 +386,13 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
+    public String[] staticOptionFields() {
+        return new String[]{"digestAlg"};
+    }
+
+    @Override
     public String[] dynamicOptionFields() {
-        return new String[0];
+        return null;
     }
 
     @Override

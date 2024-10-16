@@ -285,15 +285,10 @@ class DeployerImpl implements Deployer {
             java.util.List<ModelActionInfo> methodModelActionInfoMap = parseModelActionInfos(annotation);
             modelInfo.setModelActionInfos(methodModelActionInfoMap.toArray(new ModelActionInfo[0]));
             modelInfo.setGroupInfos(getGroupInfo(instance));
-            modelInfo.setOptionInfos(getOptionInfo(modelFieldInfos, instance));
             modelInfo.setValidate(instance instanceof Validate);
-            if (instance instanceof List) {
-                List listInstance = (List) instance;
-                modelInfo.setListPageSequence(listInstance.listPageSequence());
-                modelInfo.setDisableBatchActions(listInstance.disableBatchActions());
-                modelInfo.setSearchParameters(listInstance.searchParameters());
-                modelInfo.setHideIdField(listInstance.hideIdField());
-            }
+            initOptionInfo(modelInfo, instance);
+            initListInfo(modelInfo, instance);
+
             modelInfos.put(instance, modelInfo);
         }
 
@@ -318,18 +313,34 @@ class DeployerImpl implements Deployer {
         return modelInfos;
     }
 
-    private LinkedHashMap<String, ItemInfo[]> getOptionInfo(ModelFieldInfo[] modelFieldInfos, ModelBase instance) {
+    private void initListInfo(ModelInfo modelInfo, ModelBase instance) {
+        if (!(instance instanceof List)) return;
+
+        List listInstance = (List) instance;
+        modelInfo.setListPageSequence(listInstance.listPageSequence());
+        modelInfo.setDisableBatchActions(listInstance.disableBatchActions());
+        modelInfo.setSearchParameters(listInstance.searchParameters());
+        modelInfo.setHideIdField(listInstance.hideIdField());
+    }
+
+    private void initOptionInfo(ModelInfo modelInfo, ModelBase instance) {
+        if (!(instance instanceof Option)) return;
+        Option option = (Option) instance;
+
         LinkedHashMap<String, ItemInfo[]> infoList = new LinkedHashMap<>();
-        if (instance instanceof Option) {
-            for (ModelFieldInfo fieldInfo : modelFieldInfos) {
-                String fieldName = fieldInfo.getCode();
-                Item[] items = ((Option) instance).optionData(fieldName);
+        String[] staticOptionFields = option.staticOptionFields();
+        if (staticOptionFields != null) {
+            modelInfo.setStaticOptionFields(staticOptionFields);
+            for (String fieldName : staticOptionFields) {
+                Item[] items = option.optionData(fieldName);
                 if (items != null) {
                     infoList.put(fieldName, Arrays.stream(items).map(ItemInfo::new).toArray(ItemInfo[]::new));
                 }
             }
         }
-        return infoList;
+        modelInfo.setOptionInfos(infoList);
+
+        modelInfo.setDynamicOptionFields(option.dynamicOptionFields());
     }
 
     private ItemInfo[] getGroupInfo(ModelBase instance) {
