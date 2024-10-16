@@ -19,7 +19,7 @@ public class Department extends AddModelBase implements Echo {
             search = true,
             name = {"部门名称", "en:Department Name"},
             info = {"该部门的详细名称。", "en:The name of the department."})
-    public String name;
+    public String id;
 
     @ModelField(
             list = true, search = true, echoGroup = {"aa"},
@@ -57,26 +57,17 @@ public class Department extends AddModelBase implements Echo {
     public long buildDate;
 
     @Override
-    public String idField() {
-        return "name";
-    }
-
-    @Override
-    public Map<String, String> echoData(String[] echoGroup, Map<String, String> params) {
+    public Map<String, String> echoData(String echoGroup, Map<String, String> params) {
         Map<String, String> map = new HashMap<>();
-        for (String s : echoGroup) {
-            if (s.equals("aa")) {
-                String name = params.get("name");
-                String superior = params.get("superior");
-                map.put("email", name + "=" + superior);
-                map.put("phone", name + "&&&&&&");
-            } else if (s.equals("bb")) {
-                String name = params.get("name");
-                String manager = params.get("manager");
-                map.put("phone", name + "=" + manager);
-            }
+        if (echoGroup.equals("aa")) {
+            String superior = params.get("superior");
+            String manager = params.get("manager");
+            map.put("email", superior + "===" + manager);
+            map.put("phone", superior + "&&&" + manager);
+        } else if (echoGroup.equals("bb")) {
+            String manager = params.get("manager");
+            map.put("phone", manager + "---");
         }
         return map;
     }
-
 }

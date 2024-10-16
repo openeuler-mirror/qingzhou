@@ -17,7 +17,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     public static final String FILE_BASEDIR = "files";
 
     @ModelField(required = true, create = false, edit = false, name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
-    public String name;
+    public String id;
 
     @ModelField(type = FieldType.file, required = true, list = true, name = {"上传文件", "en:Upload File"}, info = {"上传一个文件到服务器，文件须是 *.html类型的。", "en:Upload a file to the server of type *.html."})
     public String file;
@@ -25,11 +25,6 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     @ModelAction(code = "showhtml", icon = "share-alt", order = 1, name = {"Html", "en:Html"}, list = true,
             page = "static/test.html", info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void showHtml(Request request) {
-    }
-
-    @Override
-    public String idField() {
-        return "name";
     }
 
     @Override

@@ -70,4 +70,15 @@ public interface List {
     default String[] disableBatchActions() {
         return null;
     }
+
+    /**
+     * 设置进入列表页面默认的搜索条件
+     */
+    default Map<String, String> searchParameters() {
+        return null;
+    }
+
+    default boolean hideIdField() throws Exception {
+        return false;
+    }
 }

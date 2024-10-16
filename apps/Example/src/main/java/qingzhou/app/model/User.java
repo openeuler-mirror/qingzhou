@@ -14,15 +14,13 @@ import qingzhou.app.ExampleMain;
 public class User extends AddModelBase implements Group, Option {
     @ModelField(
             group = "base",
-            required = true,
             search = true,
             color = {"admin:Green"},
             name = {"用户名称", "en:Username"})
-    public String name;
+    public String id;
 
     @ModelField(
             group = "base",
-            required = true,
             list = true, search = true,
             pattern = "^\\+?[1-9]\\d{1,14}$",
             name = {"手机号码", "en:Mobile Phone Number"})
@@ -30,8 +28,7 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelField(
             group = "base",
-            type = FieldType.radio,
-            required = true,
+            type = FieldType.select,
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
     public String sex;
@@ -100,17 +97,12 @@ public class User extends AddModelBase implements Group, Option {
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
             list = true,
-            head = true, order = 1,
+            head = true, order = 2,
             fields = {"name", "notes", "sex", "a", "b"},
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
         System.out.println(request.getParameterNames());
-    }
-
-    @Override
-    public String idField() {
-        return "name";
     }
 
     @Override
@@ -134,6 +126,11 @@ public class User extends AddModelBase implements Group, Option {
     }
 
     @Override
+    public String[] dynamicOptionFields() {
+        return null;
+    }
+
+    @Override
     public Item[] optionData(String fieldName) {
         switch (fieldName) {
             case "sex":
@@ -149,6 +146,8 @@ public class User extends AddModelBase implements Group, Option {
                 };
             case "subjects3":
                 return Item.of(new String[]{"a", "b", "c", "d", "e"});
+            case "position":
+                return Item.of(new String[]{"a", "b", "c"});
         }
 
         return null;

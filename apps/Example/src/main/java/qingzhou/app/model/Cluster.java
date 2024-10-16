@@ -17,13 +17,7 @@ public class Cluster extends AddModelBase {
             search = true,
             color = {"admin:Green"},
             name = {"集群名称", "en:Username"})
-    public String name;
-
-
-    @Override
-    public String idField() {
-        return "name";
-    }
+    public String id;
 
     @ModelAction(
             code = "user", icon = "location-arrow",

@@ -30,10 +30,10 @@ public class Main extends QingzhouSystemApp {
         appContext.addI18n("validator.exist", new String[]{"已存在", "en:Already exists"});
         appContext.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
 
-        appContext.addMenu(Main.Business, new String[]{"业务管理", "en:" + Main.Business}, "th-large", 1);
-        appContext.addMenu(Main.User, new String[]{"用户管理", "en:" + Main.User}, "group", 2);
-        appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}, "cog", 3);
-        appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}, "cubes", 4);
+        appContext.addMenu(Main.Business, new String[]{"业务管理", "en:" + Main.Business}).setIcon("th-large").setOrder(1);
+        appContext.addMenu(Main.User, new String[]{"用户管理", "en:" + Main.User}).setIcon("group").setOrder(2);
+        appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).setIcon("cog").setOrder(3);
+        appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).setIcon("cubes").setOrder(4);
     }
 
     public static <T> T getService(Class<T> type) {
