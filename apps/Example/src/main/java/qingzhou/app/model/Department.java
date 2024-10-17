@@ -1,9 +1,11 @@
 package qingzhou.app.model;
 
 import qingzhou.api.FieldType;
+import qingzhou.api.Item;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Echo;
+import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 
 import java.util.HashMap;
@@ -13,7 +15,7 @@ import java.util.Map;
         menu = qingzhou.app.ExampleMain.MENU_11, order = 1,
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
-public class Department extends AddModelBase implements Echo {
+public class Department extends AddModelBase implements Echo, Option {
     @ModelField(
             required = true,
             search = true,
@@ -22,6 +24,7 @@ public class Department extends AddModelBase implements Echo {
     public String id;
 
     @ModelField(
+            type = FieldType.radio,
             list = true, search = true, echoGroup = {"aa"},
             name = {"上级部门", "en:Superior Department"},
             info = {"该部门所属的上级部门。",
@@ -29,6 +32,7 @@ public class Department extends AddModelBase implements Echo {
     public String superior = "";
 
     @ModelField(
+            type = FieldType.checkbox,
             list = true, search = true, echoGroup = {"aa", "bb"},
             name = {"负责人", "en:Department Manager"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
@@ -69,5 +73,26 @@ public class Department extends AddModelBase implements Echo {
             map.put("phone", manager + "---");
         }
         return map;
+    }
+
+
+    @Override
+    public String[] staticOptionFields() {
+        return new String[]{"manager"};
+    }
+
+    @Override
+    public String[] dynamicOptionFields() {
+        return new String[]{"superior"};
+    }
+
+    @Override
+    public Item[] optionData(String fieldName) {
+        if (fieldName.equals("superior")) {
+            return Item.of(new String[]{"a", "b", "c", "d", "e"});
+        } else if (fieldName.equals("manager")) {
+            return Item.of(new String[]{"jack", "lisa", "tom"});
+        }
+        return new Item[0];
     }
 }
