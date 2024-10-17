@@ -540,30 +540,35 @@ function triggerAction(ele, condition, type) {
     let shouldShowOrRead;
 
     expressions.forEach(expression => {
-        const notEq = expression.includes("!=");
-        const operator = notEq ? "!=" : "=";
-        const [item, val] = expression.split(operator);
-        const parsedVal = val.includes("'") || val.includes("\"") ? eval(val) : val;
+        let compareResult = false;
+        if (!expression.includes("!=") && !expression.includes("=")) {
+            compareResult = true;
+        } else {
+            const notEq = expression.includes("!=");
+            const operator = notEq ? "!=" : "=";
+            const [item, val] = expression.split(operator);
+            const parsedVal = val.includes("'") || val.includes("\"") ? eval(val) : val;
 
-        // 优化目标元素查找
-        let target = $("[name='" + item + "']:selected", restrictedArea).length > 0 ?
-            $("[name='" + item + "']:selected", restrictedArea) : $("[name='" + item + "']:checked", restrictedArea);
+            // 优化目标元素查找
+            let target = $("[name='" + item + "']:selected", restrictedArea).length > 0 ?
+                $("[name='" + item + "']:selected", restrictedArea) : $("[name='" + item + "']:checked", restrictedArea);
 
-        if (!target.length) {
-            target = $("[name='" + item + "']", restrictedArea);
-        }
+            if (!target.length) {
+                target = $("[name='" + item + "']", restrictedArea);
+            }
 
-        // 当有多个选项未选中时，隐藏目标表单项
-        if ((target.length > 1 || !target.length) && type === "show") {
-            $("#form-item-" + ele, restrictedArea).hide();
-            return;
+            // 当有多个选项未选中时，隐藏目标表单项
+            if ((target.length > 1 || !target.length) && type === "show") {
+                $("#form-item-" + ele, restrictedArea).hide();
+                return;
+            }
+            let isSwitch = target.parent().attr("class").indexOf("switch") !== -1;
+            if (target.val() === "" && isSwitch){
+                target.val("false");
+            }
+            // compareVal 比较出来的值是表示是否显示
+            compareResult = compareVal(target.val(), parsedVal, notEq);
         }
-        let isSwitch = target.parent().attr("class").indexOf("switch") !== -1;
-        if (target.val() === "" && isSwitch){
-            target.val("false");
-        }
-        // compareVal 比较出来的值是表示是否显示
-        const compareResult = compareVal(target.val(), parsedVal, notEq);
         if (shouldShowOrRead === undefined) {
             shouldShowOrRead = compareResult;
         } else {
