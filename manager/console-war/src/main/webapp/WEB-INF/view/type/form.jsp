@@ -71,7 +71,7 @@
 
                         String readonly = "";
                         if (!modelField.isEdit() && isEdit) {
-                            readonly = "readonly";
+                            continue;
                         } else if (fieldName.equals(idField)) {
                             if (isEdit) {
                                 readonly = "readonly";
