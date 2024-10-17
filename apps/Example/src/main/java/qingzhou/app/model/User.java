@@ -75,24 +75,24 @@ public class User extends AddModelBase implements Group, Option {
     public String kv;
 
     @ModelField(
-            type = FieldType.sortablecheckbox,
+            type = FieldType.sortablecheckbox,edit = false,
             separator = "#",
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
-            type = FieldType.sortablecheckbox,
+            type = FieldType.sortablecheckbox, create = false,
             separator = "#",
             name = {"项目3", "en:3"})
     public String subjects3;
 
     @ModelField(
             type = FieldType.textarea,
-            list = true, search = true,
-            link = "department.email",
+            list = true, search = true, readOnly = "true",
+            link= "department.email",
             skip = {">", "("},
             name = {"备注", "en:Notes"})
-    public String notes;
+    public String notes = "只读控制";
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",

@@ -104,6 +104,8 @@ public class PageUtil {
     }
 
     public static String getDisplayValue(String value, String qzApp, ModelInfo modelInfo, ModelFieldInfo fieldInfo) {
+        if (Utils.isBlank(value)) return value;
+
         FieldType fieldType = FieldType.valueOf(fieldInfo.getType());
         switch (fieldType) {
             case markdown:

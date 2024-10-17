@@ -28,10 +28,10 @@
 
     String showText = ((selectText == null || "".equals(selectText.trim())) ? selectVal : selectText);
     if (index <= 6) {
-        selectHtml = "<span>" + showText + "</span><input type=\"hidden\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" + readonly + " format=\"" + showText + "\">" + selectHtml;
+        selectHtml = "<span>" + showText + "</span><input type=\"hidden\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" + echoGroup + readonly + " format=\"" + showText + "\">" + selectHtml;
     } else {
-        selectHtml = "<input type=\"text\" value=\"" + selectText + "\" text=\"" + selectText + "\"" + readonly + " autocomplete=\"off\">"
-                + "<input type=\"hidden\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" + readonly + " format=\"" + showText + "\">" + selectHtml;
+        selectHtml = "<input type=\"text\" value=\"" + selectText + "\" text=\"" + selectText + "\"" + echoGroup + readonly + " autocomplete=\"off\">"
+                + "<input type=\"hidden\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" + echoGroup + readonly + " format=\"" + showText + "\">" + selectHtml;
     }
     selectHtml = "<div class=\"form-control nice-select wide\" tabindex=\"" + tabIndex + "\">" + selectHtml + "</div>";
 
