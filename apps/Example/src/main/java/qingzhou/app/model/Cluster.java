@@ -31,7 +31,7 @@ public class Cluster extends AddModelBase {
             code = "org", icon = "location-arrow",
             models = {"department", "post"},
             name = {"组织", "en:Org"},
-            info = {"打开有部门和岗位菜单的管理页面，默认展开第一个，即部门的模块入口页面。", "en:Go to the page."}
+            info = {"打开有部门和岗位菜单的管理页面，默认展开第一个，即部门的模块入口页面。", "en:Go to the page."})
     public void org(Request request) {
     }
 

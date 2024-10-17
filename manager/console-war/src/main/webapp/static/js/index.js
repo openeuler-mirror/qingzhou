@@ -639,7 +639,7 @@ function bindEchoItemEvent() {
     //查找当前表单下所有回显数据元素，添加失去焦点事件
     var echoGroupElements = $("form[name='pageForm']").find('[echoGroup]');
     echoGroupElements.each(function() {
-        $(this).unbind("blur").bind("blur", function (e) {
+        $(this).bind("change", function (e) {
             e.preventDefault();
             var params = $("form[name='pageForm']").formToArray();
             if ($(this).attr("echoGroup") !== undefined && $(this).attr("echoGroup") !== "") {

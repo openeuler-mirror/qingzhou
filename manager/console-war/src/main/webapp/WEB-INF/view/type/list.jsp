@@ -248,7 +248,7 @@
                                     out.print(customActionId);
                                 }
 
-                                if (useJsonUri) {
+                                if (useJsonUri && Utils.isBlank(customActionId)) {
                                     out.print(" act-ajax='true' act-confirm='"
                                             + String.format(I18n.getKeyI18n("page.operationConfirm"),
                                             I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName),
