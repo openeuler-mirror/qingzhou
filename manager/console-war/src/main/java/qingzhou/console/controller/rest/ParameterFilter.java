@@ -25,7 +25,7 @@ public class ParameterFilter implements Filter<RestContext> {
         separateParameters(request);
         password(request);
         datetime(request);
-        batchId(request, context);
+        batchId(request);
 
         return true;
     }
@@ -82,22 +82,26 @@ public class ParameterFilter implements Filter<RestContext> {
         }
     }
 
-    private void batchId(RequestImpl request, RestContext context) {
-        if (!Arrays.asList(request.getCachedModelInfo().getBatchActionNames()).contains(request.getAction())) return;
-
+    private void batchId(RequestImpl request) {
         ModelInfo modelInfo = request.getCachedModelInfo();
+
+        String[] batchActions = modelInfo.getBatchActions();
+        if (batchActions.length == 0) return;
+        if (Arrays.stream(batchActions).noneMatch(s -> s.equals(request.getAction()))) return;
+
         String idField = modelInfo.getIdField();
         String id = request.getParameter(idField);
-        if (id != null && id.contains(DeployerConstants.BATCH_ID_SEPARATOR)) {
-            Set<String> batchIds = new HashSet<>();
-            String[] splitIds = id.split(DeployerConstants.BATCH_ID_SEPARATOR);
-            for (String splitId : splitIds) {
-                if (Utils.notBlank(splitId)) {
-                    batchIds.add(splitId);
-                }
+        ModelFieldInfo idFieldInfo = modelInfo.getModelFieldInfo(idField);
+        if (Utils.isBlank(id) || !id.contains(idFieldInfo.getSeparator())) return;
+
+        Set<String> batchIds = new HashSet<>();
+        String[] splitIds = id.split(idFieldInfo.getSeparator());
+        for (String splitId : splitIds) {
+            if (Utils.notBlank(splitId)) {
+                batchIds.add(splitId);
             }
-            context.batchIds = batchIds.toArray(new String[0]);
-            request.removeParameter(idField);
         }
+        request.setBatchId(batchIds.toArray(new String[0]));
+        request.removeParameter(idField);
     }
 }

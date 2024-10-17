@@ -13,8 +13,8 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
-public class DownloadView implements View {
-    public static final String FLAG = "download";
+public class StreamView implements View {
+    public static final String FLAG = "stream";
 
     @Override
     public void render(RestContext restContext) throws Exception {
@@ -33,6 +33,8 @@ public class DownloadView implements View {
         byte[] content = response.getBodyBytes();
         Map<String, String> result = response.getParameters();
         while (true) {
+            if (content == null || content.length == 0) break;
+
             ServletOutputStream outputStream = servletResponse.getOutputStream();
             outputStream.write(content);
             outputStream.flush();
@@ -45,7 +47,7 @@ public class DownloadView implements View {
 
             // 要续传
             RequestImpl req = new RequestImpl(request);
-            req.setNonModelParameter(DeployerConstants.DOWNLOAD_KEY, result.get(DeployerConstants.DOWNLOAD_KEY));
+            req.setNonModelParameter(DeployerConstants.DOWNLOAD_SERIAL_KEY, result.get(DeployerConstants.DOWNLOAD_SERIAL_KEY));
             req.setNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             ResponseImpl res = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(req);
             if (res.isSuccess()) {

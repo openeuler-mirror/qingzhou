@@ -4,6 +4,7 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.*;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.deployer.ActionInvoker;
@@ -11,6 +12,7 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,35 +23,50 @@ public class HtmlView implements View {
 
     @Override
     public void render(RestContext restContext) throws Exception {
-        HttpServletResponse resp = restContext.resp;
-        if (resp.isCommitted()) return;
+        HttpServletRequest servletRequest = restContext.req;
+        HttpServletResponse servletResponse = restContext.resp;
+        if (servletResponse.isCommitted()) return;
 
         RequestImpl request = restContext.request;
-        HttpServletRequest req = restContext.req;
+        ModelInfo modelInfo = request.getCachedModelInfo();
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
 
-        boolean isManageAction = isManageAction(request);
+        String page = actionInfo.getPage();
+        if (Utils.notBlank(page)) {
+            page = "/" + request.getApp() + (page.startsWith("/") ? page : "/" + page);
+            servletRequest.getRequestDispatcher(page).forward(servletRequest, restContext.resp);
+            return;
+        }
+
+        String redirect = actionInfo.getRedirect();
+        if (Utils.notBlank(redirect)) {
+            servletResponse.sendRedirect(RESTController.encodeURL(servletResponse, servletRequest.getContextPath() +
+                    DeployerConstants.REST_PREFIX +
+                    "/" + request.getView() +
+                    "/" + request.getApp() +
+                    "/" + request.getModel() +
+                    "/" + redirect +
+                    "/" + request.getId()));
+            return;
+        }
+
+        // 转发给内部的 jsp view
+        servletRequest.setAttribute(Request.class.getName(), request);
+        boolean isManageAction = isManageApp(request);
         if (isManageAction) {
             request.setAppName(request.getId());
             request.setModelName("home"); // qingzhou.app.common.Home 的 code
             request.setCachedModelInfo(SystemController.getModelInfo(request.getApp(), request.getModel())); // 重新缓存
             request.setActionName(Show.ACTION_SHOW);
             Response response = SystemController.getService(ActionInvoker.class).invokeSingle(request);
-            request.setResponse(response);
+            request.setResponse(response);// 用远端的请求替换本地的，如果是本地实例，它俩是等效的
         }
-        req.setAttribute(Request.class.getName(), request);
-        ModelActionInfo actionInfo = request.getCachedModelInfo().getModelActionInfo(request.getAction());
-        String redirectPage = actionInfo.getPage();
-        if (Utils.notBlank(redirectPage)) {
-            redirectPage = "/" + request.getApp() + (redirectPage.startsWith("/") ? redirectPage : "/" + redirectPage);
-            restContext.req.getRequestDispatcher(redirectPage).forward(restContext.req, restContext.resp);
-        } else {
-            String forwardView = isManageAction ? "sys/manage" : getForwardView(request);
-            String forwardToPage = HtmlView.htmlPageBase + (forwardView.contains("/") ? (forwardView + ".jsp") : ("type/" + forwardView + ".jsp"));
-            restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);
-        }
+        String forwardView = isManageAction ? "sys/manage" : getForwardView(request);
+        String forwardToPage = HtmlView.htmlPageBase + (forwardView.contains("/") ? (forwardView + ".jsp") : ("type/" + forwardView + ".jsp"));
+        restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);
     }
 
-    private boolean isManageAction(Request request) {
+    private boolean isManageApp(Request request) {
         if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) return false;
         if (!DeployerConstants.APP_SYSTEM.equals(request.getApp())) return false;
         return DeployerConstants.MODEL_APP.equals(request.getModel());
@@ -61,14 +78,14 @@ public class HtmlView implements View {
     }
 
     private String getForwardView(RequestImpl request) {
-        switch (request.getAction()) {
+        String actionName = request.getAction();
+        switch (actionName) {
             case Show.ACTION_SHOW:
                 return "show";
             case Add.ACTION_CREATE:
             case Update.ACTION_EDIT:
                 return "form";
             case List.ACTION_LIST:
-            case Delete.ACTION_DELETE:
                 return "list";
             case Monitor.ACTION_MONITOR:
                 return "monitor";

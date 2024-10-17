@@ -130,6 +130,7 @@ public class User extends ModelBase implements General, Validate, Option {
             type = FieldType.bool,
             readOnly = "name=qingzhou",
             list = true, search = true,
+            color = {"true:Green", "false:Gray"},
             name = {"启用", "en:Active"},
             info = {"若未启用，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
     public Boolean active = true;
@@ -208,7 +209,12 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @Override
     public void deleteData(String id) throws Exception {
-        Main.getService(Config.class).deleteUser(id);
+        String[] batchId = getAppContext().getCurrentRequest().getBatchId();
+        if (batchId != null && batchId.length > 0) {
+            Main.getService(Config.class).deleteUser(batchId);
+        } else {
+            Main.getService(Config.class).deleteUser(id);
+        }
     }
 
     @Override
@@ -218,8 +224,6 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            list = true, order = 9,
-            batch = true, ajax = true,
             show = "name!=qingzhou",
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
@@ -401,5 +405,15 @@ public class User extends ModelBase implements General, Validate, Option {
             return Item.of(new String[]{"SHA-256", "SHA-384", "SHA-512"});
         }
         return null;
+    }
+
+    @Override
+    public boolean showOrderNumber() {
+        return false;
+    }
+
+    @Override
+    public String[] batchActions() {
+        return new String[]{Delete.ACTION_DELETE};
     }
 }

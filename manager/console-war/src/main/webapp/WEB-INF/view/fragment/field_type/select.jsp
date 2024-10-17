@@ -1,9 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    if (!readonly.isEmpty()) {
-        readonly = "onfocus='this.defaultIndex=this.selectedIndex;' onchange='this.selectedIndex=this.defaultIndex;' readonly";
-    }
     int index = 0;
     int tabIndex = 0;
     String selectVal = "";
@@ -28,10 +25,10 @@
 
     String showText = ((selectText == null || "".equals(selectText.trim())) ? selectVal : selectText);
     if (index <= 6) {
-        selectHtml = "<span>" + showText + "</span><input type=\"hidden\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" + echoGroup + readonly + " format=\"" + showText + "\">" + selectHtml;
+        selectHtml = "<span>" + showText + "</span><input type=\"hidden\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" + echoGroup + " format=\"" + showText + "\">" + selectHtml;
     } else {
-        selectHtml = "<input type=\"text\" value=\"" + selectText + "\" text=\"" + selectText + "\"" + echoGroup + readonly + " autocomplete=\"off\">"
-                + "<input type=\"hidden\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" + echoGroup + readonly + " format=\"" + showText + "\">" + selectHtml;
+        selectHtml = "<input type=\"text\" value=\"" + selectText + "\" text=\"" + selectText + "\"" + echoGroup + " autocomplete=\"off\">"
+                + "<input type=\"hidden\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" + echoGroup + " format=\"" + showText + "\">" + selectHtml;
     }
     selectHtml = "<div class=\"form-control nice-select wide\" tabindex=\"" + tabIndex + "\">" + selectHtml + "</div>";
 

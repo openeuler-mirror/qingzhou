@@ -20,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -28,17 +29,19 @@ import java.util.stream.Collectors;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
-    private final Map<String, AppImpl> apps = new TreeMap<>();
+    private final Map<String, AppImpl> apps = new ConcurrentSkipListMap<>();
 
     private final ModuleContext moduleContext;
+    private final Registry registry;
     private final Logger logger;
     private LoaderPolicy loaderPolicy;
     File appsBase = null;
 
     private final java.util.List<AppListener> appListeners = new ArrayList<>();
 
-    DeployerImpl(ModuleContext moduleContext, Logger logger) {
+    DeployerImpl(ModuleContext moduleContext, Registry registry, Logger logger) {
         this.moduleContext = moduleContext;
+        this.registry = registry;
         this.logger = logger;
     }
 
@@ -130,6 +133,16 @@ class DeployerImpl implements Deployer {
     @Override
     public qingzhou.deployer.App getApp(String appName) {
         return apps.get(appName);
+    }
+
+    @Override
+    public AppInfo getAppInfo(String appName) {
+        // 优先找本地，master和instance都在本地
+        qingzhou.deployer.App app = getApp(appName);
+        if (app != null) return app.getAppInfo();
+
+        // 再找远程
+        return registry.getAppInfo(appName);
     }
 
     private AppImpl buildApp(File appDir) throws Exception {
@@ -317,10 +330,12 @@ class DeployerImpl implements Deployer {
         if (!(instance instanceof List)) return;
 
         List listInstance = (List) instance;
-        modelInfo.setListPageSequence(listInstance.listPageSequence());
-        modelInfo.setDisableBatchActions(listInstance.disableBatchActions());
-        modelInfo.setSearchParameters(listInstance.searchParameters());
-        modelInfo.setHideIdField(listInstance.hideIdField());
+        modelInfo.setShowOrderNumber(listInstance.showOrderNumber());
+        modelInfo.setFilterValues(listInstance.filterValues());
+        modelInfo.setShowIdField(listInstance.showIdField());
+        modelInfo.setListActions(listInstance.listActions());
+        modelInfo.setHeadActions(listInstance.headActions());
+        modelInfo.setBatchActions(listInstance.batchActions());
     }
 
     private void initOptionInfo(ModelInfo modelInfo, ModelBase instance) {
@@ -495,19 +510,15 @@ class DeployerImpl implements Deployer {
     static java.util.List<ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
         java.util.List<ModelActionInfo> modelActionInfos = new ArrayList<>();
         annotation.readModelAction().forEach((method, modelAction) -> {
-            if (modelAction.disable()) return;
             ModelActionInfo modelActionInfo = new ModelActionInfo();
             modelActionInfo.setMethod(method);
             modelActionInfo.setCode(modelAction.code());
             modelActionInfo.setName(modelAction.name());
             modelActionInfo.setInfo(modelAction.info());
             modelActionInfo.setIcon(modelAction.icon());
-            modelActionInfo.setOrder(modelAction.order());
-            modelActionInfo.setHead(modelAction.head());
-            modelActionInfo.setList(modelAction.list());
-            modelActionInfo.setBatch(modelAction.batch());
-            modelActionInfo.setAjax(modelAction.ajax());
+            modelActionInfo.setDistribute(modelAction.distribute());
             modelActionInfo.setShow(modelAction.show());
+            modelActionInfo.setRedirect(modelAction.redirect());
             modelActionInfo.setPage(modelAction.page());
             modelActionInfo.setFields(modelAction.fields());
             modelActionInfos.add(modelActionInfo);

@@ -13,21 +13,17 @@ import qingzhou.crypto.Base32Coder;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
+import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
+import javax.servlet.http.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -37,13 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
@@ -121,56 +111,56 @@ public class RESTController extends HttpServlet {
             // 执行具体的业务逻辑
             context -> {
                 RestContext restContext = (RestContext) context;
-
-                Object[] result;
-                //批量操作判断，过滤器结束后，进入模块 action 处理
-                boolean isBatch = restContext.batchIds != null;
-                if (isBatch) {
-                    result = invokeBatch(restContext);
-                } else {
-                    result = invoke(restContext);
-                }
-                responseMsg(result, restContext.request, isBatch);
+                RequestImpl request = restContext.request;
+                Map<String, Response> instanceResult = SystemController.getService(ActionInvoker.class).invoke(request);
+                responseMsg(instanceResult, request);
                 return true;
             }
     };
 
-    private void responseMsg(Object[] totalResult, RequestImpl request, boolean isBatch) {
+    private void responseMsg(Map<String, Response> instanceResult, RequestImpl request) {
         Response response = request.getResponse();
-        List<Map<String, String>> dataList = response.getDataList();
-        if (dataList.isEmpty()) {
-            dataList.addAll((Collection<? extends Map<String, String>>) totalResult[3]);
+        Map<String, Response> responseList = request.getResponseList();
+        if (responseList != null && !responseList.isEmpty()) {
+            instanceResult = responseList;
         }
-        int suc = ((int) totalResult[0]);
-        int fail = ((int) totalResult[1]);
-        Map<String, String> totalError = (Map<String, String>) totalResult[2];
-        if (!isBatch) {  // 非批量操作，不需要重组响应信息
-            if (response.getMsg() == null) { // 完善响应的 msg
-                if (fail == 1) {
-                    response.setMsg(totalError.isEmpty() ? "" : totalError.keySet().stream().findFirst().get());
-                    response.setMsgType(MsgLevel.error);
-                } else {
-                    response.setMsg(defaultMsg(response.isSuccess(), request));
-                }
-            }
+
+        if (instanceResult.size() == 1) {  // 非批量操作，不需要重组响应信息
+            response = instanceResult.values().iterator().next();
+            request.setResponse(response);
         } else {
-            response.setSuccess(suc > 0); // 至少有一个成功，则认为整体是成功的
-            if (totalError.isEmpty()) {
-                response.setMsg(defaultMsg(response.isSuccess(), request)); // 以整体的成功与否来设置默认消息
-            } else {
-                StringBuilder errorMsg = new StringBuilder(String.format(I18n.getKeyI18n("batch.ops.fail"), suc, fail));
-                for (Map.Entry<String, String> entry : totalError.entrySet()) {
-                    String instance = entry.getKey();
-                    String msg = entry.getValue();
-                    errorMsg.append(msg).append("= {").append(instance).append("}; ");
+            Map<String, Response> failed = new LinkedHashMap<>();
+            int suc = 0;
+            int fail = 0;
+            for (Map.Entry<String, Response> e : instanceResult.entrySet()) {
+                Response check = e.getValue();
+                if (check.isSuccess()) {
+                    suc += 1;
+                } else {
+                    fail += 1;
+                    failed.put(e.getKey(), check);
                 }
-                response.setMsg(errorMsg.toString());
             }
+
+            response.setSuccess(suc > 0); // 至少有一个成功，则认为整体是成功的
 
             MsgLevel msgLevel = suc > 0
                     ? (fail > 0 ? MsgLevel.warn : MsgLevel.info)
                     : MsgLevel.error;
             response.setMsgType(msgLevel);
+
+            StringBuilder errorMsg = new StringBuilder(String.format(I18n.getKeyI18n("batch.ops.fail"), suc, fail));
+            for (Map.Entry<String, Response> e : failed.entrySet()) {
+                String instance = e.getKey();
+                String msg = e.getValue().getMsg();
+                errorMsg.append(instance).append(": ").append(msg);
+            }
+            response.setMsg(errorMsg.toString());
+        }
+
+        // 完善响应的 msg
+        if (response.getMsg() == null) {
+            response.setMsg(defaultMsg(response.isSuccess(), request));
         }
 
         // 完善响应的 msg type
@@ -187,66 +177,6 @@ public class RESTController extends HttpServlet {
         String action = I18n.getModelI18n(appName, "model.action." + request.getModel() + "." + request.getAction());
         String operation = Objects.equals(model, action) ? model : model + SP + action;
         return operation + SP + msg;
-    }
-
-    private Object[] invoke(RestContext restContext) {
-        int suc = 0;
-        int fail = 0;
-        Map<String, String> result = new HashMap<>();
-
-        RequestImpl request = restContext.request;
-        List<Response> responseList = SystemController.getService(ActionInvoker.class).invokeAll(request);
-        StringBuilder errorMsg = new StringBuilder();
-        for (Response response : responseList) {
-            if (response.isSuccess()) {
-                suc++;
-            } else {
-                String errMsg = response.getMsg();
-                if (result.containsKey(errMsg)) {
-                    errorMsg.append(result.get(errMsg));
-                    errorMsg.append(DeployerConstants.DEFAULT_DATA_SEPARATOR);
-                    errorMsg.append(request.getId());
-                    result.put(errMsg, errorMsg.toString());
-                    errorMsg.setLength(0);
-                } else {
-                    result.put(errMsg, request.getId());
-                }
-                fail++;
-            }
-        }
-
-        return new Object[]{suc, fail, result, responseList.get(0).getDataList()};
-    }
-
-    private Object[] invokeBatch(RestContext restContext) {
-        int suc = 0;
-        int fail = 0;
-        Map<String, String> result = new HashMap<>();
-        List<Map<String, String>> dataList = null;
-        StringBuilder errorMsg = new StringBuilder();
-        for (String id : restContext.batchIds) {
-            restContext.request.setId(id);
-            Object[] batchOne = invoke(restContext);
-            suc += ((int) batchOne[0]);
-            fail += ((int) batchOne[1]);
-            Map<String, String> oneMap = (Map<String, String>) batchOne[2];
-            if (dataList == null) {
-                dataList = (List<Map<String, String>>) batchOne[3];
-            }
-            for (String k : oneMap.keySet()) {
-                if (result.containsKey(k)) {
-                    errorMsg.append(result.get(k));
-                    errorMsg.append(DeployerConstants.DEFAULT_DATA_SEPARATOR);
-                    errorMsg.append(oneMap.get(k));
-                    result.put(k, errorMsg.toString());
-                    errorMsg.setLength(0);
-                } else {
-                    result.put(k, oneMap.get(k));
-                }
-            }
-        }
-
-        return new Object[]{suc, fail, result, dataList};
     }
 
     private final ViewManager viewManager = new ViewManager();
@@ -332,18 +262,11 @@ public class RESTController extends HttpServlet {
             }
             request.setId(RESTController.decodeId(id.toString()));
         }
-        boolean actionFound = false;
-        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp())
-                .getModelInfo(request.getModel());
-        String[] actions = modelInfo.getActionNames();
-        for (String name : actions) {
-            if (name.equals(request.getAction())) {
-                actionFound = true;
-                break;
-            }
-        }
 
-        if (!actionFound) {
+        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
+
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+        if (actionInfo == null) {
             String msg = "Not Found: " + req.getRequestURI();
             JsonView.responseErrorJson(resp, msg);
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, msg);

@@ -180,10 +180,6 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             if (!context.fieldInfo.getCode().equals(context.modelInfo.getIdField())) return null;
 
-            if (context.parameterVal.contains(DeployerConstants.BATCH_ID_SEPARATOR)) {
-                return new String[]{"validation_forbid", DeployerConstants.BATCH_ID_SEPARATOR};
-            }
-
             if (context.isAddAction) {
                 RequestImpl tmp = new RequestImpl(context.request);
                 tmp.setActionName(List.ACTION_CONTAINS);
@@ -440,9 +436,8 @@ public class ValidationFilter implements Filter<RestContext> {
             String readOnly = context.fieldInfo.getReadOnly();
             if (readOnly == null || readOnly.trim().isEmpty()) return null;
 
-            boolean isReadOnly = SecurityController.checkRule(readOnly, context.request::getParameter, false);
+            boolean isReadOnly = SecurityController.checkRule(readOnly, new RemoteFieldValueRetriever(context.request.getId(), context.request), true);
             if (isReadOnly) {
-
                 if (changed(context)) {
                     return new String[]{"validation_readonly"};
                 }

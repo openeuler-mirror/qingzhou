@@ -24,7 +24,6 @@
                         echoGroup = "echoGroup='" + echoGroups + "'";
                     }
 
-                    String readonly = "";
                     String fieldValue = modelData.get(fieldName);
                     if (fieldValue == null) {
                         fieldValue = "";

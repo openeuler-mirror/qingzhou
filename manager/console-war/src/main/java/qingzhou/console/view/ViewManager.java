@@ -1,7 +1,7 @@
 package qingzhou.console.view;
 
 import qingzhou.console.controller.rest.RestContext;
-import qingzhou.console.view.type.DownloadView;
+import qingzhou.console.view.type.StreamView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.deployer.RequestImpl;
@@ -20,7 +20,7 @@ public class ViewManager {
     public ViewManager() {
         views.put(HtmlView.FLAG, new HtmlView());
         views.put(JsonView.FLAG, new JsonView());
-        views.put(DownloadView.FLAG, new DownloadView());
+        views.put(StreamView.FLAG, new StreamView());
     }
 
     public void render(RestContext restContext) throws Exception {

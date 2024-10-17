@@ -11,10 +11,7 @@ import qingzhou.http.Http;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.InstanceInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -41,8 +38,8 @@ class ActionInvokerImpl implements ActionInvoker {
     }
 
     @Override
-    public List<Response> invokeOnInstances(Request request, String... onInstances) {
-        List<Response> responseList = new ArrayList<>();
+    public Map<String, Response> invokeOnInstances(Request request, String... onInstances) {
+        Map<String, Response> responseList = new LinkedHashMap<>();
 
         Cipher cipher = null;
         Map<String, File> fieldUploadFile = new HashMap<>();
@@ -54,13 +51,13 @@ class ActionInvokerImpl implements ActionInvoker {
                     AppContextImpl appContext = (AppContextImpl) instanceApp.getAppContext();
                     appContext.setCurrentRequest(request);
                     instanceApp.invoke(request);
-                    responseList.add(request.getResponse());
+                    responseList.put(instance, request.getResponse());
                 } else {
                     InstanceInfo instanceInfo = registry.getInstanceInfo(instance);
                     if (cipher == null) {
                         AppInfo appInfo = registry.getAppInfo(request.getApp());
                         if (appInfo == null && request.getApp().equals(DeployerConstants.APP_SYSTEM)) {
-                            // 调用远程实例上的 system app，这个不是注册来的，故从本地获取其元数据
+                            // 调用远程实例上的 system app，这个不是注册来的，故需从本地获取其元数据，如远程上传文件
                             appInfo = deployer.getApp(request.getApp()).getAppInfo();
                         }
                         ModelInfo modelInfo = Objects.requireNonNull(appInfo).getModelInfo(request.getModel());
@@ -83,10 +80,10 @@ class ActionInvokerImpl implements ActionInvoker {
                             request, fieldUploadFile,
                             instanceInfo.getHost(), instanceInfo.getPort(),
                             cipher);
-                    responseList.add(response);
+                    responseList.put(instance, response);
                 }
             } catch (Exception e) {
-                responseList.add(buildErrorResponse(instance, e));
+                responseList.put(instance, buildErrorResponse(instance, e));
             }
         }
 
@@ -168,15 +165,37 @@ class ActionInvokerImpl implements ActionInvoker {
 
     @Override
     public Response invokeSingle(Request request) {
-        List<String> appInstances = getAppInstances(request.getApp());
-        List<Response> responseList = invokeOnInstances(request, appInstances.get(0));
-        return responseList.get(0);
+        String selectInstance = selectInstance(request.getApp());
+        Map<String, Response> invokeOnInstances = invokeOnInstances(request, selectInstance);
+        return invokeOnInstances.values().iterator().next();
+    }
+
+    private String selectInstance(String app) {
+        List<String> appInstances = getAppInstances(app);
+        if (appInstances.contains(DeployerConstants.INSTANCE_LOCAL)) {
+            // 优先考虑在本地实例上执行，性能最好
+            return DeployerConstants.INSTANCE_LOCAL;
+        } else {
+            return appInstances.get(0);
+        }
     }
 
     @Override
-    public List<Response> invokeAll(Request request) {
-        List<String> appInstances = getAppInstances(request.getApp());
-        return invokeOnInstances(request, appInstances.toArray(new String[0]));
+    public Map<String, Response> invoke(Request request) {
+        String appName = request.getApp();
+        AppInfo appInfo = deployer.getAppInfo(appName);
+        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+        if (actionInfo.isDistribute()) {
+            List<String> appInstances = getAppInstances(appName);
+            return invokeOnInstances(request, appInstances.toArray(new String[0]));
+        } else {
+            String selectInstance = selectInstance(request.getApp());
+            Map<String, Response> invokeOnInstances = invokeOnInstances(request, selectInstance);
+            return new HashMap<String, Response>() {{
+                put(selectInstance, invokeOnInstances.values().iterator().next());
+            }};
+        }
     }
 
     private List<String> getAppInstances(String app) {

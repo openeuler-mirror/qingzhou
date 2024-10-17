@@ -11,15 +11,17 @@ public class RequestImpl implements Request {
     private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
     private transient Response response = new ResponseImpl();
     private transient ModelInfo cachedModelInfo = null;
+    private transient Map<String, Response> responseList;
 
     private String appName;
     private String modelName;
     private String actionName;
     private String viewName;
     private String id;
+    private String[] batchId;
     private String userName;
     private Lang lang;
-    private byte[] byteParameter;
+    private byte[] byteParameter; // 发送上传的附件到远程实例上
     private final Map<String, String> nonModelParameters = new HashMap<>();
     private final Map<String, String> parameters = new HashMap<>();
     private final Map<String, String> parametersInSession = new HashMap<>();
@@ -34,7 +36,9 @@ public class RequestImpl implements Request {
         this.viewName = origin.viewName;
         this.id = origin.id;
         this.userName = origin.userName;
+        this.batchId = origin.batchId;
         this.lang = origin.lang;
+        this.byteParameter = null; // 数据量大，且目前大部分业务并不需要它
     }
 
     @Override
@@ -63,13 +67,17 @@ public class RequestImpl implements Request {
     }
 
     @Override
-    public String getNonModelParameter(String name) {
-        return nonModelParameters.get(name);
+    public String[] getBatchId() {
+        return batchId;
+    }
+
+    public void setBatchId(String[] batchId) {
+        this.batchId = batchId;
     }
 
     @Override
-    public Enumeration<String> getNonModelParameterNames() {
-        return Collections.enumeration(nonModelParameters.keySet());
+    public String getNonModelParameter(String name) {
+        return nonModelParameters.get(name);
     }
 
     @Override
@@ -183,5 +191,13 @@ public class RequestImpl implements Request {
 
     public void setByteParameter(byte[] byteParameter) {
         this.byteParameter = byteParameter;
+    }
+
+    public Map<String, Response> getResponseList() {
+        return responseList;
+    }
+
+    public void setResponseList(Map<String, Response> responseList) {
+        this.responseList = responseList;
     }
 }

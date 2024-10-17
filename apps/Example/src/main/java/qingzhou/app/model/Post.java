@@ -49,7 +49,7 @@ public class Post extends AddModelBase implements Option {
     }
 
     @Override
-    public boolean hideIdField() {
+    public boolean showIdField() {
         return true;
     }
 

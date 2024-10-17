@@ -1,5 +1,7 @@
 package qingzhou.deployer;
 
+import qingzhou.registry.AppInfo;
+
 import java.io.File;
 import java.util.List;
 
@@ -17,4 +19,6 @@ public interface Deployer {
     List<String> getAllApp();
 
     App getApp(String appName);
+
+    AppInfo getAppInfo(String appName);
 }

@@ -17,6 +17,7 @@ import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +28,7 @@ import java.util.Map;
         name = {"实例", "en:Instance"},
         info = {"实例是应用部署的载体，为应用提供运行时环境。预置的 " + DeployerConstants.INSTANCE_LOCAL + " 实例表示当前正在访问的服务所在的实例，如集中管理端就运行在此实例上。",
                 "en:An instance is the carrier of application deployment and provides a runtime environment for the application. The provisioned " + DeployerConstants.INSTANCE_LOCAL + " instance indicates the instance where the service is currently accessed, such as the centralized management side running on this instance."})
-public class Instance extends ModelBase implements List, Monitor, Group {
+public class Instance extends ModelBase implements List, Monitor, Group, Download {
     private static final String ID_KEY = "name";
 
     @ModelField(
@@ -261,8 +262,6 @@ public class Instance extends ModelBase implements List, Monitor, Group {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            list = true, order = 8,
-            ajax = true,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。",
                     "en:Download the log information of the instance."})
@@ -281,7 +280,6 @@ public class Instance extends ModelBase implements List, Monitor, Group {
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
-            list = true, order = 2,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -293,6 +291,11 @@ public class Instance extends ModelBase implements List, Monitor, Group {
         tempData.remove();
     }
 
+    @Override
+    public String[] listActions() {
+        return new String[]{ACTION_MONITOR, Download.ACTION_FILES};
+    }
+
     // 为了复用 DefaultAction 的 monitor 方法逻辑
     private final ThreadLocal<Map<String, String>> tempData = new ThreadLocal<>();
 
@@ -301,20 +304,21 @@ public class Instance extends ModelBase implements List, Monitor, Group {
         return tempData.get();
     }
 
-    private void invokeOnAgent(Request request, String... instance) {
+    private void invokeOnAgent(Request request, String instance) {
         String originModel = request.getModel();
         RequestImpl requestImpl = (RequestImpl) request;
         try {
             requestImpl.setModelName(DeployerConstants.MODEL_AGENT);
-            java.util.List<Response> responseList = Main.getService(ActionInvoker.class)
+            Map<String, Response> invokeOnInstances = Main.getService(ActionInvoker.class)
                     .invokeOnInstances(request, instance);
-            if (responseList.size() == 1) {
-                requestImpl.setResponse(responseList.get(0));
-            } else {
-                throw new IllegalStateException();
-            }
+            requestImpl.setResponse(invokeOnInstances.values().iterator().next());
         } finally {
             requestImpl.setModelName(originModel);
         }
+    }
+
+    @Override
+    public File downloadData(String id) {
+        return null;//已经自行实现了下载方法，不必在覆写这个
     }
 }

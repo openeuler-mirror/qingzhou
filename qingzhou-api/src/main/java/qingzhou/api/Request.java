@@ -37,16 +37,16 @@ public interface Request {
 
     /**
      * 获取请求的ID。
-     *
-     * @return 返回请求的唯一符。
      */
     String getId();
 
-    // 获取未使用 @ModelField 标注的参数
-    String getNonModelParameter(String name);
+    /**
+     * 批量处理时的id组
+     */
+    String[] getBatchId();
 
     // 获取未使用 @ModelField 标注的参数
-    Enumeration<String> getNonModelParameterNames();
+    String getNonModelParameter(String name);
 
     /**
      * Returns the value of a request parameter as a <code>String</code>, or

@@ -55,7 +55,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        deployer = new DeployerImpl(moduleContext, logger);
+        deployer = new DeployerImpl(moduleContext, registry, logger);
         deployer.appsBase = FileUtil.newFile(moduleContext.getInstanceDir(), "apps");
 
         moduleContext.registerService(Deployer.class, deployer);
