@@ -54,6 +54,11 @@ public class Post extends AddModelBase implements Option {
     }
 
     @Override
+    public String[] staticOptionFields() {
+        return null;
+    }
+
+    @Override
     public String[] dynamicOptionFields() {
         return new String[]{"postStatus"};
     }

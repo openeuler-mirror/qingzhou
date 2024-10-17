@@ -26,6 +26,8 @@ public class ModelInfo {
     private LinkedHashMap<String, ItemInfo[]> optionInfos;
     private Map<String, String> searchParameters;
     private boolean hideIdField;
+    private String[] staticOptionFields;
+    private String[] dynamicOptionFields;
 
     public ModelActionInfo getModelActionInfo(String actionName) {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
@@ -326,6 +328,22 @@ public class ModelInfo {
 
     public void setHideIdField(boolean hideIdField) {
         this.hideIdField = hideIdField;
+    }
+
+    public String[] getStaticOptionFields() {
+        return staticOptionFields;
+    }
+
+    public void setStaticOptionFields(String[] staticOptionFields) {
+        this.staticOptionFields = staticOptionFields;
+    }
+
+    public String[] getDynamicOptionFields() {
+        return dynamicOptionFields;
+    }
+
+    public void setDynamicOptionFields(String[] dynamicOptionFields) {
+        this.dynamicOptionFields = dynamicOptionFields;
     }
 
     @Override

@@ -78,7 +78,7 @@ public interface List {
         return null;
     }
 
-    default boolean hideIdField() throws Exception {
+    default boolean hideIdField() {
         return false;
     }
 }

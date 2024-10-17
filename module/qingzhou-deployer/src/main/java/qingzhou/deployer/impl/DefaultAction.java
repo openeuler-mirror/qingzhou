@@ -1,9 +1,6 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.List;
 import qingzhou.api.type.*;
 import qingzhou.deployer.DeployerConstants;
@@ -11,10 +8,7 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
+import qingzhou.registry.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,6 +71,23 @@ class DefaultAction {
             data.putAll(echoResult);
         });
         request.getResponse().addData(data);
+    }
+
+    @ModelAction(
+            code = Option.ACTION_OPTION, icon = "check-board",
+            name = {"选项", "en:Option"},
+            info = {"列出指定字段的候选值。", "en:Lists the candidate values for the specified field."})
+    public void option(Request request) throws Exception {
+        Option option = (Option) instance;
+        Item[] items = option.optionData(request.getParameter(Option.FIELD_NAME_PARAMETER));
+        if (items == null) return;
+
+        ItemInfo[] itemInfos = new ItemInfo[items.length];
+        for (int i = 0; i < items.length; i++) {
+            itemInfos[i] = new ItemInfo(items[i]);
+        }
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.setItemInfos(itemInfos);
     }
 
     @ModelAction(

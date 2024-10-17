@@ -31,7 +31,7 @@ public class User extends AddModelBase implements Group, Option {
             type = FieldType.select,
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
-    public String sex;
+    public String gender;
 
     @ModelField(
             group = "org",
@@ -98,7 +98,7 @@ public class User extends AddModelBase implements Group, Option {
             code = "test", icon = "circle-arrow-up",
             list = true,
             head = true, order = 2,
-            fields = {"name", "notes", "sex", "a", "b"},
+            fields = {"name", "notes", "gender", "a", "b"},
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
@@ -126,14 +126,19 @@ public class User extends AddModelBase implements Group, Option {
     }
 
     @Override
+    public String[] staticOptionFields() {
+        return new String[]{"gender"};
+    }
+
+    @Override
     public String[] dynamicOptionFields() {
-        return null;
+        return new String[]{"subjects2", "subjects3"};
     }
 
     @Override
     public Item[] optionData(String fieldName) {
         switch (fieldName) {
-            case "sex":
+            case "gender":
                 return new Item[]{
                         Item.of("0", new String[]{"男", "en:man"}),
                         Item.of("1", new String[]{"女", "en:woman"})
@@ -146,7 +151,7 @@ public class User extends AddModelBase implements Group, Option {
                 };
             case "subjects3":
                 return Item.of(new String[]{"a", "b", "c", "d", "e"});
-            case "position":
+            case "position": // 没有设置静态和动态选项字段，无效代码
                 return Item.of(new String[]{"a", "b", "c"});
         }
 
