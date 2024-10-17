@@ -99,7 +99,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
 
                 String SP = redirectUri.contains("?") ? "&" : "?";
                 if (!VerCode.isVerCodeDisabled()) {
-                    redirectUri += (SP + VerCode.SHOW_CAPTCHA_FLAG); // 只要错误就要求输入验证码，命令行登录是不需要的，命令行设备5此登录失败拦截的，验证码只是前端拦截用户，本质没啥大用，因为命令行可以绕过验证码
+                    redirectUri += (SP + VerCode.SHOW_CAPTCHA_FLAG); // 只要错误就要求输入验证码，命令行登录是不需要的，命令行设备5次登录失败拦截的，验证码只是前端拦截用户，本质没啥大用，因为命令行可以绕过验证码
                 }
                 response.sendRedirect(request.getContextPath() + redirectUri);
             }

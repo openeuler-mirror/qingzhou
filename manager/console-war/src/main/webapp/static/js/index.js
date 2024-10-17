@@ -1,316 +1,49 @@
-+function ($) {
-    "use strict";
+/**
+ * 获取全局配置项
+ * @param key 配置 key
+ */
+function getSetting(key) {
+    var settings = eval("(typeof global_setting !== 'undefined') ? global_setting : {}");
+    return settings[key] ? settings[key] : key;
+};
 
-    var DataKey = "lte.pushmenu";
+// 当前页面主活动区域
+function getActiveTabContent() {
+    return $(".content-box>ul>li")[$(".tab-box>ul>li.active").index()];
+};
 
-    var Default = {
-        collapseScreenSize: 767,
-        expandOnHover: false,
-        expandTransitionDelay: 10
-    };
-
-    var Selector = {
-        collapsed: ".sidebar-collapse",
-        open: ".sidebar-open",
-        mainSidebar: ".main-sidebar",
-        contentWrapper: ".content-wrapper",
-        searchInput: ".sidebar-form .form-control",
-        button: "[data-toggle='push-menu']",
-        mini: ".sidebar-mini",
-        expanded: ".sidebar-expanded-on-hover",
-        layoutFixed: ".fixed"
-    };
-
-    var ClassName = {
-        collapsed: "sidebar-collapse",
-        open: "sidebar-open",
-        mini: "sidebar-mini",
-        expanded: "sidebar-expanded-on-hover",
-        expandFeature: "sidebar-mini-expand-feature",
-        layoutFixed: "fixed"
-    };
-
-    var Event = {
-        expanded: "expanded.pushMenu",
-        collapsed: "collapsed.pushMenu"
-    };
-
-    // PushMenu Class Definition
-    // =========================
-    var PushMenu = function (options) {
-        this.options = options;
-        this.init();
-    };
-
-    PushMenu.prototype.init = function () {
-        if (this.options.expandOnHover
-            || ($("body").is(Selector.mini + Selector.layoutFixed))) {
-            this.expandOnHover();
-            $("body").addClass(ClassName.expandFeature);
-        }
-
-        $(Selector.contentWrapper).click(function () {
-            // Enable hide menu when clicking on the content-wrapper on small screens
-            if ($(window).width() <= this.options.collapseScreenSize && $("body").hasClass(ClassName.open)) {
-                this.close();
-            }
-        }.bind(this));
-
-        // __Fix for android devices
-        $(Selector.searchInput).click(function (e) {
-            e.stopPropagation();
-        });
-    };
-
-    PushMenu.prototype.toggle = function () {
-        var windowWidth = $(window).width();
-        var isOpen = !$("body").hasClass(ClassName.collapsed);
-
-        if (windowWidth <= this.options.collapseScreenSize) {
-            isOpen = $("body").hasClass(ClassName.open);
-        }
-
-        if (!isOpen) {
-            var windowWidth = $(window).width();
-            if (windowWidth > this.options.collapseScreenSize) {
-                $("body").removeClass(ClassName.collapsed);
-            } else {
-                $("body").addClass(ClassName.open);
-            }
-        } else {
-            var windowWidth = $(window).width();
-            if (windowWidth > this.options.collapseScreenSize) {
-                $("body").addClass(ClassName.collapsed);
-            } else {
-                $("body").removeClass(ClassName.open + " " + ClassName.collapsed);
-            }
-        }
-    };
-
-    // PushMenu Plugin Definition
-    // ==========================
-    function Plugin(option) {
-        return this.each(function () {
-            var $this = $(this);
-            var data = $this.data(DataKey);
-
-            if (!data) {
-                var options = $.extend({}, Default, $this.data(), typeof option === "object" && option);
-                $this.data(DataKey, (data = new PushMenu(options)));
-            }
-
-            if (option === "toggle") {
-                data.toggle();
-            }
-        });
-    }
-
-    var old = $.fn.pushMenu;
-
-    $.fn.pushMenu = Plugin;
-    $.fn.pushMenu.Constructor = PushMenu;
-
-    // No Conflict Mode
-    // ================
-    $.fn.pushMenu.noConflict = function () {
-        $.fn.pushMenu = old;
-        return this;
-    };
-
-    // Data API
-    // ========
-    $(document).on("click", Selector.button, function (e) {
-        e.preventDefault();
-        Plugin.call($(this), "toggle");
-    });
-    $(window).on("load", function () {
-        Plugin.call($(Selector.button));
-    });
-}(jQuery);
-
-+function ($) {
-    "use strict";
-
-    var DataKey = "lte.tree";
-    var Default = {
-        animationSpeed: 10,
-        accordion: true,
-        followLink: true,
-        trigger: ".treeview a"
-    };
-    var Selector = {
-        tree: ".tree",
-        treeview: ".treeview",
-        treeviewMenu: ".treeview-menu",
-        open: ".menu-open, .active",
-        li: "li",
-        data: "[data-widget='tree']",
-        active: ".active"
-    };
-    var ClassName = {
-        open: "menu-open",
-        tree: "tree",
-        openActive: "menu-open active"
-    };
-    var Event = {
-        collapsed: "collapsed.tree",
-        expanded: "expanded.tree"
-    };
-
-    // Tree Class Definition
-    // =====================
-    var Tree = function (element, options) {
-        this.element = element;
-        this.options = options;
-        //$(this.element).addClass(ClassName.tree);
-        //$(Selector.treeview + Selector.active, this.element).addClass(ClassName.open);
-        $(Selector.treeviewMenu + " " + Selector.active).parents(Selector.treeview).addClass(ClassName.openActive);
-        this._setUpListeners();
-    };
-
-    Tree.prototype.toggle = function (link, event) {
-        var treeviewMenu = link.next(Selector.treeviewMenu);
-        var parentLi = link.parent();
-        if (!parentLi.is(Selector.treeview)) {
-            return;
-        }
-
-        if (!this.options.followLink || link.attr("href") === "#" || link.attr("href").indexOf("javascript:") === 0) {
-            event.preventDefault();
-        }
-
-        if ($(".treeview-menu", parentLi).length > 0) {
-            parentLi.removeClass("expandsub");
-            if (parentLi.hasClass(ClassName.open)) {
-                this.collapse(treeviewMenu, parentLi);
-            } else {
-                this.expand(treeviewMenu, parentLi);
-            }
-        }
-    };
-
-    Tree.prototype.expand = function (tree, parent) {
-        var expandedEvent = $.Event(Event.expanded);
-        if (this.options.accordion) {
-            var openMenuLi = parent.siblings(Selector.open);
-            var openTree = openMenuLi.children(Selector.treeviewMenu);
-            this.collapse(openTree, openMenuLi);
-        }
-
-        parent.addClass(ClassName.open);
-        tree.slideDown(this.options.animationSpeed, function () {
-            // tree.find(Selector.open + " > " + Selector.treeview).slideDown();
-            $(this.element).trigger(expandedEvent);
-        }.bind(this));
-    };
-
-    Tree.prototype.collapse = function (tree, parentLi) {
-        var collapsedEvent = $.Event(Event.collapsed);
-
-        //tree.find(Selector.open).removeClass(ClassName.openActive);
-        parentLi.removeClass(ClassName.open);
-        tree.slideUp(this.options.animationSpeed, function () {
-            // tree.find(Selector.open + " > " + Selector.treeview).slideUp();
-            $(this.element).trigger(collapsedEvent);
-        }.bind(this));
-    };
-
-    // Private
-    Tree.prototype._setUpListeners = function () {
-        var that = this;
-        $(this.element).on("click", this.options.trigger, function (event) {
-            that.toggle($(this), event);
-            if ($(this).next(Selector.treeviewMenu).length === 0 && $(this).attr("href").indexOf("javascript:") < 0) {
-                $("li.active", that.element).removeClass("active");
-                $(this).parents("li").not(".treeview.menu-open").addClass("active");
-            }
-        });
-    };
-
-    // Plugin Definition
-    // =================
-    function Plugin(option) {
-        return this.each(function () {
-            var $this = $(this);
-            var data = $this.data(DataKey);
-            if (!data) {
-                var options = $.extend({}, Default, $this.data(), typeof option === "object" && option);
-                $this.data(DataKey, new Tree($this, options));
-            }
-        });
-    }
-
-    var old = $.fn.menuTree;
-    $.fn.menuTree = Plugin;
-    $.fn.menuTree.Constructor = Tree;
-
-    // No Conflict Mode
-    // ================
-    $.fn.menuTree.noConflict = function () {
-        $.fn.menuTree = old;
-        return this;
-    };
-
-    // Tree Data API
-    // =============
-    $(window).on("load", function () {
-        $(Selector.data).each(function () {
-            Plugin.call($(this));
-        });
-    });
-}(jQuery);
+// 获取限定区域
+function getRestrictedArea() {
+    return getActiveTabContent();
+};
 
 $(document).ready(function () {
-    // 设置或重新设置（如事件绑定、赋初始值等）
-    setOrReset();
-    // 菜单展示优化
-    $(".sidebar-menu>li").hover(function () {
-        if ($(document.body).hasClass("sidebar-collapse")) {
-            $(".main-sidebar .sidebar").removeClass("sidebar-scroll");
-            if ($(".treeview-menu", this).length < 1) {
-                $(this).addClass("optimize-sub");
-            } else {
-                if ($(this).offset().top < $(".main-header .navbar").height()) {
-                    $(".treeview-menu", this).addClass("locate-t");
-                } else {
-                    var compare = $(window).height() - ($(this).offset().top + $(".treeview-menu", this).height());
-                    if (compare < 30) {
-                        $(".treeview-menu", this).addClass("locate-b");
-                        $(this).addClass("for-locate");
-                    }
-                }
-            }
-        }
-    }, function () {
-        $(this).removeClass("optimize-sub for-locate");
-        $(".treeview-menu", this).removeClass("locate-t locate-b");
-        $(".main-sidebar .sidebar").addClass("sidebar-scroll");
-    });
-
+    // ITAIT-4984 微软自研浏览器 Edge 样式特殊处理，解决滚动条样式问题
+    var browserInfo = qz.browserNV();
+    if (browserInfo.core === "Edge" && browserInfo.v <= 60.0) {
+        $(".main-body").css({"min-height": "calc(-100px + 100%)", "height": "auto", "top": "100px", "bottom": "100px"});
+    }
+    
     // 响应式小屏模式下，点击完菜单，自动隐藏左侧菜单栏
-    $(".sidebar li a").click(function () {
+    $(".sidebar li a").click(function () {// TODO 需要考虑多Tab标签的情况
         if ($(document.body).hasClass("sidebar-open") && $(this).attr("href").indexOf("/") > -1) {
             $(document.body).toggleClass("sidebar-open");
         }
     });
     $(document.body).click(function (e) {
-        if ($(document.body).hasClass("sidebar-open") && !$(e.target).hasClass(".sidebar-toggle") && $(e.target).parents(".sidebar-toggle").length === 0 && !$(e.target).hasClass(".main-sidebar") && $(e.target).parents(".main-sidebar").length === 0) {
+        if ($(document.body).hasClass("sidebar-open") && !$(e.target).hasClass(".sidebar-toggle") && $(e.target).parents(".sidebar-toggle").length === 0 
+                && !$(e.target).hasClass(".main-sidebar") && $(e.target).parents(".main-sidebar").length === 0) {
             $(document.body).toggleClass("sidebar-open");
         }
     });
-
-    // ITAIT-4984 微软自研浏览器 Edge 样式特殊处理，解决滚动条样式问题
-    var browserInfo = browserNV();
-    if (browserInfo != {} && browserInfo.core === "Edge" && browserInfo.v <= 60.0) {
-        $(".main-body").css({"min-height": "calc(-100px + 100%)", "height": "auto", "top": "100px", "bottom": "100px"});
-    }
+    
     //切换主题模式点击事件
-    $("#switch-mode-btn").click(function () {
+    $("#switch-mode-btn").unbind("click").bind("click", function () {
         var icon = $("i", this);
         var $this = this;
         var themeUrl = $(this).attr("themeUrl");
         var nowTheme = $(this).attr("theme");
-        var toTheme = $(this).attr("theme") == "" ? "dark" : "";
+        var toTheme = $(this).attr("theme") === "" ? "dark" : "";
         if (themeUrl.indexOf("?") > 0) {
             themeUrl = themeUrl.substr(0, themeUrl.lastIndexOf("/") + 1) + toTheme + themeUrl.substring(themeUrl.indexOf("?"));
         } else {
@@ -318,7 +51,7 @@ $(document).ready(function () {
         }
         $.post(themeUrl, {}, function (themeTxt) {
             $("body").removeClass(nowTheme + "-mode");
-            if (themeTxt != "") {
+            if (themeTxt !== "") {
                 $("body").addClass(themeTxt + "-mode");
             }
             if (icon.hasClass("icon-moon")) {
@@ -356,13 +89,12 @@ $(document).ready(function () {
         });
         return false;
     });
-
     // 用户修改密码点击事件
     $("#reset-password-btn").unbind("click").bind("click", function (e) {
         e.preventDefault();
         $(".tab-box>ul>li[fixed='true']").click();
         const restrictedArea = getRestrictedArea();
-        var lis = $(".sidebar-menu .active", restrictedArea);
+        var lis = $(".sidebar-menu .active", restrictedArea);// TODO 需要考虑二级 Tab 标签的情况
         lis.removeClass("menu-open active");
         for (var i = 0; i < lis.length; i++) {
             var uls = lis[i].querySelectorAll('ul');
@@ -379,83 +111,10 @@ $(document).ready(function () {
             $(menuItemLink).parent().addClass("active");
             $(menuItemLink).parents(".sidebar.sidebar-scroll").animate({scrollTop: $(menuItemLink).parents(".sidebar.sidebar-scroll").scrollTop() + $(menuItemLink).parent().offset().top - $(menuItemLink).parents(".sidebar.sidebar-scroll").offset().top}, 1000);
         }
-        tw.fill(matchPart, {}, ".main-body", false, this);
+        qz.fill(matchPart, {}, $(".main-body").first(), false, null);
         return false;
     });
-});
-
-/**
- * 设置(如绑定事件或设置初始值等) 或 重新设置
- */
-function setOrReset() {
-    // 左侧菜单点击菜单事件
-    tw.bindFill("ul.sidebar-menu a", ".main-body", false, true);
-    // 集中管理、默认实例等 Tab 标签切换事件绑定
-    bindTabEvent();
-    // 布尔开关
-    $(".switch-btn:not(.disallowed)").unbind("click").bind("click", function () {
-        $(".switchedge", this).toggleClass("switch-bg");
-        $(".circle", this).toggleClass("switch-right");
-        $("input", this).val($("input", this).val() === "true" ? false : true);
-        $("input", this).change();
-    });
-    // 下拉列表 / 可输入下拉列表
-    niceSelect();
-    // 多选下拉
-    $("select[multiple='multiple'][loaded!='true']").each(function () {
-        var $this = $(this);
-        $(this).attr("loaded", true).multipleSelect({
-            locale: getSetting("locale"),
-            multiple: true,
-            multipleWidth: 180,
-            filter: true,
-            filterGroup: true,
-            showClear: true,
-            animate: "fade",
-            onAfterCreate: function () {
-                $("ul li.multiple", $($this).next(".ms-parent")).each(function () {
-                    $(this).attr("title", $("label>span", this).first().text());
-                    $(this).hover(function () {
-                        $("label>span", this).css({"white-space": "normal"});
-                    }, function () {
-                        $("label>span", this).css({"white-space": "nowrap"});
-                    });
-                });
-                return true;
-            }
-        });
-    });
-    // sortable.jsp 拖拽排序
-    dragable();
-    // sortablecheckbox.jsp 拖拽排序
-    checkboxSortable();
-    // 列表页面事件操作
-    bindEventForListPage();
-    // form 表单页面事件操作
-    bindEventForFormPage();
-    // monitor.jsp 页面加载
-    initMonitorPage();
-    // grid.jsp 页面初始化
-    if (document.querySelectorAll(".apps").length > 0) {
-        var apps = document.querySelectorAll(".apps");
-        for (var i = 0; i < apps.length; i++) {
-            new Muuri(apps[i], {
-                items: apps[i].querySelectorAll("div.app"),
-                layoutDuration: 300,
-                layoutEasing: "ease",
-                dragEnabled: false
-            });
-        }
-    }
-    // markdown 内容展示
-    $(".markedviewText").each(function () {
-        $(this).prev(".markedview").html(marked.parse($(this).val()));
-    });
-    // 菜单区域禁止鼠标右键
-    $(".main-sidebar").unbind("contextmenu").bind("contextmenu", function (e) {
-        e.preventDefault();
-        return false;
-    });
+    
     $("#searchText").unbind("input").bind("input", function (e) {
         var html = "";
         var keyword = $.trim($(this).val());
@@ -548,16 +207,143 @@ function setOrReset() {
             $("#searchText").blur();
             return false;
         }
-    }).unbind("focus").bind("focus", function (e) {
-        var brwVer = browserNV();
-        if (brwVer.core === "IE" && brwVer.v === 9) {
-            $("#searchResult").css({"visibility": "visible", "opacity": "1"});
+    });
+    
+    // 设置或重新设置（如事件绑定、赋初始值等）
+    setOrReset();
+});
+
+// 绑定本机、集群、实例 Tab 标签事件
+function bindTabEvent() {
+    $(".tab-box>ul>li[loaded!='true']").attr("loaded", "true").each(function (i, dom) {
+        var $this = this;
+        $(this).unbind("click").bind("click", function (e) {
+            e.preventDefault();
+            if ($($this).hasClass("active") || (e.target.tagName === "LABEL" && $(e.target).hasClass("close"))) {
+                return false;
+            }
+            var activeTab = $(".tab-box li.active");
+            $(this).parent().attr("preTab", $(activeTab).attr("id"));
+            $(activeTab).removeClass("active");
+            $($(".content-box>ul>li")[$(activeTab).index()]).removeClass("active").addClass("inactive");
+            $(this).addClass("active");
+            $($(".content-box>ul>li")[$(this).index()]).removeClass("inactive").addClass("active");
+            autoAdaptTip();
+            return false;
+        });
+        $(".close", this).unbind("click").bind("click", function (e) {
+            e.preventDefault();
+            if ($($this).hasClass("active")) {
+                var preTab = $("#" + $($this).parent().attr("preTab"));
+                if (preTab == undefined || preTab.attr("id") == $($this).attr("id")) {
+                    preTab = $("#defaultTab");
+                }
+                $(preTab).addClass("active");
+                $($(".content-box>ul>li")[$(preTab).index()]).removeClass("inactive").addClass("active");
+            } else {
+                $($this).parent().attr("preTab", $(".tab-box li.active").attr("id"));
+            }
+            $($(".content-box>ul>li")[$($this).index()]).remove();
+            $($this).remove();
+            autoAdaptTip();
+            return false;
+        });
+    });
+};
+
+/**
+ * 设置(如绑定事件或设置初始值等) 或 重新设置
+ */
+function setOrReset() {
+    // 菜单区域禁止鼠标右键
+    $(".main-sidebar").unbind("contextmenu").bind("contextmenu", function (e) {
+        e.preventDefault();
+        return false;
+    });
+    // 菜单展示优化
+    $("aside.main-sidebar[loaded!='true']").attr("loaded", "true").find(".sidebar-menu>li").hover(function () {
+        if ($(document.body).hasClass("sidebar-collapse")) {// TODO Need to consider the case of multiple Tab tabs.
+            $(".main-sidebar .sidebar").removeClass("sidebar-scroll");
+            if ($(".treeview-menu", this).length < 1) {
+                $(this).addClass("optimize-sub");
+            } else {
+                if ($(this).offset().top < $(".main-header .navbar").height()) {
+                    $(".treeview-menu", this).addClass("locate-t");
+                } else {
+                    var compare = $(window).height() - ($(this).offset().top + $(".treeview-menu", this).height());
+                    if (compare < 30) {
+                        $(".treeview-menu", this).addClass("locate-b");
+                        $(this).addClass("for-locate");
+                    }
+                }
+            }
         }
-    }).unbind("blur").bind("blur", function (e) {
-        var brwVer = browserNV();
-        if (brwVer.core === "IE" && brwVer.v === 9) {
-            $("#searchResult").css({"visibility": "hidden", "opacity": "0"});
+    }, function () {
+        $(this).removeClass("optimize-sub for-locate");
+        $(".treeview-menu", this).removeClass("locate-t locate-b");
+        $(".main-sidebar .sidebar").addClass("sidebar-scroll");
+    });
+    // 布尔开关
+    $(".switch-btn:not(.disallowed)[loaded!='true']").attr("loaded", "true").unbind("click").bind("click", function () {
+        $(".switchedge", this).toggleClass("switch-bg");
+        $(".circle", this).toggleClass("switch-right");
+        $("input", this).val($("input", this).val() === "true" ? false : true);
+        $("input", this).change();
+    });
+    // 多选下拉
+    $("select[multiple='multiple'][loaded!='true']").attr("loaded", "true").each(function () {
+        var $this = $(this);
+        $(this).multipleSelect({
+            locale: getSetting("locale"),
+            multiple: true,
+            multipleWidth: 180,
+            filter: true,
+            filterGroup: true,
+            showClear: true,
+            animate: "fade",
+            onAfterCreate: function () {
+                $("ul li.multiple", $($this).next(".ms-parent")).each(function () {
+                    $(this).attr("title", $("label>span", this).first().text());
+                    $(this).hover(function () {
+                        $("label>span", this).css({"white-space": "normal"});
+                    }, function () {
+                        $("label>span", this).css({"white-space": "nowrap"});
+                    });
+                });
+                return true;
+            }
+        });
+    });
+    
+    // 一级 Tab 标签切换事件绑定
+    bindTabEvent();
+    // 下拉列表 / 可输入下拉列表
+    niceSelect();
+    // sortable.jsp 拖拽排序
+    dragable();
+    // sortablecheckbox.jsp 拖拽排序
+    checkboxSortable();
+    // 列表页面事件操作
+    bindEventForListPage();
+    // form 表单页面事件操作
+    bindEventForFormPage();
+    // monitor.jsp 页面加载
+    initMonitorPage();
+    // grid.jsp 页面初始化
+    if (document.querySelectorAll(".apps").length > 0) {
+        var apps = document.querySelectorAll(".apps");
+        for (var i = 0; i < apps.length; i++) {
+            new Muuri(apps[i], {
+                items: apps[i].querySelectorAll("div.app"),
+                layoutDuration: 300,
+                layoutEasing: "ease",
+                dragEnabled: false
+            });
         }
+    }
+    // markdown 内容展示
+    $(".markedviewText[loaded!='true']").attr("loaded", "true").each(function () {
+        $(this).prev(".markedview").html(marked.parse($(this).val()));
     });
     $("label[password_label_right]").unbind("click").click("click", function () {
         if ($("i", this).hasClass("icon-eye-open")) {
@@ -568,13 +354,17 @@ function setOrReset() {
             $(this).prev().attr("type", "text");
         }
     });
+    
+    const restrictedArea = getRestrictedArea();
+    // 左侧菜单点击菜单事件
+    qz.bindFill("ul.sidebar-menu a", ".main-body", false, true, getRestrictedArea);
 };
 
 function gotoTarget(model, action, group, field) {
     var boxes = new Array(".content-box>ul>li.active:first", ".content-box>ul>li:eq(1)", ".content-box>ul>li:eq(0)");
-    const restrictedArea = getRestrictedArea();
+    const restrictedArea = getRestrictedArea();// TODO 待调整
     for (var i = 0; i < boxes.length; i++) {
-        var menuItemLink = $("ul.sidebar-menu li a[modelName='" + model + "']", $(boxes[i]));
+        var menuItemLink = $("ul.sidebar-menu li a[modelName='" + model + "']", $(boxes[i])).not(":has(div.tab-container)");
         if (menuItemLink.length > 0) {
             if ($(menuItemLink).parent().hasClass("treeview")) {
                 $(menuItemLink).parents("li.treeview").addClass("active");
@@ -592,8 +382,9 @@ function gotoTarget(model, action, group, field) {
 
             if (action && action !== null && action !== "") {
                 if (action === "create") {
-                    var container = $("div.bodyDiv", restrictedArea);
-                    tw.fill("/console/rest/html/" + model + "/" + action + searchUrl.substring(searchUrl.indexOf("?")), {}, ($(container).length > 0 ? container : $(".main-body", restrictedArea)), false, menuItemLink);
+                    var container = $("div.bodyDiv", restrictedArea).not(":has(div.tab-container)");
+                    var url = "/console/rest/html/" + model + "/" + action + searchUrl.substring(searchUrl.indexOf("?"));
+                    qz.fill(url, {}, ($(container).length > 0 ? container : $(".main-body", restrictedArea).not(":has(div.tab-container)")), false, null);
                 }
             }
             $(".nav-tabs a[tabGroup='" + group + "']", restrictedArea).click();
@@ -651,12 +442,6 @@ function shaking(el) {
 
 /**************************************** form.jsp - start *************************************************/
 function bindEventForFormPage() {
-    // 返回按钮
-    tw.bindFill(".form-btn a[btn-type='goback']", ".main-body", false, true);
-
-    // 列表页及form页面下载(日志、快照等)
-    tw.bindFill(".form-btn a[btn-type='monitor']", ".main-body", true, false);
-
     // form页面(修改密码动态密码二维码加载)
     $(".form-btn a[btn-type='qrOtp']").unbind("click").bind("click", function (e) {
         e.preventDefault();
@@ -701,16 +486,10 @@ function bindEventForFormPage() {
         });
         return false;
     });
-
     // 只读元素鼠标手势
     $(".form-group [readonly]").each(function () {
         $(this).css("cursor", "not-allowed").parent().css("cursor", "not-allowed");
     });
-
-    //绑定失去焦点数据回显事件
-    bindEchoItemEvent();
-    bindFormEvent();
-
     // 日期组件设置
     $(".form-datetime").datetimepicker({
         weekStart: 1,
@@ -720,18 +499,25 @@ function bindEventForFormPage() {
         forceParse: 0,
         showMeridian: 1
     });
+    //绑定失去焦点数据回显事件
+    bindEchoItemEvent();
+    bindFormEvent();
+    
+    const restrictedArea = getRestrictedArea();
+    // 返回按钮
+    qz.bindFill(".form-btn a[btn-type='goback']", ".main-body", false, true, getRestrictedArea);
+    // 列表页及form页面下载(日志、快照等)
+    qz.bindFill(".form-btn a[btn-type='monitor']", ".main-body", true, false, getRestrictedArea);
 };
 
 function bindFormEvent() {
-    $("form[name='pageForm'][loaded!='true']").each(function () {
+    $("form[name='pageForm'][loaded!='true']").attr("loaded", "true").each(function () {
         var thisForm = $(this);
         // 表单元素级联控制显示/隐藏，只读的事件绑定
-        var eventConditions = JSON.parse($.trim($("textarea[name='eventConditions']", thisForm).val()));
-        bindEvent(eventConditions);
-
+        bindEvent(JSON.parse($.trim($("textarea[name='eventConditions']", thisForm).val())));
         var passwordFields = $.trim($("textarea[name='passwordFields']", thisForm).val()).split(",");
         // form 表单异步提交(ajax form)
-        $(this).attr("loaded", "true").ajaxForm({
+        $(this).ajaxForm({
             type: "POST",
             dataType: "json",
             beforeSerialize: function () {
@@ -762,8 +548,8 @@ function bindFormEvent() {
             },
             beforeSubmit: function (data) {
                 $("#mask-loading").show();
-                $("input[data-type='password']").attr("type", "password");
-                $("input[data-type='password']").next().find("i").removeClass("icon-eye-open").addClass("icon-eye-close");
+                $("input[data-type='password']", thisForm).attr("type", "password");
+                $("input[data-type='password']", thisForm).next().find("i").removeClass("icon-eye-open").addClass("icon-eye-close");
                 $(".form-btn .btn", thisForm).attr("disabled", true);
                 if ($("input[type='file']", thisForm).length > 0) {
                     $(thisForm).attr("enctype", "multipart/form-data");
@@ -783,7 +569,7 @@ function bindFormEvent() {
                     if ($(".form-btn a[btn-type='goback']", thisForm).length > 0) {
                         $(".form-btn a[btn-type='goback']", thisForm).click();
                     } else {
-                        $(".sidebar-menu li.active", getRestrictedArea()).each(function () {
+                        $(".sidebar-menu", getRestrictedArea()).not(":has(div.tab-container)").find("li.active").each(function () {
                             if (!$(this).hasClass("menu-open")) {
                                 $("a", this).click();
                             }
@@ -830,7 +616,7 @@ function bindFormEvent() {
                                 $("label.tw-error-info", this).html(errorData[$(this).attr("error-key")]);
                             });
                         });
-                        $($("a", $(".nav.nav-tabs > li.tab-has-error").first()).attr("href")).addClass("active");
+                        $($("a", $(".nav.nav-tabs > li.tab-has-error").first()).attr("href")).addClass("active");// TODO 需要考虑多级 Tab 标签。
                         //$("html, body").animate({scrollTop: $(".has-error", thisForm).first().offset().top - 100}, 500);
                     } else {
                         showMsg(data.message, data.msg_level);
@@ -895,13 +681,12 @@ function addRow(alink, readonly) {
     }
     var ulEle = $("ul.sortable", $(alink).parents(".form-control-sortable"));
     var selectedRow = $("li[selected='selected']", ulEle);
-    var isIE9 = browserNV().core === "IE" && browserNV().v < 10.0;
-    var html = "<li class=\"droptarget\"" + (isIE9 ? "" : " draggable=\"true\"") + "><table class=\"table table-bordered dragtable\">"
+    var html = "<li class=\"droptarget\" draggable=\"true\"><table class=\"table table-bordered dragtable\">"
         + "<tr><td class=\"editable\" style=\"padding:0px 0px !important;\"><label></label></td>"
         + "<td class=\"narrow\"><a href=\"javascript:void(0);\" class=\"editable-edit\""
         + "onclick=\"bindEditable(this, false);\"><i class=\"icon icon-edit\"></i></a></td>"
         + "<td class=\"narrow\"><a href=\"javascript:void(0);\" onclick=\"removeRow(this, false);\"><i class=\"icon icon-trash\"></i></a></td>"
-        + "<td class=\"draggable narrow\"><a href=\"javascript:void(0);\"" + (isIE9 ? " draggable=\"true\"" : "") + "><i class=\"icon icon-arrows\"></i></a>\</td>"
+        + "<td class=\"draggable narrow\"><a href=\"javascript:void(0);\"><i class=\"icon icon-arrows\"></i></a>\</td>"
         + "</tr></table></li>";
     if (selectedRow.length > 0) {
         $(selectedRow).before(html);
@@ -967,14 +752,6 @@ function refreshTable() {
 };
 
 function dragable() {
-    var isIE9 = browserNV().core === "IE" && browserNV().v < 10.0;
-    $(".form-control-sortable>ul.sortable").each(function () {
-        if (isIE9) {
-            $("li.droptarget", this).removeAttr("draggable");
-        } else {
-            $("a[draggable='true']", this).removeAttr("draggable");
-        }
-    });
     var dragging = null;
     $(".form-control-sortable>ul.sortable").unbind("selectstart,dragstart,drag,dragend,dragenter,dragover,dragleave,drop")
         .bind("selectstart", function (e) {
@@ -1046,7 +823,6 @@ function checkboxSortable() {
         }
     });
     var draging = null;
-    const restrictedArea = getRestrictedArea();
     $(".checkbox-group a input:checked:not([readonly])").next().css({"cursor": "move"});
     $(".checkbox-group.sortable").unbind("selectstart,dragstart,drag,dragend,dragenter,dragover,dragleave,drop")
         .bind("selectstart", function (e) {
@@ -1056,7 +832,7 @@ function checkboxSortable() {
         draging = e.target;
     }).bind("dragover", function (e) {
         e.preventDefault();
-        var target = e.target.nodeName === "A" ? e.target : $(e.target).parents("a[draggable='true']")[0];
+        var target = e.target;
         if ($(e.target).parents(".checkbox-group").length > 0 && target !== draging) {
             if ($(target).index() < $(draging).index()) {
                 $(target).before(draging);
@@ -1075,7 +851,7 @@ function checkboxSortable() {
  */
 function bindEventForListPage() {
     // 初始化分页条
-    $("ul.pager.pager-loose").each(function () {
+    $("ul.pager.pager-loose[loaded!='true']").attr("loaded", "true").each(function () {
         var partLinkUri = $(this).attr("partLinkUri");
         $(this).pager({
             page: Number($(this).attr("data-page")),
@@ -1088,35 +864,52 @@ function bindEventForListPage() {
             lang: getSetting("pageLang")
         });
     });
-    // 搜索
-    tw.bindFill(".search-btn a", ".main-body", false, false);
+    const restrictedArea = getRestrictedArea();
     // 列表搜索框回车
-    $("form[name='filterForm']").unbind("keypress").bind("keypress", function (e) {
+    $("form[name='filterForm'][loaded!='true']").attr("loaded", "true").unbind("keypress").bind("keypress", function (e) {
         if (e.keyCode === 13) {
             e.preventDefault();
-            var $this = $(this);
-            var filterForm = document.getElementById("filterForm");
-            var element = filterForm.getElementsByTagName("a")[0];
-            var url = element.href;
-            const restrictedArea = getRestrictedArea();
-            var data = tw.formToJson($("form[name='filterForm']", restrictedArea));
-            var targetContainer = $this.attr("fill") || $(".main-body", restrictedArea);
-            tw.fill(url, data, targetContainer, false, this);
+            qz.fill($("a", this).first().attr("href"), qz.formToJson(this), $(this).closest(".main-body"), false, null);
         }
     });
-    // 表格顶部操作按钮
-    tw.bindFill(".tools-group a", ".bodyDiv", false, true);
-    // 表格操作列
-    tw.bindFill("table a.dataid", ".bodyDiv", false, true);
-    // 列表页
-    tw.bindFill("a.tw-action-link", ".main-body", true, true);
-    // 分页
-    tw.bindFill("ul.pager.pager-loose a", ".main-body", false, false);
+    
+    $("section.main-body", document.body).each(function () {
+        if ($(".tab-wrapper", this).length > 0) {
+            // 搜索
+            qz.bindFill($(".search-btn a:not(div.tab-container .search-btn a)", this), $(".main-body:not(div.tab-container .main-body)", this), false, false, getRestrictedArea);
+            // 表格顶部操作按钮
+            qz.bindFill($(".tools-group a:not(div.tab-container .tools-group a)", this), $(".bodyDiv:not(div.tab-container .bodyDiv)", this), false, true, getRestrictedArea);
+            // 表格操作列
+            qz.bindFill($("table a.dataid:not(div.tab-container table a.dataid)", this), $(".bodyDiv:not(div.tab-container .bodyDiv)", this), false, true, getRestrictedArea);
+            // 列表页
+            qz.bindFill($("a.tw-action-link:not(div.tab-container a.tw-action-link)", this), $(".main-body:not(div.tab-container .main-body)", this), true, true, getRestrictedArea);
+            // 分页
+            qz.bindFill($("ul.pager.pager-loose a:not(div.tab-container ul.pager.pager-loose a)", this), $(".main-body:not(div.tab-container .main-body)", this), false, false, getRestrictedArea);
+            // 分页
+            var selector = "table a[record-action-id='" + getSetting("showAction") + "']";
+            qz.bindFill($(selector + ":not(div.tab-container " + selector + ")", this), $(".main-body:not(div.tab-container .main-body)", this), true, true, getRestrictedArea);
+        } else {
+            // 搜索
+            qz.bindFill($(".search-btn a", this), $(".main-body", this), false, false, getRestrictedArea);
+            // 表格顶部操作按钮
+            qz.bindFill($(".tools-group a", this), $(".bodyDiv", this), false, true, getRestrictedArea);
+            // 表格操作列
+            qz.bindFill($("table a.dataid", this), $(".bodyDiv", this), false, true, getRestrictedArea);
+            // 列表页
+            qz.bindFill($("a.tw-action-link", this), $(".main-body", this), true, true, getRestrictedArea);
+            // 分页
+            qz.bindFill($("ul.pager.pager-loose a", this), $(".main-body", this), false, false, getRestrictedArea);
+            // 分页
+            qz.bindFill($("table a[record-action-id='" + getSetting("showAction") + "']", this), $(".main-body", this), true, true, getRestrictedArea);
+        }
+    });
+    
     // 列表操作列部分操作事件绑定
-    $("a[act-ajax='true']").unbind("click").bind("click", function (e) {
+    $("a[act-ajax='true'][loaded!='true']").attr("loaded", "true").unbind("click").bind("click", function (e) {
         e.preventDefault();
         var actUrl = $(this).attr("href");
         var bindId = $(this).attr("data-id");
+        var filterForm = $(this).closest("form[name='filterForm']");
         showConfirm($(this).attr("act-confirm"), {
             "title": getSetting("pageConfirmTitle"),
             "btn": [getSetting("confirmBtnText"), getSetting("cancelBtnText")]
@@ -1129,12 +922,13 @@ function bindEventForListPage() {
                 });
             }
             closeLayer(index);
-            confirm_method(actUrl);
+            confirm_method(filterForm, actUrl);
         });
         return false;
     });
+    
     // 集群实例点击[管理]，打开新 Tab 并切换
-    $("table a[action-name='" + getSetting("actionName_target") + "']")
+    $("table a[action-name='" + getSetting("actionName_target") + "'][loaded!='true']:not(div.tab-container table a)").attr("loaded", "true")
         .unbind("click").bind("click", function (e) {
         e.preventDefault();
         var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");
@@ -1145,9 +939,9 @@ function bindEventForListPage() {
         var url = $(this).attr("href");
         return initializeManager($(this), url);
     });
-
+    
     // 列表页及form页面下载(日志、快照等)
-    $("table a[action-name='" + getSetting("filesName") + "'], a[btn-type='" + getSetting("filesName") + "']").unbind("click").bind("click", function (e) {
+    $("table a[action-name='" + getSetting("filesName") + "'], a[btn-type='" + getSetting("filesName") + "'][loaded!='true']").attr("loaded", "true").unbind("click").bind("click", function (e) {
         e.preventDefault();
         if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
             downloadFiles($(this).attr("href"), $(this).attr("downloadfile"));
@@ -1155,16 +949,13 @@ function bindEventForListPage() {
         return false;
     });
 
-    $("a[custom-action-id]").unbind("click").bind("click", function (e) {
+    $("a[custom-action-id][loaded!='true']").attr("loaded", "true").unbind("click").bind("click", function (e) {
         e.preventDefault();
         if($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0){
-            customAction($(this).attr("href"),$(this).attr("custom-action-id"),$(this).attr("data-tip"));
+            customAction($(this).attr("href"),$(this).attr("custom-action-id"),$(this).attr("data-tip"), $(this).closest("section.main-body"));
         }
         return false;
     });
-
-    // 分页
-    tw.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", true, true);
 };
 
 function initializeManager(element, url) {
@@ -1181,8 +972,8 @@ function initializeManager(element, url) {
     $(".content-box>ul").append("<li></li>");
     bindTabEvent();
     $(".tab-box>ul>li").last().click();
-    tw.fill(url, {}, $(".content-box>ul>li").last(), false, element);
-    tw.bindFill("ul.sidebar-menu a", ".main-body", false, true);
+    qz.fill(url, {}, $(".content-box>ul>li").last(), false, null);
+    qz.bindFill($(".content-box>ul>li:last ul.sidebar-menu a"), $(".content-box>ul>li:last>section.main-body"), false, true, getRestrictedArea);
     $("ul[data-widget='tree']", $(".content-box>ul>li").last()).menuTree();
     $("[data-toggle='push-menu']", $(".content-box>ul>li").last()).pushMenu({});
     return false;
@@ -1191,7 +982,7 @@ function initializeManager(element, url) {
 /**
  * @param url
  */
-function confirm_method(url) {
+function confirm_method(filterForm, url) {
     $("#mask-loading").show();
     $.ajax({
         type: "POST",
@@ -1203,7 +994,7 @@ function confirm_method(url) {
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
-                $(".search-btn a", getRestrictedArea()).click();
+                $(".search-btn a", filterForm).click();
             }
             showMsg(data.message, data.msg_level);
         },
@@ -1304,8 +1095,8 @@ function downloadFiles(fileListUrl, downloadUrl) {
     });
 }
 
-function customAction(actionUrl, customActionId, title) {
-    let html  = $("div[custom-action-id='" + customActionId + "']", getRestrictedArea()).html();
+function customAction(actionUrl, customActionId, title, restrictedArea) {
+    let html  = $("div[custom-action-id='" + customActionId + "']", restrictedArea).html();
     html = "<form id='" + customActionId + "' method='post' class='form-horizontal'>" + html + "</form><hr style='margin-top: 4px;'><div id='custom-action-result' ></div>";
     openLayer({
         title: title,
@@ -1325,7 +1116,7 @@ function customAction(actionUrl, customActionId, title) {
                 success: function (response) {
                     $('#custom-action-result').html("<pre style='background-color: #333;color: #fff;padding: 10px;'>" + JSON.stringify(response, null, 4) + "</pre>");
                 },
-                error: function (error) {
+                error: function (e) {
                     handleError(e);
                 }
             });
@@ -1337,8 +1128,7 @@ function customAction(actionUrl, customActionId, title) {
 /**************************************** monitor.jsp - start *************************************************/
 function initMonitorPage() {
     var randId = new Date().getTime();
-    $(".bodyDiv>div.infoPage[chartMonitor='true'][loaded!='true']").each(function (i) {
-        $(this).attr("loaded", "true");
+    $(".bodyDiv>div.infoPage[chartMonitor='true'][loaded!='true']").attr("loaded", "true").each(function (i) {
         var thisDiv = $(this);
         var infoKeys = eval("(" + $("textarea[name='infoKeys']", thisDiv).val() + ")");
         var chartOption = defaultOption(infoKeys);
@@ -1368,15 +1158,6 @@ function initMonitorPage() {
             }, 10);
         })(myChart, chartOption, $(thisDiv).attr("data-url"), infoKeys, thisDiv, randId + i);
     });
-};
-
-// 获取当前时间的分钟秒
-function getTime() {
-    var myDate = new Date();
-    var hours = myDate.getHours < 10 ? "0" + myDate.getHours() : myDate.getHours();
-    var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
-    var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
-    return hours + ":" + minutes + ":" + seconds;
 };
 
 function defaultOption(infoKv) {
@@ -1409,7 +1190,6 @@ function defaultOption(infoKv) {
                     return str;
                 }
 
-                let flag = false;
                 res += '<div style="clear: both">';
                 for (let i = 0; i < params.length; i++) {
                     res += getHtml(params[i]);
@@ -1494,7 +1274,13 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
                 var monitorData = data.data[0];
                 if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
                     var models = [{
-                        dataTime: getTime(),
+                        dataTime: function () {
+                            var myDate = new Date();
+                            var hours = myDate.getHours < 10 ? "0" + myDate.getHours() : myDate.getHours();
+                            var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
+                            var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
+                            return hours + ":" + minutes + ":" + seconds;
+                        },
                         data: monitorData,
                         models: data.data[1]
                     }];
@@ -1671,138 +1457,73 @@ function panelUpdate(monitorData, restrictedArea) {
         }
     });
 };
-
 /**************************************** monitor.jsp - end *************************************************/
-
-/**
- * 绘制 / 结束绘制引导锚点
- * @param {boolean} off 关闭绘制锚点 true | false
- * @param {String} image 背景图片名称，带扩展名，图片位于 WEB-INF 同级目录的 static 下的 images/guide目录下
- */
-function markAnchor(off, image) {
-    var stepsArray = [];
-    var stepOption = {};
-    var guideBoard = document.getElementById("guide");
-    if (off) {
-        guideBoard.onmousedown = null;
-        $(document.body).children("header,main").show();
-        $(guideBoard).hide();
-        return;
-    }
-    var imgSrc = $("#guideImg", guideBoard).attr("src");
-    if (image !== undefined && image !== "") {
-        $("#guideImg", guideBoard).attr("src", imgSrc.substring(0, imgSrc.lastIndexOf("/") + 1) + image);
-    } else {
-        image = imgSrc.substring(imgSrc.lastIndexOf("/") + 1);
-    }
-    $(document.body).children("header,main").hide();
-    $(guideBoard).show();
-    guideBoard.onmousedown = function (e) {
-        stepOption = {};
-        var offset = 0;
-        e = e || window.event;
-        var x1 = e.clientX + offset, y1 = e.clientY + offset;
-
-        var marker = document.createElement("div");
-        marker.id = randomId(6);
-        marker.className = "guideMarker";
-        guideBoard.appendChild(marker);
-
-        stepOption["element"] = "#" + marker.id;
-        stepOption["intro"] = "第" + (stepsArray.length + 1) + "步引导信息";
-        stepOption["image"] = image;
-        guideBoard.onmousemove = function (ev) {
-            ev = ev || window.event;
-            var x2 = ev.clientX + offset, y2 = ev.clientY + offset;
-            var left = x2 > x1 ? x1 : x2;
-            var top = y2 > y1 ? y1 : y2;
-            stepOption["position"] = "auto";
-            stepOption["rl"] = left * 100 / guideBoard.clientWidth;
-            stepOption["rt"] = top * 100 / guideBoard.clientHeight;
-            stepOption["rw"] = Math.abs(x2 - x1) * 100 / guideBoard.clientWidth;
-            stepOption["rh"] = Math.abs(y2 - y1) * 100 / guideBoard.clientHeight;
-
-            marker.style.left = left + "px";
-            marker.style.top = top + "px";
-            marker.style.width = Math.abs(x2 - x1) + "px";
-            marker.style.height = Math.abs(y2 - y1) + "px";
-            marker.style.border = "2px dotted red";
-        };
-
-        document.onmouseup = function () {
-            if (stepOption !== null) {
-                stepsArray.push(stepOption);
-                // 清空事件绑定
-                guideBoard.onmousemove = null;
-                /*$("div.guideMarker", guideBoard).each(function () {
-                    $(this).css({"border": "0px"});
-                });*/
-                //alert("F12 打开开发者工具，查看控制台输出并复制“需要拷贝的参数”。");
-                console.log("需要拷贝的参数，对应 guideOptions.steps：" + JSON.stringify(stepsArray));
-                stepOption = null;
+function autoAdaptTip() {
+    var mainBody = $(".main-body:not(div.tab-container .main-body)", getRestrictedArea());
+    if (mainBody.length > 0) {
+        var ruler = document.createElement("div");
+        ruler.style.fontSize = "13px";
+        ruler.style.maxWidth = "320px";
+        ruler.style.visibility = "hidden";
+        document.body.appendChild(ruler);
+        var totalHeight = $(mainBody).prop("scrollHeight");
+        var scrollTop = $(mainBody).scrollTop();
+        var offsetTop = $(mainBody).offset().top;
+        $("form[name='pageForm'] span.tooltips:visible:not(div.tab-container span.tooltips)", mainBody).each(function () {
+            ruler.innerHTML = $(this).attr("data-tip");
+            var top = scrollTop + $(this).offset().top - offsetTop;
+            if ((totalHeight - top - 120) < ruler.offsetHeight) {
+                $(this).attr("data-tip-arrow", "top-right");
+            } else {
+                $(this).attr("data-tip-arrow", "bottom-right");
             }
-        };
+        });
+        document.body.removeChild(ruler);
+    }
+};
 
-        return false;// 解除在划动过程中鼠标样式改变的BUG
-    };
+var tabMap = {};
+function openTab(dataId, dataUrl, tabTitle) {
+    var restrictedArea = getRestrictedArea();
+    if ($("div.tab-container", restrictedArea).length === 0) {
+        var randId = qz.randomStr(8);
+        var html = ""
+            + "<div id=\"" + randId + "\" class=\"tab-container\">"
+            + "    <div class=\"tab-container-box\"></div>"
+            + "</div>";
+        $(restrictedArea).append(html);
+    }
+    var bindId = $("div.tab-container", restrictedArea).first().attr("id");
+    if (tabMap[bindId] === undefined) {
+        tabMap[bindId] = new qz.tab($("#" + randId + " div.tab-container"));
+        tabMap[bindId].init($("#" + randId + ">div.tab-container-box"), function() {
+            switchTabView(false, bindId);
+        }, function(){
+            delete tabMap[bindId];
+            $("#" + bindId).remove();
+            $("aside.main-sidebar,section.main-body", getRestrictedArea()).not(":has(div.tab-container)").fadeIn("slow");
+        });
+    }
+    var qzTab = tabMap[bindId];
+    qzTab.addTab(dataId, tabTitle, "", {}, true, function(tabDom) {
+        qz.fill(dataUrl, {}, tabDom, false, function() {
+            $(tabDom).css({"height": $(".main-body", restrictedArea).first().height()});
+            $("aside.main-sidebar", tabDom).css({"margin-top":"0px"});
+            $("aside.main-sidebar .menu-toggle-btn", tabDom).css({"margin-bottom":"0px"});
+            $("ul[data-widget='tree']", tabDom).menuTree();
+            $("a[data-toggle='push-menu']", tabDom).pushMenu({});
+        });
+    });
+    switchTabView(true, bindId);
 }
 
-/**
- * 生成随机id
- * @param {type} length
- * @returns {String}
- */
-function randomId(length) {
-    length = length ? length : 6;
-    var random = "";
-    var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    for (var i = length; i > 0; --i) {
-        random += chars[Math.floor(Math.random() * chars.length)];
+function switchTabView(show, id) {
+    var restrictedArea = getRestrictedArea();
+    if (show) {
+        $("aside.main-sidebar,section.main-body", restrictedArea).filter(":not(div.tab-container aside.main-sidebar, div.tab-container section.main-body)").fadeOut("slow");
+        $("#" + id, restrictedArea).fadeIn("fast");
+    } else {
+        $("#" + id, restrictedArea).fadeOut("fast");
+        $("aside.main-sidebar,section.main-body", restrictedArea).filter(":not(div.tab-container aside.main-sidebar, div.tab-container section.main-body)").fadeIn("slow");
     }
-    return random;
-}
-
-function base64Encode(input) {
-    keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-    var output = "";
-    var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
-    var i = 0;
-    input = utf8_encode(input);
-    while (i < input.length) {
-        chr1 = input.charCodeAt(i++);
-        chr2 = input.charCodeAt(i++);
-        chr3 = input.charCodeAt(i++);
-        enc1 = chr1 >> 2;
-        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-        enc4 = chr3 & 63;
-        if (isNaN(chr2)) {
-            enc3 = enc4 = 64;
-        } else if (isNaN(chr3)) {
-            enc4 = 64;
-        }
-        output = output +
-            keyStr.charAt(enc1) + keyStr.charAt(enc2) +
-            keyStr.charAt(enc3) + keyStr.charAt(enc4);
-    }
-    return output;
-}
-
-function utf8_encode(string) {
-    string = string.replace(/\r\n/g, "\n");
-    var utftext = "";
-    for (var n = 0; n < string.length; n++) {
-        var c = string.charCodeAt(n);
-        if (c < 128) {
-            utftext += String.fromCharCode(c);
-        } else if ((c > 127) && (c < 2048)) {
-            utftext += String.fromCharCode((c >> 6) | 192);
-            utftext += String.fromCharCode((c & 63) | 128);
-        } else {
-            utftext += String.fromCharCode((c >> 12) | 224);
-            utftext += String.fromCharCode(((c >> 6) & 63) | 128);
-            utftext += String.fromCharCode((c & 63) | 128);
-        }
-    }
-    return utftext;
 }
