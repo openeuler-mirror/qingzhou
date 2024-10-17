@@ -1,12 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    // 判断是否只读，并设置相应的属性
-    String readonlyAttribute = "";
-    if (!readonly.isEmpty()) {
-        readonlyAttribute = " onclick='return false;' readonly";
-    }
-
     // 获取所有选项并放入 map
     Map<String, ItemInfo> optionMap = new LinkedHashMap<>();
     for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldName)) {
@@ -21,8 +15,7 @@
             if (selectedItem != null) {
     %>
     <a draggable="true" href="javascript:void(0);">
-        <input checked type="checkbox" name="<%=fieldName%>"
-               value="<%=field%>" <%=readonlyAttribute%> />
+        <input checked type="checkbox" name="<%=fieldName%>" value="<%=field%>"/>
         <label><%=I18n.getStringI18n(selectedItem.getI18n())%>
         </label>
     </a>
@@ -36,8 +29,7 @@
         for (ItemInfo itemInfo : optionMap.values()) {
     %>
     <a draggable="true" href="javascript:void(0);">
-        <input type="checkbox" name="<%=fieldName%>"
-               value="<%=itemInfo.getName()%>" <%=readonlyAttribute%> />
+        <input type="checkbox" name="<%=fieldName%>" value="<%=itemInfo.getName()%>"/>
         <label><%=I18n.getStringI18n(itemInfo.getI18n())%>
         </label>
     </a>

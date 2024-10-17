@@ -47,7 +47,7 @@ public class StreamView implements View {
 
             // 要续传
             RequestImpl req = new RequestImpl(request);
-            req.setNonModelParameter(DeployerConstants.DOWNLOAD_KEY, result.get(DeployerConstants.DOWNLOAD_KEY));
+            req.setNonModelParameter(DeployerConstants.DOWNLOAD_SERIAL_KEY, result.get(DeployerConstants.DOWNLOAD_SERIAL_KEY));
             req.setNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
             ResponseImpl res = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(req);
             if (res.isSuccess()) {

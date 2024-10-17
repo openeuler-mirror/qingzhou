@@ -67,6 +67,10 @@ public interface List {
         return new String[]{Add.ACTION_CREATE};
     }
 
+    default String[] batchActions() {
+        return null;
+    }
+
     default String[] listActions() {
         return new String[]{Update.ACTION_EDIT, Delete.ACTION_DELETE};
     }
@@ -84,10 +88,5 @@ public interface List {
 
     default boolean showOrderNumber() {
         return true;
-    }
-
-
-    default boolean showBatchOption() {
-        return false;
     }
 }

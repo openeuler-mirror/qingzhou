@@ -5,9 +5,11 @@
 <%
     String contextPath = request.getContextPath();
     String idField = modelInfo.getIdField();
-    String[] fieldsToList = modelInfo.getFieldsToList();
+    ModelFieldInfo idFieldInfo = modelInfo.getModelFieldInfo(idField);
 
-    String[] listActions = modelInfo.getListActionNames();
+    String[] listFields = modelInfo.getFieldsToList();
+    String[] listActions = modelInfo.getListActions();
+    String[] batchActions = modelInfo.getBatchActions();
 
     int totalSize = qzResponse.getTotalSize();
     int pageNum = qzResponse.getPageNum();
@@ -34,7 +36,7 @@
         <div class="table-tools tw-list-operate">
             <div class="tools-group">
                 <%
-                    for (String actionName : modelInfo.getHeadActionNames()) {
+                    for (String actionName : modelInfo.getHeadActions()) {
                         if (!SecurityController.isActionShow(qzApp, qzModel, actionName, null, currentUser)) {
                             continue;
                         }
@@ -63,6 +65,31 @@
                 <%
                         }
                     }
+
+                    // 支持批量操作的按钮
+                    for (String actionKey : batchActions) {
+                        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(actionKey);
+                        if (!SecurityController.isActionShow(qzApp, qzModel, actionKey, null, currentUser)) {
+                            continue;
+                        }
+                        String operationConfirm = String.format(I18n.getKeyI18n("page.operationConfirm"),
+                                I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
+                                I18n.getModelI18n(qzApp, "model." + qzModel));
+
+                        String actionUrl = PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, actionKey);
+                %>
+                <a id="<%=actionKey%>" action-name="<%=actionKey%>"
+                   href="<%=actionUrl%>"
+                   onclick='batchOps("<%=actionUrl%>","<%=actionKey%>")'
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionKey)%>'
+                   class="btn batch-ops"
+                   disabled="disabled" model-icon="<%=modelInfo.getIcon()%>"
+                   data-name="" data-id="" act-ajax='true' act-confirm='<%=operationConfirm%> ?'>
+                    <i class="icon icon-<%=actionInfo.getIcon()%>"></i>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey)%>
+                </a>
+                <%
+                    }
                 %>
             </div>
         </div>
@@ -72,7 +99,7 @@
             <tr style="height:20px;">
                 <%
                     int otherTh = 0;
-                    if (modelInfo.isShowBatchOption()) {
+                    if (batchActions.length > 0) {
                         otherTh += 1;
                 %>
                 <th class="custom-checkbox">
@@ -90,7 +117,7 @@
                     if (listActions.length > 0) {
                         otherTh += 1;
                     }
-                    for (String field : fieldsToList) {
+                    for (String field : listFields) {
                         String ifHideStyle = "";
                         if (field.equals(idField)) {
                             ifHideStyle = "; display: none";
@@ -103,7 +130,7 @@
                         if (fieldInfo.getWidthPercent() > 0) {
                             width = fieldInfo.getWidthPercent();
                         } else {
-                            width = 100 / (fieldsToList.length + otherTh);
+                            width = 100 / (listFields.length + otherTh);
                         }
                 %>
                 <th style="width: <%=width%> <%=ifHideStyle%>"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
@@ -120,7 +147,7 @@
             <%
                 java.util.List<Map<String, String>> modelDataList = qzResponse.getDataList();
                 if (modelDataList.isEmpty()) {
-                    String dataEmpty = "<tr><td colspan='" + ((modelInfo.isShowBatchOption() ? 1 : 0) + (modelInfo.isShowOrderNumber() ? 1 : 0) + fieldsToList.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
+                    String dataEmpty = "<tr><td colspan='" + ((batchActions.length > 0 ? 1 : 0) + (modelInfo.isShowOrderNumber() ? 1 : 0) + listFields.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
                             + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getKeyI18n("page.none") + "</span></td>";
                     out.print(dataEmpty);
@@ -132,7 +159,7 @@
             %>
             <tr>
                 <%
-                    if (modelInfo.isShowBatchOption()) {
+                    if (batchActions.length > 0) {
                 %>
                 <td class="custom-checkbox">
                     <input type="checkbox" class='morecheck'
@@ -146,7 +173,7 @@
                 </td>
                 <%
                     }
-                    for (String field : fieldsToList) {
+                    for (String field : listFields) {
                         String hideStyle = "";
                         if (field.equals(idField)) {
                             hideStyle = "display: none";
@@ -230,7 +257,9 @@
                                 customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId + "'";
                             }
 
-                            boolean useJsonUri = action.isAjax() || Utils.notBlank(customActionId);
+                            boolean useJsonUri = Utils.notBlank(customActionId)
+                                    || actionName.equals(Delete.ACTION_DELETE)
+                                    || actionName.equals(Download.ACTION_FILES);
                     %>
                     <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest,
                             useJsonUri ? JsonView.FLAG : HtmlView.FLAG,
@@ -364,7 +393,7 @@
         $(".list-table  input[type='checkbox'][class='morecheck']", getRestrictedArea()).each(function () {
             if ($(this).prop("checked")) {
                 if ($(this).attr("value") !== undefined && $(this).attr("value") !== null && $(this).attr("value") !== "") {
-                    params = params + $(this).attr("value") + "<%=DeployerConstants.BATCH_ID_SEPARATOR%>"
+                    params = params + $(this).attr("value") + "<%=idFieldInfo.getSeparator()%>"
                 }
             }
         });

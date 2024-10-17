@@ -69,17 +69,16 @@
                             continue;
                         }
 
-                        String readonly = "";
                         if (!modelField.isEdit() && isEdit) {
                             continue;
                         } else if (fieldName.equals(idField)) {
                             if (isEdit) {
-                                readonly = "readonly";
+                                continue;
                             }
                         } else {
                             boolean readOnly = SecurityController.checkRule(modelField.getReadOnly(), modelData::get, false);
                             if (readOnly) {
-                                readonly = "readonly";
+                                continue;
                             }
                         }
 
@@ -113,25 +112,7 @@
                         <%=fieldInfo%>
                     </label>
                     <div class="col-sm-5">
-                        <%
-                            if (!readonly.isEmpty()) {
-                                if (FieldType.textarea.name().equals(modelField.getType())) {
-                        %>
-                        <textarea rows="3" disabled="disabled" name="<%=fieldName%>" <%=echoGroup%> class="form-control"
-                                  readonly="readonly"><%=fieldValue%></textarea>
-                        <%
-                        } else {
-                        %>
-                        <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>' <%=echoGroup%>
-							   class="form-control" readonly="readonly">
-                        <%
-                            }
-                        } else {
-                        %>
                         <%@ include file="../fragment/field_type.jsp" %>
-                        <%
-                            }
-                        %>
                         <label class="tw-error-info"></label>
                     </div>
                 </div>
@@ -231,13 +212,13 @@
         </textarea>
     <textarea name="passwordFields" rows="3" disabled="disabled" style="display:none;">
         <%
-			for (int i = 0; i < passwordFields.size(); i++) {
-				if (i > 0) {
-					out.print(",");
-				}
-				out.print(passwordFields.get(i));
-			}
-		%>
+            for (int i = 0; i < passwordFields.size(); i++) {
+                if (i > 0) {
+                    out.print(",");
+                }
+                out.print(passwordFields.get(i));
+            }
+        %>
         </textarea>
 
 </form>

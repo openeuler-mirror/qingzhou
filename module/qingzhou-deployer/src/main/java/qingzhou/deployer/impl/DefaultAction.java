@@ -192,6 +192,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Add.ACTION_ADD, icon = "save",
+            distribute = true,
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
@@ -212,6 +213,7 @@ class DefaultAction {
 
     @ModelAction(
             code = Update.ACTION_UPDATE, icon = "save",
+            distribute = true,
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
@@ -223,6 +225,8 @@ class DefaultAction {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
+            redirect = List.ACTION_LIST,
+            distribute = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
@@ -231,12 +235,12 @@ class DefaultAction {
     }
 
     @ModelAction(
-            code = Stream.ACTION_STREAM, icon = "download-alt",
+            code = Export.ACTION_EXPORT, icon = "download-alt",
             name = {"导出", "en:Export"},
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
     public void export(Request request) {
-        Stream stream = (Stream) instance;
-        Stream.StreamSupplier streamSupplier = stream.downloadStream(request.getId());
+        Export stream = (Export) instance;
+        Export.StreamSupplier streamSupplier = stream.exportData(request.getId());
         if (streamSupplier == null) return;
 
         downloadStream(request, streamSupplier);
@@ -328,7 +332,7 @@ class DefaultAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 
-        String downloadKey = request.getNonModelParameter(DeployerConstants.DOWNLOAD_KEY);
+        String downloadKey = request.getNonModelParameter(DeployerConstants.DOWNLOAD_SERIAL_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
             String downloadFileNames = request.getNonModelParameter(DeployerConstants.DOWNLOAD_FILE_NAMES);
 
@@ -351,7 +355,7 @@ class DefaultAction {
 
         response.setDownloadName(downloadKey + ".zip");
         String finalDownloadKey = downloadKey;
-        downloadStream(request, new Stream.StreamSupplier() {
+        downloadStream(request, new Export.StreamSupplier() {
             private final File temp = FileUtil.newFile(keyDir, finalDownloadKey);
             private final RandomAccessFile raf = new RandomAccessFile(temp, "r");
 
@@ -362,7 +366,7 @@ class DefaultAction {
             }
 
             @Override
-            public String downloadKey() {
+            public String serialKey() {
                 return finalDownloadKey;
             }
 
@@ -428,7 +432,7 @@ class DefaultAction {
         return key;
     }
 
-    private void downloadStream(Request request, Stream.StreamSupplier supplier) {
+    private void downloadStream(Request request, Export.StreamSupplier supplier) {
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
         long offset = 0;
@@ -439,7 +443,7 @@ class DefaultAction {
         if (offset < 0) return;
 
         Map<String, String> result = response.getParameters();
-        result.put(DeployerConstants.DOWNLOAD_KEY, supplier.downloadKey());
+        result.put(DeployerConstants.DOWNLOAD_SERIAL_KEY, supplier.serialKey());
 
         byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
         int read = 0;

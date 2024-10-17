@@ -1,20 +1,15 @@
 package qingzhou.config.impl;
 
+import qingzhou.config.*;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.json.Json;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.util.Properties;
-
-import qingzhou.config.Config;
-import qingzhou.config.Console;
-import qingzhou.config.Jmx;
-import qingzhou.config.Security;
-import qingzhou.config.User;
-import qingzhou.config.Web;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.json.Json;
 
 public class JsonFileConfig implements Config {
     private final Json json;
@@ -36,18 +31,8 @@ public class JsonFileConfig implements Config {
     }
 
     @Override
-    public void deleteUser(String id) throws IOException {
+    public void deleteUser(String... id) throws IOException {
         deleteJson("name", id, "module", "console", "user");
-    }
-
-    @Override
-    public void deleteEnv(String id) throws Exception {
-        deleteJson("name", id, "jvm", "env");
-    }
-
-    @Override
-    public void deleteArg(String id) throws Exception {
-        deleteJson("name", id, "jvm", "arg");
     }
 
     @Override
@@ -65,10 +50,18 @@ public class JsonFileConfig implements Config {
         writeJson(security, false, "module", "console", "security");
     }
 
-    public void deleteJson(String idKey, String idVal, String... position) throws IOException {
+    public void deleteJson(String idKey, String[] idValues, String... position) throws IOException {
         String jsonAll = FileUtil.fileToString(jsonFile);
         String result = json.deleteJson(jsonAll,
-                p -> p.get(idKey).equals(idVal),
+                (Properties p) -> {
+                    String checkId = p.getProperty(idKey);
+                    for (String val : idValues) {
+                        if (val.equals(checkId)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                },
                 position);
         writeFile(result);
     }

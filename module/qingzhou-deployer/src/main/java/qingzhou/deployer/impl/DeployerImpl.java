@@ -331,11 +331,11 @@ class DeployerImpl implements Deployer {
 
         List listInstance = (List) instance;
         modelInfo.setShowOrderNumber(listInstance.showOrderNumber());
-        modelInfo.setShowBatchOption(listInstance.showBatchOption());
         modelInfo.setFilterValues(listInstance.filterValues());
         modelInfo.setShowIdField(listInstance.showIdField());
         modelInfo.setListActions(listInstance.listActions());
         modelInfo.setHeadActions(listInstance.headActions());
+        modelInfo.setBatchActions(listInstance.batchActions());
     }
 
     private void initOptionInfo(ModelInfo modelInfo, ModelBase instance) {
@@ -510,7 +510,6 @@ class DeployerImpl implements Deployer {
     static java.util.List<ModelActionInfo> parseModelActionInfos(AnnotationReader annotation) {
         java.util.List<ModelActionInfo> modelActionInfos = new ArrayList<>();
         annotation.readModelAction().forEach((method, modelAction) -> {
-            if (modelAction.disable()) return;
             ModelActionInfo modelActionInfo = new ModelActionInfo();
             modelActionInfo.setMethod(method);
             modelActionInfo.setCode(modelAction.code());
@@ -519,6 +518,7 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setIcon(modelAction.icon());
             modelActionInfo.setDistribute(modelAction.distribute());
             modelActionInfo.setShow(modelAction.show());
+            modelActionInfo.setRedirect(modelAction.redirect());
             modelActionInfo.setPage(modelAction.page());
             modelActionInfo.setFields(modelAction.fields());
             modelActionInfos.add(modelActionInfo);

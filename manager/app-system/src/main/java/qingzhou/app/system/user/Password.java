@@ -1,7 +1,7 @@
 package qingzhou.app.system.user;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Stream;
+import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.config.Config;
@@ -13,7 +13,7 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -25,7 +25,7 @@ import java.util.Objects;
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
-public class Password extends ModelBase implements Stream {
+public class Password extends ModelBase implements Export {
     private final String KEY_IN_SESSION_FLAG = "keyForOtp";
 
     @ModelField(
@@ -167,26 +167,6 @@ public class Password extends ModelBase implements Stream {
     }
 
     @ModelAction(
-            code = DeployerConstants.ACTION_REFRESHKEY,
-            icon = "shield",
-            name = {"刷新动态密码", "en:Refresh OTP"},
-            info = {"获取当前用户的动态密码，以二维码形式提供给用户。", "en:Obtain the current user OTP and provide it to the user in the form of a QR code."})
-    public void refreshKey(Request request) throws Exception {
-        TotpCipher totpCipher = Main.getService(CryptoService.class).getTotpCipher();
-        String keyForOtp = totpCipher.generateKey();
-        request.setParameterInSession(KEY_IN_SESSION_FLAG, keyForOtp);
-
-        String format = "png";
-        request.getResponse().setContentType("image/" + format);
-
-        String loginUser = request.getUser();
-        String qrCode = "otpauth://totp/" + loginUser + "?secret=" + keyForOtp;
-        QrGenerator qrGenerator = Main.getService(QrGenerator.class);
-        byte[] bytes = qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
-        request.getResponse().setBodyBytes(bytes); // todo 用 downloadStream 来替代
-    }
-
-    @ModelAction(
             code = "confirmKey",
             name = {"刷新动态密码", "en:Refresh OTP"},
             info = {"验证并刷新动态密码。", "en:Verify and refresh the OTP."})
@@ -207,8 +187,44 @@ public class Password extends ModelBase implements Stream {
         request.getResponse().setSuccess(result);
     }
 
+    @ModelAction(
+            code = Export.ACTION_EXPORT,
+            icon = "shield",
+            name = {"刷新动态密码", "en:Refresh OTP"},
+            info = {"获取当前用户的动态密码，以二维码形式提供给用户。", "en:Obtain the current user OTP and provide it to the user in the form of a QR code."})
+    public void refreshKey(Request request) throws Exception {
+        getAppContext().callDefaultAction(request);
+    }
+
     @Override
-    public InputStream downloadStream(String id) {
-        return null;
+    public StreamSupplier exportData(String id) {
+        Request request = getAppContext().getCurrentRequest();
+        return new StreamSupplier() {
+            @Override
+            public int read(byte[] block, long offset) throws IOException {
+                TotpCipher totpCipher = Main.getService(CryptoService.class).getTotpCipher();
+                String keyForOtp = totpCipher.generateKey();
+                request.setParameterInSession(KEY_IN_SESSION_FLAG, keyForOtp);
+
+                String format = "png";
+                request.getResponse().setContentType("image/" + format);
+
+                String loginUser = request.getUser();
+                String qrCode = "otpauth://totp/" + loginUser + "?secret=" + keyForOtp;
+                QrGenerator qrGenerator = Main.getService(QrGenerator.class);
+                byte[] bytes = qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
+                System.arraycopy(bytes, 0, block, 0, bytes.length);
+                return bytes.length;
+            }
+
+            @Override
+            public String serialKey() {
+                return "";
+            }
+
+            @Override
+            public void finished() {
+            }
+        };
     }
 }

@@ -120,7 +120,7 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelAction(
             code = "share", icon = "share-alt",
-            page = "list",// todo 如何跳转到qingzhou的action上？
+            redirect = "list",
             name = {"头部按钮", "en:Share"},
             info = {"头部按钮", "en:Share"})
     public void share(Request request) {

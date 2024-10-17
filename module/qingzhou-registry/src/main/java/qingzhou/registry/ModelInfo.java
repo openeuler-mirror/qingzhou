@@ -18,7 +18,6 @@ public class ModelInfo {
     private String idField;
     private boolean validate;
     private boolean showOrderNumber;
-    private boolean showBatchOption;
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
@@ -30,21 +29,30 @@ public class ModelInfo {
     private String[] dynamicOptionFields;
     private String[] headActions;
     private String[] listActions;
+    private String[] batchActions;
 
     public ModelActionInfo getModelActionInfo(String actionName) {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
     }
 
-    public String[] getListActionNames() {
-        return existsActions(listActions);
-    }
-
-    public String[] getHeadActionNames() {
+    public String[] getHeadActions() {
         return existsActions(headActions);
     }
 
+    public String[] getListActions() {
+        return existsActions(listActions);
+    }
+
+    public String[] getBatchActions() {
+        return existsActions(batchActions);
+    }
+
+    public void setBatchActions(String[] batchActions) {
+        this.batchActions = batchActions;
+    }
+
     private String[] existsActions(String[] scope) {
-        if (scope == null) return null;
+        if (scope == null) return new String[0];
 
         List<String> fountActions = new ArrayList<>();
         for (String action : scope) {
@@ -284,14 +292,6 @@ public class ModelInfo {
 
     public void setShowOrderNumber(boolean showOrderNumber) {
         this.showOrderNumber = showOrderNumber;
-    }
-
-    public boolean isShowBatchOption() {
-        return showBatchOption;
-    }
-
-    public void setShowBatchOption(boolean showBatchOption) {
-        this.showBatchOption = showBatchOption;
     }
 
     public Map<String, String> getFilterValues() {

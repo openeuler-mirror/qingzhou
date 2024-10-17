@@ -22,13 +22,13 @@ public @interface ModelAction {
 
     String[] models() default {}; //  弹出子级管理页面
 
+    String redirect() default ""; // 转给默认的view，如 qingzhou.api.type.List.ACTION_LIST，注：优先级低于 page
+
     String page() default ""; // 跳转到指定的页面，注：app根目录后的相对路径
 
+    boolean distribute() default false;
+
     String show() default ""; // 设置该操作的可用条件
-
-    boolean distribute() default true;
-
-    boolean disable() default false; // 是否禁用此 action
 
     /**
      * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作名称。

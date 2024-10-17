@@ -40,7 +40,7 @@ public interface DeployerConstants {
     String UPLOAD_FILE_PREFIX_FLAG = "UPLOAD_FILE_PREFIX_FLAG";
     String UPLOAD_FILE_TEMP_SUB_DIR = "UPLOAD_FILE_TEMP_SUB_DIR";
 
-    String DOWNLOAD_KEY = "DOWNLOAD_KEY";
+    String DOWNLOAD_SERIAL_KEY = "DOWNLOAD_SERIAL_KEY";
     String DOWNLOAD_OFFSET = "DOWNLOAD_OFFSET";
     String DOWNLOAD_FILE_NAMES = "DOWNLOAD_FILE_NAMES";
 
@@ -58,7 +58,6 @@ public interface DeployerConstants {
     String CHECK_VAL = "CHECK_VAL";
     String app_Started = "Started";
     String app_Stopped = "Stopped";
-    String BATCH_ID_SEPARATOR = ",";
     String DEFAULT_DATA_SEPARATOR = ",";
     String DOWNLOAD_FILE_NAMES_SP = "/"; // |/\:*?"<> 这些都是 windows 平台u支持的文件名，linux 上 / 不支持文件名
     String DOWNLOAD_FILE_GROUP_SP = "/";

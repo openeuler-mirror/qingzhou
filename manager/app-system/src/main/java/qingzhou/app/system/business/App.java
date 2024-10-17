@@ -199,6 +199,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     @ModelAction(
             code = "start", icon = "play",
             show = "state=" + DeployerConstants.app_Stopped,
+            redirect = qingzhou.api.type.List.ACTION_LIST,
             name = {"启动", "en:start"},
             info = {"启动应用",
                     "en:Launch the application."})
@@ -212,6 +213,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     @ModelAction(
             code = "stop", icon = "stop",
             show = "state=" + DeployerConstants.app_Started,
+            redirect = qingzhou.api.type.List.ACTION_LIST,
             name = {"停止", "en:end"},
             info = {"停止应用",
                     "en:stop the application."})

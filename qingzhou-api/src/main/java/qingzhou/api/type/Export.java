@@ -2,15 +2,15 @@ package qingzhou.api.type;
 
 import java.io.IOException;
 
-public interface Stream {
-    String ACTION_STREAM = "stream";
+public interface Export {
+    String ACTION_EXPORT = "export";
 
-    StreamSupplier downloadStream(String id);
+    StreamSupplier exportData(String id);
 
     interface StreamSupplier {
         int read(byte[] block, long offset) throws IOException;
 
-        String downloadKey();
+        String serialKey();
 
         void finished();
     }

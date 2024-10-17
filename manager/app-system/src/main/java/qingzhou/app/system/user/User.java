@@ -130,6 +130,7 @@ public class User extends ModelBase implements General, Validate, Option {
             type = FieldType.bool,
             readOnly = "name=qingzhou",
             list = true, search = true,
+            color = {"true:Green", "false:Gray"},
             name = {"启用", "en:Active"},
             info = {"若未启用，则无法登录服务器。", "en:If it is not activated, you cannot log in to the server."})
     public Boolean active = true;
@@ -208,7 +209,12 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @Override
     public void deleteData(String id) throws Exception {
-        Main.getService(Config.class).deleteUser(id);
+        String[] batchId = getAppContext().getCurrentRequest().getBatchId();
+        if (batchId != null && batchId.length > 0) {
+            Main.getService(Config.class).deleteUser(batchId);
+        } else {
+            Main.getService(Config.class).deleteUser(id);
+        }
     }
 
     @Override
@@ -399,5 +405,15 @@ public class User extends ModelBase implements General, Validate, Option {
             return Item.of(new String[]{"SHA-256", "SHA-384", "SHA-512"});
         }
         return null;
+    }
+
+    @Override
+    public boolean showOrderNumber() {
+        return false;
+    }
+
+    @Override
+    public String[] batchActions() {
+        return new String[]{Delete.ACTION_DELETE};
     }
 }

@@ -10,6 +10,7 @@ public class ModelActionInfo {
     private String icon;
     private boolean distribute;
     private String show;
+    private String redirect;
     private String page;
     private String[] fields;
 
@@ -59,6 +60,14 @@ public class ModelActionInfo {
 
     public void setDistribute(boolean distribute) {
         this.distribute = distribute;
+    }
+
+    public String getRedirect() {
+        return redirect;
+    }
+
+    public void setRedirect(String redirect) {
+        this.redirect = redirect;
     }
 
     public String getPage() {

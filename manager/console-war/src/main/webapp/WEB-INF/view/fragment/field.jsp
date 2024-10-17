@@ -47,7 +47,7 @@
             %>
             <tr row-item="<%=fieldName%>">
                 <td class="home-field-info" field="<%=fieldName%>">
-                    <label for="<%=fieldName%>"><%=info%>&nbsp;
+                    <label><%=info%>&nbsp;
                         <%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
                     </label>
                 </td>
