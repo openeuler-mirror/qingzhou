@@ -563,7 +563,7 @@ function triggerAction(ele, condition, type) {
                 return;
             }
             let isSwitch = target.parent().attr("class").indexOf("switch") !== -1;
-            if (target.val() === "" && isSwitch){
+            if (target.val() === "" && isSwitch) {
                 target.val("false");
             }
             // compareVal 比较出来的值是表示是否显示
@@ -729,4 +729,53 @@ function niceSelect() {
     if (style.pointerEvents !== "auto") {
         $("html").addClass("no-csspointerevents");
     }
-};
+}
+
+function difModelActive(omodel, nmodel) {
+    if (omodel !== nmodel) {
+        var omenuItemLink = $("ul.sidebar-menu li a[modelName='" + omodel + "']");
+        var nmenuItemLink = $("ul.sidebar-menu li a[modelName='" + nmodel + "']");
+        if (omenuItemLink.length > 0) {
+            if ($(omenuItemLink).parent().hasClass("treeview")) {
+                $(omenuItemLink).parents("li.treeview").removeClass("active");
+            } else {
+                $(omenuItemLink).parents("li.treeview").removeClass("menu-open active");
+            }
+            $(omenuItemLink).parents("ul.treeview-menu").hide();
+            $(omenuItemLink).parent().removeClass("active");
+        }
+        if (nmenuItemLink.length > 0) {
+            if ($(nmenuItemLink).parent().hasClass("treeview")) {
+                $(nmenuItemLink).parents("li.treeview").addClass("active");
+            } else {
+                $(nmenuItemLink).parents("li.treeview").addClass("menu-open active");
+            }
+            $(nmenuItemLink).parents("ul.treeview-menu").show();
+            $(nmenuItemLink).parent().addClass("active");
+        }
+    }
+}
+
+function batchOps(url, action) {
+    var params = "";
+    $(".list-table  input[type='checkbox'][class='morecheck']", getRestrictedArea()).each(function () {
+        if ($(this).prop("checked")) {
+            if ($(this).attr("value") !== undefined && $(this).attr("value") !== null && $(this).attr("value") !== "") {
+                params = params + $(this).attr("value") + "<%=idFieldInfo.getSeparator()%>"
+            }
+        }
+    });
+    var str = url;
+    if (str.indexOf("?") > -1) {
+        url = str + "&<%=idField%>=" + params;
+    } else {
+        url = str + "?<%=idField%>=" + params;
+    }
+    $("#" + action, getRestrictedArea()).attr("href", url);
+}
+
+function filter_reset() {
+    const form = document.getElementById('filterForm');
+    form.reset()
+    document.getElementById("filter_search").click();
+}

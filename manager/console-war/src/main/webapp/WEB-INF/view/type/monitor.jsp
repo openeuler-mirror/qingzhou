@@ -45,19 +45,4 @@
             }
         %>
     </div>
-
-    <%
-        if (request.getAttribute("comeFromIndexPage") == null) {
-    %>
-    <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
-        <div class="form-btn">
-            <a href="javascript:void(0);" onclick="tw.goback(this);" btn-type="goback" class="btn">
-                <%=I18n.getKeyI18n("page.return")%>
-            </a>
-        </div>
-    </div>
-    <%
-        }
-    %>
-
 </div>
