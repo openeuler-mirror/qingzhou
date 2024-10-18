@@ -409,4 +409,10 @@
     $(document).ready(function () {
         $('[data-toggle="tooltip"]').tooltip();
     })
+
+    function filter_reset() {
+        const form = document.getElementById('filterForm');
+        form.reset()
+        document.getElementById("filter_search").click();
+    }
 </script>
