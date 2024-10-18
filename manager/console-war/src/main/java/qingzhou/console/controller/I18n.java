@@ -33,6 +33,7 @@ public class I18n implements Filter<SystemControllerContext> {
         addKeyI18n("page.localInstance", new String[]{"默认实例", "en:Default Instance"});
         addKeyI18n("page.action", new String[]{"操作", "en:Action"});
         addKeyI18n("page.filter", new String[]{"搜索", "en:Search"});
+        addKeyI18n("page.filter.reset", new String[]{"重置", "en:Reset"});
         addKeyI18n("page.status", new String[]{"状态", "en:Status"});
         addKeyI18n("page.msg", new String[]{"消息", "en:Message"});
         addKeyI18n("page.browser.outdated", new String[]{"您正在使用过时的浏览器，当前页面不能支持，请升级或更换浏览器!", "en:You are using an outdated browser, the current page is not supported, please upgrade or change your browser!"});

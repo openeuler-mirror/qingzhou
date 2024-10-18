@@ -33,9 +33,16 @@
         %>
         <div class="col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
             <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0;">
-                <a class="btn"
+                <a class="btn" id="filter_search"
                    href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>">
                     <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter")%>
+                </a>
+            </span>
+
+            <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0;margin-left: 45px;">
+                <a class="btn"
+                   href="javascript:void(0);" onclick="filter_reset()">
+                    <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter.reset")%>
                 </a>
             </span>
         </div>
