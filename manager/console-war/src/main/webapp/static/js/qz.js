@@ -6,18 +6,18 @@
         this.init = function (dom, minFn, destroyFn) {
             if ($(dom, this.rootBox).length > 0) {
                 var html = ""
-                        + "<div class=\"tab-wrapper\">"
-                        + "    <div class=\"tab-header\">"
-                        + "        <button class=\"tab-btn btn-left\"><i><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M11.0002 17.035C11.0002 17.1383 10.9682 17.239 10.9087 17.3234C10.7494 17.549 10.4375 17.6028 10.2119 17.4435L3.07889 12.4085C3.03228 12.3756 2.99164 12.335 2.95874 12.2883C2.7995 12.0627 2.85329 11.7508 3.07889 11.5915L10.2119 6.55648C10.2962 6.49693 10.3969 6.46497 10.5002 6.46497C10.7763 6.46497 11.0002 6.68882 11.0002 6.96497V17.035ZM12.0789 12.4085C12.0323 12.3756 11.9916 12.335 11.9587 12.2883C11.7995 12.0627 11.8533 11.7508 12.0789 11.5915L19.2119 6.55648C19.2962 6.49693 19.3969 6.46497 19.5002 6.46497C19.7763 6.46497 20.0002 6.68882 20.0002 6.96497V17.035C20.0002 17.1383 19.9682 17.239 19.9087 17.3234C19.7494 17.549 19.4375 17.6028 19.2119 17.4435L12.0789 12.4085Z\"></path></svg></i></button>"
-                        + "        <nav class=\"tab-nav\">"
-                        + "            <div class=\"tab-nav-box\"></div>"
-                        + "        </nav>"
-                        + "        <button class=\"tab-btn btn-right\"><i><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M4.78834 17.4434C4.70398 17.503 4.60326 17.535 4.5 17.535C4.22386 17.535 4 17.3111 4 17.035V6.96488C4 6.86163 4.03197 6.7609 4.09152 6.67654C4.25076 6.45094 4.56274 6.39715 4.78834 6.5564L11.9213 11.5914C11.9679 11.6243 12.0086 11.665 12.0415 11.7116C12.2007 11.9372 12.1469 12.2492 11.9213 12.4084L4.78834 17.4434ZM13 6.96488C13 6.86163 13.032 6.7609 13.0915 6.67654C13.2508 6.45094 13.5627 6.39715 13.7883 6.5564L20.9213 11.5914C20.9679 11.6243 21.0086 11.665 21.0415 11.7116C21.2007 11.9372 21.1469 12.2492 20.9213 12.4084L13.7883 17.4434C13.704 17.503 13.6033 17.535 13.5 17.535C13.2239 17.535 13 17.3111 13 17.035V6.96488Z\"></path></svg></i></button>"
-                        + "        <button class=\"tab-btn mintab\"><i><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M15 4.00008H13V11.0001H20V9.00008H16.4142L20.7071 4.70718L19.2929 3.29297L15 7.58586V4.00008ZM4.00008 15H7.58586L3.29297 19.2929L4.70718 20.7071L9.00008 16.4142V20H11.0001V13H4.00008V15Z\"></path></svg></i></button>"
-                        + "        <button class=\"tab-btn destroy\"><i><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M11.9997 10.5865L16.9495 5.63672L18.3637 7.05093L13.4139 12.0007L18.3637 16.9504L16.9495 18.3646L11.9997 13.4149L7.04996 18.3646L5.63574 16.9504L10.5855 12.0007L5.63574 7.05093L7.04996 5.63672L11.9997 10.5865Z\"></path></svg></i></button>"
-                        + "    </div>"
-                        + "    <div class=\"tab-body\"></div>"
-                        + "</div>";
+                    + "<div class=\"tab-wrapper\">"
+                    + "    <div class=\"tab-header\">"
+                    + "        <button class=\"tab-btn btn-left\"><i><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M11.0002 17.035C11.0002 17.1383 10.9682 17.239 10.9087 17.3234C10.7494 17.549 10.4375 17.6028 10.2119 17.4435L3.07889 12.4085C3.03228 12.3756 2.99164 12.335 2.95874 12.2883C2.7995 12.0627 2.85329 11.7508 3.07889 11.5915L10.2119 6.55648C10.2962 6.49693 10.3969 6.46497 10.5002 6.46497C10.7763 6.46497 11.0002 6.68882 11.0002 6.96497V17.035ZM12.0789 12.4085C12.0323 12.3756 11.9916 12.335 11.9587 12.2883C11.7995 12.0627 11.8533 11.7508 12.0789 11.5915L19.2119 6.55648C19.2962 6.49693 19.3969 6.46497 19.5002 6.46497C19.7763 6.46497 20.0002 6.68882 20.0002 6.96497V17.035C20.0002 17.1383 19.9682 17.239 19.9087 17.3234C19.7494 17.549 19.4375 17.6028 19.2119 17.4435L12.0789 12.4085Z\"></path></svg></i></button>"
+                    + "        <nav class=\"tab-nav\">"
+                    + "            <div class=\"tab-nav-box\"></div>"
+                    + "        </nav>"
+                    + "        <button class=\"tab-btn btn-right\"><i><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M4.78834 17.4434C4.70398 17.503 4.60326 17.535 4.5 17.535C4.22386 17.535 4 17.3111 4 17.035V6.96488C4 6.86163 4.03197 6.7609 4.09152 6.67654C4.25076 6.45094 4.56274 6.39715 4.78834 6.5564L11.9213 11.5914C11.9679 11.6243 12.0086 11.665 12.0415 11.7116C12.2007 11.9372 12.1469 12.2492 11.9213 12.4084L4.78834 17.4434ZM13 6.96488C13 6.86163 13.032 6.7609 13.0915 6.67654C13.2508 6.45094 13.5627 6.39715 13.7883 6.5564L20.9213 11.5914C20.9679 11.6243 21.0086 11.665 21.0415 11.7116C21.2007 11.9372 21.1469 12.2492 20.9213 12.4084L13.7883 17.4434C13.704 17.503 13.6033 17.535 13.5 17.535C13.2239 17.535 13 17.3111 13 17.035V6.96488Z\"></path></svg></i></button>"
+                    + "        <button class=\"tab-btn mintab\"><i><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M15 4.00008H13V11.0001H20V9.00008H16.4142L20.7071 4.70718L19.2929 3.29297L15 7.58586V4.00008ZM4.00008 15H7.58586L3.29297 19.2929L4.70718 20.7071L9.00008 16.4142V20H11.0001V13H4.00008V15Z\"></path></svg></i></button>"
+                    + "        <button class=\"tab-btn destroy\"><i><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"currentColor\" width=\"22\" height=\"22\"><path d=\"M11.9997 10.5865L16.9495 5.63672L18.3637 7.05093L13.4139 12.0007L18.3637 16.9504L16.9495 18.3646L11.9997 13.4149L7.04996 18.3646L5.63574 16.9504L10.5855 12.0007L5.63574 7.05093L7.04996 5.63672L11.9997 10.5865Z\"></path></svg></i></button>"
+                    + "    </div>"
+                    + "    <div class=\"tab-body\"></div>"
+                    + "</div>";
                 $(html).appendTo($(dom, this.rootBox));
             }
 
@@ -249,7 +249,7 @@
             return false;
         };
     };
-    
+
     qzCls.tooltip = function (ele, transitionObj, enterCallback, outCallback) {
         if (!ele || typeof ele !== "string") {
             console.error(new Error('The "tooltip" method requires the "class" of at least one parameter'));
@@ -379,13 +379,14 @@
         tooltip: function (ele, transitionObj, enterCallback, outCallback) {
             return new qzCls.tooltip(ele, transitionObj, enterCallback, outCallback);
         },
-        guid: function() {
+        guid: function () {
             function S4() {
                 return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
             }
+
             return (S4() + S4() + S4() + S4() + S4() + S4() + S4() + S4());
         },
-        randomStr: function(length) {
+        randomStr: function (length) {
             length = length ? length : 6;
             var random = "";
             var chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -445,14 +446,6 @@
             }
             return nv === "" ? {} : {"core": nv.split(":")[0], "version": nv.split(":")[1], "v": Number(v)};
         },
-        goback: function (obj) {
-            const restrictedArea = getRestrictedArea();
-            if ($("[hidden-for-goback='true']", restrictedArea).length > 0) {
-                $(obj).parents(".bodyDiv").prev(".breadcrumb[hidden-for-goback!='true']").remove();
-                $(obj).parents(".bodyDiv").remove();
-                $("[hidden-for-goback='true']", restrictedArea).removeAttr("hidden-for-goback").show();
-            }
-        },
         formToJson: function (formSelector) {
             var jsonObj = {};
             var paramArray = $(formSelector).serializeArray();
@@ -483,8 +476,9 @@
                     return;
                 }
                 var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea));
-                that.fill(url, data, targets, append, function(){});
-            });            
+                that.fill(url, data, targets, append, function () {
+                });
+            });
         },
         /**
          * ajax 填充 html 片段
@@ -529,15 +523,9 @@
                         html = newHtml;
                     }
                     if (append) {
-                        $(container).children().each(function () {
-                            if (!$(this).is(":hidden")) {
-                                $(this).attr("hidden-for-goback", "true").hide();
-                            }
-                        });
                         $(container).append(html);
                     } else {
                         $(container).html(html);
-                        $(".form-btn a.btn[btn-type='goback'][href='javascript:void(0);']", $(container)).parents(".block-bg").hide();
                     }
                     setOrReset();
                     if ((typeof callback) === "function") {

@@ -6,9 +6,11 @@
 <%@ include file="../fragment/menu.jsp" %>
 
 <section class="main-body">
-	<%-- 面包屑分级导航 --%>
-	<%@ include file="../fragment/breadcrumb.jsp" %>
+    <%-- 面包屑分级导航 --%>
+    <%@ include file="../fragment/breadcrumb.jsp" %>
 
-	<%-- 首页面主体部分 --%>
-	<%@ include file="../fragment/info.jsp" %>
+    <%-- 首页面主体部分 --%>
+    <div class="bodyDiv">
+        <%@ include file="../fragment/info.jsp" %>
+    </div>
 </section>

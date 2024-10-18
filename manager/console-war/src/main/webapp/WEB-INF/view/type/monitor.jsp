@@ -12,7 +12,7 @@
         <input type="hidden" name="monitorName" value="<%=(Utils.notBlank(encodedId) ? encodedId : "")%>">
         <div class="panel" style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
             <div class="panel-body" style="word-break: break-all">
-                <div class="block-bg" container="chart" style="height: 600px;width: 100%;"></div>
+                <div container="chart" style="height: 600px;width: 100%;"></div>
             </div>
         </div>
 
@@ -21,9 +21,7 @@
             if (dataList.size() == 2) {
                 Map<String, String> infoData = dataList.get(1);
         %>
-        <div class="block-bg">
-            <%@ include file="../fragment/field.jsp" %>
-        </div>
+        <%@ include file="../fragment/field.jsp" %>
         <textarea name="infoKeys" rows="3" disabled="disabled" style="display:none;">
         <%
             StringBuilder keysBuilder = new StringBuilder();

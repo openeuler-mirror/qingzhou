@@ -1,17 +1,16 @@
 package qingzhou.console;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import qingzhou.console.controller.SystemController;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 public class SecurityController {
-    public static boolean isActionShow(String app, String model, String action, Map<String, String> data, String user) {
+    public static boolean isActionPermitted(String app, String model, String action, String user) {
         // model 是否存在
         ModelInfo modelInfo = SystemController.getModelInfo(app, model);
         if (modelInfo == null) return false;
@@ -21,11 +20,7 @@ public class SecurityController {
         if (actionInfo == null) return false;
 
         // 检查用户的权限
-        if (user == null) return false;
-
-        // 检查数据约束
-        if (data == null) return true;
-        return checkRule(actionInfo.getShow(), data::get, true);
+        return user != null;
     }
 
     public static boolean checkRule(String condition, FieldValueRetriever retriever, boolean defaultSuccess) {

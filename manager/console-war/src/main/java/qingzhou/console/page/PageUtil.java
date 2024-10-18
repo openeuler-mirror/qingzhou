@@ -2,6 +2,7 @@ package qingzhou.console.page;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.Request;
+import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
@@ -19,6 +20,16 @@ import java.util.stream.Stream;
 
 public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
+
+    public static String[] filterActions(String[] checkActions, String qzApp, String qzModel, String currentUser) {
+        List<String> filteredActions = new ArrayList<>();
+        for (String action : checkActions) {
+            if (SecurityController.isActionPermitted(qzApp, qzModel, action, currentUser)) {
+                filteredActions.add(action);
+            }
+        }
+        return filteredActions.toArray(new String[0]);
+    }
 
     public static String getAppToShow() {
         List<String> allApp = SystemController.getService(Deployer.class).getAllApp();

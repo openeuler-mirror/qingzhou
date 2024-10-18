@@ -264,7 +264,9 @@
                     <%@ include file="../fragment/breadcrumb.jsp" %>
 
                     <%-- 首页面主体部分 --%>
-                    <%@ include file="../fragment/info.jsp" %>
+                    <div class="bodyDiv">
+                        <%@ include file="../fragment/info.jsp" %>
+                    </div>
                 </section>
             </li>
         </ul>

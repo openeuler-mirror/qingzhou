@@ -30,6 +30,7 @@ public class ModelInfo {
     private String[] headActions;
     private String[] listActions;
     private String[] batchActions;
+    private String[] formActions;
 
     public ModelActionInfo getModelActionInfo(String actionName) {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
@@ -47,8 +48,16 @@ public class ModelInfo {
         return existsActions(batchActions);
     }
 
+    public String[] getFormActions() {
+        return existsActions(formActions);
+    }
+
     public void setBatchActions(String[] batchActions) {
         this.batchActions = batchActions;
+    }
+
+    public void setFormActions(String[] formActions) {
+        this.formActions = formActions;
     }
 
     private String[] existsActions(String[] scope) {

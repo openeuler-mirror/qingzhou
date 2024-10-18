@@ -122,7 +122,11 @@ public class ValidationFilter implements Filter<RestContext> {
     private String[] validate(ValidationContext context) {
         ModelFieldInfo fieldInfo = context.fieldInfo;
 
-        boolean show = SecurityController.checkRule(fieldInfo.getShow(), context.request::getParameter, true);
+        boolean show = SecurityController.checkRule(fieldInfo.getShow(),
+                context.isUpdateAction
+                        ? new RemoteFieldValueRetriever(context.request.getId(), context.request)
+                        : context.request::getParameter,
+                true);
         if (!show) { // 不再页面显示的属性，不需要校验，并删除之以免后续持久化了错误数据
             context.request.removeParameter(fieldInfo.getCode());
             return null;
