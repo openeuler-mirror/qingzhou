@@ -2,7 +2,6 @@
 
 <%
     String contextPath = request.getContextPath();
-    request.setAttribute("comeFromIndexPage", true);
 %>
 <!DOCTYPE html>
 <html lang="zh">

@@ -29,7 +29,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
 
     @Override
     public String[] listActions() {
-        return new String[]{"showhtml"};
+        return new String[]{"showhtml", Download.ACTION_FILES};
     }
 
     @Override
@@ -48,7 +48,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
                 String fileName = file.getName();
                 if (id.equals(fileName)) {
                     return new HashMap<String, String>() {{
-                        put("name", fileName);
+                        put(idField(), fileName);
                         put("file", file.getAbsolutePath().replace(getAppContext().getAppDir().getAbsolutePath(), ""));
                     }};
                 }

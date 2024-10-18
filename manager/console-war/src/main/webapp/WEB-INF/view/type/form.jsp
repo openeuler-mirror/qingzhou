@@ -135,15 +135,6 @@
             <%
                 }
 
-                if (SecurityController.isActionShow(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, modelData, currentUser)) {
-            %>
-            <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>"
-               btn-type="goback" class="btn">
-                <%=I18n.getKeyI18n("page.return")%>
-            </a>
-            <%
-                }
-
                 if (modelInfo.getModelActionInfo(DeployerConstants.ACTION_REFRESHKEY) != null) {
             %>
             <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, StreamView.FLAG, DeployerConstants.ACTION_REFRESHKEY)%>"
