@@ -896,7 +896,12 @@ function bindEventForListPage() {
             // 表格操作列
             qz.bindFill($("table a.dataid", this), $(".bodyDiv", this), false, true, getRestrictedArea);
             // 列表页
-            qz.bindFill($("a.tw-action-link", this), $(".main-body", this), true, true, getRestrictedArea);
+            qz.bindFill($("a.tw-action-link[action-name='monitor']", this), $(".bodyDiv", this), true, true, getRestrictedArea);
+            // 列表页
+            qz.bindFill($("a.tw-action-link[action-name='stop'], a.tw-action-link[action-name='start']", this), $(".bodyDiv", this), true, false, getRestrictedArea);
+            // 列表页
+            qz.bindFill($("a.tw-action-link", this), $(".main-body", this), false, true, getRestrictedArea);
+            
             // 分页
             qz.bindFill($("ul.pager.pager-loose a", this), $(".main-body", this), false, false, getRestrictedArea);
             // 分页
