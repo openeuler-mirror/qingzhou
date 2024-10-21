@@ -71,6 +71,11 @@ public class RequestImpl implements Request {
         return batchId;
     }
 
+    @Override
+    public Enumeration<String> getNonModelParameterNames() {
+        return Collections.enumeration(nonModelParameters.keySet());
+    }
+
     public void setBatchId(String[] batchId) {
         this.batchId = batchId;
     }

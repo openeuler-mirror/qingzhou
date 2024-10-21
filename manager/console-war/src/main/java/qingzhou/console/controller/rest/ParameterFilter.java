@@ -1,6 +1,8 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.FieldType;
+import qingzhou.api.type.Update;
+import qingzhou.console.SecurityController;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
@@ -10,10 +12,7 @@ import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ParameterFilter implements Filter<RestContext> {
@@ -21,20 +20,70 @@ public class ParameterFilter implements Filter<RestContext> {
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
 
-        trim(request);
+        // 先分离出表单参数
         separateParameters(request);
+        // 剔除前端不要的表单参数
+        remove(request);
+        // trim 有效的值
+        trim(request);
+        // 密码传输解密
         password(request);
+        // 日期组件格式解码
         datetime(request);
+        // 设置批量处理的标记
         batchId(request);
 
         return true;
     }
 
+    private void remove(RequestImpl request) {
+        List<String> toRemove = new ArrayList<>();
+        boolean isUpdateAction = Update.ACTION_UPDATE.equals(request.getAction());
+
+        Enumeration<String> parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            String name = parameterNames.nextElement();
+            ModelFieldInfo fieldInfo = request.getCachedModelInfo().getModelFieldInfo(name);
+
+            String show = fieldInfo.getShow();
+            if (Utils.notBlank(show)) {
+                if (!SecurityController.checkRule(show, request::getParameter, true)) {
+                    toRemove.add(name);
+                }
+            }
+
+            if (isUpdateAction) {
+                if (!fieldInfo.isEdit()) toRemove.add(name);
+
+                // readonly 要从后端数据校验，避免通过 rest api 绕过前端进入数据写入
+                if (Utils.notBlank(fieldInfo.getReadOnly())) {
+                    boolean isReadOnly = SecurityController.checkRule(fieldInfo.getReadOnly(), new RemoteFieldValueRetriever(request.getId(), request), true);
+                    if (isReadOnly) {
+                        toRemove.add(name);
+                    }
+                }
+            }
+        }
+
+        toRemove.forEach(request::removeParameter);
+    }
+
     private void trim(RequestImpl request) {
-        for (String fieldName : request.getCachedModelInfo().getFormFieldNames()) {
-            String val = request.getParameter(fieldName);
+        Enumeration<String> paramNames = request.getParameterNames();
+        while (paramNames.hasMoreElements()) {
+            String name = paramNames.nextElement();
+            String val = request.getParameter(name);
             if (val != null) {
-                request.setParameter(fieldName, val.trim());
+                request.setParameter(name, val.trim());
+            }
+        }
+
+        Enumeration<String> nonModelParam = request.getNonModelParameterNames();
+        while (nonModelParam.hasMoreElements()) {
+            String name = nonModelParam.nextElement();
+            String val = request.getNonModelParameter(name);
+            if (val != null) {
+                request.setNonModelParameter(name, val.trim());
             }
         }
     }
@@ -50,7 +99,9 @@ public class ParameterFilter implements Filter<RestContext> {
 
     private void datetime(RequestImpl request) {
         ModelInfo modelInfo = request.getCachedModelInfo();
-        for (String fieldName : modelInfo.getFormFieldNames()) {
+        Enumeration<String> parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField.getType().equals(FieldType.datetime.name())) {
                 try {
@@ -67,7 +118,9 @@ public class ParameterFilter implements Filter<RestContext> {
 
     private void password(RequestImpl request) {
         ModelInfo modelInfo = request.getCachedModelInfo();
-        for (String fieldName : modelInfo.getFormFieldNames()) {
+        Enumeration<String> parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField.getType().equals(FieldType.password.name())) {
                 try {

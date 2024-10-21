@@ -147,18 +147,6 @@ public class ModelInfo {
         return data;
     }
 
-    public Map<String, String> getReadOnlyMap() {
-        Map<String, String> data = new HashMap<>();
-        for (String field : getFormFieldNames()) {
-            ModelFieldInfo modelFieldInfo = getModelFieldInfo(field);
-            String readOnly = modelFieldInfo.getReadOnly();
-            if (Utils.notBlank(readOnly)) {
-                data.put(field, readOnly);
-            }
-        }
-        return data;
-    }
-
     public Map<String, Map<String, ModelFieldInfo>> getFormGroupedFields() {
         return getGroupedFields(getFormFieldNames());
     }

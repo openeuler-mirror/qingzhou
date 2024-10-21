@@ -53,14 +53,14 @@ class DefaultAction {
         RequestImpl request = (RequestImpl) req;
         ModelInfo modelInfo = request.getCachedModelInfo();
 
-        Map<String, String> parameters = prepareParameters(request);
-
         Map<String, Map<String, String>> echoParameters = new LinkedHashMap<>();
-        for (String p : parameters.keySet()) {
+        Enumeration<String> parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            String p = parameterNames.nextElement();
             String[] fieldEchoGroup = modelInfo.getModelFieldInfo(p).getEchoGroup();
             for (String group : fieldEchoGroup) {
                 Map<String, String> groupParameters = echoParameters.computeIfAbsent(group, k -> new LinkedHashMap<>());
-                groupParameters.put(p, parameters.get(p));
+                groupParameters.put(p, request.getParameter(p));
             }
         }
 
@@ -97,18 +97,6 @@ class DefaultAction {
     public void contains(Request request) throws Exception {
         List list = (List) instance;
         request.getResponse().setSuccess(list.contains(request.getId()));
-    }
-
-    @ModelAction(
-            code = Update.ACTION_CHANGED, icon = "check-board",
-            name = {"校验", "en:Changed"},
-            info = {"校验指定的字段是否被改变。", "en:Verify whether the specified field has been changed."})
-    public void changed(Request request) throws Exception {
-        Update update = (Update) instance;
-        request.getResponse().setSuccess(update.changed(request.getId(),
-                request.getNonModelParameter(DeployerConstants.CHECK_KEY),
-                request.getNonModelParameter(DeployerConstants.CHECK_VAL)
-        ));
     }
 
     @ModelAction(
@@ -196,7 +184,7 @@ class DefaultAction {
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
-        Map<String, String> properties = prepareParameters(request);
+        Map<String, String> properties = ((ResponseImpl) request).getParameters();
         if (request.getResponse().isSuccess()) {
             ((Add) instance).addData(properties);
         }
@@ -217,7 +205,7 @@ class DefaultAction {
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
-        Map<String, String> properties = prepareParameters(request);
+        Map<String, String> properties = ((ResponseImpl) request).getParameters();
         if (request.getResponse().isSuccess()) {
             ((Update) instance).updateData(properties);
         }
@@ -244,17 +232,6 @@ class DefaultAction {
         if (streamSupplier == null) return;
 
         downloadStream(request, streamSupplier);
-    }
-
-    private Map<String, String> prepareParameters(Request request) {
-        Map<String, String> properties = new HashMap<>();
-        for (String fieldName : getAppInfo().getModelInfo(request.getModel()).getFormFieldNames()) {
-            String value = request.getParameter(fieldName);
-            if (value != null) {
-                properties.put(fieldName, value);
-            }
-        }
-        return properties;
     }
 
     @ModelAction(
