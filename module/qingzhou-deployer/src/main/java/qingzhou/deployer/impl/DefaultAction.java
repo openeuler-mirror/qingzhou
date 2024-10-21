@@ -238,7 +238,7 @@ class DefaultAction {
             code = Export.ACTION_EXPORT, icon = "download-alt",
             name = {"导出", "en:Export"},
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
-    public void export(Request request) {
+    public void export(Request request) throws IOException {
         Export stream = (Export) instance;
         Export.StreamSupplier streamSupplier = stream.exportData(request.getId());
         if (streamSupplier == null) return;
@@ -352,36 +352,54 @@ class DefaultAction {
             downloadKey = buildDownloadKey(downloadFiles, keyDir);
         }
         if (downloadKey.trim().isEmpty() || !new File(keyDir, downloadKey).exists()) return;
-
+        response.getParameters().put(DeployerConstants.DOWNLOAD_SERIAL_KEY, downloadKey);
         response.setDownloadName(downloadKey + ".zip");
         String finalDownloadKey = downloadKey;
+
         downloadStream(request, new Export.StreamSupplier() {
-            private final File temp = FileUtil.newFile(keyDir, finalDownloadKey);
-            private final RandomAccessFile raf = new RandomAccessFile(temp, "r");
+            private long currentOffset;
 
             @Override
-            public int read(byte[] block, long offset) throws IOException {
-                raf.seek(offset);
-                return raf.read(block);
+            public byte[] read(long offset) throws IOException {
+                File temp = FileUtil.newFile(keyDir, finalDownloadKey);
+                try (RandomAccessFile raf = new RandomAccessFile(temp, "r")) {
+                    currentOffset = offset;
+                    raf.seek(offset);
+
+                    byte[] byteRead;
+                    byte[] block = new byte[1024 * 1024 * 15];
+                    int read = raf.read(block);
+                    if (read == block.length) {
+                        byteRead = block;
+                    } else {
+                        byteRead = new byte[read];
+                        System.arraycopy(block, 0, byteRead, 0, read);
+                    }
+
+                    currentOffset += read;
+                    if (currentOffset != raf.getFilePointer()) throw new IllegalStateException();
+                    if (currentOffset >= raf.length()) {
+                        currentOffset = -1L;
+                        try {
+                            FileUtil.forceDelete(temp);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    return byteRead;
+                } catch (Throwable e) {
+                    try {
+                        FileUtil.forceDelete(temp);
+                    } catch (IOException ignored) {
+                    }
+                    throw e;
+                }
             }
 
             @Override
-            public String serialKey() {
-                return finalDownloadKey;
-            }
-
-            @Override
-            public void finished() {
-                try {
-                    raf.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    FileUtil.forceDelete(temp);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            public long offset() {
+                return currentOffset;
             }
         });
     }
@@ -432,7 +450,7 @@ class DefaultAction {
         return key;
     }
 
-    private void downloadStream(Request request, Export.StreamSupplier supplier) {
+    private void downloadStream(Request request, Export.StreamSupplier supplier) throws IOException {
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
         long offset = 0;
@@ -442,35 +460,8 @@ class DefaultAction {
         }
         if (offset < 0) return;
 
-        Map<String, String> result = response.getParameters();
-        result.put(DeployerConstants.DOWNLOAD_SERIAL_KEY, supplier.serialKey());
-
-        byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
-        int read = 0;
-        try {
-            read = supplier.read(block, offset);
-            if (read > 0) { // ==0 表示上次正好读取到结尾
-                offset += read;
-
-                byte[] byteRead;
-                if (read == block.length) {
-                    byteRead = block;
-                } else {
-                    byteRead = new byte[read];
-                    System.arraycopy(block, 0, byteRead, 0, read);
-                }
-                response.setBodyBytes(byteRead);
-            }
-        } catch (Exception e) {
-            supplier.finished();
-            e.printStackTrace();
-        } finally {
-            if (read != block.length) {
-                offset = -1L;
-                supplier.finished();
-            }
-        }
-
-        result.put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
+        byte[] block = supplier.read(offset);
+        response.setBodyBytes(block);
+        response.getParameters().put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(supplier.offset()));
     }
 }

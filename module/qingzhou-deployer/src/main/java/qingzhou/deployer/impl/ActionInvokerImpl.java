@@ -107,14 +107,14 @@ class ActionInvokerImpl implements ActionInvoker {
             tmp.setNonModelParameter(DeployerConstants.UPLOAD_FILE_NAME, file.getName());
             tmp.setNonModelParameter(DeployerConstants.UPLOAD_APP_NAME, request.getApp());
             try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-                byte[] block = new byte[DeployerConstants.DOWNLOAD_BLOCK_SIZE];
+                byte[] block = new byte[1024 * 1024 * 15];
                 long offset = 0;
                 while (true) {
                     raf.seek(offset);
                     int read = raf.read(block);
                     if (read > 0) { // ==0 表示上次正好读取到结尾
                         byte[] sendBlock =
-                                read == DeployerConstants.DOWNLOAD_BLOCK_SIZE
+                                read == block.length
                                         ? block
                                         : Arrays.copyOfRange(block, 0, read);
                         tmp.setByteParameter(sendBlock);

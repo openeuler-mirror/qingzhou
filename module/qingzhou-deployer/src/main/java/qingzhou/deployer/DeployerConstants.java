@@ -30,6 +30,7 @@ public interface DeployerConstants {
     String ACTION_STOP_APP = "ACTION_STOP_APP";
     String ACTION_INSTALL_VERSION = "ACTION_INSTALL_VERSION";
     String ACTION_UNINSTALL_VERSION = "ACTION_UNINSTALL_VERSION";
+    String ACTION_CONFIRMKEY = "confirmKey";
 
     // 内部通信参数
 
@@ -60,6 +61,4 @@ public interface DeployerConstants {
     String DEFAULT_DATA_SEPARATOR = ",";
     String DOWNLOAD_FILE_NAMES_SP = "/"; // |/\:*?"<> 这些都是 windows 平台u支持的文件名，linux 上 / 不支持文件名
     String DOWNLOAD_FILE_GROUP_SP = "/";
-
-    int DOWNLOAD_BLOCK_SIZE = Integer.parseInt(System.getProperty("qingzhou.DOWNLOAD_BLOCK_SIZE", String.valueOf(1024 * 1024 * 2)));
 }

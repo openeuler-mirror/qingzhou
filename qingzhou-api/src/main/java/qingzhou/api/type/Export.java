@@ -8,10 +8,8 @@ public interface Export {
     StreamSupplier exportData(String id);
 
     interface StreamSupplier {
-        int read(byte[] block, long offset) throws IOException;
+        byte[] read(long offset) throws IOException;
 
-        String serialKey();
-
-        void finished();
+        long offset();
     }
 }

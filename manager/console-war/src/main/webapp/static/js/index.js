@@ -466,7 +466,7 @@ function bindEventForFormPage() {
                 var params = {};
                 params[getSetting("checkOtp")] = $.trim($("#randCode-OTP").val());
                 $.ajax({
-                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/")) + "/confirmKey").replace("/stream/", "/json/"),
+                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/")) + "/" + getSetting("confirmKey")).replace("/" + getSetting("stream") + "/", "/json/"),
                     async: true,
                     data: params,
                     dataType: "json",
