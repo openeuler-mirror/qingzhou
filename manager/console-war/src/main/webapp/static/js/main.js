@@ -461,7 +461,7 @@ function openLayer(options) {
         options["skin"] = "layer-" + theme;
     }
     return layer.open($.extend(defaults, options));
-};
+}
 
 function closeLayer(index) {
     if (document.getElementById(index)) {
@@ -469,10 +469,10 @@ function closeLayer(index) {
     } else {
         layer.close(index);
     }
-};
+}
 
 // start, for: ModelField注解 effectiveWhen()
-function bindEvent(conditions) {
+function bindEvent(showCondition) {
     const triggers = {};
     const contain = function (array, ele) {
         for (var i = 0; i < array.length; i++) {
@@ -482,37 +482,37 @@ function bindEvent(conditions) {
         }
         return false;
     };
-    // 处理 show 和 readonly 两种事件类型
-    ["show", "readonly"].forEach(type => {
-        if (conditions[type]) {
-            Object.keys(conditions[type]).forEach(key => {
-                const condition = conditions[type][key];
-                const expressions = condition.includes("&") ? condition.split("&") : condition.split("|");
 
-                // 处理每个表达式
-                expressions.forEach(expression => {
-                    const operator = expression.includes("!=") ? "!=" : "=";
-                    const [triggerItem, val] = expression.split(operator).map(part => part.trim());
+    // 处理 show 条件
+    if (showCondition) {
+        Object.keys(showCondition).forEach(fieldName => {
+            const condition = showCondition[fieldName];
+            const expressions = condition.includes("&") ? condition.split("&") : condition.split("|");
 
-                    // 初始化触发器对象
-                    if (!triggers[triggerItem]) {
-                        triggers[triggerItem] = [];
-                    }
+            // 处理每个表达式
+            expressions.forEach(expression => {
+                const operator = expression.includes("!=") ? "!=" : "=";
+                const [triggerItem, val] = expression.split(operator).map(part => part.trim());
 
-                    // 创建并添加条件
-                    const json = {[key]: condition, type: type};
-                    if (!contain(triggers[triggerItem], json)) {
-                        triggers[triggerItem].push(json);
-                    }
-                });
+                // 初始化触发器对象
+                if (!triggers[triggerItem]) {
+                    triggers[triggerItem] = [];
+                }
+
+                // 创建并添加条件
+                const json = {[fieldName]: condition};
+                if (!contain(triggers[triggerItem], json)) {
+                    triggers[triggerItem].push(json);
+                }
             });
-        }
-    });
+        });
+    }
+
     var triggerTies = function (json) {
         json.forEach(item => {
-            const {type, ...rest} = item; // 事件类型 (show/readonly)
+            const {type, ...rest} = item;
             Object.keys(rest).forEach(key => {
-                triggerAction(key, rest[key], type);
+                triggerAction(key, rest[key]);
             });
         });
     };
@@ -527,9 +527,9 @@ function bindEvent(conditions) {
     });
 
     autoAdaptTip();
-};
+}
 
-function triggerAction(ele, condition, type) {
+function triggerAction(ele, condition) {
     const operators = condition.includes("&") ? "&" : "|";
     const expressions = condition.split(operators);
     const compareVal = function (value, val, notEq) {
@@ -537,7 +537,7 @@ function triggerAction(ele, condition, type) {
     };
     const restrictedArea = getRestrictedArea();
 
-    let shouldShowOrRead;
+    let shouldShow;
 
     expressions.forEach(expression => {
         let compareResult = false;
@@ -558,7 +558,7 @@ function triggerAction(ele, condition, type) {
             }
 
             // 当有多个选项未选中时，隐藏目标表单项
-            if ((target.length > 1 || !target.length) && type === "show") {
+            if ((target.length > 1 || !target.length)) {
                 $("#form-item-" + ele, restrictedArea).hide();
                 return;
             }
@@ -569,30 +569,23 @@ function triggerAction(ele, condition, type) {
             // compareVal 比较出来的值是表示是否显示
             compareResult = compareVal(target.val(), parsedVal, notEq);
         }
-        if (shouldShowOrRead === undefined) {
-            shouldShowOrRead = compareResult;
+        if (shouldShow === undefined) {
+            shouldShow = compareResult;
         } else {
             if (operators === "&") {
-                shouldShowOrRead = shouldShowOrRead && compareResult;
+                shouldShow = shouldShow && compareResult;
             } else {
-                shouldShowOrRead = shouldShowOrRead || compareResult;
+                shouldShow = shouldShow || compareResult;
             }
         }
     });
-    if (type === "show") {
-        if (shouldShowOrRead) {
-            $("#form-item-" + ele, restrictedArea).fadeIn(200);
-        } else {
-            $("#form-item-" + ele, restrictedArea).hide();
-        }
-    } else if (type === "readonly") {
-        if (shouldShowOrRead) {
-            $("#form-item-" + ele, restrictedArea).find("input").attr("readonly", "readonly");
-        } else {
-            $("#form-item-" + ele, restrictedArea).find("input").removeAttr("readonly");
-        }
+
+    if (shouldShow) {
+        $("#form-item-" + ele, restrictedArea).fadeIn(200);
+    } else {
+        $("#form-item-" + ele, restrictedArea).hide();
     }
-};
+}
 
 /*下拉列表，可输入下拉列表：jQuery Nice Select - v1.1.0 (Made by Hernán Sartorio, https://github.com/hernansartorio/jquery-nice-select)*/
 function niceSelect() {
@@ -660,21 +653,20 @@ function niceSelect() {
         var $dropdown = $option.closest(".nice-select");
         $(".selected", $dropdown).removeClass("selected");
         $option.addClass("selected");
-        if ($("input[type='hidden']", $dropdown).attr("readonly") !== "readonly") {
-            $("input[type='hidden']", $dropdown).val($option.attr("data-value"));
-            $("input[type='hidden']", $dropdown).attr("format", $option.attr("format"));
-            $("input[type='text']", $dropdown).attr("text", $option.text()).val($option.text());
-            $("input[type='hidden']", $dropdown).change();
-            if ($("span", $dropdown).length > 0) {
-                if ($.trim($option.text()) !== "") {
-                    $("span", $dropdown).html($option.text());
-                } else {
-                    $("span", $dropdown).html($option.attr("data-value"));
-                }
-                $dropdown.attr("title", $("span", $dropdown).html());
+
+        $("input[type='hidden']", $dropdown).val($option.attr("data-value"));
+        $("input[type='hidden']", $dropdown).attr("format", $option.attr("format"));
+        $("input[type='text']", $dropdown).attr("text", $option.text()).val($option.text());
+        $("input[type='hidden']", $dropdown).change();
+        if ($("span", $dropdown).length > 0) {
+            if ($.trim($option.text()) !== "") {
+                $("span", $dropdown).html($option.text());
             } else {
-                $dropdown.attr("title", $option.attr("data-value"));
+                $("span", $dropdown).html($option.attr("data-value"));
             }
+            $dropdown.attr("title", $("span", $dropdown).html());
+        } else {
+            $dropdown.attr("title", $option.attr("data-value"));
         }
     });
 

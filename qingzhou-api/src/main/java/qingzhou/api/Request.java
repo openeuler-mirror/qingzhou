@@ -46,6 +46,9 @@ public interface Request {
     String[] getBatchId();
 
     // 获取未使用 @ModelField 标注的参数
+    Enumeration<String> getNonModelParameterNames();
+
+    // 获取未使用 @ModelField 标注的参数
     String getNonModelParameter(String name);
 
     /**

@@ -6,7 +6,6 @@ import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Update;
 import qingzhou.api.type.Validate;
-import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.ActionInvoker;
@@ -15,16 +14,14 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ItemInfo;
+import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,14 +39,12 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         I18n.addKeyI18n("validation_forbid", new String[]{"该值已被禁用：%s", "en:This value is disabled: %s"});
         I18n.addKeyI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
-        I18n.addKeyI18n("validation_editable", new String[]{"该属性不可编辑", "en:This property is not editable"});
         I18n.addKeyI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
         I18n.addKeyI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
         I18n.addKeyI18n("validation_email", new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
         I18n.addKeyI18n("validation_filePath", new String[]{"文件路径不支持以\\或者/结尾，不支持包含特殊字符和空格", "en:The file path cannot end with \\ or /, and cannot contain special characters or Spaces"});
         I18n.addKeyI18n("validation_options", new String[]{"取值不在范围：%s", "en:The value is not in the range: %s"});
         I18n.addKeyI18n("validation_datetime", new String[]{"须符合时间格式：%s", "en:Must conform to the time format: %s"});
-        I18n.addKeyI18n("validation_readonly", new String[]{"当前状态下不支持写入", "en:Writes are not supported in the current state"});
     }
 
     @Override
@@ -62,7 +57,9 @@ public class ValidationFilter implements Filter<RestContext> {
         boolean isAddAction = Add.ACTION_ADD.equals(request.getAction());
         boolean isUpdateAction = Update.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
-            for (String field : modelInfo.getFormFieldNames()) {
+            Enumeration<String> parameterNames = request.getParameterNames();
+            while (parameterNames.hasMoreElements()) {
+                String field = parameterNames.nextElement();
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                 String parameterVal = request.getParameter(field);
                 ValidationContext vc = new ValidationContext(request, modelInfo, fieldInfo, parameterVal, isAddAction, isUpdateAction);
@@ -109,28 +106,17 @@ public class ValidationFilter implements Filter<RestContext> {
             new host(),
             new port(),
             new forbid(),
-            new create(), new edit(),
+            new create(),
             new checkXSS(),
             new regularExpression(),
             new checkEmail(),
             new checkFilePath(),
             new options(),
-            new datetime(),
-            new readonly()
+            new datetime()
     };
 
     private String[] validate(ValidationContext context) {
         ModelFieldInfo fieldInfo = context.fieldInfo;
-
-        boolean show = SecurityController.checkRule(fieldInfo.getShow(),
-                context.isUpdateAction
-                        ? new RemoteFieldValueRetriever(context.request.getId(), context.request)
-                        : context.request::getParameter,
-                true);
-        if (!show) { // 不再页面显示的属性，不需要校验，并删除之以免后续持久化了错误数据
-            context.request.removeParameter(fieldInfo.getCode());
-            return null;
-        }
 
         // 处理空值情况
         if (context.parameterVal == null || context.parameterVal.isEmpty()) {
@@ -185,6 +171,10 @@ public class ValidationFilter implements Filter<RestContext> {
             if (!context.fieldInfo.getCode().equals(context.modelInfo.getIdField())) return null;
 
             if (context.isAddAction) {
+                ModelInfo modelInfo = context.request.getCachedModelInfo();
+                ModelActionInfo actionInfo = modelInfo.getModelActionInfo(List.ACTION_CONTAINS);
+                if (actionInfo == null) return null;
+
                 RequestImpl tmp = new RequestImpl(context.request);
                 tmp.setActionName(List.ACTION_CONTAINS);
                 tmp.setId(context.parameterVal);
@@ -330,23 +320,6 @@ public class ValidationFilter implements Filter<RestContext> {
         }
     }
 
-    static class edit implements Validator {
-
-        @Override
-        public String[] validate(ValidationContext context) {
-            ModelFieldInfo fieldInfo = context.fieldInfo;
-            if (fieldInfo.isEdit()) return null;
-
-            if (!context.isUpdateAction) return null;
-
-            if (changed(context)) {
-                return new String[]{"validation_editable"};
-            }
-
-            return null;
-        }
-    }
-
     static class checkXSS implements Validator {
 
         @Override
@@ -430,33 +403,5 @@ public class ValidationFilter implements Filter<RestContext> {
                 return new String[]{"validation_datetime", DeployerConstants.FIELD_DATETIME_FORMAT};
             }
         }
-    }
-
-    static class readonly implements Validator {
-        @Override
-        public String[] validate(ValidationContext context) {
-            if (context.isAddAction) return null;
-
-            String readOnly = context.fieldInfo.getReadOnly();
-            if (readOnly == null || readOnly.trim().isEmpty()) return null;
-
-            boolean isReadOnly = SecurityController.checkRule(readOnly, new RemoteFieldValueRetriever(context.request.getId(), context.request), true);
-            if (isReadOnly) {
-                if (changed(context)) {
-                    return new String[]{"validation_readonly"};
-                }
-            }
-
-            return null;
-        }
-    }
-
-    private static boolean changed(ValidationContext context) {
-        RequestImpl tmp = new RequestImpl(context.request);
-        tmp.setActionName(Update.ACTION_CHANGED);
-        tmp.setNonModelParameter(DeployerConstants.CHECK_KEY, context.fieldInfo.getCode());
-        tmp.setNonModelParameter(DeployerConstants.CHECK_VAL, context.parameterVal);
-        Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
-        return tmpResp.isSuccess();
     }
 }

@@ -157,66 +157,56 @@
                     <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Download.ACTION_FILES)%>
                 </a>
                 <%
-                } else {
-                %>
-                <input type="submit" class="btn"
-                       value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + formAction)%>'>
-                <%
                         }
+                    }
+                %>
+
+                <%
+                    if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
+                %>
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>"
+                   class="btn">
+                    <%=I18n.getKeyI18n("page.return")%>
+                </a>
+                <%
                     }
                 %>
             </div>
         </div>
 
         <div id="tempZone" style="display:none;"></div>
-        <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
-        <%=SystemController.getPublicKeyString()%>
-        </textarea>
 
-        <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">
+        <textarea name="pubkey" rows="3" disabled="disabled"
+                  style="display:none;"><%=SystemController.getPublicKeyString()%></textarea>
+
         <%
             // added by yuanwc for: ModelField 注解 show()
-            StringBuilder conditionBuilder = new StringBuilder();
-            conditionBuilder.append("{");
+            StringBuilder showCondition = new StringBuilder();
+            showCondition.append("{");
+            boolean isFirst = true;
+            for (Map.Entry<String, String> entry : modelInfo.getShowMap().entrySet()) {
+                if (!isFirst) showCondition.append(",");
+                isFirst = false;
 
-            // 处理 show 条件
-            conditionBuilder.append("\"show\": {");
-            Map<String, String> showConditions = modelInfo.getShowMap();
-            for (Map.Entry<String, String> entry : showConditions.entrySet()) {
-                conditionBuilder.append("\"").append(entry.getKey()).append("\": \"")
-                        .append(entry.getValue().replaceAll("\\&\\&", "&").replaceAll("\\|\\|", "|")).append("\",");
+                showCondition.append("\"").append(entry.getKey()).append("\":")
+                        .append("\"").append(entry.getValue().replaceAll("\\&\\&", "&").replaceAll("\\|\\|", "|")).append("\"");
             }
-            if (conditionBuilder.lastIndexOf(",") > 0) {
-                conditionBuilder.deleteCharAt(conditionBuilder.lastIndexOf(","));
-            }
-            conditionBuilder.append("},");
-
-            // 处理 readonly 条件
-            conditionBuilder.append("\"readonly\": {");
-            Map<String, String> readonlyConditions = modelInfo.getReadOnlyMap();
-            for (Map.Entry<String, String> entry : readonlyConditions.entrySet()) {
-                conditionBuilder.append("\"").append(entry.getKey()).append("\": \"")
-                        .append(entry.getValue()).append("\",");
-            }
-            if (!readonlyConditions.isEmpty()) {
-                conditionBuilder.deleteCharAt(conditionBuilder.lastIndexOf(","));
-            }
-            conditionBuilder.append("}");
-
-            conditionBuilder.append("}");
-            out.print(conditionBuilder.toString());
+            showCondition.append("}");
         %>
-        </textarea>
-        <textarea name="passwordFields" rows="3" disabled="disabled" style="display:none;">
+        <textarea name="showCondition" rows="3" disabled="disabled"
+                  style="display:none;"><%=showCondition.toString()%></textarea>
+
         <%
+            StringBuilder pwdFields = new StringBuilder();
             for (int i = 0; i < passwordFields.size(); i++) {
                 if (i > 0) {
-                    out.print(",");
+                    pwdFields.append(",");
                 }
-                out.print(passwordFields.get(i));
+                pwdFields.append(passwordFields.get(i));
             }
         %>
-    </textarea>
+        <textarea name="passwordFields" rows="3" disabled="disabled"
+                  style="display:none;"><%=pwdFields.toString()%></textarea>
 
     </form>
 

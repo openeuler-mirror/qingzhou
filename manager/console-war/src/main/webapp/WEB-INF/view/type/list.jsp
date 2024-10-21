@@ -245,6 +245,8 @@
                 <%
                     for (String actionName : listActions) {
                         ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
+                        boolean showAction = SecurityController.checkRule(action.getShow(), modelData::get, true);
+                        if (!showAction) continue;
 
                         String customActionId = "";
                         if (action.getFields() != null && action.getFields().length > 0) {
