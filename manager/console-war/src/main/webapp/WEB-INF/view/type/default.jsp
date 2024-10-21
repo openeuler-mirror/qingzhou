@@ -9,35 +9,34 @@
     <%-- 面包屑分级导航 --%>
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
-    <div class="block-bg">
-        <table class="table table-hover">
-            <tr>
-                <td>
-                    <%=I18n.getKeyI18n("page.status")%>:
-                </td>
-                <td>
-                    <%=qzResponse.isSuccess()%>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <%=I18n.getKeyI18n("page.msg")%>:
-                </td>
-                <td>
-                    <%=qzResponse.getMsg()%>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                </td>
-                <td>
-                    <%
-                        for (Map<String, String> data : qzResponse.getDataList()) {
-                            for (Map.Entry<String, String> e : data.entrySet()) {
-                                String key = e.getKey();
-                                String value = e.getValue();
-                    %>
-                    <p>
+    <table class="table table-hover">
+        <tr>
+            <td>
+                <%=I18n.getKeyI18n("page.status")%>:
+            </td>
+            <td>
+                <%=qzResponse.isSuccess()%>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <%=I18n.getKeyI18n("page.msg")%>:
+            </td>
+            <td>
+                <%=qzResponse.getMsg()%>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            </td>
+            <td>
+                <%
+                    for (Map<String, String> data : qzResponse.getDataList()) {
+                        for (Map.Entry<String, String> e : data.entrySet()) {
+                            String key = e.getKey();
+                            String value = e.getValue();
+                %>
+                <p>
 						<span class="key">
 						<%
                             if (key.startsWith("http")) {
@@ -49,7 +48,7 @@
                             }
                         %>
 						</span>
-                        <span class="value">
+                    <span class="value">
 						<%
                             if (!value.isEmpty()) {
                                 if (value.startsWith("http")) {
@@ -62,13 +61,12 @@
                                         }
                                     %>
 						</span>
-                    </p>
-                    <%
-                            }
+                </p>
+                <%
                         }
-                    %>
-                </td>
-            </tr>
-        </table>
-    </div>
+                    }
+                %>
+            </td>
+        </tr>
+    </table>
 </div>

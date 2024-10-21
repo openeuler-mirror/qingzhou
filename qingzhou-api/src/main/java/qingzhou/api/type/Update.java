@@ -18,4 +18,8 @@ public interface Update {
     default boolean changed(String id, String key, String val) throws Exception {
         return !Objects.equals(editData(id).get(key), val);
     }
+
+    default String[] formActions() {
+        return null;
+    }
 }

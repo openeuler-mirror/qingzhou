@@ -12,14 +12,11 @@
         </div>
     </li>
     <%
-        if (!Objects.equals(I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + qzAction), I18n.getModelI18n(qzApp, "model." + qzModel))) {
-            if (I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + qzAction) != null) {
+        String actionDesc = I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + qzAction);
+        if (!Objects.equals(actionDesc, I18n.getModelI18n(qzApp, "model." + qzModel))) {
     %>
-    <li class="active">
-        <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + qzAction)%>
-    </li>
+    <li class="active"><%=actionDesc%></li>
     <%
-            }
         }
     %>
 </ol>

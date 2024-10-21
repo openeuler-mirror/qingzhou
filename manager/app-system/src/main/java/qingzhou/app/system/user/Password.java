@@ -25,14 +25,14 @@ import java.util.Objects;
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
                 "en:It is used to change the password of the current logged-in user, enable OTP, and so on."})
-public class Password extends ModelBase implements Export {
+public class Password extends ModelBase implements Update, Export {
     private final String KEY_IN_SESSION_FLAG = "keyForOtp";
 
     @ModelField(
             type = FieldType.bool,
             name = {"修改密码", "en:Change Password"},
             info = {"标记需要本用户登录系统的密码。", "en:Mark the password that requires the user to log in to the system."})
-    public Boolean changePwd = true;
+    public Boolean changePwd;
 
     @ModelField(
             show = "changePwd=true",
@@ -77,65 +77,6 @@ public class Password extends ModelBase implements Export {
                 "en:The new password is the same as the original password and has not changed"});
         getAppContext().addI18n("password.doNotUseOldPasswords", new String[]{"出于安全考虑，请勿设置最近使用过的密码",
                 "en:For security reasons, do not set a recently used password"});
-    }
-
-    @ModelAction(
-            code = Update.ACTION_EDIT,
-            name = {"修改", "en:Edit"},
-            info = {"修改当前登录账户的密码。",
-                    "en:Change the password of the current login account."})
-    public void edit(Request request) throws Exception {
-        Password password = new Password();
-        Map<String, String> loginUserPro = User.showDataForUserInternal(request.getUser());
-        password.enableOtp = Boolean.parseBoolean(Objects.requireNonNull(loginUserPro).get("enableOtp"));
-        request.getResponse().addModelData(password);
-    }
-
-    @ModelAction(
-            code = Update.ACTION_UPDATE,
-            name = {"更新", "en:Update"},
-            info = {"更新密码。", "en:Update the password."})
-    public void update(Request request) throws Exception {
-        String loginUser = request.getUser();
-        Map<String, String> baseData = Objects.requireNonNull(User.showDataForUserInternal(loginUser));
-
-        if (Boolean.parseBoolean(request.getParameter("changePwd"))) {
-            String error = checkError(request, baseData);
-            if (error != null) {
-                request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(getAppContext().getI18n(error));
-                return;
-            }
-
-            String[] passwords = User.splitPwd(baseData.get("password"));
-            String digestAlg = passwords[0];
-            int saltLength = Integer.parseInt(passwords[1]);
-            int iterations = Integer.parseInt(passwords[2]);
-            MessageDigest digest = Main.getService(CryptoService.class).getMessageDigest();
-            baseData.put("password", digest.digest(request.getParameter("newPassword"), digestAlg, saltLength, iterations));
-            baseData.put("changePwd", "false");
-            User.insertPasswordModifiedTime(baseData);
-            Console console = Main.getService(Config.class).getConsole();
-            String historyPasswords = User.cutOldPasswords(
-                    baseData.remove("historyPasswords"),
-                    console.getSecurity().getPasswordLimitRepeats(), baseData.get("password"));
-            baseData.put("historyPasswords", historyPasswords);
-        }
-
-        String enableOtpFlag = request.getParameter("enableOtp");
-        if (enableOtpFlag != null) {
-            boolean parsedBoolean = Boolean.parseBoolean(enableOtpFlag);
-            baseData.put("enableOtp", String.valueOf(parsedBoolean));
-
-            String keyForOtp = baseData.get("keyForOtp");
-            if (parsedBoolean && Utils.isBlank(keyForOtp)) {
-                request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(getAppContext().getI18n("keyForOtp.bind"));
-                return;
-            }
-        }
-
-        User.updateDataForUser(baseData);
     }
 
     private String checkError(Request request, Map<String, String> baseData) {
@@ -226,5 +167,66 @@ public class Password extends ModelBase implements Export {
             public void finished() {
             }
         };
+    }
+
+    @Override
+    public Map<String, String> editData(String id) {
+        Request request = getAppContext().getCurrentRequest();
+        Map<String, String> loginUserPro = User.showDataForUserInternal(request.getUser());
+        boolean enableOtp = Boolean.parseBoolean(Objects.requireNonNull(loginUserPro).get("enableOtp"));
+        return new HashMap<String, String>() {{
+            put("changePwd", "true");
+            put("enableOtp", String.valueOf(enableOtp));
+        }};
+    }
+
+    @Override
+    public void updateData(Map<String, String> data) throws Exception {
+        Request request = getAppContext().getCurrentRequest();
+        String loginUser = request.getUser();
+        Map<String, String> baseData = Objects.requireNonNull(User.showDataForUserInternal(loginUser));
+
+        if (Boolean.parseBoolean(request.getParameter("changePwd"))) {
+            String error = checkError(request, baseData);
+            if (error != null) {
+                request.getResponse().setSuccess(false);
+                request.getResponse().setMsg(getAppContext().getI18n(error));
+                return;
+            }
+
+            String[] passwords = User.splitPwd(baseData.get("password"));
+            String digestAlg = passwords[0];
+            int saltLength = Integer.parseInt(passwords[1]);
+            int iterations = Integer.parseInt(passwords[2]);
+            MessageDigest digest = Main.getService(CryptoService.class).getMessageDigest();
+            baseData.put("password", digest.digest(request.getParameter("newPassword"), digestAlg, saltLength, iterations));
+            baseData.put("changePwd", "false");
+            User.insertPasswordModifiedTime(baseData);
+            Console console = Main.getService(Config.class).getConsole();
+            String historyPasswords = User.cutOldPasswords(
+                    baseData.remove("historyPasswords"),
+                    console.getSecurity().getPasswordLimitRepeats(), baseData.get("password"));
+            baseData.put("historyPasswords", historyPasswords);
+        }
+
+        String enableOtpFlag = request.getParameter("enableOtp");
+        if (enableOtpFlag != null) {
+            boolean parsedBoolean = Boolean.parseBoolean(enableOtpFlag);
+            baseData.put("enableOtp", String.valueOf(parsedBoolean));
+
+            String keyForOtp = baseData.get("keyForOtp");
+            if (parsedBoolean && Utils.isBlank(keyForOtp)) {
+                request.getResponse().setSuccess(false);
+                request.getResponse().setMsg(getAppContext().getI18n("keyForOtp.bind"));
+                return;
+            }
+        }
+
+        User.updateDataForUser(baseData);
+    }
+
+    @Override
+    public String[] formActions() {
+        return new String[]{Export.ACTION_EXPORT};
     }
 }

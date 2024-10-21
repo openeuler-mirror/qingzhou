@@ -23,7 +23,7 @@ $(document).ready(function () {
     if (browserInfo.core === "Edge" && browserInfo.v <= 60.0) {
         $(".main-body").css({"min-height": "calc(-100px + 100%)", "height": "auto", "top": "100px", "bottom": "100px"});
     }
-    
+
     // 响应式小屏模式下，点击完菜单，自动隐藏左侧菜单栏
     $(".sidebar li a").click(function () {// TODO 需要考虑多Tab标签的情况
         if ($(document.body).hasClass("sidebar-open") && $(this).attr("href").indexOf("/") > -1) {
@@ -31,12 +31,12 @@ $(document).ready(function () {
         }
     });
     $(document.body).click(function (e) {
-        if ($(document.body).hasClass("sidebar-open") && !$(e.target).hasClass(".sidebar-toggle") && $(e.target).parents(".sidebar-toggle").length === 0 
-                && !$(e.target).hasClass(".main-sidebar") && $(e.target).parents(".main-sidebar").length === 0) {
+        if ($(document.body).hasClass("sidebar-open") && !$(e.target).hasClass(".sidebar-toggle") && $(e.target).parents(".sidebar-toggle").length === 0
+            && !$(e.target).hasClass(".main-sidebar") && $(e.target).parents(".main-sidebar").length === 0) {
             $(document.body).toggleClass("sidebar-open");
         }
     });
-    
+
     //切换主题模式点击事件
     $("#switch-mode-btn").unbind("click").bind("click", function () {
         var icon = $("i", this);
@@ -114,7 +114,7 @@ $(document).ready(function () {
         qz.fill(matchPart, {}, $(".main-body").first(), false, null);
         return false;
     });
-    
+
     $("#searchText").unbind("input").bind("input", function (e) {
         var html = "";
         var keyword = $.trim($(this).val());
@@ -208,7 +208,7 @@ $(document).ready(function () {
             return false;
         }
     });
-    
+
     // 设置或重新设置（如事件绑定、赋初始值等）
     setOrReset();
 });
@@ -314,7 +314,7 @@ function setOrReset() {
             }
         });
     });
-    
+
     // 一级 Tab 标签切换事件绑定
     bindTabEvent();
     // 下拉列表 / 可输入下拉列表
@@ -354,7 +354,7 @@ function setOrReset() {
             $(this).prev().attr("type", "text");
         }
     });
-    
+
     const restrictedArea = getRestrictedArea();
     // 左侧菜单点击菜单事件
     qz.bindFill("ul.sidebar-menu a", ".main-body", false, true, getRestrictedArea);
@@ -502,10 +502,8 @@ function bindEventForFormPage() {
     //绑定失去焦点数据回显事件
     bindEchoItemEvent();
     bindFormEvent();
-    
+
     const restrictedArea = getRestrictedArea();
-    // 返回按钮
-    qz.bindFill(".form-btn a[btn-type='goback']", ".main-body", false, true, getRestrictedArea);
     // 列表页及form页面下载(日志、快照等)
     qz.bindFill(".form-btn a[btn-type='monitor']", ".main-body", true, false, getRestrictedArea);
 };
@@ -566,15 +564,11 @@ function bindFormEvent() {
                 $("#mask-loading").hide();
                 $(".form-btn .btn", thisForm).removeAttr("disabled");
                 if (data.success === "true" || data.success === true) {
-                    if ($(".form-btn a[btn-type='goback']", thisForm).length > 0) {
-                        $(".form-btn a[btn-type='goback']", thisForm).click();
-                    } else {
-                        $(".sidebar-menu", getRestrictedArea()).not(":has(div.tab-container)").find("li.active").each(function () {
-                            if (!$(this).hasClass("menu-open")) {
-                                $("a", this).click();
-                            }
-                        });
-                    }
+                    $(".sidebar-menu", getRestrictedArea()).not(":has(div.tab-container)").find("li.active").each(function () {
+                        if (!$(this).hasClass("menu-open")) {
+                            $("a", this).click();
+                        }
+                    });
 
                     if (data.redirectURL !== "" && data.redirectURL !== undefined) {
                         window.location.href = data.redirectURL;
@@ -638,7 +632,7 @@ function bindFormEvent() {
 function bindEchoItemEvent() {
     //查找当前表单下所有回显数据元素，添加失去焦点事件
     var echoGroupElements = $("form[name='pageForm']").find('[echoGroup]');
-    echoGroupElements.each(function() {
+    echoGroupElements.each(function () {
         $(this).bind("change", function (e) {
             e.preventDefault();
             var params = $("form[name='pageForm']").formToArray();
@@ -651,7 +645,7 @@ function bindEchoItemEvent() {
 
 function echoItem(thisForm, params, item) {
     var action = $(thisForm).attr("action");
-    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName") ;
+    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName");
     $.post(action, params, function (data, textStatus, jqXHR) {
         if (data.success === "false") {
             $("#form-item-" + item + " > div", thisForm).attr("error-key", item).addClass("has-error");
@@ -659,10 +653,10 @@ function echoItem(thisForm, params, item) {
         } else {
             $("#form-item-" + item + " > div", thisForm).attr("error-key", item).removeClass("has-error");
             $("#form-item-" + item + " > div .tw-error-info", thisForm).html("");
-            $(thisForm).find('[name]').each(function() {
+            $(thisForm).find('[name]').each(function () {
                 var result = data.data[0];
                 if (result !== null) {
-                    for(let key in result) {
+                    for (let key in result) {
                         if (key === $(this).attr("name")) {
                             $(this).val(result[key]);
                         }
@@ -672,6 +666,7 @@ function echoItem(thisForm, params, item) {
         }
     }, "json");
 }
+
 /**************************************** form.jsp - end *************************************************/
 
 /**************************************** sortable.jsp - start *************************************************/
@@ -872,7 +867,7 @@ function bindEventForListPage() {
             qz.fill($("a", this).first().attr("href"), qz.formToJson(this), $(this).closest(".main-body"), false, null);
         }
     });
-    
+
     $("section.main-body", document.body).each(function () {
         if ($(".tab-wrapper", this).length > 0) {
             // 搜索
@@ -901,14 +896,14 @@ function bindEventForListPage() {
             qz.bindFill($("a.tw-action-link[action-name='stop'], a.tw-action-link[action-name='start']", this), $(".bodyDiv", this), true, false, getRestrictedArea);
             // 列表页
             qz.bindFill($("a.tw-action-link", this), $(".main-body", this), false, true, getRestrictedArea);
-            
+
             // 分页
             qz.bindFill($("ul.pager.pager-loose a", this), $(".main-body", this), false, false, getRestrictedArea);
             // 分页
             qz.bindFill($("table a[record-action-id='" + getSetting("showAction") + "']", this), $(".main-body", this), true, true, getRestrictedArea);
         }
     });
-    
+
     // 列表操作列部分操作事件绑定
     $("a[act-ajax='true'][loaded!='true']").attr("loaded", "true").unbind("click").bind("click", function (e) {
         e.preventDefault();
@@ -919,9 +914,9 @@ function bindEventForListPage() {
             "title": getSetting("pageConfirmTitle"),
             "btn": [getSetting("confirmBtnText"), getSetting("cancelBtnText")]
         }, function (index) {
-            if (actUrl.indexOf("app/delete") != -1){
+            if (actUrl.indexOf("app/delete") != -1) {
                 $("label.close").each(function () {
-                    if ($(this).parent().attr("bind-id") === bindId){
+                    if ($(this).parent().attr("bind-id") === bindId) {
                         $(this).click();
                     }
                 });
@@ -931,7 +926,7 @@ function bindEventForListPage() {
         });
         return false;
     });
-    
+
     // 集群实例点击[管理]，打开新 Tab 并切换
     $("table a[action-name='" + getSetting("actionName_target") + "'][loaded!='true']:not(div.tab-container table a)").attr("loaded", "true")
         .unbind("click").bind("click", function (e) {
@@ -944,7 +939,7 @@ function bindEventForListPage() {
         var url = $(this).attr("href");
         return initializeManager($(this), url);
     });
-    
+
     // 列表页及form页面下载(日志、快照等)
     $("table a[action-name='" + getSetting("filesName") + "'], a[btn-type='" + getSetting("filesName") + "'][loaded!='true']").attr("loaded", "true").unbind("click").bind("click", function (e) {
         e.preventDefault();
@@ -956,8 +951,8 @@ function bindEventForListPage() {
 
     $("a[custom-action-id][loaded!='true']").attr("loaded", "true").unbind("click").bind("click", function (e) {
         e.preventDefault();
-        if($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0){
-            customAction($(this).attr("href"),$(this).attr("custom-action-id"),$(this).attr("data-tip"), $(this).closest("section.main-body"));
+        if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
+            customAction($(this).attr("href"), $(this).attr("custom-action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"));
         }
         return false;
     });
@@ -1101,7 +1096,7 @@ function downloadFiles(fileListUrl, downloadUrl) {
 }
 
 function customAction(actionUrl, customActionId, title, restrictedArea) {
-    let html  = $("div[custom-action-id='" + customActionId + "']", restrictedArea).html();
+    let html = $("div[custom-action-id='" + customActionId + "']", restrictedArea).html();
     html = "<form id='" + customActionId + "' method='post' class='form-horizontal'>" + html + "</form><hr style='margin-top: 4px;'><div id='custom-action-result' ></div>";
     openLayer({
         title: title,
@@ -1128,6 +1123,7 @@ function customAction(actionUrl, customActionId, title, restrictedArea) {
         }
     });
 }
+
 /**************************************** list.jsp - end *************************************************/
 
 /**************************************** monitor.jsp - start *************************************************/
@@ -1137,7 +1133,7 @@ function initMonitorPage() {
         var thisDiv = $(this);
         var infoKeys = eval("(" + $("textarea[name='infoKeys']", thisDiv).val() + ")");
         var chartOption = defaultOption(infoKeys);
-        var myChart = echarts.init($("div.block-bg[container='chart']", this)[0]);
+        var myChart = echarts.init($("div.bodyDiv[container='chart']", this)[0]);
         myChart.renderFlag = true;
         myChart.on('mouseover', {seriesType: 'line'}, function () {
             myChart.renderFlag = false;
@@ -1462,6 +1458,7 @@ function panelUpdate(monitorData, restrictedArea) {
         }
     });
 };
+
 /**************************************** monitor.jsp - end *************************************************/
 function autoAdaptTip() {
     var mainBody = $(".main-body:not(div.tab-container .main-body)", getRestrictedArea());
@@ -1488,6 +1485,7 @@ function autoAdaptTip() {
 };
 
 var tabMap = {};
+
 function openTab(dataId, dataUrl, tabTitle) {
     var restrictedArea = getRestrictedArea();
     if ($("div.tab-container", restrictedArea).length === 0) {
@@ -1501,20 +1499,20 @@ function openTab(dataId, dataUrl, tabTitle) {
     var bindId = $("div.tab-container", restrictedArea).first().attr("id");
     if (tabMap[bindId] === undefined) {
         tabMap[bindId] = new qz.tab($("#" + randId + " div.tab-container"));
-        tabMap[bindId].init($("#" + randId + ">div.tab-container-box"), function() {
+        tabMap[bindId].init($("#" + randId + ">div.tab-container-box"), function () {
             switchTabView(false, bindId);
-        }, function(){
+        }, function () {
             delete tabMap[bindId];
             $("#" + bindId).remove();
             $("aside.main-sidebar,section.main-body", getRestrictedArea()).not(":has(div.tab-container)").fadeIn("slow");
         });
     }
     var qzTab = tabMap[bindId];
-    qzTab.addTab(dataId, tabTitle, "", {}, true, function(tabDom) {
-        qz.fill(dataUrl, {}, tabDom, false, function() {
+    qzTab.addTab(dataId, tabTitle, "", {}, true, function (tabDom) {
+        qz.fill(dataUrl, {}, tabDom, false, function () {
             $(tabDom).css({"height": $(".main-body", restrictedArea).first().height()});
-            $("aside.main-sidebar", tabDom).css({"margin-top":"0px"});
-            $("aside.main-sidebar .menu-toggle-btn", tabDom).css({"margin-bottom":"0px"});
+            $("aside.main-sidebar", tabDom).css({"margin-top": "0px"});
+            $("aside.main-sidebar .menu-toggle-btn", tabDom).css({"margin-bottom": "0px"});
             $("ul[data-widget='tree']", tabDom).menuTree();
             $("a[data-toggle='push-menu']", tabDom).pushMenu({});
         });

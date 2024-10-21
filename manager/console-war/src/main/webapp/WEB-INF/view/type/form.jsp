@@ -6,168 +6,174 @@
     String submitActionName = isEdit ? Update.ACTION_UPDATE : Add.ACTION_ADD;
     java.util.List<String> passwordFields = new ArrayList<>();
     String idField = modelInfo.getIdField();
+    String[] formActions = PageUtil.filterActions(modelInfo.getFormActions(), qzApp, qzModel, currentUser);
 %>
 
-<%-- <div class="bodyDiv"> --%>
-<%-- 面包屑分级导航 --%>
-<%@ include file="../fragment/breadcrumb.jsp" %>
+<div class="bodyDiv">
+    <%-- 面包屑分级导航 --%>
+    <%@ include file="../fragment/breadcrumb.jsp" %>
 
-<form name="pageForm" method="post" class="form-horizontal"
-      action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
-    <div class="block-bg" style="padding-top: 24px; padding-bottom: 1px;">
-        <%
-            java.util.List<Map<String, String>> models = qzResponse.getDataList();
-            Map<String, String> modelData;
-            if (!models.isEmpty()) {
-                modelData = models.get(0);
-            } else {
-                modelData = new HashMap<>();
-            }
-            Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedFields();
-            Set<String> groups = formGroup.keySet();
-            long suffixId = System.currentTimeMillis();
-            ItemInfo[] groupInfos = modelInfo.getGroupInfos();
-            boolean hasGroup = groups.size() > 1 || Utils.notBlank(groups.iterator().next());
-            if (hasGroup) {
-        %>
-        <ul class="nav nav-tabs">
+    <form name="pageForm" method="post" class="form-horizontal"
+          action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
+        <div style="padding-top: 24px; padding-bottom: 1px;">
             <%
-                boolean isFirst = true;
-                for (String group : groups) {
-                    ItemInfo gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(PageUtil.OTHER_GROUP);
+                java.util.List<Map<String, String>> models = qzResponse.getDataList();
+                Map<String, String> modelData;
+                if (!models.isEmpty()) {
+                    modelData = models.get(0);
+                } else {
+                    modelData = new HashMap<>();
+                }
+                Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedFields();
+                Set<String> groups = formGroup.keySet();
+                long suffixId = System.currentTimeMillis();
+                ItemInfo[] groupInfos = modelInfo.getGroupInfos();
+                boolean hasGroup = groups.size() > 1 || Utils.notBlank(groups.iterator().next());
+                if (hasGroup) {
             %>
-            <li <%=isFirst ? "class='active'" : ""%>>
-                <a data-tab href="#group-<%=group%>-<%=suffixId%>"
-                   tabGroup="<%=group%>">
-                    <%=I18n.getStringI18n(gInfo.getI18n())%>
-                </a>
-            </li>
+            <ul class="nav nav-tabs">
+                <%
+                    boolean isFirst = true;
+                    for (String group : groups) {
+                        ItemInfo gInfo = Arrays.stream(groupInfos).filter(groupInfo -> groupInfo.getName().equals(group)).findAny().orElse(PageUtil.OTHER_GROUP);
+                %>
+                <li <%=isFirst ? "class='active'" : ""%>>
+                    <a data-tab href="#group-<%=group%>-<%=suffixId%>"
+                       tabGroup="<%=group%>">
+                        <%=I18n.getStringI18n(gInfo.getI18n())%>
+                    </a>
+                </li>
+                <%
+                        isFirst = false;
+                    }
+                %>
+            </ul>
             <%
-                    isFirst = false;
                 }
             %>
-        </ul>
-        <%
-            }
-        %>
-        <div class="tab-content" style="padding-top: 24px; padding-bottom: 12px;">
-            <%
-                boolean isFirstGroup = true;
-                for (String group : groups) {
-            %>
-            <div class="tab-pane <%=isFirstGroup?"active":""%>"
-                 id="group-<%=group%>-<%=suffixId%>"
-                 tabGroup="<%=group%>">
+            <div class="tab-content" style="padding-top: 24px; padding-bottom: 12px;">
                 <%
-                    isFirstGroup = false;
-                    Map<String, ModelFieldInfo> groupFieldMap = formGroup.get(group);
-                    for (Map.Entry<String, ModelFieldInfo> e : groupFieldMap.entrySet()) {
-                        String fieldName = e.getKey();
-                        ModelFieldInfo modelField = e.getValue();
-
-                        if (!modelField.isCreate() && !isEdit) {
-                            continue;
-                        }
-
-                        if (!modelField.isEdit() && isEdit) {
-                            continue;
-                        } else if (fieldName.equals(idField)) {
-                            if (isEdit) {
-                                continue;
-                            }
-                        } else {
-                            boolean readOnly = SecurityController.checkRule(modelField.getReadOnly(), modelData::get, false);
-                            if (readOnly) {
-                                continue;
-                            }
-                        }
-
-                        boolean required = fieldName.equals(idField) || modelField.isRequired();
-
-                        String echoGroup = "";
-                        if (modelField.getEchoGroup().length > 0) {
-                            String echoGroups = String.join(",", modelField.getEchoGroup());
-                            echoGroup = "echoGroup='" + echoGroups + "'";
-                        }
-
-                        String fieldValue = modelData.get(fieldName);
-                        if (fieldValue == null) {
-                            fieldValue = "";
-                        }
-                        java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
+                    boolean isFirstGroup = true;
+                    for (String group : groups) {
                 %>
-                <div class="form-group" id="form-item-<%=fieldName%>">
-                    <label for="<%=fieldName%>" class="col-sm-4">
-                        <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
-                        <%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
-                        <%
-                            String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
-                            if (fieldInfo != null) {
-                                // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
-                                fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
-                            } else {
-                                fieldInfo = "";
+                <div class="tab-pane <%=isFirstGroup?"active":""%>"
+                     id="group-<%=group%>-<%=suffixId%>"
+                     tabGroup="<%=group%>">
+                    <%
+                        isFirstGroup = false;
+                        Map<String, ModelFieldInfo> groupFieldMap = formGroup.get(group);
+                        for (Map.Entry<String, ModelFieldInfo> e : groupFieldMap.entrySet()) {
+                            String fieldName = e.getKey();
+                            ModelFieldInfo modelField = e.getValue();
+
+                            if (!modelField.isCreate() && !isEdit) {
+                                continue;
                             }
-                        %>
-                        <%=fieldInfo%>
-                    </label>
-                    <div class="col-sm-5">
-                        <%@ include file="../fragment/field_type.jsp" %>
-                        <label class="tw-error-info"></label>
+
+                            if (!modelField.isEdit() && isEdit) {
+                                continue;
+                            } else if (fieldName.equals(idField)) {
+                                if (isEdit) {
+                                    continue;
+                                }
+                            } else {
+                                boolean readOnly = SecurityController.checkRule(modelField.getReadOnly(), modelData::get, false);
+                                if (readOnly) {
+                                    continue;
+                                }
+                            }
+
+                            boolean required = fieldName.equals(idField) || modelField.isRequired();
+
+                            String echoGroup = "";
+                            if (modelField.getEchoGroup().length > 0) {
+                                String echoGroups = String.join(",", modelField.getEchoGroup());
+                                echoGroup = "echoGroup='" + echoGroups + "'";
+                            }
+
+                            String fieldValue = modelData.get(fieldName);
+                            if (fieldValue == null) {
+                                fieldValue = "";
+                            }
+                            java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
+                    %>
+                    <div class="form-group" id="form-item-<%=fieldName%>">
+                        <label for="<%=fieldName%>" class="col-sm-4">
+                            <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
+                            <%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
+                            <%
+                                String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
+                                if (fieldInfo != null) {
+                                    // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
+                                    fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
+                                } else {
+                                    fieldInfo = "";
+                                }
+                            %>
+                            <%=fieldInfo%>
+                        </label>
+                        <div class="col-sm-5">
+                            <%@ include file="../fragment/field_type.jsp" %>
+                            <label class="tw-error-info"></label>
+                        </div>
                     </div>
+                    <%
+                        }
+                    %>
                 </div>
                 <%
                     }
                 %>
             </div>
-            <%
-                }
-            %>
         </div>
-    </div>
-    <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
-        <div class="form-btn">
-            <%
-                if (SecurityController.isActionShow(qzApp, qzModel, submitActionName, null, currentUser)) {
-            %>
-            <input type="submit" class="btn"
-                   value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
-            <%
-                }
+        <div style="margin-top: 15px; height: 64px; text-align: center;">
+            <div class="form-btn">
+                <%
+                    if (SecurityController.isActionPermitted(qzApp, qzModel, submitActionName, currentUser)) {
+                %>
+                <input type="submit" class="btn"
+                       value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
+                <%
+                    }
 
-                if (modelInfo.getModelActionInfo(DeployerConstants.ACTION_REFRESHKEY) != null) {
-            %>
-            <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, StreamView.FLAG, DeployerConstants.ACTION_REFRESHKEY)%>"
-               btn-type="qrOtp" class="btn">
-                <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + DeployerConstants.ACTION_REFRESHKEY)%>
-            </a>
-            <%
-                }
+                    for (String formAction : formActions) {
 
-                if (SecurityController.isActionShow(qzApp, qzModel, Download.ACTION_DOWNLOAD, modelData, currentUser)) {
-            %>
-            <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, Download.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
-                    <%
-                        out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, StreamView.FLAG, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
-                    %>
-               data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Download.ACTION_FILES)%>'
-               data-tip-arrow="top"
-               btn-type="<%=Download.ACTION_FILES%>" class="btn tooltips">
-                <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Download.ACTION_FILES)%>
-            </a>
-            <%
-                }
-            %>
-
+                        if (formAction.equals(Export.ACTION_EXPORT)) {
+                %>
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, StreamView.FLAG, Export.ACTION_EXPORT)%>"
+                   btn-type="qrOtp" class="btn">
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Export.ACTION_EXPORT)%>
+                </a>
+                <%
+                } else if (formAction.equals(Download.ACTION_DOWNLOAD)) {
+                %>
+                <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, Download.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
+                        <%
+                            out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, StreamView.FLAG, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
+                        %>
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Download.ACTION_FILES)%>'
+                   data-tip-arrow="top"
+                   btn-type="<%=Download.ACTION_FILES%>" class="btn tooltips">
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Download.ACTION_FILES)%>
+                </a>
+                <%
+                } else {
+                %>
+                <input type="submit" class="btn"
+                       value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + formAction)%>'>
+                <%
+                        }
+                    }
+                %>
+            </div>
         </div>
-    </div>
 
-    <div id="tempZone" style="display:none;"></div>
-    <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
+        <div id="tempZone" style="display:none;"></div>
+        <textarea name="pubkey" rows="3" disabled="disabled" style="display:none;">
         <%=SystemController.getPublicKeyString()%>
         </textarea>
 
-    <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">
+        <textarea name="eventConditions" rows="3" disabled="disabled" style="display:none;">
         <%
             // added by yuanwc for: ModelField 注解 show()
             StringBuilder conditionBuilder = new StringBuilder();
@@ -201,7 +207,7 @@
             out.print(conditionBuilder.toString());
         %>
         </textarea>
-    <textarea name="passwordFields" rows="3" disabled="disabled" style="display:none;">
+        <textarea name="passwordFields" rows="3" disabled="disabled" style="display:none;">
         <%
             for (int i = 0; i < passwordFields.size(); i++) {
                 if (i > 0) {
@@ -210,6 +216,8 @@
                 out.print(passwordFields.get(i));
             }
         %>
-        </textarea>
+    </textarea>
 
-</form>
+    </form>
+
+</div>

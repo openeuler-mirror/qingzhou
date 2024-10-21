@@ -301,6 +301,10 @@ class DeployerImpl implements Deployer {
             modelInfo.setValidate(instance instanceof Validate);
             initOptionInfo(modelInfo, instance);
             initListInfo(modelInfo, instance);
+            if (instance instanceof Update) {
+                Update update = (Update) instance;
+                modelInfo.setFormActions(update.formActions());
+            }
 
             modelInfos.put(instance, modelInfo);
         }

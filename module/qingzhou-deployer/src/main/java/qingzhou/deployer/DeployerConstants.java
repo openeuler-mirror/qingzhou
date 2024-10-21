@@ -22,7 +22,6 @@ public interface DeployerConstants {
     String ACTION_MANAGE = "manage";
     String ACTION_INDEX = "index";
     String ACTION_UPLOAD = "upload";
-    String ACTION_REFRESHKEY = "refreshKey";
     // 系统内部 Action For Agent
     String ACTION_DOWNLOAD_PAGE = "ACTION_DOWNLOAD_PAGE";
     String ACTION_INSTALL_APP = "ACTION_INSTALL_APP";

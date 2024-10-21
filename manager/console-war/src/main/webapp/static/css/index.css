@@ -180,7 +180,7 @@ label.checkbox-inline, label.radio-inline {
 }
 
 /*页面区块背景色*/
-.block-bg {
+.bodyDiv {
     background: var(--bg-color-block, #FFFFFF);
     border-radius: 0;
 }
@@ -1211,7 +1211,7 @@ tw-tooltip-bottom-left:before {
     width: 100px;
 }
 
-.block-bg .tab-content > .tab-pane {
+.tab-content > .tab-pane {
     padding: 0 20px;
 }
 
