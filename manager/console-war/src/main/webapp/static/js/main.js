@@ -473,8 +473,8 @@ function closeLayer(index) {
 
 // start, for: ModelField注解 effectiveWhen()
 function bindEvent(showCondition) {
-    const triggers = {};
-    const contain = function (array, ele) {
+    var triggers = {};
+    var contain = function (array, ele) {
         for (var i = 0; i < array.length; i++) {
             if (array[i] === ele) {
                 return true;
@@ -485,14 +485,17 @@ function bindEvent(showCondition) {
 
     // 处理 show 条件
     if (showCondition) {
-        Object.keys(showCondition).forEach(fieldName => {
-            const condition = showCondition[fieldName];
-            const expressions = condition.includes("&") ? condition.split("&") : condition.split("|");
+        for (var fieldName in showCondition) {
+            var condition = showCondition[fieldName];
+            var expressions = condition.indexOf("&") > -1 ? condition.split("&") : condition.split("|");
 
             // 处理每个表达式
-            expressions.forEach(expression => {
-                const operator = expression.includes("!=") ? "!=" : "=";
-                const [triggerItem, val] = expression.split(operator).map(part => part.trim());
+            for (var i in expressions) {
+                var expression = expressions[i];
+                var operator = expression.indexOf("!=") > 0 ? "!=" : "=";
+                var [triggerItem, val] = expression.split(operator).map(part => part.trim());
+                var triggerItem = expression.split(operator)[0];
+                var val = expression.split(operator)[1];
 
                 // 初始化触发器对象
                 if (!triggers[triggerItem]) {
@@ -500,57 +503,59 @@ function bindEvent(showCondition) {
                 }
 
                 // 创建并添加条件
-                const json = {[fieldName]: condition};
+                var json = {};
+                json[fieldName] = condition;
                 if (!contain(triggers[triggerItem], json)) {
                     triggers[triggerItem].push(json);
                 }
-            });
-        });
+            }
+        }
     }
 
     var triggerTies = function (json) {
-        json.forEach(item => {
-            const {type, ...rest} = item;
-            Object.keys(rest).forEach(key => {
-                triggerAction(key, rest[key]);
-            });
-        });
+        for (var j = 0; j < json.length; j++) {
+            for (var k in json[j]) {
+                triggerAction(k, json[j][k]);
+            }
+        }
     };
     const restrictedArea = getRestrictedArea();
     // 绑定事件和触发初始状态
-    Object.keys(triggers).forEach(item => {
-        const elements = $(`[name='${item}']`, restrictedArea);
+    for (var item in triggers) {
+        var elements = $(`[name='${item}']`, restrictedArea);
         elements.off("change").on("change", function () {
             triggerTies(triggers[$(this).attr("name")]);
         });
         triggerTies(triggers[item]);
-    });
+    }
 
     autoAdaptTip();
 }
 
 function triggerAction(ele, condition) {
-    const operators = condition.includes("&") ? "&" : "|";
-    const expressions = condition.split(operators);
-    const compareVal = function (value, val, notEq) {
+    var operators = condition.includes("&") ? "&" : "|";
+    var expressions = condition.split(operators);
+    var compareVal = function (value, val, notEq) {
         return notEq ? value !== val : value === val;
     };
-    const restrictedArea = getRestrictedArea();
+    var restrictedArea = getRestrictedArea();
 
-    let shouldShow;
+    var shouldShow;
 
-    expressions.forEach(expression => {
-        let compareResult = false;
+    for (var i in expressions) {
+        var expression = expressions[i];
+        var compareResult = false;
         if (!expression.includes("!=") && !expression.includes("=")) {
             compareResult = true;
         } else {
-            const notEq = expression.includes("!=");
-            const operator = notEq ? "!=" : "=";
-            const [item, val] = expression.split(operator);
-            const parsedVal = val.includes("'") || val.includes("\"") ? eval(val) : val;
+            var notEq = expression.indexOf("!=") >= 0;
+            var operator = notEq ? "!=" : "=";
+            var item = expression.split(operator)[0];
+            var val = expression.split(operator)[1];
+            var parsedVal = val.indexOf("'") >= 0 || val.indexOf("\"") >= 0 ? eval(val) : val;
 
             // 优化目标元素查找
-            let target = $("[name='" + item + "']:selected", restrictedArea).length > 0 ?
+            var target = $("[name='" + item + "']:selected", restrictedArea).length > 0 ?
                 $("[name='" + item + "']:selected", restrictedArea) : $("[name='" + item + "']:checked", restrictedArea);
 
             if (!target.length) {
@@ -562,7 +567,10 @@ function triggerAction(ele, condition) {
                 $("#form-item-" + ele, restrictedArea).hide();
                 return;
             }
-            let isSwitch = target.parent().attr("class").indexOf("switch") !== -1;
+            if (target.length === 0) {
+                return;
+            }
+            var isSwitch = target.parent().attr("class").indexOf("switch") !== -1;
             if (target.val() === "" && isSwitch) {
                 target.val("false");
             }
@@ -578,7 +586,7 @@ function triggerAction(ele, condition) {
                 shouldShow = shouldShow || compareResult;
             }
         }
-    });
+    }
 
     if (shouldShow) {
         $("#form-item-" + ele, restrictedArea).fadeIn(200);
