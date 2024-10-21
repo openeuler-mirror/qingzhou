@@ -64,7 +64,6 @@ class RunningControl implements Process {
             }
         }
         catch (IOException e) {
-            e.printStackTrace();
             return false;
         }
         //return false;
