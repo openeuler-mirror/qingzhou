@@ -1162,22 +1162,24 @@ tw-tooltip-bottom-left:before {
     color: #ea644a !important;
 }
 
-#filterForm label.input-control-label-left {
+.filterForm {padding: 0px 5px;}
+.filterForm label.input-control-label-left {
     width: 68px !important;
     white-space: nowrap !important;
 }
 
-#filterForm label.input-control-label-left:hover {
+.filterForm label.input-control-label-left:hover {
     width: auto !important;
 }
 
-#filterForm .nice-select {
+.filterForm .nice-select {
     height: 32px;
 }
 
 .tw-list-operate {
     margin-top: 15px;
     margin-bottom: 15px;
+    padding: 0px 5px;
 }
 
 .tw-action-link {

@@ -456,28 +456,27 @@
             });
             return jsonObj;
         },
-        bindFill: function (triggerDom, targetContainer, append, resetData, restrictedAreaCall) {
+        /**
+         * 为目标对象绑定事件及响应结果目标渲染对象
+         * @param {type} triggerSelector 触发事件的元素选择器表达式
+         * @param {type} targetSelector 响应结果的目标渲染元素
+         * @param {type} append （true 表示在目标渲染元素中追加响应结果 | false 表示覆盖目标渲染元素的内容。通常情况下请用 false）
+         * @param {type} resetData (列表页搜索条件是否需要重置搜索条件，用于搜索、分页、列表数据刷新等)
+         * @param {type} restrictedArea 限定区域元素，此参数若省去，则默认为 document.body (注：此参数的作用主要是限制选择响应结果的目标渲染元素，避免获取到多个目标元素导致渲染异常)
+         * @returns {unresolved}
+         */
+        bindFill: function (triggerSelector, targetSelector, append, resetData, restrictedArea, afterRenderCall) {
             var that = this;
-            var randomGuid = this.guid();
-            $(triggerDom).filter("[binded!='true']").attr("binded", "true").attr("guid", randomGuid).unbind("click").bind("click", function (e) {
+            $(triggerSelector + "[binded!='true']", restrictedArea).attr("binded", "true").click(function (e) {
                 e.preventDefault();
-                var restrictedArea = ((typeof restrictedAreaCall) === "function") ? restrictedAreaCall.call(null) : document.body;
-                var targets = $(targetContainer, restrictedArea);
-                if ($(targets).filter("[guid='" + randomGuid + "']").length > 0) {
-                    targets = $(targets).filter("[guid='" + randomGuid + "']");
-                } else {
-                    targets = $(targets).filter(":not([guid])").attr("guid", randomGuid);
-                }
-                // e.target.href 或者 $(e.target).attr("href")
-                var $this = $(this);
-                var url = $this.attr("href") || $this.attr("url");
                 // 跳过 href="javascript:void(0);"
+                var url = $(this).attr("href") || $(this).attr("url");
                 if (url.indexOf("javascript:") === 0) {
                     return;
                 }
-                var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea));
-                that.fill(url, data, targets, append, function () {
-                });
+                
+                var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea || document.body));
+                that.fill(url, data, $(targetSelector, restrictedArea), append, afterRenderCall);
             });
         },
         /**

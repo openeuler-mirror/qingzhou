@@ -4,7 +4,7 @@
     if (fieldsToListSearch.length > 0) {
 %>
 
-<form name="filterForm" id="filterForm" method="POST"
+<form name="filterForm" class="filterForm" method="POST"
       action="<%=RESTController.encodeURL( response, HtmlView.FLAG + "/" + qzApp + "/" + qzModel + "/" + qingzhou.api.type.List.ACTION_LIST)%>">
     <div class="row" style="margin-top: 10px;">
         <%
@@ -33,7 +33,7 @@
         %>
         <div class="col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
             <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0;">
-                <a class="btn" id="filter_search"
+                <a class="btn" class="filter_search"
                    href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>">
                     <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter")%>
                 </a>
@@ -41,7 +41,7 @@
 
             <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0;margin-left: 45px;">
                 <a class="btn"
-                   href="javascript:void(0);" onclick="filter_reset()">
+                   href="javascript:void(0);" onclick="filter_reset(this);">
                     <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter.reset")%>
                 </a>
             </span>

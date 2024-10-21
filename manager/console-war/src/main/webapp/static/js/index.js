@@ -357,7 +357,9 @@ function setOrReset() {
 
     const restrictedArea = getRestrictedArea();
     // 左侧菜单点击菜单事件
-    qz.bindFill("ul.sidebar-menu a", ".main-body", false, true, getRestrictedArea);
+    $("aside.main-sidebar", document.body).each(function () {
+        qz.bindFill("ul.sidebar-menu a", ".main-body", false, false, $(this).parent(), null);
+    });
 };
 
 function gotoTarget(model, action, group, field) {
@@ -502,10 +504,6 @@ function bindEventForFormPage() {
     //绑定失去焦点数据回显事件
     bindEchoItemEvent();
     bindFormEvent();
-
-    const restrictedArea = getRestrictedArea();
-    // 列表页及form页面下载(日志、快照等)
-    qz.bindFill(".form-btn a[btn-type='monitor']", ".main-body", true, false, getRestrictedArea);
 };
 
 function bindFormEvent() {
@@ -869,38 +867,50 @@ function bindEventForListPage() {
     });
 
     $("section.main-body", document.body).each(function () {
+        var restrictedArea = $(this).parent();
         if ($(".tab-wrapper", this).length > 0) {
-            // 搜索
-            qz.bindFill($(".search-btn a:not(div.tab-container .search-btn a)", this), $(".main-body:not(div.tab-container .main-body)", this), false, false, getRestrictedArea);
-            // 表格顶部操作按钮
-            qz.bindFill($(".tools-group a:not(div.tab-container .tools-group a)", this), $(".bodyDiv:not(div.tab-container .bodyDiv)", this), false, true, getRestrictedArea);
-            // 表格操作列
-            qz.bindFill($("table a.dataid:not(div.tab-container table a.dataid)", this), $(".bodyDiv:not(div.tab-container .bodyDiv)", this), false, true, getRestrictedArea);
-            // 列表页
-            qz.bindFill($("a.tw-action-link:not(div.tab-container a.tw-action-link)", this), $(".main-body:not(div.tab-container .main-body)", this), true, true, getRestrictedArea);
-            // 分页
-            qz.bindFill($("ul.pager.pager-loose a:not(div.tab-container ul.pager.pager-loose a)", this), $(".main-body:not(div.tab-container .main-body)", this), false, false, getRestrictedArea);
-            // 分页
+            // 搜索按钮
+            qz.bindFill(".search-btn a:not(div.tab-container .search-btn a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
+            // 列表页表格顶部操作按钮
+            qz.bindFill(".tools-group a:not(div.tab-container .tools-group a)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
+            
+            // 分页(页码及上一页、下一页、首页、尾页等)
+            qz.bindFill("ul.pager.pager-loose a:not(div.tab-container ul.pager.pager-loose a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
+            
+            // 列表页表格单元格操作
+            qz.bindFill("table a.dataid:not(div.tab-container table a.dataid)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
+            // 列表页表格单元格操作(查看)
             var selector = "table a[record-action-id='" + getSetting("showAction") + "']";
-            qz.bindFill($(selector + ":not(div.tab-container " + selector + ")", this), $(".main-body:not(div.tab-container .main-body)", this), true, true, getRestrictedArea);
+            qz.bindFill(selector + ":not(div.tab-container " + selector + ")", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
+            
+            // 列表页表格操作列(监视)
+            qz.bindFill("a.tw-action-link[action-name='monitor']:not(div.tab-container a.tw-action-link)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
+            // 列表页表格操作列(启动、停止)
+            qz.bindFill("a.tw-action-link[action-name='stop']:not(div.tab-container a.tw-action-link), a.tw-action-link[action-name='start']:not(div.tab-container a.tw-action-link)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
+            
+            // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
+            qz.bindFill("a.tw-action-link:not(div.tab-container a.tw-action-link)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
         } else {
-            // 搜索
-            qz.bindFill($(".search-btn a", this), $(".main-body", this), false, false, getRestrictedArea);
-            // 表格顶部操作按钮
-            qz.bindFill($(".tools-group a", this), $(".bodyDiv", this), false, true, getRestrictedArea);
-            // 表格操作列
-            qz.bindFill($("table a.dataid", this), $(".bodyDiv", this), false, true, getRestrictedArea);
-            // 列表页
-            qz.bindFill($("a.tw-action-link[action-name='monitor']", this), $(".bodyDiv", this), false, true, getRestrictedArea);
-            // 列表页
-            qz.bindFill($("a.tw-action-link[action-name='stop'], a.tw-action-link[action-name='start']", this), $(".bodyDiv", this), true, false, getRestrictedArea);
-            // 列表页
-            qz.bindFill($("a.tw-action-link", this), $(".main-body", this), false, true, getRestrictedArea);
-
-            // 分页
-            qz.bindFill($("ul.pager.pager-loose a", this), $(".main-body", this), false, false, getRestrictedArea);
-            // 分页
-            qz.bindFill($("table a[record-action-id='" + getSetting("showAction") + "']", this), $(".main-body", this), true, true, getRestrictedArea);
+            // 搜索按钮
+            qz.bindFill(".search-btn a", ".main-body", false, false, restrictedArea, null);
+            // 列表页表格顶部操作按钮
+            qz.bindFill(".tools-group a", ".bodyDiv", false, false, restrictedArea, null);
+            
+            // 分页(页码及上一页、下一页、首页、尾页等)
+            qz.bindFill("ul.pager.pager-loose a", ".main-body", false, false, restrictedArea, null);
+            
+            // 列表页表格单元格操作
+            qz.bindFill("table a.dataid", ".bodyDiv", false, false, restrictedArea, null);
+            // 列表页表格单元格操作(查看)
+            qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);
+            
+            // 列表页表格操作列(监视)
+            qz.bindFill("a.tw-action-link[action-name='monitor']", ".bodyDiv", false, false, restrictedArea, null);
+            // 列表页表格操作列(启动、停止)
+            qz.bindFill("a.tw-action-link[action-name='stop'], a.tw-action-link[action-name='start']", ".bodyDiv", false, false, restrictedArea, null);
+            
+            // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
+            qz.bindFill("a.tw-action-link", ".main-body", false, false, restrictedArea, null);
         }
     });
 
@@ -973,7 +983,6 @@ function initializeManager(element, url) {
     bindTabEvent();
     $(".tab-box>ul>li").last().click();
     qz.fill(url, {}, $(".content-box>ul>li").last(), false, null);
-    qz.bindFill($(".content-box>ul>li:last ul.sidebar-menu a"), $(".content-box>ul>li:last>section.main-body"), false, true, getRestrictedArea);
     $("ul[data-widget='tree']", $(".content-box>ul>li").last()).menuTree();
     $("[data-toggle='push-menu']", $(".content-box>ul>li").last()).pushMenu({});
     return false;
