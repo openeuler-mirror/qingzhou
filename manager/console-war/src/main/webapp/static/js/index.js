@@ -891,7 +891,7 @@ function bindEventForListPage() {
             // 表格操作列
             qz.bindFill($("table a.dataid", this), $(".bodyDiv", this), false, true, getRestrictedArea);
             // 列表页
-            qz.bindFill($("a.tw-action-link[action-name='monitor']", this), $(".bodyDiv", this), true, true, getRestrictedArea);
+            qz.bindFill($("a.tw-action-link[action-name='monitor']", this), $(".bodyDiv", this), false, true, getRestrictedArea);
             // 列表页
             qz.bindFill($("a.tw-action-link[action-name='stop'], a.tw-action-link[action-name='start']", this), $(".bodyDiv", this), true, false, getRestrictedArea);
             // 列表页
@@ -1133,7 +1133,7 @@ function initMonitorPage() {
         var thisDiv = $(this);
         var infoKeys = eval("(" + $("textarea[name='infoKeys']", thisDiv).val() + ")");
         var chartOption = defaultOption(infoKeys);
-        var myChart = echarts.init($("div.bodyDiv[container='chart']", this)[0]);
+        var myChart = echarts.init($("div[container='chart']", this)[0]);
         myChart.renderFlag = true;
         myChart.on('mouseover', {seriesType: 'line'}, function () {
             myChart.renderFlag = false;
@@ -1275,13 +1275,13 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
                 var monitorData = data.data[0];
                 if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
                     var models = [{
-                        dataTime: function () {
+                        dataTime: (function () {
                             var myDate = new Date();
-                            var hours = myDate.getHours < 10 ? "0" + myDate.getHours() : myDate.getHours();
+                            var hours = myDate.getHours() < 10 ? "0" + myDate.getHours() : myDate.getHours();
                             var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
                             var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
                             return hours + ":" + minutes + ":" + seconds;
-                        },
+                        })(),
                         data: monitorData,
                         models: data.data[1]
                     }];
