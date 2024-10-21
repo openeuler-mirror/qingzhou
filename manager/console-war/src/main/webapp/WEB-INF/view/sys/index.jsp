@@ -309,6 +309,8 @@
         passwordChangedMsg: '<%=I18n.getKeyI18n("page.password.changed")%>',
         searchHiddenTip: '<%=I18n.getKeyI18n("page.search.hidden")%>',
         passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>',
+        confirmKey: '<%=DeployerConstants.ACTION_CONFIRMKEY%>',
+        stream: '<%=StreamView.FLAG%>',
         echoActionName: '<%=Echo.ACTION_ECHO%>'
     };
 

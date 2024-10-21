@@ -108,7 +108,7 @@ public class Password extends ModelBase implements Update, Export {
     }
 
     @ModelAction(
-            code = "confirmKey",
+            code = DeployerConstants.ACTION_CONFIRMKEY,
             name = {"刷新动态密码", "en:Refresh OTP"},
             info = {"验证并刷新动态密码。", "en:Verify and refresh the OTP."})
     public void confirmKey(Request request) throws Exception {
@@ -142,7 +142,7 @@ public class Password extends ModelBase implements Update, Export {
         Request request = getAppContext().getCurrentRequest();
         return new StreamSupplier() {
             @Override
-            public int read(byte[] block, long offset) throws IOException {
+            public byte[] read(long offset) throws IOException {
                 TotpCipher totpCipher = Main.getService(CryptoService.class).getTotpCipher();
                 String keyForOtp = totpCipher.generateKey();
                 request.setParameterInSession(KEY_IN_SESSION_FLAG, keyForOtp);
@@ -153,18 +153,12 @@ public class Password extends ModelBase implements Update, Export {
                 String loginUser = request.getUser();
                 String qrCode = "otpauth://totp/" + loginUser + "?secret=" + keyForOtp;
                 QrGenerator qrGenerator = Main.getService(QrGenerator.class);
-                byte[] bytes = qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
-                System.arraycopy(bytes, 0, block, 0, bytes.length);
-                return bytes.length;
+                return qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
             }
 
             @Override
-            public String serialKey() {
-                return "";
-            }
-
-            @Override
-            public void finished() {
+            public long offset() {
+                return -1L;
             }
         };
     }
