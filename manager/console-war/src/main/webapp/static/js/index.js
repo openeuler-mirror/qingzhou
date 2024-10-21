@@ -1284,13 +1284,13 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
                 var monitorData = data.data[0];
                 if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
                     var models = [{
-                        dataTime: (function () {
+                        dataTime: function () {
                             var myDate = new Date();
                             var hours = myDate.getHours() < 10 ? "0" + myDate.getHours() : myDate.getHours();
                             var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
                             var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
                             return hours + ":" + minutes + ":" + seconds;
-                        })(),
+                        },
                         data: monitorData,
                         models: data.data[1]
                     }];
@@ -1333,7 +1333,7 @@ function addData(chartObj, option, models, keys, restrictedArea) {
         }
     }
     for (var i in models) {
-        option.xAxis.data.push(models[i].dataTime);
+        option.xAxis.data.push(models[i].dataTime.call(null));
         var data = models[i].data;
         for (var key in keys) {
             var value = data[key];
