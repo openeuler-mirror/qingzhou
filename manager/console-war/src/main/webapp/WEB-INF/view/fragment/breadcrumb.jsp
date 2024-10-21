@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%-- 面包屑分级导航 --%>
-<ol class="breadcrumb" style="font-size: 15px; margin-bottom: 0; min-width: 300px; padding: 10px 5px !important;">
+<ol class="breadcrumb" style="margin-left: 5px; font-size: 15px; margin-bottom: 0; min-width: 300px; padding: 10px 5px !important;">
     <li class="active" style="margin-left:-5px;">
         <div class="model-info">
             <span><%=I18n.getModelI18n(qzApp, "model." + qzModel)%></span>

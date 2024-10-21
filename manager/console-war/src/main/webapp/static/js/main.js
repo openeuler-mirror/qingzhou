@@ -774,8 +774,8 @@ function batchOps(url, action) {
     $("#" + action, getRestrictedArea()).attr("href", url);
 }
 
-function filter_reset() {
-    const form = document.getElementById('filterForm');
-    form.reset()
-    document.getElementById("filter_search").click();
+function filter_reset(subEle) {
+    const form = $(subEle).parents('.filterForm')[0];
+    form.reset();
+    $(".filter_search", form).click();
 }
