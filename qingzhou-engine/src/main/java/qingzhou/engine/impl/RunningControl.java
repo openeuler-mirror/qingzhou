@@ -2,6 +2,10 @@ package qingzhou.engine.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
@@ -33,8 +37,62 @@ class RunningControl implements Process {
     }
 
     private boolean checkService() {
-        return false;
+        return checkConnect()||checkTmp();
     }
+
+    private boolean checkConnect() {
+        try {
+            File cfg = FileUtil.newFile(engineContext.getInstanceDir(), "conf", "qingzhou.json");
+            String jsonConfig = FileUtil.fileToString(cfg);
+            // 改进后的正则表达式，匹配整个 console 配置段落
+            String regex = "\"module\":\\s*\\{\\s*\"console\":\\s*\\{\\s*\"enabled\":\\s*\"(.*?)\",\\s*\"port\":\\s*\"(\\d+)\"";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(jsonConfig);
+
+            if (matcher.find()) {
+                //String enabled = matcher.group(1); // 获取 enabled 的值
+                String port = matcher.group(2); // 获取 port 的值
+                //System.out.println("Enabled: " + enabled);
+                System.out.println("current port ==" + port);
+                String url = "http://localhost:9000/console";
+                boolean isConnected = checkConnection(url);
+                //System.out.println("连接成功: " + isConnected);
+                return isConnected;
+            } else {
+                System.out.println("未找到相关配置");
+                return false;
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        //return false;
+    }
+    private boolean checkTmp(){
+        //检查当前是否存在临时文件
+        File temp=FileUtil.newFile(engineContext.getTemp());
+        //System.out.println(temp.getAbsolutePath());
+        //System.out.println(temp.exists());
+        //System.out.println(temp);
+        return temp.exists();}
+    private static boolean checkConnection(String urlString) {
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(2000); // 设置连接超时时间
+            connection.setReadTimeout(2000);    // 设置读取超时时间
+
+            int responseCode = connection.getResponseCode();
+            return (responseCode == HttpURLConnection.HTTP_OK); // 判断是否为200 OK
+        } catch (IOException e) {
+            //e.printStackTrace();
+            return false; // 连接失败
+        }
+    }
+
+
 
     @Override
     public void undo() {
