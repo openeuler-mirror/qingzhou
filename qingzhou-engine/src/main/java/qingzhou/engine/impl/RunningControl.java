@@ -37,7 +37,7 @@ class RunningControl implements Process {
     }
 
     private boolean checkService() {
-        return checkConnect()||checkTmp();
+        return checkConnect()&&checkTmp();
     }
 
     private boolean checkConnect() {
