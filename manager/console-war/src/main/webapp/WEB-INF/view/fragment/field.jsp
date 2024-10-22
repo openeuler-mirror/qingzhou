@@ -29,7 +29,7 @@
         }
     %>
     <div class="panel-body" style="word-break: break-all;">
-        <table class="table home-table" style="margin-bottom: 1px;">
+        <table class="table table-striped table-hover home-table" style="margin-bottom: 1px;">
             <%
                 for (String fieldName : groupedFields.get(groupKey)) {
                     ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
