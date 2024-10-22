@@ -919,7 +919,7 @@ function bindEventForListPage() {
         e.preventDefault();
         var actUrl = $(this).attr("href");
         var bindId = $(this).attr("data-id");
-        var filterForm = $(this).closest("form[name='filterForm']");
+        var filterForm = $("form[name='filterForm']");
         showConfirm($(this).attr("act-confirm"), {
             "title": getSetting("pageConfirmTitle"),
             "btn": [getSetting("confirmBtnText"), getSetting("cancelBtnText")]

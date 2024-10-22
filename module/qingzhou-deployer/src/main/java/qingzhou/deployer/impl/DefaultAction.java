@@ -184,7 +184,7 @@ class DefaultAction {
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
-        Map<String, String> properties = ((ResponseImpl) request).getParameters();
+        Map<String, String> properties = ((RequestImpl) request).getParameters();
         if (request.getResponse().isSuccess()) {
             ((Add) instance).addData(properties);
         }
@@ -205,7 +205,7 @@ class DefaultAction {
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
-        Map<String, String> properties = ((ResponseImpl) request).getParameters();
+        Map<String, String> properties = ((RequestImpl) request).getParameters();
         if (request.getResponse().isSuccess()) {
             ((Update) instance).updateData(properties);
         }

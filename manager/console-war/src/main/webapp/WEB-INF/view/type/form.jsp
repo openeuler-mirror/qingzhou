@@ -14,7 +14,7 @@
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
     <form name="pageForm" method="post" class="form-horizontal"
-          action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
+          action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "?"+ idField +"=" + encodedId: ""))%>">
         <div style="padding-top: 24px; padding-bottom: 1px;">
             <%
                 java.util.List<Map<String, String>> models = qzResponse.getDataList();
