@@ -71,10 +71,9 @@
     %>
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
         <div class="form-btn">
-            <a class="btn"
-               href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>">
-                <%=I18n.getKeyI18n("page.return")%>
-            </a>
+            <a class="btn" onclick="returnHref('<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>')"
+               href="javascript:void(0)">
+                    <%=I18n.getKeyI18n("page.return")%></a>
         </div>
     </div>
     <%

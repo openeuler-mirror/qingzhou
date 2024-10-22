@@ -919,7 +919,7 @@ function bindEventForListPage() {
         e.preventDefault();
         var actUrl = $(this).attr("href");
         var bindId = $(this).attr("data-id");
-        var filterForm = $(this).closest("form[name='filterForm']");
+        var filterForm = $("form[name='filterForm']");
         showConfirm($(this).attr("act-confirm"), {
             "title": getSetting("pageConfirmTitle"),
             "btn": [getSetting("confirmBtnText"), getSetting("cancelBtnText")]
@@ -967,6 +967,11 @@ function bindEventForListPage() {
         return false;
     });
 };
+
+//返回列表页面
+function returnHref(href){
+    $(".content-box li.active a[href='" + href + "']").click()
+}
 
 function initializeManager(element, url) {
     var tabHtml = "<li id=\"" + new Date().getTime() + "\" bind-id=\"" + element.attr("data-id") + "\">"
