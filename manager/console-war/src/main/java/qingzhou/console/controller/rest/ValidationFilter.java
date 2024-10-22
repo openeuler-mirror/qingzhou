@@ -1,6 +1,17 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.FieldType;
+import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import qingzhou.api.InputType;
 import qingzhou.api.Response;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
@@ -17,13 +28,6 @@ import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
-
-import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
@@ -195,7 +199,7 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             try {
-                if (!FieldType.number.name().equals(fieldInfo.getType())) return null;
+                if (InputType.number != fieldInfo.getInputType()) return null;
                 if (Long.parseLong(context.parameterVal) >= fieldInfo.getMin()) return null;
                 return new String[]{"validation_min", String.valueOf(fieldInfo.getMin())};
             } catch (Exception e) {
@@ -210,7 +214,7 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
             try {
-                if (!FieldType.number.name().equals(fieldInfo.getType())) return null;
+                if (InputType.number != fieldInfo.getInputType()) return null;
                 if (Long.parseLong(context.parameterVal) <= fieldInfo.getMax()) return null;
                 return new String[]{"validation_max", String.valueOf(fieldInfo.getMax())};
             } catch (Exception e) {
@@ -357,7 +361,7 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             ModelFieldInfo fieldInfo = context.fieldInfo;
-            if (fieldInfo.getType().equals(FieldType.file.name())
+            if (fieldInfo.getInputType() == InputType.file
                     || fieldInfo.isFile()) {
                 String[] illegalCollections = {"|", "&", "~", "../", "./", "*", "?", "\"", "'", "<", ">", "(", ")", "[", "]", "{", "}", "^", " "};
                 for (String illegalCollection : illegalCollections) {
@@ -393,7 +397,7 @@ public class ValidationFilter implements Filter<RestContext> {
     static class datetime implements Validator {
         @Override
         public String[] validate(ValidationContext context) {
-            if (!FieldType.datetime.name().equals(context.fieldInfo.getType())) return null;
+            if (InputType.datetime != context.fieldInfo.getInputType()) return null;
 
             try {
                 // 已转换在：qingzhou.console.controller.rest.ParameterFilter.datetime

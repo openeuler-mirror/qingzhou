@@ -26,6 +26,12 @@
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-engine</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
             <artifactId>qingzhou-logger</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>

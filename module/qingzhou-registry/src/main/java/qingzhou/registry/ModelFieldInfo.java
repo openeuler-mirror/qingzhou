@@ -1,11 +1,15 @@
 package qingzhou.registry;
 
+import qingzhou.api.FieldType;
+import qingzhou.api.InputType;
+
 public class ModelFieldInfo {
     private String code;
     private String[] name;
     private String[] info;
     private String group;
-    private String type;
+    private FieldType fieldType;
+    private InputType inputType;
     private String refModel;
     private String separator;
     private transient Class<?> refModelClass;
@@ -15,7 +19,6 @@ public class ModelFieldInfo {
     private boolean search;
     private boolean detail;
     private int widthPercent;
-    private boolean monitor;
     private boolean numeric;
     private boolean create;
     private boolean edit;
@@ -142,12 +145,20 @@ public class ModelFieldInfo {
         this.group = group;
     }
 
-    public String getType() {
-        return type;
+    public InputType getInputType() {
+        return inputType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setInputType(InputType inputType) {
+        this.inputType = inputType;
+    }
+
+    public FieldType getFieldType() {
+        return fieldType;
+    }
+
+    public void setFieldType(FieldType fieldType) {
+        this.fieldType = fieldType;
     }
 
     public String getRefModel() {
@@ -172,14 +183,6 @@ public class ModelFieldInfo {
 
     public void setSeparator(String separator) {
         this.separator = separator;
-    }
-
-    public boolean isMonitor() {
-        return monitor;
-    }
-
-    public void setMonitor(boolean monitor) {
-        this.monitor = monitor;
     }
 
     public boolean isNumeric() {

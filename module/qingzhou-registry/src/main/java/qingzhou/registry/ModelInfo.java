@@ -1,10 +1,17 @@
 package qingzhou.registry;
 
-import qingzhou.api.FieldType;
-import qingzhou.engine.util.Utils;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
+import qingzhou.api.FieldType;
+import qingzhou.api.InputType;
+import qingzhou.engine.util.Utils;
 
 public class ModelInfo {
     private String code;
@@ -73,7 +80,7 @@ public class ModelInfo {
     }
 
     public Map<String, String> getFormFieldDefaultValues() {
-        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> !modelFieldInfo.isMonitor()).collect(Collectors.toMap(ModelFieldInfo::getCode, ModelFieldInfo::getDefaultValue));
+        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.FORM).collect(Collectors.toMap(ModelFieldInfo::getCode, ModelFieldInfo::getDefaultValue));
     }
 
     public ModelFieldInfo getModelFieldInfo(String fieldName) {
@@ -87,20 +94,11 @@ public class ModelInfo {
 
     public Integer[] getFieldsIndexToList() {
         List<Integer> index = new ArrayList<>();
-        int idFieldIndex = -1;
         for (int i = 0; i < modelFieldInfos.length; i++) {
             ModelFieldInfo fieldInfo = modelFieldInfos[i];
-
-            if (fieldInfo.getCode().equals(idField)) {
-                idFieldIndex = i;
-                continue;
+            if (fieldInfo.getFieldType() == FieldType.FORM) {
+                if (fieldInfo.isList()) index.add(i);
             }
-            if (fieldInfo.isMonitor()) continue;
-
-            if (fieldInfo.isList()) index.add(i);
-        }
-        if (idFieldIndex >= 0) {
-            index.add(0, idFieldIndex);
         }
         return index.toArray(new Integer[0]);
     }
@@ -108,7 +106,7 @@ public class ModelInfo {
     public String[] getFieldsToListSearch() {
         List<String> list = new ArrayList<>();
         for (ModelFieldInfo fieldInfo : modelFieldInfos) {
-            if (fieldInfo.isSearch()) {
+            if (fieldInfo.isSearch() || fieldInfo.getFieldType() == FieldType.SEARCH) {
                 list.add(fieldInfo.getCode());
             }
         }
@@ -120,19 +118,22 @@ public class ModelInfo {
         for (Integer i : getFieldsIndexToList()) {
             list.add(modelFieldInfos[i].getCode());
         }
+        if (!list.contains(idField)) {
+            list.add(0, idField);
+        }
         return list.toArray(new String[0]);
     }
 
     public String[] getMonitorFieldNames() {
-        return Arrays.stream(modelFieldInfos).filter(ModelFieldInfo::isMonitor).map(ModelFieldInfo::getCode).toArray(String[]::new);
+        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.MONITOR).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }
 
     public String[] getFileUploadFieldNames() {
-        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> !modelFieldInfo.isMonitor() && modelFieldInfo.getType().equals(FieldType.file.name())).map(ModelFieldInfo::getCode).toArray(String[]::new);
+        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.FORM && modelFieldInfo.getInputType() == InputType.file).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }
 
     public String[] getFormFieldNames() {
-        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> !modelFieldInfo.isMonitor()).map(ModelFieldInfo::getCode).toArray(String[]::new);
+        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.FORM).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }
 
     public Map<String, String> getShowMap() {

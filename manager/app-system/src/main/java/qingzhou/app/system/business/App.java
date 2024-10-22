@@ -70,7 +70,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     public String name;
 
     @ModelField(
-            type = FieldType.bool,
+            inputType = InputType.bool,
             name = {"使用上传", "en:Enable Upload"},
             info = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。",
                     "en:The installed app can be uploaded from the client or read from a location specified on the server side."})
@@ -87,7 +87,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelField(
             show = "upload=true",
-            type = FieldType.file,
+            inputType = InputType.file,
             required = true,
             name = {"上传应用", "en:Upload Application"},
             info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
@@ -95,7 +95,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     public String file;
 
     @ModelField(
-            type = FieldType.checkbox,
+            inputType = InputType.checkbox,
             required = true,
             refModel = Instance.class,
             separator = App.instanceSP,

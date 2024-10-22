@@ -1,18 +1,19 @@
 package qingzhou.console.view;
 
-import qingzhou.console.controller.rest.RestContext;
-import qingzhou.console.view.type.StreamView;
-import qingzhou.console.view.type.HtmlView;
-import qingzhou.console.view.type.JsonView;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
-import qingzhou.registry.ModelInfo;
-
-import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
+
+import qingzhou.console.SecurityController;
+import qingzhou.console.controller.rest.RestContext;
+import qingzhou.console.view.type.HtmlView;
+import qingzhou.console.view.type.JsonView;
+import qingzhou.console.view.type.StreamView;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
+import qingzhou.registry.ModelInfo;
 
 public class ViewManager {
     private final Map<String, View> views = new HashMap<>();
@@ -40,9 +41,27 @@ public class ViewManager {
         response.getHeaderNames().forEach(k -> servletResponse.setHeader(k, response.getHeader(k)));
         response.getDateHeaderNames().forEach(k -> servletResponse.setDateHeader(k, response.getDateHeader(k)));
 
+        show(request, response);
         orderResult(request, response);
 
         view.render(restContext);
+    }
+
+    private void show(RequestImpl request, ResponseImpl response) {
+        ModelInfo modelInfo = request.getCachedModelInfo();
+        Map<String, String> showMap = modelInfo.getShowMap();
+        if (showMap.isEmpty()) return;
+
+        List<Map<String, String>> dataList = response.getDataList();
+        for (int i = 0; i < dataList.size(); i++) {
+            Map<String, String> data = dataList.get(i);
+            showMap.entrySet().forEach(entry -> {
+                boolean show = SecurityController.checkRule(entry.getValue(), data::get, true);
+                if (!show) {
+                    data.remove(entry.getKey());
+                }
+            });
+        }
     }
 
     private void orderResult(RequestImpl request, ResponseImpl response) {

@@ -1,6 +1,29 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.FieldType;
+import java.io.File;
+import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
+
+import qingzhou.api.InputType;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
@@ -21,19 +44,6 @@ import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.*;
-import java.io.File;
-import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.StandardOpenOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
@@ -280,7 +290,7 @@ public class RESTController extends HttpServlet {
             String[] v = req.getParameterValues(k);
             if (v != null) {
                 ModelFieldInfo modelFieldInfo = modelInfo.getModelFieldInfo(k);
-                if (modelFieldInfo != null && FieldType.kv.name().equals(modelFieldInfo.getType())) {
+                if (modelFieldInfo != null && InputType.kv == modelFieldInfo.getInputType()) {
                     for (int i = 0; i < v.length; i++) {// 前端页面的 kv 组件会对此进行 Base64加密，在这里进行解密，解密异常不处理，传递原始数据
                         v[i] = v[i].trim();
                         try {

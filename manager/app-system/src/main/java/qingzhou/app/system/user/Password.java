@@ -1,6 +1,16 @@
 package qingzhou.app.system.user;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
@@ -13,11 +23,6 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         hidden = true,
         menu = Main.Setting,
@@ -29,14 +34,14 @@ public class Password extends ModelBase implements Update, Export {
     private final String KEY_IN_SESSION_FLAG = "keyForOtp";
 
     @ModelField(
-            type = FieldType.bool,
+            inputType = InputType.bool,
             name = {"修改密码", "en:Change Password"},
             info = {"标记需要本用户登录系统的密码。", "en:Mark the password that requires the user to log in to the system."})
     public Boolean changePwd;
 
     @ModelField(
             show = "changePwd=true",
-            type = FieldType.password,
+            inputType = InputType.password,
             required = true,
             name = {"原始密码", "en:Original Password"},
             info = {"登录系统的原始密码。", "en:The original password to log in to the system."})
@@ -44,7 +49,7 @@ public class Password extends ModelBase implements Update, Export {
 
     @ModelField(
             show = "changePwd=true",
-            type = FieldType.password,
+            inputType = InputType.password,
             required = true,
             name = {"新密码", "en:New Password"},
             info = {"用于登录系统的新密码。", "en:The new password used to log in to the system."})
@@ -52,14 +57,14 @@ public class Password extends ModelBase implements Update, Export {
 
     @ModelField(
             show = "changePwd=true",
-            type = FieldType.password,
+            inputType = InputType.password,
             required = true,
             name = {"确认密码", "en:Confirm Password"},
             info = {"确认用于登录系统的新密码。", "en:Confirm the new password used to log in to the system."})
     public String confirmPassword;
 
     @ModelField(
-            type = FieldType.bool,
+            inputType = InputType.bool,
             name = {"动态密码", "en:One-time password"},
             info = {"用户开启动态密码，在登录系统时，输入动态密码，可免输入账户密码。",
                     "en:When the user turns on the one-time password, when logging in to the system, enter the one-time password, and the account password is not required."})
@@ -123,6 +128,7 @@ public class Password extends ModelBase implements Update, Export {
                 data.put(User.idKey, request.getUser());
                 data.put("keyForOtp", keyForOtp);
                 User.updateDataForUser(data);
+                request.removeParameterInSession(KEY_IN_SESSION_FLAG);
             }
         }
         request.getResponse().setSuccess(result);

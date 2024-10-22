@@ -48,7 +48,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     public String running;
 
     @ModelField(
-            type = FieldType.markdown,
+            inputType = InputType.markdown,
             create = false,
             name = {"发布说明", "en:Release Notes"},
             info = {"此版本的说明信息，通常会包括该版本的新增功能、修复已知问题等内容。",
@@ -56,7 +56,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     public String releaseNotes;
 
     @ModelField(
-            type = FieldType.bool,
+            inputType = InputType.bool,
             name = {"使用上传", "en:Enable Upload"},
             info = {"升级包可以从客户端上传，也可以从服务器端指定的位置读取。",
                     "en:The upgrade package can be uploaded from the client or read from a location specified on the server side."})
@@ -73,7 +73,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
 
     @ModelField(
             show = "upload=true",
-            type = FieldType.file,
+            inputType = InputType.file,
             required = true,
             name = {"上传文件", "en:File"},
             info = {"上传一个文件到服务器，文件须是 version*.zip 类型的文件，否则可能会导致升级失败。",
