@@ -5,7 +5,7 @@
     <%-- 面包屑分级导航 --%>
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
-    <table class="table table-hover">
+    <table class="table table-striped table-hover">
         <tr>
             <td>
                 <%=I18n.getKeyI18n("page.status")%>:
