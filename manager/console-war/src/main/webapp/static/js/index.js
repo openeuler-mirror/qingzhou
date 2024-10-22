@@ -968,6 +968,11 @@ function bindEventForListPage() {
     });
 };
 
+//返回列表页面
+function returnHref(href){
+    $(".content-box li.active a[href='" + href + "']").click()
+}
+
 function initializeManager(element, url) {
     var tabHtml = "<li id=\"" + new Date().getTime() + "\" bind-id=\"" + element.attr("data-id") + "\">"
         + "<a href=\"javascript:void(0);\" href-attr=\"" + url + "\" rel=\"noopener noreferrer\">"

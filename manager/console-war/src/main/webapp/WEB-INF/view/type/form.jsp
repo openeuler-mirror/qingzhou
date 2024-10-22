@@ -164,10 +164,9 @@
                 <%
                     if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
                 %>
-                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>"
-                   class="btn">
-                    <%=I18n.getKeyI18n("page.return")%>
-                </a>
+                <a class="btn" onclick="returnHref('<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>')"
+                   href="javascript:void(0)">
+                        <%=I18n.getKeyI18n("page.return")%></a>
                 <%
                     }
                 %>
