@@ -34,9 +34,7 @@ public @interface ModelField {
 
     InputType inputType() default InputType.text; // 字段的显示类型
 
-    boolean create() default true; // 允许创建时指定值
-
-    boolean edit() default true; // 允许编辑此字段
+    String editable() default ""; // 允许指定值
 
     String readOnly() default ""; // 表单元素级联控制只读的事件绑定
 
@@ -70,24 +68,22 @@ public @interface ModelField {
 
     String[] echoGroup() default {};
 
-    // 数据类型的相关信息
-
-    String show() default ""; // 表单元素级联控制显示/隐藏的事件绑定
-
     // 列表类型的相关信息
+
+    boolean show() default true; // 是否显示在列表中。
 
     boolean list() default false; // 是否显示在列表中。
 
     boolean search() default false; // 是否支持列头搜索
 
-    boolean detail() default false; // 点击此字段调整到详情页面，模块须支持 show
+    boolean linkShow() default false; // 点击此字段调整到详情页面，模块须支持 show
 
     int widthPercent() default -1;
 
     int ignore() default -1; // 列表页面上，最多显示的字符数，超出后隐藏并悬浮显示全值
 
     // 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
-    String link() default "";
+    String linkList() default "";
 
     // 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
     String[] color() default {};

@@ -11,7 +11,7 @@
             Map<String, ModelFieldInfo> groupFieldMap = groupInfo.getValue();
             for (Map.Entry<String, ModelFieldInfo> e : groupFieldMap.entrySet()) {
                 String fieldName = e.getKey();
-                if (!Utils.contains(action.getFields(), fieldName)) {
+                if (!Utils.contains(action.getLinkFields(), fieldName)) {
                     continue;
                 }
 

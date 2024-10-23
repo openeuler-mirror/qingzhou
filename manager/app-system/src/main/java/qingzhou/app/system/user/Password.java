@@ -40,7 +40,7 @@ public class Password extends ModelBase implements Update, Export {
     public Boolean changePwd;
 
     @ModelField(
-            show = "changePwd=true",
+            editable = "changePwd=true",
             inputType = InputType.password,
             required = true,
             name = {"原始密码", "en:Original Password"},
@@ -48,7 +48,7 @@ public class Password extends ModelBase implements Update, Export {
     public String originalPassword;
 
     @ModelField(
-            show = "changePwd=true",
+            editable = "changePwd=true",
             inputType = InputType.password,
             required = true,
             name = {"新密码", "en:New Password"},
@@ -56,7 +56,7 @@ public class Password extends ModelBase implements Update, Export {
     public String newPassword;
 
     @ModelField(
-            show = "changePwd=true",
+            editable = "changePwd=true",
             inputType = InputType.password,
             required = true,
             name = {"确认密码", "en:Confirm Password"},

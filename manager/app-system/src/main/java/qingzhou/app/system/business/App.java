@@ -60,8 +60,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     }
 
     @ModelField(
-            required = true,
-            create = false, edit = false,
+            editable = "false",
             forbid = {DeployerConstants.APP_SYSTEM},
             search = true,
             name = {"应用名称", "en:App Name"},
@@ -77,7 +76,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     public Boolean upload = false;
 
     @ModelField(
-            show = "upload=false",
+            editable = "upload=false",
             required = true,
             file = true,
             name = {"应用位置", "en:Application File"},
@@ -86,7 +85,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     public String path;
 
     @ModelField(
-            show = "upload=true",
+            editable = "upload=true",
             inputType = InputType.file,
             required = true,
             name = {"上传应用", "en:Upload Application"},
@@ -106,7 +105,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelField(
             list = true, search = true,
-            create = false, edit = false,
+            editable = "false",
             color = {DeployerConstants.app_Started + ":Green", DeployerConstants.app_Stopped + ":Gray"},
             name = {"状态", "en:State"},
             info = {"指示应用的当前运行状态。", "en:Indicates the current running state of the app."})

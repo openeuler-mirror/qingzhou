@@ -1,7 +1,6 @@
 package qingzhou.console;
 
 import qingzhou.console.controller.SystemController;
-import qingzhou.engine.util.Utils;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
 
@@ -23,8 +22,9 @@ public class SecurityController {
         return user != null;
     }
 
-    public static boolean checkRule(String condition, FieldValueRetriever retriever, boolean defaultSuccess) {
-        if (Utils.isBlank(condition)) return defaultSuccess;
+    public static boolean checkRule(String condition, FieldValueRetriever retriever) {
+        if ("true".equalsIgnoreCase(condition)) return true;
+        if ("false".equalsIgnoreCase(condition)) return false;
 
         AndOrQueue queue = null;
         String[] split;
@@ -38,7 +38,7 @@ public class SecurityController {
                 queue = new AndOrQueue(true);
             }
         }
-        if (queue == null) return defaultSuccess;
+        if (queue == null) return false;
 
         String notEqStr = "!=";
         String eqStr = "=";

@@ -166,7 +166,7 @@ class DefaultAction {
             }
         }
 
-        return query != null ? query : ((List) instance).filterValues();
+        return query != null ? query : ((List) instance).defaultSearch();
     }
 
     @ModelAction(

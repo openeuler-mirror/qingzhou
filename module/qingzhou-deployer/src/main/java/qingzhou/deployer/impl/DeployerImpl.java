@@ -1,38 +1,8 @@
 package qingzhou.deployer.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.Supplier;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
-import java.util.stream.Collectors;
-
-import qingzhou.api.AppContext;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingzhouApp;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Group;
+import qingzhou.api.*;
 import qingzhou.api.type.List;
-import qingzhou.api.type.Option;
-import qingzhou.api.type.Update;
-import qingzhou.api.type.Validate;
+import qingzhou.api.type.*;
 import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -41,12 +11,21 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ItemInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Supplier;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
@@ -356,7 +335,7 @@ class DeployerImpl implements Deployer {
 
         List listInstance = (List) instance;
         modelInfo.setShowOrderNumber(listInstance.showOrderNumber());
-        modelInfo.setFilterValues(listInstance.filterValues());
+        modelInfo.setDefaultSearch(listInstance.defaultSearch());
         modelInfo.setShowIdField(listInstance.showIdField());
         modelInfo.setListActions(listInstance.listActions());
         modelInfo.setHeadActions(listInstance.headActions());
@@ -406,15 +385,15 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setRefModelClass(modelField.refModel());
             modelFieldInfo.setSeparator(modelField.separator());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
+            modelFieldInfo.setShow(modelField.show());
             modelFieldInfo.setList(modelField.list());
             modelFieldInfo.setIgnore(modelField.ignore());
             modelFieldInfo.setSearch(modelField.search());
-            modelFieldInfo.setDetail(modelField.detail());
+            modelFieldInfo.setLinkShow(modelField.linkShow());
             modelFieldInfo.setWidthPercent(modelField.widthPercent());
             modelFieldInfo.setFieldType(modelField.fieldType());
             modelFieldInfo.setNumeric(modelField.numeric());
-            modelFieldInfo.setCreate(modelField.create());
-            modelFieldInfo.setEdit(modelField.edit());
+            modelFieldInfo.setEditable(modelField.editable());
             modelFieldInfo.setRequired(modelField.required());
             modelFieldInfo.setMin(modelField.min());
             modelFieldInfo.setMax(modelField.max());
@@ -423,13 +402,12 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setPattern(modelField.pattern());
             modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
-            modelFieldInfo.setShow(modelField.show());
             modelFieldInfo.setReadOnly(modelField.readOnly());
             modelFieldInfo.setForbid(modelField.forbid());
             modelFieldInfo.setSkip(modelField.skip());
             modelFieldInfo.setEmail(modelField.email());
             modelFieldInfo.setFile(modelField.file());
-            modelFieldInfo.setLink(modelField.link());
+            modelFieldInfo.setLinkList(modelField.linkList());
             modelFieldInfo.setColor(modelField.color());
             modelFieldInfo.setEchoGroup(modelField.echoGroup());
             modelFieldInfoList.add(modelFieldInfo);
@@ -545,8 +523,8 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setRedirect(modelAction.redirect());
             modelActionInfo.setPage(modelAction.page());
-            modelActionInfo.setFields(modelAction.fields());
-            modelActionInfo.setModels(modelAction.models());
+            modelActionInfo.setLinkFields(modelAction.linkFields());
+            modelActionInfo.setLinkModels(modelAction.linkModels());
             modelActionInfos.add(modelActionInfo);
         });
         return modelActionInfos;

@@ -1,22 +1,12 @@
 package qingzhou.console.controller.rest;
 
-import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import qingzhou.api.InputType;
 import qingzhou.api.Response;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Update;
 import qingzhou.api.type.Validate;
+import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.ActionInvoker;
@@ -28,6 +18,13 @@ import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
@@ -42,13 +39,28 @@ public class ValidationFilter implements Filter<RestContext> {
         I18n.addKeyI18n("validation_port", new String[]{"须是一个合法的端口", "en:Must be a legitimate port"});
         I18n.addKeyI18n("validation_port_valueBetween", new String[]{"取值必须介于%s - %s之间", "en:Value must be between %s and %s"});
         I18n.addKeyI18n("validation_forbid", new String[]{"该值已被禁用：%s", "en:This value is disabled: %s"});
-        I18n.addKeyI18n("validation_createable", new String[]{"创建时不支持写入该属性", "en:Writing this property is not supported during creation"});
         I18n.addKeyI18n("validation_xss", new String[]{"可能存在XSS风险或隐患", "en:There may be XSS risks or hidden dangers"});
         I18n.addKeyI18n("validation_pattern", new String[]{"内容不满足规则", "en:The content does not meet the rules"});
         I18n.addKeyI18n("validation_email", new String[]{"须是一个合法的电子邮件地址", "en:Must be a valid email address"});
         I18n.addKeyI18n("validation_filePath", new String[]{"文件路径不支持以\\或者/结尾，不支持包含特殊字符和空格", "en:The file path cannot end with \\ or /, and cannot contain special characters or Spaces"});
         I18n.addKeyI18n("validation_options", new String[]{"取值不在范围：%s", "en:The value is not in the range: %s"});
         I18n.addKeyI18n("validation_datetime", new String[]{"须符合时间格式：%s", "en:Must conform to the time format: %s"});
+    }
+
+    public static boolean isSingleSelect(ModelFieldInfo fieldInfo) {
+        InputType type = fieldInfo.getInputType();
+        return type == InputType.bool
+                || type == InputType.radio
+                || type == InputType.select;
+    }
+
+    public static boolean isMultipleSelect(ModelFieldInfo fieldInfo) {
+        InputType type = fieldInfo.getInputType();
+        return type == InputType.checkbox
+                || type == InputType.sortablecheckbox
+                || type == InputType.multiselect
+                || type == InputType.sortable
+                || type == InputType.kv;
     }
 
     @Override
@@ -110,7 +122,6 @@ public class ValidationFilter implements Filter<RestContext> {
             new host(),
             new port(),
             new forbid(),
-            new create(),
             new checkXSS(),
             new regularExpression(),
             new checkEmail(),
@@ -124,14 +135,20 @@ public class ValidationFilter implements Filter<RestContext> {
 
         // 处理空值情况
         if (context.parameterVal == null || context.parameterVal.isEmpty()) {
-            if (context.isAddAction && !fieldInfo.isCreate()) {
+            if (context.isUpdateAction) { // rest 编辑，很多值都不传，只传递要修改的值
                 return null;
             }
-            if (context.isUpdateAction && !fieldInfo.isEdit()) {
-                return null;
+
+            if (context.isAddAction) {
+                String editable = fieldInfo.getEditable();
+                if (Utils.notBlank(editable)) {
+                    if (!SecurityController.checkRule(editable, context.request::getParameter)) {
+                        return null;
+                    }
+                }
             }
-            if (fieldInfo.getCode().equals(context.modelInfo.getIdField())
-                    || fieldInfo.isRequired()) {
+
+            if (fieldInfo.isRequired()) {
                 return new String[]{"validation_required"};
             } else {
                 return null;
@@ -311,21 +328,7 @@ public class ValidationFilter implements Filter<RestContext> {
         }
     }
 
-    static class create implements Validator {
-
-        @Override
-        public String[] validate(ValidationContext context) {
-            ModelFieldInfo fieldInfo = context.fieldInfo;
-            if (fieldInfo.isCreate()) return null;
-
-            if (!context.isAddAction) return null;
-
-            return new String[]{"validation_createable"};
-        }
-    }
-
     static class checkXSS implements Validator {
-
         @Override
         public String[] validate(ValidationContext context) {
             String[] checks = {"vbscript:", "eval(", "(", ")", "<", ">", "[", "]", "\"", "'"};
@@ -384,12 +387,20 @@ public class ValidationFilter implements Filter<RestContext> {
         public String[] validate(ValidationContext context) {
             ItemInfo[] options = SystemController.getOptions(context.request.getApp(), context.modelInfo, context.fieldInfo.getCode());
             if (options.length == 0) return null;
-            String[] vals = context.parameterVal.split(context.fieldInfo.getSeparator());
-            for (String v : vals) {
-                if (Arrays.stream(options).noneMatch(itemInfo -> itemInfo.getName().equals(v))) {
+
+            if (isSingleSelect(context.fieldInfo)) {
+                if (Arrays.stream(options).noneMatch(itemInfo -> itemInfo.getName().equals(context.parameterVal))) {
                     return new String[]{"validation_options", Arrays.toString(options)};
                 }
+            } else if (isMultipleSelect(context.fieldInfo)) {
+                String[] vals = context.parameterVal.split(context.fieldInfo.getSeparator());
+                for (String v : vals) {
+                    if (Arrays.stream(options).noneMatch(itemInfo -> itemInfo.getName().equals(v))) {
+                        return new String[]{"validation_options", Arrays.toString(options)};
+                    }
+                }
             }
+
             return null;
         }
     }

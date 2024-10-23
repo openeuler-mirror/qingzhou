@@ -22,7 +22,7 @@ public class Post extends AddModelBase implements Option {
     public String postCode;
 
     @ModelField(
-            required = true, detail = true,
+            required = true, linkShow = true,
             ignore = 15,
             search = true, list = true,
             name = {"岗位名称", "en:Post Name"},

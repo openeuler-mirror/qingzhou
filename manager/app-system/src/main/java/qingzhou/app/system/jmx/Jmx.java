@@ -30,7 +30,7 @@ public class Jmx extends ModelBase implements Update {
     public Boolean enabled = false;
 
     @ModelField(
-            show = "enabled=true",
+            editable = "enabled=true",
             host = true,
             name = {"服务 IP", "en:Service IP"},
             info = {"指定 JMX 监听服务绑定的 IP 地址，为空表示绑定到 127.0.0.1。",
@@ -38,7 +38,7 @@ public class Jmx extends ModelBase implements Update {
     public String host = "127.0.0.1";
 
     @ModelField(
-            show = "enabled=true",
+            editable = "enabled=true",
             port = true,
             name = {"服务端口", "en:Service Port"},
             info = {"指定 JMX 监听服务绑定的端口。", "en:Specifies the port to which the JMX listening service is bound."}

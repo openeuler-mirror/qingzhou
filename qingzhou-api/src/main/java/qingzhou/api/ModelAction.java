@@ -29,7 +29,7 @@ public @interface ModelAction {
 
     String page() default ""; // 跳转到指定的页面，注：app根目录后的相对路径
 
-    String[] fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
+    String[] linkFields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
 
-    String[] models() default {}; //  弹出子级管理页面
+    String[] linkModels() default {}; //  弹出子级管理页面
 }
