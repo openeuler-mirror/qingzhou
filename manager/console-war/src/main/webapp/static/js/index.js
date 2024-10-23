@@ -358,7 +358,7 @@ function setOrReset() {
     const restrictedArea = getRestrictedArea();
     // 左侧菜单点击菜单事件
     $("aside.main-sidebar", document.body).each(function () {
-        qz.bindFill("ul.sidebar-menu a", ".main-body", false, false, $(this).parent(), null);
+        qz.bindFill("ul.sidebar-menu a", ".main-body", false, true, $(this).parent(), null);
     });
 };
 
