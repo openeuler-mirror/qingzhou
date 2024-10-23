@@ -314,8 +314,6 @@
         echoActionName: '<%=Echo.ACTION_ECHO%>'
     };
 
-    var searchUrl = '<%=RESTController.encodeURL(response, contextPath + "/search")%>';
-
     <%-- 显示第一个应用的管理页面--%>
     <%
 	String appName = PageUtil.getAppToShow();

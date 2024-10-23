@@ -25,23 +25,11 @@ public @interface ModelAction {
 
     boolean distribute() default false;
 
-    /**
-     * ActionType.Link 类型的属性
-     */
-
     String redirect() default ""; // 转给默认的view，如 qingzhou.api.type.List.ACTION_LIST，注：优先级低于 page
 
     String page() default ""; // 跳转到指定的页面，注：app根目录后的相对路径
 
-    /**
-     * ActionType.Link 类型的属性
-     */
-
     String[] fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
-
-    /**
-     * ActionType.Link 类型的属性
-     */
 
     String[] models() default {}; //  弹出子级管理页面
 }
