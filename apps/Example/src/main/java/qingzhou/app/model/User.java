@@ -1,6 +1,11 @@
 package qingzhou.app.model;
 
-import qingzhou.api.*;
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
@@ -28,14 +33,14 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelField(
             group = "base",
-            type = FieldType.select,
+            inputType = InputType.select,
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
     public String gender;
 
     @ModelField(
             group = "org",
-            type = FieldType.select,
+            inputType = InputType.select,
             refModel = Post.class,
             list = true, search = true,
             name = {"岗位", "en:Position"})
@@ -43,45 +48,45 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelField(
             group = "org",
-            type = FieldType.select,
+            inputType = InputType.select,
             refModel = Department.class,
             list = true, search = true,
             name = {"归属部门", "en:Department "})
     public String department;
 
     @ModelField(
-            type = FieldType.sortable,
+            inputType = InputType.sortable,
             list = true,
             separator = "@",
             name = {"项目1", "en:1"})
     public String subjects1;
 
     @ModelField(
-            type = FieldType.checkbox,
+            inputType = InputType.checkbox,
             separator = "@",
             refModel = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
     @ModelField(
-            type = FieldType.multiselect,
+            inputType = InputType.multiselect,
             separator = "@",
             refModel = Post.class,
             name = {"multiselect", "en:1"})
     public String multiselect;
     @ModelField(
-            type = FieldType.kv,
+            inputType = InputType.kv,
             separator = "@",
             name = {"kv", "en:1"})
     public String kv;
 
     @ModelField(
-            type = FieldType.sortablecheckbox,edit = false,
+            inputType = InputType.sortablecheckbox, edit = false,
             separator = "#",
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
-            type = FieldType.sortablecheckbox, create = false,
+            inputType = InputType.sortablecheckbox, create = false,
             separator = "#",
             name = {"项目3", "en:3"})
     public String subjects3;
@@ -92,9 +97,9 @@ public class User extends AddModelBase implements Group, Option {
     public String noEdit;
 
     @ModelField(
-            type = FieldType.textarea,
+            inputType = InputType.textarea,
             list = true, search = true, readOnly = "true",
-            link= "department.email",
+            link = "department.email",
             skip = {">", "("},
             name = {"备注", "en:Notes"})
     public String notes = "只读控制";

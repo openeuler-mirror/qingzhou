@@ -2,7 +2,7 @@ package qingzhou.app.system.jmx;
 
 import java.util.Map;
 
-import qingzhou.api.FieldType;
+import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
@@ -23,7 +23,7 @@ import qingzhou.logger.Logger;
                 "en:JMX is an abbreviation for Java Management Extensions, which is a standardized management and monitoring framework for managing and monitoring applications, systems, and network resources on the Java platform. JMX provides a standard way for developers to expose various administrative and monitoring information in their applications, which can then be accessed and manipulated using JMX client tools or applications. After the JMX interface service is enabled, clients can manage the Qingzhou platform through the java jmx protocol."})
 public class Jmx extends ModelBase implements Update {
     @ModelField(
-            type = FieldType.bool,
+            inputType = InputType.bool,
             name = {"启用", "en:Enabled"},
             info = {"功能开关，配置是否开启 Qingzhou 的 JMX 接口服务。",
                     "en:Function switch, configure whether to enable Qingzhou JMX interface service."})

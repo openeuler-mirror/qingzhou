@@ -1,6 +1,6 @@
 package qingzhou.app.model;
 
-import qingzhou.api.FieldType;
+import qingzhou.api.InputType;
 import qingzhou.api.Item;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
@@ -24,7 +24,7 @@ public class Department extends AddModelBase implements Echo, Option {
     public String id;
 
     @ModelField(
-            type = FieldType.radio,
+            inputType = InputType.radio,
             list = true, search = true, echoGroup = {"aa"},
             name = {"上级部门", "en:Superior Department"},
             info = {"该部门所属的上级部门。",
@@ -32,7 +32,7 @@ public class Department extends AddModelBase implements Echo, Option {
     public String superior = "";
 
     @ModelField(
-            type = FieldType.checkbox,
+            inputType = InputType.checkbox,
             list = true, search = true, echoGroup = {"aa", "bb"},
             name = {"负责人", "en:Department Manager"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
@@ -54,7 +54,7 @@ public class Department extends AddModelBase implements Echo, Option {
     public String email;
 
     @ModelField(
-            type = FieldType.datetime,
+            inputType = InputType.datetime,
             list = true, search = true,
             name = {"建立日期", "en:Date"}
     )

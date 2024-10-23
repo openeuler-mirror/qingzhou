@@ -23,7 +23,7 @@ import java.util.Map;
         name = {"实例代理", "en:Agent"})
 public class Agent extends ModelBase implements Download {
     @ModelField(
-            type = FieldType.file, // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
+            inputType = InputType.file, // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
             name = {"", "en:"})
     public String file; // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
 

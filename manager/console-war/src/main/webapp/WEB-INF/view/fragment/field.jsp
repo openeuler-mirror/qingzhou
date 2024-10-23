@@ -41,7 +41,7 @@
                     }
                     String fieldValue = infoData.get(fieldName);
                     fieldValue = fieldValue != null ? fieldValue : "";
-                    if (!FieldType.markdown.name().equals(modelField.getType())) {
+                    if (InputType.markdown != modelField.getInputType()) {
                         fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
                     }
             %>
@@ -60,7 +60,7 @@
                     </a>
                     <%
                         } else {
-                            out.print(PageUtil.getDisplayValue(fieldValue, qzApp, modelInfo, modelField));
+                            out.print(PageUtil.getInputTypeStyle(fieldValue, qzApp, modelInfo, modelField));
                         }
                     %>
                 </td>

@@ -1,6 +1,16 @@
 package qingzhou.console.page;
 
-import qingzhou.api.FieldType;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import qingzhou.api.InputType;
 import qingzhou.api.Request;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
@@ -10,13 +20,12 @@ import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.*;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Stream;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ItemInfo;
+import qingzhou.registry.MenuInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
@@ -59,8 +68,6 @@ public class PageUtil {
         if (Utils.isBlank(value)) return value;
 
         try {
-            value = getDisplayValue(value, qzApp, modelInfo, fieldInfo);
-
             String[] colorInfo = fieldInfo.getColor();
             if (colorInfo == null) return value;
 
@@ -89,11 +96,11 @@ public class PageUtil {
         }
     }
 
-    public static String getDisplayValue(String value, String qzApp, ModelInfo modelInfo, ModelFieldInfo fieldInfo) {
+    public static String getInputTypeStyle(String value, String qzApp, ModelInfo modelInfo, ModelFieldInfo fieldInfo) {
         if (Utils.isBlank(value)) return value;
 
-        FieldType fieldType = FieldType.valueOf(fieldInfo.getType());
-        switch (fieldType) {
+        InputType inputType = fieldInfo.getInputType();
+        switch (inputType) {
             case markdown:
                 value = "<div class=\"markdownview\">" + value + "</div>";
                 break;

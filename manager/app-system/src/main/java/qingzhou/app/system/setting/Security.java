@@ -2,7 +2,7 @@ package qingzhou.app.system.setting;
 
 import java.util.Map;
 
-import qingzhou.api.FieldType;
+import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
@@ -24,14 +24,14 @@ public class Security extends ModelBase implements Update {
     public String trustedIp;
 
     @ModelField(
-            type = FieldType.number,
+            inputType = InputType.number,
             min = 1,
             name = {"失败锁定次数", "en:User Lockout Threshold"},
             info = {"用户连续认证失败后被锁定的次数。", "en:The number of times a user has been locked out after successive failed authentication attempts."})
     public Integer failureCount = 5;
 
     @ModelField(
-            type = FieldType.number,
+            inputType = InputType.number,
             min = 60,
             name = {"锁定时长", "en:Lock Duration"},
             info = {"用户在多次认证失败后被锁定的时间（秒）。",
@@ -39,13 +39,13 @@ public class Security extends ModelBase implements Update {
     public Integer lockOutTime = 300;
 
     @ModelField(
-            type = FieldType.bool,
+            inputType = InputType.bool,
             name = {"启用验证码", "en:Enable Verification Code"},
             info = {"开启用户登录时的验证码校验，当首次登录失败后，再次登录需要输入验证码。", "en:Enable authentication code verification during user login, when the first login fails, you need to enter the authentication code to login again."})
     public Boolean verCodeEnabled = true;
 
     @ModelField(
-            type = FieldType.number,
+            inputType = InputType.number,
             min = 0, max = 90,
             name = {"密码最长使用期限", "en:Maximum Password Age"},
             info = {"用户登录系统的密码距离上次修改超过该期限（单位为天）后，需首先更新密码才能继续登录系统。",// 内部：0 表示可以永久不更新。
@@ -53,7 +53,7 @@ public class Security extends ModelBase implements Update {
     public Integer passwordMaxAge = 0;
 
     @ModelField(
-            type = FieldType.number,
+            inputType = InputType.number,
             min = 1, max = 10,
             name = {"不使用最近密码", "en:Recent Password Restrictions"},
             info = {"限制本次更新的密码不能和最近几次使用过的密码重复。注：设置为 “1” 表示只要不与当前密码重复即可。",
@@ -61,7 +61,7 @@ public class Security extends ModelBase implements Update {
     public Integer passwordLimitRepeats = 1;
 
     @ModelField(
-            type = FieldType.textarea,
+            inputType = InputType.textarea,
             edit = false, create = false,
             lengthMax = 1000,
             name = {"加密公钥", "en:Public Key"},

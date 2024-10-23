@@ -62,6 +62,8 @@ public interface Request {
 
     String getParameterInSession(String name);
 
+    void removeParameterInSession(String name);
+
     void setParameterInSession(String key, String val);
 
     /**

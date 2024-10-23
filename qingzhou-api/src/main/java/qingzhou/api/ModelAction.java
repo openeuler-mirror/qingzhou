@@ -11,32 +11,37 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ModelAction {
+    // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作名称。
+    String[] name();
+
+    // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
+    String[] info() default {};
+
     String code(); // 接口名
 
     String icon() default ""; // 指定与该模型操作关联的图标名称
 
-    /**
-     * 在list页面上，弹出表单页面，指定表单页面里显示的字段
-     */
-    String[] fields() default {};
+    String show() default ""; // 设置该操作的可用条件
 
-    String[] models() default {}; //  弹出子级管理页面
+    boolean distribute() default false;
+
+    /**
+     * ActionType.Link 类型的属性
+     */
 
     String redirect() default ""; // 转给默认的view，如 qingzhou.api.type.List.ACTION_LIST，注：优先级低于 page
 
     String page() default ""; // 跳转到指定的页面，注：app根目录后的相对路径
 
-    boolean distribute() default false;
+    /**
+     * ActionType.Link 类型的属性
+     */
 
-    String show() default ""; // 设置该操作的可用条件
+    String[] fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
 
     /**
-     * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作名称。
+     * ActionType.Link 类型的属性
      */
-    String[] name();
 
-    /**
-     * 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
-     */
-    String[] info() default {};
+    String[] models() default {}; //  弹出子级管理页面
 }

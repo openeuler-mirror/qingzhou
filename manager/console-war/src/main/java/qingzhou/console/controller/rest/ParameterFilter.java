@@ -1,6 +1,15 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.FieldType;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import qingzhou.api.InputType;
 import qingzhou.api.type.Update;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.SystemController;
@@ -10,10 +19,6 @@ import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
-
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class ParameterFilter implements Filter<RestContext> {
     @Override
@@ -103,7 +108,7 @@ public class ParameterFilter implements Filter<RestContext> {
         while (parameterNames.hasMoreElements()) {
             String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-            if (modelField.getType().equals(FieldType.datetime.name())) {
+            if (modelField.getInputType() == InputType.datetime) {
                 try {
                     String val = request.getParameter(fieldName);
                     if (Utils.notBlank(val)) {
@@ -122,7 +127,7 @@ public class ParameterFilter implements Filter<RestContext> {
         while (parameterNames.hasMoreElements()) {
             String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-            if (modelField.getType().equals(FieldType.password.name())) {
+            if (modelField.getInputType() == InputType.password) {
                 try {
                     String val = request.getParameter(fieldName);
                     String result = SystemController.decryptWithConsolePrivateKey(val, false);

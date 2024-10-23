@@ -1,6 +1,6 @@
 package qingzhou.app.model;
 
-import qingzhou.api.FieldType;
+import qingzhou.api.InputType;
 import qingzhou.api.Item;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
@@ -23,13 +23,14 @@ public class Post extends AddModelBase implements Option {
 
     @ModelField(
             required = true, detail = true,
+            ignore = 15,
             search = true, list = true,
             name = {"岗位名称", "en:Post Name"},
             info = {"岗位名称。", "en:Post name."})
     public String name;
 
     @ModelField(
-            type = FieldType.radio,
+            inputType = InputType.radio,
             color = {"yes:Green", "no:Red"},
             list = true, search = true,
             widthPercent = 20,
@@ -37,7 +38,8 @@ public class Post extends AddModelBase implements Option {
     public String postStatus;
 
     @ModelField(
-            type = FieldType.textarea,
+            inputType = InputType.textarea,
+            ignore = 15,
             color = {"12345678901234456789:Green", "00:Red"},
             list = true, search = true,
             name = {"备注", "en:Notes"})
@@ -50,7 +52,7 @@ public class Post extends AddModelBase implements Option {
 
     @Override
     public boolean showIdField() {
-        return true;
+        return false;
     }
 
     @Override

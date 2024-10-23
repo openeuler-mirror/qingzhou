@@ -1,6 +1,19 @@
 package qingzhou.app.system.business;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import qingzhou.api.FieldType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.List;
@@ -16,12 +29,6 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
         menu = Main.Business, order = 2,
@@ -60,129 +67,129 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelField(
             group = group_os,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"OS", "en:OS"}, info = {"操作系统的名称。", "en:The name of the operating system."})
     public String osName;
 
     @ModelField(
             group = group_os,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"版本", "en:OS Version"}, info = {"操作系统的版本。", "en:The version of the operating system."})
     public String osVer;
 
     @ModelField(
             group = group_os,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"架构", "en:OS Architecture"}, info = {"服务器的架构。", "en:The architecture of the server."})
     public String arch;
 
     @ModelField(
             group = group_os,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"CPU 个数", "en:Number Of Cpus"}, info = {"服务器的处理器数量。", "en:The number of processors on the server."})
     public int cpu;
 
     @ModelField(
             group = group_os,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"硬盘（GB）", "en:Disk (GB)"},
             info = {"硬盘总空间大小，单位GB。", "en:The total size of the hard disk, in GB."})
     public double disk;
 
     @ModelField(
             group = group_os,
-            monitor = true, numeric = true,
+            fieldType = FieldType.MONITOR, numeric = true,
             name = {"系统负载", "en:Load Average"},
             info = {"表示当前系统 CPU 的总体利用率，范围在 0.0 ~ 1.0 之间。", "en:Indicates the overall utilization of the current system CPU, ranging from 0.0 ~ 1.0."})
     public double cpuUsed;
 
     @ModelField(
             group = group_os,
-            monitor = true, numeric = true,
+            fieldType = FieldType.MONITOR, numeric = true,
             name = {"使用硬盘（GB）", "en:Disk Used (GB)"},
             info = {"当前已使用的硬盘空间，单位GB。", "en:The disk currently used, in GB."})
     public double diskUsed;
 
     @ModelField(
             group = group_jvm,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"Java 规格", "en:Java Spec"},
             info = {"Java 虚拟机规范名称。", "en:Java virtual machine specification name."})
     public String specName;
 
     @ModelField(
             group = group_jvm,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"Java 版本", "en:Java Version"},
             info = {"Java 虚拟机规范版本。", "en:Java virtual machine specification version."})
     public String specVersion;
 
     @ModelField(
             group = group_jvm,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"Jvm 名称", "en:Jvm Name"},
             info = {"Java 虚拟机名称。", "en:The Java virtual machine implementation name."})
     public String vmName;
 
     @ModelField(
             group = group_jvm,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"Jvm 供应商", "en:Jvm Version"},
             info = {"Java 虚拟机供应商。", "en:JVM software vendor."})
     public String vmVendor;
 
     @ModelField(
             group = group_jvm,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"Jvm 版本", "en:Jvm Vendor"},
             info = {"Java 虚拟机版本。", "en:JVM software version."})
     public String vmVersion;
 
     @ModelField(
             group = group_jvm,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"Jvm 进程", "en:Jvm Process"},
             info = {"当前运行服务的操作系统PID。", "en:PID of the operating system currently running the service."})
     public String Name;
 
     @ModelField(
             group = group_jvm,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"启动时间", "en:Start Time"},
             info = {"Java 虚拟机的启动时间。", "en:The Java virtual machine startup time."})
     public String startTime;
 
     @ModelField(
             group = group_jvm,
-            monitor = true,
+            fieldType = FieldType.MONITOR,
             name = {"最大堆内存（MB）", "en:Heap Memory Max (MB)"},
             info = {"可使用的最大堆内存，单位MB。", "en:The maximum heap memory that can be used, in MB."})
     public Double heapCommitted;
 
     @ModelField(
             group = group_jvm,
-            monitor = true, numeric = true,
+            fieldType = FieldType.MONITOR, numeric = true,
             name = {"Jvm 线程总数", "en:Jvm Thread Count"},
             info = {"当前活动线程的数量，包括守护线程和非守护线程。", "en:The current number of live threads including both daemon and non-daemon threads."})
     public int threadCount;
 
     @ModelField(
             group = group_jvm,
-            monitor = true, numeric = true,
+            fieldType = FieldType.MONITOR, numeric = true,
             name = {"死锁线程数", "en:Deadlocked Threads"},
             info = {"死锁等待对象监视器或同步器的线程数。", "en:The number of threads deadlocked waiting for an object monitor or synchronizer."})
     public int deadlockedThreadCount;
 
     @ModelField(
             group = group_jvm,
-            monitor = true, numeric = true,
+            fieldType = FieldType.MONITOR, numeric = true,
             name = {"使用中堆内存（MB）", "en:Heap Memory Used (MB)"},
             info = {"正在使用的堆内存的大小，单位MB。", "en:The size of the heap memory in use, in MB."})
     public Double heapUsed;
 
     @ModelField(
             group = group_jvm,
-            monitor = true, numeric = true,
+            fieldType = FieldType.MONITOR, numeric = true,
             name = {"使用中非堆内存（MB）", "en:Non-Heap Memory Used (MB)"},
             info = {"正在使用的非堆内存的大小，单位MB。", "en:The size of the non-heap memory in use, in MB."})
     public Double nonHeapUsed;

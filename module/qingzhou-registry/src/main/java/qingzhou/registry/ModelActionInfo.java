@@ -13,6 +13,7 @@ public class ModelActionInfo {
     private String redirect;
     private String page;
     private String[] fields;
+    private String[] models;
 
     public Method getMethod() {
         return method;
@@ -92,5 +93,13 @@ public class ModelActionInfo {
 
     public void setFields(String[] fields) {
         this.fields = fields;
+    }
+
+    public String[] getModels() {
+        return models;
+    }
+
+    public void setModels(String[] models) {
+        this.models = models;
     }
 }

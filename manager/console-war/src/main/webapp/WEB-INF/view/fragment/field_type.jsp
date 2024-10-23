@@ -1,8 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-	FieldType fieldType = FieldType.valueOf(modelField.getType());
-	switch (fieldType) {
+	InputType inputType = modelField.getInputType();
+	switch (inputType) {
 		case text:
 %>
 <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>' <%=echoGroup%>
@@ -91,6 +91,6 @@
 <%
 			break;
 		default:
-			throw new IllegalStateException(modelField.getType() + ".jsp not found.");
+			throw new IllegalStateException(modelField.getInputType().name() + ".jsp not found.");
 	}
 %>
