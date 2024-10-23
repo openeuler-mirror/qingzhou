@@ -8,7 +8,7 @@
         <li class="droptarget" draggable="true">
             <table class="table table-bordered">
                 <tr>
-                    <td class="editable" style="padding:0 0 !important;"><label><%= val%>
+                    <td class="editable" style="padding:0 !important;"><label><%= val%>
                     </label></td>
                     <td class="narrow">
                         <a href="javascript:void(0);" class="editable-edit"
@@ -22,7 +22,9 @@
                         </a>
                     </td>
                     <td class="draggable narrow">
-                        <a href="javascript:void(0);" draggable="true"><i class="icon icon-arrows"></i></a>
+                        <a href="javascript:void(0);" draggable="true">
+                            <i class="icon icon-arrows"></i>
+                        </a>
                     </td>
                 </tr>
             </table>
