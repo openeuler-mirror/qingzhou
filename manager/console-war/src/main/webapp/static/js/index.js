@@ -1123,7 +1123,8 @@ function customAction(actionUrl, customActionId, title, restrictedArea) {
         content: html,
         btn: [getSetting("confirmBtnText"), getSetting("cancelBtnText")],
         yes: function () {
-            var formData = $('#' + customActionId).serializeArray();
+            //不知道为什么$('#' + customActionId)在某些特殊情况下拿不到元素
+            var formData = $(document.getElementById(customActionId)).serializeArray();
             const data = {};
             formData.forEach(item => {
                 data[item.name] = item.value;
