@@ -104,7 +104,7 @@
 							%>
 							<%=fieldInfo%>
 						</label>
-						<div class="col-sm-5">
+						<div class="col-sm-5" type="<%=modelField.getInputType().name()%>">
 							<%
 								if (readOnly) {
 							%>

@@ -595,6 +595,28 @@ function triggerAction(ele, condition) {
     }
 }
 
+function selectOption() {
+    var $option = $(this);
+    var $dropdown = $option.closest(".nice-select");
+    $(".selected", $dropdown).removeClass("selected");
+    $option.addClass("selected");
+
+    $("input[type='hidden']", $dropdown).val($option.attr("data-value"));
+    $("input[type='hidden']", $dropdown).attr("format", $option.attr("format"));
+    $("input[type='text']", $dropdown).attr("text", $option.text()).val($option.text());
+    $("input[type='hidden']", $dropdown).change();
+    if ($("span", $dropdown).length > 0) {
+        if ($.trim($option.text()) !== "") {
+            $("span", $dropdown).html($option.text());
+        } else {
+            $("span", $dropdown).html($option.attr("data-value"));
+        }
+        $dropdown.attr("title", $("span", $dropdown).html());
+    } else {
+        $dropdown.attr("title", $option.attr("data-value"));
+    }
+}
+
 /*下拉列表，可输入下拉列表：jQuery Nice Select - v1.1.0 (Made by Hernán Sartorio, https://github.com/hernansartorio/jquery-nice-select)*/
 function niceSelect() {
     /* Event listeners */
@@ -656,27 +678,7 @@ function niceSelect() {
     });
 
     // Option click
-    $(document).on("click.nice_select", ".nice-select .option:not(.disabled)", function (e) {
-        var $option = $(this);
-        var $dropdown = $option.closest(".nice-select");
-        $(".selected", $dropdown).removeClass("selected");
-        $option.addClass("selected");
-
-        $("input[type='hidden']", $dropdown).val($option.attr("data-value"));
-        $("input[type='hidden']", $dropdown).attr("format", $option.attr("format"));
-        $("input[type='text']", $dropdown).attr("text", $option.text()).val($option.text());
-        $("input[type='hidden']", $dropdown).change();
-        if ($("span", $dropdown).length > 0) {
-            if ($.trim($option.text()) !== "") {
-                $("span", $dropdown).html($option.text());
-            } else {
-                $("span", $dropdown).html($option.attr("data-value"));
-            }
-            $dropdown.attr("title", $("span", $dropdown).html());
-        } else {
-            $dropdown.attr("title", $option.attr("data-value"));
-        }
-    });
+    $(document).on("click.nice_select", ".nice-select .option:not(.disabled)", selectOption);
 
     // Keyboard events
     $(document).on("keydown.nice_select", ".nice-select", function (event) {
