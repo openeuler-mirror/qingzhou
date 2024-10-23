@@ -776,6 +776,6 @@ function batchOps(url, action, idField, idSeparator) {
 
 function filter_reset(subEle) {
     const form = $(subEle).parents('.filterForm')[0];
-    form.reset();
+    Array.from(form.elements).forEach(input => input.value = "");
     $(".filter_search", form).click();
 }

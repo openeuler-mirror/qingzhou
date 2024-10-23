@@ -33,7 +33,7 @@
         %>
         <div class="col-md-2 col-sm-3 col-xs-4 search-btn" style="margin-bottom: 16px;">
             <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0;">
-                <a class="btn" class="filter_search"
+                <a class="btn filter_search"
                    href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>">
                     <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter")%>
                 </a>
