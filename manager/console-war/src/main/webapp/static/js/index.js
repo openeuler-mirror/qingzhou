@@ -644,7 +644,16 @@ function bindEchoItemEvent() {
 function echoItem(thisForm, params, item, echoGroup) {
     var action = $(thisForm).attr("action");
     action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName") + "?$echoGroup=" + echoGroup;
-    $.post(action, params, function (data, textStatus, jqXHR) {
+    let bindNames = new Set();
+    $(thisForm).find('[echoGroup]').each(function () {
+        for (let group of echoGroup.split(",")) {
+            if ($(this).attr("echoGroup").split(",").includes(group)) {
+                bindNames.add($(this).attr("name"));
+            }
+        }
+    });
+    const submitValue = params.filter(item => bindNames.has(item.name));
+    $.post(action, submitValue, function (data) {
         if (data.success === "false") {
             $("#form-item-" + item + " > div", thisForm).attr("error-key", item).addClass("has-error");
             $("#form-item-" + item + " > div .tw-error-info", thisForm).html(data.msg !== "" ? data.msg : data.attachments[item]);
@@ -666,6 +675,12 @@ function updateFormData(thisForm, data) {
         const formItem = $("#form-item-" + key + " > div", thisForm);
         const type = formItem.attr("type")
         switch (type) {
+            case "bool":
+                const val = $("input[name='" + key + "']", formItem).val();
+                if (val !== value) {
+                    $("div.switch-btn", formItem).trigger("click");
+                }
+                break;
             case "checkbox":
             case "radio":
                 $(formItem).find("input[name='" + key + "']").each(function () {
@@ -688,6 +703,38 @@ function updateFormData(thisForm, data) {
                         $("input[name=" + key + "]", this).prop("checked", false);
                     }
                 });
+                break;
+            case "sortable":
+                $("input[name='" + key + "']", formItem).val(value);
+                $('ul.sortable li:not(:first)', formItem).remove();
+                const valArr = value.split(",");
+                const ulEl = $("ul.sortable", formItem);
+                const firstLi = ulEl.find('li:first');
+                for (let i = 0; i < valArr.length; i++) {
+                    if (i === 0) {
+                        $("td.editable label", firstLi).text(valArr[i]);
+                    } else {
+                        const clonedLi = firstLi.clone();
+                        $("td.editable label", clonedLi).text(valArr[i]);
+                        ulEl.append(clonedLi);
+                    }
+                }
+                break;
+            case "kv":
+                // $("input[name='" + key + "']", formItem).val(value);
+                $("tbody tr:not(:first,:last)", formItem).remove();
+                const alink = $("tbody tr:last td a", formItem);
+                const separator = $(formItem).children("div").attr("separator");
+                if (value !== null && value !== '') {
+                    const valArr = value.split(separator);
+                    for (let val of valArr) {
+                        const arr = val.split("=");
+                        addDictRow(alink, false, arr[0], arr[1]);
+                    }
+                }
+                break;
+            case "textarea":
+                $("textarea[name='" + key + "']", formItem).val(value);
                 break;
             default:
                 $("input[name='" + key + "']", formItem).val(value);
@@ -800,12 +847,12 @@ function dragable() {
 
 /**************************************** sortable.jsp - end *************************************************/
 /**************************************** kv.jsp - start *************************************************/
-function addDictRow(alink, readonly) {
+function addDictRow(alink, readonly, key, value) {
     if (!readonly) {
         var tr = $(alink).parent().parent();
         var html = "<tr>"
-            + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='' onchange=\"refreshDict()\" /></td>"
-            + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='' onchange=\"refreshDict()\" /></td>"
+        + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='" + (key ? key : '') + "' onchange=\"refreshDict()\" /></td>"
+        + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='" + (value ? value : "") + "' onchange=\"refreshDict()\" /></td>"
             + "<td class=\"narrow\"><a href=\"javascript:void(0);\" onclick=\"removeDictRow(this, false);\"><i class=\"icon icon-trash\"></i></a></td>"
             + "</tr>";
         $(tr).before(html);
