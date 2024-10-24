@@ -1,10 +1,6 @@
 package qingzhou.app;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MemoryDataStoreDemo {
     private final String idKey;
@@ -72,6 +68,7 @@ public class MemoryDataStoreDemo {
             String queryValue = e.getValue();
 
             String val = data.get(queryKey);
+            if (val == null) return false;
 
             String querySP = ",";
             if (queryValue.contains(querySP)) {

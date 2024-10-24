@@ -1,19 +1,6 @@
 package qingzhou.app.system.business;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import qingzhou.api.FieldType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.List;
@@ -30,6 +17,12 @@ import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 @Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
         menu = Main.Business, order = 2,
         name = {"实例", "en:Instance"},
@@ -39,6 +32,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
     private static final String ID_KEY = "name";
 
     @ModelField(
+            required = true,
             search = true,
             name = {"实例名称", "en:Instance Name"},
             info = {"表示该实例的名称，用于识别和管理该实例。",

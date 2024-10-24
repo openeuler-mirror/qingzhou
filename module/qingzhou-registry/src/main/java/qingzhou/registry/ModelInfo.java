@@ -1,17 +1,11 @@
 package qingzhou.registry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 import qingzhou.engine.util.Utils;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ModelInfo {
     private String code;
@@ -30,7 +24,7 @@ public class ModelInfo {
     private ModelActionInfo[] modelActionInfos;
     private ItemInfo[] groupInfos;
     private LinkedHashMap<String, ItemInfo[]> optionInfos;
-    private Map<String, String> filterValues;
+    private Map<String, String> defaultSearch;
     private boolean showIdField;
     private String[] staticOptionFields;
     private String[] dynamicOptionFields;
@@ -136,11 +130,11 @@ public class ModelInfo {
         return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.FORM).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }
 
-    public Map<String, String> getShowMap() {
+    public Map<String, String> getDisplayCondition() {
         Map<String, String> data = new HashMap<>();
         for (String field : getFormFieldNames()) {
             ModelFieldInfo modelFieldInfo = getModelFieldInfo(field);
-            String show = modelFieldInfo.getShow();
+            String show = modelFieldInfo.getDisplay();
             if (Utils.notBlank(show)) {
                 data.put(field, show);
             }
@@ -292,12 +286,12 @@ public class ModelInfo {
         this.showOrderNumber = showOrderNumber;
     }
 
-    public Map<String, String> getFilterValues() {
-        return filterValues;
+    public Map<String, String> getDefaultSearch() {
+        return defaultSearch;
     }
 
-    public void setFilterValues(Map<String, String> filterValues) {
-        this.filterValues = filterValues;
+    public void setDefaultSearch(Map<String, String> defaultSearch) {
+        this.defaultSearch = defaultSearch;
     }
 
     public boolean isShowIdField() {

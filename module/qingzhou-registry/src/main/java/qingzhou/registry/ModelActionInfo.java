@@ -12,8 +12,8 @@ public class ModelActionInfo {
     private String show;
     private String redirect;
     private String page;
-    private String[] fields;
-    private String[] models;
+    private String[] linkFields;
+    private String[] linkModels;
 
     public Method getMethod() {
         return method;
@@ -87,19 +87,19 @@ public class ModelActionInfo {
         this.icon = icon;
     }
 
-    public String[] getFields() {
-        return fields;
+    public String[] getLinkFields() {
+        return linkFields;
     }
 
-    public void setFields(String[] fields) {
-        this.fields = fields;
+    public void setLinkFields(String[] linkFields) {
+        this.linkFields = linkFields;
     }
 
-    public String[] getModels() {
-        return models;
+    public String[] getLinkModels() {
+        return linkModels;
     }
 
-    public void setModels(String[] models) {
-        this.models = models;
+    public void setLinkModels(String[] linkModels) {
+        this.linkModels = linkModels;
     }
 }

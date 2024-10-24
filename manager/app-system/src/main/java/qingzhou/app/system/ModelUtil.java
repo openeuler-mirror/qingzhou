@@ -1,20 +1,15 @@
 package qingzhou.app.system;
 
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.engine.util.Utils;
+
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.engine.util.Utils;
+import java.util.*;
 
 public class ModelUtil {
     private static final String STRING_PROPERTIES_SP = DeployerConstants.DEFAULT_DATA_SEPARATOR;
@@ -154,6 +149,7 @@ public class ModelUtil {
 
             Map<String, String> data = supplier.get();
             String val = data.get(queryField);
+            if (val == null) return false;
 
             String querySP = supplier.getFieldSeparator(queryField);
             if (queryValue.contains(querySP)) {

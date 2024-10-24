@@ -1,5 +1,10 @@
 package qingzhou.app.model;
 
+import qingzhou.api.*;
+import qingzhou.api.type.*;
+import qingzhou.app.ExampleMain;
+import qingzhou.engine.util.FileUtil;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -7,25 +12,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
-import qingzhou.app.ExampleMain;
-import qingzhou.engine.util.FileUtil;
-
 @Model(code = "filemanage", icon = "file", menu = ExampleMain.MENU_11, order = 4, name = {"文件管理", "en:File Manage"}, info = {"对系统中的文件进行管理。", "en:Manage files in the system."})
 public class FileManage extends ModelBase implements Add, Show, List, Delete, Download {
     public static final String FILE_BASEDIR = "files";
 
-    @ModelField(required = true, create = false, edit = false, name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
+    @ModelField(display = "false", name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
     public String id;
 
     @ModelField(inputType = InputType.file, required = true, list = true, name = {"上传文件", "en:Upload File"}, info = {"上传一个文件到服务器，文件须是 *.html类型的。", "en:Upload a file to the server of type *.html."})

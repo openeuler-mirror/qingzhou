@@ -119,7 +119,7 @@ public class User extends ModelBase implements General, Validate, Option {
     public Boolean changePwd = true;
 
     @ModelField(
-            create = false, edit = false,
+            display = "false",
             list = true, search = true,
             name = {"密码最后修改时间", "en:Password Last Modified"},
             info = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}
@@ -137,7 +137,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             list = true, search = true,
-            detail = true,
+            linkShow = true,
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;
@@ -357,7 +357,7 @@ public class User extends ModelBase implements General, Validate, Option {
         Map<String, String> errors = new HashMap<>();
         String password = request.getParameter("password");
 
-        boolean isAddOrUpdate = Boolean.parseBoolean(request.getNonModelParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER));
+        boolean isAddOrUpdate = Boolean.parseBoolean(request.getParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER));
         if (isAddOrUpdate) {
             String msg = checkPwd(password, request.getUser());
             if (msg != null) {

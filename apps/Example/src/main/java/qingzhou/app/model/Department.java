@@ -25,6 +25,7 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             inputType = InputType.radio,
+            required = true,
             list = true, search = true, echoGroup = {"aa"},
             name = {"上级部门", "en:Superior Department"},
             info = {"该部门所属的上级部门。",
@@ -40,6 +41,7 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             list = true, search = true,
+            echoGroup = {"cc"},
             color = {"AAAAA:Green",
                     "BBBBB:Gray"},
             name = {"联系电话", "en:Department Phone"},
@@ -85,7 +87,7 @@ public class Department extends AddModelBase implements Echo, Option {
             map.put("phone", superior + "&&&" + manager);
             map.put("emailSuffix", "@qq.com");
             map.put("manager", "lisa");
-            if (params.get("superior").equals("a") || params.get("superior").equals("c")) {
+            if ("a".equals(params.get("superior")) || "c".equals(params.get("superior"))) {
                 map.put("active", "false");
             } else {
                 map.put("active", "true");
@@ -94,6 +96,10 @@ public class Department extends AddModelBase implements Echo, Option {
         } else if (echoGroup.equals("bb")) {
             String manager = params.get("manager");
             map.put("phone", manager + "---");
+            map.put("buildDate", "");
+        } else if (echoGroup.equals("cc")) {
+            String manager = params.get("manager");
+            map.put("phone", manager + "cccccccc");
             map.put("buildDate", "");
         }
         return map;

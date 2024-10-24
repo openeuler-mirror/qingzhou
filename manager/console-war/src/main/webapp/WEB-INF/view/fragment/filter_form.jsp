@@ -13,19 +13,35 @@
         <div class='col-md-2 col-sm-3 col-xs-4 list-page-padding-bottom'>
             <div class="input-control">
                 <%
-                    String showHtml = request.getParameter(fieldName);
-                    if (showHtml == null) {
-                        Map<String, String> searchParameters = modelInfo.getFilterValues();
-                        if (searchParameters != null) {
-                            showHtml = searchParameters.get(fieldName);
+                    String echoGroup = "";
+                    String fieldValue = request.getParameter(fieldName);
+                    if (fieldValue == null) {
+                        Map<String, String> defaultSearch = modelInfo.getDefaultSearch();
+                        if (defaultSearch != null) {
+                            fieldValue = defaultSearch.get(fieldName);
                         }
                     }
-                    if (showHtml == null) {
-                        showHtml = "";
+                    if (fieldValue == null) {
+                        fieldValue = "";
+                    }
+                    ModelFieldInfo searchFieldInfo = modelInfo.getModelFieldInfo(fieldName);
+                    if (ValidationFilter.isSingleSelect(searchFieldInfo)) {
+                %>
+                <%@ include file="field_type/select.jsp" %>
+                <%
+                } else if (ValidationFilter.isMultipleSelect(searchFieldInfo)) {
+                    java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
+                %>
+                <%@ include file="field_type/multiselect.jsp" %>
+                <%
+                } else {
+                %>
+                <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
+                       class="form-control"
+                       placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>">
+                <%
                     }
                 %>
-                <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=showHtml%>' class="form-control"
-                       placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>">
             </div>
         </div>
         <%

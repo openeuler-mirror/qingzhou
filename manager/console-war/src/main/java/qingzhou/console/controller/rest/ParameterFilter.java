@@ -1,14 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import qingzhou.api.InputType;
 import qingzhou.api.type.Update;
 import qingzhou.console.SecurityController;
@@ -20,13 +11,14 @@ import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 public class ParameterFilter implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
 
-        // 先分离出表单参数
-        separateParameters(request);
         // 剔除前端不要的表单参数
         remove(request);
         // trim 有效的值
@@ -50,19 +42,17 @@ public class ParameterFilter implements Filter<RestContext> {
             String name = parameterNames.nextElement();
             ModelFieldInfo fieldInfo = request.getCachedModelInfo().getModelFieldInfo(name);
 
-            String show = fieldInfo.getShow();
-            if (Utils.notBlank(show)) {
-                if (!SecurityController.checkRule(show, request::getParameter, true)) {
+            String display = fieldInfo.getDisplay();
+            if (Utils.notBlank(display)) {
+                if (!SecurityController.checkRule(display, request::getParameter)) {
                     toRemove.add(name);
                 }
             }
 
             if (isUpdateAction) {
-                if (!fieldInfo.isEdit()) toRemove.add(name);
-
                 // readonly 要从后端数据校验，避免通过 rest api 绕过前端进入数据写入
                 if (Utils.notBlank(fieldInfo.getReadOnly())) {
-                    boolean isReadOnly = SecurityController.checkRule(fieldInfo.getReadOnly(), new RemoteFieldValueRetriever(request.getId(), request), true);
+                    boolean isReadOnly = SecurityController.checkRule(fieldInfo.getReadOnly(), new RemoteFieldValueRetriever(request.getId(), request));
                     if (isReadOnly) {
                         toRemove.add(name);
                     }
@@ -82,24 +72,6 @@ public class ParameterFilter implements Filter<RestContext> {
                 request.setParameter(name, val.trim());
             }
         }
-
-        Enumeration<String> nonModelParam = request.getNonModelParameterNames();
-        while (nonModelParam.hasMoreElements()) {
-            String name = nonModelParam.nextElement();
-            String val = request.getNonModelParameter(name);
-            if (val != null) {
-                request.setNonModelParameter(name, val.trim());
-            }
-        }
-    }
-
-    private void separateParameters(RequestImpl request) {
-        ModelInfo modelInfo = request.getCachedModelInfo();
-        List<String> toRemove = request.getParameters().keySet().stream().filter(param -> Arrays.stream(modelInfo.getFormFieldNames()).noneMatch(s -> s.equals(param))).collect(Collectors.toList());
-        toRemove.forEach(p -> {
-            String v = request.removeParameter(p);
-            request.setNonModelParameter(p, v);
-        });
     }
 
     private void datetime(RequestImpl request) {

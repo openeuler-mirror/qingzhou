@@ -14,14 +14,15 @@ public class ModelFieldInfo {
     private String separator;
     private transient Class<?> refModelClass;
     private String defaultValue;
+    private boolean show;
+    private boolean update;
     private boolean list;
     private int ignore;
     private boolean search;
-    private boolean detail;
+    private boolean linkShow;
     private int widthPercent;
     private boolean numeric;
-    private boolean create;
-    private boolean edit;
+    private String display;
     private boolean required;
     private long min;
     private long max;
@@ -32,9 +33,8 @@ public class ModelFieldInfo {
     private String[] forbid;
     private String[] skip;
     private String pattern;
-    private String show;
     private String readOnly;
-    private String link;
+    private String linkList;
     private String[] color;
     private String[] echoGroup;
 
@@ -97,6 +97,22 @@ public class ModelFieldInfo {
         this.defaultValue = defaultValue;
     }
 
+    public boolean isShow() {
+        return show;
+    }
+
+    public void setShow(boolean show) {
+        this.show = show;
+    }
+
+    public boolean isUpdate() {
+        return update;
+    }
+
+    public void setUpdate(boolean update) {
+        this.update = update;
+    }
+
     public boolean isList() {
         return list;
     }
@@ -121,12 +137,12 @@ public class ModelFieldInfo {
         this.search = search;
     }
 
-    public boolean isDetail() {
-        return detail;
+    public boolean isLinkShow() {
+        return linkShow;
     }
 
-    public void setDetail(boolean detail) {
-        this.detail = detail;
+    public void setLinkShow(boolean linkShow) {
+        this.linkShow = linkShow;
     }
 
     public int getWidthPercent() {
@@ -193,20 +209,12 @@ public class ModelFieldInfo {
         this.numeric = numeric;
     }
 
-    public boolean isCreate() {
-        return create;
+    public String getDisplay() {
+        return display;
     }
 
-    public void setCreate(boolean create) {
-        this.create = create;
-    }
-
-    public boolean isEdit() {
-        return edit;
-    }
-
-    public void setEdit(boolean edit) {
-        this.edit = edit;
+    public void setDisplay(String display) {
+        this.display = display;
     }
 
     public boolean isRequired() {
@@ -281,20 +289,12 @@ public class ModelFieldInfo {
         this.forbid = forbid;
     }
 
-    public String getShow() {
-        return show;
-    }
-
     public String getReadOnly() {
         return readOnly;
     }
 
     public void setReadOnly(String readOnly) {
         this.readOnly = readOnly;
-    }
-
-    public void setShow(String show) {
-        this.show = show;
     }
 
     public boolean isEmail() {
@@ -305,12 +305,12 @@ public class ModelFieldInfo {
         this.email = email;
     }
 
-    public String getLink() {
-        return link;
+    public String getLinkList() {
+        return linkList;
     }
 
-    public void setLink(String link) {
-        this.link = link;
+    public void setLinkList(String linkList) {
+        this.linkList = linkList;
     }
 
     public String[] getEchoGroup() {

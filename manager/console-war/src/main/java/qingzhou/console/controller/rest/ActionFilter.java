@@ -43,7 +43,7 @@ public class ActionFilter implements Filter<RestContext> {
         for (String id : checkIds) {
             if (Utils.isBlank(id)) continue;
 
-            if (SecurityController.checkRule(condition, new RemoteFieldValueRetriever(id, request), true)) continue;
+            if (SecurityController.checkRule(condition, new RemoteFieldValueRetriever(id, request))) continue;
 
             String i18n = I18n.getKeyI18n("action_not_show",
                     I18n.getModelI18n(request.getApp(), "model.action." + request.getModel() + "." + request.getAction()),
