@@ -7,6 +7,7 @@ import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.controller.rest.ValidationFilter;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -56,29 +57,45 @@ public class PageUtil {
         return response.encodeURL(url);
     }
 
+    public static String styleUpdateValue(String value, ModelFieldInfo fieldInfo, ModelInfo modelInfo) {
+        if (fieldInfo.getInputType().equals(InputType.bool)) {
+            ModelActionInfo modelActionInfo = modelInfo.getModelActionInfo(Update.ACTION_UPDATE);
+            //有编辑才能点击
+            String load = modelActionInfo == null ? "loaded=\"true\"" : "";
+            if (Boolean.parseBoolean(value)) {
+                return "<div class=\"switch-btn\" " + load + ">\n" +
+                        "    <div class=\"switchedge switch-bg\">\n" +
+                        "        <div class=\"circle switch-right\"></div>\n" +
+                        "    </div>\n" +
+                        "    <input type=\"hidden\" name=\"" + fieldInfo.getCode() + "\" value=\"true\">\n" +
+                        "</div>";
+            } else {
+                return "<div class=\"switch-btn\"" + load + ">\n" +
+                        "    <div class=\"switchedge\">\n" +
+                        "        <div class=\"circle\"></div>\n" +
+                        "    </div>\n" +
+                        "    <input type=\"hidden\" name=\"" + fieldInfo.getCode() + "\" value=\"false\">\n" +
+                        "</div>";
+            }
+        }
+
+        if (ValidationFilter.isSingleSelect(fieldInfo)) {
+            return null;// todo
+        }
+
+        if (ValidationFilter.isMultipleSelect(fieldInfo)) {
+            return null;// todo
+        }
+
+        return "<input type=\"text\" name=\"xxxx\">";// todo
+    }
+
     public static String styleFieldValue(String value, ModelFieldInfo fieldInfo, ModelInfo modelInfo) {
         if (Utils.isBlank(value)) return value;
 
         try {
-            if (fieldInfo.getInputType().equals(InputType.bool)) {
-                ModelActionInfo modelActionInfo = modelInfo.getModelActionInfo(Update.ACTION_UPDATE);
-                //有编辑才能点击
-                String load = modelActionInfo == null ? "loaded=\"true\"" : "";
-                if (Boolean.parseBoolean(value)) {
-                    return "<div class=\"switch-btn\" " + load + ">\n" +
-                            "    <div class=\"switchedge switch-bg\">\n" +
-                            "        <div class=\"circle switch-right\"></div>\n" +
-                            "    </div>\n" +
-                            "    <input type=\"hidden\" name=\"" + fieldInfo.getCode() + "\" value=\"true\">\n" +
-                            "</div>";
-                } else {
-                    return "<div class=\"switch-btn\"" + load + ">\n" +
-                            "    <div class=\"switchedge\">\n" +
-                            "        <div class=\"circle\"></div>\n" +
-                            "    </div>\n" +
-                            "    <input type=\"hidden\" name=\"" + fieldInfo.getCode() + "\" value=\"false\">\n" +
-                            "</div>";
-                }
+            if (fieldInfo.isUpdate()) {
+                return styleUpdateValue(value, fieldInfo, modelInfo);
             }
 
             String[] colorInfo = fieldInfo.getColor();
