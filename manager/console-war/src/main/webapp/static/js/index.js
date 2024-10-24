@@ -635,15 +635,15 @@ function bindEchoItemEvent() {
             e.preventDefault();
             var params = $("form[name='pageForm']").formToArray();
             if ($(this).attr("echoGroup") !== undefined && $(this).attr("echoGroup") !== "") {
-                echoItem($("form[name='pageForm']", getRestrictedArea()), params, $(this).attr("name"));
+                echoItem($("form[name='pageForm']", getRestrictedArea()), params, $(this).attr("name"), $(this).attr("echoGroup"));
             }
         });
     });
 }
 
-function echoItem(thisForm, params, item) {
+function echoItem(thisForm, params, item, echoGroup) {
     var action = $(thisForm).attr("action");
-    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName");
+    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName") + "?$echoGroup=" + echoGroup;
     $.post(action, params, function (data, textStatus, jqXHR) {
         if (data.success === "false") {
             $("#form-item-" + item + " > div", thisForm).attr("error-key", item).addClass("has-error");
@@ -651,18 +651,48 @@ function echoItem(thisForm, params, item) {
         } else {
             $("#form-item-" + item + " > div", thisForm).attr("error-key", item).removeClass("has-error");
             $("#form-item-" + item + " > div .tw-error-info", thisForm).html("");
-            $(thisForm).find('[name]').each(function () {
-                var result = data.data[0];
-                if (result !== null) {
-                    for (let key in result) {
-                        if (key === $(this).attr("name")) {
-                            $(this).val(result[key]);
-                        }
-                    }
-                }
-            });
+            var result = data.data[0];
+            if (result !== null) {
+                updateFormData(thisForm, result);
+            }
         }
     }, "json");
+}
+
+
+function updateFormData(thisForm, data) {
+    for (let key in data) {
+        const value = data[key];
+        const formItem = $("#form-item-" + key + " > div", thisForm);
+        const type = formItem.attr("type")
+        switch (type) {
+            case "checkbox":
+            case "radio":
+                $(formItem).find("input[name='" + key + "']").each(function () {
+                    if ($(this).attr("value") !== value) {
+                        $(this).attr("checked", false);
+                    } else {
+                        $(this).attr("checked", true);
+                    }
+                });
+                break;
+            case "select":
+                $("li[data-value='" + value + "']", formItem).each(selectOption);
+                break;
+            case "sortablecheckbox":
+                $("a", formItem).each(function () {
+                    const val = $("input[name=" + key + "]", this).attr("value");
+                    if (value.split(",").includes(val)){
+                        $("input[name=" + key + "]", this).prop("checked", true);
+                    } else {
+                        $("input[name=" + key + "]", this).prop("checked", false);
+                    }
+                });
+                break;
+            default:
+                $("input[name='" + key + "']", formItem).val(value);
+        }
+    }
 }
 
 /**************************************** form.jsp - end *************************************************/
