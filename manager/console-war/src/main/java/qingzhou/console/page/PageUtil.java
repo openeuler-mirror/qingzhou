@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
+import qingzhou.api.type.Update;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -20,12 +21,7 @@ import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ItemInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
 public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
@@ -68,6 +64,28 @@ public class PageUtil {
         if (Utils.isBlank(value)) return value;
 
         try {
+            ModelActionInfo modelActionInfo = modelInfo.getModelActionInfo(Update.ACTION_UPDATE);
+            //有编辑才能点击
+            String load = modelActionInfo == null ? "loaded=\"true\"" : "";
+            if (fieldInfo.getInputType().equals(InputType.bool)) {
+                if ("false".equals(value)) {
+                    return "<div class=\"switch-btn\"" + load + ">\n" +
+                            "    <div class=\"switchedge\">\n" +
+                            "        <div class=\"circle\"></div>\n" +
+                            "    </div>\n" +
+                            "    <input type=\"hidden\" field-id=\""+ modelInfo.getIdField() +"\"  name=\""+ fieldInfo.getCode() +"\"  value=\"false\">\n" +
+                            "</div>";
+                } else {
+                    return "<div class=\"switch-btn\" " + load + ">\n" +
+                            "    <div class=\"switchedge switch-bg\">\n" +
+                            "        <div class=\"circle switch-right\"></div>\n" +
+                            "    </div>\n" +
+                            "    <input type=\"hidden\" field-id=\""+ modelInfo.getIdField() +"\"  name=\""+ fieldInfo.getCode() +"\" value=\"true\">\n" +
+                            "</div>";
+                }
+            }
+
+
             String[] colorInfo = fieldInfo.getColor();
             if (colorInfo == null) return value;
 

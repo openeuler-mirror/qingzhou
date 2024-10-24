@@ -1043,6 +1043,33 @@ function bindEventForListPage() {
         }
         return false;
     });
+
+    $('table .switch-btn').each(function () {
+        $("input",$(this)).bind("change", function (e) {
+            let idStr = $(this).attr("field-id")
+            let fieldStr = $(this).attr("name")
+            let v = $(this).val()
+            let tempUrl = $(this).closest('tr').find('a[href*="edit"]').attr("href");
+            tempUrl = tempUrl.replace("html","json").replace("edit","update")
+            let lastSlashIndex = tempUrl.lastIndexOf('/');
+            let realUrl = tempUrl.substring(0, lastSlashIndex);
+            var part2 = tempUrl.substring(lastSlashIndex + 1);
+            let resData = {};
+            resData[fieldStr] = v;
+            $.ajax({
+                type: "POST",
+                url: realUrl+"?"+idStr+"="+part2,
+                data: resData,
+                success: function (data) {
+                    //刷新页面
+                    returnHref(realUrl.replace("json","html").replace("update","list"))
+                },
+                error: function (e) {
+                    handleError(e);
+                }
+            });
+        });
+    });
 };
 
 //返回列表页面
