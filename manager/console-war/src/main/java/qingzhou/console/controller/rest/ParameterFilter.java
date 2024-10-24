@@ -41,7 +41,9 @@ public class ParameterFilter implements Filter<RestContext> {
         while (parameterNames.hasMoreElements()) {
             String name = parameterNames.nextElement();
             ModelFieldInfo fieldInfo = request.getCachedModelInfo().getModelFieldInfo(name);
-
+            if (fieldInfo == null) {
+                continue;
+            }
             String display = fieldInfo.getDisplay();
             if (Utils.notBlank(display)) {
                 if (!SecurityController.checkRule(display, request::getParameter)) {
@@ -80,7 +82,7 @@ public class ParameterFilter implements Filter<RestContext> {
         while (parameterNames.hasMoreElements()) {
             String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-            if (modelField.getInputType() == InputType.datetime) {
+            if (modelField != null && modelField.getInputType() == InputType.datetime) {
                 try {
                     String val = request.getParameter(fieldName);
                     if (Utils.notBlank(val)) {
@@ -99,7 +101,7 @@ public class ParameterFilter implements Filter<RestContext> {
         while (parameterNames.hasMoreElements()) {
             String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-            if (modelField.getInputType() == InputType.password) {
+            if (modelField != null && modelField.getInputType() == InputType.password) {
                 try {
                     String val = request.getParameter(fieldName);
                     String result = SystemController.decryptWithConsolePrivateKey(val, false);
