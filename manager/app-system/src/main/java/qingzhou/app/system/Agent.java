@@ -98,8 +98,8 @@ public class Agent extends ModelBase implements Download {
             code = DeployerConstants.ACTION_DOWNLOAD_PAGE,
             name = {"", "en:"})
     public void downloadPage(Request request) throws IOException {
-        String app = request.getNonModelParameter(DeployerConstants.DOWNLOAD_PAGE_APP);
-        String dir = request.getNonModelParameter(DeployerConstants.DOWNLOAD_PAGE_DIR);
+        String app = request.getParameter(DeployerConstants.DOWNLOAD_PAGE_APP);
+        String dir = request.getParameter(DeployerConstants.DOWNLOAD_PAGE_DIR);
         File appPageDir = FileUtil.newFile(getAppsDir(), app, dir);
         if (appPageDir.exists()) {
             File zipFile = FileUtil.newFile(Main.getService(ModuleContext.class).getTemp(), dir + ".zip");
@@ -202,9 +202,9 @@ public class Agent extends ModelBase implements Download {
             code = DeployerConstants.ACTION_UPLOAD,
             name = {"", "en:"})
     public void uploadTempFile(Request request) throws IOException {
-        String fileId = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_ID);
-        String fileName = request.getNonModelParameter(DeployerConstants.UPLOAD_FILE_NAME);
-        String appName = request.getNonModelParameter(DeployerConstants.UPLOAD_APP_NAME);
+        String fileId = request.getParameter(DeployerConstants.UPLOAD_FILE_ID);
+        String fileName = request.getParameter(DeployerConstants.UPLOAD_FILE_NAME);
+        String appName = request.getParameter(DeployerConstants.UPLOAD_APP_NAME);
         byte[] fileBytes = ((RequestImpl) request).getByteParameter();
         App app = Main.getService(Deployer.class).getApp(appName);
         File file = FileUtil.newFile(app.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, fileId, fileName);

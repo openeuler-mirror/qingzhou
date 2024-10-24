@@ -1,15 +1,5 @@
 package qingzhou.console.page;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
 import qingzhou.api.type.Update;
@@ -22,6 +12,12 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
@@ -60,31 +56,30 @@ public class PageUtil {
         return response.encodeURL(url);
     }
 
-    public static String styleFieldValue(String value, ModelFieldInfo fieldInfo, String qzApp, ModelInfo modelInfo) {
+    public static String styleFieldValue(String value, ModelFieldInfo fieldInfo, ModelInfo modelInfo) {
         if (Utils.isBlank(value)) return value;
 
         try {
-            ModelActionInfo modelActionInfo = modelInfo.getModelActionInfo(Update.ACTION_UPDATE);
-            //有编辑才能点击
-            String load = modelActionInfo == null ? "loaded=\"true\"" : "";
             if (fieldInfo.getInputType().equals(InputType.bool)) {
-                if ("false".equals(value)) {
-                    return "<div class=\"switch-btn\"" + load + ">\n" +
-                            "    <div class=\"switchedge\">\n" +
-                            "        <div class=\"circle\"></div>\n" +
-                            "    </div>\n" +
-                            "    <input type=\"hidden\" field-id=\""+ modelInfo.getIdField() +"\"  name=\""+ fieldInfo.getCode() +"\"  value=\"false\">\n" +
-                            "</div>";
-                } else {
+                ModelActionInfo modelActionInfo = modelInfo.getModelActionInfo(Update.ACTION_UPDATE);
+                //有编辑才能点击
+                String load = modelActionInfo == null ? "loaded=\"true\"" : "";
+                if (Boolean.parseBoolean(value)) {
                     return "<div class=\"switch-btn\" " + load + ">\n" +
                             "    <div class=\"switchedge switch-bg\">\n" +
                             "        <div class=\"circle switch-right\"></div>\n" +
                             "    </div>\n" +
-                            "    <input type=\"hidden\" field-id=\""+ modelInfo.getIdField() +"\"  name=\""+ fieldInfo.getCode() +"\" value=\"true\">\n" +
+                            "    <input type=\"hidden\" name=\"" + fieldInfo.getCode() + "\" value=\"true\">\n" +
+                            "</div>";
+                } else {
+                    return "<div class=\"switch-btn\"" + load + ">\n" +
+                            "    <div class=\"switchedge\">\n" +
+                            "        <div class=\"circle\"></div>\n" +
+                            "    </div>\n" +
+                            "    <input type=\"hidden\" name=\"" + fieldInfo.getCode() + "\" value=\"false\">\n" +
                             "</div>";
                 }
             }
-
 
             String[] colorInfo = fieldInfo.getColor();
             if (colorInfo == null) return value;

@@ -386,6 +386,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setSeparator(modelField.separator());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setShow(modelField.show());
+            modelFieldInfo.setUpdate(modelField.update());
             modelFieldInfo.setList(modelField.list());
             modelFieldInfo.setIgnore(modelField.ignore());
             modelFieldInfo.setSearch(modelField.search());
@@ -393,7 +394,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setWidthPercent(modelField.widthPercent());
             modelFieldInfo.setFieldType(modelField.fieldType());
             modelFieldInfo.setNumeric(modelField.numeric());
-            modelFieldInfo.setEditable(modelField.editable());
+            modelFieldInfo.setDisplay(modelField.display());
             modelFieldInfo.setRequired(modelField.required());
             modelFieldInfo.setMin(modelField.min());
             modelFieldInfo.setMax(modelField.max());

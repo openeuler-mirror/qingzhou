@@ -22,7 +22,10 @@ import qingzhou.registry.ModelInfo;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -73,9 +76,7 @@ public class ValidationFilter implements Filter<RestContext> {
         boolean isAddAction = Add.ACTION_ADD.equals(request.getAction());
         boolean isUpdateAction = Update.ACTION_UPDATE.equals(request.getAction());
         if (isAddAction || isUpdateAction) {
-            Enumeration<String> parameterNames = request.getParameterNames();
-            while (parameterNames.hasMoreElements()) {
-                String field = parameterNames.nextElement();
+            for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
                 String parameterVal = request.getParameter(field);
                 ValidationContext vc = new ValidationContext(request, modelInfo, fieldInfo, parameterVal, isAddAction, isUpdateAction);
@@ -95,7 +96,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 RequestImpl tmp = new RequestImpl(context.request);
                 tmp.setActionName(Validate.ACTION_VALIDATE);
                 context.request.getParameters().forEach(tmp::setParameter);
-                tmp.setNonModelParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER, String.valueOf(isAddAction));
+                tmp.setParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER, String.valueOf(isAddAction));
                 Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
                 if (!tmpResp.isSuccess()) {
                     java.util.List<Map<String, String>> dataList = tmpResp.getDataList();
@@ -140,7 +141,7 @@ public class ValidationFilter implements Filter<RestContext> {
             }
 
             if (context.isAddAction) {
-                String editable = fieldInfo.getEditable();
+                String editable = fieldInfo.getDisplay();
                 if (Utils.notBlank(editable)) {
                     if (!SecurityController.checkRule(editable, context.request::getParameter)) {
                         return null;

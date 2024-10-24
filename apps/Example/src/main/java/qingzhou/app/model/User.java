@@ -1,17 +1,9 @@
 package qingzhou.app.model;
 
-import qingzhou.api.InputType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Echo;
 import qingzhou.api.*;
-import qingzhou.api.type.Delete;
+import qingzhou.api.type.Echo;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
-import qingzhou.api.type.Update;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
@@ -89,33 +81,35 @@ public class User extends AddModelBase implements Group, Option, Echo {
     public String kv;
 
     @ModelField(
-            inputType = InputType.sortablecheckbox, edit = false,
+            inputType = InputType.sortablecheckbox,
+            display = "id!=",
             separator = "#",
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
-            inputType = InputType.sortablecheckbox, create = false,
+            inputType = InputType.sortablecheckbox,
+            display = "false",
             separator = "#",
             name = {"项目3", "en:3"})
     public String subjects3;
 
     @ModelField(
-            edit = false,
+            display = "id!=",
             name = {"创建后不可编辑", "en:"})
     public String noEdit;
 
     @ModelField(
             inputType = InputType.textarea,
             list = true, search = true,
-            link = "department.email",
+            display = "department.email",
             skip = {">", "("},
             name = {"备注", "en:Notes"})
     public String notes = "只读控制";
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            fields = {"name", "notes", "gender", "a", "b"},
+            linkFields = {"name", "notes", "gender", "a", "b"},
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
@@ -124,7 +118,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @Override
     public String[] listActions() {
-        return new String[]{"test","edit"};
+        return new String[]{"test", "edit"};
     }
 
     @Override

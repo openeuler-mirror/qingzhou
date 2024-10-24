@@ -16,7 +16,7 @@ import java.util.Map;
 public class FileManage extends ModelBase implements Add, Show, List, Delete, Download {
     public static final String FILE_BASEDIR = "files";
 
-    @ModelField(editable = "false", name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
+    @ModelField(display = "false", name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
     public String id;
 
     @ModelField(inputType = InputType.file, required = true, list = true, name = {"上传文件", "en:Upload File"}, info = {"上传一个文件到服务器，文件须是 *.html类型的。", "en:Upload a file to the server of type *.html."})

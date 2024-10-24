@@ -1,5 +1,6 @@
 package qingzhou.console.controller.rest;
 
+import qingzhou.api.Response;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.*;
 import qingzhou.engine.util.FileUtil;
@@ -11,6 +12,7 @@ import qingzhou.registry.ModelActionInfo;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public class PageFilter implements Filter<RestContext> {
     @Override
@@ -37,12 +39,14 @@ public class PageFilter implements Filter<RestContext> {
         fileReq.setAppName(DeployerConstants.APP_SYSTEM);
         fileReq.setModelName(DeployerConstants.MODEL_AGENT);
         fileReq.setActionName(DeployerConstants.ACTION_DOWNLOAD_PAGE);
-        fileReq.setNonModelParameter(DeployerConstants.DOWNLOAD_PAGE_APP, targetAppName);
+        fileReq.setParameter(DeployerConstants.DOWNLOAD_PAGE_APP, targetAppName);
         String pageRootDirName = getPageRootDirName(actionPage);
-        fileReq.setNonModelParameter(DeployerConstants.DOWNLOAD_PAGE_DIR, pageRootDirName);
+        fileReq.setParameter(DeployerConstants.DOWNLOAD_PAGE_DIR, pageRootDirName);
 
-        ResponseImpl res = (ResponseImpl) SystemController.getService(ActionInvoker.class)
-                .invokeOnInstances(fileReq, SystemController.getAppInstances(targetAppName).get(0)).get(0);
+        Map<String, Response> invokeOnInstances = SystemController.getService(ActionInvoker.class)
+                .invokeOnInstances(fileReq, SystemController.getAppInstances(targetAppName).get(0));
+        Response next = invokeOnInstances.values().iterator().next();
+        ResponseImpl res = (ResponseImpl) next;
         if (res.isSuccess() && res.getBodyBytes() != null) {
             File tempFile = FileUtil.newFile(appPageCacheDir, pageRootDirName + ".zip");
             try {

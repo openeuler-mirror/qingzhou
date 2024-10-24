@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 class DefaultAction {
     static final java.util.List<ModelActionInfo> allDefaultActionCache;
@@ -55,15 +56,10 @@ class DefaultAction {
 
         Map<String, Map<String, String>> echoParameters = new LinkedHashMap<>();
         Enumeration<String> parameterNames = request.getParameterNames();
-        String[] echoGroup = request.getNonModelParameter("$echoGroup").split(",");
-
         while (parameterNames.hasMoreElements()) {
             String p = parameterNames.nextElement();
             String[] fieldEchoGroup = modelInfo.getModelFieldInfo(p).getEchoGroup();
             for (String group : fieldEchoGroup) {
-                if (!Utils.contains(echoGroup, group)) {
-                    continue;
-                }
                 Map<String, String> groupParameters = echoParameters.computeIfAbsent(group, k -> new LinkedHashMap<>());
                 groupParameters.put(p, request.getParameter(p));
             }
@@ -139,7 +135,7 @@ class DefaultAction {
         ResponseImpl responseImpl = (ResponseImpl) request.getResponse();
         int pageNum = 1;
         try {
-            pageNum = Integer.parseInt(request.getNonModelParameter("pageNum"));
+            pageNum = Integer.parseInt(request.getParameter("pageNum"));
         } catch (NumberFormatException ignored) {
         }
         List list = (List) instance;
@@ -191,8 +187,15 @@ class DefaultAction {
     public void add(Request request) throws Exception {
         Map<String, String> properties = ((RequestImpl) request).getParameters();
         if (request.getResponse().isSuccess()) {
+            cleanParameters(properties, request);
             ((Add) instance).addData(properties);
         }
+    }
+
+    private void cleanParameters(Map<String, String> params, Request request) {
+        ModelInfo modelInfo = getAppInfo().getModelInfo(request.getModel());
+        java.util.List<String> toRemove = params.keySet().stream().filter(param -> Arrays.stream(modelInfo.getFormFieldNames()).noneMatch(s -> s.equals(param))).collect(Collectors.toList());
+        toRemove.forEach(params::remove);
     }
 
     @ModelAction(
@@ -212,6 +215,7 @@ class DefaultAction {
     public void update(Request request) throws Exception {
         Map<String, String> properties = ((RequestImpl) request).getParameters();
         if (request.getResponse().isSuccess()) {
+            cleanParameters(properties, request);
             ((Update) instance).updateData(properties);
         }
     }
@@ -314,9 +318,9 @@ class DefaultAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 
-        String downloadKey = request.getNonModelParameter(DeployerConstants.DOWNLOAD_SERIAL_KEY);
+        String downloadKey = request.getParameter(DeployerConstants.DOWNLOAD_SERIAL_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
-            String downloadFileNames = request.getNonModelParameter(DeployerConstants.DOWNLOAD_FILE_NAMES);
+            String downloadFileNames = request.getParameter(DeployerConstants.DOWNLOAD_FILE_NAMES);
 
             // check
             if (downloadFileNames == null || downloadFileNames.trim().isEmpty()) {
@@ -436,7 +440,7 @@ class DefaultAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
         long offset = 0;
-        String downloadOffsetParameter = request.getNonModelParameter(DeployerConstants.DOWNLOAD_OFFSET);
+        String downloadOffsetParameter = request.getParameter(DeployerConstants.DOWNLOAD_OFFSET);
         if (downloadOffsetParameter != null && !downloadOffsetParameter.trim().isEmpty()) {
             offset = Long.parseLong(downloadOffsetParameter.trim());
         }

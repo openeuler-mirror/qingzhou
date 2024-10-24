@@ -15,13 +15,14 @@ public class ModelFieldInfo {
     private transient Class<?> refModelClass;
     private String defaultValue;
     private boolean show;
+    private boolean update;
     private boolean list;
     private int ignore;
     private boolean search;
     private boolean linkShow;
     private int widthPercent;
     private boolean numeric;
-    private String editable;
+    private String display;
     private boolean required;
     private long min;
     private long max;
@@ -102,6 +103,14 @@ public class ModelFieldInfo {
 
     public void setShow(boolean show) {
         this.show = show;
+    }
+
+    public boolean isUpdate() {
+        return update;
+    }
+
+    public void setUpdate(boolean update) {
+        this.update = update;
     }
 
     public boolean isList() {
@@ -200,12 +209,12 @@ public class ModelFieldInfo {
         this.numeric = numeric;
     }
 
-    public String getEditable() {
-        return editable;
+    public String getDisplay() {
+        return display;
     }
 
-    public void setEditable(String editable) {
-        this.editable = editable;
+    public void setDisplay(String display) {
+        this.display = display;
     }
 
     public boolean isRequired() {

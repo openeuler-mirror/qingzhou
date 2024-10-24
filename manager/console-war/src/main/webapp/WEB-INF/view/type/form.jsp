@@ -14,7 +14,7 @@
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
     <form name="pageForm" method="post" class="form-horizontal"
-          action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "?"+ idField +"=" + encodedId: ""))%>">
+          action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
         <div style="padding-top: 24px; padding-bottom: 1px;">
             <%
                 java.util.List<Map<String, String>> models = qzResponse.getDataList();
@@ -82,62 +82,62 @@
                                 echoGroup = "echoGroup='" + echoGroups + "'";
                             }
 
-							String fieldValue = modelData.get(fieldName);
-							if (fieldValue == null) {
-								fieldValue = "";
-							}
-							java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
-					%>
-					<div class="form-group" id="form-item-<%=fieldName%>">
-						<label for="<%=fieldName%>" class="col-sm-4">
-							<%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
-							<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
-							<%
-								String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
-								if (fieldInfo != null) {
-									// 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
-									fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
-								} else {
-									fieldInfo = "";
-								}
-							%>
-							<%=fieldInfo%>
-						</label>
-						<div class="col-sm-5" type="<%=modelField.getInputType().name()%>">
-							<%
-								if (readOnly) {
-							%>
-							<input type="text" disabled="true" name="<%=fieldName%>"
-								   value='<%=fieldValue%>' <%=echoGroup%>
-								   class="form-control"/>
-							<%
-							} else {
-							%>
-							<%@ include file="../fragment/field_type.jsp" %>
-							<%
-								}
-							%>
-							<label class="tw-error-info"></label>
-						</div>
-					</div>
-					<%
-						}
-					%>
-				</div>
-				<%
-					}
-				%>
-			</div>
-		</div>
-		<div style="margin-top: 15px; height: 64px; text-align: center;">
-			<div class="form-btn">
-				<%
-					if (SecurityController.isActionPermitted(qzApp, qzModel, submitActionName, currentUser)) {
-				%>
-				<input type="submit" class="btn"
-					   value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
-				<%
-					}
+                            String fieldValue = modelData.get(fieldName);
+                            if (fieldValue == null) {
+                                fieldValue = "";
+                            }
+                            java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
+                    %>
+                    <div class="form-group" id="form-item-<%=fieldName%>">
+                        <label for="<%=fieldName%>" class="col-sm-4">
+                            <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
+                            <%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
+                            <%
+                                String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
+                                if (fieldInfo != null) {
+                                    // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
+                                    fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
+                                } else {
+                                    fieldInfo = "";
+                                }
+                            %>
+                            <%=fieldInfo%>
+                        </label>
+                        <div class="col-sm-5" type="<%=modelField.getInputType().name()%>">
+                            <%
+                                if (readOnly) {
+                            %>
+                            <input type="text" disabled="disabled" name="<%=fieldName%>"
+                                   value='<%=fieldValue%>' <%=echoGroup%>
+                                   class="form-control"/>
+                            <%
+                            } else {
+                            %>
+                            <%@ include file="../fragment/field_type.jsp" %>
+                            <%
+                                }
+                            %>
+                            <label class="tw-error-info"></label>
+                        </div>
+                    </div>
+                    <%
+                        }
+                    %>
+                </div>
+                <%
+                    }
+                %>
+            </div>
+        </div>
+        <div style="margin-top: 15px; height: 64px; text-align: center;">
+            <div class="form-btn">
+                <%
+                    if (SecurityController.isActionPermitted(qzApp, qzModel, submitActionName, currentUser)) {
+                %>
+                <input type="submit" class="btn"
+                       value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
+                <%
+                    }
 
                     for (String formAction : formActions) {
 
@@ -185,20 +185,20 @@
 
         <%
             // added by yuanwc for: ModelField 注解 show()
-            StringBuilder editableCondition = new StringBuilder();
-            editableCondition.append("{");
+            StringBuilder displayCondition = new StringBuilder();
+            displayCondition.append("{");
             boolean isFirst = true;
-            for (Map.Entry<String, String> entry : modelInfo.getEditableCondition().entrySet()) {
-                if (!isFirst) editableCondition.append(",");
+            for (Map.Entry<String, String> entry : modelInfo.getDisplayCondition().entrySet()) {
+                if (!isFirst) displayCondition.append(",");
                 isFirst = false;
 
-                editableCondition.append("\"").append(entry.getKey()).append("\":")
+                displayCondition.append("\"").append(entry.getKey()).append("\":")
                         .append("\"").append(entry.getValue().replaceAll("\\&\\&", "&").replaceAll("\\|\\|", "|")).append("\"");
             }
-            editableCondition.append("}");
+            displayCondition.append("}");
         %>
         <textarea name="showCondition" rows="3" disabled="disabled"
-                  style="display:none;"><%=editableCondition.toString()%></textarea>
+                  style="display:none;"><%=displayCondition.toString()%></textarea>
 
         <%
             StringBuilder pwdFields = new StringBuilder();

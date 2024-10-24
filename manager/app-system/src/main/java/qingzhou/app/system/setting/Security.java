@@ -62,7 +62,7 @@ public class Security extends ModelBase implements Update {
 
     @ModelField(
             inputType = InputType.textarea,
-            editable = "false",
+            display = "false",
             lengthMax = 1000,
             name = {"加密公钥", "en:Public Key"},
             info = {"为了能够管理远端的实例，需要将此密钥在远端的实例进行保存。此外，客户端通过 REST、JMX 等接口管理轻舟实例时，也需要使用此密钥对敏感数据进行加密后再传输。",

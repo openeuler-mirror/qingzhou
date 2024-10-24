@@ -1,16 +1,11 @@
 package qingzhou.deployer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import qingzhou.api.Lang;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.registry.ModelInfo;
+
+import java.util.*;
 
 public class RequestImpl implements Request {
     private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
@@ -27,7 +22,6 @@ public class RequestImpl implements Request {
     private String userName;
     private Lang lang;
     private byte[] byteParameter; // 发送上传的附件到远程实例上
-    private final Map<String, String> nonModelParameters = new HashMap<>();
     private final Map<String, String> parameters = new HashMap<>();
     private final Map<String, String> parametersInSession = new HashMap<>();
 
@@ -76,18 +70,8 @@ public class RequestImpl implements Request {
         return batchId;
     }
 
-    @Override
-    public Enumeration<String> getNonModelParameterNames() {
-        return Collections.enumeration(nonModelParameters.keySet());
-    }
-
     public void setBatchId(String[] batchId) {
         this.batchId = batchId;
-    }
-
-    @Override
-    public String getNonModelParameter(String name) {
-        return nonModelParameters.get(name);
     }
 
     @Override
@@ -170,10 +154,6 @@ public class RequestImpl implements Request {
 
     public String removeParameter(String parameterName) {
         return parameters.remove(parameterName);
-    }
-
-    public void setNonModelParameter(String parameterName, String parameterValue) {
-        nonModelParameters.put(parameterName, parameterValue);
     }
 
     public void setParameter(String parameterName, String parameterValue) {

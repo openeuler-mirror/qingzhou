@@ -130,11 +130,11 @@ public class ModelInfo {
         return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.FORM).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }
 
-    public Map<String, String> getEditableCondition() {
+    public Map<String, String> getDisplayCondition() {
         Map<String, String> data = new HashMap<>();
         for (String field : getFormFieldNames()) {
             ModelFieldInfo modelFieldInfo = getModelFieldInfo(field);
-            String show = modelFieldInfo.getEditable();
+            String show = modelFieldInfo.getDisplay();
             if (Utils.notBlank(show)) {
                 data.put(field, show);
             }

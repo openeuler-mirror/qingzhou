@@ -59,7 +59,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     public Boolean upload = false;
 
     @ModelField(
-            editable = "upload=false",
+            display = "upload=false",
             required = true,
             file = true,
             name = {"文件位置", "en:Path"},
@@ -68,7 +68,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     public String path;
 
     @ModelField(
-            editable = "upload=true",
+            display = "upload=true",
             inputType = InputType.file,
             required = true,
             name = {"上传文件", "en:File"},

@@ -211,11 +211,11 @@
                    class="dataid tooltips"
                    record-action-id="<%=Show.ACTION_SHOW%>"
                    style="color:#4C638F;">
-                    <%=PageUtil.styleFieldValue(value, fieldInfo, qzApp, modelInfo)%>
+                    <%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
                 </a>
                 <%
                     } else {
-                        out.print(PageUtil.styleFieldValue(value, fieldInfo, qzApp, modelInfo));
+                        out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
                     }
                 } else {
                     String refModelName = null;
@@ -238,11 +238,11 @@
                    class="dataid tooltips" record-action-id="<%=qingzhou.api.type.List.ACTION_LIST%>"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
                    style="color:#4C638F;">
-                    <%=PageUtil.styleFieldValue(value, fieldInfo, qzApp, modelInfo)%>
+                    <%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
                 </a>
                 <%
                         } else {
-                            out.print(PageUtil.styleFieldValue(value, fieldInfo, qzApp, modelInfo));
+                            out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
                         }
                     }
                 %>

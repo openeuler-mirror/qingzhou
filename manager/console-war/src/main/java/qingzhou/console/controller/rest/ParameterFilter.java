@@ -13,15 +13,12 @@ import qingzhou.registry.ModelInfo;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ParameterFilter implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
 
-        // 先分离出表单参数
-        separateParameters(request);
         // 剔除前端不要的表单参数
         remove(request);
         // trim 有效的值
@@ -45,9 +42,9 @@ public class ParameterFilter implements Filter<RestContext> {
             String name = parameterNames.nextElement();
             ModelFieldInfo fieldInfo = request.getCachedModelInfo().getModelFieldInfo(name);
 
-            String create = fieldInfo.getEditable();
-            if (Utils.notBlank(create)) {
-                if (!SecurityController.checkRule(create, request::getParameter)) {
+            String display = fieldInfo.getDisplay();
+            if (Utils.notBlank(display)) {
+                if (!SecurityController.checkRule(display, request::getParameter)) {
                     toRemove.add(name);
                 }
             }
@@ -75,24 +72,6 @@ public class ParameterFilter implements Filter<RestContext> {
                 request.setParameter(name, val.trim());
             }
         }
-
-        Enumeration<String> nonModelParam = request.getNonModelParameterNames();
-        while (nonModelParam.hasMoreElements()) {
-            String name = nonModelParam.nextElement();
-            String val = request.getNonModelParameter(name);
-            if (val != null) {
-                request.setNonModelParameter(name, val.trim());
-            }
-        }
-    }
-
-    private void separateParameters(RequestImpl request) {
-        ModelInfo modelInfo = request.getCachedModelInfo();
-        List<String> toRemove = request.getParameters().keySet().stream().filter(param -> Arrays.stream(modelInfo.getFormFieldNames()).noneMatch(s -> s.equals(param))).collect(Collectors.toList());
-        toRemove.forEach(p -> {
-            String v = request.removeParameter(p);
-            request.setNonModelParameter(p, v);
-        });
     }
 
     private void datetime(RequestImpl request) {

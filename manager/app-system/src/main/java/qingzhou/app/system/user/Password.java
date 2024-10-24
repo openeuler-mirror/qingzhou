@@ -1,16 +1,6 @@
 package qingzhou.app.system.user;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
@@ -22,6 +12,11 @@ import qingzhou.crypto.TotpCipher;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         hidden = true,
@@ -40,7 +35,7 @@ public class Password extends ModelBase implements Update, Export {
     public Boolean changePwd;
 
     @ModelField(
-            editable = "changePwd=true",
+            display = "changePwd=true",
             inputType = InputType.password,
             required = true,
             name = {"原始密码", "en:Original Password"},
@@ -48,7 +43,7 @@ public class Password extends ModelBase implements Update, Export {
     public String originalPassword;
 
     @ModelField(
-            editable = "changePwd=true",
+            display = "changePwd=true",
             inputType = InputType.password,
             required = true,
             name = {"新密码", "en:New Password"},
@@ -56,7 +51,7 @@ public class Password extends ModelBase implements Update, Export {
     public String newPassword;
 
     @ModelField(
-            editable = "changePwd=true",
+            display = "changePwd=true",
             inputType = InputType.password,
             required = true,
             name = {"确认密码", "en:Confirm Password"},
@@ -118,7 +113,7 @@ public class Password extends ModelBase implements Update, Export {
             info = {"验证并刷新动态密码。", "en:Verify and refresh the OTP."})
     public void confirmKey(Request request) throws Exception {
         boolean result = false;
-        String reqCode = request.getNonModelParameter("otp");
+        String reqCode = request.getParameter("otp");
         if (Utils.notBlank(reqCode)) {
             String keyForOtp = request.getParameterInSession(KEY_IN_SESSION_FLAG);
             TotpCipher totpCipher = getAppContext().getService(CryptoService.class).getTotpCipher();

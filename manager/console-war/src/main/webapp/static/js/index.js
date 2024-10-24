@@ -549,7 +549,7 @@ function bindEchoItemEvent() {
 
 function echoItem(thisForm, params, item, echoGroup) {
     var action = $(thisForm).attr("action");
-    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName") + "?$echoGroup=" + echoGroup;
+    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName");
     let bindNames = new Set();
     $(thisForm).find('[echoGroup]').each(function () {
         for (let group of echoGroup.split(",")) {
@@ -603,7 +603,7 @@ function updateFormData(thisForm, data) {
             case "sortablecheckbox":
                 $("a", formItem).each(function () {
                     const val = $("input[name=" + key + "]", this).attr("value");
-                    if (value.split(",").includes(val)){
+                    if (value.split(",").includes(val)) {
                         $("input[name=" + key + "]", this).prop("checked", true);
                     } else {
                         $("input[name=" + key + "]", this).prop("checked", false);
@@ -757,8 +757,8 @@ function addDictRow(alink, readonly, key, value) {
     if (!readonly) {
         var tr = $(alink).parent().parent();
         var html = "<tr>"
-        + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='" + (key ? key : '') + "' onchange=\"refreshDict()\" /></td>"
-        + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='" + (value ? value : "") + "' onchange=\"refreshDict()\" /></td>"
+            + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='" + (key ? key : '') + "' onchange=\"refreshDict()\" /></td>"
+            + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='" + (value ? value : "") + "' onchange=\"refreshDict()\" /></td>"
             + "<td class=\"narrow\"><a href=\"javascript:void(0);\" onclick=\"removeDictRow(this, false);\"><i class=\"icon icon-trash\"></i></a></td>"
             + "</tr>";
         $(tr).before(html);
@@ -856,21 +856,21 @@ function bindEventForListPage() {
             qz.bindFill(".search-btn a:not(div.tab-container .search-btn a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
             // 列表页表格顶部操作按钮
             qz.bindFill(".tools-group a:not(div.tab-container .tools-group a)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
-            
+
             // 分页(页码及上一页、下一页、首页、尾页等)
             qz.bindFill("ul.pager.pager-loose a:not(div.tab-container ul.pager.pager-loose a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
-            
+
             // 列表页表格单元格操作
             qz.bindFill("table a.dataid:not(div.tab-container table a.dataid)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
             // 列表页表格单元格操作(查看)
             var selector = "table a[record-action-id='" + getSetting("showAction") + "']";
             qz.bindFill(selector + ":not(div.tab-container " + selector + ")", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
-            
+
             // 列表页表格操作列(监视)
             qz.bindFill("a.tw-action-link[action-name='monitor']:not(div.tab-container a.tw-action-link)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
             // 列表页表格操作列(启动、停止)
             qz.bindFill("a.tw-action-link[action-name='stop']:not(div.tab-container a.tw-action-link), a.tw-action-link[action-name='start']:not(div.tab-container a.tw-action-link)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
-            
+
             // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
             qz.bindFill("a.tw-action-link:not(div.tab-container a.tw-action-link)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
         } else {
@@ -878,20 +878,20 @@ function bindEventForListPage() {
             qz.bindFill(".search-btn a", ".main-body", false, false, restrictedArea, null);
             // 列表页表格顶部操作按钮
             qz.bindFill(".tools-group a", ".bodyDiv", false, false, restrictedArea, null);
-            
+
             // 分页(页码及上一页、下一页、首页、尾页等)
             qz.bindFill("ul.pager.pager-loose a", ".main-body", false, false, restrictedArea, null);
-            
+
             // 列表页表格单元格操作
             qz.bindFill("table a.dataid", ".bodyDiv", false, false, restrictedArea, null);
             // 列表页表格单元格操作(查看)
             qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);
-            
+
             // 列表页表格操作列(监视)
             qz.bindFill("a.tw-action-link[action-name='monitor']", ".bodyDiv", false, false, restrictedArea, null);
             // 列表页表格操作列(启动、停止)
             qz.bindFill("a.tw-action-link[action-name='stop'], a.tw-action-link[action-name='start']", ".bodyDiv", false, false, restrictedArea, null);
-            
+
             // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
             qz.bindFill("a.tw-action-link", ".main-body", false, false, restrictedArea, null);
         }
@@ -951,24 +951,20 @@ function bindEventForListPage() {
     });
 
     $('table .switch-btn').each(function () {
-        $("input",$(this)).bind("change", function (e) {
-            let idStr = $(this).attr("field-id")
+        $("input", $(this)).bind("change", function (e) {
             let fieldStr = $(this).attr("name")
             let v = $(this).val()
             let tempUrl = $(this).closest('tr').find('a[href*="edit"]').attr("href");
-            tempUrl = tempUrl.replace("html","json").replace("edit","update")
-            let lastSlashIndex = tempUrl.lastIndexOf('/');
-            let realUrl = tempUrl.substring(0, lastSlashIndex);
-            var part2 = tempUrl.substring(lastSlashIndex + 1);
+            tempUrl = tempUrl.replace("html", "json").replace("edit", "update")
             let resData = {};
             resData[fieldStr] = v;
             $.ajax({
                 type: "POST",
-                url: realUrl+"?"+idStr+"="+part2,
+                url: tempUrl,
                 data: resData,
                 success: function (data) {
                     //刷新页面
-                    returnHref(realUrl.replace("json","html").replace("update","list"))
+                    returnHref(tempUrl.replace("json", "html").replace("update", "list"))
                 },
                 error: function (e) {
                     handleError(e);
@@ -976,10 +972,10 @@ function bindEventForListPage() {
             });
         });
     });
-};
+}
 
 //返回列表页面
-function returnHref(href){
+function returnHref(href) {
     $(".content-box li.active a[href='" + href + "']").click()
 }
 

@@ -44,7 +44,7 @@ public class AddModelBase extends ModelBase implements General {
 
     @Override
     public void updateData(Map<String, String> data) {
-        testData.updateData(data.get(idField()), data);
+        testData.updateData(getAppContext().getCurrentRequest().getId(), data);
         ExampleMain.logger.info("updateData:" + data);
     }
 

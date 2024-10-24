@@ -34,7 +34,7 @@ public @interface ModelField {
 
     InputType inputType() default InputType.text; // 字段的显示类型
 
-    String editable() default ""; // 允许指定值
+    String display() default ""; // 允许指定值
 
     String readOnly() default ""; // 表单元素级联控制只读的事件绑定
 
@@ -69,6 +69,8 @@ public @interface ModelField {
     String[] echoGroup() default {};
 
     // 列表类型的相关信息
+
+    boolean update() default false; // 支持直接在列表上进行编辑
 
     boolean show() default true; // 是否显示在列表中。
 
