@@ -1,5 +1,12 @@
 package qingzhou.app.model;
 
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Echo;
 import qingzhou.api.*;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.Group;
@@ -8,12 +15,16 @@ import qingzhou.api.type.Update;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 
 @Model(code = "user", icon = "user",
         menu = ExampleMain.MENU_1, order = 1,
         name = {"用户", "en:User management"},
         info = {"用户管理", "en:User management."})
-public class User extends AddModelBase implements Group, Option {
+public class User extends AddModelBase implements Group, Option, Echo {
     @ModelField(
             group = "base",
             required = true,
@@ -31,7 +42,7 @@ public class User extends AddModelBase implements Group, Option {
 
     @ModelField(
             group = "base",
-            inputType = InputType.select,
+            inputType = InputType.select, echoGroup = "aa",
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
     public String gender;
@@ -78,35 +89,33 @@ public class User extends AddModelBase implements Group, Option {
     public String kv;
 
     @ModelField(
-            inputType = InputType.sortablecheckbox,
-            editable = "id!=",
+            inputType = InputType.sortablecheckbox, edit = false,
             separator = "#",
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
-            inputType = InputType.sortablecheckbox,
-            editable = "false",
+            inputType = InputType.sortablecheckbox, create = false,
             separator = "#",
             name = {"项目3", "en:3"})
     public String subjects3;
 
     @ModelField(
-            editable = "id!=",
+            edit = false,
             name = {"创建后不可编辑", "en:"})
     public String noEdit;
 
     @ModelField(
             inputType = InputType.textarea,
-            list = true, search = true, readOnly = "true",
-            linkList = "department.email",
+            list = true, search = true,
+            link = "department.email",
             skip = {">", "("},
             name = {"备注", "en:Notes"})
     public String notes = "只读控制";
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            linkFields = {"name", "notes", "gender", "a", "b"},
+            fields = {"name", "notes", "gender", "a", "b"},
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
@@ -115,7 +124,7 @@ public class User extends AddModelBase implements Group, Option {
 
     @Override
     public String[] listActions() {
-        return new String[]{Update.ACTION_EDIT, "test", Delete.ACTION_DELETE};
+        return new String[]{"test","edit"};
     }
 
     @Override
@@ -134,7 +143,7 @@ public class User extends AddModelBase implements Group, Option {
 
     @Override
     public String[] staticOptionFields() {
-        return new String[]{"gender"};
+        return new String[]{"gender", "checkbox"};
     }
 
     @Override
@@ -150,6 +159,10 @@ public class User extends AddModelBase implements Group, Option {
                         Item.of("0", new String[]{"男", "en:man"}),
                         Item.of("1", new String[]{"女", "en:woman"})
                 };
+            case "checkbox":
+                return Item.of(new String[]{
+                        "java", "python", "js"
+                });
             case "subjects2":
                 return new Item[]{
                         Item.of("1", new String[]{"一", "en:One"}),
@@ -161,7 +174,6 @@ public class User extends AddModelBase implements Group, Option {
             case "position": // 没有设置静态和动态选项字段，无效代码
                 return Item.of(new String[]{"a", "b", "c"});
         }
-
         return null;
     }
 
@@ -171,5 +183,32 @@ public class User extends AddModelBase implements Group, Option {
                 Item.of("base", new String[]{"基本信息", "en:Base"}),
                 Item.of("org", new String[]{"组织关系", "en:Org"})
         };
+    }
+
+    @Override
+    public Map<String, String> echoData(String echoGroup, Map<String, String> params) {
+        if (echoGroup.equals("aa")) {
+            Map<String, String> map = new HashMap<>();
+            if (params.get("gender").equals("0")) {
+                map.put("position", "001");
+                map.put("department", "一部");
+                map.put("subjects1", "123," + params.get("gender"));
+                map.put("checkbox", "python");
+                map.put("subjects2", "3,2");
+                map.put("kv", "a=123@b=addf");
+            } else {
+                map.put("position", "002");
+                map.put("department", "二部");
+                map.put("subjects1", params.get("gender"));
+                map.put("checkbox", "js");
+                map.put("subjects2", "1,2");
+                map.put("kv", "hello=world@lang=");
+            }
+            map.put("notes", params.get("gender"));
+
+            return map;
+        } else {
+            return Collections.emptyMap();
+        }
     }
 }

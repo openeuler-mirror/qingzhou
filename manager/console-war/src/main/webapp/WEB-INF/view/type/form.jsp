@@ -82,62 +82,62 @@
                                 echoGroup = "echoGroup='" + echoGroups + "'";
                             }
 
-                            String fieldValue = modelData.get(fieldName);
-                            if (fieldValue == null) {
-                                fieldValue = "";
-                            }
-                            java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
-                    %>
-                    <div class="form-group" id="form-item-<%=fieldName%>">
-                        <label for="<%=fieldName%>" class="col-sm-4">
-                            <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
-                            <%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
-                            <%
-                                String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
-                                if (fieldInfo != null) {
-                                    // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
-                                    fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
-                                } else {
-                                    fieldInfo = "";
-                                }
-                            %>
-                            <%=fieldInfo%>
-                        </label>
-                        <div class="col-sm-5">
-                            <%
-                                if (readOnly) {
-                            %>
-                            <input type="text" disabled name="<%=fieldName%>"
-                                   value='<%=fieldValue%>' <%=echoGroup%>
-                                   class="form-control"/>
-                            <%
-                            } else {
-                            %>
-                            <%@ include file="../fragment/field_type.jsp" %>
-                            <%
-                                }
-                            %>
-                            <label class="tw-error-info"></label>
-                        </div>
-                    </div>
-                    <%
-                        }
-                    %>
-                </div>
-                <%
-                    }
-                %>
-            </div>
-        </div>
-        <div style="margin-top: 15px; height: 64px; text-align: center;">
-            <div class="form-btn">
-                <%
-                    if (SecurityController.isActionPermitted(qzApp, qzModel, submitActionName, currentUser)) {
-                %>
-                <input type="submit" class="btn"
-                       value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
-                <%
-                    }
+							String fieldValue = modelData.get(fieldName);
+							if (fieldValue == null) {
+								fieldValue = "";
+							}
+							java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
+					%>
+					<div class="form-group" id="form-item-<%=fieldName%>">
+						<label for="<%=fieldName%>" class="col-sm-4">
+							<%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
+							<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
+							<%
+								String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
+								if (fieldInfo != null) {
+									// 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
+									fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
+								} else {
+									fieldInfo = "";
+								}
+							%>
+							<%=fieldInfo%>
+						</label>
+						<div class="col-sm-5" type="<%=modelField.getInputType().name()%>">
+							<%
+								if (readOnly) {
+							%>
+							<input type="text" disabled="true" name="<%=fieldName%>"
+								   value='<%=fieldValue%>' <%=echoGroup%>
+								   class="form-control"/>
+							<%
+							} else {
+							%>
+							<%@ include file="../fragment/field_type.jsp" %>
+							<%
+								}
+							%>
+							<label class="tw-error-info"></label>
+						</div>
+					</div>
+					<%
+						}
+					%>
+				</div>
+				<%
+					}
+				%>
+			</div>
+		</div>
+		<div style="margin-top: 15px; height: 64px; text-align: center;">
+			<div class="form-btn">
+				<%
+					if (SecurityController.isActionPermitted(qzApp, qzModel, submitActionName, currentUser)) {
+				%>
+				<input type="submit" class="btn"
+					   value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
+				<%
+					}
 
                     for (String formAction : formActions) {
 

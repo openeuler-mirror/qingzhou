@@ -55,10 +55,15 @@ class DefaultAction {
 
         Map<String, Map<String, String>> echoParameters = new LinkedHashMap<>();
         Enumeration<String> parameterNames = request.getParameterNames();
+        String[] echoGroup = request.getNonModelParameter("$echoGroup").split(",");
+
         while (parameterNames.hasMoreElements()) {
             String p = parameterNames.nextElement();
             String[] fieldEchoGroup = modelInfo.getModelFieldInfo(p).getEchoGroup();
             for (String group : fieldEchoGroup) {
+                if (!Utils.contains(echoGroup, group)) {
+                    continue;
+                }
                 Map<String, String> groupParameters = echoParameters.computeIfAbsent(group, k -> new LinkedHashMap<>());
                 groupParameters.put(p, request.getParameter(p));
             }

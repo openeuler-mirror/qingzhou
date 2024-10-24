@@ -1,10 +1,8 @@
 package qingzhou.app.model;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Item;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
-import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
@@ -12,7 +10,7 @@ import qingzhou.app.ExampleMain;
         menu = ExampleMain.MENU_11, order = 1,
         name = {"岗位", "en:Post"},
         info = {"岗位管理。", "en:Post management."})
-public class Post extends AddModelBase implements Option {
+public class Post extends AddModelBase {
 
     @ModelField(
             required = true,
@@ -30,10 +28,8 @@ public class Post extends AddModelBase implements Option {
     public String name;
 
     @ModelField(
-            inputType = InputType.radio,
-            color = {"yes:Green", "no:Red"},
+            inputType = InputType.bool,
             list = true, search = true,
-            widthPercent = 20,
             name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
@@ -55,24 +51,4 @@ public class Post extends AddModelBase implements Option {
         return false;
     }
 
-    @Override
-    public String[] staticOptionFields() {
-        return null;
-    }
-
-    @Override
-    public String[] dynamicOptionFields() {
-        return new String[]{"postStatus"};
-    }
-
-    @Override
-    public Item[] optionData(String fieldName) {
-        if (fieldName.equals("postStatus")) {
-            return new Item[]{
-                    Item.of("yes", new String[]{"正常", "en:Normal"}),
-                    Item.of("no", new String[]{"停用", "en:Deactivated"}),
-            };
-        }
-        return null;
-    }
 }

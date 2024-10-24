@@ -541,34 +541,111 @@ function bindEchoItemEvent() {
             e.preventDefault();
             var params = $("form[name='pageForm']").formToArray();
             if ($(this).attr("echoGroup") !== undefined && $(this).attr("echoGroup") !== "") {
-                echoItem($("form[name='pageForm']", getRestrictedArea()), params, $(this).attr("name"));
+                echoItem($("form[name='pageForm']", getRestrictedArea()), params, $(this).attr("name"), $(this).attr("echoGroup"));
             }
         });
     });
 }
 
-function echoItem(thisForm, params, item) {
+function echoItem(thisForm, params, item, echoGroup) {
     var action = $(thisForm).attr("action");
-    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName");
-    $.post(action, params, function (data, textStatus, jqXHR) {
+    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName") + "?$echoGroup=" + echoGroup;
+    let bindNames = new Set();
+    $(thisForm).find('[echoGroup]').each(function () {
+        for (let group of echoGroup.split(",")) {
+            if ($(this).attr("echoGroup").split(",").includes(group)) {
+                bindNames.add($(this).attr("name"));
+            }
+        }
+    });
+    const submitValue = params.filter(item => bindNames.has(item.name));
+    $.post(action, submitValue, function (data) {
         if (data.success === "false") {
             $("#form-item-" + item + " > div", thisForm).attr("error-key", item).addClass("has-error");
             $("#form-item-" + item + " > div .tw-error-info", thisForm).html(data.msg !== "" ? data.msg : data.attachments[item]);
         } else {
             $("#form-item-" + item + " > div", thisForm).attr("error-key", item).removeClass("has-error");
             $("#form-item-" + item + " > div .tw-error-info", thisForm).html("");
-            $(thisForm).find('[name]').each(function () {
-                var result = data.data[0];
-                if (result !== null) {
-                    for (let key in result) {
-                        if (key === $(this).attr("name")) {
-                            $(this).val(result[key]);
-                        }
-                    }
-                }
-            });
+            var result = data.data[0];
+            if (result !== null) {
+                updateFormData(thisForm, result);
+            }
         }
     }, "json");
+}
+
+
+function updateFormData(thisForm, data) {
+    for (let key in data) {
+        const value = data[key];
+        const formItem = $("#form-item-" + key + " > div", thisForm);
+        const type = formItem.attr("type")
+        switch (type) {
+            case "bool":
+                const val = $("input[name='" + key + "']", formItem).val();
+                if (val !== value) {
+                    $("div.switch-btn", formItem).trigger("click");
+                }
+                break;
+            case "checkbox":
+            case "radio":
+                $(formItem).find("input[name='" + key + "']").each(function () {
+                    if ($(this).attr("value") !== value) {
+                        $(this).attr("checked", false);
+                    } else {
+                        $(this).attr("checked", true);
+                    }
+                });
+                break;
+            case "select":
+                $("li[data-value='" + value + "']", formItem).each(selectOption);
+                break;
+            case "sortablecheckbox":
+                $("a", formItem).each(function () {
+                    const val = $("input[name=" + key + "]", this).attr("value");
+                    if (value.split(",").includes(val)){
+                        $("input[name=" + key + "]", this).prop("checked", true);
+                    } else {
+                        $("input[name=" + key + "]", this).prop("checked", false);
+                    }
+                });
+                break;
+            case "sortable":
+                $("input[name='" + key + "']", formItem).val(value);
+                $('ul.sortable li:not(:first)', formItem).remove();
+                const valArr = value.split(",");
+                const ulEl = $("ul.sortable", formItem);
+                const firstLi = ulEl.find('li:first');
+                for (let i = 0; i < valArr.length; i++) {
+                    if (i === 0) {
+                        $("td.editable label", firstLi).text(valArr[i]);
+                    } else {
+                        const clonedLi = firstLi.clone();
+                        $("td.editable label", clonedLi).text(valArr[i]);
+                        ulEl.append(clonedLi);
+                    }
+                }
+                break;
+            case "kv":
+                // $("input[name='" + key + "']", formItem).val(value);
+                $("tbody tr:not(:first,:last)", formItem).remove();
+                const alink = $("tbody tr:last td a", formItem);
+                const separator = $(formItem).children("div").attr("separator");
+                if (value !== null && value !== '') {
+                    const valArr = value.split(separator);
+                    for (let val of valArr) {
+                        const arr = val.split("=");
+                        addDictRow(alink, false, arr[0], arr[1]);
+                    }
+                }
+                break;
+            case "textarea":
+                $("textarea[name='" + key + "']", formItem).val(value);
+                break;
+            default:
+                $("input[name='" + key + "']", formItem).val(value);
+        }
+    }
 }
 
 /**************************************** form.jsp - end *************************************************/
@@ -676,12 +753,12 @@ function dragable() {
 
 /**************************************** sortable.jsp - end *************************************************/
 /**************************************** kv.jsp - start *************************************************/
-function addDictRow(alink, readonly) {
+function addDictRow(alink, readonly, key, value) {
     if (!readonly) {
         var tr = $(alink).parent().parent();
         var html = "<tr>"
-            + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='' onchange=\"refreshDict()\" /></td>"
-            + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='' onchange=\"refreshDict()\" /></td>"
+        + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='" + (key ? key : '') + "' onchange=\"refreshDict()\" /></td>"
+        + "<td class=\"edit-kv\" style=\"padding:0px 0px !important;\"><input type=\"text\" class=\"form-control\" value='" + (value ? value : "") + "' onchange=\"refreshDict()\" /></td>"
             + "<td class=\"narrow\"><a href=\"javascript:void(0);\" onclick=\"removeDictRow(this, false);\"><i class=\"icon icon-trash\"></i></a></td>"
             + "</tr>";
         $(tr).before(html);
@@ -871,6 +948,33 @@ function bindEventForListPage() {
             customAction($(this).attr("href"), $(this).attr("custom-action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"));
         }
         return false;
+    });
+
+    $('table .switch-btn').each(function () {
+        $("input",$(this)).bind("change", function (e) {
+            let idStr = $(this).attr("field-id")
+            let fieldStr = $(this).attr("name")
+            let v = $(this).val()
+            let tempUrl = $(this).closest('tr').find('a[href*="edit"]').attr("href");
+            tempUrl = tempUrl.replace("html","json").replace("edit","update")
+            let lastSlashIndex = tempUrl.lastIndexOf('/');
+            let realUrl = tempUrl.substring(0, lastSlashIndex);
+            var part2 = tempUrl.substring(lastSlashIndex + 1);
+            let resData = {};
+            resData[fieldStr] = v;
+            $.ajax({
+                type: "POST",
+                url: realUrl+"?"+idStr+"="+part2,
+                data: resData,
+                success: function (data) {
+                    //刷新页面
+                    returnHref(realUrl.replace("json","html").replace("update","list"))
+                },
+                error: function (e) {
+                    handleError(e);
+                }
+            });
+        });
     });
 };
 

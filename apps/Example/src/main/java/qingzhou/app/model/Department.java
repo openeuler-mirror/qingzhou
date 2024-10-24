@@ -54,6 +54,21 @@ public class Department extends AddModelBase implements Echo, Option {
     public String email;
 
     @ModelField(
+            inputType = InputType.select,
+            list = true, search = true,
+            name = {"邮箱后缀", "en:Email Suffix"},
+            info = {"邮箱后缀。", "en:Email Suffix."})
+    public String emailSuffix;
+
+    @ModelField(
+            inputType = InputType.bool,
+            list = true, search = true,
+            color = {"true:Green", "false:Gray"},
+            name = {"启用", "en:Active"},
+            info = {"。", "en:."})
+    public Boolean active = true;
+
+    @ModelField(
             inputType = InputType.datetime,
             list = true, search = true,
             name = {"建立日期", "en:Date"}
@@ -68,9 +83,18 @@ public class Department extends AddModelBase implements Echo, Option {
             String manager = params.get("manager");
             map.put("email", superior + "===" + manager);
             map.put("phone", superior + "&&&" + manager);
+            map.put("emailSuffix", "@qq.com");
+            map.put("manager", "lisa");
+            if (params.get("superior").equals("a") || params.get("superior").equals("c")) {
+                map.put("active", "false");
+            } else {
+                map.put("active", "true");
+            }
+            map.put("buildDate", "2024-10-24 14:39:24");
         } else if (echoGroup.equals("bb")) {
             String manager = params.get("manager");
             map.put("phone", manager + "---");
+            map.put("buildDate", "");
         }
         return map;
     }
@@ -78,7 +102,7 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @Override
     public String[] staticOptionFields() {
-        return new String[]{"manager"};
+        return new String[]{"manager", "emailSuffix"};
     }
 
     @Override
@@ -92,6 +116,8 @@ public class Department extends AddModelBase implements Echo, Option {
             return Item.of(new String[]{"a", "b", "c", "d", "e"});
         } else if (fieldName.equals("manager")) {
             return Item.of(new String[]{"jack", "lisa", "tom"});
+        } else if (fieldName.equals("emailSuffix")) {
+            return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com"});
         }
         return new Item[0];
     }
