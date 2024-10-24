@@ -103,7 +103,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             inputType = InputType.textarea,
-            list = true, search = true, readOnly = "true",
+            list = true, search = true,
             link = "department.email",
             skip = {">", "("},
             name = {"备注", "en:Notes"})
@@ -191,12 +191,14 @@ public class User extends AddModelBase implements Group, Option, Echo {
                 map.put("subjects1", "123," + params.get("gender"));
                 map.put("checkbox", "python");
                 map.put("subjects2", "3,2");
+                map.put("kv", "a=123@b=addf");
             } else {
                 map.put("position", "002");
                 map.put("department", "二部");
                 map.put("subjects1", params.get("gender"));
                 map.put("checkbox", "js");
                 map.put("subjects2", "1,2");
+                map.put("kv", "hello=world@lang=");
             }
             map.put("notes", params.get("gender"));
 

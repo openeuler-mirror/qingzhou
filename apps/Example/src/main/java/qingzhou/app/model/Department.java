@@ -33,7 +33,7 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             inputType = InputType.checkbox,
-            list = true, search = true, echoGroup = {"bb"},
+            list = true, search = true, echoGroup = {"aa", "bb"},
             name = {"负责人", "en:Department Manager"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
     public String manager;
@@ -90,9 +90,11 @@ public class Department extends AddModelBase implements Echo, Option {
             } else {
                 map.put("active", "true");
             }
+            map.put("buildDate", "2024-10-24 14:39:24");
         } else if (echoGroup.equals("bb")) {
             String manager = params.get("manager");
             map.put("phone", manager + "---");
+            map.put("buildDate", "");
         }
         return map;
     }
