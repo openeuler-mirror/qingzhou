@@ -1,7 +1,7 @@
 package qingzhou.engine.impl;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.regex.Matcher;
@@ -23,7 +23,7 @@ class RunningControl implements Process {
     public void exec() throws Exception {
         // 实例不可重复启动，因为端口和 temp 文件都会冲突
         running = FileUtil.newFile(engineContext.getInstanceDir(), "temp", "running");
-        if (running.exists() && checkService()) {
+        if (checkService()) {
             throw new IllegalStateException("Qingzhou is already starting");
         }
 
@@ -37,36 +37,52 @@ class RunningControl implements Process {
     }
 
     private boolean checkService() {
-        return checkConnect()&&checkTmp();
+        return checkPort()&&checkTmp();
     }
 
-    private boolean checkConnect() {
+    private boolean checkPort() {
         try {
-            File cfg = FileUtil.newFile(engineContext.getInstanceDir(), "conf", "qingzhou.json");
-            String jsonConfig = FileUtil.fileToString(cfg);
-            // 改进后的正则表达式，匹配整个 console 配置段落
-            String regex = "\"module\":\\s*\\{\\s*\"console\":\\s*\\{\\s*\"enabled\":\\s*\"(.*?)\",\\s*\"port\":\\s*\"(\\d+)\"";
+            String jsonConfig=FileUtil.fileToString(FileUtil.newFile(engineContext.getInstanceDir(),"conf","qingzhou.json"));
+            String regex = "\"port\":\\s*\"(\\d+)\"";
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(jsonConfig);
+            String port="9000";
 
             if (matcher.find()) {
                 //String enabled = matcher.group(1); // 获取 enabled 的值
-                String port = matcher.group(2); // 获取 port 的值
-                //System.out.println("Enabled: " + enabled);
-                System.out.println("current port ==" + port);
-                String url = "http://localhost:9000/console";
-                boolean isConnected = checkConnection(url);
-                //System.out.println("连接成功: " + isConnected);
-                return isConnected;
+                port = matcher.group(1); // 获取 port 的值
             } else {
                 System.out.println("未找到相关配置");
-                return false;
             }
-        }
-        catch (IOException e) {
+                URL url = new URL("http://localhost:"+port+"/console");
+
+                // 打开连接
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+                // 设置请求方法为GET
+                connection.setRequestMethod("GET");
+
+                // 设置连接超时时间和读取超时时间（单位：毫秒）
+                connection.setConnectTimeout(1000); // 5秒
+                connection.setReadTimeout(1000); // 5秒
+
+            connection.disconnect();
+            int responseCode = connection.getResponseCode();
+
+                // 如果响应码是200（HTTP_OK），则表示连接成功
+                if (responseCode == 200) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        catch (ConnectException e){
             return false;
         }
-        //return false;
+        catch (IOException e){
+            e.printStackTrace();
+            return false;
+        }
     }
     private boolean checkTmp(){
         //检查当前是否存在临时文件
@@ -75,21 +91,7 @@ class RunningControl implements Process {
         //System.out.println(temp.exists());
         //System.out.println(temp);
         return temp.exists();}
-    private static boolean checkConnection(String urlString) {
-        try {
-            URL url = new URL(urlString);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(2000); // 设置连接超时时间
-            connection.setReadTimeout(2000);    // 设置读取超时时间
 
-            int responseCode = connection.getResponseCode();
-            return (responseCode == HttpURLConnection.HTTP_OK); // 判断是否为200 OK
-        } catch (IOException e) {
-            //e.printStackTrace();
-            return false; // 连接失败
-        }
-    }
 
 
 
