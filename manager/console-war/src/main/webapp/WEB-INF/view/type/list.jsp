@@ -138,7 +138,7 @@
                         width = 100 / (listFields.length + otherTh);
                     }
             %>
-            <th style="width: <%=width%> <%=ifHideStyle%>"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
+            <th style="width: <%=width%>% <%=ifHideStyle%>"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
             </th>
             <%
                 }
@@ -192,6 +192,11 @@
                     if (value == null) {
                         value = "";
                     }
+                    //兼容表单组件 例：bool.jsp中使用的是fieldValue和fieldName
+                    String fieldValue = value;
+                    java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(fieldInfo.getSeparator()));
+                    String fieldName = field;
+                    String echoGroup = "";
             %>
             <td style="<%=hideStyle%>">
                 <%
@@ -216,6 +221,29 @@
                 <%
                     } else {
                         out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
+                    }
+                } else if (fieldInfo.isUpdate()) {
+                    switch (fieldInfo.getInputType()){
+                        case bool:
+                %>
+                <%@ include file="../fragment/field_type/bool.jsp" %>
+                <%
+                            break;
+                        case select:
+                %>
+                <%@ include file="../fragment/field_type/select.jsp" %>
+                <%
+                            break;
+                        case multiselect:
+                %>
+                <%@ include file="../fragment/field_type/multiselect.jsp" %>
+                <%
+                            break;
+                        default:
+                %>
+                <%
+                            out.print("<div class=\"input-class\"> <input type=\"text\" name=\""+ fieldName +"\" value=\""+ fieldValue +"\" class=\"form-control\"></div>");
+                            break;
                     }
                 } else {
                     String refModelName = null;

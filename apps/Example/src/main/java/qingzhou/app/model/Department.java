@@ -57,6 +57,7 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             inputType = InputType.select,
+            update = true,
             list = true, search = true,
             name = {"邮箱后缀", "en:Email Suffix"},
             info = {"邮箱后缀。", "en:Email Suffix."})
