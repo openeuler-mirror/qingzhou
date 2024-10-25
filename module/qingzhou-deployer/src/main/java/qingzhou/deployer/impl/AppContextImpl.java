@@ -103,16 +103,6 @@ class AppContextImpl implements AppContext {
     }
 
     @Override
-    public String getModel(ModelBase modelBase) {
-        for (Map.Entry<String, ModelBase> e : app.getModelBaseMap().entrySet()) {
-            if (e.getValue() == modelBase) {
-                return e.getKey();
-            }
-        }
-        return null;
-    }
-
-    @Override
     public String getPlatformVersion() {
         return moduleContext.getPlatformVersion();
     }

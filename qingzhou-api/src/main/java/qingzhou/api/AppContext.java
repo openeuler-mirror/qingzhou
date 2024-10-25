@@ -60,10 +60,5 @@ public interface AppContext {
 
     void callDefaultAction(Request request) throws Exception;
 
-    /**
-     * 获取此 ModelBase 的模块名，即 qingzhou.api.Model#code() 标注值
-     */
-    String getModel(ModelBase modelBase);
-
     String getPlatformVersion();
 }

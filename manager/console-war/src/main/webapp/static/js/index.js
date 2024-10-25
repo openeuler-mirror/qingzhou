@@ -485,17 +485,12 @@ function bindFormEvent() {
                     for (var i = 0; i < passwordFields.length; i++) {
                         $("input[name='" + passwordFields[i] + "']", thisForm).val($("input[name='" + passwordFields[i] + "']", thisForm).attr("originVal"));
                     }
-                    var first = true;
-                    if (data.data && !$.isEmptyObject(data.data)) {
-                        var errorData = data.data[0];
+                    if (data.data) {
+                        var errorData = data.data;
                         for (var key in errorData) {
                             $("#form-item-" + key + " > div", thisForm).attr("error-key", key).addClass("has-error");
                             if ($(".nav.nav-tabs", thisForm).length < 1) {
                                 $("#form-item-" + key + " > div .tw-error-info", thisForm).html(errorData[key]);
-                                if (first) {
-                                    first = false;
-                                    //$("html, body").animate({scrollTop: $("#form-item-" + key, thisForm).offset().top - 100}, 500);
-                                }
                             }
                         }
                         $(".nav.nav-tabs > li", thisForm).each(function (i) {
@@ -562,11 +557,11 @@ function echoItem(thisForm, params, item, echoGroup) {
     $.post(action, submitValue, function (data) {
         if (data.success === "false") {
             $("#form-item-" + item + " > div", thisForm).attr("error-key", item).addClass("has-error");
-            $("#form-item-" + item + " > div .tw-error-info", thisForm).html(data.msg !== "" ? data.msg : data.attachments[item]);
+            $("#form-item-" + item + " > div .tw-error-info", thisForm).html(data.message !== "" ? data.message : data.attachments[item]);
         } else {
             $("#form-item-" + item + " > div", thisForm).attr("error-key", item).removeClass("has-error");
             $("#form-item-" + item + " > div .tw-error-info", thisForm).html("");
-            var result = data.data[0];
+            var result = data.data;
             if (result !== null) {
                 updateFormData(thisForm, result);
             }
@@ -1054,11 +1049,11 @@ function downloadFiles(fileListUrl, downloadUrl) {
         success: function (data) {
             var randId = new Date().getTime();
             var html = "<form id='downloadForm-" + randId + "' action='' method='post'>";
-            if (data.data && !$.isEmptyObject(data.data)) {
+            if (data.data) {
                 var keys = [];
                 var groups = {};
                 var defGroup = "defaultGroup-" + randId;
-                var attachmentData = data.data[0];
+                var attachmentData = data.data;
                 for (var key in attachmentData) {
                     var separaIndex = key.indexOf(getSetting("downdloadGroupSepara"));
                     var group = separaIndex > 0 ? key.substring(0, separaIndex) : defGroup;
@@ -1085,7 +1080,7 @@ function downloadFiles(fileListUrl, downloadUrl) {
                 }
             }
             html += "<label id='fileErrorMsg-" + randId + "' style='height: 20px; color: red; "
-                + (data.success === "true" ? "display: none;'>" : ("display: block;'>" + data.msg)) + "</label>";
+                + (data.success === "true" ? "display: none;'>" : ("display: block;'>" + data.message)) + "</label>";
             html += "</form>";
 
             openLayer({
@@ -1312,7 +1307,7 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
-                var monitorData = data.data[0];
+                var monitorData = data.data;
                 if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
                     var models = [{
                         dataTime: function () {
@@ -1323,7 +1318,7 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
                             return hours + ":" + minutes + ":" + seconds;
                         },
                         data: monitorData,
-                        models: data.data[1]
+                        models: monitorData
                     }];
                     addData(chartObj, chartOption, models, keys, restrictedArea);
                 }

@@ -29,12 +29,10 @@ public class Index extends ModelBase {
             name = {"主页", "en:Home"},
             info = {"查看 Qingzhou 平台的相关信息。",
                     "en:View Qingzhou platform information."})
-    public void show(Request request) throws Exception {
-        Index index = new Index();
-        index.name = "Qingzhou（轻舟）";
-        index.version = getAppContext().getPlatformVersion();
-        index.javaHome = System.getProperty("java.home");
-        request.getResponse().addModelData(index);
+    public void show(Request request) {
+        request.getResponse().addDataMap("name", "Qingzhou（轻舟）");
+        request.getResponse().addDataMap("version", getAppContext().getPlatformVersion());
+        request.getResponse().addDataMap("javaHome", System.getProperty("java.home"));
     }
 
     @ModelAction(// NOTE: 这个方法用作是 Login 成功后 跳过的
@@ -42,7 +40,7 @@ public class Index extends ModelBase {
             name = {"主页", "en:Home"},
             info = {"进入 Qingzhou 平台的主页。",
                     "en:View Qingzhou platform information."})
-    public void index(Request request) throws Exception {
+    public void index(Request request) {
         show(request);
     }
 }

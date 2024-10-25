@@ -12,7 +12,6 @@ import qingzhou.logger.Logger;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 class Heartbeat implements Process {
@@ -79,6 +78,14 @@ class Heartbeat implements Process {
     }
 
     void register() {
+        try {
+            register0();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    void register0() throws Exception {
         List<AppInfo> appInfos = new ArrayList<>();
         for (String a : deployer.getAllApp()) {
             if (!DeployerConstants.APP_SYSTEM.equals(a)) {
@@ -104,24 +111,14 @@ class Heartbeat implements Process {
 
         boolean registered = false;
         if (response != null && response.getResponseCode() == 200) {
-            Map resultMap;
-            try {
-                resultMap = json.fromJson(new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET), Map.class);
-            } catch (UnsupportedEncodingException e) {
-                logger.error(e.getMessage(), e);
-                return;
-            }
-            List<Map<String, String>> dataList = (List<Map<String, String>>) resultMap.get(DeployerConstants.JSON_DATA);
-            if (dataList != null && !dataList.isEmpty()) {
-                String checkResult = dataList.get(0).get(fingerprint);
-                registered = Boolean.parseBoolean(checkResult);
-            }
+            String checkResult = new String(response.getResponseBody(), DeployerConstants.ACTION_INVOKE_CHARSET);
+            registered = Boolean.parseBoolean(checkResult);
         }
         if (registered) return;
 
         try {
             http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
-                put("doRegister", registerData);
+                put(DeployerConstants.DO_REGISTER, registerData);
             }});
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

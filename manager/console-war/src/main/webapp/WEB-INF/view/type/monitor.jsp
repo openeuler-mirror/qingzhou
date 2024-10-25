@@ -21,7 +21,7 @@
             if (dataList.size() == 2) {
                 Map<String, String> infoData = dataList.get(1);
         %>
-        <%@ include file="../fragment/field.jsp" %>
+        <%@ include file="../fragment/info.jsp" %>
         <textarea name="infoKeys" rows="3" disabled="disabled" style="display:none;">
         <%
             StringBuilder keysBuilder = new StringBuilder();

@@ -34,15 +34,15 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             group = "base",
-            inputType = InputType.select, echoGroup = "aa",
+            input_type = InputType.select, echo_group = "aa",
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
     public String gender;
 
     @ModelField(
             group = "org",
-            inputType = InputType.select,
-            refModel = Post.class,
+            input_type = InputType.select,
+            reference = Post.class,
             list = true, search = true,
             update = true,
             name = {"岗位", "en:Position"})
@@ -50,42 +50,42 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             group = "org",
-            inputType = InputType.multiselect,
-            refModel = Department.class,
+            input_type = InputType.multiselect,
+            reference = Department.class,
             list = true, search = true,
             update = true,
             name = {"归属部门", "en:Department "})
     public String department;
 
     @ModelField(
-            inputType = InputType.sortable,
+            input_type = InputType.sortable,
             list = true,
             separator = "@",
             name = {"项目1", "en:1"})
     public String subjects1;
 
     @ModelField(
-            inputType = InputType.checkbox,
+            input_type = InputType.checkbox,
             separator = "@",
-            refModel = Post.class,
+            reference = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
 
     @ModelField(
-            inputType = InputType.kv,
+            input_type = InputType.kv,
             separator = "@",
             name = {"kv", "en:1"})
     public String kv;
 
     @ModelField(
-            inputType = InputType.sortablecheckbox,
+            input_type = InputType.sortable_checkbox,
             display = "id!=",
             separator = "#",
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
-            inputType = InputType.sortablecheckbox,
+            input_type = InputType.sortable_checkbox,
             display = "false",
             separator = "#",
             name = {"项目3", "en:3"})
@@ -97,7 +97,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
     public String noEdit;
 
     @ModelField(
-            inputType = InputType.textarea,
+            input_type = InputType.textarea,
             list = true, search = true,
             display = "department.email",
             skip = {">", "("},
@@ -106,7 +106,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            linkFields = {"name", "notes", "gender", "a", "b"},
+            link_fields = {"name", "notes", "gender", "a", "b"},
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {

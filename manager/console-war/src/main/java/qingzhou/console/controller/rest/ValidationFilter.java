@@ -1,7 +1,6 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.InputType;
-import qingzhou.api.Response;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Update;
@@ -12,6 +11,7 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ItemInfo;
@@ -60,7 +60,7 @@ public class ValidationFilter implements Filter<RestContext> {
     public static boolean isMultipleSelect(ModelFieldInfo fieldInfo) {
         InputType type = fieldInfo.getInputType();
         return type == InputType.checkbox
-                || type == InputType.sortablecheckbox
+                || type == InputType.sortable_checkbox
                 || type == InputType.multiselect
                 || type == InputType.sortable
                 || type == InputType.kv;
@@ -70,6 +70,7 @@ public class ValidationFilter implements Filter<RestContext> {
     public boolean doFilter(RestContext context) throws Exception {
         Map<String, String> errorMsg = new HashMap<>();
         RequestImpl request = context.request;
+        ResponseImpl response = (ResponseImpl) request.getResponse();
 
         ModelInfo modelInfo = request.getCachedModelInfo();
 
@@ -97,20 +98,16 @@ public class ValidationFilter implements Filter<RestContext> {
                 tmp.setActionName(Validate.ACTION_VALIDATE);
                 context.request.getParameters().forEach(tmp::setParameter);
                 tmp.setParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER, String.valueOf(isAddAction));
-                Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+                ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
                 if (!tmpResp.isSuccess()) {
-                    java.util.List<Map<String, String>> dataList = tmpResp.getDataList();
-                    if (!dataList.isEmpty()) {
-                        errorMsg.putAll(dataList.get(0));
-                    }
+                    errorMsg.putAll(tmpResp.getErrorInfo());
                 }
             }
         }
 
-        Response response = request.getResponse();
         if (!errorMsg.isEmpty()) {
             response.setSuccess(false);
-            response.addData(errorMsg);
+            errorMsg.forEach(response::addErrorInfo);
         }
 
         return response.isSuccess();
@@ -200,7 +197,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 RequestImpl tmp = new RequestImpl(context.request);
                 tmp.setActionName(List.ACTION_CONTAINS);
                 tmp.setId(context.parameterVal);
-                Response tmpResp = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+                ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
                 boolean success = tmpResp.isSuccess();
                 if (success) {
                     return new String[]{"validation_id"};

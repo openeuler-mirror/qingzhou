@@ -50,12 +50,10 @@ public interface DeployerConstants {
 
     String REST_PREFIX = "/rest";
     String JSON_VIEW_FLAG = "json";
-    String JSON_DATA = "data";
     String CHECK_FINGERPRINT = "fingerprint";
+    String DO_REGISTER = "doRegister";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String FIELD_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
-    String CHECK_KEY = "CHECK_KEY";
-    String CHECK_VAL = "CHECK_VAL";
     String app_Started = "Started";
     String app_Stopped = "Stopped";
     String DEFAULT_DATA_SEPARATOR = ",";

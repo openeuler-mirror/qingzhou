@@ -1,15 +1,22 @@
 package qingzhou.console.view;
 
 import qingzhou.api.type.Show;
+import qingzhou.console.SecurityController;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.console.view.type.StreamView;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
+import qingzhou.engine.util.Utils;
+import qingzhou.json.Json;
+import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.*;
 
 public class ViewManager {
@@ -41,6 +48,22 @@ public class ViewManager {
         show(request, response);
         orderResult(request, response);
 
+        Serializable customizedDataObject = response.getCustomizedDataObject();
+        if (customizedDataObject != null) {
+            String writeData;
+            if (customizedDataObject instanceof String) {
+                writeData = (String) customizedDataObject;
+            } else {
+                Json json = SystemController.getService(Json.class);
+                writeData = json.toJson(customizedDataObject);
+            }
+
+            PrintWriter writer = restContext.resp.getWriter();
+            writer.write(writeData);
+            writer.flush();
+            return;
+        }
+
         view.render(restContext);
     }
 
@@ -53,8 +76,16 @@ public class ViewManager {
         for (Map<String, String> data : dataList) {
             List<String> toRemove = new ArrayList<>();
             data.forEach((key, value) -> {
-                if (!modelInfo.getModelFieldInfo(key).isShow()) {
+                ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(key);
+                if (!fieldInfo.isShow()) {
                     toRemove.add(key);
+                    return;
+                }
+
+                if (Utils.notBlank(fieldInfo.getDisplay())) {
+                    if (!SecurityController.checkRule(fieldInfo.getDisplay(), data::get)) {
+                        toRemove.add(key);
+                    }
                 }
             });
             toRemove.forEach(data::remove);

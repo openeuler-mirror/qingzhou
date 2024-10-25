@@ -29,11 +29,9 @@ public class Home extends ModelBase {
             name = {"首页", "en:Home"},
             info = {"进入此应用的默认首页。",
                     "en:Go to the default home of this app."})
-    public void show(Request request) throws Exception {
-        Home home = new Home();
-        home.appName = request.getApp();
-        home.appDir = getAppContext().getAppDir().getAbsolutePath();
-        home.javaHome = System.getProperty("java.home");
-        request.getResponse().addModelData(home);
+    public void show(Request request) {
+        request.getResponse().addDataMap("appName", request.getApp());
+        request.getResponse().addDataMap("appDir", getAppContext().getAppDir().getAbsolutePath());
+        request.getResponse().addDataMap("javaHome", System.getProperty("java.home"));
     }
 }

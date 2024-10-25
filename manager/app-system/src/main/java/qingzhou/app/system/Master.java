@@ -7,9 +7,6 @@ import qingzhou.api.Request;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.registry.Registry;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Model(code = DeployerConstants.MODEL_MASTER,
         hidden = true,
         name = {"集中管理", "en:Master"},
@@ -23,10 +20,8 @@ public class Master extends ModelBase {
     public void check(Request request) {
         String fingerprint = request.getParameter(DeployerConstants.CHECK_FINGERPRINT);
         if (fingerprint != null) {
-            Map<String, String> result = new HashMap<>();
             Registry registry = Main.getService(Registry.class);
-            result.put(fingerprint, String.valueOf(registry.checkRegistry(fingerprint)));
-            request.getResponse().addData(result);
+            request.getResponse().setCustomizedDataObject(String.valueOf(registry.checkRegistry(fingerprint)));
         }
     }
 
@@ -35,7 +30,7 @@ public class Master extends ModelBase {
             name = {"注册实例", "en:Register"},
             info = {"用于接收实例注册的信息。", "en:Information used to receive instance registrations."})
     public void register(Request request) {
-        String doRegister = request.getParameter("doRegister");
+        String doRegister = request.getParameter(DeployerConstants.DO_REGISTER);
         if (doRegister != null) {
             Registry registry = Main.getService(Registry.class);
             registry.register(doRegister);

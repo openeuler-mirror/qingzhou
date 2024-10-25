@@ -192,11 +192,6 @@
                     if (value == null) {
                         value = "";
                     }
-                    //兼容表单组件 例：bool.jsp中使用的是fieldValue和fieldName
-                    String fieldValue = value;
-                    java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(fieldInfo.getSeparator()));
-                    String fieldName = field;
-                    String echoGroup = "";
             %>
             <td style="<%=hideStyle%>">
                 <%
@@ -223,26 +218,34 @@
                         out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
                     }
                 } else if (fieldInfo.isUpdate()) {
-                    switch (fieldInfo.getInputType()){
+                    // 兼容表单组件 例：bool.jsp中使用的是fieldValue和fieldName
+                    // 避免编译报错，放入这个循环里，是避免和 list.jsp 中 的同名变量冲突
+                    java.util.List<String> passwordFields = new ArrayList<>();
+                    String echoGroup = "";
+                    String fieldValue = value;
+                    java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(fieldInfo.getSeparator()));
+                    String fieldName = field;
+
+                    switch (fieldInfo.getInputType()) {
                         case bool:
                 %>
                 <%@ include file="../fragment/field_type/bool.jsp" %>
                 <%
-                            break;
-                        case select:
+                        break;
+                    case select:
                 %>
                 <%@ include file="../fragment/field_type/select.jsp" %>
                 <%
-                            break;
-                        case multiselect:
+                        break;
+                    case multiselect:
                 %>
                 <%@ include file="../fragment/field_type/multiselect.jsp" %>
                 <%
-                            break;
-                        default:
+                        break;
+                    default:
                 %>
                 <%
-                            out.print("<div class=\"input-class\"> <input type=\"text\" name=\""+ fieldName +"\" value=\""+ fieldValue +"\" class=\"form-control\"></div>");
+                            out.print("<div class=\"input-class\"> <input type=\"text\" name=\"" + fieldName + "\" value=\"" + fieldValue + "\" class=\"form-control\"></div>");
                             break;
                     }
                 } else {

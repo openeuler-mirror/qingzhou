@@ -19,7 +19,7 @@ import qingzhou.config.Config;
                 "en:Set console-related parameters, such as HTTP and servlets. Note: After these parameters are changed, they will take effect after the next startup."})
 public class Web extends ModelBase implements Update {
     @ModelField(
-            inputType = InputType.number,
+            input_type = InputType.number,
             required = true,
             port = true,
             name = {"服务端口", "en:Port"},
@@ -35,7 +35,7 @@ public class Web extends ModelBase implements Update {
     public String contextRoot;
 
     @ModelField(
-            inputType = InputType.number,
+            input_type = InputType.number,
             required = true,
             min = 1,
             name = {"最大 POST 长度", "en:Max Post Size"},

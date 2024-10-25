@@ -4,7 +4,6 @@ import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
-import qingzhou.api.Response;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Option;
 import qingzhou.config.Config;
@@ -33,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.Arrays;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
@@ -101,24 +100,24 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return null;
     }
 
-    private static java.util.List<String> getAllIds(String app, String model, ModelFieldInfo fieldInfo) {
-        java.util.List<String> idList = new ArrayList<>();
-
-        if (!fieldInfo.isRequired()) {
-            idList.add("");
-        }
-
+    private static String[] getAllIds(String app, String model, ModelFieldInfo fieldInfo) {
         RequestImpl req = new RequestImpl();
         req.setAppName(app);
         req.setModelName(model);
         req.setActionName(List.ACTION_ALL);
-        Response res = getService(ActionInvoker.class).invokeSingle(req); // 续传
-        if (res.isSuccess()) {
-            for (Map<String, String> map : res.getDataList()) {
-                idList.add(map.entrySet().iterator().next().getKey());
+        ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
+        String[] ids = res.getIds();
+        if (ids != null) {
+            if (fieldInfo.isRequired()) {
+                return ids;
+            } else {
+                String[] idsCopy = new String[1 + ids.length];
+                idsCopy[0] = "";
+                System.arraycopy(ids, 0, idsCopy, 1, ids.length);
+                return idsCopy;
             }
         }
-        return idList;
+        return null;
     }
 
     public static ItemInfo[] getOptions(String qzApp, ModelInfo modelInfo, String fieldName) {
@@ -157,8 +156,10 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(fieldName);
         String refModel = fieldInfo.getRefModel();
         if (Utils.notBlank(refModel)) {
-            java.util.List<String> allIds = getAllIds(qzApp, refModel, fieldInfo);
-            return allIds.stream().map(s -> new ItemInfo(s, new String[]{s, "en:" + s})).toArray(ItemInfo[]::new);
+            String[] allIds = getAllIds(qzApp, refModel, fieldInfo);
+            if (allIds != null) {
+                return Arrays.stream(allIds).map(s -> new ItemInfo(s, new String[]{s, "en:" + s})).toArray(ItemInfo[]::new);
+            }
         }
 
         return new ItemInfo[0];

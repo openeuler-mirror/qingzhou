@@ -24,14 +24,14 @@ public class Security extends ModelBase implements Update {
     public String trustedIp;
 
     @ModelField(
-            inputType = InputType.number,
+            input_type = InputType.number,
             min = 1,
             name = {"失败锁定次数", "en:User Lockout Threshold"},
             info = {"用户连续认证失败后被锁定的次数。", "en:The number of times a user has been locked out after successive failed authentication attempts."})
     public Integer failureCount = 5;
 
     @ModelField(
-            inputType = InputType.number,
+            input_type = InputType.number,
             min = 60,
             name = {"锁定时长", "en:Lock Duration"},
             info = {"用户在多次认证失败后被锁定的时间（秒）。",
@@ -39,13 +39,13 @@ public class Security extends ModelBase implements Update {
     public Integer lockOutTime = 300;
 
     @ModelField(
-            inputType = InputType.bool,
+            input_type = InputType.bool,
             name = {"启用验证码", "en:Enable Verification Code"},
             info = {"开启用户登录时的验证码校验，当首次登录失败后，再次登录需要输入验证码。", "en:Enable authentication code verification during user login, when the first login fails, you need to enter the authentication code to login again."})
     public Boolean verCodeEnabled = true;
 
     @ModelField(
-            inputType = InputType.number,
+            input_type = InputType.number,
             min = 0, max = 90,
             name = {"密码最长使用期限", "en:Maximum Password Age"},
             info = {"用户登录系统的密码距离上次修改超过该期限（单位为天）后，需首先更新密码才能继续登录系统。",// 内部：0 表示可以永久不更新。
@@ -53,7 +53,7 @@ public class Security extends ModelBase implements Update {
     public Integer passwordMaxAge = 0;
 
     @ModelField(
-            inputType = InputType.number,
+            input_type = InputType.number,
             min = 1, max = 10,
             name = {"不使用最近密码", "en:Recent Password Restrictions"},
             info = {"限制本次更新的密码不能和最近几次使用过的密码重复。注：设置为 “1” 表示只要不与当前密码重复即可。",
@@ -61,9 +61,9 @@ public class Security extends ModelBase implements Update {
     public Integer passwordLimitRepeats = 1;
 
     @ModelField(
-            inputType = InputType.textarea,
+            input_type = InputType.textarea,
             display = "false",
-            lengthMax = 1000,
+            max_length = 1000,
             name = {"加密公钥", "en:Public Key"},
             info = {"为了能够管理远端的实例，需要将此密钥在远端的实例进行保存。此外，客户端通过 REST、JMX 等接口管理轻舟实例时，也需要使用此密钥对敏感数据进行加密后再传输。",
                     "en:In order to manage the remote instance, you need to save the key in the remote instance. In addition, when clients manage Qingzhou instances through interfaces such as REST and JMX, they also need to use this key to encrypt sensitive data before transmission."})

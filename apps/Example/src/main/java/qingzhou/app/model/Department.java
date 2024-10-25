@@ -24,24 +24,24 @@ public class Department extends AddModelBase implements Echo, Option {
     public String id;
 
     @ModelField(
-            inputType = InputType.radio,
+            input_type = InputType.radio,
             required = true,
-            list = true, search = true, echoGroup = {"aa"},
+            list = true, search = true, echo_group = {"aa"},
             name = {"上级部门", "en:Superior Department"},
             info = {"该部门所属的上级部门。",
                     "en:The superior department to which the department belongs."})
     public String superior = "";
 
     @ModelField(
-            inputType = InputType.checkbox,
-            list = true, search = true, echoGroup = {"aa", "bb"},
+            input_type = InputType.checkbox,
+            list = true, search = true, echo_group = {"aa", "bb"},
             name = {"负责人", "en:Department Manager"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
     public String manager;
 
     @ModelField(
             list = true, search = true,
-            echoGroup = {"cc"},
+            echo_group = {"cc"},
             color = {"AAAAA:Green",
                     "BBBBB:Gray"},
             name = {"联系电话", "en:Department Phone"},
@@ -56,7 +56,7 @@ public class Department extends AddModelBase implements Echo, Option {
     public String email;
 
     @ModelField(
-            inputType = InputType.select,
+            input_type = InputType.select,
             update = true,
             list = true, search = true,
             name = {"邮箱后缀", "en:Email Suffix"},
@@ -64,7 +64,7 @@ public class Department extends AddModelBase implements Echo, Option {
     public String emailSuffix;
 
     @ModelField(
-            inputType = InputType.bool,
+            input_type = InputType.bool,
             list = true, search = true,
             color = {"true:Green", "false:Gray"},
             name = {"启用", "en:Active"},
@@ -72,7 +72,7 @@ public class Department extends AddModelBase implements Echo, Option {
     public Boolean active = true;
 
     @ModelField(
-            inputType = InputType.datetime,
+            input_type = InputType.datetime,
             list = true, search = true,
             name = {"建立日期", "en:Date"}
     )

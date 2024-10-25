@@ -1,6 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.InputType;
+import qingzhou.api.type.Add;
 import qingzhou.api.type.Update;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.SystemController;
@@ -35,29 +36,46 @@ public class ParameterFilter implements Filter<RestContext> {
 
     private void remove(RequestImpl request) {
         List<String> toRemove = new ArrayList<>();
+        boolean isAddAction = Add.ACTION_ADD.equals(request.getAction());
         boolean isUpdateAction = Update.ACTION_UPDATE.equals(request.getAction());
 
+        ModelInfo modelInfo = request.getCachedModelInfo();
+        String idField = modelInfo.getIdField();
         Enumeration<String> parameterNames = request.getParameterNames();
         while (parameterNames.hasMoreElements()) {
             String name = parameterNames.nextElement();
-            ModelFieldInfo fieldInfo = request.getCachedModelInfo().getModelFieldInfo(name);
-            if (fieldInfo == null) {
-                continue;
-            }
-            String display = fieldInfo.getDisplay();
-            if (Utils.notBlank(display)) {
-                if (!SecurityController.checkRule(display, request::getParameter)) {
+            ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(name);
+            if (fieldInfo == null) continue;
+
+            if (isAddAction) {
+                if (!fieldInfo.isCreate()) {
                     toRemove.add(name);
+                    continue;
                 }
             }
 
             if (isUpdateAction) {
+                if (!fieldInfo.isEdit()) {
+                    toRemove.add(name);
+                    continue;
+                }
+
+                if (name.equals(idField)) {
+                    toRemove.add(name);
+                    continue;
+                }
+
                 // readonly 要从后端数据校验，避免通过 rest api 绕过前端进入数据写入
-                if (Utils.notBlank(fieldInfo.getReadOnly())) {
-                    boolean isReadOnly = SecurityController.checkRule(fieldInfo.getReadOnly(), new RemoteFieldValueRetriever(request.getId(), request));
-                    if (isReadOnly) {
-                        toRemove.add(name);
-                    }
+                if (fieldInfo.isReadonly()) {
+                    toRemove.add(name);
+                    continue;
+                }
+            }
+
+            String display = fieldInfo.getDisplay();
+            if (Utils.notBlank(display)) {
+                if (!SecurityController.checkRule(display, request::getParameter)) {
+                    toRemove.add(name);
                 }
             }
         }
@@ -82,7 +100,8 @@ public class ParameterFilter implements Filter<RestContext> {
         while (parameterNames.hasMoreElements()) {
             String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-            if (modelField != null && modelField.getInputType() == InputType.datetime) {
+            if (modelField == null) continue;
+            if (modelField.getInputType() == InputType.datetime) {
                 try {
                     String val = request.getParameter(fieldName);
                     if (Utils.notBlank(val)) {
@@ -101,7 +120,8 @@ public class ParameterFilter implements Filter<RestContext> {
         while (parameterNames.hasMoreElements()) {
             String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-            if (modelField != null && modelField.getInputType() == InputType.password) {
+            if (modelField == null) continue;
+            if (modelField.getInputType() == InputType.password) {
                 try {
                     String val = request.getParameter(fieldName);
                     String result = SystemController.decryptWithConsolePrivateKey(val, false);

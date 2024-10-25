@@ -14,13 +14,13 @@ public class Post extends AddModelBase {
 
     @ModelField(
             required = true,
-            widthPercent = 10,
+            width_percent = 10,
             search = true,
             name = {"岗位编码", "en:Post Code"})
     public String postCode;
 
     @ModelField(
-            required = true, linkShow = true,
+            required = true, link_show = true,
             ignore = 15,
             search = true, list = true,
             name = {"岗位名称", "en:Post Name"},
@@ -28,14 +28,14 @@ public class Post extends AddModelBase {
     public String name;
 
     @ModelField(
-            inputType = InputType.bool,
+            input_type = InputType.bool,
             list = true, search = true,
             update = true,
             name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
     @ModelField(
-            inputType = InputType.textarea,
+            input_type = InputType.textarea,
             ignore = 15,
             update = true,
             list = true, search = true,

@@ -21,15 +21,15 @@ public class Cluster extends AddModelBase implements Option {
     public String id;
 
     @ModelField(
-            inputType = InputType.select,
+            input_type = InputType.select,
             search = true,
-            fieldType = FieldType.SEARCH,
+            field_type = FieldType.OTHER,
             name = {"时间", "en:Time"})
     public String time;
 
     @ModelAction(
             code = "user", icon = "location-arrow",
-            linkModels = {"user"},
+            link_models = {"user"},
             name = {"用户", "en:User"},
             info = {"打开只有用户菜单的管理页面。", "en:Go to the page."})
     public void user(Request request) {
@@ -37,7 +37,7 @@ public class Cluster extends AddModelBase implements Option {
 
     @ModelAction(
             code = "org", icon = "location-arrow",
-            linkModels = {"department", "post"},
+            link_models = {"department", "post"},
             name = {"组织", "en:Org"},
             info = {"打开有部门和岗位菜单的管理页面，默认展开第一个，即部门的模块入口页面。", "en:Go to the page."})
     public void org(Request request) {

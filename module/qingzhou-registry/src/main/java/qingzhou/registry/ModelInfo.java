@@ -100,7 +100,7 @@ public class ModelInfo {
     public String[] getFieldsToListSearch() {
         List<String> list = new ArrayList<>();
         for (ModelFieldInfo fieldInfo : modelFieldInfos) {
-            if (fieldInfo.isSearch() || fieldInfo.getFieldType() == FieldType.SEARCH) {
+            if (fieldInfo.isSearch()) {
                 list.add(fieldInfo.getCode());
             }
         }

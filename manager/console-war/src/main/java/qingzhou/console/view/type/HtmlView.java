@@ -10,12 +10,16 @@ import qingzhou.console.view.View;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HtmlView implements View {
     public static final String htmlPageBase = "/WEB-INF/view/";
@@ -61,9 +65,36 @@ public class HtmlView implements View {
             Response response = SystemController.getService(ActionInvoker.class).invokeSingle(request);
             request.setResponse(response);// 用远端的请求替换本地的，如果是本地实例，它俩是等效的
         }
+
+        doMonitorData(request);
+
         String forwardView = isManageAction ? "sys/manage" : getForwardView(request);
         String forwardToPage = HtmlView.htmlPageBase + (forwardView.contains("/") ? (forwardView + ".jsp") : ("type/" + forwardView + ".jsp"));
         restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);
+    }
+
+    private void doMonitorData(RequestImpl request) {
+        if (!request.getAction().equals(Monitor.ACTION_MONITOR)) return;
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+
+        Map<String, String> monitorData = new HashMap<>();
+        Map<String, String> infoData = new HashMap<>();
+
+        ModelInfo modelInfo = request.getCachedModelInfo();
+        String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
+        for (String fieldName : monitorFieldNames) {
+            String val = response.getDataMap().get(fieldName);
+            if (val == null) continue;
+            ModelFieldInfo monitorField = modelInfo.getModelFieldInfo(fieldName);
+            if (monitorField.isNumeric()) {
+                monitorData.put(fieldName, val);
+            } else {
+                infoData.put(fieldName, val);
+            }
+        }
+        response.getDataMap().clear(); // 监视页面是用的 DataList，这里清空不需要的 DataMap，注意 json view 里面是没有区分的
+        response.addDataList(monitorData);
+        response.addDataList(infoData);
     }
 
     private boolean isManageApp(Request request) {

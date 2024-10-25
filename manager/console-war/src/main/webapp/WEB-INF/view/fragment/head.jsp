@@ -26,7 +26,7 @@
 	ModelInfo modelInfo = qzRequest.getCachedModelInfo();
 	String id = qzRequest.getId();
 	String encodedId = RESTController.encodeId(id);
-	Response qzResponse = qzRequest.getResponse();
+	ResponseImpl qzResponse = (ResponseImpl) qzRequest.getResponse();
 	String themeMode = (String) session.getAttribute(Theme.KEY_THEME_MODE);
 %>
 

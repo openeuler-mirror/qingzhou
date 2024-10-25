@@ -6,7 +6,6 @@ import qingzhou.api.type.Delete;
 import qingzhou.api.type.Show;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.app.system.business.App;
 import qingzhou.app.system.business.Instance;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.FileUtil;
@@ -45,14 +44,14 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     public String running;
 
     @ModelField(
-            inputType = InputType.markdown,
+            input_type = InputType.markdown,
             name = {"发布说明", "en:Release Notes"},
             info = {"此版本的说明信息，通常会包括该版本的新增功能、修复已知问题等内容。",
                     "en:The description of this release, which usually includes new features in the release, fixes for known issues, and so on."})
     public String releaseNotes;
 
     @ModelField(
-            inputType = InputType.bool,
+            input_type = InputType.bool,
             name = {"使用上传", "en:Enable Upload"},
             info = {"升级包可以从客户端上传，也可以从服务器端指定的位置读取。",
                     "en:The upgrade package can be uploaded from the client or read from a location specified on the server side."})
@@ -69,7 +68,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
 
     @ModelField(
             display = "upload=true",
-            inputType = InputType.file,
+            input_type = InputType.file,
             required = true,
             name = {"上传文件", "en:File"},
             info = {"上传一个文件到服务器，文件须是 version*.zip 类型的文件，否则可能会导致升级失败。",
@@ -112,7 +111,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
             name = {"升级", "en:Upgrade"},
             info = {"将轻舟升级到一个新的版本。", "en:Upgrade the light boat to a new version."})
     public void create(Request request) throws Exception {
-        request.getResponse().addModelData(new App());
+        getAppContext().callDefaultAction(request);
     }
 
     @ModelAction(

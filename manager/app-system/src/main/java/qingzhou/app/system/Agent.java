@@ -16,6 +16,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_AGENT,
@@ -23,7 +24,7 @@ import java.util.Map;
         name = {"实例代理", "en:Agent"})
 public class Agent extends ModelBase implements Download {
     @ModelField(
-            inputType = InputType.file, // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
+            input_type = InputType.file, // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
             name = {"", "en:"})
     public String file; // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
 
@@ -128,7 +129,7 @@ public class Agent extends ModelBase implements Download {
     public void monitor(Request request) {
         OperatingSystemMXBean mxBean = ManagementFactory.getOperatingSystemMXBean();
 
-        Map<String, String> data = new HashMap<>();
+        LinkedHashMap<String, String> data = new LinkedHashMap<>();
         data.put("osName", mxBean.getName());
         data.put("osVer", mxBean.getVersion());
         data.put("arch", mxBean.getArch());
@@ -162,7 +163,7 @@ public class Agent extends ModelBase implements Download {
         data.put("heapCommitted", maskMBytes(memoryMXBean.getHeapMemoryUsage().getCommitted()));
         data.put("nonHeapUsed", maskMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
 
-        request.getResponse().addData(data);
+        data.forEach((key, value) -> request.getResponse().addDataMap(key, value));
     }
 
     private String maskGBytes(long val) {

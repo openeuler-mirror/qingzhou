@@ -15,6 +15,8 @@ public class ModelFieldInfo {
     private transient Class<?> refModelClass;
     private String defaultValue;
     private boolean show;
+    private boolean create;
+    private boolean edit;
     private boolean update;
     private boolean list;
     private int ignore;
@@ -33,7 +35,7 @@ public class ModelFieldInfo {
     private String[] forbid;
     private String[] skip;
     private String pattern;
-    private String readOnly;
+    private boolean readonly;
     private String linkList;
     private String[] color;
     private String[] echoGroup;
@@ -111,6 +113,22 @@ public class ModelFieldInfo {
 
     public void setUpdate(boolean update) {
         this.update = update;
+    }
+
+    public boolean isCreate() {
+        return create;
+    }
+
+    public void setCreate(boolean create) {
+        this.create = create;
+    }
+
+    public boolean isEdit() {
+        return edit;
+    }
+
+    public void setEdit(boolean edit) {
+        this.edit = edit;
     }
 
     public boolean isList() {
@@ -289,12 +307,12 @@ public class ModelFieldInfo {
         this.forbid = forbid;
     }
 
-    public String getReadOnly() {
-        return readOnly;
+    public boolean isReadonly() {
+        return readonly;
     }
 
-    public void setReadOnly(String readOnly) {
-        this.readOnly = readOnly;
+    public void setReadonly(boolean readonly) {
+        this.readonly = readonly;
     }
 
     public boolean isEmail() {

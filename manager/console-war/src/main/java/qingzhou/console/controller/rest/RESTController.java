@@ -1,28 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.StandardOpenOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
-
 import qingzhou.api.InputType;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Request;
@@ -37,6 +14,7 @@ import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
@@ -44,6 +22,19 @@ import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
@@ -129,21 +120,21 @@ public class RESTController extends HttpServlet {
     };
 
     private void responseMsg(Map<String, Response> instanceResult, RequestImpl request) {
-        Response response = request.getResponse();
+        ResponseImpl response = (ResponseImpl) request.getResponse();
         Map<String, Response> responseList = request.getResponseList();
         if (responseList != null && !responseList.isEmpty()) {
             instanceResult = responseList;
         }
 
         if (instanceResult.size() == 1) {  // 非批量操作，不需要重组响应信息
-            response = instanceResult.values().iterator().next();
+            response = (ResponseImpl) instanceResult.values().iterator().next();
             request.setResponse(response);
         } else {
-            Map<String, Response> failed = new LinkedHashMap<>();
+            Map<String, ResponseImpl> failed = new LinkedHashMap<>();
             int suc = 0;
             int fail = 0;
             for (Map.Entry<String, Response> e : instanceResult.entrySet()) {
-                Response check = e.getValue();
+                ResponseImpl check = (ResponseImpl) e.getValue();
                 if (check.isSuccess()) {
                     suc += 1;
                 } else {
@@ -155,12 +146,12 @@ public class RESTController extends HttpServlet {
             response.setSuccess(suc > 0); // 至少有一个成功，则认为整体是成功的
 
             MsgLevel msgLevel = suc > 0
-                    ? (fail > 0 ? MsgLevel.warn : MsgLevel.info)
-                    : MsgLevel.error;
-            response.setMsgType(msgLevel);
+                    ? (fail > 0 ? MsgLevel.WARN : MsgLevel.INFO)
+                    : MsgLevel.ERROR;
+            response.setMsgLevel(msgLevel);
 
             StringBuilder errorMsg = new StringBuilder(String.format(I18n.getKeyI18n("batch.ops.fail"), suc, fail));
-            for (Map.Entry<String, Response> e : failed.entrySet()) {
+            for (Map.Entry<String, ResponseImpl> e : failed.entrySet()) {
                 String instance = e.getKey();
                 String msg = e.getValue().getMsg();
                 errorMsg.append(instance).append(": ").append(msg);
@@ -174,8 +165,8 @@ public class RESTController extends HttpServlet {
         }
 
         // 完善响应的 msg type
-        if (response.getMsgType() == null) {
-            response.setMsgType(response.isSuccess() ? MsgLevel.info : MsgLevel.error);
+        if (response.getMsgLevel() == null) {
+            response.setMsgLevel(response.isSuccess() ? MsgLevel.INFO : MsgLevel.ERROR);
         }
     }
 

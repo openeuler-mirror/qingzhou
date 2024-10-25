@@ -71,30 +71,30 @@ public class User extends ModelBase implements General, Validate, Option {
     public String name;
 
     @ModelField(
-            inputType = InputType.password,
+            input_type = InputType.password,
             required = true,
-            lengthMin = 10, lengthMax = 20,
+            min_length = 10, max_length = 20,
             name = {"账户密码", "en:Password"},
             info = {"用于登录系统的账户密码。", "en:The account password used to log in to the system."})
     public String password;
 
     @ModelField(
-            inputType = InputType.password,
+            input_type = InputType.password,
             required = true,
-            lengthMin = 10, lengthMax = 20,
+            min_length = 10, max_length = 20,
             name = {"确认密码", "en:Confirm Password"},
             info = {"确认登录系统的新密码。", "en:Confirm the new password for logging in to the system."})
     public String confirmPassword;
 
     @ModelField(
-            inputType = InputType.select,
+            input_type = InputType.select,
             name = {"摘要算法", "en:Digest Algorithm"},
             info = {"进行摘要加密所采用的算法。", "en:The algorithm used for digest encryption."}
     )
     public String digestAlg = "SHA-256";
 
     @ModelField(
-            inputType = InputType.number,
+            input_type = InputType.number,
             min = 1,
             max = 128,
             name = {"加盐长度", "en:Salt Length"},
@@ -103,7 +103,7 @@ public class User extends ModelBase implements General, Validate, Option {
     public Integer saltLength = 4;
 
     @ModelField(
-            inputType = InputType.number,
+            input_type = InputType.number,
             min = 1,
             max = 128,
             name = {"迭代次数", "en:Iterations"},
@@ -112,7 +112,7 @@ public class User extends ModelBase implements General, Validate, Option {
     public Integer iterations = 5;
 
     @ModelField(
-            inputType = InputType.bool,
+            input_type = InputType.bool,
             name = {"下次登录须改密码", "en:Change Initial Password"},
             info = {"标记该用户下次登录系统后，须首先修改其登录密码，否则不能进行其它操作。",
                     "en:After marking the user to log in to the system next time, he or she must first change his login password, otherwise no other operations can be performed."})
@@ -127,8 +127,7 @@ public class User extends ModelBase implements General, Validate, Option {
     public String passwordLastModified;
 
     @ModelField(
-            inputType = InputType.bool,
-            readOnly = "name=qingzhou",
+            input_type = InputType.bool,
             list = true, search = true,
             color = {"true:Green", "false:Gray"},
             name = {"启用", "en:Active"},
@@ -137,7 +136,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             list = true, search = true,
-            linkShow = true,
+            link_show = true,
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;

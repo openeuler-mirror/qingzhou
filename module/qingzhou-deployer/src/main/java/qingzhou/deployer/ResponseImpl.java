@@ -1,37 +1,42 @@
 package qingzhou.deployer;
 
-import qingzhou.api.ModelBase;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Response;
 import qingzhou.registry.ItemInfo;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import java.io.Serializable;
 import java.util.*;
 
 public class ResponseImpl implements Response {
     private boolean success = true;
     private String msg;
     private MsgLevel msgLevel;
-    private final List<Map<String, String>> dataList = new ArrayList<>();
-    private int totalSize = -1;
-    private int pageSize = -1;
-    private int pageNum = -1;
     private String contentType;
+    private final Map<String, String> parameters = new HashMap<>();
     private final Map<String, String> parametersInSession = new HashMap<>();
     private final Map<String, String> headers = new LinkedHashMap<>();
     private final Map<String, Long> dateHeaders = new LinkedHashMap<>();
     private byte[] bodyBytes;
     private String downloadName;
-    private final Map<String, String> parameters = new HashMap<>();
     private ItemInfo[] itemInfos;
+    private String[] ids;
+
+    private Serializable customizedDataObject;
+
+    private final Map<String, String> dataMap = new LinkedHashMap<>();
+
+    private final Map<String, String> errorInfo = new LinkedHashMap<>();
+
+    private final List<Map<String, String>> dataList = new ArrayList<>();
+    private int totalSize = -1;
+    private int pageSize = -1;
+    private int pageNum = -1;
 
     @Override
     public void setSuccess(boolean success) {
         this.success = success;
     }
 
-    @Override
     public boolean isSuccess() {
         return this.success;
     }
@@ -41,22 +46,27 @@ public class ResponseImpl implements Response {
         this.msg = msg;
     }
 
-    @Override
     public String getMsg() {
         return this.msg;
     }
 
     @Override
-    public void setMsgType(MsgLevel msgLevel) {
+    public void setMsgLevel(MsgLevel msgLevel) {
         this.msgLevel = msgLevel;
     }
 
-    @Override
-    public MsgLevel getMsgType() {
+    public MsgLevel getMsgLevel() {
         return this.msgLevel;
     }
 
-    @Override
+    public void addErrorInfo(String key, String value) {
+        errorInfo.put(key, value);
+    }
+
+    public Map<String, String> getErrorInfo() {
+        return errorInfo;
+    }
+
     public int getTotalSize() {
         return totalSize;
     }
@@ -65,7 +75,6 @@ public class ResponseImpl implements Response {
         this.totalSize = totalSize;
     }
 
-    @Override
     public int getPageSize() {
         return pageSize;
     }
@@ -74,7 +83,6 @@ public class ResponseImpl implements Response {
         this.pageSize = pageSize;
     }
 
-    @Override
     public int getPageNum() {
         return pageNum;
     }
@@ -84,43 +92,10 @@ public class ResponseImpl implements Response {
     }
 
     @Override
-    public List<Map<String, String>> getDataList() {
-        return dataList;
-    }
-
-    @Override
-    public void addData(Map<String, String> data) {
-        if (data == null) return;
-        dataList.add(data);
-    }
-
-    @Override
-    public void addModelData(ModelBase data) {
-        Map<String, String> map = new HashMap<>();
-
-        Field[] fields = data.getClass().getFields();
-        for (Field field : fields) {
-            try {
-                int modifiers = field.getModifiers();
-                if (Modifier.isPublic(modifiers) && !Modifier.isStatic(modifiers)) {
-                    Object val = field.get(data);
-                    if (val != null) {
-                        map.put(field.getName(), String.valueOf(val));
-                    }
-                }
-            } catch (IllegalAccessException ignored) {
-            }
-        }
-
-        dataList.add(map);
-    }
-
-    @Override
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
 
-    @Override
     public String getContentType() {
         return contentType;
     }
@@ -130,12 +105,10 @@ public class ResponseImpl implements Response {
         headers.put(name, value);
     }
 
-    @Override
     public String getHeader(String name) {
         return headers.get(name);
     }
 
-    @Override
     public Collection<String> getHeaderNames() {
         return headers.keySet();
     }
@@ -145,12 +118,10 @@ public class ResponseImpl implements Response {
         dateHeaders.put(name, date);
     }
 
-    @Override
     public Long getDateHeader(String name) {
         return dateHeaders.get(name);
     }
 
-    @Override
     public Collection<String> getDateHeaderNames() {
         return dateHeaders.keySet();
     }
@@ -167,9 +138,26 @@ public class ResponseImpl implements Response {
         return downloadName;
     }
 
-    @Override
     public void setDownloadName(String downloadName) {
         this.downloadName = downloadName;
+    }
+
+    public Serializable getCustomizedDataObject() {
+        return customizedDataObject;
+    }
+
+    @Override
+    public void setCustomizedDataObject(Serializable customizedDataObject) {
+        this.customizedDataObject = customizedDataObject;
+    }
+
+    @Override
+    public void addDataMap(String key, String value) {
+        dataMap.put(key, value);
+    }
+
+    public Map<String, String> getDataMap() {
+        return dataMap;
     }
 
     public Map<String, String> getParametersInSession() {
@@ -186,5 +174,21 @@ public class ResponseImpl implements Response {
 
     public void setItemInfos(ItemInfo[] itemInfos) {
         this.itemInfos = itemInfos;
+    }
+
+    public List<Map<String, String>> getDataList() {
+        return dataList;
+    }
+
+    public void addDataList(Map<String, String> dataList) {
+        this.dataList.add(dataList);
+    }
+
+    public String[] getIds() {
+        return ids;
+    }
+
+    public void setIds(String[] ids) {
+        this.ids = ids;
     }
 }
