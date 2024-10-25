@@ -950,28 +950,42 @@ function bindEventForListPage() {
         return false;
     });
 
-    $('table .switch-btn').each(function () {
-        $("input", $(this)).bind("change", function (e) {
-            let fieldStr = $(this).attr("name")
-            let v = $(this).val()
-            let tempUrl = $(this).closest('tr').find('a[href*="edit"]').attr("href");
-            tempUrl = tempUrl.replace("html", "json").replace("edit", "update")
-            let resData = {};
-            resData[fieldStr] = v;
-            $.ajax({
-                type: "POST",
-                url: tempUrl,
-                data: resData,
-                success: function (data) {
-                    //刷新页面
-                    returnHref(tempUrl.replace("json", "html").replace("update", "list"))
-                },
-                error: function (e) {
-                    handleError(e);
-                }
-            });
-        });
+    $('table .switch-btn, table .input-class, table .nice-select').each(function () {
+        $("input", $(this)).bind("change", updateListValue);
     });
+
+    function updateListValue (e) {
+        let fieldStr = $(this).attr("name")
+        let v = $(this).val()
+        let tempUrl = $(this).closest('tr').find('a[href*="edit"]').attr("href");
+        tempUrl = tempUrl.replace("html", "json").replace("edit", "update");
+        let resData
+        if (Array.isArray(v)){
+            resData = [{}]
+            v.forEach(function(currentV) {
+                resData.push({"name":fieldStr,"value":currentV})
+            });
+        }else{
+            resData = {};
+            resData[fieldStr] = v;
+        }
+        $.ajax({
+            type: "POST",
+            url: tempUrl,
+            data: resData,
+            success: function (data) {
+                //去list页面
+                let listUrl = tempUrl.replace("json", "html").replace("update", "list")
+                returnHref(listUrl.substring(0,listUrl.lastIndexOf("/")))
+            },
+            error: function (e) {
+                handleError(e);
+            }
+        });
+    }
+
+    $("select[multiple='multiple']").on("change", updateListValue);
+
 }
 
 //返回列表页面

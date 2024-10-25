@@ -30,13 +30,14 @@ public class Post extends AddModelBase {
     @ModelField(
             inputType = InputType.bool,
             list = true, search = true,
+            update = true,
             name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
     @ModelField(
             inputType = InputType.textarea,
             ignore = 15,
-            color = {"12345678901234456789:Green", "00:Red"},
+            update = true,
             list = true, search = true,
             name = {"备注", "en:Notes"})
     public String notes;

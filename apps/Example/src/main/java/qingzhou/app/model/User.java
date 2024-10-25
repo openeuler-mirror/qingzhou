@@ -44,14 +44,16 @@ public class User extends AddModelBase implements Group, Option, Echo {
             inputType = InputType.select,
             refModel = Post.class,
             list = true, search = true,
+            update = true,
             name = {"岗位", "en:Position"})
     public String position;
 
     @ModelField(
             group = "org",
-            inputType = InputType.select,
+            inputType = InputType.multiselect,
             refModel = Department.class,
             list = true, search = true,
+            update = true,
             name = {"归属部门", "en:Department "})
     public String department;
 
@@ -68,12 +70,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
             refModel = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
-    @ModelField(
-            inputType = InputType.multiselect,
-            separator = "@",
-            refModel = Post.class,
-            name = {"multiselect", "en:1"})
-    public String multiselect;
+
     @ModelField(
             inputType = InputType.kv,
             separator = "@",
