@@ -1,27 +1,27 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
 
 <%
-    String contextPath = request.getContextPath();
+	String contextPath = request.getContextPath();
 %>
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <base href="<%=contextPath%>/">
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="renderer" content="webkit|ie-comp|ie-stand">
-    <meta name="viewport"
-          content="width=device-width,initial-scale=1.0,minimum-scale=0.5,shrink-to-fit=no,user-scalable=yes">
-    <meta name="author" content="https://gitee.com/openeuler/qingzhou">
-    <title>Qingzhou Console</title>
-    <link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
-    <link rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
-    <link rel="stylesheet" href="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.css">
-    <link rel="stylesheet" href="<%=contextPath%>/static/css/index.css">
-    <link rel="stylesheet" href="<%=contextPath%>/static/css/nice-select.css">
-    <link rel="stylesheet" href="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.css">
+	<base href="<%=contextPath%>/">
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="renderer" content="webkit|ie-comp|ie-stand">
+	<meta name="viewport"
+		  content="width=device-width,initial-scale=1.0,minimum-scale=0.5,shrink-to-fit=no,user-scalable=yes">
+	<meta name="author" content="https://gitee.com/openeuler/qingzhou">
+	<title>Qingzhou Console</title>
+	<link type="image/x-icon" rel="shortcut icon" href="<%=contextPath%>/static/images/favicon.svg">
+	<link rel="stylesheet" href="<%=contextPath%>/static/lib/zui/css/zui.min.css">
+	<link rel="stylesheet" href="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.css">
+	<link rel="stylesheet" href="<%=contextPath%>/static/css/index.css">
+	<link rel="stylesheet" href="<%=contextPath%>/static/css/nice-select.css">
+	<link rel="stylesheet" href="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.css">
 
-    <style>
+	<style>
         /* list.jsp */
         table.table.table-striped.table-hover th {
             color: black;
@@ -198,22 +198,22 @@
             height: 30px;
             line-height: 30px;
         }
-    </style>
-    <%--注意：后面的<!--\>一定不能省略，否则在 IE 之外的浏览器就无法加载 jQuery --%>
-    <script src="<%=contextPath%>/static/js/jquery.min.js"></script>
-    <script src="<%=contextPath%>/static/js/jquery.form.min.js"></script>
-    <script src="<%=contextPath%>/static/js/jsencrypt.min.js"></script>
-    <script src="<%=contextPath%>/static/lib/zui/js/zui.min.js"></script>
-    <script src="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.js"></script>
-    <%--  echarts   https://echarts.apache.org/zh/builder.html  定制的 5.3.0 如果缺少要用的模块请重新定制 --%>
-    <%--  echarts  当前定制 模块有 柱状图 折线图 饼图 直角坐标系 日历 标题 图例 提示框 svg 兼容IE8 工具集 代码压缩 --%>
-    <script src="<%=contextPath%>/static/js/echarts.min.js?v=5.3.0"></script>
-    <script src="<%=contextPath%>/static/js/msg.js"></script>
-    <script src="<%=contextPath%>/static/lib/layer/layer.js"></script>
-    <script src="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.js"></script>
-    <script src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
-    <script src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
-    <script src="<%=contextPath%>/static/lib/muuri/muuri.min.js"></script>
+	</style>
+	<%--注意：后面的<!--\>一定不能省略，否则在 IE 之外的浏览器就无法加载 jQuery --%>
+	<script src="<%=contextPath%>/static/js/jquery.min.js"></script>
+	<script src="<%=contextPath%>/static/js/jquery.form.min.js"></script>
+	<script src="<%=contextPath%>/static/js/jsencrypt.min.js"></script>
+	<script src="<%=contextPath%>/static/lib/zui/js/zui.min.js"></script>
+	<script src="<%=contextPath%>/static/lib/datetimepicker/datetimepicker.min.js"></script>
+	<%--  echarts   https://echarts.apache.org/zh/builder.html  定制的 5.3.0 如果缺少要用的模块请重新定制 --%>
+	<%--  echarts  当前定制 模块有 柱状图 折线图 饼图 直角坐标系 日历 标题 图例 提示框 svg 兼容IE8 工具集 代码压缩 --%>
+	<script src="<%=contextPath%>/static/js/echarts.min.js?v=5.3.0"></script>
+	<script src="<%=contextPath%>/static/js/msg.js"></script>
+	<script src="<%=contextPath%>/static/lib/layer/layer.js"></script>
+	<script src="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.js"></script>
+	<script src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
+	<script src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
+	<script src="<%=contextPath%>/static/lib/muuri/muuri.min.js"></script>
 </head>
 
 <%@ include file="../fragment/head.jsp" %>
@@ -226,55 +226,58 @@
 <%@ include file="../fragment/navbar.jsp" %>
 
 <main>
-    <section class="tab-box">
-        <ul preTab="defaultTab">
-            <li id="defaultTab" fixed="true">
-                <a href="javascript:void(0);">
-                    <i class="icon icon-resize"></i>
-                    <label><%=I18n.getKeyI18n("page.index.centralized")%>
-                    </label>
-                </a>
-            </li>
-        </ul>
-    </section>
+	<section class="tab-box">
+		<ul preTab="defaultTab">
+			<li id="defaultTab" fixed="true">
+				<a href="javascript:void(0);">
+					<i class="icon icon-resize"></i>
+					<label><%=I18n.getKeyI18n("page.index.centralized")%>
+					</label>
+				</a>
+			</li>
+		</ul>
+	</section>
 
-    <section class="content-box">
-        <ul>
-            <li id="defaultTabBox" class="active" fixed="true">
-                <%-- 左侧菜单 --%>
-                <aside class="main-sidebar">
-                    <div class="sidebar sidebar-scroll">
-                        <ul class="sidebar-menu" data-widget="tree">
-                            <%
-                                // 菜单
-                                out.print(PageUtil.buildMenu(request, response, qzRequest));
-                            %>
-                        </ul>
-                    </div>
+	<section class="content-box">
+		<ul>
+			<li id="defaultTabBox" class="active" fixed="true">
+				<%-- 左侧菜单 --%>
+				<aside class="main-sidebar">
+					<div class="sidebar sidebar-scroll">
+						<ul class="sidebar-menu" data-widget="tree">
+							<%
+								// 菜单
+								out.print(PageUtil.buildMenu(request, response, qzRequest));
+							%>
+						</ul>
+					</div>
 
-                    <div class="menu-toggle-btn">
-                        <a href="javascript:void(0);" data-toggle="push-menu">
-                            <i class="icon icon-sliders"></i>
-                        </a>
-                    </div>
-                </aside>
+					<div class="menu-toggle-btn">
+						<a href="javascript:void(0);" data-toggle="push-menu">
+							<i class="icon icon-sliders"></i>
+						</a>
+					</div>
+				</aside>
 
-                <section class="main-body">
-                    <%-- 面包屑分级导航 --%>
-                    <%@ include file="../fragment/breadcrumb.jsp" %>
+				<section class="main-body">
+					<%-- 面包屑分级导航 --%>
+					<%@ include file="../fragment/breadcrumb.jsp" %>
 
-                    <%-- 首页面主体部分 --%>
-                    <div class="bodyDiv">
-                        <%@ include file="../fragment/info.jsp" %>
-                    </div>
-                </section>
-            </li>
-        </ul>
-    </section>
+					<%-- 首页面主体部分 --%>
+					<div class="bodyDiv">
+						<%
+							Map<String, String> infoData = qzResponse.getDataMap();
+						%>
+						<%@ include file="../fragment/info.jsp" %>
+					</div>
+				</section>
+			</li>
+		</ul>
+	</section>
 </main>
 
 <div id="mask-loading" class="mask-loading">
-    <div class="loading"></div>
+	<div class="loading"></div>
 </div>
 
 <script>

@@ -185,7 +185,7 @@
             StringBuilder displayCondition = new StringBuilder();
             displayCondition.append("{");
             boolean isFirst = true;
-            for (Map.Entry<String, String> entry : modelInfo.getDisplayCondition().entrySet()) {
+            for (Map.Entry<String, String> entry : modelInfo.getFormFieldDisplay().entrySet()) {
                 if (!isFirst) displayCondition.append(",");
                 isFirst = false;
 

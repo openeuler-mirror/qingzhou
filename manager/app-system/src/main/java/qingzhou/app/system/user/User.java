@@ -1,6 +1,22 @@
 package qingzhou.app.system.user;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
@@ -15,11 +31,6 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Pattern;
 
 @Model(code = DeployerConstants.MODEL_USER, icon = "user",
         menu = Main.User, order = 1,
@@ -72,7 +83,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             input_type = InputType.password,
-            required = true,
+            required = true, show = false,
             min_length = 10, max_length = 20,
             name = {"账户密码", "en:Password"},
             info = {"用于登录系统的账户密码。", "en:The account password used to log in to the system."})
@@ -80,13 +91,14 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             input_type = InputType.password,
-            required = true,
+            required = true, show = false,
             min_length = 10, max_length = 20,
             name = {"确认密码", "en:Confirm Password"},
             info = {"确认登录系统的新密码。", "en:Confirm the new password for logging in to the system."})
     public String confirmPassword;
 
     @ModelField(
+            show = false,
             input_type = InputType.select,
             name = {"摘要算法", "en:Digest Algorithm"},
             info = {"进行摘要加密所采用的算法。", "en:The algorithm used for digest encryption."}
@@ -94,6 +106,7 @@ public class User extends ModelBase implements General, Validate, Option {
     public String digestAlg = "SHA-256";
 
     @ModelField(
+            show = false,
             input_type = InputType.number,
             min = 1,
             max = 128,
@@ -103,6 +116,7 @@ public class User extends ModelBase implements General, Validate, Option {
     public Integer saltLength = 4;
 
     @ModelField(
+            show = false,
             input_type = InputType.number,
             min = 1,
             max = 128,
@@ -119,7 +133,7 @@ public class User extends ModelBase implements General, Validate, Option {
     public Boolean changePwd = true;
 
     @ModelField(
-            display = "false",
+            create = false, edit = false,
             list = true, search = true,
             name = {"密码最后修改时间", "en:Password Last Modified"},
             info = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}
@@ -217,7 +231,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
         return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
@@ -228,7 +242,7 @@ public class User extends ModelBase implements General, Validate, Option {
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) throws Exception {
-        getAppContext().callDefaultAction(request);
+        getAppContext().invokeSuperAction(request);
     }
 
     private boolean passwordChanged(String password) {
@@ -352,7 +366,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
-    public Map<String, String> validate(Request request) throws Exception {
+    public Map<String, String> validate(Request request) {
         Map<String, String> errors = new HashMap<>();
         String password = request.getParameter("password");
 

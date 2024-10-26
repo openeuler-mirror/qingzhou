@@ -14,6 +14,7 @@ public class Post extends AddModelBase {
 
     @ModelField(
             required = true,
+            show = false,
             width_percent = 10,
             search = true,
             name = {"岗位编码", "en:Post Code"})
@@ -46,10 +47,4 @@ public class Post extends AddModelBase {
     public String idField() {
         return "postCode";
     }
-
-    @Override
-    public boolean showIdField() {
-        return false;
-    }
-
 }

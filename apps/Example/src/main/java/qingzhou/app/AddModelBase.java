@@ -28,7 +28,7 @@ public class AddModelBase extends ModelBase implements General {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
         return testData.listData(pageNum, pageSize, showFields, query);
     }
 

@@ -231,7 +231,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
     }
 
     @Override
-    public java.util.List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
+    public java.util.List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
         return ModelUtil.listData(allIds(query), Instance::showData, pageNum, pageSize, showFields);
     }
 
@@ -269,9 +269,9 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Download.ACTION_DOWNLOAD, icon = "download-alt",
-            name = {"下载文件", "en:Download File"},
-            info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
-                    "en:Downloads the specified set of files that are in the component list of downloadable files."})
+            name = {"下载日志", "en:Download Log"},
+            info = {"下载实例的日志信息。",
+                    "en:Download the log information of the instance."})
     public void download(Request request) {
         invokeOnAgent(request, request.getId());
     }
@@ -285,7 +285,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
         invokeOnAgent(request, request.getId());
         ResponseImpl response = (ResponseImpl) request.getResponse();
         tempData.set(response.getDataMap()); // dataList 不应为空，来自：qingzhou.app.system.Agent.monitor（xxx）
-        getAppContext().callDefaultAction(request); // 触发调用下面的 monitorData（使用 tempData）；
+        getAppContext().invokeSuperAction(request); // 触发调用下面的 monitorData（使用 tempData）；
         tempData.remove();
     }
 
@@ -294,7 +294,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
         return new String[]{ACTION_MONITOR, Download.ACTION_FILES};
     }
 
-    // 为了复用 DefaultAction 的 monitor 方法逻辑
+    // 为了复用 SuperAction 的 monitor 方法逻辑
     private final ThreadLocal<Map<String, String>> tempData = new ThreadLocal<>();
 
     @Override

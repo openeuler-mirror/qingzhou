@@ -1,11 +1,16 @@
 package qingzhou.deployer;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Response;
 import qingzhou.registry.ItemInfo;
-
-import java.io.Serializable;
-import java.util.*;
 
 public class ResponseImpl implements Response {
     private boolean success = true;
@@ -27,7 +32,7 @@ public class ResponseImpl implements Response {
 
     private final Map<String, String> errorInfo = new LinkedHashMap<>();
 
-    private final List<Map<String, String>> dataList = new ArrayList<>();
+    private List<String[]> dataList = new ArrayList<>();
     private int totalSize = -1;
     private int pageSize = -1;
     private int pageNum = -1;
@@ -147,13 +152,8 @@ public class ResponseImpl implements Response {
     }
 
     @Override
-    public void setCustomizedDataObject(Serializable customizedDataObject) {
+    public void useCustomizedResponse(Serializable customizedDataObject) {
         this.customizedDataObject = customizedDataObject;
-    }
-
-    @Override
-    public void addDataMap(String key, String value) {
-        dataMap.put(key, value);
     }
 
     public Map<String, String> getDataMap() {
@@ -176,12 +176,12 @@ public class ResponseImpl implements Response {
         this.itemInfos = itemInfos;
     }
 
-    public List<Map<String, String>> getDataList() {
-        return dataList;
+    public void setDataList(List<String[]> dataList) {
+        this.dataList = dataList;
     }
 
-    public void addDataList(Map<String, String> dataList) {
-        this.dataList.add(dataList);
+    public List<String[]> getDataList() {
+        return dataList;
     }
 
     public String[] getIds() {

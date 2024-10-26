@@ -16,7 +16,7 @@ public interface List {
      * @param showFields 查询出的每条数据的字段名称
      *                   注：当 totalSize() 或 pageSize() 返回值 小于 1 时，请在实现内部忽略分页逻辑，转而返回所有数据
      */
-    java.util.List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception;
+    java.util.List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception;
 
     /**
      * 指定 ModelField 指定的字段中，哪一个用作数据 ID
@@ -82,10 +82,6 @@ public interface List {
      */
     default Map<String, String> defaultSearch() {
         return null;
-    }
-
-    default boolean showIdField() {
-        return true;
     }
 
     default boolean showOrderNumber() {

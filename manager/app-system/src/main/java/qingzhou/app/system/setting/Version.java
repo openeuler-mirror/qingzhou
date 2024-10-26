@@ -1,6 +1,24 @@
 package qingzhou.app.system.setting;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.Show;
@@ -10,33 +28,29 @@ import qingzhou.app.system.business.Instance;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.FileUtil;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
 @Model(code = "version", icon = "upload-alt",
         menu = Main.Setting,
         order = 4,
         name = {"版本", "en:Product Version"},
         info = {"管理轻舟的运行版本，将轻舟升级到一个新的版本。注：升级包会立即下发，但在实例下次重启时生效。",
                 "en:Manage the running version of the light boat and upgrade the light boat to a new version. Note: The upgrade package is delivered immediately, but takes effect the next time the instance is restarted."})
-public class Version extends ModelBase implements qingzhou.api.type.List, Show {
+public class Version extends ModelBase implements qingzhou.api.type.List, Add, Show {
     @ModelField(
+            create = false,
             search = true,
             name = {"产品版本", "en:Product Version"},
             info = {"产品的版本号。", "en:Version number of the product."})
     public String version;
 
     @ModelField(
-            list = true, search = true,
+            create = false,
+            list = true,
             name = {"构建日期", "en:Build Date"},
             info = {"此版本的构建日期。", "en:The build date of this release."})
     public String buildDate;
 
     @ModelField(
+            create = false,
             list = true, search = true,
             color = {"true:Green", "false:Gray"},
             name = {"生效中", "en:Running"},
@@ -44,6 +58,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     public String running;
 
     @ModelField(
+            create = false,
             input_type = InputType.markdown,
             name = {"发布说明", "en:Release Notes"},
             info = {"此版本的说明信息，通常会包括该版本的新增功能、修复已知问题等内容。",
@@ -102,7 +117,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
         return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
@@ -111,7 +126,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
             name = {"升级", "en:Upgrade"},
             info = {"将轻舟升级到一个新的版本。", "en:Upgrade the light boat to a new version."})
     public void create(Request request) throws Exception {
-        getAppContext().callDefaultAction(request);
+        getAppContext().invokeSuperAction(request);
     }
 
     @ModelAction(
@@ -204,5 +219,10 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Show {
             k++;
         }
         return len2 - len1;
+    }
+
+    @Override
+    public void addData(Map<String, String> data) {
+        throw new IllegalStateException("覆盖了 add 方法，不会再进入这里");
     }
 }

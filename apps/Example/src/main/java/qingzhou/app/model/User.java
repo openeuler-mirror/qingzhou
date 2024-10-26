@@ -1,15 +1,20 @@
 package qingzhou.app.model;
 
-import qingzhou.api.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @Model(code = "user", icon = "user",
@@ -79,27 +84,24 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.sortable_checkbox,
-            display = "id!=",
             separator = "#",
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
             input_type = InputType.sortable_checkbox,
-            display = "false",
             separator = "#",
             name = {"项目3", "en:3"})
     public String subjects3;
 
     @ModelField(
-            display = "id!=",
+            readonly = true,
             name = {"创建后不可编辑", "en:"})
     public String noEdit;
 
     @ModelField(
             input_type = InputType.textarea,
             list = true, search = true,
-            display = "department.email",
             skip = {">", "("},
             name = {"备注", "en:Notes"})
     public String notes = "只读控制";
@@ -110,7 +112,10 @@ public class User extends AddModelBase implements Group, Option, Echo {
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
-        System.out.println(request.getParameterNames());
+        request.getResponse().useCustomizedResponse(
+                String.format("处理参数，name：%s，gender：%s",
+                        request.getParameter("name"),
+                        request.getParameter("gender")));
     }
 
     @Override

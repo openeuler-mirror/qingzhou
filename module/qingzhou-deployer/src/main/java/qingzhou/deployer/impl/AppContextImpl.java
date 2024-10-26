@@ -98,7 +98,7 @@ class AppContextImpl implements AppContext {
     }
 
     @Override
-    public void callDefaultAction(Request request) throws Exception {
+    public void invokeSuperAction(Request request) throws Exception {
         app.invokeDefault(request);
     }
 

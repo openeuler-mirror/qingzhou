@@ -30,7 +30,7 @@ public class VerCode implements Filter<SystemControllerContext> {
     private final Captcha captcha = new Captcha(verCodeFormat);
     private final char[] CHAR_ARRAY = "3456789ABCDEFGHJKMNPQRSTUVWXY".toCharArray();
 
-    private static Map<String, String> getUserVerCodesFromIp(String clientIp) {
+    private static synchronized Map<String, String> getUserVerCodesFromIp(String clientIp) {
         if (IPUtil.isLocalIp(clientIp)) { // 本机访问本机，浏览器、命令行、接口等可能用了不同的发送ip，有的是h127，有的是::1，有的实际ip等
             clientIp = "LocalIp";
         }

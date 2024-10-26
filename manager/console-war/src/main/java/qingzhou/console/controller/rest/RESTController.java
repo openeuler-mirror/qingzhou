@@ -1,5 +1,28 @@
 package qingzhou.console.controller.rest;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
+
 import qingzhou.api.InputType;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Request;
@@ -22,19 +45,6 @@ import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.*;
-import java.io.File;
-import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.StandardOpenOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
@@ -121,7 +131,7 @@ public class RESTController extends HttpServlet {
 
     private void responseMsg(Map<String, Response> instanceResult, RequestImpl request) {
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        Map<String, Response> responseList = request.getResponseList();
+        Map<String, Response> responseList = request.getInvokeOnInstances();
         if (responseList != null && !responseList.isEmpty()) {
             instanceResult = responseList;
         }
@@ -255,16 +265,20 @@ public class RESTController extends HttpServlet {
         request.setUserName(LoginManager.getLoginUser(req));
         request.setI18nLang(I18n.getI18nLang());
 
+        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
+
+
         StringBuilder id = new StringBuilder();
         if (rest.size() > restDepth) {
             id.append(rest.get(restDepth));
             for (int i = restDepth + 1; i < rest.size(); i++) {
                 id.append("/").append(rest.get(i)); // support ds jndi: jdbc/test
             }
-            request.setId(RESTController.decodeId(id.toString()));
+            String decodeId = RESTController.decodeId(id.toString());
+            request.setId(decodeId);
+            // Update 更新操作参数里需要id
+            request.setParameter(modelInfo.getIdField(), decodeId);
         }
-
-        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
 
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
         if (actionInfo == null) {

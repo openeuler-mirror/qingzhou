@@ -1,6 +1,18 @@
 package qingzhou.app.system.business;
 
-import qingzhou.api.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
@@ -11,8 +23,6 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
-
-import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.Business, order = 1,
@@ -60,7 +70,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     }
 
     @ModelField(
-            display = "false",
+            create = false, edit = false,
             forbid = {DeployerConstants.APP_SYSTEM},
             search = true,
             name = {"应用名称", "en:App Name"},
@@ -105,7 +115,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelField(
             list = true, search = true,
-            display = "false",
+            create = false, edit = false,
             color = {DeployerConstants.app_Started + ":Green", DeployerConstants.app_Stopped + ":Gray"},
             name = {"状态", "en:State"},
             info = {"指示应用的当前运行状态。", "en:Indicates the current running state of the app."})
@@ -147,7 +157,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
         return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
@@ -170,7 +180,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
     public void create(Request request) throws Exception {
-        getAppContext().callDefaultAction(request);
+        getAppContext().invokeSuperAction(request);
     }
 
     @ModelAction(

@@ -1,5 +1,13 @@
 package qingzhou.console.controller.rest;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import qingzhou.api.InputType;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Update;
@@ -11,9 +19,6 @@ import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
-
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 public class ParameterFilter implements Filter<RestContext> {
     @Override
@@ -40,7 +45,6 @@ public class ParameterFilter implements Filter<RestContext> {
         boolean isUpdateAction = Update.ACTION_UPDATE.equals(request.getAction());
 
         ModelInfo modelInfo = request.getCachedModelInfo();
-        String idField = modelInfo.getIdField();
         Enumeration<String> parameterNames = request.getParameterNames();
         while (parameterNames.hasMoreElements()) {
             String name = parameterNames.nextElement();
@@ -60,11 +64,6 @@ public class ParameterFilter implements Filter<RestContext> {
                     continue;
                 }
 
-                if (name.equals(idField)) {
-                    toRemove.add(name);
-                    continue;
-                }
-
                 // readonly 要从后端数据校验，避免通过 rest api 绕过前端进入数据写入
                 if (fieldInfo.isReadonly()) {
                     toRemove.add(name);
@@ -80,7 +79,11 @@ public class ParameterFilter implements Filter<RestContext> {
             }
         }
 
-        toRemove.forEach(request::removeParameter);
+        String idField = modelInfo.getIdField();
+        for (String f : toRemove) {
+            if (f.equals(idField)) continue;
+            request.removeParameter(f);
+        }
     }
 
     private void trim(RequestImpl request) {

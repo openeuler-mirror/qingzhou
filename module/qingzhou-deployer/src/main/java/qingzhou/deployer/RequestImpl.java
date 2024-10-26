@@ -11,7 +11,7 @@ public class RequestImpl implements Request {
     private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
     private transient Response response = new ResponseImpl();
     private transient ModelInfo cachedModelInfo = null;
-    private transient Map<String, Response> responseList;
+    private transient Map<String, Response> invokeOnInstances;
 
     private String appName;
     private String modelName;
@@ -188,11 +188,11 @@ public class RequestImpl implements Request {
         this.byteParameter = byteParameter;
     }
 
-    public Map<String, Response> getResponseList() {
-        return responseList;
+    public Map<String, Response> getInvokeOnInstances() {
+        return invokeOnInstances;
     }
 
-    public void setResponseList(Map<String, Response> responseList) {
-        this.responseList = responseList;
+    public void setInvokeOnInstances(Map<String, Response> invokeOnInstances) {
+        this.invokeOnInstances = invokeOnInstances;
     }
 }

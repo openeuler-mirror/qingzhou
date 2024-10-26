@@ -1,11 +1,35 @@
 package qingzhou.deployer.impl;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import qingzhou.api.Item;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Echo;
+import qingzhou.api.type.Export;
 import qingzhou.api.type.List;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Show;
+import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
@@ -16,24 +40,17 @@ import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-
-class DefaultAction {
-    static final java.util.List<ModelActionInfo> allDefaultActionCache;
+class SuperAction {
+    static final java.util.List<ModelActionInfo> allSuperActionCache;
 
     static {
-        allDefaultActionCache = DeployerImpl.parseModelActionInfos(new AnnotationReader(DefaultAction.class));
+        allSuperActionCache = DeployerImpl.parseModelActionInfos(new AnnotationReader(SuperAction.class));
     }
 
     private final AppImpl app;
     private final ModelBase instance;
 
-    DefaultAction(AppImpl app, ModelBase instance) {
+    SuperAction(AppImpl app, ModelBase instance) {
         this.app = app;
         this.instance = instance;
     }
@@ -48,7 +65,8 @@ class DefaultAction {
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request) throws Exception {
         Map<String, String> data = ((Show) instance).showData(request.getId());
-        data.forEach((k, v) -> request.getResponse().addDataMap(k, v));
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(data);
     }
 
     @ModelAction(
@@ -71,10 +89,11 @@ class DefaultAction {
             }
         }
 
+        ResponseImpl response = (ResponseImpl) request.getResponse();
         Echo echo = (Echo) instance;
         echoParameters.forEach((group, groupParameters) -> {
             Map<String, String> echoResult = echo.echoData(group, groupParameters);
-            echoResult.forEach((k, v) -> request.getResponse().addDataMap(k, v));
+            response.getDataMap().putAll(echoResult);
         });
     }
 
@@ -145,14 +164,11 @@ class DefaultAction {
 
         Map<String, String> query = queryParams(request);
         String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFieldsToList();
-        java.util.List<Map<String, String>> result = list.listData(pageNum, pageSize, fieldNamesToList, query);
+        java.util.List<String[]> result = list.listData(pageNum, pageSize, fieldNamesToList, query);
         if (result == null) return;
 
-        for (Map<String, String> data : result) {
-            responseImpl.addDataList(data);
-        }
+        responseImpl.setDataList(result);
         int totalSize = list.totalSize(query);
-
         responseImpl.setTotalSize(totalSize);
         responseImpl.setPageSize(pageSize);
         responseImpl.setPageNum(pageNum);
@@ -178,7 +194,8 @@ class DefaultAction {
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) {
         Map<String, String> properties = getAppInfo().getModelInfo(request.getModel()).getFormFieldDefaultValues();
-        properties.forEach((k, v) -> request.getResponse().addDataMap(k, v));
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(properties);
     }
 
     @ModelAction(
@@ -204,7 +221,8 @@ class DefaultAction {
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
         Map<String, String> data = ((Update) instance).editData(request.getId());
-        data.forEach((k, v) -> request.getResponse().addDataMap(k, v));
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(data);
     }
 
     @ModelAction(
@@ -251,7 +269,7 @@ class DefaultAction {
         if (p == null || p.isEmpty()) return;
 
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        p.forEach(response::addDataMap);
+        response.getDataMap().putAll(p);
     }
 
     @ModelAction(
@@ -290,7 +308,7 @@ class DefaultAction {
         }
 
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        map.forEach(response::addDataMap);
+        response.getDataMap().putAll(map);
     }
 
     @ModelAction(

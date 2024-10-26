@@ -58,7 +58,7 @@ public interface AppContext {
 
     Collection<Class<?>> getServiceTypes();
 
-    void callDefaultAction(Request request) throws Exception;
+    void invokeSuperAction(Request request) throws Exception;
 
     String getPlatformVersion();
 }

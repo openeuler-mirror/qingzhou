@@ -1,10 +1,5 @@
 package qingzhou.app.model;
 
-import qingzhou.api.*;
-import qingzhou.api.type.*;
-import qingzhou.app.ExampleMain;
-import qingzhou.engine.util.FileUtil;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -12,11 +7,25 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Show;
+import qingzhou.app.ExampleMain;
+import qingzhou.engine.util.FileUtil;
+
 @Model(code = "filemanage", icon = "file", menu = ExampleMain.MENU_11, order = 4, name = {"文件管理", "en:File Manage"}, info = {"对系统中的文件进行管理。", "en:Manage files in the system."})
 public class FileManage extends ModelBase implements Add, Show, List, Delete, Download {
     public static final String FILE_BASEDIR = "files";
 
-    @ModelField(display = "false", name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
+    @ModelField(create = false, edit = false, name = {"文件名称", "en:Department Name"}, info = {"该文件的名称。", "en:The name of the department."})
     public String id;
 
     @ModelField(input_type = InputType.file, required = true, list = true, name = {"上传文件", "en:Upload File"}, info = {"上传一个文件到服务器，文件须是 *.html类型的。", "en:Upload a file to the server of type *.html."})
@@ -38,7 +47,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     }
 
     @Override
-    public Map<String, String> showData(String id) throws Exception {
+    public Map<String, String> showData(String id) {
         File path = new File(getAppContext().getAppDir(), FILE_BASEDIR);
         if (path.exists()) {
             for (File file : path.listFiles()) {
@@ -73,24 +82,24 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     }
 
     @Override
-    public java.util.List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
+    public java.util.List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
         String[] allIds = allIds(query);
         int totalSize = allIds.length;
         int startIndex = (pageNum - 1) * pageSize;
         int endIndex = Math.min(startIndex + pageSize, totalSize);
         String[] subList = Arrays.copyOfRange(allIds, startIndex, endIndex);
 
-        java.util.List<Map<String, String>> data = new ArrayList<>();
+        java.util.List<String[]> data = new ArrayList<>();
         for (String id : subList) {
-            Map<String, String> result = new HashMap<>();
+            String[] result = new String[showFields.length];
 
             Map<String, String> idData = showData(id);
             if (idData == null) {
                 continue;
             }
 
-            for (String fieldName : showFields) {
-                result.put(fieldName, idData.get(fieldName));
+            for (int i = 0; i < showFields.length; i++) {
+                result[i] = idData.get(showFields[i]);
             }
 
             data.add(result);

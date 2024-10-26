@@ -1,6 +1,9 @@
 package qingzhou.app;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class MemoryDataStoreDemo {
     private final String idKey;
@@ -37,19 +40,19 @@ public class MemoryDataStoreDemo {
                 .toArray(String[]::new);
     }
 
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] fieldNames, Map<String, String> query) {
+    public List<String[]> listData(int pageNum, int pageSize, String[] fieldNames, Map<String, String> query) {
         String[] ids = allIds(query);
         int fromIndex = (pageNum - 1) * pageSize;
         int endIndex = Math.min(fromIndex + pageSize, ids.length);
 
-        List<Map<String, String>> result = new ArrayList<>();
+        List<String[]> result = new ArrayList<>();
         for (String id : Arrays.copyOfRange(ids, fromIndex, endIndex)) {
             Map<String, String> item = showData(id);
-            result.add(new HashMap<String, String>() {{
-                for (String fieldName : fieldNames) {
-                    put(fieldName, item.get(fieldName));
-                }
-            }});
+            String[] data = new String[fieldNames.length];
+            for (int i = 0; i < fieldNames.length; i++) {
+                data[i] = item.get(fieldNames[i]);
+            }
+            result.add(data);
         }
         return result;
     }

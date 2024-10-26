@@ -1,23 +1,34 @@
 package qingzhou.app.system;
 
-import qingzhou.api.*;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.Monitor;
-import qingzhou.deployer.App;
-import qingzhou.deployer.*;
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Monitor;
+import qingzhou.deployer.App;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
+import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
 
 @Model(code = DeployerConstants.MODEL_AGENT,
         hidden = true,
@@ -129,7 +140,7 @@ public class Agent extends ModelBase implements Download {
     public void monitor(Request request) {
         OperatingSystemMXBean mxBean = ManagementFactory.getOperatingSystemMXBean();
 
-        LinkedHashMap<String, String> data = new LinkedHashMap<>();
+        Map<String, String> data = new HashMap<>();
         data.put("osName", mxBean.getName());
         data.put("osVer", mxBean.getVersion());
         data.put("arch", mxBean.getArch());
@@ -163,7 +174,8 @@ public class Agent extends ModelBase implements Download {
         data.put("heapCommitted", maskMBytes(memoryMXBean.getHeapMemoryUsage().getCommitted()));
         data.put("nonHeapUsed", maskMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
 
-        data.forEach((key, value) -> request.getResponse().addDataMap(key, value));
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(data);
     }
 
     private String maskGBytes(long val) {

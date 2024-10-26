@@ -36,7 +36,5 @@ public interface Response {
      */
     void setDateHeader(String name, long date);
 
-    void setCustomizedDataObject(Serializable customizedDataObject);
-
-    void addDataMap(String key, String value);
+    void useCustomizedResponse(Serializable customizedDataObject);
 }

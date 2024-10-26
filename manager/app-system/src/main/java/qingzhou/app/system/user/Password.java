@@ -135,7 +135,7 @@ public class Password extends ModelBase implements Update, Export {
             name = {"刷新动态密码", "en:Refresh OTP"},
             info = {"获取当前用户的动态密码，以二维码形式提供给用户。", "en:Obtain the current user OTP and provide it to the user in the form of a QR code."})
     public void refreshKey(Request request) throws Exception {
-        getAppContext().callDefaultAction(request);
+        getAppContext().invokeSuperAction(request);
     }
 
     @Override

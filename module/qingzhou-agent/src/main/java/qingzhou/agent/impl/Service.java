@@ -107,7 +107,7 @@ class Service implements Process {
         Serializable customizedDataObject = response.getCustomizedDataObject();
         if (customizedDataObject != null) { // 数据清洗提炼，减少传输压力
             ResponseImpl liteResponse = new ResponseImpl();
-            liteResponse.setCustomizedDataObject(customizedDataObject);
+            liteResponse.useCustomizedResponse(customizedDataObject);
             response = liteResponse;
         }
         response.getParametersInSession().putAll(request.getParametersInSession());
