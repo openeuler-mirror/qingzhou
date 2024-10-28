@@ -1,13 +1,12 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.Response;
 import qingzhou.api.type.Show;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.SystemController;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 
-import java.util.HashMap;
 import java.util.Map;
 
 class RemoteFieldValueRetriever implements SecurityController.FieldValueRetriever {
@@ -26,12 +25,8 @@ class RemoteFieldValueRetriever implements SecurityController.FieldValueRetrieve
             RequestImpl tmp = new RequestImpl(request);
             tmp.setActionName(Show.ACTION_SHOW);
             tmp.setId(id);
-            Response response = SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
-            if (!response.getDataList().isEmpty()) {
-                originData = response.getDataList().get(0);
-            } else {
-                originData = new HashMap<>();
-            }
+            ResponseImpl response = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+            originData = response.getDataMap();
         }
 
         return originData.get(fieldName);

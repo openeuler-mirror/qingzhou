@@ -12,10 +12,7 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.ModelInfo;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 class Service implements Process {
@@ -107,6 +104,12 @@ class Service implements Process {
 
         // 将 request 收集的 session 参数，通过 response 回传到调用端
         ResponseImpl response = (ResponseImpl) request.getResponse();
+        Serializable customizedDataObject = response.getCustomizedDataObject();
+        if (customizedDataObject != null) { // 数据清洗提炼，减少传输压力
+            ResponseImpl liteResponse = new ResponseImpl();
+            liteResponse.useCustomizedResponse(customizedDataObject);
+            response = liteResponse;
+        }
         response.getParametersInSession().putAll(request.getParametersInSession());
 
         // 5. 响应数据

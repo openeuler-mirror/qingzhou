@@ -1,11 +1,17 @@
 package qingzhou.registry;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 import qingzhou.engine.util.Utils;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class ModelInfo {
     private String code;
@@ -25,7 +31,6 @@ public class ModelInfo {
     private ItemInfo[] groupInfos;
     private LinkedHashMap<String, ItemInfo[]> optionInfos;
     private Map<String, String> defaultSearch;
-    private boolean showIdField;
     private String[] staticOptionFields;
     private String[] dynamicOptionFields;
     private String[] headActions;
@@ -86,31 +91,41 @@ public class ModelInfo {
         return null;
     }
 
-    public Integer[] getFieldsIndexToList() {
-        List<Integer> index = new ArrayList<>();
-        for (int i = 0; i < modelFieldInfos.length; i++) {
-            ModelFieldInfo fieldInfo = modelFieldInfos[i];
-            if (fieldInfo.getFieldType() == FieldType.FORM) {
-                if (fieldInfo.isList()) index.add(i);
-            }
-        }
-        return index.toArray(new Integer[0]);
-    }
-
     public String[] getFieldsToListSearch() {
         List<String> list = new ArrayList<>();
         for (ModelFieldInfo fieldInfo : modelFieldInfos) {
-            if (fieldInfo.isSearch() || fieldInfo.getFieldType() == FieldType.SEARCH) {
+            if (fieldInfo.isSearch()) {
                 list.add(fieldInfo.getCode());
             }
         }
         return list.toArray(new String[0]);
     }
 
+    public boolean isHideId() {
+        return !getModelFieldInfo(idField).isShow();
+    }
+
+    public int getIdIndex() {
+        return getFieldIndex(idField);
+    }
+
+    public int getFieldIndex(String field) {
+        String[] fieldsToList = getFieldsToList();
+        for (int i = 0; i < fieldsToList.length; i++) {
+            if (fieldsToList[i].equals(field)) {
+                return i;
+            }
+        }
+        throw new IllegalStateException();
+    }
+
     public String[] getFieldsToList() {
         List<String> list = new ArrayList<>();
-        for (Integer i : getFieldsIndexToList()) {
-            list.add(modelFieldInfos[i].getCode());
+        for (String formFieldName : getFormFieldNames()) {
+            ModelFieldInfo modelFieldInfo = getModelFieldInfo(formFieldName);
+            if (modelFieldInfo.isList() && modelFieldInfo.isShow()) {
+                list.add(formFieldName);
+            }
         }
         if (!list.contains(idField)) {
             list.add(0, idField);
@@ -130,7 +145,7 @@ public class ModelInfo {
         return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.FORM).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }
 
-    public Map<String, String> getDisplayCondition() {
+    public Map<String, String> getFormFieldDisplay() {
         Map<String, String> data = new HashMap<>();
         for (String field : getFormFieldNames()) {
             ModelFieldInfo modelFieldInfo = getModelFieldInfo(field);
@@ -292,14 +307,6 @@ public class ModelInfo {
 
     public void setDefaultSearch(Map<String, String> defaultSearch) {
         this.defaultSearch = defaultSearch;
-    }
-
-    public boolean isShowIdField() {
-        return showIdField;
-    }
-
-    public void setShowIdField(boolean showIdField) {
-        this.showIdField = showIdField;
     }
 
     public String[] getStaticOptionFields() {

@@ -55,7 +55,7 @@ public class Main extends QingzhouSystemApp {
             requestImpl.setActionName(action);
             Map<String, Response> responseList = Main.getService(ActionInvoker.class)
                     .invokeOnInstances(request, instances);
-            requestImpl.setResponseList(responseList);
+            requestImpl.setInvokeOnInstances(responseList);
         } finally {
             requestImpl.setModelName(originModel);
             requestImpl.setActionName(originAction);

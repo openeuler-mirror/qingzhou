@@ -11,5 +11,9 @@ public interface Export {
         byte[] read(long offset) throws IOException;
 
         long offset();
+
+        default String getDownloadName() {
+            return null;
+        }
     }
 }

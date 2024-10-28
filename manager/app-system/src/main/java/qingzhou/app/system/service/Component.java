@@ -25,14 +25,14 @@ import java.util.Map;
 public class Component extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
             search = true,
-            widthPercent = 30,
+            width_percent = 30,
             name = {"组件名称", "en:Component Name"},
             info = {"组件名称", "en:Component Name"})
     public String id;
 
     @ModelField(
             list = true, search = true,
-            widthPercent = 70,
+            width_percent = 70,
             name = {"组件类型", "en:Component Type"},
             info = {"组件类型", "en:Component type"})
     public String type;
@@ -62,7 +62,7 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
         return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 

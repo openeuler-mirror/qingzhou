@@ -1,21 +1,20 @@
 package qingzhou.console.view.type;
 
+import javax.servlet.http.HttpServletRequest;
+
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Show;
+import qingzhou.api.type.Update;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
-import qingzhou.engine.util.Utils;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelInfo;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public class HtmlView implements View {
     public static final String htmlPageBase = "/WEB-INF/view/";
@@ -23,34 +22,9 @@ public class HtmlView implements View {
 
     @Override
     public void render(RestContext restContext) throws Exception {
-        HttpServletRequest servletRequest = restContext.req;
-        HttpServletResponse servletResponse = restContext.resp;
-        if (servletResponse.isCommitted()) return;
-
         RequestImpl request = restContext.request;
-        ModelInfo modelInfo = request.getCachedModelInfo();
-        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+        HttpServletRequest servletRequest = restContext.req;
 
-        String page = actionInfo.getPage();
-        if (Utils.notBlank(page)) {
-            page = "/" + request.getApp() + (page.startsWith("/") ? page : "/" + page);
-            servletRequest.getRequestDispatcher(page).forward(servletRequest, restContext.resp);
-            return;
-        }
-
-        String redirect = actionInfo.getRedirect();
-        if (Utils.notBlank(redirect)) {
-            servletResponse.sendRedirect(RESTController.encodeURL(servletResponse, servletRequest.getContextPath() +
-                    DeployerConstants.REST_PREFIX +
-                    "/" + request.getView() +
-                    "/" + request.getApp() +
-                    "/" + request.getModel() +
-                    "/" + redirect +
-                    "/" + request.getId()));
-            return;
-        }
-
-        // 转发给内部的 jsp view
         servletRequest.setAttribute(Request.class.getName(), request);
         boolean isManageAction = isManageApp(request);
         if (isManageAction) {
@@ -61,6 +35,7 @@ public class HtmlView implements View {
             Response response = SystemController.getService(ActionInvoker.class).invokeSingle(request);
             request.setResponse(response);// 用远端的请求替换本地的，如果是本地实例，它俩是等效的
         }
+
         String forwardView = isManageAction ? "sys/manage" : getForwardView(request);
         String forwardToPage = HtmlView.htmlPageBase + (forwardView.contains("/") ? (forwardView + ".jsp") : ("type/" + forwardView + ".jsp"));
         restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);

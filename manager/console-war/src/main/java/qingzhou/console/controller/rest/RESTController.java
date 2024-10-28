@@ -37,6 +37,7 @@ import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
@@ -129,21 +130,21 @@ public class RESTController extends HttpServlet {
     };
 
     private void responseMsg(Map<String, Response> instanceResult, RequestImpl request) {
-        Response response = request.getResponse();
-        Map<String, Response> responseList = request.getResponseList();
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        Map<String, Response> responseList = request.getInvokeOnInstances();
         if (responseList != null && !responseList.isEmpty()) {
             instanceResult = responseList;
         }
 
         if (instanceResult.size() == 1) {  // 非批量操作，不需要重组响应信息
-            response = instanceResult.values().iterator().next();
+            response = (ResponseImpl) instanceResult.values().iterator().next();
             request.setResponse(response);
         } else {
-            Map<String, Response> failed = new LinkedHashMap<>();
+            Map<String, ResponseImpl> failed = new LinkedHashMap<>();
             int suc = 0;
             int fail = 0;
             for (Map.Entry<String, Response> e : instanceResult.entrySet()) {
-                Response check = e.getValue();
+                ResponseImpl check = (ResponseImpl) e.getValue();
                 if (check.isSuccess()) {
                     suc += 1;
                 } else {
@@ -155,12 +156,12 @@ public class RESTController extends HttpServlet {
             response.setSuccess(suc > 0); // 至少有一个成功，则认为整体是成功的
 
             MsgLevel msgLevel = suc > 0
-                    ? (fail > 0 ? MsgLevel.warn : MsgLevel.info)
-                    : MsgLevel.error;
-            response.setMsgType(msgLevel);
+                    ? (fail > 0 ? MsgLevel.WARN : MsgLevel.INFO)
+                    : MsgLevel.ERROR;
+            response.setMsgLevel(msgLevel);
 
             StringBuilder errorMsg = new StringBuilder(String.format(I18n.getKeyI18n("batch.ops.fail"), suc, fail));
-            for (Map.Entry<String, Response> e : failed.entrySet()) {
+            for (Map.Entry<String, ResponseImpl> e : failed.entrySet()) {
                 String instance = e.getKey();
                 String msg = e.getValue().getMsg();
                 errorMsg.append(instance).append(": ").append(msg);
@@ -174,8 +175,8 @@ public class RESTController extends HttpServlet {
         }
 
         // 完善响应的 msg type
-        if (response.getMsgType() == null) {
-            response.setMsgType(response.isSuccess() ? MsgLevel.info : MsgLevel.error);
+        if (response.getMsgLevel() == null) {
+            response.setMsgLevel(response.isSuccess() ? MsgLevel.INFO : MsgLevel.ERROR);
         }
     }
 
@@ -264,16 +265,20 @@ public class RESTController extends HttpServlet {
         request.setUserName(LoginManager.getLoginUser(req));
         request.setI18nLang(I18n.getI18nLang());
 
+        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
+
+
         StringBuilder id = new StringBuilder();
         if (rest.size() > restDepth) {
             id.append(rest.get(restDepth));
             for (int i = restDepth + 1; i < rest.size(); i++) {
                 id.append("/").append(rest.get(i)); // support ds jndi: jdbc/test
             }
-            request.setId(RESTController.decodeId(id.toString()));
+            String decodeId = RESTController.decodeId(id.toString());
+            request.setId(decodeId);
+            // Update 更新操作参数里需要id
+            request.setParameter(modelInfo.getIdField(), decodeId);
         }
-
-        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
 
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
         if (actionInfo == null) {

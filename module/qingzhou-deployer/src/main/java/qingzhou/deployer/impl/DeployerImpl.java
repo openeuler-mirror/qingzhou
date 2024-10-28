@@ -1,8 +1,38 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Supplier;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+import java.util.stream.Collectors;
+
+import qingzhou.api.AppContext;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Group;
 import qingzhou.api.type.List;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
 import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -11,21 +41,12 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
-import qingzhou.registry.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.Supplier;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
-import java.util.stream.Collectors;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ItemInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
@@ -189,14 +210,14 @@ class DeployerImpl implements Deployer {
         });
 
         // 追加默认的 Action 执行器
-        Map<String, java.util.List<ModelActionInfo>> addedDefaultActions = addDefaultAction(modelInfos);// 追加系统预置的 action
-        addedDefaultActions.forEach((modelName, addedModelActions) -> {
+        Map<String, java.util.List<ModelActionInfo>> addedSuperActions = addSuperAction(modelInfos);// 追加系统预置的 action
+        addedSuperActions.forEach((modelName, addedModelActions) -> {
             ModelBase[] findModelBase = new ModelBase[1];
             modelInfos.entrySet().stream().filter(entry -> entry.getValue().getCode().equals(modelName)).findAny().ifPresent(entry -> findModelBase[0] = entry.getKey());
-            DefaultAction defaultAction = new DefaultAction(app, findModelBase[0]);
+            SuperAction superAction = new SuperAction(app, findModelBase[0]);
             Map<String, ActionMethod> moelMap = app.getModelActionMap().computeIfAbsent(modelName, model -> new HashMap<>());
             for (ModelActionInfo action : addedModelActions) {
-                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getMethod(), defaultAction);
+                ActionMethod actionMethod = ActionMethod.buildActionMethod(action.getMethod(), superAction);
                 moelMap.put(action.getCode(), actionMethod);
             }
         });
@@ -204,9 +225,9 @@ class DeployerImpl implements Deployer {
         return app;
     }
 
-    private Map<String, java.util.List<ModelActionInfo>> addDefaultAction(Map<ModelBase, ModelInfo> modelInfos) {
+    private Map<String, java.util.List<ModelActionInfo>> addSuperAction(Map<ModelBase, ModelInfo> modelInfos) {
         Map<String, java.util.List<ModelActionInfo>> addActionToModels = detectActionsToAdd(modelInfos);
-        mergeDefaultActions(modelInfos, addActionToModels);
+        mergeSuperActions(modelInfos, addActionToModels);
         return addActionToModels;
     }
 
@@ -217,7 +238,7 @@ class DeployerImpl implements Deployer {
             Set<ModelActionInfo> selfActions = Arrays.stream(entry.getValue().getModelActionInfos()).collect(Collectors.toSet());
             ModelBase modelBase = entry.getKey();
             Set<String> detectedActionNames = new HashSet<>();
-            findSuperDefaultActions(modelBase.getClass(), detectedActionNames);
+            findSuperActions(modelBase.getClass(), detectedActionNames);
             detectedActionNames.forEach(addActionName -> {
                 boolean exists = false;
                 for (ModelActionInfo self : selfActions) {
@@ -227,7 +248,7 @@ class DeployerImpl implements Deployer {
                     }
                 }
                 if (!exists) {
-                    for (ModelActionInfo actionInfo : DefaultAction.allDefaultActionCache) {
+                    for (ModelActionInfo actionInfo : SuperAction.allSuperActionCache) {
                         if (addActionName.equals(actionInfo.getCode())) {
                             added.add(actionInfo);
                             break;
@@ -241,7 +262,7 @@ class DeployerImpl implements Deployer {
         return addActionToModels;
     }
 
-    private void mergeDefaultActions(Map<ModelBase, ModelInfo> modelInfos, Map<String, java.util.List<ModelActionInfo>> addActionToModels) {
+    private void mergeSuperActions(Map<ModelBase, ModelInfo> modelInfos, Map<String, java.util.List<ModelActionInfo>> addActionToModels) {
         for (Map.Entry<String, java.util.List<ModelActionInfo>> addedModelActionInfos : addActionToModels.entrySet()) {
             ModelInfo addedToModel = null;
             for (ModelInfo value : modelInfos.values()) {
@@ -336,7 +357,6 @@ class DeployerImpl implements Deployer {
         List listInstance = (List) instance;
         modelInfo.setShowOrderNumber(listInstance.showOrderNumber());
         modelInfo.setDefaultSearch(listInstance.defaultSearch());
-        modelInfo.setShowIdField(listInstance.showIdField());
         modelInfo.setListActions(listInstance.listActions());
         modelInfo.setHeadActions(listInstance.headActions());
         modelInfo.setBatchActions(listInstance.batchActions());
@@ -381,36 +401,38 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setName(modelField.name());
             modelFieldInfo.setInfo(modelField.info());
             modelFieldInfo.setGroup(modelField.group());
-            modelFieldInfo.setInputType(modelField.inputType());
-            modelFieldInfo.setRefModelClass(modelField.refModel());
+            modelFieldInfo.setInputType(modelField.input_type());
+            modelFieldInfo.setRefModelClass(modelField.reference());
             modelFieldInfo.setSeparator(modelField.separator());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setShow(modelField.show());
             modelFieldInfo.setUpdate(modelField.update());
+            modelFieldInfo.setCreate(modelField.create());
+            modelFieldInfo.setEdit(modelField.edit());
             modelFieldInfo.setList(modelField.list());
             modelFieldInfo.setIgnore(modelField.ignore());
             modelFieldInfo.setSearch(modelField.search());
-            modelFieldInfo.setLinkShow(modelField.linkShow());
-            modelFieldInfo.setWidthPercent(modelField.widthPercent());
-            modelFieldInfo.setFieldType(modelField.fieldType());
+            modelFieldInfo.setLinkShow(modelField.link_show());
+            modelFieldInfo.setWidthPercent(modelField.width_percent());
+            modelFieldInfo.setFieldType(modelField.field_type());
             modelFieldInfo.setNumeric(modelField.numeric());
             modelFieldInfo.setDisplay(modelField.display());
             modelFieldInfo.setRequired(modelField.required());
             modelFieldInfo.setMin(modelField.min());
             modelFieldInfo.setMax(modelField.max());
-            modelFieldInfo.setLengthMin(modelField.lengthMin());
-            modelFieldInfo.setLengthMax(modelField.lengthMax());
+            modelFieldInfo.setLengthMin(modelField.min_length());
+            modelFieldInfo.setLengthMax(modelField.max_length());
             modelFieldInfo.setPattern(modelField.pattern());
             modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
-            modelFieldInfo.setReadOnly(modelField.readOnly());
+            modelFieldInfo.setReadonly(modelField.readonly());
             modelFieldInfo.setForbid(modelField.forbid());
             modelFieldInfo.setSkip(modelField.skip());
             modelFieldInfo.setEmail(modelField.email());
             modelFieldInfo.setFile(modelField.file());
-            modelFieldInfo.setLinkList(modelField.linkList());
+            modelFieldInfo.setLinkList(modelField.link_list());
             modelFieldInfo.setColor(modelField.color());
-            modelFieldInfo.setEchoGroup(modelField.echoGroup());
+            modelFieldInfo.setEchoGroup(modelField.echo_group());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);
@@ -524,44 +546,44 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setRedirect(modelAction.redirect());
             modelActionInfo.setPage(modelAction.page());
-            modelActionInfo.setLinkFields(modelAction.linkFields());
-            modelActionInfo.setLinkModels(modelAction.linkModels());
+            modelActionInfo.setLinkFields(modelAction.link_fields());
+            modelActionInfo.setLinkModels(modelAction.link_models());
             modelActionInfos.add(modelActionInfo);
         });
         return modelActionInfos;
     }
 
-    static void findSuperDefaultActions(Class<?> checkClass, Set<String> defaultActions) {
-        Set<String> foundActions = findDefaultActions(checkClass);
+    static void findSuperActions(Class<?> checkClass, Set<String> superActions) {
+        Set<String> foundActions = findSuperActions(checkClass);
         if (foundActions != null) {
-            defaultActions.addAll(foundActions);
+            superActions.addAll(foundActions);
         }
 
         Class<?> superClass = checkClass.getSuperclass();
         if (superClass != null) {
-            findSuperDefaultActions(superClass, defaultActions);
+            findSuperActions(superClass, superActions);
         }
 
         for (Class<?> c : checkClass.getInterfaces()) {
-            findSuperDefaultActions(c, defaultActions);
+            findSuperActions(c, superActions);
         }
     }
 
-    private static Set<String> findDefaultActions(Class<?> checkClass) {
+    private static Set<String> findSuperActions(Class<?> checkClass) {
         if (!checkClass.isInterface()) return null;
         if (checkClass.getPackage() != (Add.class.getPackage())) return null;
 
-        Set<String> defaultActions = new HashSet<>();
+        Set<String> superActions = new HashSet<>();
         for (Field field : checkClass.getDeclaredFields()) {
             if (field.getName().startsWith("ACTION_")) {
                 try {
-                    defaultActions.add((String) field.get(null));
+                    superActions.add((String) field.get(null));
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
-        return defaultActions;
+        return superActions;
     }
 
     void setLoaderPolicy(LoaderPolicy loaderPolicy) {

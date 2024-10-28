@@ -1,6 +1,13 @@
 package qingzhou.app.common;
 
-import qingzhou.api.*;
+import java.util.HashMap;
+import java.util.Map;
+
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Show;
 
 @Model(code = "home", icon = "home",
@@ -8,7 +15,7 @@ import qingzhou.api.type.Show;
         name = {"首页", "en:Home"},
         info = {"展示应用的默认首页信息。",
                 "en:Displays the default app Home information."})
-public class Home extends ModelBase {
+public class Home extends ModelBase implements Show {
     @ModelField(
             name = {"应用名称", "en:App Name"},
             info = {"应用的名称信息。", "en:The name information of the app."})
@@ -30,10 +37,15 @@ public class Home extends ModelBase {
             info = {"进入此应用的默认首页。",
                     "en:Go to the default home of this app."})
     public void show(Request request) throws Exception {
-        Home home = new Home();
-        home.appName = request.getApp();
-        home.appDir = getAppContext().getAppDir().getAbsolutePath();
-        home.javaHome = System.getProperty("java.home");
-        request.getResponse().addModelData(home);
+        getAppContext().invokeSuperAction(request);
+    }
+
+    @Override
+    public Map<String, String> showData(String id) {
+        return new HashMap<String, String>() {{
+            put("appName", getAppContext().getCurrentRequest().getApp());
+            put("appDir", getAppContext().getAppDir().getAbsolutePath());
+            put("javaHome", System.getProperty("java.home"));
+        }};
     }
 }

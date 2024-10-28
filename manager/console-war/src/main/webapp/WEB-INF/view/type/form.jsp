@@ -17,18 +17,12 @@
           action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, submitActionName + (isEdit && Utils.notBlank(encodedId) ? "/" + encodedId: ""))%>">
         <div style="padding-top: 24px; padding-bottom: 1px;">
             <%
-                java.util.List<Map<String, String>> models = qzResponse.getDataList();
-                Map<String, String> modelData;
-                if (!models.isEmpty()) {
-                    modelData = models.get(0);
-                } else {
-                    modelData = new HashMap<>();
-                }
+                Map<String, String> modelData = qzResponse.getDataMap();
                 Map<String, Map<String, ModelFieldInfo>> formGroup = modelInfo.getFormGroupedFields();
                 Set<String> groups = formGroup.keySet();
                 long suffixId = System.currentTimeMillis();
                 ItemInfo[] groupInfos = modelInfo.getGroupInfos();
-                boolean hasGroup = groups.size() > 1 || Utils.notBlank(groups.iterator().next());
+                boolean hasGroup = groups.size() > 1 || (groups.size() == 1 && Utils.notBlank(groups.iterator().next()));
                 if (hasGroup) {
             %>
             <ul class="nav nav-tabs">
@@ -66,12 +60,15 @@
                             String fieldName = e.getKey();
                             ModelFieldInfo modelField = e.getValue();
 
+                            if (isEdit) {
+                                if (!modelField.isEdit()) continue;
+                            } else {
+                                if (!modelField.isCreate()) continue;
+                            }
+
                             boolean readOnly = fieldName.equals(idField) && isEdit;
                             if (!readOnly) {
-                                String modelFieldReadOnly = modelField.getReadOnly();
-                                if (Utils.notBlank(modelFieldReadOnly)) {
-                                    readOnly = SecurityController.checkRule(modelFieldReadOnly, modelData::get);
-                                }
+                                readOnly = modelField.isReadonly();
                             }
 
                             boolean required = fieldName.equals(idField) || modelField.isRequired();
@@ -188,7 +185,7 @@
             StringBuilder displayCondition = new StringBuilder();
             displayCondition.append("{");
             boolean isFirst = true;
-            for (Map.Entry<String, String> entry : modelInfo.getDisplayCondition().entrySet()) {
+            for (Map.Entry<String, String> entry : modelInfo.getFormFieldDisplay().entrySet()) {
                 if (!isFirst) displayCondition.append(",");
                 isFirst = false;
 

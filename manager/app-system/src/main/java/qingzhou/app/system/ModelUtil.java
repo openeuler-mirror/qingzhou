@@ -1,15 +1,20 @@
 package qingzhou.app.system;
 
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.engine.util.Utils;
-
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.engine.util.Utils;
 
 public class ModelUtil {
     private static final String STRING_PROPERTIES_SP = DeployerConstants.DEFAULT_DATA_SEPARATOR;
@@ -170,22 +175,20 @@ public class ModelUtil {
         return true;
     }
 
-    public static List<Map<String, String>> listData(String[] allIds, IdSupplier idSupplier,
-                                                     int pageNum, int pageSize, String[] fieldNames) throws IOException {
+    public static List<String[]> listData(String[] allIds, IdSupplier idSupplier,
+                                          int pageNum, int pageSize, String[] fieldNames) throws IOException {
         int totalSize = allIds.length;
         int startIndex = (pageNum - 1) * pageSize;
         int endIndex = Math.min(startIndex + pageSize, totalSize);
         String[] subList = Arrays.copyOfRange(allIds, startIndex, endIndex);
 
-        List<Map<String, String>> data = new ArrayList<>();
+        List<String[]> data = new ArrayList<>();
         for (String id : subList) {
-            Map<String, String> result = new HashMap<>();
-
+            String[] result = new String[fieldNames.length];
             Map<String, String> idData = idSupplier.get(id);
-            for (String fieldName : fieldNames) {
-                result.put(fieldName, idData.get(fieldName));
+            for (int i = 0; i < fieldNames.length; i++) {
+                result[i] = idData.get(fieldNames[i]);
             }
-
             data.add(result);
         }
         return data;

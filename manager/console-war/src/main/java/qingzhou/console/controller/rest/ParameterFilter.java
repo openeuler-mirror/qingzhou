@@ -1,6 +1,15 @@
 package qingzhou.console.controller.rest;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import qingzhou.api.InputType;
+import qingzhou.api.type.Add;
 import qingzhou.api.type.Update;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.SystemController;
@@ -10,9 +19,6 @@ import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
-
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 public class ParameterFilter implements Filter<RestContext> {
     @Override
@@ -35,34 +41,49 @@ public class ParameterFilter implements Filter<RestContext> {
 
     private void remove(RequestImpl request) {
         List<String> toRemove = new ArrayList<>();
+        boolean isAddAction = Add.ACTION_ADD.equals(request.getAction());
         boolean isUpdateAction = Update.ACTION_UPDATE.equals(request.getAction());
 
+        ModelInfo modelInfo = request.getCachedModelInfo();
         Enumeration<String> parameterNames = request.getParameterNames();
         while (parameterNames.hasMoreElements()) {
             String name = parameterNames.nextElement();
-            ModelFieldInfo fieldInfo = request.getCachedModelInfo().getModelFieldInfo(name);
-            if (fieldInfo == null) {
-                continue;
+            ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(name);
+            if (fieldInfo == null) continue;
+
+            if (isAddAction) {
+                if (!fieldInfo.isCreate()) {
+                    toRemove.add(name);
+                    continue;
+                }
             }
+
+            if (isUpdateAction) {
+                if (!fieldInfo.isEdit()) {
+                    toRemove.add(name);
+                    continue;
+                }
+
+                // readonly 要从后端数据校验，避免通过 rest api 绕过前端进入数据写入
+                if (fieldInfo.isReadonly()) {
+                    toRemove.add(name);
+                    continue;
+                }
+            }
+
             String display = fieldInfo.getDisplay();
             if (Utils.notBlank(display)) {
                 if (!SecurityController.checkRule(display, request::getParameter)) {
                     toRemove.add(name);
                 }
             }
-
-            if (isUpdateAction) {
-                // readonly 要从后端数据校验，避免通过 rest api 绕过前端进入数据写入
-                if (Utils.notBlank(fieldInfo.getReadOnly())) {
-                    boolean isReadOnly = SecurityController.checkRule(fieldInfo.getReadOnly(), new RemoteFieldValueRetriever(request.getId(), request));
-                    if (isReadOnly) {
-                        toRemove.add(name);
-                    }
-                }
-            }
         }
 
-        toRemove.forEach(request::removeParameter);
+        String idField = modelInfo.getIdField();
+        for (String f : toRemove) {
+            if (f.equals(idField)) continue;
+            request.removeParameter(f);
+        }
     }
 
     private void trim(RequestImpl request) {
@@ -82,7 +103,8 @@ public class ParameterFilter implements Filter<RestContext> {
         while (parameterNames.hasMoreElements()) {
             String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-            if (modelField != null && modelField.getInputType() == InputType.datetime) {
+            if (modelField == null) continue;
+            if (modelField.getInputType() == InputType.datetime) {
                 try {
                     String val = request.getParameter(fieldName);
                     if (Utils.notBlank(val)) {
@@ -101,7 +123,8 @@ public class ParameterFilter implements Filter<RestContext> {
         while (parameterNames.hasMoreElements()) {
             String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-            if (modelField != null && modelField.getInputType() == InputType.password) {
+            if (modelField == null) continue;
+            if (modelField.getInputType() == InputType.password) {
                 try {
                     String val = request.getParameter(fieldName);
                     String result = SystemController.decryptWithConsolePrivateKey(val, false);

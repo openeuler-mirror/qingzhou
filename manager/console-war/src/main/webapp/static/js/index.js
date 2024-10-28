@@ -473,29 +473,18 @@ function bindFormEvent() {
                             $("a", this).click();
                         }
                     });
-
-                    if (data.redirectURL !== "" && data.redirectURL !== undefined) {
-                        window.location.href = data.redirectURL;
-                        return;
-                    } else {
-                        showMsg(data.message, data.msg_level);
-                    }
+                    showMsg(data.msg, data.msg_level);
                 } else {
                     $("#tempZone", thisForm).html("");
                     for (var i = 0; i < passwordFields.length; i++) {
                         $("input[name='" + passwordFields[i] + "']", thisForm).val($("input[name='" + passwordFields[i] + "']", thisForm).attr("originVal"));
                     }
-                    var first = true;
-                    if (data.data && !$.isEmptyObject(data.data)) {
-                        var errorData = data.data[0];
+                    if (data.data) {
+                        var errorData = data.data;
                         for (var key in errorData) {
                             $("#form-item-" + key + " > div", thisForm).attr("error-key", key).addClass("has-error");
                             if ($(".nav.nav-tabs", thisForm).length < 1) {
                                 $("#form-item-" + key + " > div .tw-error-info", thisForm).html(errorData[key]);
-                                if (first) {
-                                    first = false;
-                                    //$("html, body").animate({scrollTop: $("#form-item-" + key, thisForm).offset().top - 100}, 500);
-                                }
                             }
                         }
                         $(".nav.nav-tabs > li", thisForm).each(function (i) {
@@ -517,7 +506,7 @@ function bindFormEvent() {
                         $($("a", $(".nav.nav-tabs > li.tab-has-error").first()).attr("href")).addClass("active");// TODO 需要考虑多级 Tab 标签。
                         //$("html, body").animate({scrollTop: $(".has-error", thisForm).first().offset().top - 100}, 500);
                     } else {
-                        showMsg(data.message, data.msg_level);
+                        showMsg(data.msg, data.msg_level);
                     }
                 }
             },
@@ -560,17 +549,7 @@ function echoItem(thisForm, params, item, echoGroup) {
     });
     const submitValue = params.filter(item => bindNames.has(item.name));
     $.post(action, submitValue, function (data) {
-        if (data.success === "false") {
-            $("#form-item-" + item + " > div", thisForm).attr("error-key", item).addClass("has-error");
-            $("#form-item-" + item + " > div .tw-error-info", thisForm).html(data.msg !== "" ? data.msg : data.attachments[item]);
-        } else {
-            $("#form-item-" + item + " > div", thisForm).attr("error-key", item).removeClass("has-error");
-            $("#form-item-" + item + " > div .tw-error-info", thisForm).html("");
-            var result = data.data[0];
-            if (result !== null) {
-                updateFormData(thisForm, result);
-            }
-        }
+        updateFormData(thisForm, data.data);
     }, "json");
 }
 
@@ -954,18 +933,18 @@ function bindEventForListPage() {
         $("input", $(this)).bind("change", updateListValue);
     });
 
-    function updateListValue (e) {
+    function updateListValue(e) {
         let fieldStr = $(this).attr("name")
         let v = $(this).val()
         let tempUrl = $(this).closest('tr').find('a[href*="edit"]').attr("href");
         tempUrl = tempUrl.replace("html", "json").replace("edit", "update");
         let resData
-        if (Array.isArray(v)){
+        if (Array.isArray(v)) {
             resData = [{}]
-            v.forEach(function(currentV) {
-                resData.push({"name":fieldStr,"value":currentV})
+            v.forEach(function (currentV) {
+                resData.push({"name": fieldStr, "value": currentV})
             });
-        }else{
+        } else {
             resData = {};
             resData[fieldStr] = v;
         }
@@ -976,7 +955,7 @@ function bindEventForListPage() {
             success: function (data) {
                 //去list页面
                 let listUrl = tempUrl.replace("json", "html").replace("update", "list")
-                returnHref(listUrl.substring(0,listUrl.lastIndexOf("/")))
+                returnHref(listUrl.substring(0, listUrl.lastIndexOf("/")))
             },
             error: function (e) {
                 handleError(e);
@@ -1035,7 +1014,7 @@ function confirm_method(filterForm, url) {
                     $("li.treeview.active", getRestrictedArea()).find("a").trigger('click');//点击当前所在菜单，请求list
                 }
             }
-            showMsg(data.message, data.msg_level);
+            showMsg(data.msg, data.msg_level);
         },
         error: function (e) {
             handleError(e);
@@ -1054,11 +1033,11 @@ function downloadFiles(fileListUrl, downloadUrl) {
         success: function (data) {
             var randId = new Date().getTime();
             var html = "<form id='downloadForm-" + randId + "' action='' method='post'>";
-            if (data.data && !$.isEmptyObject(data.data)) {
+            if (data.data) {
                 var keys = [];
                 var groups = {};
                 var defGroup = "defaultGroup-" + randId;
-                var attachmentData = data.data[0];
+                var attachmentData = data.data;
                 for (var key in attachmentData) {
                     var separaIndex = key.indexOf(getSetting("downdloadGroupSepara"));
                     var group = separaIndex > 0 ? key.substring(0, separaIndex) : defGroup;
@@ -1171,8 +1150,8 @@ function initMonitorPage() {
     var randId = new Date().getTime();
     $(".bodyDiv>div.infoPage[chartMonitor='true'][loaded!='true']").attr("loaded", "true").each(function (i) {
         var thisDiv = $(this);
-        var infoKeys = eval("(" + $("textarea[name='infoKeys']", thisDiv).val() + ")");
-        var chartOption = defaultOption(infoKeys);
+        var monitorI18nInfo = eval("(" + $("textarea[name='monitorI18nInfo']", thisDiv).val() + ")");
+        var chartOption = defaultOption(monitorI18nInfo);
         var myChart = echarts.init($("div[container='chart']", this)[0]);
         myChart.renderFlag = true;
         myChart.on('mouseover', {seriesType: 'line'}, function () {
@@ -1197,7 +1176,7 @@ function initMonitorPage() {
                     handler(chartObj, option, url, keys, restrictedArea, retryOption, fn);
                 }
             }, 10);
-        })(myChart, chartOption, $(thisDiv).attr("data-url"), infoKeys, thisDiv, randId + i);
+        })(myChart, chartOption, $(thisDiv).attr("data-url"), monitorI18nInfo, thisDiv, randId + i);
     });
 };
 
@@ -1312,7 +1291,7 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
-                var monitorData = data.data[0];
+                var monitorData = data.data;
                 if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
                     var models = [{
                         dataTime: function () {
@@ -1323,12 +1302,12 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
                             return hours + ":" + minutes + ":" + seconds;
                         },
                         data: monitorData,
-                        models: data.data[1]
+                        models: monitorData
                     }];
                     addData(chartObj, chartOption, models, keys, restrictedArea);
                 }
             } else {
-                showMsg(data.message, data.msg_level);
+                showMsg(data.msg, data.msg_level);
             }
         },
         error: function (e) {

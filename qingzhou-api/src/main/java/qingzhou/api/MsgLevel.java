@@ -1,5 +1,10 @@
 package qingzhou.api;
 
 public enum MsgLevel {
-    info, warn, error
+    INFO("info"), WARN("warn"), ERROR("error");
+    public final String flag;
+
+    MsgLevel(String flag) {
+        this.flag = flag;
+    }
 }

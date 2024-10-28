@@ -1,6 +1,22 @@
 package qingzhou.app.system.user;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
@@ -15,11 +31,6 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Pattern;
 
 @Model(code = DeployerConstants.MODEL_USER, icon = "user",
         menu = Main.User, order = 1,
@@ -71,30 +82,32 @@ public class User extends ModelBase implements General, Validate, Option {
     public String name;
 
     @ModelField(
-            inputType = InputType.password,
-            required = true,
-            lengthMin = 10, lengthMax = 20,
+            input_type = InputType.password,
+            required = true, show = false,
+            min_length = 10, max_length = 20,
             name = {"账户密码", "en:Password"},
             info = {"用于登录系统的账户密码。", "en:The account password used to log in to the system."})
     public String password;
 
     @ModelField(
-            inputType = InputType.password,
-            required = true,
-            lengthMin = 10, lengthMax = 20,
+            input_type = InputType.password,
+            required = true, show = false,
+            min_length = 10, max_length = 20,
             name = {"确认密码", "en:Confirm Password"},
             info = {"确认登录系统的新密码。", "en:Confirm the new password for logging in to the system."})
     public String confirmPassword;
 
     @ModelField(
-            inputType = InputType.select,
+            show = false,
+            input_type = InputType.select,
             name = {"摘要算法", "en:Digest Algorithm"},
             info = {"进行摘要加密所采用的算法。", "en:The algorithm used for digest encryption."}
     )
     public String digestAlg = "SHA-256";
 
     @ModelField(
-            inputType = InputType.number,
+            show = false,
+            input_type = InputType.number,
             min = 1,
             max = 128,
             name = {"加盐长度", "en:Salt Length"},
@@ -103,7 +116,8 @@ public class User extends ModelBase implements General, Validate, Option {
     public Integer saltLength = 4;
 
     @ModelField(
-            inputType = InputType.number,
+            show = false,
+            input_type = InputType.number,
             min = 1,
             max = 128,
             name = {"迭代次数", "en:Iterations"},
@@ -112,14 +126,14 @@ public class User extends ModelBase implements General, Validate, Option {
     public Integer iterations = 5;
 
     @ModelField(
-            inputType = InputType.bool,
+            input_type = InputType.bool,
             name = {"下次登录须改密码", "en:Change Initial Password"},
             info = {"标记该用户下次登录系统后，须首先修改其登录密码，否则不能进行其它操作。",
                     "en:After marking the user to log in to the system next time, he or she must first change his login password, otherwise no other operations can be performed."})
     public Boolean changePwd = true;
 
     @ModelField(
-            display = "false",
+            create = false, edit = false,
             list = true, search = true,
             name = {"密码最后修改时间", "en:Password Last Modified"},
             info = {"最后一次修改密码的日期和时间。", "en:The date the password was last changed."}
@@ -127,8 +141,7 @@ public class User extends ModelBase implements General, Validate, Option {
     public String passwordLastModified;
 
     @ModelField(
-            inputType = InputType.bool,
-            readOnly = "name=qingzhou",
+            input_type = InputType.bool,
             list = true, search = true,
             color = {"true:Green", "false:Gray"},
             name = {"启用", "en:Active"},
@@ -137,7 +150,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             list = true, search = true,
-            linkShow = true,
+            link_show = true,
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;
@@ -218,7 +231,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
         return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
@@ -229,7 +242,7 @@ public class User extends ModelBase implements General, Validate, Option {
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) throws Exception {
-        getAppContext().callDefaultAction(request);
+        getAppContext().invokeSuperAction(request);
     }
 
     private boolean passwordChanged(String password) {
@@ -353,7 +366,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
-    public Map<String, String> validate(Request request) throws Exception {
+    public Map<String, String> validate(Request request) {
         Map<String, String> errors = new HashMap<>();
         String password = request.getParameter("password");
 

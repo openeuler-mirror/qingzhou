@@ -162,7 +162,11 @@ class ActionInvokerImpl implements ActionInvoker {
             decryptedData = responseBody;
         }
         String result = new String(decryptedData, DeployerConstants.ACTION_INVOKE_CHARSET);
-        return json.fromJson(result, ResponseImpl.class);
+        ResponseImpl res = json.fromJson(result, ResponseImpl.class);
+        if (res == null) {
+            throw new Exception(result);
+        }
+        return res;
     }
 
     private Response buildErrorResponse(String instance, Exception e) {

@@ -1,6 +1,18 @@
 package qingzhou.app.system.business;
 
-import qingzhou.api.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
@@ -12,14 +24,12 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
 
-import java.util.*;
-
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.Business, order = 1,
         name = {"应用", "en:App"},
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
-public class App extends ModelBase implements qingzhou.api.type.List {
+public class App extends ModelBase implements qingzhou.api.type.List, Add {
     public static final String instanceSP = ";";
 
     @Override
@@ -60,7 +70,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     }
 
     @ModelField(
-            display = "false",
+            create = false, edit = false,
             forbid = {DeployerConstants.APP_SYSTEM},
             search = true,
             name = {"应用名称", "en:App Name"},
@@ -69,7 +79,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     public String name;
 
     @ModelField(
-            inputType = InputType.bool,
+            input_type = InputType.bool,
             name = {"使用上传", "en:Enable Upload"},
             info = {"安装的应用可以从客户端上传，也可以从服务器端指定的位置读取。",
                     "en:The installed app can be uploaded from the client or read from a location specified on the server side."})
@@ -86,7 +96,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelField(
             display = "upload=true",
-            inputType = InputType.file,
+            input_type = InputType.file,
             required = true,
             name = {"上传应用", "en:Upload Application"},
             info = {"上传一个应用文件到服务器，文件须是 *.jar 或 *.zip 类型的 Qingzhou 应用文件，否则可能会导致安装失败。",
@@ -94,9 +104,9 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     public String file;
 
     @ModelField(
-            inputType = InputType.checkbox,
+            input_type = InputType.checkbox,
             required = true,
-            refModel = Instance.class,
+            reference = Instance.class,
             separator = App.instanceSP,
             list = true, search = true,
             name = {"安装实例", "en:Instance"},
@@ -105,7 +115,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
 
     @ModelField(
             list = true, search = true,
-            display = "false",
+            create = false, edit = false,
             color = {DeployerConstants.app_Started + ":Green", DeployerConstants.app_Stopped + ":Gray"},
             name = {"状态", "en:State"},
             info = {"指示应用的当前运行状态。", "en:Indicates the current running state of the app."})
@@ -147,7 +157,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     }
 
     @Override
-    public List<Map<String, String>> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
         return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
@@ -170,7 +180,7 @@ public class App extends ModelBase implements qingzhou.api.type.List {
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
     public void create(Request request) throws Exception {
-        request.getResponse().addModelData(new App());
+        getAppContext().invokeSuperAction(request);
     }
 
     @ModelAction(
@@ -181,6 +191,11 @@ public class App extends ModelBase implements qingzhou.api.type.List {
     public void add(Request request) {
         String instances = ((RequestImpl) request).removeParameter("instances");
         Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_INSTALL_APP, instances.split(App.instanceSP));
+    }
+
+    @Override
+    public void addData(Map<String, String> data) {
+        // 覆写了 Add.ACTION_ADD ，不会再进入这里了
     }
 
     @ModelAction(

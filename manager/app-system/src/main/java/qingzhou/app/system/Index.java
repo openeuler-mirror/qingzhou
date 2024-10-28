@@ -1,8 +1,15 @@
 package qingzhou.app.system;
 
-import qingzhou.api.*;
+import java.util.HashMap;
+
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Show;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.ResponseImpl;
 
 @Model(code = DeployerConstants.MODEL_INDEX, icon = "home",
         entrance = Show.ACTION_SHOW,
@@ -30,11 +37,12 @@ public class Index extends ModelBase {
             info = {"查看 Qingzhou 平台的相关信息。",
                     "en:View Qingzhou platform information."})
     public void show(Request request) throws Exception {
-        Index index = new Index();
-        index.name = "Qingzhou（轻舟）";
-        index.version = getAppContext().getPlatformVersion();
-        index.javaHome = System.getProperty("java.home");
-        request.getResponse().addModelData(index);
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(new HashMap<String, String>() {{
+            put("name", "Qingzhou（轻舟）");
+            put("version", getAppContext().getPlatformVersion());
+            put("javaHome", System.getProperty("java.home"));
+        }});
     }
 
     @ModelAction(// NOTE: 这个方法用作是 Login 成功后 跳过的

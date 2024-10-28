@@ -22,7 +22,7 @@ class AppImpl implements App {
     private QingzhouApp qingzhouApp;
     private final Map<String, ModelBase> modelBaseMap = new HashMap<>();
     private final Map<String, Map<String, ActionMethod>> modelActionMap = new HashMap<>();
-    private final Map<String, Map<String, ActionMethod>> addedDefaultActions = new HashMap<>();
+    private final Map<String, Map<String, ActionMethod>> addedSuperActions = new HashMap<>();
 
     @Override
     public AppContextImpl getAppContext() {
@@ -67,16 +67,16 @@ class AppImpl implements App {
         String modelName = request.getModel();
         String actionName = request.getAction();
 
-        Map<String, ActionMethod> actionMethodMap = addedDefaultActions.computeIfAbsent(modelName, k -> new HashMap<>());
+        Map<String, ActionMethod> actionMethodMap = addedSuperActions.computeIfAbsent(modelName, k -> new HashMap<>());
         ActionMethod actionMethod = actionMethodMap.computeIfAbsent(actionName, s -> {
             ModelBase modelBase = modelBaseMap.get(modelName);
             Class<? extends ModelBase> modelClass = modelBase.getClass();
-            Set<String> defaultActions = new HashSet<>();
-            DeployerImpl.findSuperDefaultActions(modelClass, defaultActions);
-            if (defaultActions.contains(actionName)) {
-                for (ModelActionInfo actionInfo : DefaultAction.allDefaultActionCache) {
+            Set<String> superActions = new HashSet<>();
+            DeployerImpl.findSuperActions(modelClass, superActions);
+            if (superActions.contains(actionName)) {
+                for (ModelActionInfo actionInfo : SuperAction.allSuperActionCache) {
                     if (actionInfo.getCode().equals(actionName)) {
-                        return ActionMethod.buildActionMethod(actionInfo.getMethod(), new DefaultAction(this, modelBase));
+                        return ActionMethod.buildActionMethod(actionInfo.getMethod(), new SuperAction(this, modelBase));
                     }
                 }
             }

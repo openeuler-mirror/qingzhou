@@ -1,16 +1,12 @@
 package qingzhou.app.system;
 
-import qingzhou.api.*;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.Monitor;
-import qingzhou.deployer.App;
-import qingzhou.deployer.*;
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -18,12 +14,28 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Monitor;
+import qingzhou.deployer.App;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
+import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
+
 @Model(code = DeployerConstants.MODEL_AGENT,
         hidden = true,
         name = {"实例代理", "en:Agent"})
 public class Agent extends ModelBase implements Download {
     @ModelField(
-            inputType = InputType.file, // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
+            input_type = InputType.file, // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
             name = {"", "en:"})
     public String file; // ActionInvokerImpl.invokeOnInstances 中调用  getFileUploadFieldNames，依赖这个 file 类型
 
@@ -162,7 +174,8 @@ public class Agent extends ModelBase implements Download {
         data.put("heapCommitted", maskMBytes(memoryMXBean.getHeapMemoryUsage().getCommitted()));
         data.put("nonHeapUsed", maskMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
 
-        request.getResponse().addData(data);
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(data);
     }
 
     private String maskGBytes(long val) {

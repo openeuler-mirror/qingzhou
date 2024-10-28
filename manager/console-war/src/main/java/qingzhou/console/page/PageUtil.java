@@ -115,7 +115,7 @@ public class PageUtil {
                 break;
             case multiselect:
             case checkbox:
-            case sortablecheckbox:
+            case sortable_checkbox:
                 String[] split = value.split(fieldInfo.getSeparator());
                 List<String> list = new ArrayList<>(split.length);
                 for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldInfo.getCode())) {

@@ -65,7 +65,7 @@
 <%@ include file="field_type/checkbox.jsp" %>
 <%
 		break;
-	case sortablecheckbox:
+	case sortable_checkbox:
 %>
 <%@ include file="field_type/sortablecheckbox.jsp" %>
 <%

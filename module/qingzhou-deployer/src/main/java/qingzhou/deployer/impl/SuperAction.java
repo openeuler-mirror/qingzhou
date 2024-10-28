@@ -1,33 +1,56 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import qingzhou.api.Item;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Echo;
+import qingzhou.api.type.Export;
 import qingzhou.api.type.List;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Show;
+import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ItemInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelInfo;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-
-class DefaultAction {
-    static final java.util.List<ModelActionInfo> allDefaultActionCache;
+class SuperAction {
+    static final java.util.List<ModelActionInfo> allSuperActionCache;
 
     static {
-        allDefaultActionCache = DeployerImpl.parseModelActionInfos(new AnnotationReader(DefaultAction.class));
+        allSuperActionCache = DeployerImpl.parseModelActionInfos(new AnnotationReader(SuperAction.class));
     }
 
     private final AppImpl app;
     private final ModelBase instance;
 
-    DefaultAction(AppImpl app, ModelBase instance) {
+    SuperAction(AppImpl app, ModelBase instance) {
         this.app = app;
         this.instance = instance;
     }
@@ -42,7 +65,8 @@ class DefaultAction {
             info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void show(Request request) throws Exception {
         Map<String, String> data = ((Show) instance).showData(request.getId());
-        request.getResponse().addData(data);
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(data);
     }
 
     @ModelAction(
@@ -65,13 +89,12 @@ class DefaultAction {
             }
         }
 
+        ResponseImpl response = (ResponseImpl) request.getResponse();
         Echo echo = (Echo) instance;
-        Map<String, String> data = new HashMap<>();
         echoParameters.forEach((group, groupParameters) -> {
             Map<String, String> echoResult = echo.echoData(group, groupParameters);
-            data.putAll(echoResult);
+            response.getDataMap().putAll(echoResult);
         });
-        request.getResponse().addData(data);
     }
 
     @ModelAction(
@@ -106,8 +129,9 @@ class DefaultAction {
             info = {"校验指定的字段是否被改变。", "en:Verify whether the specified field has been changed."})
     public void validate(Request request) throws Exception {
         Validate validate = (Validate) instance;
-        Response response = request.getResponse();
-        response.addData(validate.validate(request));
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        Map<String, String> errors = validate.validate(request);
+        errors.forEach(response::addErrorInfo);
         response.setSuccess(response.getDataList().isEmpty());
     }
 
@@ -120,11 +144,8 @@ class DefaultAction {
         Map<String, String> query = queryParams(request);
         String[] ids = list.allIds(query);
         if (ids == null) return;
-        for (String id : ids) {
-            request.getResponse().addData(new HashMap<String, String>() {{
-                put(id, "");
-            }});
-        }
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.setIds(ids);
     }
 
     @ModelAction(
@@ -143,14 +164,11 @@ class DefaultAction {
 
         Map<String, String> query = queryParams(request);
         String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFieldsToList();
-        java.util.List<Map<String, String>> result = list.listData(pageNum, pageSize, fieldNamesToList, query);
+        java.util.List<String[]> result = list.listData(pageNum, pageSize, fieldNamesToList, query);
         if (result == null) return;
 
-        for (Map<String, String> data : result) {
-            request.getResponse().addData(data);
-        }
+        responseImpl.setDataList(result);
         int totalSize = list.totalSize(query);
-
         responseImpl.setTotalSize(totalSize);
         responseImpl.setPageSize(pageSize);
         responseImpl.setPageNum(pageNum);
@@ -174,9 +192,10 @@ class DefaultAction {
             code = Add.ACTION_CREATE, icon = "plus-sign",
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
-    public void create(Request request) throws Exception {
+    public void create(Request request) {
         Map<String, String> properties = getAppInfo().getModelInfo(request.getModel()).getFormFieldDefaultValues();
-        request.getResponse().addData(properties);
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(properties);
     }
 
     @ModelAction(
@@ -186,10 +205,8 @@ class DefaultAction {
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
         Map<String, String> properties = ((RequestImpl) request).getParameters();
-        if (request.getResponse().isSuccess()) {
-            cleanParameters(properties, request);
-            ((Add) instance).addData(properties);
-        }
+        cleanParameters(properties, request);
+        ((Add) instance).addData(properties);
     }
 
     private void cleanParameters(Map<String, String> params, Request request) {
@@ -204,7 +221,8 @@ class DefaultAction {
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
         Map<String, String> data = ((Update) instance).editData(request.getId());
-        request.getResponse().addData(data);
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(data);
     }
 
     @ModelAction(
@@ -214,10 +232,8 @@ class DefaultAction {
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
         Map<String, String> properties = ((RequestImpl) request).getParameters();
-        if (request.getResponse().isSuccess()) {
-            cleanParameters(properties, request);
-            ((Update) instance).updateData(properties);
-        }
+        cleanParameters(properties, request);
+        ((Update) instance).updateData(properties);
     }
 
     @ModelAction(
@@ -252,24 +268,8 @@ class DefaultAction {
         Map<String, String> p = ((Monitor) instance).monitorData(request.getId());
         if (p == null || p.isEmpty()) return;
 
-        Map<String, String> monitorData = new HashMap<>();
-        Map<String, String> infoData = new HashMap<>();
-
-        ModelInfo modelInfo = getAppInfo().getModelInfo(request.getModel());
-        String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
-        for (String fieldName : monitorFieldNames) {
-            String val = p.get(fieldName);
-            if (val == null) continue;
-            ModelFieldInfo monitorField = modelInfo.getModelFieldInfo(fieldName);
-            if (monitorField.isNumeric()) {
-                monitorData.put(fieldName, val);
-            } else {
-                infoData.put(fieldName, val);
-            }
-        }
-
-        request.getResponse().addData(monitorData);
-        request.getResponse().addData(infoData);
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(p);
     }
 
     @ModelAction(
@@ -306,7 +306,9 @@ class DefaultAction {
                 }
             }
         }
-        request.getResponse().addData(map);
+
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(map);
     }
 
     @ModelAction(
@@ -339,10 +341,8 @@ class DefaultAction {
         }
         if (downloadKey.trim().isEmpty() || !new File(keyDir, downloadKey).exists()) return;
         response.getParameters().put(DeployerConstants.DOWNLOAD_SERIAL_KEY, downloadKey);
-        response.setDownloadName(downloadKey + ".zip");
         String finalDownloadKey = downloadKey;
-
-        downloadStream(request, new Export.StreamSupplier() {
+        Export.StreamSupplier supplier = new Export.StreamSupplier() {
             private long currentOffset;
 
             @Override
@@ -387,7 +387,14 @@ class DefaultAction {
             public long offset() {
                 return currentOffset;
             }
-        });
+
+            @Override
+            public String getDownloadName() {
+                return finalDownloadKey + ".zip";
+            }
+        };
+        downloadStream(request, supplier);
+        response.setDownloadName(supplier.getDownloadName());
     }
 
     // 为支持大文件续传，下载必需有 key
