@@ -777,7 +777,5 @@ function batchOps(url, action, idField, idSeparator) {
 }
 
 function filter_reset(subEle) {
-    const form = $(subEle).parents('.filterForm')[0];
-    Array.from(form.elements).forEach(input => input.value = "");
-    $(".filter_search", form).click();
+    returnHref($(subEle).parent().parent().find("a.filter_search").attr("href"))
 }

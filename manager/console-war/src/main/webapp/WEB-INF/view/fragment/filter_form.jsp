@@ -14,7 +14,15 @@
             <div class="input-control">
                 <%
                     String echoGroup = "";
-                    String fieldValue = request.getParameter(fieldName);
+                    ModelFieldInfo searchFieldInfo = modelInfo.getModelFieldInfo(fieldName);
+                    String fieldValue = null;
+                    if (ValidationFilter.isMultipleSelect(searchFieldInfo)) {
+                        if (request.getParameterValues(fieldName) != null){
+                            fieldValue = String.join(searchFieldInfo.getSeparator(), request.getParameterValues(fieldName));
+                        }
+                    } else {
+                        fieldValue = request.getParameter(fieldName);
+                    }
                     if (fieldValue == null) {
                         Map<String, String> defaultSearch = modelInfo.getDefaultSearch();
                         if (defaultSearch != null) {
@@ -24,7 +32,6 @@
                     if (fieldValue == null) {
                         fieldValue = "";
                     }
-                    ModelFieldInfo searchFieldInfo = modelInfo.getModelFieldInfo(fieldName);
                     if (ValidationFilter.isSingleSelect(searchFieldInfo)) {
                 %>
                 <%@ include file="field_type/select.jsp" %>

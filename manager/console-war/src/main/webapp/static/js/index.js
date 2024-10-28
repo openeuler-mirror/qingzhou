@@ -937,6 +937,9 @@ function bindEventForListPage() {
         let fieldStr = $(this).attr("name")
         let v = $(this).val()
         let tempUrl = $(this).closest('tr').find('a[href*="edit"]').attr("href");
+        if (tempUrl === undefined){
+            return;
+        }
         tempUrl = tempUrl.replace("html", "json").replace("edit", "update");
         let resData
         if (Array.isArray(v)) {
