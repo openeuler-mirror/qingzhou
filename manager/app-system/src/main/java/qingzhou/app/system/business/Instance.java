@@ -260,6 +260,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
+            action_type = ActionType.FILES,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。",
                     "en:Download the log information of the instance."})
@@ -269,6 +270,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Download.ACTION_DOWNLOAD, icon = "download-alt",
+            action_type = ActionType.DOWNLOAD,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。",
                     "en:Download the log information of the instance."})
