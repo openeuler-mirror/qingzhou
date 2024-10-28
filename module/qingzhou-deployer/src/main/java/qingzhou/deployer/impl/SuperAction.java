@@ -7,7 +7,6 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
@@ -159,7 +158,7 @@ class SuperAction {
         ModelInfo modelInfo = getAppInfo().getModelInfo(request.getModel());
         for (String fieldName : modelInfo.getFieldsToListSearch()) {
             String val = request.getParameter(fieldName);
-            if (Utils.notBlank(val)) {
+            if (val != null) { // 注意不要用  “” 判定，以区分使用默认搜索，还是 清空所有条件！！！
                 if (query == null) query = new HashMap<>();
                 query.put(fieldName, val);
             }

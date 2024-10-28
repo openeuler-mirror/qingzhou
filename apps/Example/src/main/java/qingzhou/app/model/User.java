@@ -1,20 +1,15 @@
 package qingzhou.app.model;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import qingzhou.api.InputType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Model(code = "user", icon = "user",
@@ -39,7 +34,8 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             group = "base",
-            input_type = InputType.select, echo_group = "aa",
+            required = true,
+            input_type = InputType.radio, echo_group = "aa",
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
     public String gender;
@@ -206,5 +202,12 @@ public class User extends AddModelBase implements Group, Option, Echo {
         } else {
             return Collections.emptyMap();
         }
+    }
+
+    @Override
+    public Map<String, String> defaultSearch() {
+        return new HashMap<String, String>() {{
+            put("gender", "1");
+        }};
     }
 }
