@@ -1,5 +1,7 @@
 package qingzhou.registry;
 
+import qingzhou.api.ActionType;
+
 import java.lang.reflect.Method;
 
 public class ModelActionInfo {
@@ -14,6 +16,7 @@ public class ModelActionInfo {
     private String page;
     private String[] linkFields;
     private String[] linkModels;
+    private ActionType actionType;
 
     public Method getMethod() {
         return method;
@@ -101,5 +104,13 @@ public class ModelActionInfo {
 
     public void setLinkModels(String[] linkModels) {
         this.linkModels = linkModels;
+    }
+
+    public ActionType getActionType() {
+        return actionType;
+    }
+
+    public void setActionType(ActionType actionType) {
+        this.actionType = actionType;
     }
 }

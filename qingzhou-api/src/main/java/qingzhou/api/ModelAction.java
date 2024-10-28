@@ -17,6 +17,8 @@ public @interface ModelAction {
     // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
     String[] info() default {};
 
+    ActionType action_type() default ActionType.LINK;
+
     String code(); // 接口名
 
     String icon() default ""; // 指定与该模型操作关联的图标名称

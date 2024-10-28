@@ -1,35 +1,8 @@
 package qingzhou.deployer.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import qingzhou.api.Item;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.Echo;
-import qingzhou.api.type.Export;
+import qingzhou.api.*;
 import qingzhou.api.type.List;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Option;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
-import qingzhou.api.type.Validate;
+import qingzhou.api.type.*;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
@@ -39,6 +12,13 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 class SuperAction {
     static final java.util.List<ModelActionInfo> allSuperActionCache;
@@ -249,6 +229,7 @@ class SuperAction {
 
     @ModelAction(
             code = Export.ACTION_EXPORT, icon = "download-alt",
+            action_type = ActionType.Export,
             name = {"导出", "en:Export"},
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
     public void export(Request request) throws IOException {
@@ -274,6 +255,7 @@ class SuperAction {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
+            action_type = ActionType.FILES,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
                     "en:Gets a list of downloadable files for this component."})
@@ -313,6 +295,7 @@ class SuperAction {
 
     @ModelAction(
             code = Download.ACTION_DOWNLOAD, icon = "download-alt",
+            action_type = ActionType.DOWNLOAD,
             name = {"下载文件", "en:Download File"},
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files."})
