@@ -448,13 +448,7 @@
         },
         formToJson: function (formSelector) {
             var jsonObj = {};
-            var paramArray = $(formSelector).serializeArray();
-            $(paramArray).each(function (i, element) {
-                if ($.trim(element.value) !== "") {
-                    jsonObj[element.name] = element.value;
-                }
-            });
-            return jsonObj;
+            return  $(formSelector).serializeArray();
         },
         /**
          * 为目标对象绑定事件及响应结果目标渲染对象
@@ -474,7 +468,7 @@
                 if (url.indexOf("javascript:") === 0) {
                     return;
                 }
-                
+
                 var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea || document.body));
                 that.fill(url, data, $(targetSelector, restrictedArea), append, afterRenderCall);
             });

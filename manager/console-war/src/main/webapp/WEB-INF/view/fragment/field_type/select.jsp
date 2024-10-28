@@ -7,6 +7,13 @@
     String selectText = "";
     String selectHtml = "<ul class=\"list\">";
 
+    if (Objects.equals(fieldValue, "")) {
+        selectVal = "";
+        selectText = "";
+        selectHtml += "<li data-value=\"\" class=\"option selected focus\" format=\"\"></li>";
+    } else {
+        selectHtml += "<li data-value=\"\" class=\"option\" format=\"\"></li>";
+    }
     for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldName)) {
         String option = itemInfo.getName();
         String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
