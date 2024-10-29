@@ -131,7 +131,7 @@ public class Password extends ModelBase implements Update, Export {
 
     @ModelAction(
             code = Export.ACTION_EXPORT,
-            action_type = ActionType.Export,
+            action_type = ActionType.download,
             icon = "shield",
             name = {"刷新动态密码", "en:Refresh OTP"},
             info = {"获取当前用户的动态密码，以二维码形式提供给用户。", "en:Obtain the current user OTP and provide it to the user in the form of a QR code."})
@@ -140,9 +140,9 @@ public class Password extends ModelBase implements Update, Export {
     }
 
     @Override
-    public StreamSupplier exportData(String id) {
+    public ByteStreamSupplier exportData(String id) {
         Request request = getAppContext().getCurrentRequest();
-        return new StreamSupplier() {
+        return new ByteStreamSupplier() {
             private final String format = "png";
 
             @Override
@@ -165,7 +165,7 @@ public class Password extends ModelBase implements Update, Export {
             }
 
             @Override
-            public String getDownloadName() {
+            public String getSupplierName() {
                 return "keyForOtp." + format;
             }
         };

@@ -290,11 +290,11 @@
 				   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
 				   class="qz-action-link tooltips" data-tip-arrow="top"
 				   model-icon="<%=modelInfo.getIcon()%>" action-name="<%=actionName%>"
-				   data-action="<%=action.getActionType()%>"
+				   action-type="<%=action.getActionType()%>"
 				   data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
 						<%
 							if (actionName.equals(Download.ACTION_FILES)) {
-								out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, StreamView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+								out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
 							}
 
 							if (Utils.notBlank(customActionId)) {
