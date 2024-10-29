@@ -27,10 +27,10 @@
 
 		String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
 		Map<String, String> dataMap = qzResponse.getDataMap();
-		if (dataMap.isEmpty()) {
+		List<String[]> dataList = qzResponse.getDataList();
+		if (dataMap.isEmpty() && !dataList.isEmpty()) {
 			for (int i1 = 0; i1 < monitorFieldNames.length; i1++) {
 				String fieldName = monitorFieldNames[i1];
-				List<String[]> dataList = qzResponse.getDataList();
 				String value = dataList.get(dataList.size() - 1)[i1 + 1];
 				dataMap.put(fieldName, value);
 			}
