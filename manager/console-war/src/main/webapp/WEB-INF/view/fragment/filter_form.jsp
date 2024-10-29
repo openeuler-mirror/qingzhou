@@ -16,7 +16,7 @@
                     String echoGroup = "";
                     ModelFieldInfo searchFieldInfo = modelInfo.getModelFieldInfo(fieldName);
                     String fieldValue = null;
-                    if (ValidationFilter.isMultipleSelect(searchFieldInfo)) {
+                    if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo)) {
                         if (request.getParameterValues(fieldName) != null){
                             fieldValue = String.join(searchFieldInfo.getSeparator(), request.getParameterValues(fieldName));
                         }
@@ -32,11 +32,7 @@
                     if (fieldValue == null) {
                         fieldValue = "";
                     }
-                    if (ValidationFilter.isSingleSelect(searchFieldInfo)) {
-                %>
-                <%@ include file="field_type/select.jsp" %>
-                <%
-                } else if (ValidationFilter.isMultipleSelect(searchFieldInfo)) {
+                if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo)) {
                     java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
                 %>
                 <%@ include file="field_type/multiselect.jsp" %>
