@@ -262,8 +262,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
             code = Download.ACTION_FILES, icon = "download-alt",
             action_type = ActionType.FILES,
             name = {"下载日志", "en:Download Log"},
-            info = {"下载实例的日志信息。",
-                    "en:Download the log information of the instance."})
+            info = {"下载实例的日志信息。", "en:Download the log information of the instance."})
     public void files(Request request) {
         invokeOnAgent(request, request.getId());
     }
@@ -272,14 +271,14 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
             code = Download.ACTION_DOWNLOAD, icon = "download-alt",
             action_type = ActionType.DOWNLOAD,
             name = {"下载日志", "en:Download Log"},
-            info = {"下载实例的日志信息。",
-                    "en:Download the log information of the instance."})
+            info = {"下载实例的日志信息。", "en:Download the log information of the instance."})
     public void download(Request request) {
         invokeOnAgent(request, request.getId());
     }
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
+            action_type = ActionType.Monitor,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})

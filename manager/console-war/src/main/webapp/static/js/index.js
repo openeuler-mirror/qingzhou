@@ -363,7 +363,7 @@ function bindEventForFormPage() {
             + "<img src='" + imgSrc + "' style='width:200px; height:200px; margin-top:20px; padding:6px;' onerror='this.src=\"./static/images/data-empty.svg\"'>"
             + "<br><div class=\"input-control\" style=\"width: 200px;text-align: center;margin-left: 26%;\">"
             + "<input id=\"randCode-OTP\" type=\"text\" class=\"form-control\" placeholder=\"" + getSetting("placeholderOtp") + "\"></div>"
-            + "<label id='verifyCodeOtpError' class=\"tw-error-info\" style=\"position:relative; margin-left:-68px; color:red;\"></label>"
+            + "<label id='verifyCodeOtpError' class=\"qz-error-info\" style=\"position:relative; margin-left:-68px; color:red;\"></label>"
             + "</div>";
         openLayer({
             area: ["450px", "400px"],
@@ -459,7 +459,7 @@ function bindFormEvent() {
                     $(thisForm).removeAttr("enctype", "multipart/form-data");
                 }
                 $(".tab-has-error", thisForm).removeClass("tab-has-error");
-                $(".form-group .tw-error-info", thisForm).html("");
+                $(".form-group .qz-error-info", thisForm).html("");
                 $(".has-error", thisForm).removeClass("has-error");
                 $("select[multiple='multiple']", thisForm).multipleSelect("refresh");
                 return true;
@@ -484,7 +484,7 @@ function bindFormEvent() {
                         for (var key in errorData) {
                             $("#form-item-" + key + " > div", thisForm).attr("error-key", key).addClass("has-error");
                             if ($(".nav.nav-tabs", thisForm).length < 1) {
-                                $("#form-item-" + key + " > div .tw-error-info", thisForm).html(errorData[key]);
+                                $("#form-item-" + key + " > div .qz-error-info", thisForm).html(errorData[key]);
                             }
                         }
                         $(".nav.nav-tabs > li", thisForm).each(function (i) {
@@ -500,7 +500,7 @@ function bindFormEvent() {
                                 $($("a", this).attr("href")).addClass("active");
                             }
                             $(".has-error", $($("a", this).attr("href"))).each(function () {
-                                $("label.tw-error-info", this).html(errorData[$(this).attr("error-key")]);
+                                $("label.qz-error-info", this).html(errorData[$(this).attr("error-key")]);
                             });
                         });
                         $($("a", $(".nav.nav-tabs > li.tab-has-error").first()).attr("href")).addClass("active");// TODO 需要考虑多级 Tab 标签。
@@ -828,6 +828,50 @@ function bindEventForListPage() {
         }
     });
 
+    // 列表页表格操作列特定事件绑定
+    var bindingActions = {
+        "Monitor": function(selector, exclude) {// 列表页表格操作列(监视)
+            var target = ".bodyDiv" + (exclude ? ":not(div.tab-container .bodyDiv)" : "");
+            qz.bindFill(selector, target, false, false, restrictedArea, null);
+        },
+        "StartStop": function(selector, exclude) {// 列表页表格操作列(启动、停止)
+            var target = ".bodyDiv" + (exclude ? ":not(div.tab-container .bodyDiv)" : "");
+            qz.bindFill(selector, target, false, false, restrictedArea, null);
+        },
+        "FILES": function(selector, exclude) {// 列表页表格操作列及form页面(下载日志、快照等)
+            $(selector + "[loaded!='true']").attr("loaded", "true").bind("click", function (e) {
+                e.preventDefault();
+                if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
+                    downloadFiles($(this).attr("href"), $(this).attr("downloadfile"));
+                }
+                return false;
+            });
+        },
+        "PopLayer": function(selector, exclude) {
+            $(selector + "[loaded!='true']").attr("loaded", "true").bind("click", function (e) {
+                e.preventDefault();
+                if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
+                    customAction($(this).attr("href"), $(this).attr("custom-action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"));
+                }
+                return false;
+            });
+        },
+        "ViewHtml": function(selector, exclude) {
+            $(selector + "[loaded!='true']").attr("loaded", "true").bind("click", function (e) {
+                alert("TODO");
+                e.preventDefault();
+                return false;
+            });
+        },
+        "SubTab": function(selector, exclude) {
+            $(selector + "[loaded!='true']").attr("loaded", "true").bind("click", function (e) {
+                e.preventDefault();
+                openTab($(this).attr("data-id"), $(this).attr("href"), $(this).attr("data-name"));
+                return false;
+            });
+        }
+    };
+
     $("section.main-body", document.body).each(function () {
         var restrictedArea = $(this).parent();
         if ($(".tab-wrapper", this).length > 0) {
@@ -846,12 +890,21 @@ function bindEventForListPage() {
             qz.bindFill(selector + ":not(div.tab-container " + selector + ")", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
 
             // 列表页表格操作列(监视)
-            qz.bindFill("a.tw-action-link[action-name='monitor']:not(div.tab-container a.tw-action-link)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
+            qz.bindFill("a.qz-action-link[action-name='monitor']:not(div.tab-container a.qz-action-link)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
             // 列表页表格操作列(启动、停止)
-            qz.bindFill("a.tw-action-link[action-name='stop']:not(div.tab-container a.tw-action-link), a.tw-action-link[action-name='start']:not(div.tab-container a.tw-action-link)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
+            qz.bindFill("a.qz-action-link[action-name='stop']:not(div.tab-container a.qz-action-link), a.qz-action-link[action-name='start']:not(div.tab-container a.qz-action-link)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
+
+            $("table.qz-data-list a.qz-action-link[data-action!='LINK']", restrictedArea).each(function(){
+                var selector = "table.qz-data-list a.qz-action-link[data-action='" + $(this).attr("data-action") + "']:not(div.tab-container a)";
+                if (bindingActions[$(this).attr("data-action")]) {
+                    bindingActions[$(this).attr("data-action")].call(null, selector, true);
+                } else {
+                    console.log("Action function binding failed: function " + $(this).attr("data-action") + " not found.");
+                }
+            });
 
             // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-            qz.bindFill("a.tw-action-link:not(div.tab-container a.tw-action-link)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
+            qz.bindFill("table.qz-data-list a.qz-action-link[data-action='LINK']:not(div.tab-container a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
         } else {
             // 搜索按钮
             qz.bindFill(".search-btn a", ".main-body", false, false, restrictedArea, null);
@@ -864,15 +917,18 @@ function bindEventForListPage() {
             // 列表页表格单元格操作
             qz.bindFill("table a.dataid", ".bodyDiv", false, false, restrictedArea, null);
             // 列表页表格单元格操作(查看)
-            qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);
-
-            // 列表页表格操作列(监视)
-            qz.bindFill("a.tw-action-link[action-name='monitor']", ".bodyDiv", false, false, restrictedArea, null);
-            // 列表页表格操作列(启动、停止)
-            qz.bindFill("a.tw-action-link[action-name='stop'], a.tw-action-link[action-name='start']", ".bodyDiv", false, false, restrictedArea, null);
-
+            //qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);         
+            
+            $("table.qz-data-list a.qz-action-link[data-action!='LINK']", restrictedArea).each(function(){
+                var selector = "table.qz-data-list a.qz-action-link[data-action='" + $(this).attr("data-action") + "']";
+                if (bindingActions[$(this).attr("data-action")]) {
+                    bindingActions[$(this).attr("data-action")].call(null, selector, false);
+                } else {
+                    console.log("Action function binding failed: function " + $(this).attr("data-action") + " not found.");
+                }
+            });
             // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-            qz.bindFill("a.tw-action-link", ".main-body", false, false, restrictedArea, null);
+            qz.bindFill("table.qz-data-list a.qz-action-link[data-action='LINK']", ".main-body", false, false, restrictedArea, null);
         }
     });
 
@@ -900,8 +956,7 @@ function bindEventForListPage() {
     });
 
     // 集群实例点击[管理]，打开新 Tab 并切换
-    $("table a[action-name='" + getSetting("actionName_target") + "'][loaded!='true']:not(div.tab-container table a)").attr("loaded", "true")
-        .unbind("click").bind("click", function (e) {
+    $("table a[action-name='" + getSetting("actionName_target") + "'][loaded!='true']:not(div.tab-container table a)").attr("loaded", "true").bind("click", function (e) {
         e.preventDefault();
         var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");
         if (tab.length > 0) {
@@ -910,23 +965,6 @@ function bindEventForListPage() {
         }
         var url = $(this).attr("href");
         return initializeManager($(this), url);
-    });
-
-    // 列表页及form页面下载(日志、快照等)
-    $("table a[action-name='" + getSetting("filesName") + "'], a[btn-type='" + getSetting("filesName") + "'][loaded!='true']").attr("loaded", "true").unbind("click").bind("click", function (e) {
-        e.preventDefault();
-        if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
-            downloadFiles($(this).attr("href"), $(this).attr("downloadfile"));
-        }
-        return false;
-    });
-
-    $("a[custom-action-id][loaded!='true']").attr("loaded", "true").unbind("click").bind("click", function (e) {
-        e.preventDefault();
-        if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
-            customAction($(this).attr("href"), $(this).attr("custom-action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"));
-        }
-        return false;
     });
 
     $('table .switch-btn, table .input-class, table .nice-select').each(function () {
@@ -1191,13 +1229,11 @@ function defaultOption(infoKv) {
             trigger: 'axis',
             confine: true,
             formatter: function (params) {
-                let res = params[0].axisValueLabel;
-
-                function getMaxSeriesNameWidth(params) {//找到内容最长的，给所有属性设置固定width，避免第二列与第一列数据重叠
-                    let maxWidth = 0;
-                    for (let i = 0; i < params.length; i++) {
-                        let text = params[i].seriesName + ': ' + params[i].data;
-                        let width = text.length * 8;
+                var getMaxSeriesNameWidth = function (para) {//找到内容最长的，给所有属性设置固定width，避免第二列与第一列数据重叠
+                    var maxWidth = 0;
+                    for (var i = 0; i < para.length; i++) {
+                        var text = para[i].seriesName + ': ' + para[i].data;
+                        var width = text.length * 8;
                         if (width > maxWidth) {
                             maxWidth = width;
                         }
@@ -1205,16 +1241,17 @@ function defaultOption(infoKv) {
                     return maxWidth;
                 }
 
-                let maxSeriesNameWidth = getMaxSeriesNameWidth(params);
+                var maxSeriesNameWidth = getMaxSeriesNameWidth(params);
 
-                function getHtml(param) {
-                    let str = '<div style="float: left; width: ' + (maxSeriesNameWidth + 70) + 'px;"><span style="background: ' + param.color + '; width: 11px; height: 11px; border-radius: 11px;float: left; margin: 5px 3px;"></span>' +
+                var getHtml = function(param) {
+                    var str = '<div style="float: left; width: ' + (maxSeriesNameWidth + 70) + 'px;"><span style="background: ' + param.color + '; width: 11px; height: 11px; border-radius: 11px;float: left; margin: 5px 3px;"></span>' +
                         param.seriesName + ':' + param.data + '&emsp;&emsp;</div>';
                     return str;
                 }
 
+                var res = params[0].axisValueLabel;
                 res += '<div style="clear: both">';
-                for (let i = 0; i < params.length; i++) {
+                for (var i = 0; i < params.length; i++) {
                     res += getHtml(params[i]);
                     if (params.length > 11 && i % 2 == 1) {
                         res += '</div><div style="clear: both">';
