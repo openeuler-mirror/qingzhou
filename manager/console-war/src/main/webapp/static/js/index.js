@@ -1430,7 +1430,6 @@ function addData(chartObj, option, models, keys, restrictedArea) {
     let line_num_each_row = 6;// 图例中每行显示的线条数目
     this.setSeriesAndLegend(option, line_num_each_row);
     this.setGrid(option, line_num_each_row);
-    console.log(option);
 
     if (chartObj.renderFlag === undefined || chartObj.renderFlag) {
         if (!$.isEmptyObject(chartObj.legendselect)) {

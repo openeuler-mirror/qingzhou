@@ -17,21 +17,18 @@ import java.util.List;
 public class StaticCharts extends ModelBase {
 
     @ModelField(
-            // list = true,
             name = {"时间", "en:Time"},
             info = {"。", "en:."})
     public int time;
 
     @ModelField(
             field_type = FieldType.MONITOR, numeric = true,
-            // list = true,
             name = {"A", "en:A"},
             info = {"A info。", "en:A info."})
     public int a;
 
     @ModelField(
             field_type = FieldType.MONITOR, numeric = true,
-            // list = true,
             name = {"B", "en:B"},
             info = {"B info。", "en:B info."})
     public int b;
@@ -43,7 +40,6 @@ public class StaticCharts extends ModelBase {
     public int c;
 
     @ModelField(
-            // list = true,
             search = true,
             input_type = InputType.textarea,
             name = {"sql", "en:sql"},
@@ -70,14 +66,17 @@ public class StaticCharts extends ModelBase {
                 dataList.add(list.toArray(new String[0]));
             }
         } else {
-            int j = Integer.parseInt(sql);
-            for (int i = 0; i < j; i++) {
-                List<String> list = new ArrayList<>();
-                list.add(i + "");   // x轴属性的值要在列表的第一个
-                list.add(String.valueOf(-i * j + 1));
-                list.add(String.valueOf(-i * j + .5));
-                list.add(String.valueOf(-i * j + 5));
-                dataList.add(list.toArray(new String[0]));
+            try {
+                int j = Integer.parseInt(sql);
+                for (int i = 0; i < j; i++) {
+                    List<String> list = new ArrayList<>();
+                    list.add(i + "");   // x轴属性的值要在列表的第一个
+                    list.add(String.valueOf(-i * j + 1));
+                    list.add(String.valueOf(-i * j + .5));
+                    list.add(String.valueOf(-i * j + 5));
+                    dataList.add(list.toArray(new String[0]));
+                }
+            } catch (NumberFormatException ignored) {
             }
         }
     }
