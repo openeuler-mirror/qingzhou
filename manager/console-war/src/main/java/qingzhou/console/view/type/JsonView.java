@@ -41,7 +41,7 @@ public class JsonView implements View {
         ModelInfo modelInfo = request.getCachedModelInfo();
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
-        if (request.getAction().equals(Monitor.ACTION_MONITOR)) {
+        if (request.getAction().equals(Monitor.ACTION_MONITOR) && !response.getDataMap().isEmpty()) {
             String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
             Map<String, String> orderedData = new LinkedHashMap<>();
 

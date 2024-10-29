@@ -34,4 +34,9 @@ public @interface ModelAction {
     String[] link_fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
 
     String[] link_models() default {}; //  弹出子级管理页面
+
+    boolean autoRefresh() default true; // 监控图表是否自动刷新
+
+    String xAxisField() default ""; // x轴的属性名，该属性的值要在返回数组的第一个
+
 }
