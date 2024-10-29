@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
@@ -143,7 +144,6 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         }
         instances.addAll(registry.getAppInstanceNames(id));
 
-
         if (appInfo != null) {
             Map<String, String> appMap = new HashMap<>();
             appMap.put(idField(), id);
@@ -214,9 +214,9 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
             code = "start", icon = "play",
             show = "state=" + DeployerConstants.app_Stopped,
             redirect = qingzhou.api.type.List.ACTION_LIST,
+            action_type = ActionType.StartStop,
             name = {"启动", "en:start"},
-            info = {"启动应用",
-                    "en:Launch the application."})
+            info = {"启动应用", "en:Launch the application."})
     public void startApp(Request request) {
         String id = request.getId();
         Map<String, String> app = showData(id);
@@ -228,9 +228,9 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
             code = "stop", icon = "stop",
             show = "state=" + DeployerConstants.app_Started,
             redirect = qingzhou.api.type.List.ACTION_LIST,
+            action_type = ActionType.StartStop,
             name = {"停止", "en:end"},
-            info = {"停止应用",
-                    "en:stop the application."})
+            info = {"停止应用", "en:stop the application."})
     public void stopApp(Request request) {
         String id = request.getId();
         Map<String, String> app = showData(id);

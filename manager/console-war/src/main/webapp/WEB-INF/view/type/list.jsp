@@ -40,7 +40,7 @@
 		}
 	%>
 
-	<div class="table-tools tw-list-operate">
+	<div class="table-tools qz-list-operate">
 		<div class="tools-group">
 			<%
 				for (String actionName : headActions) {
@@ -101,7 +101,7 @@
 		</div>
 	</div>
 
-	<table class="table table-striped table-hover list-table responseScroll">
+	<table class="qz-data-list table table-striped table-hover list-table responseScroll">
 		<thead>
 		<tr style="height:20px;">
 			<%
@@ -288,8 +288,9 @@
                             useJsonUri ? JsonView.FLAG : HtmlView.FLAG,
                             actionName + "/" + encodedItemId)%>"
 				   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
-				   class="tw-action-link tooltips" data-tip-arrow="top"
+				   class="qz-action-link tooltips" data-tip-arrow="top"
 				   model-icon="<%=modelInfo.getIcon()%>" action-name="<%=actionName%>"
+				   data-action="<%=action.getActionType()%>"
 				   data-name="<%=originUnEncodedId%>" data-id="<%=(qzModel + "|" + encodedItemId)%>"
 						<%
 							if (actionName.equals(Download.ACTION_FILES)) {

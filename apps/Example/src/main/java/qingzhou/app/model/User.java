@@ -1,15 +1,21 @@
 package qingzhou.app.model;
 
-import qingzhou.api.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 
 @Model(code = "user", icon = "user",
@@ -105,6 +111,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
             link_fields = {"name", "notes", "gender", "a", "b"},
+            action_type = ActionType.PopLayer,
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
@@ -116,7 +123,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @Override
     public String[] listActions() {
-        return new String[]{"test", "edit"};
+        return new String[]{"subTab", "test", "edit"};
     }
 
     @Override

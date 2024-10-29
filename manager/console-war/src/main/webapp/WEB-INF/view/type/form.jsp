@@ -114,7 +114,7 @@
                             <%
                                 }
                             %>
-                            <label class="tw-error-info"></label>
+                            <label class="qz-error-info"></label>
                         </div>
                     </div>
                     <%
