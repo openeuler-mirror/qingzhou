@@ -905,7 +905,7 @@ label.checkbox-label.checkbox-anim .checkbox-i {
 }
 
 /* tooltip 提示信息 */
-.tw-tooltip {
+.qz-tooltip {
     background-color: rgba(0, 0, 0, .9);
     padding: 5px 10px;
     border-radius: 4px;
@@ -917,7 +917,7 @@ label.checkbox-label.checkbox-anim .checkbox-i {
     word-wrap: break-word
 }
 
-.tw-tooltip:before {
+.qz-tooltip:before {
     position: absolute;
     content: '';
     background-color: rgba(0, 0, 0, 0);
@@ -927,7 +927,7 @@ label.checkbox-label.checkbox-anim .checkbox-i {
     border-style: solid
 }
 
-.tw-tooltip-top:before {
+.qz-tooltip-top:before {
     top: 100%;
     left: 50%;
     transform: translate(-50%, 0);
@@ -936,7 +936,7 @@ label.checkbox-label.checkbox-anim .checkbox-i {
     border-color: rgba(0, 0, 0, .9) transparent transparent transparent
 }
 
-.tw-tooltip-right:before {
+.qz-tooltip-right:before {
     top: 50%;
     left: 0;
     transform: translate(-100%, -50%);
@@ -945,7 +945,7 @@ label.checkbox-label.checkbox-anim .checkbox-i {
     border-color: transparent rgba(0, 0, 0, .9) transparent transparent
 }
 
-.tw-tooltip-bottom:before {
+.qz-tooltip-bottom:before {
     top: 0;
     left: 50%;
     transform: translate(-50%, -100%);
@@ -954,7 +954,7 @@ label.checkbox-label.checkbox-anim .checkbox-i {
     border-color: transparent transparent rgba(0, 0, 0, .9) transparent
 }
 
-.tw-tooltip-left:before {
+.qz-tooltip-left:before {
     top: 50%;
     left: 100%;
     transform: translate(0, -50%);
@@ -963,7 +963,7 @@ label.checkbox-label.checkbox-anim .checkbox-i {
     border-color: transparent transparent transparent rgba(0, 0, 0, .9)
 }
 
-.tw-tooltip-top-left:before {
+.qz-tooltip-top-left:before {
     top: 100%;
     left: calc(100% - 10px);
     transform: translate(-50%, 0);
@@ -972,7 +972,7 @@ label.checkbox-label.checkbox-anim .checkbox-i {
     border-color: rgba(0, 0, 0, .9) transparent transparent transparent
 }
 
-.tw-tooltip-top-right:before {
+.qz-tooltip-top-right:before {
     top: 100%;
     left: 10px;
     transform: translate(-50%, 0);
@@ -981,7 +981,7 @@ label.checkbox-label.checkbox-anim .checkbox-i {
     border-color: rgba(0, 0, 0, .9) transparent transparent transparent
 }
 
-tw-tooltip-bottom-left:before {
+.qz-tooltip-bottom-left:before {
     top: 0;
     left: calc(100% - 10px);
     transform: translate(-50%, -100%);
@@ -990,7 +990,7 @@ tw-tooltip-bottom-left:before {
     border-color: transparent transparent rgba(0, 0, 0, .9) transparent
 }
 
-.tw-tooltip-bottom-right:before {
+.qz-tooltip-bottom-right:before {
     top: 0;
     left: 10px;
     transform: translate(-50%, -100%);
@@ -1158,7 +1158,7 @@ tw-tooltip-bottom-left:before {
     color: black !important;
 }
 
-.has-error > label.tw-error-info {
+.has-error > label.qz-error-info {
     color: #ea644a !important;
 }
 
@@ -1176,13 +1176,13 @@ tw-tooltip-bottom-left:before {
     height: 32px;
 }
 
-.tw-list-operate {
+.qz-list-operate {
     margin-top: 15px;
     margin-bottom: 15px;
     padding: 0px 5px;
 }
 
-.tw-action-link {
+.qz-action-link {
     color: #4C638F;
     border: none;
     font-size: 14px;
@@ -1192,7 +1192,7 @@ tw-tooltip-bottom-left:before {
     padding-right: 6px;
 }
 
-.tw-action-link:hover {
+.qz-action-link:hover {
     text-decoration: none !important;
 }
 
@@ -1282,7 +1282,7 @@ tw-tooltip-bottom-left:before {
     display: inline-block;
 }
 
-.tw-error-info {
+.qz-error-info {
     font-size: 12px; /*bottom: -26px;*/
     width: 100%;
     display: block;

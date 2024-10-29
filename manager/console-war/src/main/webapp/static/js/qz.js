@@ -308,7 +308,7 @@
                 }
             };
             var destroyEvent = function () {
-                var oldTipContent = document.querySelector(".tw-tooltip");
+                var oldTipContent = document.querySelector(".qz-tooltip");
                 if (oldTipContent) {
                     if (transition === true) {
                         return opacityTransition(oldTipContent, "leave");
@@ -337,8 +337,8 @@
         });
 
         function tipContentSetter(tipContent, tip, direction) {
-            tipContent.innerHTML = tip.replace(/</g, "&#60;").replace(/>/g, "&#62;").replace(/"/g, "&#34;").replace(/'/g, "&#39;");
-            tipContent.className = "tw-tooltip tw-tooltip-" + direction;
+            tipContent.innerHTML = (tip == null || tip === undefined ? "" : tip).replace(/</g, "&#60;").replace(/>/g, "&#62;").replace(/"/g, "&#34;").replace(/'/g, "&#39;");
+            tipContent.className = "qz-tooltip qz-tooltip-" + direction;
             document.body.appendChild(tipContent);
             if (transition === true) {
                 opacityTransition(tipContent, "enter");
@@ -492,7 +492,7 @@
                 },
                 complete: function () {
                     $("#mask-loading").hide();
-                    $(".tw-tooltip").remove();
+                    $(".qz-tooltip").remove();
                 },
                 success: function (html) {
                     if (html.indexOf("<!DOCTYPE html>") >= 0 && html.indexOf("loginForm") > -1) {

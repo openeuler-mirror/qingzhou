@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
@@ -31,7 +32,7 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     @ModelField(input_type = InputType.file, required = true, list = true, name = {"上传文件", "en:Upload File"}, info = {"上传一个文件到服务器，文件须是 *.html类型的。", "en:Upload a file to the server of type *.html."})
     public String file;
 
-    @ModelAction(code = "showhtml", icon = "share-alt", name = {"Html", "en:Html"},
+    @ModelAction(code = "showhtml", icon = "share-alt", name = {"Html", "en:Html"}, action_type = ActionType.ViewHtml,
             page = "static/test.html", info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void showHtml(Request request) {
     }

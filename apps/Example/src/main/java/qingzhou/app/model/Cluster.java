@@ -1,5 +1,6 @@
 package qingzhou.app.model;
 
+import qingzhou.api.ActionType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
@@ -35,8 +36,16 @@ public class Cluster extends AddModelBase {
     public void org(Request request) {
     }
 
+    @ModelAction(
+            code = "subTab", icon = "window-alt", action_type = ActionType.SubTab, link_models = {"user"},
+            name = {"管理", "en:Manage"},
+            info = {"打开子Tab标签管理页面。", "en:Open sub tab in the page."})
+    public void subTab(Request request) {
+        
+    }
+
     @Override
     public String[] listActions() {
-        return new String[]{"user", "org"};
+        return new String[]{"user", "org", "subTab"};
     }
 }
