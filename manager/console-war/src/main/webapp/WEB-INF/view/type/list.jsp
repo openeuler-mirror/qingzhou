@@ -50,11 +50,15 @@
 					if (action.getLinkFields() != null && action.getLinkFields().length > 0) {
 						customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "'";
 					}
+					String viewName = Utils.notBlank(customActionId)?JsonView.FLAG:HtmlView.FLAG;
+					if(actionName.equals(Export.ACTION_EXPORT)){
+						viewName = StreamView.FLAG;
+					}
 
 			%>
 			<a class="btn" data-tip-arrow="top" action-name="<%=actionName%>" <%=customActionId%>
 			   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
-			   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, Utils.notBlank(customActionId)?JsonView.FLAG:HtmlView.FLAG, actionName)%>"
+			   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
 			>
 				<i class="icon icon-<%=action.getIcon()%>"></i>
 				<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
