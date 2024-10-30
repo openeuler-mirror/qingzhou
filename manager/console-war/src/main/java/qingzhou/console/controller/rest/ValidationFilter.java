@@ -66,6 +66,18 @@ public class ValidationFilter implements Filter<RestContext> {
                 || type == InputType.kv;
     }
 
+    public static boolean filterPageIsMultipleSelect(ModelFieldInfo fieldInfo){
+        InputType type = fieldInfo.getInputType();
+        return type == InputType.checkbox
+                || type == InputType.sortable_checkbox
+                || type == InputType.multiselect
+                || type == InputType.sortable
+                || type == InputType.bool
+                || type == InputType.radio
+                || type == InputType.select
+                || type == InputType.kv;
+    }
+
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         Map<String, String> errorMsg = new HashMap<>();

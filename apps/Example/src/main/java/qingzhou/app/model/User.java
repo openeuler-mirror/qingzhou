@@ -103,7 +103,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.textarea,
-            list = true, search = true,
+            list = true,
             skip = {">", "("},
             name = {"备注", "en:Notes"})
     public String notes = "只读控制";

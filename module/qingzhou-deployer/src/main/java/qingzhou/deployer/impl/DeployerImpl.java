@@ -528,6 +528,8 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setLinkFields(modelAction.link_fields());
             modelActionInfo.setLinkModels(modelAction.link_models());
             modelActionInfo.setActionType(modelAction.action_type());
+            modelActionInfo.setAutoRefresh(modelAction.autoRefresh());
+            modelActionInfo.setxAxisField(modelAction.xAxisField());
             modelActionInfos.add(modelActionInfo);
         });
         return modelActionInfos;

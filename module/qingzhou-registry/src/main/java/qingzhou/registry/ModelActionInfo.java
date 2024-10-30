@@ -17,6 +17,8 @@ public class ModelActionInfo {
     private String[] linkFields;
     private String[] linkModels;
     private ActionType actionType;
+    private boolean autoRefresh;
+    private String xAxisField;
 
     public Method getMethod() {
         return method;
@@ -112,5 +114,21 @@ public class ModelActionInfo {
 
     public void setActionType(ActionType actionType) {
         this.actionType = actionType;
+    }
+
+    public boolean isAutoRefresh() {
+        return autoRefresh;
+    }
+
+    public void setAutoRefresh(boolean autoRefresh) {
+        this.autoRefresh = autoRefresh;
+    }
+
+    public String getxAxisField() {
+        return xAxisField;
+    }
+
+    public void setxAxisField(String xAxisField) {
+        this.xAxisField = xAxisField;
     }
 }

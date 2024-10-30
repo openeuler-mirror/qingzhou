@@ -830,11 +830,15 @@ function bindEventForListPage() {
 
     // 列表页表格操作列特定事件绑定
     var bindingActions = {
-        "monitor": function (selector, exclude) {// 列表页表格操作列(监视)
+        "Monitor": function(selector, exclude) {// 列表页表格操作列(监视)
             var target = ".bodyDiv" + (exclude ? ":not(div.tab-container .bodyDiv)" : "");
             qz.bindFill(selector, target, false, false, restrictedArea, null);
         },
-        "files": function (selector, exclude) {// 列表页表格操作列及form页面(下载日志、快照等)
+        "StartStop": function(selector, exclude) {// 列表页表格操作列(启动、停止)
+            var target = ".bodyDiv" + (exclude ? ":not(div.tab-container .bodyDiv)" : "");
+            qz.bindFill(selector, target, false, false, restrictedArea, null);
+        },
+        "FILES": function(selector, exclude) {// 列表页表格操作列及form页面(下载日志、快照等)
             $(selector + "[loaded!='true']").attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
                 if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
@@ -843,11 +847,7 @@ function bindEventForListPage() {
                 return false;
             });
         },
-        "StartStop": function (selector, exclude) {// 列表页表格操作列(启动、停止)
-            var target = ".bodyDiv" + (exclude ? ":not(div.tab-container .bodyDiv)" : "");
-            qz.bindFill(selector, target, false, false, restrictedArea, null);
-        },
-        "PopLayer": function (selector, exclude) {
+        "PopLayer": function(selector, exclude) {
             $(selector + "[loaded!='true']").attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
                 if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
@@ -856,14 +856,14 @@ function bindEventForListPage() {
                 return false;
             });
         },
-        "ViewHtml": function (selector, exclude) {
+        "ViewHtml": function(selector, exclude) {
             $(selector + "[loaded!='true']").attr("loaded", "true").bind("click", function (e) {
                 alert("TODO");
                 e.preventDefault();
                 return false;
             });
         },
-        "SubTab": function (selector, exclude) {
+        "SubTab": function(selector, exclude) {
             $(selector + "[loaded!='true']").attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
                 openTab($(this).attr("data-id"), $(this).attr("href"), $(this).attr("data-name"));
@@ -917,12 +917,12 @@ function bindEventForListPage() {
             // 列表页表格单元格操作
             qz.bindFill("table a.dataid", ".bodyDiv", false, false, restrictedArea, null);
             // 列表页表格单元格操作(查看)
-            //qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);         
+            //qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);
 
-            $("table.qz-data-list a.qz-action-link[action-type!='" + getSetting("link") + "']", restrictedArea).each(function () {
-                var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']";
-                if (bindingActions[$(this).attr("action-type")]) {
-                    bindingActions[$(this).attr("action-type")].call(null, selector, false);
+            $("table.qz-data-list a.qz-action-link[data-action!='LINK']", restrictedArea).each(function(){
+                var selector = "table.qz-data-list a.qz-action-link[data-action='" + $(this).attr("data-action") + "']";
+                if (bindingActions[$(this).attr("data-action")]) {
+                    bindingActions[$(this).attr("data-action")].call(null, selector, false);
                 } else {
                     console.log("Action function binding failed: function " + $(this).attr("action-type") + " not found.");
                 }
@@ -1192,7 +1192,8 @@ function initMonitorPage() {
     $(".bodyDiv>div.infoPage[chartMonitor='true'][loaded!='true']").attr("loaded", "true").each(function (i) {
         var thisDiv = $(this);
         var monitorI18nInfo = eval("(" + $("textarea[name='monitorI18nInfo']", thisDiv).val() + ")");
-        var chartOption = defaultOption(monitorI18nInfo);
+        let xAxisField = $(this).attr("xAxisField");
+        var chartOption = defaultOption(monitorI18nInfo, xAxisField);
         var myChart = echarts.init($("div[container='chart']", this)[0]);
         myChart.renderFlag = true;
         myChart.on('mouseover', {seriesType: 'line'}, function () {
@@ -1208,20 +1209,34 @@ function initMonitorPage() {
         (function (chartObj, option, url, keys, restrictedArea, tempId) {
             $(thisDiv).append("<span id=\"monitor-timer-" + tempId + "\" style=\"display:none;\"></span>");
             var retryOption = {retryLimit: 10};
-            window.setTimeout(function fn(retryRemain) {
-                if (retryRemain === undefined) {
-                    retryRemain = retryOption.retryLimit;
-                }
-                if (retryRemain > 0 && retryRemain <= retryOption.retryLimit && $("span#monitor-timer-" + tempId).length > 0) {
-                    retryOption["retryRemain"] = retryRemain;
-                    handler(chartObj, option, url, keys, restrictedArea, retryOption, fn);
-                }
-            }, 10);
+            let autoRefresh = $(restrictedArea).attr("autoRefresh");
+            if ("true" === autoRefresh) {
+                window.setTimeout(function fn(retryRemain) {
+                    if (retryRemain === undefined) {
+                        retryRemain = retryOption.retryLimit;
+                    }
+                    if (retryRemain > 0 && retryRemain <= retryOption.retryLimit && $("span#monitor-timer-" + tempId).length > 0) {
+                        retryOption["retryRemain"] = retryRemain;
+                        handler(chartObj, option, url, keys, restrictedArea, retryOption, fn);
+                    }
+                }, 10);
+            } else {
+                handler(myChart, chartOption, $(thisDiv).attr("data-url"), monitorI18nInfo, thisDiv, retryOption);
+            }
         })(myChart, chartOption, $(thisDiv).attr("data-url"), monitorI18nInfo, thisDiv, randId + i);
     });
-};
+}
 
-function defaultOption(infoKv) {
+function defaultOption(infoKv, xAxisField) {
+    let dimensions = [];
+    if (xAxisField) {
+        dimensions.push(xAxisField);
+    } else {
+        dimensions.push("dataTime");
+    }
+    for (let key in infoKv) {
+        dimensions.push(key);
+    }
     return {
         width: 'auto',
         title: {text: ''},
@@ -1229,11 +1244,23 @@ function defaultOption(infoKv) {
             trigger: 'axis',
             confine: true,
             formatter: function (params) {
-                var getMaxSeriesNameWidth = function (para) {//找到内容最长的，给所有属性设置固定width，避免第二列与第一列数据重叠
-                    var maxWidth = 0;
-                    for (var i = 0; i < para.length; i++) {
-                        var text = para[i].seriesName + ': ' + para[i].data;
-                        var width = text.length * 8;
+                function getContent(param) {
+                    const key = param.seriesName;
+                    const name = infoKv[key][0];
+                    let value;
+                    if (param.value instanceof Array) {
+                        value = param.value[param.encode.y[0]]
+                    } else {
+                        value = param.value[param.dimensionNames[param.encode.y[0]]];
+                    }
+                    return name + ": " + value;
+                }
+
+                function getMaxSeriesNameWidth(params) {//找到内容最长的，给所有属性设置固定width，避免第二列与第一列数据重叠
+                    let maxWidth = 0;
+                    for (let i = 0; i < params.length; i++) {
+                        let text = getContent(params[i]);
+                        let width = text.length * 8;
                         if (width > maxWidth) {
                             maxWidth = width;
                         }
@@ -1241,17 +1268,15 @@ function defaultOption(infoKv) {
                     return maxWidth;
                 }
 
-                var maxSeriesNameWidth = getMaxSeriesNameWidth(params);
+                let maxSeriesNameWidth = getMaxSeriesNameWidth(params);
 
-                var getHtml = function (param) {
-                    var str = '<div style="float: left; width: ' + (maxSeriesNameWidth + 70) + 'px;"><span style="background: ' + param.color + '; width: 11px; height: 11px; border-radius: 11px;float: left; margin: 5px 3px;"></span>' +
-                        param.seriesName + ':' + param.data + '&emsp;&emsp;</div>';
-                    return str;
+                function getHtml(param) {
+                    return '<div style="float: left; width: ' + (maxSeriesNameWidth + 70) + 'px;"><span style="background: ' + param.color + '; width: 11px; height: 11px; border-radius: 11px;float: left; margin: 5px 3px;"></span>' +
+                        getContent(param) + '&emsp;&emsp;</div>';
                 }
 
-                var res = params[0].axisValueLabel;
-                res += '<div style="clear: both">';
-                for (var i = 0; i < params.length; i++) {
+                let res = '<div style="clear: both">';
+                for (let i = 0; i < params.length; i++) {
                     res += getHtml(params[i]);
                     if (params.length > 11 && i % 2 == 1) {
                         res += '</div><div style="clear: both">';
