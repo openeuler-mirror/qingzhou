@@ -1,12 +1,7 @@
 package qingzhou.console.controller.rest;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import qingzhou.api.InputType;
 import qingzhou.api.type.Add;
@@ -108,8 +103,13 @@ public class ParameterFilter implements Filter<RestContext> {
                 try {
                     String val = request.getParameter(fieldName);
                     if (Utils.notBlank(val)) {
-                        long time = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).parse(val).getTime();
-                        request.setParameter(fieldName, String.valueOf(time));
+                        final String[] values = val.split(",");
+                        List<String> times = new LinkedList<>();
+                        for (String s : values) {
+                            long time = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).parse(s).getTime();
+                            times.add(time + "");
+                        }
+                        request.setParameter(fieldName, String.valueOf(String.join(",", times)));
                     }
                 } catch (Exception ignored) {
                 }

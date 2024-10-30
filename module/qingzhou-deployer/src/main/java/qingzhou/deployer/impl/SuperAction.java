@@ -437,6 +437,7 @@ class SuperAction {
 
         byte[] block = supplier.read(offset);
         response.setBodyBytes(block);
+        response.setDownloadName(supplier.getDownloadName());
         response.getParameters().put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(supplier.offset()));
     }
 }

@@ -468,6 +468,10 @@
                 if (url.indexOf("javascript:") === 0) {
                     return;
                 }
+                if (url.endsWith("export")){
+                    window.location.href = url;
+                    return;
+                }
 
                 var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea || document.body));
                 that.fill(url, data, $(targetSelector, restrictedArea), append, afterRenderCall);
