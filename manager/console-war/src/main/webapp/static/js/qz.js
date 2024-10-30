@@ -448,7 +448,7 @@
         },
         formToJson: function (formSelector) {
             var jsonObj = {};
-            return  $(formSelector).serializeArray();
+            return $(formSelector).serializeArray();
         },
         /**
          * 为目标对象绑定事件及响应结果目标渲染对象
@@ -468,7 +468,7 @@
                 if (url.indexOf("javascript:") === 0) {
                     return;
                 }
-                if (url.endsWith("export")){
+                if (url.endsWith("export")) {
                     window.location.href = url;
                     return;
                 }

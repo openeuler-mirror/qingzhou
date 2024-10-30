@@ -7,6 +7,7 @@ import qingzhou.engine.util.pattern.Process;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,47 +43,24 @@ class RunningControl implements Process {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        String regex = "\"port\":\\s*\"(\\d+)\"";
-        String agentPortRegex = "\"agentPort\":\\s*\"(\\d+)\"";
-        Pattern pattern = Pattern.compile(regex);
-        Pattern patternAgent = Pattern.compile(agentPortRegex);
-        Matcher matcher = pattern.matcher(jsonConfig);
-        Matcher matcherAgent = patternAgent.matcher(jsonConfig);
 
+        String[] checkPorts = new String[]{"port", "agentPort"};
+        return Arrays.stream(checkPorts).anyMatch(checkPort -> checkPort(checkPort, jsonConfig));
+    }
+
+    private boolean checkPort(String portPattern, String content) {
+        String portRegex = "\"" + portPattern + "\":\\s*\"(\\d+)\"";
+        Matcher matcher = Pattern.compile(portRegex).matcher(content);
         while (matcher.find()) {
-            String port = matcher.group(1); // 获取 port 的值
-            if(checkPort(port)){
-                System.out.println("Error!Qingzhou may already started because Qingzhou's designated port: "+port+" is already in use!");
+            String port = matcher.group(1);
+            try (Socket ignored1 = new Socket("localhost", Integer.parseInt(port))) {
+                System.out.println("Qingzhou may have started, because the designated port:" + port + " is in use!");
                 return true;
-            }
-        }
-        while (matcherAgent.find()) {
-            String port = matcherAgent.group(1);
-            if(checkPort(port)){
-                System.out.println("Error!Qingzhou may already started because Qingzhou's designated agent port:" +port+" is already in use!");
-                return true;
+            } catch (Throwable ignored2) {
             }
         }
         return false;
     }
-
-    private boolean checkPort(String port) {
-        try {
-
-            try (Socket socket = new Socket("localhost", Integer.parseInt(port))) {
-                return true;
-                //System.out.println("Port " + finalPort + " is open");
-            } catch (IOException e) {
-
-                return false;
-            }
-            // 端口关闭或无法连接
-        } catch (Exception e) {
-            throw new IllegalStateException("failed to check port!");
-        }
-
-    }
-
 
     @Override
     public void undo() {

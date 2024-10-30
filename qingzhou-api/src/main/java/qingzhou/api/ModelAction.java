@@ -38,5 +38,4 @@ public @interface ModelAction {
     boolean autoRefresh() default true; // 监控图表是否自动刷新
 
     String xAxisField() default ""; // x轴的属性名，该属性的值要在返回数组的第一个
-
 }

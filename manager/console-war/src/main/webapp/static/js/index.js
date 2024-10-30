@@ -919,10 +919,10 @@ function bindEventForListPage() {
             // 列表页表格单元格操作(查看)
             //qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);
 
-            $("table.qz-data-list a.qz-action-link[data-action!='LINK']", restrictedArea).each(function(){
-                var selector = "table.qz-data-list a.qz-action-link[data-action='" + $(this).attr("data-action") + "']";
-                if (bindingActions[$(this).attr("data-action")]) {
-                    bindingActions[$(this).attr("data-action")].call(null, selector, false);
+            $("table.qz-data-list a.qz-action-link[action-type!='" + getSetting("link") + "']", restrictedArea).each(function(){
+                var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']";
+                if (bindingActions[$(this).attr("action-type")]) {
+                    bindingActions[$(this).attr("action-type")].call(null, selector, false);
                 } else {
                     console.log("Action function binding failed: function " + $(this).attr("action-type") + " not found.");
                 }
