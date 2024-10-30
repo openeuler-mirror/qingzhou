@@ -917,8 +917,8 @@ function bindEventForListPage() {
             // 列表页表格单元格操作
             qz.bindFill("table a.dataid", ".bodyDiv", false, false, restrictedArea, null);
             // 列表页表格单元格操作(查看)
-            //qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);         
-            
+            //qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);
+
             $("table.qz-data-list a.qz-action-link[data-action!='LINK']", restrictedArea).each(function(){
                 var selector = "table.qz-data-list a.qz-action-link[data-action='" + $(this).attr("data-action") + "']";
                 if (bindingActions[$(this).attr("data-action")]) {
@@ -1192,7 +1192,8 @@ function initMonitorPage() {
     $(".bodyDiv>div.infoPage[chartMonitor='true'][loaded!='true']").attr("loaded", "true").each(function (i) {
         var thisDiv = $(this);
         var monitorI18nInfo = eval("(" + $("textarea[name='monitorI18nInfo']", thisDiv).val() + ")");
-        var chartOption = defaultOption(monitorI18nInfo);
+        let xAxisField = $(this).attr("xAxisField");
+        var chartOption = defaultOption(monitorI18nInfo, xAxisField);
         var myChart = echarts.init($("div[container='chart']", this)[0]);
         myChart.renderFlag = true;
         myChart.on('mouseover', {seriesType: 'line'}, function () {
@@ -1208,20 +1209,34 @@ function initMonitorPage() {
         (function (chartObj, option, url, keys, restrictedArea, tempId) {
             $(thisDiv).append("<span id=\"monitor-timer-" + tempId + "\" style=\"display:none;\"></span>");
             var retryOption = {retryLimit: 10};
-            window.setTimeout(function fn(retryRemain) {
-                if (retryRemain === undefined) {
-                    retryRemain = retryOption.retryLimit;
-                }
-                if (retryRemain > 0 && retryRemain <= retryOption.retryLimit && $("span#monitor-timer-" + tempId).length > 0) {
-                    retryOption["retryRemain"] = retryRemain;
-                    handler(chartObj, option, url, keys, restrictedArea, retryOption, fn);
-                }
-            }, 10);
+            let autoRefresh = $(restrictedArea).attr("autoRefresh");
+            if ("true" === autoRefresh) {
+                window.setTimeout(function fn(retryRemain) {
+                    if (retryRemain === undefined) {
+                        retryRemain = retryOption.retryLimit;
+                    }
+                    if (retryRemain > 0 && retryRemain <= retryOption.retryLimit && $("span#monitor-timer-" + tempId).length > 0) {
+                        retryOption["retryRemain"] = retryRemain;
+                        handler(chartObj, option, url, keys, restrictedArea, retryOption, fn);
+                    }
+                }, 10);
+            } else {
+                handler(myChart, chartOption, $(thisDiv).attr("data-url"), monitorI18nInfo, thisDiv, retryOption);
+            }
         })(myChart, chartOption, $(thisDiv).attr("data-url"), monitorI18nInfo, thisDiv, randId + i);
     });
-};
+}
 
-function defaultOption(infoKv) {
+function defaultOption(infoKv, xAxisField) {
+    let dimensions = [];
+    if (xAxisField) {
+        dimensions.push(xAxisField);
+    } else {
+        dimensions.push("dataTime");
+    }
+    for (let key in infoKv) {
+        dimensions.push(key);
+    }
     return {
         width: 'auto',
         title: {text: ''},
@@ -1229,11 +1244,23 @@ function defaultOption(infoKv) {
             trigger: 'axis',
             confine: true,
             formatter: function (params) {
-                var getMaxSeriesNameWidth = function (para) {//找到内容最长的，给所有属性设置固定width，避免第二列与第一列数据重叠
-                    var maxWidth = 0;
-                    for (var i = 0; i < para.length; i++) {
-                        var text = para[i].seriesName + ': ' + para[i].data;
-                        var width = text.length * 8;
+                function getContent(param) {
+                    const key = param.seriesName;
+                    const name = infoKv[key][0];
+                    let value;
+                    if (param.value instanceof Array) {
+                        value = param.value[param.encode.y[0]]
+                    } else {
+                        value = param.value[param.dimensionNames[param.encode.y[0]]];
+                    }
+                    return name + ": " + value;
+                }
+
+                function getMaxSeriesNameWidth(params) {//找到内容最长的，给所有属性设置固定width，避免第二列与第一列数据重叠
+                    let maxWidth = 0;
+                    for (let i = 0; i < params.length; i++) {
+                        let text = getContent(params[i]);
+                        let width = text.length * 8;
                         if (width > maxWidth) {
                             maxWidth = width;
                         }
@@ -1241,17 +1268,15 @@ function defaultOption(infoKv) {
                     return maxWidth;
                 }
 
-                var maxSeriesNameWidth = getMaxSeriesNameWidth(params);
+                let maxSeriesNameWidth = getMaxSeriesNameWidth(params);
 
-                var getHtml = function(param) {
-                    var str = '<div style="float: left; width: ' + (maxSeriesNameWidth + 70) + 'px;"><span style="background: ' + param.color + '; width: 11px; height: 11px; border-radius: 11px;float: left; margin: 5px 3px;"></span>' +
-                        param.seriesName + ':' + param.data + '&emsp;&emsp;</div>';
-                    return str;
+                function getHtml(param) {
+                    return '<div style="float: left; width: ' + (maxSeriesNameWidth + 70) + 'px;"><span style="background: ' + param.color + '; width: 11px; height: 11px; border-radius: 11px;float: left; margin: 5px 3px;"></span>' +
+                        getContent(param) + '&emsp;&emsp;</div>';
                 }
 
-                var res = params[0].axisValueLabel;
-                res += '<div style="clear: both">';
-                for (var i = 0; i < params.length; i++) {
+                let res = '<div style="clear: both">';
+                for (let i = 0; i < params.length; i++) {
                     res += getHtml(params[i]);
                     if (params.length > 11 && i % 2 == 1) {
                         res += '</div><div style="clear: both">';
@@ -1275,13 +1300,9 @@ function defaultOption(infoKv) {
             tooltip: {
                 show: true,
                 trigger: "item",
-                formatter: function (option, a, b, c) {
+                formatter: function (option) {
                     if (infoKv !== undefined) {
-                        for (var k in infoKv) {
-                            if (infoKv[k][0] == option.name) {
-                                return infoKv[k][1];
-                            }
-                        }
+                        return infoKv[option.name][1];
                     }
                     return option.name;
                 }
@@ -1300,10 +1321,14 @@ function defaultOption(infoKv) {
             },
             left: '95%'
         },
+        dataset: {
+            dimensions: dimensions,
+            source: [],
+            sourceHeader: false,
+        },
         xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: []
         },
         yAxis: {
             type: 'value',
@@ -1312,38 +1337,46 @@ function defaultOption(infoKv) {
             }
         }
     };
+}
+
+function getDateTime() {
+    var myDate = new Date();
+    var hours = myDate.getHours() < 10 ? "0" + myDate.getHours() : myDate.getHours();
+    var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
+    var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
+    return hours + ":" + minutes + ":" + seconds;
 };
 
 function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, timerFn) {
+    const formData = $(restrictedArea).siblings("form.filterForm").serializeArray();
     $.ajax({
-        type: "GET",
+        type: "POST",
+        data: formData,
         url: url,
         dataType: 'json',
         complete: function (xhr, status) {
-            if (status === "success") {
-                retryOption.retryRemain = retryOption.retryLimit;
-            } else {
-                retryOption.retryRemain--;
+            if (retryOption && timerFn) {
+                if (status === "success") {
+                    retryOption.retryRemain = retryOption.retryLimit;
+                } else {
+                    retryOption.retryRemain--;
+                }
+                window.setTimeout(function () {
+                    timerFn(retryOption.retryRemain);
+                }, 2000);
             }
-            window.setTimeout(function () {
-                timerFn(retryOption.retryRemain);
-            }, 2000);
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
                 var monitorData = data.data;
-                if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
-                    var models = [{
-                        dataTime: function () {
-                            var myDate = new Date();
-                            var hours = myDate.getHours() < 10 ? "0" + myDate.getHours() : myDate.getHours();
-                            var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
-                            var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
-                            return hours + ":" + minutes + ":" + seconds;
-                        },
-                        data: monitorData,
-                        models: monitorData
-                    }];
+                if (monitorData instanceof Array) {
+                    addData(chartObj, chartOption, monitorData, keys, restrictedArea);
+                } else {
+                    monitorData.dataTime = getDateTime();
+                    let models = [monitorData];
+                    if (chartOption.dataset.source.length >= 20) {
+                        chartOption.dataset.source.shift();
+                    }
                     addData(chartObj, chartOption, models, keys, restrictedArea);
                 }
             } else {
@@ -1357,50 +1390,33 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
 };
 
 function addData(chartObj, option, models, keys, restrictedArea) {
-    if (models === null) {
+    if (models === null || models.length === 0) {
         return;
     }
-    var len = 20;
-    if (option.xAxis.data.length >= len) {
-        option.xAxis.data.shift();
-    }
+
     var valueIsItAnInteger = 'true';
     for (var key in keys) {
-        var legend = (keys[key] instanceof Array) ? keys[key][0] : keys[key];
         var exist = false;
         for (var seriesKey in option.series) {
-            if (option.series[seriesKey].name === legend) {
+            if (option.series[seriesKey].name === key) {
                 exist = true;
                 break;
             }
         }
         if (!exist) {
-            option.legend.data.push(legend);
-            var serie = {name: '', type: '', data: []};
-            serie.name = legend;
-            serie.type = 'line';
-            option.series.push(serie);
+            option.legend.data.push(key);
+            option.series.push({name: key, type: 'line'});
         }
     }
-    for (var i in models) {
-        option.xAxis.data.push(models[i].dataTime.call(null));
-        var data = models[i].data;
-        for (var key in keys) {
+    for (let i in models) {
+        let data = models[i];
+        for (let key in keys) {
             var value = data[key];
             if (!(/(^[0-9]\d*$)/.test(value))) {
                 valueIsItAnInteger = 'false';
             }
-            var name = (keys[key] instanceof Array) ? keys[key][0] : keys[key];
-            for (var seriesKey in option.series) {
-                if (option.series[seriesKey].name === name) {
-                    if (option.series[seriesKey].data.length >= len) {
-                        option.series[seriesKey].data.shift();
-                    }
-                    option.series[seriesKey].data.push(value);
-                    break;
-                }
-            }
         }
+        option.dataset.source.push(models[i]);
     }
     if (valueIsItAnInteger === 'true') {
         option.yAxis.minInterval = 1;
@@ -1412,7 +1428,7 @@ function addData(chartObj, option, models, keys, restrictedArea) {
         }
     }
     let line_num_each_row = 6;// 图例中每行显示的线条数目
-    this.setpSeriesAndLegend(option, line_num_each_row);
+    this.setSeriesAndLegend(option, line_num_each_row);
     this.setGrid(option, line_num_each_row);
 
     if (chartObj.renderFlag === undefined || chartObj.renderFlag) {
@@ -1426,28 +1442,21 @@ function addData(chartObj, option, models, keys, restrictedArea) {
     }
 }
 
-function setpSeriesAndLegend(option, line_num_each_row) {
+function setSeriesAndLegend(option, line_num_each_row) {
     let seriesData = option.series;
 
     let newLegendData = [];
     let newSeriesData = [];
 
     seriesData.forEach((el, index) => {
-        let data = el.data;
-        let name = el.name;
 
         // 一行显示个数控制
         if (index % line_num_each_row === 0 && index !== 0) {
             newLegendData.push(""); // 分行
         }
-        newLegendData.push(name);
+        newLegendData.push(el.name);
 
-        newSeriesData.push({
-            name: name,
-            type: 'line',
-            stack: 'Total',
-            data: data
-        });
+        newSeriesData.push(el);
     });
 
     option.series = newSeriesData;
