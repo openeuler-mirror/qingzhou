@@ -36,23 +36,38 @@ class RunningControl implements Process {
     }
 
     private boolean checkService() {
-        return checkPort() && checkTmp();
+        String jsonConfig;
+        try {
+            jsonConfig = FileUtil.fileToString(FileUtil.newFile(engineContext.getInstanceDir(), "conf", "qingzhou.json"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        String regex = "\"port\":\\s*\"(\\d+)\"";
+        String agentPortRegex = "\"agentPort\":\\s*\"(\\d+)\"";
+        Pattern pattern = Pattern.compile(regex);
+        Pattern patternAgent = Pattern.compile(agentPortRegex);
+        Matcher matcher = pattern.matcher(jsonConfig);
+        Matcher matcherAgent = patternAgent.matcher(jsonConfig);
+
+        while (matcher.find()) {
+            String port = matcher.group(1); // 获取 port 的值
+            if(checkPort(port)){
+                System.out.println("Error!Qingzhou may already started because Qingzhou's designated port: "+port+" is already in use!");
+                return true;
+            }
+        }
+        while (matcherAgent.find()) {
+            String port = matcherAgent.group(1);
+            if(checkPort(port)){
+                System.out.println("Error!Qingzhou may already started because Qingzhou's designated agent port:" +port+" is already in use!");
+                return true;
+            }
+        }
+        return false;
     }
 
-    private boolean checkPort() {
+    private boolean checkPort(String port) {
         try {
-            String jsonConfig = FileUtil.fileToString(FileUtil.newFile(engineContext.getInstanceDir(), "conf", "qingzhou.json"));
-            String regex = "\"port\":\\s*\"(\\d+)\"";
-            Pattern pattern = Pattern.compile(regex);
-            Matcher matcher = pattern.matcher(jsonConfig);
-            String port = "9000";
-
-            if (matcher.find()) {
-                port = matcher.group(1); // 获取 port 的值
-            } else {
-                System.out.println("未找到相关配置");
-            }
-
 
             try (Socket socket = new Socket("localhost", Integer.parseInt(port))) {
                 return true;
@@ -66,12 +81,6 @@ class RunningControl implements Process {
             throw new IllegalStateException("failed to check port!");
         }
 
-    }
-
-    private boolean checkTmp() {
-        //检查当前是否存在临时文件
-        File temp = FileUtil.newFile(engineContext.getTemp());
-        return temp.exists();
     }
 
 
