@@ -17,6 +17,7 @@
                 String dateTimeStyle ="";
                 if (searchFieldInfo.getInputType() == InputType.datetime){
                     dateTimeStyle = "display:flex";
+                    colClass = "col-md-4 col-sm-6 col-xs-8";
                 }
         %>
         <div class='<%=colClass%> list-page-padding-bottom'>

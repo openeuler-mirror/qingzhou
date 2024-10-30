@@ -6,8 +6,14 @@
         if (fieldValues.size() >= i + 1 && !fieldValues.get(i).isEmpty()) {
             formatDate = fieldValues.get(i);
         }
+        if (i == 1){
+            out.print("<span class=\"separator\" style=\"\n" +
+                    "    display: flex;\n" +
+                    "    align-items: center;\n" +
+                    "\">一</span>");
+        }
 %>
-<input type="text" name="<%=fieldName%>" value='<%=formatDate%>'
+<input type="text" name="<%=fieldName%>" value='<%=formatDate%>'"
        autocomplete="off"
        placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"
        class="form-control form-datetime"
