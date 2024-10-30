@@ -52,12 +52,14 @@ class RunningControl implements Process {
         while (matcher.find()) {
             String port = matcher.group(1); // 获取 port 的值
             if(checkPort(port)){
+                System.out.println("Error!Qingzhou may already started because Qingzhou's designated port: "+port+" is already in use!");
                 return true;
             }
         }
         while (matcherAgent.find()) {
             String port = matcherAgent.group(1);
             if(checkPort(port)){
+                System.out.println("Error!Qingzhou may already started because Qingzhou's designated agent port:" +port+" is already in use!");
                 return true;
             }
         }
