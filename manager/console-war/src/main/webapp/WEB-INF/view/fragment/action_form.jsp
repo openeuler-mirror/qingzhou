@@ -29,3 +29,8 @@
 		}
 	%>
 </div>
+<div style="margin-top: 15px; height: 64px; text-align: center;">
+	<div class="form-btn">
+		<input type="submit" class="btn" value='<%=I18n.getKeyI18n("page.confirm")%>'>
+	</div>
+</div>
