@@ -317,10 +317,10 @@
         searchHiddenTip: '<%=I18n.getKeyI18n("page.search.hidden")%>',
         passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>',
         confirmKey: '<%=DeployerConstants.ACTION_CONFIRMKEY%>',
-		download: '<%=DownloadView.FLAG%>',
+	download: '<%=DownloadView.FLAG%>',
         echoActionName: '<%=Echo.ACTION_ECHO%>',
-		monitor: '<%=ActionType.monitor.name()%>',
-		link: '<%=ActionType.link.name()%>',
+	monitor: '<%=ActionType.monitor.name()%>',
+	link: '<%=ActionType.link.name()%>',
     };
 
     <%-- 显示第一个应用的管理页面--%>

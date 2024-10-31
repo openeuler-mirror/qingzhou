@@ -55,6 +55,7 @@ public class ServletContainerImpl implements ServletContainer {
             context.setAllowCasualMultipartParsing(true);
         }
         context.setRequestCharacterEncoding(StandardCharsets.UTF_8.name());
+        context.setResponseCharacterEncoding(StandardCharsets.UTF_8.name());
 
         addWebResources(context, properties);
     }

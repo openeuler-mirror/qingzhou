@@ -24,7 +24,6 @@
 		Map<String, String> numericData = new LinkedHashMap<>();
 		Map<String, String> basicData = new LinkedHashMap<>();
 
-
 		String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
 		Map<String, String> dataMap = qzResponse.getDataMap();
 		List<String[]> dataList = qzResponse.getDataList();

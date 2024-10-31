@@ -1,21 +1,16 @@
 package qingzhou.app.model;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
+
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Model(code = "user", icon = "user",
@@ -73,7 +68,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.checkbox,
-            separator = "@",
+            separator = "@",  list = true,
             reference = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
@@ -110,15 +105,39 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            link_fields = {"name", "notes", "gender", "a", "b"},
+            link_fields = {"name", "notes", "gender", "checkbox", "b"},
             action_type = ActionType.PopLayer,
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
-        request.getResponse().useCustomizedResponse(
-                String.format("处理参数，name：%s，gender：%s",
-                        request.getParameter("name"),
-                        request.getParameter("gender")));
+        String gender = request.getParameter("gender");
+        if ("0".equals(gender)) {
+            request.getResponse().setContentType("application/json");
+            HashMap<String, String> map = new HashMap<>();
+            Enumeration<String> names = request.getParameterNames();
+            while (names.hasMoreElements()) {
+                String key = names.nextElement();
+                String value = request.getParameter(key);
+                map.put(key, value);
+            }
+            request.getResponse().useCustomizedResponse(map);
+        } else {
+            String html = "<div style='background-color: #fff;color: #333;padding: 10px;'>" +
+                    "<table>" +
+                    "<thead><tr style='height: 20px'>" +
+                    "<th style='width: 25%'>用户名称</th>" +
+                    "<th style='width: 25%'>用户性别</th>" +
+                    "<th style='width: 50%'>备注</th>" +
+                    "</tr></thead>" +
+                    "<tbody><tr>" +
+                    "<td>" + request.getParameter("id") + "</td>"
+                    + "<td>" + request.getParameter("gender") + "</td>" +
+                    "<td>" + request.getParameter("notes") + "</td>" +
+                    "</tr></tbody>" +
+                    "</table>" +
+                    "</div>";
+            request.getResponse().useCustomizedResponse(html);
+        }
     }
 
     @Override

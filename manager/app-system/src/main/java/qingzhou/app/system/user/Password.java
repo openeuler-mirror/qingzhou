@@ -120,7 +120,7 @@ public class Password extends ModelBase implements Update, Export {
             result = totpCipher.verifyCode(keyForOtp, reqCode);
             if (result) {
                 Map<String, String> data = new HashMap<>();
-                data.put(User.idKey, request.getUser());
+                data.put(User.ID_KEY, request.getUser());
                 data.put("keyForOtp", keyForOtp);
                 User.updateDataForUser(data);
                 request.removeParameterInSession(KEY_IN_SESSION_FLAG);

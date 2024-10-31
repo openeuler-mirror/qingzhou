@@ -3,7 +3,7 @@ package qingzhou.console;
 import qingzhou.engine.ModuleContext;
 
 public interface ContextHelper {
-    ThreadLocal<ContextHelper> GetInstance = new ThreadLocal<>();
+    ThreadLocal<ContextHelper> GET_INSTANCE = new ThreadLocal<>();
 
     ModuleContext getModuleContext();
 }

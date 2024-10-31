@@ -20,10 +20,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 class SuperAction {
-    static final java.util.List<ModelActionInfo> allSuperActionCache;
+    static final java.util.List<ModelActionInfo> ALL_SUPER_ACTION_CACHE;
 
     static {
-        allSuperActionCache = DeployerImpl.parseModelActionInfos(new AnnotationReader(SuperAction.class));
+        ALL_SUPER_ACTION_CACHE = DeployerImpl.parseModelActionInfos(new AnnotationReader(SuperAction.class));
     }
 
     private final AppImpl app;
@@ -219,6 +219,7 @@ class SuperAction {
             code = Delete.ACTION_DELETE, icon = "trash",
             redirect = List.ACTION_LIST,
             distribute = true,
+            action_type = ActionType.delete,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})

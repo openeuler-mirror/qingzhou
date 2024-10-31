@@ -56,8 +56,8 @@ public interface DeployerConstants {
     String FIELD_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String RANGE_DATE_TIME = "yyyy-MM-DD HH:mm:ss";
     String RANGE_DATE_TIME_SP = "一";
-    String app_Started = "Started";
-    String app_Stopped = "Stopped";
+    String APP_STARTED = "Started";
+    String APP_STOPPED = "Stopped";
     String DEFAULT_DATA_SEPARATOR = ",";
     String DOWNLOAD_FILE_NAMES_SP = "/"; // |/\:*?"<> 这些都是 windows 平台u支持的文件名，linux 上 / 不支持文件名
     String DOWNLOAD_FILE_GROUP_SP = "/";

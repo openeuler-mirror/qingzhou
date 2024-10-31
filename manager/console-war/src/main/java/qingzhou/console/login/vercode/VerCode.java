@@ -19,7 +19,7 @@ public class VerCode implements Filter<SystemControllerContext> {
     public static final String CAPTCHA_URI = "/captcha";
     public static final String SHOW_CAPTCHA_FLAG = "SHOW_CAPTCHA_FLAG";
 
-    private static final Map<String, Map<String, String>> userVerCodes = new LinkedHashMap<String, Map<String, String>>() {
+    private static final Map<String, Map<String, String>> USER_VER_CODES = new LinkedHashMap<String, Map<String, String>>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, Map<String, String>> eldest) {
             return size() > 10000;
@@ -34,7 +34,7 @@ public class VerCode implements Filter<SystemControllerContext> {
         if (IPUtil.isLocalIp(clientIp)) { // 本机访问本机，浏览器、命令行、接口等可能用了不同的发送ip，有的是h127，有的是::1，有的实际ip等
             clientIp = "LocalIp";
         }
-        return userVerCodes.computeIfAbsent(clientIp, s -> new HashMap<>());
+        return USER_VER_CODES.computeIfAbsent(clientIp, s -> new HashMap<>());
     }
 
     public static boolean isVerCodeDisabled() {
