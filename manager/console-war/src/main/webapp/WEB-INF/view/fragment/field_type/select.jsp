@@ -14,10 +14,12 @@
     } else {
         selectHtml += "<li data-value=\"\" class=\"option\" format=\"\"></li>";
     }
+    boolean selected = false;
     for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldName)) {
         String option = itemInfo.getName();
         String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
         if (Objects.equals(fieldValue, option)) {
+            selected = true;
             selectVal = option;
             selectText = optionI18n;
             tabIndex = index;
@@ -29,6 +31,10 @@
     }
 
     selectHtml += "</ul>";
+
+    if (!selected) {
+        selectText = fieldValue;
+    }
 
     String showText = ((selectText == null || "".equals(selectText.trim())) ? selectVal : selectText);
     if (index <= 6) {

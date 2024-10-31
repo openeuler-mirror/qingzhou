@@ -86,12 +86,13 @@ public class Department extends AddModelBase implements Echo, Option {
             String manager = params.get("manager");
             map.put("email", superior + "===" + manager);
             map.put("phone", superior + "&&&" + manager);
-            map.put("emailSuffix", "@qq.com");
             map.put("manager", "lisa");
             if ("a".equals(params.get("superior")) || "c".equals(params.get("superior"))) {
                 map.put("active", "false");
+                map.put("emailSuffix", "@qq.com");
             } else {
                 map.put("active", "true");
+                map.put("emailSuffix", "@gov.com");
             }
             map.put("buildDate", "2024-10-24 14:39:24");
         } else if (echoGroup.equals("bb")) {
@@ -124,8 +125,15 @@ public class Department extends AddModelBase implements Echo, Option {
         } else if (fieldName.equals("manager")) {
             return Item.of(new String[]{"jack", "lisa", "tom"});
         } else if (fieldName.equals("emailSuffix")) {
-            return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com"});
+            return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com", "@outlook.com", "@yahoo.com", "@tongtech.com", "@github.com"});
         }
         return new Item[0];
+    }
+
+    @Override
+    public Map<String, String> editData(String id) throws Exception {
+        Map<String, String> map = showData(id);
+        map.put("emailSuffix", null);
+        return map;
     }
 }

@@ -570,16 +570,21 @@ function updateFormData(thisForm, data) {
             case "radio":
                 $(formItem).find("input[name='" + key + "']").each(function () {
                     if ($(this).attr("value") !== value) {
-                        $(this).attr("checked", false);
+                        $(this).prop("checked", false);
                     } else {
-                        $(this).attr("checked", true);
+                        $(this).prop("checked", true);
                     }
                 });
                 break;
             case "select":
-                $("li[data-value='" + value + "']", formItem).each(selectOption);
+                var $li = $("li[data-value='" + value + "']", formItem);
+                if ($li.length > 0) {
+                    $li.each(selectOption);
+                } else {
+                    $("div.nice-select span", formItem).html(value);
+                }
                 break;
-            case "sortablecheckbox":
+            case "sortable_checkbox":
                 $("a", formItem).each(function () {
                     const val = $("input[name=" + key + "]", this).attr("value");
                     if (value.split(",").includes(val)) {
@@ -606,7 +611,6 @@ function updateFormData(thisForm, data) {
                 }
                 break;
             case "kv":
-                // $("input[name='" + key + "']", formItem).val(value);
                 $("tbody tr:not(:first,:last)", formItem).remove();
                 const alink = $("tbody tr:last td a", formItem);
                 const separator = $(formItem).children("div").attr("separator");
@@ -1176,7 +1180,7 @@ function customAction(actionUrl, customActionId, title, restrictedArea) {
         area: ['700px', '500px'],
         content: html,
         success: function () {
-            $('#' + customActionId).on('submit', function (e) {
+            $(document.getElementById(customActionId)).on('submit', function (e) {
                 e.preventDefault();
                 let formData = $(this).serialize();
                 $.ajax({
