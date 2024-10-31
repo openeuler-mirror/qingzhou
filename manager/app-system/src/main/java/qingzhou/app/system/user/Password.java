@@ -140,7 +140,7 @@ public class Password extends ModelBase implements Update, Export {
     }
 
     @Override
-    public ByteStreamSupplier exportData(String id) {
+    public ByteStreamSupplier exportData(Map<String, String> query) {
         Request request = getAppContext().getCurrentRequest();
         return new ByteStreamSupplier() {
             private final String format = "png";

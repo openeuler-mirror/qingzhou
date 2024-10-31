@@ -11,6 +11,7 @@ import qingzhou.engine.util.Utils;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.net.URLEncoder;
 import java.util.Map;
 
 public class DownloadView implements View {
@@ -28,7 +29,8 @@ public class DownloadView implements View {
             downloadName = request.getModel() + "-" + System.currentTimeMillis();
         }
         HttpServletResponse servletResponse = restContext.resp;
-        servletResponse.setHeader("Content-disposition", "attachment; filename=" + downloadName);
+        String encodedFileName = URLEncoder.encode(downloadName, "UTF-8");
+        servletResponse.setHeader("Content-disposition", "attachment; filename=" + encodedFileName);
 
         byte[] content = response.getBodyBytes();
         Map<String, String> result = response.getParameters();
