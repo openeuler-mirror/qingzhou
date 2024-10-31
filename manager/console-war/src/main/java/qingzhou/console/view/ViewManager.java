@@ -80,6 +80,7 @@ public class ViewManager {
             } else {
                 Json json = SystemController.getService(Json.class);
                 writeData = json.toJson(customizedDataObject);
+                restContext.resp.setContentType(JsonView.CONTENT_TYPE);
             }
 
             PrintWriter writer = restContext.resp.getWriter();

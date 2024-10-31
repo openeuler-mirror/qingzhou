@@ -1156,29 +1156,32 @@ function downloadFiles(fileListUrl, downloadUrl) {
 
 function customAction(actionUrl, customActionId, title, restrictedArea) {
     let html = $("div[custom-action-id='" + customActionId + "']", restrictedArea).html();
-    html = "<form id='" + customActionId + "' method='post' class='form-horizontal'>" + html + "</form><hr style='margin-top: 4px;'><div id='custom-action-result' ></div>";
+    html = "<div style='padding: 10px'><form id='" + customActionId + "' method='post' class='form-horizontal'>" + html + "</form><hr style='margin-top: 4px;'><div id='custom-action-result' ></div></div>";
     openLayer({
+        type: 1,
+        shadeClose: true,
         title: title,
         area: ['700px', '500px'],
         content: html,
-        btn: [getSetting("confirmBtnText"), getSetting("cancelBtnText")],
-        yes: function () {
-            //不知道为什么$('#' + customActionId)在某些特殊情况下拿不到元素
-            var formData = $(document.getElementById(customActionId)).serializeArray();
-            const data = {};
-            formData.forEach(item => {
-                data[item.name] = item.value;
-            });
-            $.ajax({
-                type: "POST",
-                url: actionUrl,
-                data: data,
-                success: function (response) {
-                    $('#custom-action-result').html("<pre style='background-color: #333;color: #fff;padding: 10px;'>" + JSON.stringify(response, null, 4) + "</pre>");
-                },
-                error: function (e) {
-                    handleError(e);
-                }
+        success: function () {
+            $('#' + customActionId).on('submit', function (e) {
+                e.preventDefault();
+                let formData = $(this).serialize();
+                $.ajax({
+                    type: "POST",
+                    url: actionUrl,
+                    data: formData,
+                    success: function (res, textStatus, xhr) {
+                        if (xhr.getResponseHeader("Content-Type") && xhr.getResponseHeader("Content-Type").includes("application/json")) {
+                            $('#custom-action-result').html("<pre style='background-color: #333;color: #fff;padding: 10px;'>" + JSON.stringify(res, null, 4) + "</pre>");
+                        } else {
+                            $('#custom-action-result').html(res);
+                        }
+                    },
+                    error: function (e) {
+                        handleError(e);
+                    }
+                });
             });
         }
     });
