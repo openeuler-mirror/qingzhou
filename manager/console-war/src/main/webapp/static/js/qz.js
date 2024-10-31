@@ -468,12 +468,16 @@
                 if (url.indexOf("javascript:") === 0) {
                     return;
                 }
+                var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea || document.body));
                 if (url.endsWith("export")){
+                    url += "?"
+                    for (const item of data) {
+                        url += item.name + "=" + item.value + "&";
+                    }
                     window.location.href = url;
                     return;
                 }
 
-                var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea || document.body));
                 that.fill(url, data, $(targetSelector, restrictedArea), append, afterRenderCall);
             });
         },

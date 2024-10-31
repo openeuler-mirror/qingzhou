@@ -234,7 +234,7 @@ class SuperAction {
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
     public void export(Request request) throws IOException {
         Export stream = (Export) instance;
-        Export.StreamSupplier streamSupplier = stream.exportData(request.getId());
+        Export.StreamSupplier streamSupplier = stream.exportData(queryParams(request));
         if (streamSupplier == null) return;
 
         downloadStream(request, streamSupplier);
