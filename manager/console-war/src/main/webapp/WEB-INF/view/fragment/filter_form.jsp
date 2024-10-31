@@ -11,13 +11,12 @@
             for (String fieldName : fieldsToListSearch) {
                 ModelFieldInfo searchFieldInfo = modelInfo.getModelFieldInfo(fieldName);
                 String colClass = "col-md-2 col-sm-3 col-xs-4";
+                String dateTimeStyle = "";
                 if (searchFieldInfo.getInputType() == InputType.textarea) {
                     colClass = "col-md-12 col-sm-12 col-xs-12";
-                }
-                String dateTimeStyle ="";
-                if (searchFieldInfo.getInputType() == InputType.datetime){
-                    dateTimeStyle = "display:flex";
+                } else if (searchFieldInfo.getInputType() == InputType.datetime) {
                     colClass = "col-md-4 col-sm-6 col-xs-8";
+                    dateTimeStyle = "display:flex";
                 }
         %>
         <div class='<%=colClass%> list-page-padding-bottom'>
@@ -25,8 +24,9 @@
                 <%
                     String echoGroup = "";
                     String fieldValue = null;
-                    if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo) || searchFieldInfo.getInputType() == InputType.datetime) {
-                        if (request.getParameterValues(fieldName) != null){
+                    if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo)
+                            || searchFieldInfo.getInputType() == InputType.datetime) {
+                        if (request.getParameterValues(fieldName) != null) {
                             fieldValue = String.join(searchFieldInfo.getSeparator(), request.getParameterValues(fieldName));
                         }
                     } else {
@@ -41,22 +41,23 @@
                     if (fieldValue == null) {
                         fieldValue = "";
                     }
-                if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo)) {
-                    java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
+                    if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo)) {
+                        java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
                 %>
                 <%@ include file="field_type/multiselect.jsp" %>
                 <%
                 } else if (searchFieldInfo.getInputType() == InputType.textarea) {
                 %>
                 <textarea name="<%=fieldName%>" value='<%=fieldValue%>' class="form-control"
-                          rows="2" placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"><%=fieldValue%></textarea>
+                          rows="2"
+                          placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"><%=fieldValue%></textarea>
                 <%
-                } else if (searchFieldInfo.getInputType() == InputType.datetime){
+                } else if (searchFieldInfo.getInputType() == InputType.datetime) {
                     java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
                 %>
                 <%@ include file="field_type/rangedatetime.jsp" %>
                 <%
-                }else{
+                } else {
                 %>
                 <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
                        class="form-control"

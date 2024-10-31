@@ -448,7 +448,7 @@
         },
         formToJson: function (formSelector) {
             var jsonObj = {};
-            return  $(formSelector).serializeArray();
+            return $(formSelector).serializeArray();
         },
         /**
          * 为目标对象绑定事件及响应结果目标渲染对象
@@ -468,16 +468,12 @@
                 if (url.indexOf("javascript:") === 0) {
                     return;
                 }
-                var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea || document.body));
-                if (url.endsWith("export")){
-                    url += "?"
-                    for (const item of data) {
-                        url += item.name + "=" + item.value + "&";
-                    }
+                if (url.endsWith("export")) {
                     window.location.href = url;
                     return;
                 }
 
+                var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea || document.body));
                 that.fill(url, data, $(targetSelector, restrictedArea), append, afterRenderCall);
             });
         },

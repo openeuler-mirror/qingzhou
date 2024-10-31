@@ -14,8 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.net.URLEncoder;
 import java.util.Map;
 
-public class StreamView implements View {
-    public static final String FLAG = "stream";
+public class DownloadView implements View {
+    public static final String FLAG = "download";
 
     @Override
     public void render(RestContext restContext) throws Exception {

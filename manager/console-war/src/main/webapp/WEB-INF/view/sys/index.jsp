@@ -313,8 +313,10 @@
         searchHiddenTip: '<%=I18n.getKeyI18n("page.search.hidden")%>',
         passwordConfirmFailed: '<%=I18n.getKeyI18n("password.confirm.notequal")%>',
         confirmKey: '<%=DeployerConstants.ACTION_CONFIRMKEY%>',
-        stream: '<%=StreamView.FLAG%>',
-        echoActionName: '<%=Echo.ACTION_ECHO%>'
+		download: '<%=DownloadView.FLAG%>',
+        echoActionName: '<%=Echo.ACTION_ECHO%>',
+		monitor: '<%=ActionType.monitor.name()%>',
+		link: '<%=ActionType.link.name()%>',
     };
 
     <%-- 显示第一个应用的管理页面--%>

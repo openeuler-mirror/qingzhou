@@ -106,18 +106,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         req.setModelName(model);
         req.setActionName(List.ACTION_ALL);
         ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
-        String[] ids = res.getIds();
-        if (ids != null) {
-            if (fieldInfo.isRequired()) {
-                return ids;
-            } else {
-                String[] idsCopy = new String[1 + ids.length];
-                idsCopy[0] = "";
-                System.arraycopy(ids, 0, idsCopy, 1, ids.length);
-                return idsCopy;
-            }
-        }
-        return null;
+        return res.getIds();
     }
 
     public static ItemInfo[] getOptions(String qzApp, ModelInfo modelInfo, String fieldName) {

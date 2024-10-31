@@ -1,15 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import qingzhou.api.InputType;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
@@ -28,6 +18,16 @@ import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
@@ -66,16 +66,8 @@ public class ValidationFilter implements Filter<RestContext> {
                 || type == InputType.kv;
     }
 
-    public static boolean filterPageIsMultipleSelect(ModelFieldInfo fieldInfo){
-        InputType type = fieldInfo.getInputType();
-        return type == InputType.checkbox
-                || type == InputType.sortable_checkbox
-                || type == InputType.multiselect
-                || type == InputType.sortable
-                || type == InputType.bool
-                || type == InputType.radio
-                || type == InputType.select
-                || type == InputType.kv;
+    public static boolean filterPageIsMultipleSelect(ModelFieldInfo fieldInfo) {
+        return isSingleSelect(fieldInfo) || isMultipleSelect(fieldInfo);
     }
 
     @Override
