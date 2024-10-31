@@ -54,6 +54,8 @@ public interface DeployerConstants {
     String DO_REGISTER = "doRegister";
     String PASSWORD_LAST_MODIFIED_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String FIELD_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    String RANGE_DATE_TIME = "yyyy-MM-DD HH:mm:ss";
+    String RANGE_DATE_TIME_SP = "一";
     String app_Started = "Started";
     String app_Stopped = "Stopped";
     String DEFAULT_DATA_SEPARATOR = ",";

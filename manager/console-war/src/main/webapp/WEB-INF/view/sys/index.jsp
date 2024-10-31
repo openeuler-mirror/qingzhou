@@ -20,6 +20,8 @@
 	<link rel="stylesheet" href="<%=contextPath%>/static/css/index.css">
 	<link rel="stylesheet" href="<%=contextPath%>/static/css/nice-select.css">
 	<link rel="stylesheet" href="<%=contextPath%>/static/lib/multiple-select/multiple-select.min.css">
+	<link type="text/css" rel="stylesheet" href="<%=contextPath%>/static/lib/daterangepicker/daterangepicker.css">
+
 
 	<style>
         /* list.jsp */
@@ -214,6 +216,8 @@
 	<script src="<%=contextPath%>/static/lib/multiple-select/locale/multiple-select-locale-all.min.js"></script>
 	<script src="<%=contextPath%>/static/lib/marked/marked.min.js"></script>
 	<script src="<%=contextPath%>/static/lib/muuri/muuri.min.js"></script>
+	<script type="text/javascript" src="<%=contextPath%>/static/lib/daterangepicker/moment.min.js"></script>
+	<script type="text/javascript" src="<%=contextPath%>/static/lib/daterangepicker/daterangepicker.min.js"></script>
 </head>
 
 <%@ include file="../fragment/head.jsp" %>

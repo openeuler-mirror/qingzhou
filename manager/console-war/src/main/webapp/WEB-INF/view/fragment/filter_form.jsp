@@ -15,17 +15,15 @@
                 if (searchFieldInfo.getInputType() == InputType.textarea) {
                     colClass = "col-md-12 col-sm-12 col-xs-12";
                 } else if (searchFieldInfo.getInputType() == InputType.datetime) {
-                    colClass = "col-md-4 col-sm-6 col-xs-8";
-                    dateTimeStyle = "display:flex";
+                    colClass = "col-md-3 col-sm-5 col-xs-7";
                 }
         %>
         <div class='<%=colClass%> list-page-padding-bottom'>
-            <div class="input-control" style="<%=dateTimeStyle%>">
+            <div class="input-control">
                 <%
                     String echoGroup = "";
                     String fieldValue = null;
-                    if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo)
-                            || searchFieldInfo.getInputType() == InputType.datetime) {
+                    if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo)) {
                         if (request.getParameterValues(fieldName) != null) {
                             fieldValue = String.join(searchFieldInfo.getSeparator(), request.getParameterValues(fieldName));
                         }
@@ -53,7 +51,6 @@
                           placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"><%=fieldValue%></textarea>
                 <%
                 } else if (searchFieldInfo.getInputType() == InputType.datetime) {
-                    java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
                 %>
                 <%@ include file="field_type/rangedatetime.jsp" %>
                 <%

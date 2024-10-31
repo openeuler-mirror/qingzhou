@@ -103,7 +103,7 @@ public class ParameterFilter implements Filter<RestContext> {
                 try {
                     String val = request.getParameter(fieldName);
                     if (Utils.notBlank(val)) {
-                        final String[] values = val.split(",");
+                        final String[] values = val.split(DeployerConstants.RANGE_DATE_TIME_SP);
                         List<String> times = new LinkedList<>();
                         for (String s : values) {
                             long time = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).parse(s).getTime();

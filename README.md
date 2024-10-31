@@ -59,6 +59,7 @@ JDK >= 1.8
 + Layui layer ([https://gitee.com/layui/layer](https://gitee.com/layui/layer))
 + ZUI ([https://openzui.com](https://openzui.com))
 + jQuery ([https://jquery.com](https://jquery.com))
++ Date Range Picker ([https://daterangepicker.com/])
 
 【后端】
 
