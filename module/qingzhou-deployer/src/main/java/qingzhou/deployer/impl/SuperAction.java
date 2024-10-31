@@ -219,6 +219,7 @@ class SuperAction {
             code = Delete.ACTION_DELETE, icon = "trash",
             redirect = List.ACTION_LIST,
             distribute = true,
+            action_type = ActionType.delete,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})

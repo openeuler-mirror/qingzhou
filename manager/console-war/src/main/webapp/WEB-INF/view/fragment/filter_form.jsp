@@ -79,8 +79,7 @@
             </span>
 
             <span class="input-group-btn col-md-4" style="width: 18%;padding-left:0;margin-left: 45px;">
-                <a class="btn"
-                   href="javascript:void(0);" onclick="filter_reset(this);">
+                <a class="btn" href="javascript:void(0);" onclick="filter_reset(this);">
                     <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter.reset")%>
                 </a>
             </span>
