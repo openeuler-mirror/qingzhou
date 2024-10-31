@@ -17,7 +17,7 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 
 public class HtmlView implements View {
-    public static final String htmlPageBase = "/WEB-INF/view/";
+    public static final String HTML_PAGE_BASE = "/WEB-INF/view/";
     public static final String FLAG = "html";
 
     @Override
@@ -37,7 +37,7 @@ public class HtmlView implements View {
         }
 
         String forwardView = isManageAction ? "sys/manage" : getForwardView(request);
-        String forwardToPage = HtmlView.htmlPageBase + (forwardView.contains("/") ? (forwardView + ".jsp") : ("type/" + forwardView + ".jsp"));
+        String forwardToPage = HtmlView.HTML_PAGE_BASE + (forwardView.contains("/") ? (forwardView + ".jsp") : ("type/" + forwardView + ".jsp"));
         restContext.req.getRequestDispatcher(forwardToPage).forward(restContext.req, restContext.resp);
     }
 

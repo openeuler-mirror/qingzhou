@@ -20,10 +20,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 class SuperAction {
-    static final java.util.List<ModelActionInfo> allSuperActionCache;
+    static final java.util.List<ModelActionInfo> ALL_SUPER_ACTION_CACHE;
 
     static {
-        allSuperActionCache = DeployerImpl.parseModelActionInfos(new AnnotationReader(SuperAction.class));
+        ALL_SUPER_ACTION_CACHE = DeployerImpl.parseModelActionInfos(new AnnotationReader(SuperAction.class));
     }
 
     private final AppImpl app;

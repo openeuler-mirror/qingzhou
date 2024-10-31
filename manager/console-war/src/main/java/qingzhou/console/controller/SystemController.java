@@ -38,10 +38,10 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     public static Manager SESSIONS_MANAGER;
     private static String publicKey;
     public static PairCipher pairCipher;
-    private static final ContextHelper contextHelper;
+    private static final ContextHelper CONTEXT_HELPER;
 
     static {
-        contextHelper = ContextHelper.GetInstance.get();
+        CONTEXT_HELPER = ContextHelper.GET_INSTANCE.get();
 
         CryptoService cryptoService = SystemController.getService(CryptoService.class);
         Security security = getConsole().getSecurity();
@@ -159,7 +159,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     public static ModuleContext getModuleContext() {
-        return contextHelper.getModuleContext();
+        return CONTEXT_HELPER.getModuleContext();
     }
 
     public static Console getConsole() {

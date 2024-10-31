@@ -31,7 +31,7 @@ import qingzhou.registry.Registry;
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
 public class App extends ModelBase implements qingzhou.api.type.List, Add {
-    public static final String instanceSP = ";";
+    public static final String INSTANCE_SP = ";";
 
     @Override
     public String idField() {
@@ -108,7 +108,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
             input_type = InputType.checkbox,
             required = true,
             reference = Instance.class,
-            separator = App.instanceSP,
+            separator = App.INSTANCE_SP,
             list = true, search = true,
             name = {"安装实例", "en:Instance"},
             info = {"选择安装应用的实例。", "en:Select the instance where you want to install the application."})
@@ -117,7 +117,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     @ModelField(
             list = true, search = true,
             create = false, edit = false,
-            color = {DeployerConstants.app_Started + ":Green", DeployerConstants.app_Stopped + ":Gray"},
+            color = {DeployerConstants.APP_STARTED + ":Green", DeployerConstants.APP_STOPPED + ":Gray"},
             name = {"状态", "en:State"},
             info = {"指示应用的当前运行状态。", "en:Indicates the current running state of the app."})
     public String state;
@@ -148,7 +148,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
             Map<String, String> appMap = new HashMap<>();
             appMap.put(idField(), id);
             appMap.put("path", appInfo.getFilePath());
-            appMap.put("instances", String.join(App.instanceSP, instances));
+            appMap.put("instances", String.join(App.INSTANCE_SP, instances));
             appMap.put("state", appInfo.getState());
             return appMap;
         }
@@ -163,7 +163,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
-            show = "state=" + DeployerConstants.app_Started,
+            show = "state=" + DeployerConstants.APP_STARTED,
             action_type = ActionType.NewTab,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
@@ -191,7 +191,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
                     "en:Install the application package to the specified Qingzhou instance."})
     public void add(Request request) {
         String instances = ((RequestImpl) request).removeParameter("instances");
-        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_INSTALL_APP, instances.split(App.instanceSP));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_INSTALL_APP, instances.split(App.INSTANCE_SP));
     }
 
     @Override
@@ -209,12 +209,12 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         String id = request.getId();
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
-        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_UNINSTALL_APP, instances.split(App.instanceSP));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_UNINSTALL_APP, instances.split(App.INSTANCE_SP));
     }
 
     @ModelAction(
             code = "start", icon = "play",
-            show = "state=" + DeployerConstants.app_Stopped,
+            show = "state=" + DeployerConstants.APP_STOPPED,
             redirect = qingzhou.api.type.List.ACTION_LIST,
             action_type = ActionType.StartStop,
             name = {"启动", "en:start"},
@@ -223,12 +223,12 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         String id = request.getId();
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
-        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_START_APP, instances.split(App.instanceSP));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_START_APP, instances.split(App.INSTANCE_SP));
     }
 
     @ModelAction(
             code = "stop", icon = "stop",
-            show = "state=" + DeployerConstants.app_Started,
+            show = "state=" + DeployerConstants.APP_STARTED,
             redirect = qingzhou.api.type.List.ACTION_LIST,
             action_type = ActionType.StartStop,
             name = {"停止", "en:end"},
@@ -237,6 +237,6 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         String id = request.getId();
         Map<String, String> app = showData(id);
         String instances = app.get("instances");
-        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_STOP_APP, instances.split(App.instanceSP));
+        Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_STOP_APP, instances.split(App.INSTANCE_SP));
     }
 }

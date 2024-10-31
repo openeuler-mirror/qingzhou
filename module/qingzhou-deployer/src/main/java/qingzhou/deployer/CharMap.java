@@ -12,8 +12,8 @@ import qingzhou.api.Lang;
 import qingzhou.engine.util.Utils;
 
 class CharMap {
-    private static final Map<Character, Character> zh_tr_Map = new HashMap<>();
-    private static final Set<Character> detected = new CopyOnWriteArraySet<>();
+    private static final Map<Character, Character> ZH_TR_MAP = new HashMap<>();
+    private static final Set<Character> DETECTED = new CopyOnWriteArraySet<>();
 
     static {
         try {
@@ -21,7 +21,7 @@ class CharMap {
             String zh = props.getProperty("zh");
             String tr = props.getProperty("tr");
             for (int i = 0; i < zh.length(); i++) {
-                Character check = zh_tr_Map.put(zh.charAt(i), tr.charAt(i));
+                Character check = ZH_TR_MAP.put(zh.charAt(i), tr.charAt(i));
                 if (check != null) {
                     throw new IllegalArgumentException("Please remove duplicate characters");
                 }
@@ -52,15 +52,15 @@ class CharMap {
         StringBuilder twMsg = new StringBuilder();
         for (int i = 0; i < msg.length(); i++) {
             char c = msg.charAt(i);
-            Character twChar = zh_tr_Map.get(c);
+            Character twChar = ZH_TR_MAP.get(c);
             if (twChar == null) {
                 twChar = c;
 
                 // 记录，以更新繁体字的字典
                 if (containsZHChar(String.valueOf(c))) {
-                    detected.add(c);
+                    DETECTED.add(c);
                     StringBuilder needAdd = new StringBuilder();
-                    for (Character character : detected) {
+                    for (Character character : DETECTED) {
                         needAdd.append(character);
                     }
                     System.out.println(Lang.tr.info + " char (" + c + ") not found for: " + msg);

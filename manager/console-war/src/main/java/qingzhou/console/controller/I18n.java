@@ -25,7 +25,7 @@ public class I18n implements Filter<SystemControllerContext> {
     private static final Lang DEFAULT_LANG = Lang.zh;// 这样一来，命令行和rest默认就是中文了（也可通过 --lang 参数来修改），控制台除外（有特殊处理）
     private static final ThreadLocal<Lang> SESSION_LANG = ThreadLocal.withInitial(() -> DEFAULT_LANG);// 直接修改语言
     private static final String SESSION_LANG_FLAG = "lang";// 向下兼容，不可修改
-    private static final String lastUriKey = "lastUriKey";
+    private static final String LAST_URI_KEY = "lastUriKey";
 
     static {
         addKeyI18n("page.index", new String[]{" Qingzhou 平台", "en:Qingzhou Platform"});
@@ -105,7 +105,7 @@ public class I18n implements Filter<SystemControllerContext> {
             if (lang != null) {
                 s.setAttribute(SESSION_LANG_FLAG, lang);
 
-                String lastUri = (String) s.getAttribute(lastUriKey);
+                String lastUri = (String) s.getAttribute(LAST_URI_KEY);
                 if (Utils.isBlank(lastUri)) {
                     lastUri = request.getContextPath() + LoginManager.INDEX_PATH;
                 }
@@ -132,7 +132,7 @@ public class I18n implements Filter<SystemControllerContext> {
                 // 如果没有这个判断，在查看折线图页面，发送的最后请求是 json数据，就会跳转错误
                 HttpSession s = context.req.getSession(false);
                 if (s != null) {
-                    s.setAttribute(lastUriKey, requestURI);
+                    s.setAttribute(LAST_URI_KEY, requestURI);
                 }
             }
         } catch (Exception ignored) {

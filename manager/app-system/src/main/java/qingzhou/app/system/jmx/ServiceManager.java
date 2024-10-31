@@ -20,7 +20,7 @@ import qingzhou.config.Jmx;
 import qingzhou.engine.util.Utils;
 
 public class ServiceManager {
-    private static final ServiceManager instance = new ServiceManager();
+    private static final ServiceManager INSTANCE = new ServiceManager();
     private JMXConnectorServer server;
     private ObjectName objectName;
     private MBeanServer mBeanServer;
@@ -37,7 +37,7 @@ public class ServiceManager {
     }
 
     public static ServiceManager getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     void init(Jmx jmx) throws Exception {
