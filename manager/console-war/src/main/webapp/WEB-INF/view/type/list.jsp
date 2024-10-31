@@ -55,7 +55,7 @@
                         viewName = DownloadView.FLAG;
                     }
 			%>
-			<a class="btn" data-tip-arrow="top" <%=customActionId%>
+			<a class="btn" data-tip-arrow="top" <%=customActionId%> action-type="<%=action.getActionType()%>"
 			   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                 	   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
 			>
@@ -89,7 +89,7 @@
 
 					String actionUrl = PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, actionKey);				
 			%>
-			<a href="<%=actionUrl%>" model-icon="<%=modelInfo.getIcon()%>" disabled="disabled" data-action="<%=qingzhou.api.ActionType.delete%>"
+			<a href="<%=actionUrl%>" model-icon="<%=modelInfo.getIcon()%>" disabled="disabled" data-action="<%=qingzhou.api.ActionType.delete%>" action-type="<%=actionInfo.getActionType()%>"
 			   id-name="<%=idField%>" id-separa="<%=idFieldFieldInfo.getSeparator()%>"
 			   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionKey)%>'
 			   class="btn batch-ops" act-confirm='<%=operationConfirm%> ?' binding="<%=randomId%>">
