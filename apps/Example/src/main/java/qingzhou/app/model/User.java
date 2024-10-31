@@ -44,7 +44,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
     @ModelField(
             group = "org",
             input_type = InputType.select,
-            reference = Post.class,
+            // reference = Post.class,
             list = true, search = true,
             update = true,
             name = {"岗位", "en:Position"})
@@ -68,7 +68,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.checkbox,
-            separator = "@",  list = true,
+            separator = "@", list = true,
             reference = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
@@ -161,7 +161,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @Override
     public String[] staticOptionFields() {
-        return new String[]{"gender", "checkbox"};
+        return new String[]{"gender", "checkbox", "position"};
     }
 
     @Override
@@ -190,8 +190,12 @@ public class User extends AddModelBase implements Group, Option, Echo {
             case "subjects3":
                 return Item.of(new String[]{"a", "b", "c", "d", "e"});
             case "position": // 没有设置静态和动态选项字段，无效代码
-                return Item.of(new String[]{"a", "b", "c"});
+                return new Item[]{
+                        Item.of("001", new String[]{"开发", "en:Dev"}),
+                        Item.of("002", new String[]{"测试", "en:Test"}),
+                };
         }
+
         return null;
     }
 
@@ -208,7 +212,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
         if (echoGroup.equals("aa")) {
             Map<String, String> map = new HashMap<>();
             if (params.get("gender").equals("0")) {
-                map.put("position", "001");
+                map.put("position", "003");
                 map.put("department", "一部");
                 map.put("subjects1", "123," + params.get("gender"));
                 map.put("checkbox", "python");
@@ -235,5 +239,14 @@ public class User extends AddModelBase implements Group, Option, Echo {
         return new HashMap<String, String>() {{
             put("gender", "1");
         }};
+    }
+
+    @Override
+    public Map<String, String> showData(String id) {
+        Map<String, String> map = super.showData(id);
+        if ("1".equals(id)) {
+            map.put("position", "003");
+        }
+        return map;
     }
 }

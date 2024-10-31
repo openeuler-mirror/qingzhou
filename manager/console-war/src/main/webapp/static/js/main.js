@@ -635,7 +635,15 @@ function niceSelect() {
         }).unbind("blur").bind("blur", function () {
             $(this).val($(this).attr("text"));
         });
-        if ($(".option.selected.focus", this).length === 0 && $("li", this).length > 0) {
+
+        var value;
+        if ($("span:first", this).length > 0) {
+            value = $("span:first", this).text();
+        } else {
+            value = $("input[type='text']", this).val();
+        }
+
+        if (!value && $(".option.selected.focus", this).length === 0 && $("li", this).length > 0) {
             $("li:first", this).addClass("selected focus");
             $("input[type='hidden']:not([readonly])", this).val($("li:first", this).attr("data-value"));
             $("input[type='text']", this).val($("li:first", this).text());
