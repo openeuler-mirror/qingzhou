@@ -40,7 +40,8 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             group = "base",
-            input_type = InputType.select, echo_group = "aa",
+            required = true,
+            input_type = InputType.radio, echo_group = "aa",
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
     public String gender;
@@ -208,5 +209,12 @@ public class User extends AddModelBase implements Group, Option, Echo {
         } else {
             return Collections.emptyMap();
         }
+    }
+
+    @Override
+    public Map<String, String> defaultSearch() {
+        return new HashMap<String, String>() {{
+            put("gender", "1");
+        }};
     }
 }

@@ -7,7 +7,6 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
@@ -159,7 +158,7 @@ class SuperAction {
         ModelInfo modelInfo = getAppInfo().getModelInfo(request.getModel());
         for (String fieldName : modelInfo.getFieldsToListSearch()) {
             String val = request.getParameter(fieldName);
-            if (Utils.notBlank(val)) {
+            if (val != null) { // 注意不要用  “” 判定，以区分使用默认搜索，还是 清空所有条件！！！
                 if (query == null) query = new HashMap<>();
                 query.put(fieldName, val);
             }
@@ -229,15 +228,15 @@ class SuperAction {
 
     @ModelAction(
             code = Export.ACTION_EXPORT, icon = "download-alt",
-            action_type = ActionType.Export,
+            action_type = ActionType.download,
             name = {"导出", "en:Export"},
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
     public void export(Request request) throws IOException {
         Export stream = (Export) instance;
-        Export.StreamSupplier streamSupplier = stream.exportData(request.getId());
-        if (streamSupplier == null) return;
+        ByteStreamSupplier byteStreamSupplier = stream.exportData(request.getId());
+        if (byteStreamSupplier == null) return;
 
-        downloadStream(request, streamSupplier);
+        downloadStream(request, byteStreamSupplier);
     }
 
     @ModelAction(
@@ -255,7 +254,7 @@ class SuperAction {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            action_type = ActionType.FILES,
+            action_type = ActionType.files,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
                     "en:Gets a list of downloadable files for this component."})
@@ -295,7 +294,7 @@ class SuperAction {
 
     @ModelAction(
             code = Download.ACTION_DOWNLOAD, icon = "download-alt",
-            action_type = ActionType.DOWNLOAD,
+            action_type = ActionType.download,
             name = {"下载文件", "en:Download File"},
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files."})
@@ -325,7 +324,7 @@ class SuperAction {
         if (downloadKey.trim().isEmpty() || !new File(keyDir, downloadKey).exists()) return;
         response.getParameters().put(DeployerConstants.DOWNLOAD_SERIAL_KEY, downloadKey);
         String finalDownloadKey = downloadKey;
-        Export.StreamSupplier supplier = new Export.StreamSupplier() {
+        ByteStreamSupplier supplier = new ByteStreamSupplier() {
             private long currentOffset;
 
             @Override
@@ -372,12 +371,12 @@ class SuperAction {
             }
 
             @Override
-            public String getDownloadName() {
+            public String getSupplierName() {
                 return finalDownloadKey + ".zip";
             }
         };
         downloadStream(request, supplier);
-        response.setDownloadName(supplier.getDownloadName());
+        response.setDownloadName(supplier.getSupplierName());
     }
 
     // 为支持大文件续传，下载必需有 key
@@ -426,7 +425,7 @@ class SuperAction {
         return key;
     }
 
-    private void downloadStream(Request request, Export.StreamSupplier supplier) throws IOException {
+    private void downloadStream(Request request, ByteStreamSupplier supplier) throws IOException {
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
         long offset = 0;
@@ -438,7 +437,7 @@ class SuperAction {
 
         byte[] block = supplier.read(offset);
         response.setBodyBytes(block);
-        response.setDownloadName(supplier.getDownloadName());
+        response.setDownloadName(supplier.getSupplierName());
         response.getParameters().put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(supplier.offset()));
     }
 }

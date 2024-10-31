@@ -1,8 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
-
 import qingzhou.api.InputType;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Update;
@@ -14,6 +11,9 @@ import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class ParameterFilter implements Filter<RestContext> {
     @Override
@@ -109,7 +109,7 @@ public class ParameterFilter implements Filter<RestContext> {
                             long time = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).parse(s).getTime();
                             times.add(time + "");
                         }
-                        request.setParameter(fieldName, String.valueOf(String.join(",", times)));
+                        request.setParameter(fieldName, String.join(",", times));
                     }
                 } catch (Exception ignored) {
                 }

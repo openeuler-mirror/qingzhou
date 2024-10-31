@@ -140,7 +140,7 @@
 
                         if (formAction.equals(Export.ACTION_EXPORT)) {
                 %>
-                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, StreamView.FLAG, Export.ACTION_EXPORT)%>"
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Export.ACTION_EXPORT)%>"
                    btn-type="qrOtp" class="btn">
                     <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Export.ACTION_EXPORT)%>
                 </a>
@@ -149,7 +149,7 @@
                 %>
                 <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, Download.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
                         <%
-                            out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, StreamView.FLAG, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
+                            out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
                         %>
                    data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Download.ACTION_FILES)%>'
                    data-tip-arrow="top"

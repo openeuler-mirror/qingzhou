@@ -374,7 +374,7 @@ function bindEventForFormPage() {
                 var params = {};
                 params[getSetting("checkOtp")] = $.trim($("#randCode-OTP").val());
                 $.ajax({
-                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/")) + "/" + getSetting("confirmKey")).replace("/" + getSetting("stream") + "/", "/json/"),
+                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/")) + "/" + getSetting("confirmKey")).replace("/" + getSetting("download") + "/", "/json/"),
                     async: true,
                     data: params,
                     dataType: "json",
@@ -894,17 +894,17 @@ function bindEventForListPage() {
             // 列表页表格操作列(启动、停止)
             qz.bindFill("a.qz-action-link[action-name='stop']:not(div.tab-container a.qz-action-link), a.qz-action-link[action-name='start']:not(div.tab-container a.qz-action-link)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
 
-            $("table.qz-data-list a.qz-action-link[data-action!='LINK']", restrictedArea).each(function(){
-                var selector = "table.qz-data-list a.qz-action-link[data-action='" + $(this).attr("data-action") + "']:not(div.tab-container a)";
-                if (bindingActions[$(this).attr("data-action")]) {
-                    bindingActions[$(this).attr("data-action")].call(null, selector, true);
+            $("table.qz-data-list a.qz-action-link[action-type!='" + getSetting("link") + "']", restrictedArea).each(function () {
+                var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']:not(div.tab-container a)";
+                if (bindingActions[$(this).attr("action-type")]) {
+                    bindingActions[$(this).attr("action-type")].call(null, selector, true);
                 } else {
-                    console.log("Action function binding failed: function " + $(this).attr("data-action") + " not found.");
+                    console.log("Action function binding failed: function " + $(this).attr("action-type") + " not found.");
                 }
             });
 
             // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-            qz.bindFill("table.qz-data-list a.qz-action-link[data-action='LINK']:not(div.tab-container a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
+            qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + getSetting("link") + "']:not(div.tab-container a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
         } else {
             // 搜索按钮
             qz.bindFill(".search-btn a", ".main-body", false, false, restrictedArea, null);
@@ -919,16 +919,16 @@ function bindEventForListPage() {
             // 列表页表格单元格操作(查看)
             //qz.bindFill("table a[record-action-id='" + getSetting("showAction") + "']", ".main-body", false, false, restrictedArea, null);
 
-            $("table.qz-data-list a.qz-action-link[data-action!='LINK']", restrictedArea).each(function(){
-                var selector = "table.qz-data-list a.qz-action-link[data-action='" + $(this).attr("data-action") + "']";
-                if (bindingActions[$(this).attr("data-action")]) {
-                    bindingActions[$(this).attr("data-action")].call(null, selector, false);
+            $("table.qz-data-list a.qz-action-link[action-type!='" + getSetting("link") + "']", restrictedArea).each(function(){
+                var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']";
+                if (bindingActions[$(this).attr("action-type")]) {
+                    bindingActions[$(this).attr("action-type")].call(null, selector, false);
                 } else {
-                    console.log("Action function binding failed: function " + $(this).attr("data-action") + " not found.");
+                    console.log("Action function binding failed: function " + $(this).attr("action-type") + " not found.");
                 }
             });
             // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-            qz.bindFill("table.qz-data-list a.qz-action-link[data-action='LINK']", ".main-body", false, false, restrictedArea, null);
+            qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + getSetting("link") + "']", ".main-body", false, false, restrictedArea, null);
         }
     });
 
@@ -975,7 +975,7 @@ function bindEventForListPage() {
         let fieldStr = $(this).attr("name")
         let v = $(this).val()
         let tempUrl = $(this).closest('tr').find('a[href*="edit"]').attr("href");
-        if (tempUrl === undefined){
+        if (tempUrl === undefined) {
             return;
         }
         tempUrl = tempUrl.replace("html", "json").replace("edit", "update");
@@ -1300,9 +1300,13 @@ function defaultOption(infoKv, xAxisField) {
             tooltip: {
                 show: true,
                 trigger: "item",
-                formatter: function (option) {
+                formatter: function (option, a, b, c) {
                     if (infoKv !== undefined) {
-                        return infoKv[option.name][1];
+                        for (var k in infoKv) {
+                            if (infoKv[k][0] == option.name) {
+                                return infoKv[k][1];
+                            }
+                        }
                     }
                     return option.name;
                 }
@@ -1321,14 +1325,10 @@ function defaultOption(infoKv, xAxisField) {
             },
             left: '95%'
         },
-        dataset: {
-            dimensions: dimensions,
-            source: [],
-            sourceHeader: false,
-        },
         xAxis: {
             type: 'category',
             boundaryGap: false,
+            data: []
         },
         yAxis: {
             type: 'value',
@@ -1337,46 +1337,38 @@ function defaultOption(infoKv, xAxisField) {
             }
         }
     };
-}
-
-function getDateTime() {
-    var myDate = new Date();
-    var hours = myDate.getHours() < 10 ? "0" + myDate.getHours() : myDate.getHours();
-    var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
-    var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
-    return hours + ":" + minutes + ":" + seconds;
 };
 
 function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, timerFn) {
-    const formData = $(restrictedArea).siblings("form.filterForm").serializeArray();
     $.ajax({
-        type: "POST",
-        data: formData,
+        type: "GET",
         url: url,
         dataType: 'json',
         complete: function (xhr, status) {
-            if (retryOption && timerFn) {
-                if (status === "success") {
-                    retryOption.retryRemain = retryOption.retryLimit;
-                } else {
-                    retryOption.retryRemain--;
-                }
-                window.setTimeout(function () {
-                    timerFn(retryOption.retryRemain);
-                }, 2000);
+            if (status === "success") {
+                retryOption.retryRemain = retryOption.retryLimit;
+            } else {
+                retryOption.retryRemain--;
             }
+            window.setTimeout(function () {
+                timerFn(retryOption.retryRemain);
+            }, 2000);
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
                 var monitorData = data.data;
-                if (monitorData instanceof Array) {
-                    addData(chartObj, chartOption, monitorData, keys, restrictedArea);
-                } else {
-                    monitorData.dataTime = getDateTime();
-                    let models = [monitorData];
-                    if (chartOption.dataset.source.length >= 20) {
-                        chartOption.dataset.source.shift();
-                    }
+                if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
+                    var models = [{
+                        dataTime: function () {
+                            var myDate = new Date();
+                            var hours = myDate.getHours() < 10 ? "0" + myDate.getHours() : myDate.getHours();
+                            var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
+                            var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
+                            return hours + ":" + minutes + ":" + seconds;
+                        },
+                        data: monitorData,
+                        models: monitorData
+                    }];
                     addData(chartObj, chartOption, models, keys, restrictedArea);
                 }
             } else {
@@ -1390,33 +1382,50 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
 };
 
 function addData(chartObj, option, models, keys, restrictedArea) {
-    if (models === null || models.length === 0) {
+    if (models === null) {
         return;
     }
-
+    var len = 20;
+    if (option.xAxis.data.length >= len) {
+        option.xAxis.data.shift();
+    }
     var valueIsItAnInteger = 'true';
     for (var key in keys) {
+        var legend = (keys[key] instanceof Array) ? keys[key][0] : keys[key];
         var exist = false;
         for (var seriesKey in option.series) {
-            if (option.series[seriesKey].name === key) {
+            if (option.series[seriesKey].name === legend) {
                 exist = true;
                 break;
             }
         }
         if (!exist) {
-            option.legend.data.push(key);
-            option.series.push({name: key, type: 'line'});
+            option.legend.data.push(legend);
+            var serie = {name: '', type: '', data: []};
+            serie.name = legend;
+            serie.type = 'line';
+            option.series.push(serie);
         }
     }
-    for (let i in models) {
-        let data = models[i];
-        for (let key in keys) {
+    for (var i in models) {
+        option.xAxis.data.push(models[i].dataTime.call(null));
+        var data = models[i].data;
+        for (var key in keys) {
             var value = data[key];
             if (!(/(^[0-9]\d*$)/.test(value))) {
                 valueIsItAnInteger = 'false';
             }
+            var name = (keys[key] instanceof Array) ? keys[key][0] : keys[key];
+            for (var seriesKey in option.series) {
+                if (option.series[seriesKey].name === name) {
+                    if (option.series[seriesKey].data.length >= len) {
+                        option.series[seriesKey].data.shift();
+                    }
+                    option.series[seriesKey].data.push(value);
+                    break;
+                }
+            }
         }
-        option.dataset.source.push(models[i]);
     }
     if (valueIsItAnInteger === 'true') {
         option.yAxis.minInterval = 1;
@@ -1428,7 +1437,7 @@ function addData(chartObj, option, models, keys, restrictedArea) {
         }
     }
     let line_num_each_row = 6;// 图例中每行显示的线条数目
-    this.setSeriesAndLegend(option, line_num_each_row);
+    this.setpSeriesAndLegend(option, line_num_each_row);
     this.setGrid(option, line_num_each_row);
 
     if (chartObj.renderFlag === undefined || chartObj.renderFlag) {
@@ -1442,21 +1451,28 @@ function addData(chartObj, option, models, keys, restrictedArea) {
     }
 }
 
-function setSeriesAndLegend(option, line_num_each_row) {
+function setpSeriesAndLegend(option, line_num_each_row) {
     let seriesData = option.series;
 
     let newLegendData = [];
     let newSeriesData = [];
 
     seriesData.forEach((el, index) => {
+        let data = el.data;
+        let name = el.name;
 
         // 一行显示个数控制
         if (index % line_num_each_row === 0 && index !== 0) {
             newLegendData.push(""); // 分行
         }
-        newLegendData.push(el.name);
+        newLegendData.push(name);
 
-        newSeriesData.push(el);
+        newSeriesData.push({
+            name: name,
+            type: 'line',
+            stack: 'Total',
+            data: data
+        });
     });
 
     option.series = newSeriesData;

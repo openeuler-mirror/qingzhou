@@ -1,14 +1,5 @@
 package qingzhou.console.view.type;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import javax.servlet.http.HttpServletResponse;
-
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Request;
 import qingzhou.api.type.Monitor;
@@ -19,6 +10,11 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.ModelInfo;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
 
 public class JsonView implements View {
     public static final String FLAG = DeployerConstants.JSON_VIEW_FLAG;
