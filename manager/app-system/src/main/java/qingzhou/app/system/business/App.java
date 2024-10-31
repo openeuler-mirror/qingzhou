@@ -164,6 +164,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
             show = "state=" + DeployerConstants.app_Started,
+            action_type = ActionType.NewTab,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request) {
@@ -200,6 +201,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
+            action_type = ActionType.delete,
             name = {"卸载", "en:UnInstall"},
             info = {"卸载应用，注：卸载应用会删除应用包下的所有文件，且不可恢复。",
                     "en:Uninstall the app, Note: Uninstalling the app will delete all the files under the app package and cannot be recovered."})

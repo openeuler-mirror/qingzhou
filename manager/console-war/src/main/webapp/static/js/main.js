@@ -758,24 +758,6 @@ function difModelActive(omodel, nmodel) {
     }
 }
 
-function batchOps(url, action, idField, idSeparator) {
-    var params = "";
-    $(".list-table  input[type='checkbox'][class='morecheck']", getRestrictedArea()).each(function () {
-        if ($(this).prop("checked")) {
-            if ($(this).attr("value") !== undefined && $(this).attr("value") !== null && $(this).attr("value") !== "") {
-                params = params + $(this).attr("value") + idSeparator
-            }
-        }
-    });
-    var str = url;
-    if (str.indexOf("?") > -1) {
-        url = str + "&" + idField + "=" + params;
-    } else {
-        url = str + "?" + idField + "=" + params;
-    }
-    $("#" + action, getRestrictedArea()).attr("href", url);
-}
-
 function filter_reset(subEle) {
     returnHref($(subEle).parent().parent().find("a.filter_search").attr("href"))
 }
