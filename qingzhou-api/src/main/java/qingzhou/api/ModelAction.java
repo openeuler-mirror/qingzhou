@@ -27,13 +27,11 @@ public @interface ModelAction {
 
     boolean distribute() default false;
 
-    String redirect() default ""; // 转给默认的view，如 qingzhou.api.type.List.ACTION_LIST，注：优先级低于 page
+    String[] form_fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
 
-    String page() default ""; // 跳转到指定的页面，注：app根目录后的相对路径
+    String[] menu_models() default {}; //  弹出子级管理页面
 
-    String[] link_fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
-
-    String[] link_models() default {}; //  弹出子级管理页面
+    String app_page() default ""; // 跳转到指定的页面，注：app根目录后的相对路径
 
     boolean autoRefresh() default true; // 监控图表是否自动刷新
 

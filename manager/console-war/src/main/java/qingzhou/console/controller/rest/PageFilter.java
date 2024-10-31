@@ -19,7 +19,7 @@ public class PageFilter implements Filter<RestContext> {
     public boolean doFilter(RestContext context) {
         RequestImpl request = context.request;
         ModelActionInfo actionInfo = request.getCachedModelInfo().getModelActionInfo(request.getAction());
-        String actionPage = actionInfo.getPage();
+        String actionPage = actionInfo.getAppPage();
         if (Utils.isBlank(actionPage)) return true;
 
         File appPageCacheDir = FileUtil.newFile(SystemController.getModuleContext().getTemp(), DeployerConstants.DOWNLOAD_PAGE_ROOT_DIR, request.getApp());

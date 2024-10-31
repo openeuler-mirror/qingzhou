@@ -164,7 +164,11 @@ class SuperAction {
             }
         }
 
-        return query != null ? query : ((List) instance).defaultSearch();
+        if (query != null) return query;
+
+        if (instance instanceof List) return ((List) instance).defaultSearch();
+
+        return null;
     }
 
     @ModelAction(
@@ -217,9 +221,8 @@ class SuperAction {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            redirect = List.ACTION_LIST,
             distribute = true,
-            action_type = ActionType.delete,
+            action_type = ActionType.action_list,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
@@ -234,7 +237,7 @@ class SuperAction {
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
     public void export(Request request) throws IOException {
         Export stream = (Export) instance;
-        ByteStreamSupplier byteStreamSupplier = stream.exportData(queryParams(request));
+        ByteStreamSupplier byteStreamSupplier = stream.exportData(request.getId(), queryParams(request));
         if (byteStreamSupplier == null) return;
 
         downloadStream(request, byteStreamSupplier);

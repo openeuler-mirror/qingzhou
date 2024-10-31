@@ -1,19 +1,6 @@
 package qingzhou.app.system.business;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
@@ -24,6 +11,8 @@ import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
+
+import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
         menu = Main.Business, order = 1,
@@ -164,7 +153,6 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
             show = "state=" + DeployerConstants.APP_STARTED,
-            action_type = ActionType.NewTab,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request) {
@@ -201,7 +189,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            action_type = ActionType.delete,
+            action_type = ActionType.action_list,
             name = {"卸载", "en:UnInstall"},
             info = {"卸载应用，注：卸载应用会删除应用包下的所有文件，且不可恢复。",
                     "en:Uninstall the app, Note: Uninstalling the app will delete all the files under the app package and cannot be recovered."})
@@ -215,8 +203,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     @ModelAction(
             code = "start", icon = "play",
             show = "state=" + DeployerConstants.APP_STOPPED,
-            redirect = qingzhou.api.type.List.ACTION_LIST,
-            action_type = ActionType.StartStop,
+            action_type = ActionType.action_list,
             name = {"启动", "en:start"},
             info = {"启动应用", "en:Launch the application."})
     public void startApp(Request request) {
@@ -229,8 +216,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     @ModelAction(
             code = "stop", icon = "stop",
             show = "state=" + DeployerConstants.APP_STARTED,
-            redirect = qingzhou.api.type.List.ACTION_LIST,
-            action_type = ActionType.StartStop,
+            action_type = ActionType.action_list,
             name = {"停止", "en:end"},
             info = {"停止应用", "en:stop the application."})
     public void stopApp(Request request) {

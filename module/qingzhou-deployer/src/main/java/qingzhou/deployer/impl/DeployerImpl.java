@@ -523,10 +523,9 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setIcon(modelAction.icon());
             modelActionInfo.setDistribute(modelAction.distribute());
             modelActionInfo.setShow(modelAction.show());
-            modelActionInfo.setRedirect(modelAction.redirect());
-            modelActionInfo.setPage(modelAction.page());
-            modelActionInfo.setLinkFields(modelAction.link_fields());
-            modelActionInfo.setLinkModels(modelAction.link_models());
+            modelActionInfo.setAppPage(modelAction.app_page());
+            modelActionInfo.setFormFields(modelAction.form_fields());
+            modelActionInfo.setMenuModels(modelAction.menu_models());
             modelActionInfo.setActionType(modelAction.action_type());
             modelActionInfo.setAutoRefresh(modelAction.autoRefresh());
             modelActionInfo.setxAxisField(modelAction.xAxisField());

@@ -1,10 +1,6 @@
 package qingzhou.app.model;
 
-import qingzhou.api.ActionType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
@@ -22,30 +18,24 @@ public class Cluster extends AddModelBase {
 
     @ModelAction(
             code = "user", icon = "location-arrow",
-            link_models = {"user"},
-            name = {"用户", "en:User"},
+            menu_models = {"user"},
+            action_type = ActionType.sub_menu,
+            name = {"跳1菜单", "en:User"},
             info = {"打开只有用户菜单的管理页面。", "en:Go to the page."})
     public void user(Request request) {
     }
 
     @ModelAction(
             code = "org", icon = "location-arrow",
-            link_models = {"department", "post"},
-            name = {"组织", "en:Org"},
+            menu_models = {"department", "post"},
+            action_type = ActionType.sub_menu,
+            name = {"跳2菜单", "en:Org"},
             info = {"打开有部门和岗位菜单的管理页面，默认展开第一个，即部门的模块入口页面。", "en:Go to the page."})
     public void org(Request request) {
     }
 
-    @ModelAction(
-            code = "subTab", icon = "window-alt", action_type = ActionType.SubTab, link_models = {"user"},
-            name = {"管理", "en:Manage"},
-            info = {"打开子Tab标签管理页面。", "en:Open sub tab in the page."})
-    public void subTab(Request request) {
-        
-    }
-
     @Override
     public String[] listActions() {
-        return new String[]{"user", "org", "subTab"};
+        return new String[]{"user", "org"};
     }
 }

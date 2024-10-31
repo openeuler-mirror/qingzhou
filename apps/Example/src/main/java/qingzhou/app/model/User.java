@@ -105,8 +105,8 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            link_fields = {"name", "notes", "gender", "checkbox", "b"},
-            action_type = ActionType.PopLayer,
+            form_fields = {"name", "notes", "gender", "checkbox", "b"},
+            action_type = ActionType.sub_form,
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
@@ -142,7 +142,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @Override
     public String[] listActions() {
-        return new String[]{"subTab", "test", "edit"};
+        return new String[]{"test", "edit"};
     }
 
     @Override
@@ -152,7 +152,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelAction(
             code = "share", icon = "share-alt",
-            redirect = "list",
+            action_type = ActionType.action_list,
             name = {"头部按钮", "en:Share"},
             info = {"头部按钮", "en:Share"})
     public void share(Request request) {

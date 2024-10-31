@@ -99,17 +99,28 @@ public class ParameterFilter implements Filter<RestContext> {
             String fieldName = parameterNames.nextElement();
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField == null) continue;
+
             if (modelField.getInputType() == InputType.datetime) {
                 try {
                     String val = request.getParameter(fieldName);
                     if (Utils.notBlank(val)) {
-                        final String[] values = val.split(DeployerConstants.RANGE_DATE_TIME_SP);
-                        List<String> times = new LinkedList<>();
-                        for (String s : values) {
-                            long time = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).parse(s).getTime();
-                            times.add(time + "");
-                        }
-                        request.setParameter(fieldName, String.join(",", times));
+                        long time = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).parse(val).getTime();
+                        request.setParameter(fieldName, String.valueOf(time));
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
+            if (modelField.getInputType() == InputType.range_datetime) {
+                try {
+                    String val = request.getParameter(fieldName);
+                    if (Utils.notBlank(val)) {
+                        String sp = modelField.getSeparator();
+                        String[] values = val.split(sp);
+                        SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT);
+                        Date v1 = format.parse(values[0]);
+                        Date v2 = format.parse(values[1]);
+                        request.setParameter(fieldName, String.join(sp, v1.getTime() + sp + v2.getTime()));
                     }
                 } catch (Exception ignored) {
                 }

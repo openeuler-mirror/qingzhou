@@ -7,5 +7,5 @@ import java.util.Map;
 public interface Export {
     String ACTION_EXPORT = "export";
 
-    ByteStreamSupplier exportData(Map<String, String> query);
+    ByteStreamSupplier exportData(String id, Map<String, String> query);
 }
