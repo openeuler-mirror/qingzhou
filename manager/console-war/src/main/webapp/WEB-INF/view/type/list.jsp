@@ -55,7 +55,7 @@
                         viewName = DownloadView.FLAG;
                     }
             %>
-            <a class="btn" data-tip-arrow="top" action-name="<%=actionName%>" <%=customActionId%>
+            <a class="btn" data-tip-arrow="top" action-name="<%=actionName%>" <%=customActionId%> action-type="<%=action.getActionType()%>"
                data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
             >

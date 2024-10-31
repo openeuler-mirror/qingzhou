@@ -465,11 +465,12 @@
                 e.preventDefault();
                 // 跳过 href="javascript:void(0);"
                 var url = $(this).attr("href") || $(this).attr("url");
+                var actionType = $(this).attr("action-type")
                 if (url.indexOf("javascript:") === 0) {
                     return;
                 }
                 var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea || document.body));
-                if (url.endsWith("export")) {
+                if (actionType !== undefined && actionType === "download") {
                     url += "?";
                     for (const item of data) {
                         url += item.name + "=" + item.value + "&"
