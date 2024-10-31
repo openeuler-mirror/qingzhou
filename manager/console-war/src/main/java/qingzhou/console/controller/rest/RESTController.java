@@ -49,8 +49,8 @@ import qingzhou.registry.ModelInfo;
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
     public static final File TEMP_BASE_PATH = new File(SystemController.getModuleContext().getTemp(), "upload");
-    private static final String encodedFlag = "Encoded:";
-    private static final String[] encodeFlags = {
+    private static final String ENCODED_FLAG = "Encoded:";
+    private static final String[] ENCODE_FLAGS = {
             "#", "?", "&",// 一些不能在url中传递的参数
             ":", "%", "+", " ", "=", ",",
             "[", "]"
@@ -87,10 +87,10 @@ public class RESTController extends HttpServlet {
     // 启动参数(如 -XX:+DisableExplicitGC )有特殊字符，不能在url里作参数，因此需要编码
     public static String encodeId(String id) {
         try {
-            for (String flag : encodeFlags) {
+            for (String flag : ENCODE_FLAGS) {
                 if (id.contains(flag)) {
                     Base32Coder base32Coder = SystemController.getService(CryptoService.class).getBase32Coder();
-                    return encodedFlag + base32Coder.encode(id.getBytes(StandardCharsets.UTF_8)); // for #NC-558 特殊字符可能编码了
+                    return ENCODED_FLAG + base32Coder.encode(id.getBytes(StandardCharsets.UTF_8)); // for #NC-558 特殊字符可能编码了
                 }
             }
         } catch (Exception ignored) {
@@ -102,9 +102,9 @@ public class RESTController extends HttpServlet {
     // 启动参数(如 -XX:+DisableExplicitGC )有特殊字符，编码后放在url里作参数，因此需要解码
     public static String decodeId(String encodeId) {
         try {
-            if (encodeId.startsWith(encodedFlag)) {
+            if (encodeId.startsWith(ENCODED_FLAG)) {
                 Base32Coder base32Coder = SystemController.getService(CryptoService.class).getBase32Coder();
-                return new String(base32Coder.decode(encodeId.substring(encodedFlag.length())), StandardCharsets.UTF_8); // for #NC-558 特殊字符可能编码了
+                return new String(base32Coder.decode(encodeId.substring(ENCODED_FLAG.length())), StandardCharsets.UTF_8); // for #NC-558 特殊字符可能编码了
             }
         } catch (Exception ignored) {
         }

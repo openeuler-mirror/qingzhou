@@ -89,7 +89,7 @@ class DeployerImpl implements Deployer {
 
     private void startApp(AppImpl app) throws Exception {
         app.getQingzhouApp().start(app.getAppContext());
-        app.getAppInfo().setState(DeployerConstants.app_Started);
+        app.getAppInfo().setState(DeployerConstants.APP_STARTED);
     }
 
     @Override
@@ -114,7 +114,7 @@ class DeployerImpl implements Deployer {
         QingzhouApp qingzhouApp = app.getQingzhouApp();
         if (qingzhouApp != null) {
             qingzhouApp.stop();
-            app.getAppInfo().setState(DeployerConstants.app_Stopped);
+            app.getAppInfo().setState(DeployerConstants.APP_STOPPED);
         }
 
         try {
@@ -227,7 +227,7 @@ class DeployerImpl implements Deployer {
                     }
                 }
                 if (!exists) {
-                    for (ModelActionInfo actionInfo : SuperAction.allSuperActionCache) {
+                    for (ModelActionInfo actionInfo : SuperAction.ALL_SUPER_ACTION_CACHE) {
                         if (addActionName.equals(actionInfo.getCode())) {
                             added.add(actionInfo);
                             break;

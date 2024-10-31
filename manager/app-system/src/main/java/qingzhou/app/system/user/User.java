@@ -37,12 +37,12 @@ import qingzhou.registry.ModelFieldInfo;
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements General, Validate, Option {
-    static final String idKey = "name";
+    static final String ID_KEY = "name";
     static final String PASSWORD_FLAG = "***************";
 
     @Override
     public String idField() {
-        return idKey;
+        return ID_KEY;
     }
 
     @Override
@@ -195,7 +195,7 @@ public class User extends ModelBase implements General, Validate, Option {
         // 对新密码进行加密
         String password = data.remove("password");
         if (passwordChanged(password)) {
-            Map<String, String> originUser = showDataForUserInternal(data.get(idKey));
+            Map<String, String> originUser = showDataForUserInternal(data.get(ID_KEY));
 
             String[] splitOriginPwd = splitPwd(originUser.get("password"));
             String digestAlg = data.getOrDefault("digestAlg", splitOriginPwd[0]);
@@ -268,7 +268,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     static void updateDataForUser(Map<String, String> data) throws Exception {
         Config config = Main.getService(Config.class);
-        String id = data.get(idKey);
+        String id = data.get(ID_KEY);
         qingzhou.config.User user = config.getConsole().getUser(id);
         config.deleteUser(id);
         if (PASSWORD_FLAG.equals(data.get("password"))) {

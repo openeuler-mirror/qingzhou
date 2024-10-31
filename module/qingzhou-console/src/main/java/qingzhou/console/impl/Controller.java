@@ -97,10 +97,10 @@ public class Controller implements ModuleActivator {
         @Override
         public void exec() {
             try {
-                ContextHelper.GetInstance.set(() -> Controller.this.moduleContext);
+                ContextHelper.GET_INSTANCE.set(() -> Controller.this.moduleContext);
                 exec0();
             } finally {
-                ContextHelper.GetInstance.remove();
+                ContextHelper.GET_INSTANCE.remove();
             }
         }
 

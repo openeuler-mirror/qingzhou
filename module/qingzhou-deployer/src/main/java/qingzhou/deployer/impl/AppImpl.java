@@ -74,7 +74,7 @@ class AppImpl implements App {
             Set<String> superActions = new HashSet<>();
             DeployerImpl.findSuperActions(modelClass, superActions);
             if (superActions.contains(actionName)) {
-                for (ModelActionInfo actionInfo : SuperAction.allSuperActionCache) {
+                for (ModelActionInfo actionInfo : SuperAction.ALL_SUPER_ACTION_CACHE) {
                     if (actionInfo.getCode().equals(actionName)) {
                         return ActionMethod.buildActionMethod(actionInfo.getMethod(), new SuperAction(this, modelBase));
                     }

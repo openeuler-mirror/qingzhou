@@ -6,10 +6,10 @@ import javax.management.remote.JMXAuthenticator;
 import qingzhou.deployer.JmxServiceAdapter;
 
 class JmxServiceAdapterImpl implements JmxServiceAdapter {
-    private static final JmxServiceAdapterImpl instance = new JmxServiceAdapterImpl();
+    private static final JmxServiceAdapterImpl INSTANCE = new JmxServiceAdapterImpl();
 
     static JmxServiceAdapterImpl getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     JMXAuthenticator authenticator;

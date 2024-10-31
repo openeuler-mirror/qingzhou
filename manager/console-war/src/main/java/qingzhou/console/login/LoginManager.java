@@ -49,7 +49,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
         I18n.addKeyI18n(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
     }
 
-    private static final Map<String, LockOutRealm> userLockOutRealms = new LinkedHashMap<String, LockOutRealm>() {
+    private static final Map<String, LockOutRealm> USER_LOCKOUT_REALMS = new LinkedHashMap<String, LockOutRealm>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, LockOutRealm> eldest) {
             return size() > 10000;
@@ -65,7 +65,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
     }
 
     public static LockOutRealm getLockOutRealm(String clientIp) {
-        return userLockOutRealms.computeIfAbsent(clientIp, s -> new LockOutRealm());
+        return USER_LOCKOUT_REALMS.computeIfAbsent(clientIp, s -> new LockOutRealm());
     }
 
     private static void webLogin(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -343,7 +343,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
     }
 
     public static void forwardToLoginJsp(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        request.getRequestDispatcher(HtmlView.htmlPageBase + "login.jsp").forward(request, response);
+        request.getRequestDispatcher(HtmlView.HTML_PAGE_BASE + "login.jsp").forward(request, response);
     }
 
     public static class LoginFailedMsg {
