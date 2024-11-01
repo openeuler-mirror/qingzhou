@@ -1204,8 +1204,7 @@ function initMonitorPage() {
     $(".bodyDiv>div.infoPage[chartMonitor='true'][loaded!='true']").attr("loaded", "true").each(function (i) {
         var thisDiv = $(this);
         var monitorI18nInfo = eval("(" + $("textarea[name='monitorI18nInfo']", thisDiv).val() + ")");
-        var xAxisField = $(this).attr("xAxisField");
-        var chartOption = defaultOption(monitorI18nInfo, xAxisField);
+        var chartOption = defaultOption(monitorI18nInfo, $(this).attr("xAxisField"));
         var myChart = echarts.init($("div[container='chart']", this)[0]);
         myChart.renderFlag = true;
         myChart.on('mouseover', {seriesType: 'line'}, function () {
@@ -1240,15 +1239,20 @@ function initMonitorPage() {
 };
 
 function defaultOption(infoKv, xAxisField) {
-    var dimensions = [];
-    if (xAxisField) {
-        dimensions.push(xAxisField);
-    } else {
-        dimensions.push("dataTime");
+    var dimensions;
+    var sourceHeader = true;
+    if (JSON.stringify(infoKv) !== '{}') {
+        sourceHeader = false;
+        if (xAxisField) {
+            dimensions = [xAxisField];
+        } else {
+            dimensions = ['dataTime'];
+        }
+        for (let key in infoKv) {
+            dimensions.push(key);
+        }
     }
-    for (let key in infoKv) {
-        dimensions.push(key);
-    }
+
     return {
         width: 'auto',
         title: {text: ''},
@@ -1258,7 +1262,12 @@ function defaultOption(infoKv, xAxisField) {
             formatter: function (params) {
                 function getContent(param) {
                     var key = param.seriesName;
-                    var name = infoKv[key][0];
+                    var name;
+                    if (infoKv === undefined || infoKv[key] === undefined) {
+                        name = key;
+                    } else {
+                        name = infoKv[key][0];
+                    }
                     var value;
                     if (param.value instanceof Array) {
                         value = param.value[param.encode.y[0]]
@@ -1312,13 +1321,9 @@ function defaultOption(infoKv, xAxisField) {
             tooltip: {
                 show: true,
                 trigger: "item",
-                formatter: function (option, a, b, c) {
-                    if (infoKv !== undefined) {
-                        for (var k in infoKv) {
-                            if (infoKv[k][0] == option.name) {
-                                return infoKv[k][1];
-                            }
-                        }
+                formatter: function (option) {
+                    if (infoKv !== undefined && infoKv[option.name] !== undefined) {
+                        return infoKv[option.name][1];
                     }
                     return option.name;
                 }
@@ -1337,10 +1342,14 @@ function defaultOption(infoKv, xAxisField) {
             },
             left: '95%'
         },
+        dataset: {
+            dimensions: dimensions,
+            source: [],
+            sourceHeader: sourceHeader,
+        },
         xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: []
         },
         yAxis: {
             type: 'value',
@@ -1349,20 +1358,30 @@ function defaultOption(infoKv, xAxisField) {
             }
         }
     };
-};
+}
+
+function getDateTime() {
+    var myDate = new Date();
+    var hours = myDate.getHours() < 10 ? "0" + myDate.getHours() : myDate.getHours();
+    var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
+    var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
+    return hours + ":" + minutes + ":" + seconds;
+}
 
 function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, timerFn) {
+    const formData = $(restrictedArea).siblings("form.filterForm").serializeArray();
     $.ajax({
-        type: "GET",
+        type: "POST",
+        data: formData,
         url: url,
         dataType: 'json',
         complete: function (xhr, status) {
-            if (status === "success") {
-                retryOption.retryRemain = retryOption.retryLimit;
-            } else {
-                retryOption.retryRemain--;
-            }
-            if (timerFn) {
+            if (retryOption && timerFn) {
+                if (status === "success") {
+                    retryOption.retryRemain = retryOption.retryLimit;
+                } else {
+                    retryOption.retryRemain--;
+                }
                 window.setTimeout(function () {
                     timerFn(retryOption.retryRemain);
                 }, 2000);
@@ -1371,18 +1390,14 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
         success: function (data) {
             if (data.success === "true" || data.success === true) {
                 var monitorData = data.data;
-                if (monitorData !== null && JSON.stringify(monitorData) !== '{}') {
-                    var models = [{
-                        dataTime: function () {
-                            var myDate = new Date();
-                            var hours = myDate.getHours() < 10 ? "0" + myDate.getHours() : myDate.getHours();
-                            var minutes = myDate.getMinutes() < 10 ? "0" + myDate.getMinutes() : myDate.getMinutes();
-                            var seconds = myDate.getSeconds() < 10 ? "0" + myDate.getSeconds() : myDate.getSeconds();
-                            return hours + ":" + minutes + ":" + seconds;
-                        },
-                        data: monitorData,
-                        models: monitorData
-                    }];
+                if (monitorData instanceof Array) {
+                    addData(chartObj, chartOption, monitorData, keys, restrictedArea);
+                } else {
+                    monitorData.dataTime = getDateTime();
+                    let models = [monitorData];
+                    if (chartOption.dataset.source.length >= 20) {
+                        chartOption.dataset.source.shift();
+                    }
                     addData(chartObj, chartOption, models, keys, restrictedArea);
                 }
             } else {
@@ -1396,50 +1411,38 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
 };
 
 function addData(chartObj, option, models, keys, restrictedArea) {
-    if (models === null) {
+    if (models === null || models.length === 0) {
         return;
     }
-    var len = 20;
-    if (option.xAxis.data.length >= len) {
-        option.xAxis.data.shift();
-    }
+
     var valueIsItAnInteger = 'true';
     for (var key in keys) {
-        var legend = (keys[key] instanceof Array) ? keys[key][0] : keys[key];
         var exist = false;
         for (var seriesKey in option.series) {
-            if (option.series[seriesKey].name === legend) {
+            if (option.series[seriesKey].name === key) {
                 exist = true;
                 break;
             }
         }
         if (!exist) {
-            option.legend.data.push(legend);
-            var serie = {name: '', type: '', data: []};
-            serie.name = legend;
-            serie.type = 'line';
-            option.series.push(serie);
+            option.legend.data.push(key);
+            option.series.push({name: key, type: 'line'});
         }
     }
-    for (var i in models) {
-        option.xAxis.data.push(models[i].dataTime.call(null));
-        var data = models[i].data;
-        for (var key in keys) {
+    if (option.series.length === 0) {
+        for (let modelKey in models[0]) {
+            option.series.push({name: models[0][modelKey], type: 'line'});
+        }
+    }
+    for (let i in models) {
+        let data = models[i];
+        for (let key in keys) {
             var value = data[key];
             if (!(/(^[0-9]\d*$)/.test(value))) {
                 valueIsItAnInteger = 'false';
             }
-            var name = (keys[key] instanceof Array) ? keys[key][0] : keys[key];
-            for (var seriesKey in option.series) {
-                if (option.series[seriesKey].name === name) {
-                    if (option.series[seriesKey].data.length >= len) {
-                        option.series[seriesKey].data.shift();
-                    }
-                    option.series[seriesKey].data.push(value);
-                    break;
-                }
-            }
         }
+        option.dataset.source.push(models[i]);
     }
     if (valueIsItAnInteger === 'true') {
         option.yAxis.minInterval = 1;
@@ -1451,7 +1454,7 @@ function addData(chartObj, option, models, keys, restrictedArea) {
         }
     }
     let line_num_each_row = 6;// 图例中每行显示的线条数目
-    this.setpSeriesAndLegend(option, line_num_each_row);
+    this.setSeriesAndLegend(option, line_num_each_row);
     this.setGrid(option, line_num_each_row);
 
     if (chartObj.renderFlag === undefined || chartObj.renderFlag) {
@@ -1465,28 +1468,21 @@ function addData(chartObj, option, models, keys, restrictedArea) {
     }
 }
 
-function setpSeriesAndLegend(option, line_num_each_row) {
+function setSeriesAndLegend(option, line_num_each_row) {
     let seriesData = option.series;
 
     let newLegendData = [];
     let newSeriesData = [];
 
     seriesData.forEach((el, index) => {
-        let data = el.data;
-        let name = el.name;
 
         // 一行显示个数控制
         if (index % line_num_each_row === 0 && index !== 0) {
             newLegendData.push(""); // 分行
         }
-        newLegendData.push(name);
+        newLegendData.push(el.name);
 
-        newSeriesData.push({
-            name: name,
-            type: 'line',
-            stack: 'Total',
-            data: data
-        });
+        newSeriesData.push(el);
     });
 
     option.series = newSeriesData;
