@@ -46,7 +46,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
             input_type = InputType.select,
             // reference = Post.class,
             list = true, search = true,
-            update = true,
+            update_action = "update",
             name = {"岗位", "en:Position"})
     public String position;
 
@@ -55,7 +55,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
             input_type = InputType.multiselect,
             reference = Department.class,
             list = true, search = true,
-            update = true,
+            update_action = "update",
             name = {"归属部门", "en:Department "})
     public String department;
 

@@ -1,8 +1,6 @@
 package qingzhou.app.model;
 
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.*;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
@@ -31,14 +29,14 @@ public class Post extends AddModelBase {
     @ModelField(
             input_type = InputType.bool,
             list = true, search = true,
-            update = true,
+            update_action = "listUpdate",
             name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
     @ModelField(
             input_type = InputType.textarea,
             ignore = 15,
-            update = true,
+            update_action = "listUpdate",
             list = true, search = true,
             name = {"备注", "en:Notes"})
     public String notes;
@@ -46,5 +44,11 @@ public class Post extends AddModelBase {
     @Override
     public String idField() {
         return "postCode";
+    }
+
+    @ModelAction(
+            name = {}, code = "listUpdate")
+    public void show(Request request) throws Exception {
+        System.out.println();
     }
 }

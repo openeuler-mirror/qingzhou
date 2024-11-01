@@ -184,8 +184,18 @@
                     if (value == null) {
                         value = "";
                     }
+                    String fieldUpdateAction = "";
+                    if (!fieldInfo.getUpdateAction().isEmpty()) {
+                        fieldUpdateAction = fieldInfo.getUpdateAction();
+            %>
+            <td action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG , fieldUpdateAction + "/" + encodedItemId)%>">
+            <%
+                    }else{
             %>
             <td>
+            <%
+                }
+            %>
                 <%
                     if ((field.equals(idField)) || fieldInfo.isLinkShow()) {
                         boolean hasShowAction = false;
@@ -207,7 +217,7 @@
                     } else {
                         out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
                     }
-                } else if (fieldInfo.isUpdate()) {
+                } else if (!fieldInfo.getUpdateAction().isEmpty()) {
                     // 兼容表单组件 例：bool.jsp中使用的是fieldValue和fieldName
                     // 避免编译报错，放入这个循环里，是避免和 list.jsp 中 的同名变量冲突
                     java.util.List<String> passwordFields = new ArrayList<>();
