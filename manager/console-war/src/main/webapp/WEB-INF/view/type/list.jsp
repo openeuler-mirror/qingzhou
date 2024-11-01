@@ -257,7 +257,7 @@
                         ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
                         refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
                 %>
-                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List .ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
+                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest, HtmlView.FLAG, refModelName, qingzhou.api.type.List .ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
                    class="dataid qz-action-link tooltips"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
                    style="color:#4C638F;" onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
@@ -296,7 +296,7 @@
                 %>
                 <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, useJsonUri ? JsonView.FLAG : HtmlView.FLAG, actionName + "/" + encodedItemId)%>"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
-                   data-tip-arrow="top"
+                   data-tip-arrow="top" action-id="<%=modelInfo.getCode() + "_" + actionName%>"
                    class="qz-action-link tooltips" model-icon="<%=modelInfo.getIcon()%>"
                    data-id="<%=(qzModel + "|" + encodedItemId)%>" action-type="<%=action.getActionType()%>"
                    data-name="<%=originUnEncodedId%>"
