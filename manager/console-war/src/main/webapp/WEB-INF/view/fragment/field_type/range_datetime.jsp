@@ -1,4 +1,16 @@
+<%@ page import="java.text.SimpleDateFormat" %>
 <%@ page pageEncoding="UTF-8" %>
+<%
+    //少定义变量，防止多个冲突
+    try {
+        fieldValue = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[0])))
+                + modelField.getSeparator()
+                + new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[1])));
+    } catch (Exception exception) {
+        //转化异常表示是从request里面拿的fieldValue，此时不用转化
+    }
+
+%>
 <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
        placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"
        class="form-control dateRange"/>
@@ -20,6 +32,7 @@
                 %>
             },
             opens: 'left',                 // 选择器显示方向
+            drops: 'up',
             timePicker: true,               // 启用时间选择
             timePickerIncrement: 1,         // 每次增量选择的分钟数
             timePicker24Hour: true,        // 24小时制

@@ -58,6 +58,15 @@ public class PageUtil {
     public static String styleFieldValue(String value, ModelFieldInfo fieldInfo, ModelInfo modelInfo) {
         if (Utils.isBlank(value)) return value;
 
+        //时间转化
+        if (fieldInfo.getInputType().equals(InputType.datetime) || fieldInfo.getInputType().equals(InputType.range_datetime)) {
+            String[] vs = value.split(fieldInfo.getSeparator());
+            List<String> timeValues = new LinkedList<>();
+            for (String v : vs) {
+                timeValues.add(new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(new Date(Long.parseLong(v))));
+            }
+            value = String.join(fieldInfo.getSeparator(), timeValues);
+        }
         try {
             String[] colorInfo = fieldInfo.getColor();
             if (colorInfo == null) return value;
