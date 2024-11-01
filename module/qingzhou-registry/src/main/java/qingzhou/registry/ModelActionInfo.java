@@ -12,10 +12,9 @@ public class ModelActionInfo {
     private String icon;
     private boolean distribute;
     private String show;
-    private String redirect;
-    private String page;
-    private String[] linkFields;
-    private String[] linkModels;
+    private String appPage;
+    private String[] formFields;
+    private String[] menuModels;
     private ActionType actionType;
     private boolean autoRefresh;
     private String xAxisField;
@@ -68,20 +67,12 @@ public class ModelActionInfo {
         this.distribute = distribute;
     }
 
-    public String getRedirect() {
-        return redirect;
+    public String getAppPage() {
+        return appPage;
     }
 
-    public void setRedirect(String redirect) {
-        this.redirect = redirect;
-    }
-
-    public String getPage() {
-        return page;
-    }
-
-    public void setPage(String page) {
-        this.page = page;
+    public void setAppPage(String appPage) {
+        this.appPage = appPage;
     }
 
     public String getIcon() {
@@ -92,20 +83,20 @@ public class ModelActionInfo {
         this.icon = icon;
     }
 
-    public String[] getLinkFields() {
-        return linkFields;
+    public String[] getFormFields() {
+        return formFields;
     }
 
-    public void setLinkFields(String[] linkFields) {
-        this.linkFields = linkFields;
+    public void setFormFields(String[] formFields) {
+        this.formFields = formFields;
     }
 
-    public String[] getLinkModels() {
-        return linkModels;
+    public String[] getMenuModels() {
+        return menuModels;
     }
 
-    public void setLinkModels(String[] linkModels) {
-        this.linkModels = linkModels;
+    public void setMenuModels(String[] menuModels) {
+        this.menuModels = menuModels;
     }
 
     public ActionType getActionType() {

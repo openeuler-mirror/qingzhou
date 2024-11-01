@@ -1,26 +1,16 @@
 package qingzhou.app.model;
 
+import qingzhou.api.*;
+import qingzhou.api.type.*;
+import qingzhou.app.ExampleMain;
+import qingzhou.engine.util.FileUtil;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Show;
-import qingzhou.app.ExampleMain;
-import qingzhou.engine.util.FileUtil;
 
 @Model(code = "filemanage", icon = "file", menu = ExampleMain.MENU_11, order = 4, name = {"文件管理", "en:File Manage"}, info = {"对系统中的文件进行管理。", "en:Manage files in the system."})
 public class FileManage extends ModelBase implements Add, Show, List, Delete, Download {
@@ -32,8 +22,8 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     @ModelField(input_type = InputType.file, required = true, list = true, name = {"上传文件", "en:Upload File"}, info = {"上传一个文件到服务器，文件须是 *.html类型的。", "en:Upload a file to the server of type *.html."})
     public String file;
 
-    @ModelAction(code = "showhtml", icon = "share-alt", name = {"Html", "en:Html"}, action_type = ActionType.ViewHtml,
-            page = "static/test.html", info = {"查看该组件的相关信息。", "en:View the information of this model."})
+    @ModelAction(code = "showhtml", icon = "share-alt", name = {"Html", "en:Html"},
+            app_page = "static/test.html", info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void showHtml(Request request) {
     }
 

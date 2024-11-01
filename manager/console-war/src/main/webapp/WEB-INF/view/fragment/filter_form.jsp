@@ -10,11 +10,11 @@
         <%
             for (String fieldName : fieldsToListSearch) {
                 ModelFieldInfo searchFieldInfo = modelInfo.getModelFieldInfo(fieldName);
+                ModelFieldInfo modelField = searchFieldInfo; // range_datetime.jsp 使用
                 String colClass = "col-md-2 col-sm-3 col-xs-4";
-                String dateTimeStyle = "";
                 if (searchFieldInfo.getInputType() == InputType.textarea) {
                     colClass = "col-md-12 col-sm-12 col-xs-12";
-                } else if (searchFieldInfo.getInputType() == InputType.datetime) {
+                } else if (searchFieldInfo.getInputType() == InputType.range_datetime) {
                     colClass = "col-md-3 col-sm-5 col-xs-7";
                 }
         %>
@@ -50,9 +50,9 @@
                           rows="2"
                           placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"><%=fieldValue%></textarea>
                 <%
-                } else if (searchFieldInfo.getInputType() == InputType.datetime) {
+                } else if (searchFieldInfo.getInputType() == InputType.range_datetime) {
                 %>
-                <%@ include file="field_type/rangedatetime.jsp" %>
+                <%@ include file="field_type/range_datetime.jsp" %>
                 <%
                 } else {
                 %>

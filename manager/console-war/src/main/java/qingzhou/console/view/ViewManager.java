@@ -1,27 +1,12 @@
 package qingzhou.console.view;
 
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import qingzhou.api.type.Show;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.controller.rest.RestContext;
+import qingzhou.console.view.type.DownloadView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.console.view.type.DownloadView;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
@@ -29,6 +14,12 @@ import qingzhou.json.Json;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.util.*;
 
 public class ViewManager {
     private final Map<String, View> views = new HashMap<>();
@@ -53,22 +44,10 @@ public class ViewManager {
         response.getHeaderNames().forEach(k -> servletResponse.setHeader(k, response.getHeader(k)));
         response.getDateHeaderNames().forEach(k -> servletResponse.setDateHeader(k, response.getDateHeader(k)));
 
-        String page = actionInfo.getPage();
+        String page = actionInfo.getAppPage();
         if (Utils.notBlank(page)) {
             page = "/" + request.getApp() + (page.startsWith("/") ? page : "/" + page);
             servletRequest.getRequestDispatcher(page).forward(servletRequest, restContext.resp);
-            return;
-        }
-
-        String redirect = actionInfo.getRedirect();
-        if (Utils.notBlank(redirect)) {
-            servletResponse.sendRedirect(RESTController.encodeURL(servletResponse, servletRequest.getContextPath() +
-                    DeployerConstants.REST_PREFIX +
-                    "/" + request.getView() +
-                    "/" + request.getApp() +
-                    "/" + request.getModel() +
-                    "/" + redirect +
-                    "/" + request.getId()));
             return;
         }
 

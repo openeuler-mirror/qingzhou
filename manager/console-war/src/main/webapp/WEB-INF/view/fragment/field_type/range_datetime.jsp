@@ -1,4 +1,3 @@
-<%@ page import="java.text.SimpleDateFormat" %>
 <%@ page pageEncoding="UTF-8" %>
 <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
        placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"
@@ -7,8 +6,8 @@
     $(function () {
         $('.dateRange').daterangepicker({
             locale: {
-                format: '<%=DeployerConstants.RANGE_DATE_TIME%>', // 设置日期时间格式
-                separator: '<%=DeployerConstants.RANGE_DATE_TIME_SP%>',          // 范围分隔符
+                format: '<%=DeployerConstants.FIELD_DATETIME_FORMAT%>', // 设置日期时间格式
+                separator: '<%=modelField.getSeparator()%>',          // 范围分隔符
                 <%
                    if (I18n.isZH()){
                 %>

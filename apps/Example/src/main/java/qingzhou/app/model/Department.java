@@ -78,6 +78,13 @@ public class Department extends AddModelBase implements Echo, Option {
     )
     public long buildDate;
 
+    @ModelField(
+            input_type = InputType.range_datetime,
+            list = true, search = true,
+            name = {"日期范围", "en:dateRange"}
+    )
+    public long dateRange;
+
     @Override
     public Map<String, String> echoData(String echoGroup, Map<String, String> params) {
         Map<String, String> map = new HashMap<>();

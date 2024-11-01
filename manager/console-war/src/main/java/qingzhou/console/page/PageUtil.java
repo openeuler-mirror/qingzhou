@@ -2,12 +2,10 @@ package qingzhou.console.page;
 
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
-import qingzhou.api.type.Update;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.controller.rest.ValidationFilter;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -98,9 +96,13 @@ public class PageUtil {
                 value = "<div class=\"markdownview\">" + value + "</div>";
                 break;
             case datetime:
-                Date date = new Date();
-                date.setTime(Long.parseLong(value));
-                value = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(date);
+                value = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(parseDate(value));
+                break;
+            case range_datetime:
+                String sp = fieldInfo.getSeparator();
+                String[] dates = value.split(sp);
+                SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT);
+                value = format.format(parseDate(dates[0])) + sp + format.format(parseDate(dates[1]));
                 break;
             case radio:
             case select:
@@ -129,6 +131,12 @@ public class PageUtil {
                 break;
         }
         return value;
+    }
+
+    private static Date parseDate(String value) {
+        Date date = new Date();
+        date.setTime(Long.parseLong(value));
+        return date;
     }
 
     public static String buildMenu(HttpServletRequest request, HttpServletResponse response, Request qzRequest) {

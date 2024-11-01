@@ -127,7 +127,8 @@ public class ValidationFilter implements Filter<RestContext> {
             new checkEmail(),
             new checkFilePath(),
             new options(),
-            new datetime()
+            new datetime(),
+            new range_datetime()
     };
 
     private String[] validate(ValidationContext context) {
@@ -402,6 +403,23 @@ public class ValidationFilter implements Filter<RestContext> {
             }
 
             return null;
+        }
+    }
+
+    static class range_datetime implements Validator {
+        @Override
+        public String[] validate(ValidationContext context) {
+            if (InputType.range_datetime != context.fieldInfo.getInputType()) return null;
+
+            try {
+                for (String date : context.parameterVal.split(context.fieldInfo.getSeparator())) {
+                    // 已转换在：qingzhou.console.controller.rest.ParameterFilter.datetime
+                    new Date().setTime(Long.parseLong(date));
+                }
+                return null;
+            } catch (Exception e) {
+                return new String[]{"validation_datetime", DeployerConstants.FIELD_DATETIME_FORMAT};
+            }
         }
     }
 
