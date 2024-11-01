@@ -1,40 +1,40 @@
-package qingzhou.console.controller.rest;
+package qingzhou.console.view;
 
 import qingzhou.api.Response;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.rest.RestContext;
 import qingzhou.deployer.*;
 import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.pattern.Filter;
 import qingzhou.logger.Logger;
-import qingzhou.registry.ModelActionInfo;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-public class PageFilter implements Filter<RestContext> {
-    @Override
-    public boolean doFilter(RestContext context) {
-        RequestImpl request = context.request;
-        ModelActionInfo actionInfo = request.getCachedModelInfo().getModelActionInfo(request.getAction());
-        String actionPage = actionInfo.getAppPage();
-        if (Utils.isBlank(actionPage)) return true;
+class AppPageUtil {
+    static void doPage(String actionPage, RestContext restContext) throws Exception {
+        RequestImpl request = restContext.request;
+        HttpServletRequest servletRequest = restContext.req;
+        HttpServletResponse servletResponse = restContext.resp;
 
         File appPageCacheDir = FileUtil.newFile(SystemController.getModuleContext().getTemp(), DeployerConstants.DOWNLOAD_PAGE_ROOT_DIR, request.getApp());
         File actionPageFile = FileUtil.newFile(appPageCacheDir, actionPage);
-        if (actionPageFile.exists()) return true;
+        if (!actionPageFile.exists()) {
+            requestPage(request.getApp(), appPageCacheDir, actionPage);
+        }
 
         try {
-            return requestPage(request.getApp(), appPageCacheDir, actionPage);
-        } catch (IOException e) {
-            context.resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return false;
+            String page = "/" + request.getApp() + (actionPage.startsWith("/") ? actionPage : "/" + actionPage);
+            servletRequest.getRequestDispatcher(page).forward(servletRequest, servletResponse);
+        } catch (Exception e) {
+            servletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            throw e;
         }
     }
 
-    private boolean requestPage(String targetAppName, File appPageCacheDir, String actionPage) throws IOException {
+    private static void requestPage(String targetAppName, File appPageCacheDir, String actionPage) throws IOException {
         RequestImpl fileReq = new RequestImpl();
         fileReq.setAppName(DeployerConstants.APP_SYSTEM);
         fileReq.setModelName(DeployerConstants.MODEL_AGENT);
@@ -72,11 +72,9 @@ public class PageFilter implements Filter<RestContext> {
                 FileUtil.forceDelete(tempFile);
             }
         }
-
-        return true;
     }
 
-    private String getPageRootDirName(String path) {
+    private static String getPageRootDirName(String path) {
         if (path == null || path.isEmpty()) {
             return "";
         }

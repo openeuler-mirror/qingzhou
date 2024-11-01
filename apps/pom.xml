@@ -36,11 +36,5 @@
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-deployer</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 </project>

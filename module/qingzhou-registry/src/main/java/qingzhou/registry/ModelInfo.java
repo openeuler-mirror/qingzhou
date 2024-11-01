@@ -19,6 +19,7 @@ public class ModelInfo {
     private String idField;
     private boolean validate;
     private boolean showOrderNumber;
+    private boolean supportMonitorSearch;
 
     private ModelFieldInfo[] modelFieldInfos;
     private ModelActionInfo[] modelActionInfos;
@@ -293,6 +294,14 @@ public class ModelInfo {
 
     public void setShowOrderNumber(boolean showOrderNumber) {
         this.showOrderNumber = showOrderNumber;
+    }
+
+    public boolean isSupportMonitorSearch() {
+        return supportMonitorSearch;
+    }
+
+    public void setSupportMonitorSearch(boolean supportMonitorSearch) {
+        this.supportMonitorSearch = supportMonitorSearch;
     }
 
     public Map<String, String> getDefaultSearch() {

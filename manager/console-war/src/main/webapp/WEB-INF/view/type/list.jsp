@@ -30,11 +30,9 @@
 
     <%
         String[] fieldsToListSearch = modelInfo.getFieldsToListSearch();
-    %>
-    <%@ include file="../fragment/filter_form.jsp" %>
-    <%
         if (fieldsToListSearch.length > 0) {
     %>
+    <%@ include file="../fragment/filter_form.jsp" %>
     <hr style="margin-top: 4px;">
     <%
         }
@@ -47,7 +45,9 @@
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     String viewName = qzRequest.getView();
 
-                    if (action.getActionType() == ActionType.download) {
+                    if (action.getActionType() == ActionType.download
+                            || action.getActionType() == ActionType.qr
+                    ) {
                         viewName = DownloadView.FLAG;
                     }
 
@@ -189,13 +189,13 @@
                         fieldUpdateAction = fieldInfo.getUpdateAction();
             %>
             <td action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG , fieldUpdateAction + "/" + encodedItemId)%>">
-            <%
+                    <%
                     }else{
             %>
             <td>
-            <%
-                }
-            %>
+                <%
+                    }
+                %>
                 <%
                     if ((field.equals(idField)) || fieldInfo.isLinkShow()) {
                         boolean hasShowAction = false;
@@ -257,7 +257,7 @@
                         ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
                         refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
                 %>
-                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List .ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
+                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
                    class="dataid qz-action-link tooltips"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
                    style="color:#4C638F;" onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
@@ -301,8 +301,8 @@
                    data-id="<%=(qzModel + "|" + encodedItemId)%>" action-type="<%=action.getActionType()%>"
                    data-name="<%=originUnEncodedId%>"
                         <%
-                            if (actionName.equals(Download.ACTION_FILES)) {
-                                out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+                            if (action.getActionType() == ActionType.files) {
+                                out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, actionName + "/" + encodedItemId) + "'");
                             }
 
                             if (Utils.notBlank(customActionId)) {

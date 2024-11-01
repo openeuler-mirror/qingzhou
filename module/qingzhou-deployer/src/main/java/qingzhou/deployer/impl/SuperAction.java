@@ -249,6 +249,14 @@ class SuperAction {
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
     public void monitor(Request request) {
+
+    }
+    @ModelAction(
+            code = Monitor.ACTION_MONITOR, icon = "line-chart",
+            name = {"监视", "en:Monitor"},
+            info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
+                    "en:Obtain the operating status information of the component, which can reflect the health of the component."})
+    public void monitor(Request request) {
         Map<String, String> p = ((Monitor) instance).monitorData(request.getId());
         if (p == null || p.isEmpty()) return;
 

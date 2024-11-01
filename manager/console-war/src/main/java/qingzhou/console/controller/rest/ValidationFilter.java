@@ -83,6 +83,7 @@ public class ValidationFilter implements Filter<RestContext> {
         if (isAddAction || isUpdateAction) {
             for (String field : modelInfo.getFormFieldNames()) {
                 ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
+                if (fieldInfo.isSkipValidate()) continue;
                 String parameterVal = request.getParameter(field);
                 ValidationContext vc = new ValidationContext(request, modelInfo, fieldInfo, parameterVal, isAddAction, isUpdateAction);
                 String[] error = validate(vc);
@@ -156,11 +157,9 @@ public class ValidationFilter implements Filter<RestContext> {
             }
         }
 
-        if (!fieldInfo.isSkipValidate()) {
-            for (Validator validator : validators) {
-                String[] error = validator.validate(context);
-                if (error != null) return error;
-            }
+        for (Validator validator : validators) {
+            String[] error = validator.validate(context);
+            if (error != null) return error;
         }
 
         return null;
@@ -420,7 +419,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 }
                 return null;
             } catch (Exception e) {
-                return new String[]{"validation_datetime", DeployerConstants.FIELD_DATETIME_FORMAT};
+                return new String[]{"validation_datetime", DeployerConstants.RANGE_DATETIME_FORMAT};
             }
         }
     }
@@ -435,7 +434,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 new Date().setTime(Long.parseLong(context.parameterVal));
                 return null;
             } catch (Exception e) {
-                return new String[]{"validation_datetime", DeployerConstants.FIELD_DATETIME_FORMAT};
+                return new String[]{"validation_datetime", DeployerConstants.DATETIME_FORMAT};
             }
         }
     }

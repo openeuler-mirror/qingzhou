@@ -7,5 +7,6 @@ public enum ActionType {
     download,   // 下载
     action_list,// 启停、删除、卸载等操作完毕后跳回 list 页面
     sub_form,
-    sub_menu
+    sub_menu,
+    qr,         // 点击可显示一个二维码
 }

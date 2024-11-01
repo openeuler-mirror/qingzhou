@@ -374,7 +374,7 @@ function bindEventForFormPage() {
                 var params = {};
                 params[getSetting("checkOtp")] = $.trim($("#randCode-OTP").val());
                 $.ajax({
-                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/")) + "/" + getSetting("confirmKey")).replace("/" + getSetting("downloadView") + "/", "/" + getSetting("jsonView") + "/"),
+                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/")) + "/confirmKey").replace("/" + getSetting("downloadView") + "/", "/" + getSetting("jsonView") + "/"),
                     async: true,
                     data: params,
                     dataType: "json",
@@ -538,13 +538,14 @@ function bindEchoItemEvent() {
 
 function echoItem(thisForm, params, item, echoGroup) {
     var action = $(thisForm).attr("action");
+    action = action.substring(0, action.lastIndexOf("/")) + "/echo";
     var url = action.substring(0, action.lastIndexOf("/"));
     var id;
     if (url.endsWith("update")) {
         id = action.substring(action.lastIndexOf("/") + 1);
         url = url.substring(0, url.lastIndexOf("/"));
     }
-    url = url + "/" + getSetting("echoActionName") + (id ? "/" + id : "");
+    url = url + "/echo" + (id ? "/" + id : "");
     let bindNames = new Set();
     $(thisForm).find('[echoGroup]').each(function () {
         for (let group of echoGroup.split(",")) {

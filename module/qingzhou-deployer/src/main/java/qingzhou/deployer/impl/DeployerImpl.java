@@ -305,6 +305,10 @@ class DeployerImpl implements Deployer {
                 Update update = (Update) instance;
                 modelInfo.setFormActions(update.formActions());
             }
+            if (instance instanceof Monitor) {
+                Monitor monitor = (Monitor) instance;
+                modelInfo.setSupportMonitorSearch(monitor.supportMonitorSearch());
+            }
 
             modelInfos.put(instance, modelInfo);
         }
@@ -528,8 +532,6 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setFormFields(modelAction.form_fields());
             modelActionInfo.setMenuModels(modelAction.menu_models());
             modelActionInfo.setActionType(modelAction.action_type());
-            modelActionInfo.setAutoRefresh(modelAction.autoRefresh());
-            modelActionInfo.setxAxisField(modelAction.xAxisField());
             modelActionInfos.add(modelActionInfo);
         });
         return modelActionInfos;

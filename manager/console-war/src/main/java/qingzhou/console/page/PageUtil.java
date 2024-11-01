@@ -59,11 +59,14 @@ public class PageUtil {
         if (Utils.isBlank(value)) return value;
 
         //时间转化
-        if (fieldInfo.getInputType().equals(InputType.datetime) || fieldInfo.getInputType().equals(InputType.range_datetime)) {
-            String[] vs = value.split(fieldInfo.getSeparator());
+        if (fieldInfo.getInputType().equals(InputType.datetime)) {
+            value = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(new Date(Long.parseLong(value)));
+        }
+        if (fieldInfo.getInputType().equals(InputType.range_datetime)) {
+            SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.RANGE_DATETIME_FORMAT);
             List<String> timeValues = new LinkedList<>();
-            for (String v : vs) {
-                timeValues.add(new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(new Date(Long.parseLong(v))));
+            for (String v : value.split(fieldInfo.getSeparator())) {
+                timeValues.add(format.format(new Date(Long.parseLong(v))));
             }
             value = String.join(fieldInfo.getSeparator(), timeValues);
         }
@@ -105,12 +108,12 @@ public class PageUtil {
                 value = "<div class=\"markdownview\">" + value + "</div>";
                 break;
             case datetime:
-                value = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(parseDate(value));
+                value = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(parseDate(value));
                 break;
             case range_datetime:
                 String sp = fieldInfo.getSeparator();
                 String[] dates = value.split(sp);
-                SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT);
+                SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.RANGE_DATETIME_FORMAT);
                 value = format.format(parseDate(dates[0])) + sp + format.format(parseDate(dates[1]));
                 break;
             case radio:

@@ -137,24 +137,23 @@
                     }
 
                     for (String formAction : formActions) {
-
-                        if (formAction.equals(Export.ACTION_EXPORT)) {
+                        ModelActionInfo formActionInfo = modelInfo.getModelActionInfo(formAction);
+                        if (formActionInfo.getActionType() == ActionType.qr) {
                 %>
-                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Export.ACTION_EXPORT)%>"
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, formAction)%>"
                    btn-type="qrOtp" class="btn">
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Export.ACTION_EXPORT)%>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + formAction)%>
                 </a>
                 <%
-                } else if (formAction.equals(Download.ACTION_DOWNLOAD)) {
+                } else if (formActionInfo.getActionType() == ActionType.download) {
                 %>
-                <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, Download.ACTION_FILES + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
+                <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, formAction + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>'
                         <%
                             out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, "download" + (Utils.notBlank(encodedId) ? "/" + encodedId : "")) + "'");
                         %>
-                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + Download.ACTION_FILES)%>'
-                   data-tip-arrow="top"
-                   btn-type="<%=Download.ACTION_FILES%>" class="btn tooltips">
-                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + Download.ACTION_FILES)%>
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + formAction)%>'
+                   data-tip-arrow="top" class="btn tooltips">
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + formAction)%>
                 </a>
                 <%
                         }

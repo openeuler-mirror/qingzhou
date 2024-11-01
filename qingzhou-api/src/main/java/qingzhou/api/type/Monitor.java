@@ -14,4 +14,6 @@ public interface Monitor {
      * 每个键值对代表一个监控数据项，其中键表示监控数据的名称，值表示监控数据的当前值。
      */
     Map<String, String> monitorData(String id);
+
+    boolean supportMonitorSearch();
 }
