@@ -21,7 +21,7 @@ public class StaticCharts extends ModelBase {
             info = {"。", "en:."})
     public int time;
 
-    @ModelField(
+    /*@ModelField(
             field_type = FieldType.MONITOR, numeric = true,
             name = {"A", "en:A"},
             info = {"A info。", "en:A info."})
@@ -37,7 +37,7 @@ public class StaticCharts extends ModelBase {
             field_type = FieldType.MONITOR, numeric = true, list = true,
             name = {"C", "en:C"},
             info = {"C info。", "en:C info."})
-    public int c;
+    public int c;*/
 
     @ModelField(
             search = true,
@@ -48,7 +48,7 @@ public class StaticCharts extends ModelBase {
 
 
     @ModelAction(
-            code = Monitor.ACTION_MONITOR, icon = "line-chart", autoRefresh = false, xAxisField = "time",
+            code = Monitor.ACTION_MONITOR, icon = "line-chart", autoRefresh = false, /*xAxisField = "time",*/
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -66,14 +66,15 @@ public class StaticCharts extends ModelBase {
                 dataList.add(list.toArray(new String[0]));
             }
         } else {
+            // 不指定监控属性时，返回值的第一项会做为维度，第一项的第一个值会映射到x轴
             try {
                 int j = Integer.parseInt(sql);
                 for (int i = 0; i < j; i++) {
                     List<String> list = new ArrayList<>();
                     list.add(i + "");   // x轴属性的值要在列表的第一个
-                    list.add(String.valueOf(-i * j + 1));
-                    list.add(String.valueOf(-i * j + .5));
-                    list.add(String.valueOf(-i * j + 5));
+                    for (int k = 0; k < j / 2; k++) {
+                        list.add(String.valueOf(-i * i + k));
+                    }
                     dataList.add(list.toArray(new String[0]));
                 }
             } catch (NumberFormatException ignored) {
