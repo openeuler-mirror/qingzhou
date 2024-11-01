@@ -6,7 +6,7 @@
     $(function () {
         $('.dateRange').daterangepicker({
             locale: {
-                format: '<%=DeployerConstants.FIELD_DATETIME_FORMAT%>', // 设置日期时间格式
+                format: '<%=DeployerConstants.RANGE_DATE_TIME_FORMAT%>', // 设置日期时间格式
                 separator: '<%=modelField.getSeparator()%>',          // 范围分隔符
                 <%
                    if (I18n.isZH()){
@@ -23,6 +23,7 @@
             timePicker: true,               // 启用时间选择
             timePickerIncrement: 1,         // 每次增量选择的分钟数
             timePicker24Hour: true,        // 24小时制
+            timePickerSeconds: true,       //启用秒
             autoUpdateInput: true           // 自动更新输入框
         });
         <%
