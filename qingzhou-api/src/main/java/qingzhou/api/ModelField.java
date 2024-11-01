@@ -68,13 +68,12 @@ public @interface ModelField {
 
     // 列表类型的相关信息
 
-    boolean create() default true; // 支持直接在列表上进行编辑
+    boolean create() default true; // 支持创建页面输入
 
-    boolean edit() default true; // 支持直接在列表上进行编辑
+    boolean edit() default true; // 支持编辑修改
 
+    String update_action() default ""; //标记该字段在list页面修改后走这个action
     boolean readonly() default false; // 表单元素级联控制只读的事件绑定
-
-    boolean update() default false; // 支持直接在列表上进行编辑
 
     boolean show() default true; // 是否显示在列表中。
 

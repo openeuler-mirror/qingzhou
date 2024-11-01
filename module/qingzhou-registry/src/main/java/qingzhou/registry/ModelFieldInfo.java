@@ -17,7 +17,7 @@ public class ModelFieldInfo {
     private boolean show;
     private boolean create;
     private boolean edit;
-    private boolean update;
+    private String updateAction;
     private boolean list;
     private int ignore;
     private boolean search;
@@ -107,12 +107,12 @@ public class ModelFieldInfo {
         this.show = show;
     }
 
-    public boolean isUpdate() {
-        return update;
+    public String getUpdateAction() {
+        return updateAction;
     }
 
-    public void setUpdate(boolean update) {
-        this.update = update;
+    public void setUpdateAction(String updateAction) {
+        this.updateAction = updateAction;
     }
 
     public boolean isCreate() {

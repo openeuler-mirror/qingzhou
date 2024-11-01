@@ -976,6 +976,7 @@ function bindEventForListPage() {
         });
     });
 
+    //列表修改值
     $('table .switch-btn, table .input-class, table .nice-select').each(function () {
         $("input", $(this)).bind("change", updateListValue);
     });
@@ -983,11 +984,10 @@ function bindEventForListPage() {
     function updateListValue(e) {
         let fieldStr = $(this).attr("name")
         let v = $(this).val()
-        let tempUrl = $(this).closest('tr').find('a[href*="edit"]').attr("href");
-        if (tempUrl === undefined) {
+        let tempUrl = $(this).closest('td').attr("action");
+        if (tempUrl === undefined || tempUrl === "") {
             return;
         }
-        tempUrl = tempUrl.replace("html", "json").replace("edit", "update");
         let resData
         if (Array.isArray(v)) {
             resData = [{}]
@@ -1003,9 +1003,6 @@ function bindEventForListPage() {
             url: tempUrl,
             data: resData,
             success: function (data) {
-                //去list页面
-                let listUrl = tempUrl.replace("json", "html").replace("update", "list")
-                returnHref(listUrl.substring(0, listUrl.lastIndexOf("/")))
             },
             error: function (e) {
                 handleError(e);
