@@ -23,6 +23,7 @@
             timePicker: true,               // 启用时间选择
             timePickerIncrement: 1,         // 每次增量选择的分钟数
             timePicker24Hour: true,        // 24小时制
+            timePickerSeconds: true,       //启用秒
             autoUpdateInput: true           // 自动更新输入框
         });
         <%
