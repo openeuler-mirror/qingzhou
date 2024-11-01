@@ -6,7 +6,7 @@
     $(function () {
         $('.dateRange').daterangepicker({
             locale: {
-                format: '<%=DeployerConstants.FIELD_DATETIME_FORMAT%>', // 设置日期时间格式
+                format: '<%=DeployerConstants.RANGE_DATE_TIME_FORMAT%>', // 设置日期时间格式
                 separator: '<%=modelField.getSeparator()%>',          // 范围分隔符
                 <%
                    if (I18n.isZH()){
