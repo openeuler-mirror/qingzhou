@@ -47,6 +47,7 @@ public abstract class ParentAwareURLStreamHandlerFactory implements URLStreamHan
     /**
      * @see java.net.URLStreamHandlerFactory#createURLStreamHandler(java.lang.String)
      */
+    @Override
     public URLStreamHandler createURLStreamHandler(String protocol) {
         URLStreamHandler handler = this.create(protocol);
         if (handler == null && this.parentFactory != null) {
