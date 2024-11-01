@@ -322,7 +322,8 @@
         echoActionName: '<%=Echo.ACTION_ECHO%>',
         monitor: '<%=ActionType.monitor.name()%>',
         link: '<%=ActionType.link.name()%>',
-        download: '<%=ActionType.download.name()%>'
+        download: '<%=DeployerConstants.ACTION_MANAGE%>',
+        actionId_app_manage: '<%=DeployerConstants.MODEL_APP + "_" + DeployerConstants.ACTION_MANAGE%>'
     };
 
     <%-- 显示第一个应用的管理页面--%>
@@ -352,7 +353,6 @@
     <%
         }
     %>
-
 
 </script>
 <script src="<%=contextPath%>/static/js/qz.js"></script>
