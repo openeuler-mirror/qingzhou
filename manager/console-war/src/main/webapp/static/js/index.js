@@ -538,7 +538,13 @@ function bindEchoItemEvent() {
 
 function echoItem(thisForm, params, item, echoGroup) {
     var action = $(thisForm).attr("action");
-    action = action.substring(0, action.lastIndexOf("/")) + "/" + getSetting("echoActionName");
+    var url = action.substring(0, action.lastIndexOf("/"));
+    var id;
+    if (url.endsWith("update")) {
+        id = action.substring(action.lastIndexOf("/") + 1);
+        url = url.substring(0, url.lastIndexOf("/"));
+    }
+    url = url + "/" + getSetting("echoActionName") + (id ? "/" + id : "");
     let bindNames = new Set();
     $(thisForm).find('[echoGroup]').each(function () {
         for (let group of echoGroup.split(",")) {
@@ -548,8 +554,12 @@ function echoItem(thisForm, params, item, echoGroup) {
         }
     });
     const submitValue = params.filter(item => bindNames.has(item.name));
-    $.post(action, submitValue, function (data) {
-        updateFormData(thisForm, data.data);
+    $.post(url, submitValue, function (data) {
+        if (data.success === "true" || data.success === true) {
+            updateFormData(thisForm, data.data);
+        } else {
+            showMsg(data.msg, data.msg_level);
+        }
     }, "json");
 }
 
@@ -581,6 +591,10 @@ function updateFormData(thisForm, data) {
                 if ($li.length > 0) {
                     $li.each(selectOption);
                 } else {
+                    $("input[type='hidden']", formItem).val(value);
+                    $("input[type='hidden']", formItem).attr("format", value);
+                    $("input[type='text']", formItem).attr("text", value).val(value);
+                    $("input[type='hidden']", formItem).change();
                     $("div.nice-select span", formItem).html(value);
                 }
                 break;
@@ -1427,8 +1441,17 @@ function addData(chartObj, option, models, keys, restrictedArea) {
         }
     }
     if (option.series.length === 0) {
-        for (let modelKey in models[0]) {
-            option.series.push({name: models[0][modelKey], type: 'line'});
+        if (models[0] instanceof Array) {
+            for (let i = 1; i < models[0].length; i++) {
+                option.series.push({name: models[0][i], type: 'line'});
+            }
+        } else {
+            let i = 0;
+            for (let modelKey in models[0]) {
+                if (i++ > 0) {
+                    option.series.push({name: modelKey, type: 'line'});
+                }
+            }
         }
     }
     for (let i in models) {

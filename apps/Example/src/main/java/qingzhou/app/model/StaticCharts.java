@@ -69,6 +69,12 @@ public class StaticCharts extends ModelBase {
             // 不指定监控属性时，返回值的第一项会做为维度，第一项的第一个值会映射到x轴
             try {
                 int j = Integer.parseInt(sql);
+                List<String> dimensions = new ArrayList<>();
+                dimensions.add("time");   // x轴的key
+                for (int k = 0; k < j / 2; k++) {
+                    dimensions.add(String.valueOf((char) ('a' + k)));
+                }
+                dataList.add(dimensions.toArray(new String[0]));
                 for (int i = 0; i < j; i++) {
                     List<String> list = new ArrayList<>();
                     list.add(i + "");   // x轴属性的值要在列表的第一个

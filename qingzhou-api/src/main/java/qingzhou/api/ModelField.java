@@ -93,6 +93,8 @@ public @interface ModelField {
     // 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
     String[] color() default {};
 
+    boolean skip_validate() default false;  // 跳过轻舟框架校验
+
     /**
      * 以下是 FieldType.Monitor 类型的信息
      */
