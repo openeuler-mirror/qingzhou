@@ -1441,8 +1441,17 @@ function addData(chartObj, option, models, keys, restrictedArea) {
         }
     }
     if (option.series.length === 0) {
-        for (let modelKey in models[0]) {
-            option.series.push({name: models[0][modelKey], type: 'line'});
+        if (models[0] instanceof Array) {
+            for (let i = 1; i < models[0].length; i++) {
+                option.series.push({name: models[0][i], type: 'line'});
+            }
+        } else {
+            let i = 0;
+            for (let modelKey in models[0]) {
+                if (i++ > 0) {
+                    option.series.push({name: modelKey, type: 'line'});
+                }
+            }
         }
     }
     for (let i in models) {
