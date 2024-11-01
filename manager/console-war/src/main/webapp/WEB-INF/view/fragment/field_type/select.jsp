@@ -33,6 +33,7 @@
     selectHtml += "</ul>";
 
     if (!selected) {
+        selectVal = fieldValue;
         selectText = fieldValue;
     }
 

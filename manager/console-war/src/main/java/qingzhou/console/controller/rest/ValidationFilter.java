@@ -156,9 +156,11 @@ public class ValidationFilter implements Filter<RestContext> {
             }
         }
 
-        for (Validator validator : validators) {
-            String[] error = validator.validate(context);
-            if (error != null) return error;
+        if (!fieldInfo.isSkipValidate()) {
+            for (Validator validator : validators) {
+                String[] error = validator.validate(context);
+                if (error != null) return error;
+            }
         }
 
         return null;

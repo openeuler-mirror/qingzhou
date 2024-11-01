@@ -36,14 +36,14 @@ public class User extends AddModelBase implements Group, Option, Echo {
     @ModelField(
             group = "base",
             required = true,
-            input_type = InputType.radio, echo_group = "aa",
+            input_type= InputType.radio, echo_group = "aa",
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
     public String gender;
 
     @ModelField(
             group = "org",
-            input_type = InputType.select,
+            input_type = InputType.select,  skip_validate = true,
             // reference = Post.class,
             list = true, search = true,
             update_action = "update",

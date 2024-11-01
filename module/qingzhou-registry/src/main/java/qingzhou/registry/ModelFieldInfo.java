@@ -39,6 +39,7 @@ public class ModelFieldInfo {
     private String linkList;
     private String[] color;
     private String[] echoGroup;
+    private boolean skipValidate;
 
     public String[] getColor() {
         return color;
@@ -337,5 +338,13 @@ public class ModelFieldInfo {
 
     public void setEchoGroup(String[] echoGroup) {
         this.echoGroup = echoGroup;
+    }
+
+    public boolean isSkipValidate() {
+        return skipValidate;
+    }
+
+    public void setSkipValidate(boolean skipValidate) {
+        this.skipValidate = skipValidate;
     }
 }
