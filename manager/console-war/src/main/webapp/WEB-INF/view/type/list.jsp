@@ -296,7 +296,7 @@
                 %>
                 <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, useJsonUri ? JsonView.FLAG : HtmlView.FLAG, actionName + "/" + encodedItemId)%>"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
-                   data-tip-arrow="top"
+                   data-tip-arrow="top" action-id="<%=modelInfo.getCode() + "_" + actionName%>"
                    class="qz-action-link tooltips" model-icon="<%=modelInfo.getIcon()%>"
                    data-id="<%=(qzModel + "|" + encodedItemId)%>" action-type="<%=action.getActionType()%>"
                    data-name="<%=originUnEncodedId%>"

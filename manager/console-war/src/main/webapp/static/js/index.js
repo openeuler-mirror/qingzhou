@@ -849,57 +849,13 @@ function bindEventForListPage() {
 
     // 列表页表格操作列特定事件绑定
     var bindingActions = {
-        "action_list": function (selector, exclude, restrictedArea) {// 列表页表格操作列(启动、停止)
-            var target = ".bodyDiv" + (exclude ? ":not(div.tab-container .bodyDiv)" : "");
-            qz.bindFill(selector, target, false, false, restrictedArea, null);
-        },
-        "monitor": function (selector, exclude, restrictedArea) {// 列表页表格操作列(监视)
-            var target = ".bodyDiv" + (exclude ? ":not(div.tab-container .bodyDiv)" : "");
-            qz.bindFill(selector, target, false, false, restrictedArea, null);
-        },
-        "files": function (selector, exclude, restrictedArea) {// 列表页表格操作列及form页面(下载日志、快照等)
+        "action_list": function (dom, selector, restrictedArea) {// 列表页表格操作列(启动、停止、应用卸载、删除等)
             $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
-                if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
-                    downloadFiles($(this).attr("href"), $(this).attr("downloadfile"));
-                }
-                return false;
-            });
-        },
-        "sub_form": function (selector, exclude, restrictedArea) {
-            $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
-                e.preventDefault();
-                if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
-                    customAction($(this).attr("href"), $(this).attr("custom-action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"));
-                }
-                return false;
-            });
-        },
-        "sub_menu": function (selector, exclude, restrictedArea) {
-            $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
-                e.preventDefault();
-                openTab($(this).attr("data-id"), $(this).attr("href"), $(this).attr("data-name"));
-                return false;
-            });
-        },
-        "NewTab": function (selector, exclude, restrictedArea) {// 集群实例点击[管理]，打开新 Tab 并切换
-            $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
-                e.preventDefault();
-                var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");
-                if (tab.length > 0) {
-                    tab.click();
-                    return;
-                }
-                return initializeManager($(this), $(this).attr("href"));
-            });
-        },
-        "delete": function (selector, exclude, restrictedArea) {// 列表操作列应用卸载
-            $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
-                e.preventDefault();
-                var actUrl = $(this).attr("href");
-                var bindId = $(this).attr("data-id");
+                var actUrl = $(dom).attr("href");
+                var bindId = $(dom).attr("data-id");
                 var filterForm = $("form[name='filterForm']");
-                showConfirm($(this).attr("act-confirm"), {
+                showConfirm($(dom).attr("act-confirm"), {
                     "title": getSetting("pageConfirmTitle"),
                     "btn": [getSetting("confirmBtnText"), getSetting("cancelBtnText")]
                 }, function (index) {
@@ -915,52 +871,72 @@ function bindEventForListPage() {
                 });
                 return false;
             });
+        },
+        "monitor": function (dom, selector, restrictedArea) {// 列表页表格操作列(监视)
+            qz.bindFill(selector, $(".bodyDiv", restrictedArea).first(), false, false, restrictedArea, null);
+        },
+        "files": function (dom, selector, restrictedArea) {// 列表页表格操作列及form页面(下载日志、快照等)
+            $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
+                e.preventDefault();
+                if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
+                    downloadFiles($(this).attr("href"), $(this).attr("downloadfile"));
+                }
+                return false;
+            });
+        },
+        "sub_form": function (dom, selector, restrictedArea) {
+            $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
+                e.preventDefault();
+                if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
+                    customAction($(this).attr("href"), $(this).attr("custom-action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"));
+                }
+                return false;
+            });
+        },
+        "sub_menu": function (dom, selector, restrictedArea) {
+            $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
+                e.preventDefault();
+                openTab($(this).attr("data-id"), $(this).attr("href"), $(this).attr("data-name"));
+                return false;
+            });
         }
     };
 
     $("section.main-body", document.body).each(function () {
         var restrictedArea = $(this).parent();
-        if ($(".tab-wrapper", this).length > 0) {
-            // 搜索按钮
-            qz.bindFill(".search-btn a:not(div.tab-container .search-btn a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
-            // 列表页表格顶部操作按钮
-            qz.bindFill(".tools-group a:not([act-confirm], div.tab-container .tools-group a)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
-            // 分页(页码及上一页、下一页、首页、尾页等)
-            qz.bindFill("ul.pager.pager-loose a:not(div.tab-container ul.pager.pager-loose a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
-            // 列表页表格单元格操作
-            qz.bindFill("table a.dataid:not(div.tab-container table a.dataid)", ".bodyDiv:not(div.tab-container .bodyDiv)", false, false, restrictedArea, null);
+        // 搜索按钮
+        qz.bindFill(".search-btn a", ".main-body", false, false, restrictedArea, null);
+        // 列表页表格顶部操作按钮
+        qz.bindFill(".tools-group a:not([act-confirm])", ".bodyDiv", false, false, restrictedArea, null);
+        // 分页(页码及上一页、下一页、首页、尾页等)
+        qz.bindFill("ul.pager.pager-loose a", ".main-body", false, false, restrictedArea, null);
+        // 列表页表格单元格操作
+        qz.bindFill("table a.dataid", ".bodyDiv", false, false, restrictedArea, null);
 
-            $("table.qz-data-list a.qz-action-link[action-type!='" + getSetting("link") + "']", restrictedArea).each(function () {
-                var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']:not(div.tab-container a)";
-                if (bindingActions[$(this).attr("action-type")]) {
-                    bindingActions[$(this).attr("action-type")].call(null, selector, true, restrictedArea);
-                } else {
-                    console.log("Action function binding failed: function " + $(this).attr("action-type") + " not found.");
-                }
-            });
-            // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-            qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + getSetting("link") + "']:not(div.tab-container a)", ".main-body:not(div.tab-container .main-body)", false, false, restrictedArea, null);
-        } else {
-            // 搜索按钮
-            qz.bindFill(".search-btn a", ".main-body", false, false, restrictedArea, null);
-            // 列表页表格顶部操作按钮
-            qz.bindFill(".tools-group a:not([act-confirm])", ".bodyDiv", false, false, restrictedArea, null);
-            // 分页(页码及上一页、下一页、首页、尾页等)
-            qz.bindFill("ul.pager.pager-loose a", ".main-body", false, false, restrictedArea, null);
-            // 列表页表格单元格操作
-            qz.bindFill("table a.dataid", ".bodyDiv", false, false, restrictedArea, null);
-
-            $("table.qz-data-list a.qz-action-link[action-type!='" + getSetting("link") + "']", restrictedArea).each(function () {
+        $("table.qz-data-list a.qz-action-link", restrictedArea).each(function () {
+            if (bindingActions[$(this).attr("action-type")]) {
                 var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']";
-                if (bindingActions[$(this).attr("action-type")]) {
-                    bindingActions[$(this).attr("action-type")].call(null, selector, false, restrictedArea);
-                } else {
-                    console.log("Action function binding failed: function " + $(this).attr("action-type") + " not found.");
+                bindingActions[$(this).attr("action-type")].call(null, this, selector, false, restrictedArea);
+            } else {
+                if ($(this).attr("action-id") === getSetting("actionId_app_manage")) {// 集群实例点击[管理]，打开新 Tab 并切换
+                    $("table.qz-data-list a.qz-action-link[action-id='" + $(this).attr("action-id") + "'][loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
+                        e.preventDefault();
+                        var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");
+                        if (tab.length > 0) {
+                            tab.click();
+                            return;
+                        }
+                        return initializeManager($(this), $(this).attr("href"));
+                    });
                 }
-            });
-            // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-            qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + getSetting("link") + "']", ".main-body", false, false, restrictedArea, null);
-        }
+                if ($(this).attr("action-type")) {
+                    // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
+                    qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']", $(".main-body", restrictedArea).first(), false, false, restrictedArea, null);
+                } else {
+                    console.log("Element binding action failed. Element html:" + $(this)[0].outerHTML);
+                }
+            }
+        });
 
         $(".qz-list-operate a[act-confirm][loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
             e.preventDefault();
