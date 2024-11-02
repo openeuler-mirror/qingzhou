@@ -9,5 +9,5 @@ public interface Download {
     String ACTION_FILES = "files";
     String ACTION_DOWNLOAD = "download";
 
-    File downloadData(String id);
+    File downloadData(String id) throws Exception;
 }

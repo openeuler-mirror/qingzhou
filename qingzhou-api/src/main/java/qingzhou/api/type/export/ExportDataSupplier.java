@@ -1,13 +1,13 @@
-package qingzhou.api;
+package qingzhou.api.type.export;
 
 import java.io.IOException;
 
-public interface ByteStreamSupplier {
+public interface ExportDataSupplier {
     byte[] read(long offset) throws IOException;
 
     long offset();
 
-    default String getSupplierName() {
+    default String name() {
         return null;
     }
 }

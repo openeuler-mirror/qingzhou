@@ -1,6 +1,18 @@
 package qingzhou.app.system.user;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.type.export.ExportDataSupplier;
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
@@ -12,11 +24,6 @@ import qingzhou.crypto.TotpCipher;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         hidden = true,
@@ -140,9 +147,9 @@ public class Password extends ModelBase implements Update, Export {
     }
 
     @Override
-    public ByteStreamSupplier exportData(String id, Map<String, String> query) {
+    public ExportDataSupplier exportData(String id) {
         Request request = getAppContext().getCurrentRequest();
-        return new ByteStreamSupplier() {
+        return new ExportDataSupplier() {
             private final String format = "png";
 
             @Override
@@ -165,7 +172,7 @@ public class Password extends ModelBase implements Update, Export {
             }
 
             @Override
-            public String getSupplierName() {
+            public String name() {
                 return "keyForOtp." + format;
             }
         };

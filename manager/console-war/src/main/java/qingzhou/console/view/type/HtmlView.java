@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.Add;
+import qingzhou.api.type.Chart;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Monitor;
 import qingzhou.api.type.Show;
@@ -64,6 +65,8 @@ public class HtmlView implements View {
                 return "list";
             case Monitor.ACTION_MONITOR:
                 return "monitor";
+            case Chart.ACTION_CHART:
+                return "chart";
             case DeployerConstants.ACTION_INDEX:
                 return "sys/index";
             case DeployerConstants.ACTION_MANAGE:
