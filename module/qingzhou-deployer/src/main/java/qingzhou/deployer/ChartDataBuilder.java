@@ -1,11 +1,11 @@
-package qingzhou.deployer.impl;
+package qingzhou.deployer;
+
+import qingzhou.api.type.Chart;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import qingzhou.api.type.chart.ChartDataBuilder;
-
-public class ChartDataBuilderImpl implements ChartDataBuilder {
+public class ChartDataBuilder implements Chart.DataBuilder {
     private final Map<String, String[]> data = new LinkedHashMap<>();
 
     @Override

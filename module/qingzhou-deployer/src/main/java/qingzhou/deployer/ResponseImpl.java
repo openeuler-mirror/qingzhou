@@ -27,8 +27,6 @@ public class ResponseImpl implements Response {
 
     private final Map<String, String> errorInfo = new LinkedHashMap<>();
 
-    private final DataBuilderImpl dataBuilder = new DataBuilderImpl();
-
     private List<String[]> dataList = new ArrayList<>();
     private int totalSize = -1;
     private int pageSize = -1;
@@ -187,9 +185,5 @@ public class ResponseImpl implements Response {
 
     public void setIds(String[] ids) {
         this.ids = ids;
-    }
-
-    public DataBuilderImpl getDataBuilder() {
-        return dataBuilder;
     }
 }

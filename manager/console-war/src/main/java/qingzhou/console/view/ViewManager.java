@@ -2,7 +2,6 @@ package qingzhou.console.view;
 
 import qingzhou.api.type.Show;
 import qingzhou.console.SecurityController;
-import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.type.DownloadView;
 import qingzhou.console.view.type.HtmlView;
@@ -10,14 +9,11 @@ import qingzhou.console.view.type.JsonView;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
-import qingzhou.json.Json;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
-import java.io.Serializable;
 import java.util.*;
 
 public class ViewManager {
@@ -45,23 +41,6 @@ public class ViewManager {
         String page = actionInfo.getAppPage();
         if (Utils.notBlank(page)) {
             AppPageUtil.doPage(page, restContext);
-            return;
-        }
-
-        Serializable customizedDataObject = response.getCustomizedDataObject();
-        if (customizedDataObject != null) {
-            String writeData;
-            if (customizedDataObject instanceof String) {
-                writeData = (String) customizedDataObject;
-            } else {
-                Json json = SystemController.getService(Json.class);
-                writeData = json.toJson(customizedDataObject);
-                restContext.resp.setContentType(JsonView.CONTENT_TYPE);
-            }
-
-            PrintWriter writer = restContext.resp.getWriter();
-            writer.write(writeData);
-            writer.flush();
             return;
         }
 

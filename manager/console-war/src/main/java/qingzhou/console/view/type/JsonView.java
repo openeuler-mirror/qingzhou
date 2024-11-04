@@ -3,17 +3,20 @@ package qingzhou.console.view.type;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Request;
 import qingzhou.api.type.Monitor;
+import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
+import qingzhou.json.Json;
 import qingzhou.registry.ModelInfo;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.*;
 
 public class JsonView implements View {
@@ -36,33 +39,47 @@ public class JsonView implements View {
         RequestImpl request = restContext.request;
         ModelInfo modelInfo = request.getCachedModelInfo();
         ResponseImpl response = (ResponseImpl) request.getResponse();
+        String writeJson;
 
-        if (request.getAction().equals(Monitor.ACTION_MONITOR) && !response.getDataMap().isEmpty()) {
-            String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
-            Map<String, String> orderedData = new LinkedHashMap<>();
-
-            for (String fieldName : monitorFieldNames) {
-                orderedData.put(fieldName, response.getDataMap().get(fieldName));
+        Serializable customizedDataObject = response.getCustomizedDataObject();
+        if (customizedDataObject != null) {
+            if (customizedDataObject instanceof String) {
+                writeJson = (String) customizedDataObject;
+            } else {
+                Json json = SystemController.getService(Json.class);
+                writeJson = json.toJson(customizedDataObject);
             }
-            response.getDataMap().clear();
-            response.getDataMap().putAll(orderedData);
+        } else {
+            switch (request.getAction()) {
+                case Monitor.ACTION_MONITOR:
+                    if (!response.getDataMap().isEmpty()) {
+                        String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
+                        Map<String, String> orderedData = new LinkedHashMap<>();
+
+                        for (String fieldName : monitorFieldNames) {
+                            orderedData.put(fieldName, response.getDataMap().get(fieldName));
+                        }
+                        response.getDataMap().clear();
+                        response.getDataMap().putAll(orderedData);
+                    }
+                    break;
+                case qingzhou.api.type.List.ACTION_LIST:
+                    if (modelInfo.isHideId()) {
+                        int idIndex = modelInfo.getIdIndex();
+                        List<String[]> dataList = response.getDataList();
+                        for (int i = 0; i < dataList.size(); i++) {
+                            List<String> temp = new ArrayList<>(Arrays.asList(dataList.get(i)));
+                            temp.remove(idIndex);
+                            dataList.set(i, temp.toArray(new String[0]));
+                        }
+                    }
+                    break;
+            }
+            writeJson = buildJsonResult(request);
         }
 
-        if (request.getAction().equals(qingzhou.api.type.List.ACTION_LIST)) {
-            if (modelInfo.isHideId()) {
-                int idIndex = modelInfo.getIdIndex();
-                List<String[]> dataList = response.getDataList();
-                for (int i = 0; i < dataList.size(); i++) {
-                    List<String> temp = new ArrayList<>(Arrays.asList(dataList.get(i)));
-                    temp.remove(idIndex);
-                    dataList.set(i, temp.toArray(new String[0]));
-                }
-            }
-        }
-
-        String json = buildJsonResult(request);
         PrintWriter writer = restContext.resp.getWriter();
-        writer.write(json);
+        writer.write(writeJson);
         writer.flush();
     }
 

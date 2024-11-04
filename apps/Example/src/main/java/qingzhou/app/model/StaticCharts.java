@@ -9,7 +9,6 @@ import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.api.Request;
 import qingzhou.api.type.Chart;
-import qingzhou.api.type.chart.ChartDataBuilder;
 import qingzhou.app.ExampleMain;
 import qingzhou.engine.util.Utils;
 
@@ -51,7 +50,7 @@ public class StaticCharts extends ModelBase implements Chart {
     public int sql;
 
     @Override
-    public void chartData(ChartDataBuilder dataBuilder) throws Exception {
+    public void chartData(DataBuilder dataBuilder) throws Exception {
         Request request = getAppContext().getCurrentRequest();
         String sql = request.getParameter("sql");
 

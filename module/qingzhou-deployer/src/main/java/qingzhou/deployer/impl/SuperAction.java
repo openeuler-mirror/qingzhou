@@ -3,14 +3,7 @@ package qingzhou.deployer.impl;
 import qingzhou.api.*;
 import qingzhou.api.type.List;
 import qingzhou.api.type.*;
-import qingzhou.api.type.export.ExportDataSupplier;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
-import qingzhou.deployer.impl.dashboard.BasicImpl;
-import qingzhou.deployer.impl.dashboard.GaugeImpl;
-import qingzhou.deployer.impl.dashboard.HistogramImpl;
-import qingzhou.deployer.impl.dashboard.ShareDatasetImpl;
+import qingzhou.deployer.*;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.json.Json;
 import qingzhou.registry.AppInfo;
@@ -23,23 +16,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 class SuperAction {
@@ -77,7 +53,9 @@ class SuperAction {
             info = {"查看组合视图的相关信息。", "en:View the related information for the composite view."})
     public void Combined(Request request) throws Exception {
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        ((Combined) instance).combinedData(request.getId(), response.getDataBuilder());
+        CombinedDataBuilder dataBuilder = new CombinedDataBuilder();
+        ((Combined) instance).combinedData(request.getId(), dataBuilder);
+        response.useCustomizedResponse(dataBuilder);
     }
 
     @ModelAction(
@@ -283,10 +261,10 @@ class SuperAction {
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
     public void export(Request request) throws Exception {
         Export stream = (Export) instance;
-        ExportDataSupplier exportDataSupplier = stream.exportData(request.getId());
-        if (exportDataSupplier == null) return;
+        Export.DataSupplier dataSupplier = stream.exportData(request.getId());
+        if (dataSupplier == null) return;
 
-        downloadStream(request, exportDataSupplier);
+        downloadStream(request, dataSupplier);
     }
 
     @ModelAction(
@@ -309,7 +287,7 @@ class SuperAction {
                     "en:Obtain the historical status information of the component, which can reflect the health status of the component."})
     public void chart(Request request) throws Exception {
         Chart chart = (Chart) instance;
-        ChartDataBuilderImpl chartDataBuilder = new ChartDataBuilderImpl();
+        ChartDataBuilder chartDataBuilder = new ChartDataBuilder();
         chart.chartData(chartDataBuilder);
         Map<String, String[]> data = chartDataBuilder.getData();
         java.util.List<String[]> dataList = ((ResponseImpl) request.getResponse()).getDataList();
@@ -392,7 +370,7 @@ class SuperAction {
         if (downloadKey.trim().isEmpty() || !new File(keyDir, downloadKey).exists()) return;
         response.getParameters().put(DeployerConstants.DOWNLOAD_SERIAL_KEY, downloadKey);
         String finalDownloadKey = downloadKey;
-        ExportDataSupplier supplier = new ExportDataSupplier() {
+        Export.DataSupplier supplier = new Export.DataSupplier() {
             private long currentOffset;
 
             @Override
@@ -493,7 +471,7 @@ class SuperAction {
         return key;
     }
 
-    private void downloadStream(Request request, ExportDataSupplier supplier) throws IOException {
+    private void downloadStream(Request request, Export.DataSupplier supplier) throws IOException {
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
         long offset = 0;
@@ -517,7 +495,7 @@ class SuperAction {
     public void dashboard(Request request) {
         DashboardDataBuilder dashboardBuilder = new DashboardDataBuilder();
         ((Dashboard) instance).dashboardData(request.getId(), dashboardBuilder);
-        java.util.List<DataType> dataTypes = dashboardBuilder.getDataTypes();
+        java.util.List<Dashboard.DataType> dataTypes = dashboardBuilder.getDataTypes();
         if (dataTypes.isEmpty()) {
             return;
         }
@@ -530,29 +508,29 @@ class SuperAction {
         java.util.List<Map<String, String>> histogramDataList = new ArrayList<>();
         java.util.List<Map<String, String>> shareDatasetDataList = new ArrayList<>();
 
-        for (DataType dataType : dataTypes) {
+        for (Dashboard.DataType dataType : dataTypes) {
             if (dataType == null) {
                 continue;
             }
-            Class<? extends DataType> dataTypeClass = dataType.getClass();
-            if (dataTypeClass == BasicImpl.class) {
-                BasicImpl basic = (BasicImpl) dataType;
+            Class<? extends Dashboard.DataType> dataTypeClass = dataType.getClass();
+            if (dataTypeClass == DashboardDataBuilder.BasicImpl.class) {
+                DashboardDataBuilder.BasicImpl basic = (DashboardDataBuilder.BasicImpl) dataType;
                 Map<String, String> data = basic.getData();
                 basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(data));
                 basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_INFO, basic.getInfo());
                 basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_TITLE, basic.getTitle());
-            } else if (dataTypeClass == GaugeImpl.class) {
-                Map<String, String> gaugeData = processGaugeOrHistogram((GaugeImpl) dataType, json);
+            } else if (dataTypeClass == DashboardDataBuilder.GaugeImpl.class) {
+                Map<String, String> gaugeData = processGaugeOrHistogram((DashboardDataBuilder.GaugeImpl) dataType, json);
                 if (gaugeData != null) {
                     gaugeDataList.add(gaugeData);
                 }
-            } else if (dataTypeClass == HistogramImpl.class) {
-                Map<String, String> histogramData = processGaugeOrHistogram((HistogramImpl) dataType, json);
+            } else if (dataTypeClass == DashboardDataBuilder.HistogramImpl.class) {
+                Map<String, String> histogramData = processGaugeOrHistogram((DashboardDataBuilder.HistogramImpl) dataType, json);
                 if (histogramData != null) {
                     histogramDataList.add(histogramData);
                 }
-            } else if (dataTypeClass == ShareDatasetImpl.class) {
-                Map<String, String> shareDataset = processShareDataset((ShareDatasetImpl) dataType, json);
+            } else if (dataTypeClass == DashboardDataBuilder.ShareDatasetImpl.class) {
+                Map<String, String> shareDataset = processShareDataset((DashboardDataBuilder.ShareDatasetImpl) dataType, json);
                 if (shareDataset != null) {
                     shareDatasetDataList.add(shareDataset);
                 }
@@ -578,7 +556,7 @@ class SuperAction {
 
     }
 
-    private Map<String, String> processGaugeOrHistogram(GaugeImpl gauge, Json json) {
+    private Map<String, String> processGaugeOrHistogram(DashboardDataBuilder.GaugeImpl gauge, Json json) {
         java.util.List<String[]> dataList = gauge.getData();
         String[] fields = gauge.getFields();
         int usedIndex = -1;
@@ -618,7 +596,7 @@ class SuperAction {
         return result;
     }
 
-    private Map<String, String> processShareDataset(ShareDatasetImpl shareDataset, Json json) {
+    private Map<String, String> processShareDataset(DashboardDataBuilder.ShareDatasetImpl shareDataset, Json json) {
         try {
             java.util.List<String[]> dataList = new LinkedList<>();
             Map<String, String> data = shareDataset.getData();

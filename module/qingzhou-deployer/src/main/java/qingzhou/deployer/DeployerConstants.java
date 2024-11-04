@@ -61,6 +61,7 @@ public interface DeployerConstants {
     String DEFAULT_DATA_SEPARATOR = ",";
     String DOWNLOAD_FILE_NAMES_SP = "/"; // |/\:*?"<> 这些都是 windows 平台u支持的文件名，linux 上 / 不支持文件名
     String DOWNLOAD_FILE_GROUP_SP = "/";
+
     // 定义仪表盘字段数据类型标识，值使用枚举qingzhou.api.type.Dashboard.MetricType
     String DASHBOARD_FIELD_INFO = "info";
     String DASHBOARD_FIELD_TITLE = "title";

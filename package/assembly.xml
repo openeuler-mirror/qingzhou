@@ -108,6 +108,17 @@
 
         <dependencySet>
             <includes>
+                <include>${project.groupId}:qingzhou-uml</include>
+            </includes>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>lib/version${project.version}/plugins</outputDirectory>
+        </dependencySet>
+
+        <dependencySet>
+            <includes>
                 <include>${project.groupId}:console-war</include>
             </includes>
             <unpack>true</unpack>

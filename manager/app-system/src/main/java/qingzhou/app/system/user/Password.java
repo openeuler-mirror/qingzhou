@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import qingzhou.api.ActionType;
-import qingzhou.api.type.export.ExportDataSupplier;
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelAction;
@@ -147,9 +146,9 @@ public class Password extends ModelBase implements Update, Export {
     }
 
     @Override
-    public ExportDataSupplier exportData(String id) {
+    public DataSupplier exportData(String id) {
         Request request = getAppContext().getCurrentRequest();
-        return new ExportDataSupplier() {
+        return new DataSupplier() {
             private final String format = "png";
 
             @Override

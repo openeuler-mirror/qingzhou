@@ -2,11 +2,6 @@ package qingzhou.app.model;
 
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
-import qingzhou.api.dashboard.Basic;
-import qingzhou.api.dashboard.DataBuilder;
-import qingzhou.api.dashboard.Gauge;
-import qingzhou.api.dashboard.Histogram;
-import qingzhou.api.dashboard.ShareDataset;
 import qingzhou.app.ExampleMain;
 
 import java.util.Random;
@@ -33,7 +28,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         for (int count = 0; count < 5; count++) {
             Gauge gauge = dataBuilder.build(Gauge.class);
             gauge.info("内存使用情况" + count).title("内存" + count);
-            gauge.maxKey("max").unit("GB").valueKey("used").fields(new String[]{"name", "ip", "used", "max"});
+            gauge.maxKey("max").unit("GB").statusKey("used").fields(new String[]{"name", "ip", "used", "max"});
             for (int i = 0; i < 4; i++) {
                 int used = random.nextInt(10);
                 int max = random.nextInt(10);
@@ -50,7 +45,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
             histogram.info("网络使用情况" + count).title("网络" + count);
             histogram.unit("MB");
             histogram.maxKey("max");
-            histogram.valueKey("used");
+            histogram.statusKey("used");
             histogram.fields(new String[]{"name", "ip", "used", "max"});
             for (int i = 0; i < 4; i++) {
                 int used = random.nextInt(100);
