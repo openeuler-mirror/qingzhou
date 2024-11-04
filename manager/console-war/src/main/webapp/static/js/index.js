@@ -972,13 +972,32 @@ function bindEventForListPage() {
 
     //列表修改值
     $('table .switch-btn, table .input-class, table .nice-select').each(function () {
-        $("input", $(this)).bind("change", updateListValue);
+        var that = this
+        if ($(this).attr("class").includes("switch")) {
+            $(this).unbind("click").bind("click", function () {
+                showConfirm(getSetting("switchText"), {
+                    "title": getSetting("pageConfirmTitle"),
+                    "btn": [getSetting("confirmBtnText"), getSetting("cancelBtnText")]
+                }, function (index) {
+                    $(".switchedge", that).toggleClass("switch-bg");
+                    $(".circle", that).toggleClass("switch-right");
+                    $("input", that).val($("input", that).val() === "true" ? false : true);
+                    closeLayer(index);
+                    updateListValue(null, $("input", $(that)))
+                }, function () {
+                });
+            })
+        } else {
+            $("input", $(this)).bind("change", function (event) {
+                updateListValue(event, this);
+            });
+        }
     });
 
-    function updateListValue(e) {
-        let fieldStr = $(this).attr("name")
-        let v = $(this).val()
-        let tempUrl = $(this).closest('td').attr("action");
+    function updateListValue(even, target) {
+        let fieldStr = $(target).attr("name")
+        let v = $(target).val()
+        let tempUrl = $(target).closest('td').attr("action");
         if (tempUrl === undefined || tempUrl === "") {
             return;
         }
@@ -1004,7 +1023,9 @@ function bindEventForListPage() {
         });
     }
 
-    $("select[multiple='multiple']").on("change", updateListValue);
+    $("select[multiple='multiple']").on("change", function (event) {
+        updateListValue(event, this);
+    });
 
 }
 
@@ -1232,7 +1253,7 @@ function initMonitorPage() {
 function defaultOption(infoKv, xAxisField) {
     var dimensions;
     var sourceHeader = true;
-    if (JSON.stringify(infoKv) !== '{}') {
+    if (infoKv && JSON.stringify(infoKv) !== '{}') {
         sourceHeader = false;
         if (xAxisField) {
             dimensions = [xAxisField];

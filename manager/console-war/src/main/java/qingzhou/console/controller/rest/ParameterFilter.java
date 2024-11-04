@@ -117,7 +117,7 @@ public class ParameterFilter implements Filter<RestContext> {
                     if (Utils.notBlank(val)) {
                         String sp = modelField.getSeparator();
                         String[] values = val.split(sp);
-                        SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.RANGE_DATETIME_FORMAT);
+                        SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT);
                         Date v1 = format.parse(values[0]);
                         Date v2 = format.parse(values[1]);
                         request.setParameter(fieldName, String.join(sp, v1.getTime() + sp + v2.getTime()));

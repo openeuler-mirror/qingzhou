@@ -286,6 +286,7 @@
         "reloginBtnText": '<%=I18n.getKeyI18n("page.relogin")%>',
         "iknowBtnText": '<%=I18n.getKeyI18n("page.gotit")%>',
         "switchLang": '<%=I18n.getKeyI18n("page.lang.switch.confirm")%>',
+        "switchText": '<%=I18n.getKeyI18n("page.list.switch.confirm")%>',
         "logout": '<%=I18n.getKeyI18n("page.logout.confirm")%>',
         "downloadTip": '<%=I18n.getKeyI18n("page.download.log.tip")%>',
         "downloadCheckAll": '<%=I18n.getKeyI18n("page.download.checkall")%>',

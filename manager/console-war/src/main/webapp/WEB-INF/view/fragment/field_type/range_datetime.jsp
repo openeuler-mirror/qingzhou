@@ -17,7 +17,7 @@
     $(function () {
         $('.dateRange').daterangepicker({
             locale: {
-                format: '<%=DeployerConstants.RANGE_DATETIME_FORMAT%>', // 设置日期时间格式
+                format: 'yyyy-MM-DD HH:mm:ss',
                 separator: '<%=modelField.getSeparator()%>',          // 范围分隔符
                 <%
                    if (I18n.isZH()){
