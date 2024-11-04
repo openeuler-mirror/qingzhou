@@ -63,7 +63,7 @@ public class PageUtil {
             value = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(new Date(Long.parseLong(value)));
         }
         if (fieldInfo.getInputType().equals(InputType.range_datetime)) {
-            SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.RANGE_DATETIME_FORMAT);
+            SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT);
             List<String> timeValues = new LinkedList<>();
             for (String v : value.split(fieldInfo.getSeparator())) {
                 timeValues.add(format.format(new Date(Long.parseLong(v))));
@@ -113,7 +113,7 @@ public class PageUtil {
             case range_datetime:
                 String sp = fieldInfo.getSeparator();
                 String[] dates = value.split(sp);
-                SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.RANGE_DATETIME_FORMAT);
+                SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT);
                 value = format.format(parseDate(dates[0])) + sp + format.format(parseDate(dates[1]));
                 break;
             case radio:
