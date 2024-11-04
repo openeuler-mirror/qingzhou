@@ -912,12 +912,16 @@ function bindEventForListPage() {
 
         $("table.qz-data-list a.qz-action-link", restrictedArea).each(function () {
             var actionTypeMethod = bindingActions[$(this).attr("action-type")];
+            var actionIdSelector = "";
+            if ($(this).attr("action-id") !== undefined) {
+                actionIdSelector = "[action-id='" + $(this).attr("action-id") + "']";
+            }
             if (actionTypeMethod) {
-                var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']";
+                var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']" + actionIdSelector;
                 actionTypeMethod.call(null, this, selector, false, restrictedArea);
             } else {
                 if ($(this).attr("action-id") === getSetting("actionId_app_manage")) {// 集群实例点击[管理]，打开新 Tab 并切换
-                    $("table.qz-data-list a.qz-action-link[action-id='" + $(this).attr("action-id") + "'][loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
+                    $("table.qz-data-list a.qz-action-link" + actionIdSelector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
                         e.preventDefault();
                         var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");
                         if (tab.length > 0) {
@@ -931,7 +935,7 @@ function bindEventForListPage() {
                 }
                 if ($(this).attr("action-type")) {
                     // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-                    qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']", $(".main-body", restrictedArea).first(), false, false, restrictedArea, null);
+                    qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']" + actionIdSelector, $(".main-body", restrictedArea).first(), false, false, restrictedArea, null);
                 } else {
                     console.log("Element binding action failed. Element html:" + $(this)[0].outerHTML);
                 }
