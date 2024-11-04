@@ -248,6 +248,7 @@ class SuperAction {
     @ModelAction(
             code = Export.ACTION_EXPORT, icon = "download-alt",
             name = {"导出", "en:Export"},
+            action_type = ActionType.download,
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
     public void export(Request request) throws Exception {
         Export stream = (Export) instance;
