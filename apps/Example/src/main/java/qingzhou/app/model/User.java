@@ -124,7 +124,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
             request.getResponse().useCustomizedResponse(map);
         } else {
             String html = "<div style='background-color: #fff;color: #333;padding: 10px;'>" +
-                    "<table>" +
+                    "<table style='width: 100%'>" +
                     "<thead><tr style='height: 20px'>" +
                     "<th style='width: 25%'>用户名称</th>" +
                     "<th style='width: 25%'>用户性别</th>" +

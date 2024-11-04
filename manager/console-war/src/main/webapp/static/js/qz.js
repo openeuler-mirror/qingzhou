@@ -460,12 +460,18 @@
          * @returns {unresolved}
          */
         bindFill: function (triggerSelector, targetSelector, append, resetData, restrictedArea, afterRenderCall) {
+            $(triggerSelector + "[action-type='sub_form']", restrictedArea).each(function (){
+                var actionType = $(this).attr("action-type");
+                var actionTypeMethod = bindingActions[actionType];``
+                actionTypeMethod.call(null, null, triggerSelector + "[action-type='sub_form']", false, restrictedArea);
+            });
+
             var that = this;
-            $(triggerSelector + "[binded!='true']", restrictedArea).attr("binded", "true").click(function (e) {
+            $(triggerSelector + "[binded!='true'][action-type!='sub_form']", restrictedArea).attr("binded", "true").click(function (e) {
                 e.preventDefault();
                 // 跳过 href="javascript:void(0);"
                 var url = $(this).attr("href") || $(this).attr("url");
-                var actionType = $(this).attr("action-type")
+                var actionType = $(this).attr("action-type");
                 if (url.indexOf("javascript:") === 0) {
                     return;
                 }
