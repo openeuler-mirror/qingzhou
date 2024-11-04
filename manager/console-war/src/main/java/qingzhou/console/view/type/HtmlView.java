@@ -1,21 +1,17 @@
 package qingzhou.console.view.type;
 
-import javax.servlet.http.HttpServletRequest;
-
+import qingzhou.api.ActionType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Chart;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
+import qingzhou.api.type.*;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
+
+import javax.servlet.http.HttpServletRequest;
 
 public class HtmlView implements View {
     public static final String HTML_PAGE_BASE = "/WEB-INF/view/";
@@ -71,6 +67,11 @@ public class HtmlView implements View {
                 return "sys/index";
             case DeployerConstants.ACTION_MANAGE:
                 return "sys/manage";
+        }
+
+        ActionType actionType = request.getCachedModelInfo().getModelActionInfo(actionName).getActionType();
+        if (actionType == ActionType.sub_menu) {
+            return "sys/sub_inddex";
         }
 
         return "default";
