@@ -2,7 +2,7 @@
 
 <%@ include file="../fragment/head.jsp" %>
 
-<%-- 初始化的 tab 实例页面 --%>
+<%-- 初始化管理后的菜单页面 --%>
 <%@ include file="../fragment/menu.jsp" %>
 
 <section class="main-body">
