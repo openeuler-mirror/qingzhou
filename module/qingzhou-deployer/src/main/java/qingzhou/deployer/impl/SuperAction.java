@@ -7,7 +7,12 @@ import qingzhou.api.type.export.ExportDataSupplier;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.impl.dashboard.BasicImpl;
+import qingzhou.deployer.impl.dashboard.GaugeImpl;
+import qingzhou.deployer.impl.dashboard.HistogramImpl;
+import qingzhou.deployer.impl.dashboard.ShareDatasetImpl;
 import qingzhou.engine.util.FileUtil;
+import qingzhou.json.Json;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
@@ -18,6 +23,23 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 class SuperAction {
@@ -47,6 +69,15 @@ class SuperAction {
         Map<String, String> data = ((Show) instance).showData(request.getId());
         ResponseImpl response = (ResponseImpl) request.getResponse();
         response.getDataMap().putAll(data);
+    }
+
+    @ModelAction(
+            code = Combined.ACTION_COMBINED, icon = "folder-open-alt",
+            name = {"组合查看", "en:Combined View"},
+            info = {"查看组合视图的相关信息。", "en:View the related information for the composite view."})
+    public void Combined(Request request) throws Exception {
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        ((Combined) instance).combinedData(request.getId(), response.getDataBuilder());
     }
 
     @ModelAction(
@@ -248,6 +279,7 @@ class SuperAction {
     @ModelAction(
             code = Export.ACTION_EXPORT, icon = "download-alt",
             name = {"导出", "en:Export"},
+            action_type = ActionType.download,
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
     public void export(Request request) throws Exception {
         Export stream = (Export) instance;
@@ -475,5 +507,137 @@ class SuperAction {
         response.setBodyBytes(block);
         response.setDownloadName(supplier.name());
         response.getParameters().put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(supplier.offset()));
+    }
+
+    @ModelAction(
+            code = Dashboard.ACTION_DASHBOARD, icon = "dashboard",
+            name = {"监视概览", "en:Monitoring Overview"},
+            info = {"获取该组件的组合监视概览信息。",
+                    "en:Obtain an overview of the combined monitoring of the component."})
+    public void dashboard(Request request) {
+        DashboardDataBuilder dashboardBuilder = new DashboardDataBuilder();
+        ((Dashboard) instance).dashboardData(request.getId(), dashboardBuilder);
+        java.util.List<DataType> dataTypes = dashboardBuilder.getDataTypes();
+        if (dataTypes.isEmpty()) {
+            return;
+        }
+
+        Json json = app.getAppContext().getService(Json.class);
+
+        // 初始化各类数据的集合
+        Map<String, String> basicDataMap = new HashMap<>();
+        java.util.List<Map<String, String>> gaugeDataList = new ArrayList<>();
+        java.util.List<Map<String, String>> histogramDataList = new ArrayList<>();
+        java.util.List<Map<String, String>> shareDatasetDataList = new ArrayList<>();
+
+        for (DataType dataType : dataTypes) {
+            if (dataType == null) {
+                continue;
+            }
+            Class<? extends DataType> dataTypeClass = dataType.getClass();
+            if (dataTypeClass == BasicImpl.class) {
+                BasicImpl basic = (BasicImpl) dataType;
+                Map<String, String> data = basic.getData();
+                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(data));
+                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_INFO, basic.getInfo());
+                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_TITLE, basic.getTitle());
+            } else if (dataTypeClass == GaugeImpl.class) {
+                Map<String, String> gaugeData = processGaugeOrHistogram((GaugeImpl) dataType, json);
+                if (gaugeData != null) {
+                    gaugeDataList.add(gaugeData);
+                }
+            } else if (dataTypeClass == HistogramImpl.class) {
+                Map<String, String> histogramData = processGaugeOrHistogram((HistogramImpl) dataType, json);
+                if (histogramData != null) {
+                    histogramDataList.add(histogramData);
+                }
+            } else if (dataTypeClass == ShareDatasetImpl.class) {
+                Map<String, String> shareDataset = processShareDataset((ShareDatasetImpl) dataType, json);
+                if (shareDataset != null) {
+                    shareDatasetDataList.add(shareDataset);
+                }
+            }
+        }
+
+        Map<String, String> result = ((ResponseImpl) request.getResponse()).getDataMap();
+        if (!basicDataMap.isEmpty()) {
+            result.put(DeployerConstants.DASHBOARD_CHARTS_BASIC_DATA, json.toJson(basicDataMap));
+        }
+
+        if (!gaugeDataList.isEmpty()) {
+            result.put(DeployerConstants.DASHBOARD_CHARTS_GAUGE_DATA, json.toJson(gaugeDataList));
+        }
+
+        if (!histogramDataList.isEmpty()) {
+            result.put(DeployerConstants.DASHBOARD_CHARTS_HISTOGRAM_DATA, json.toJson(histogramDataList));
+        }
+
+        if (!shareDatasetDataList.isEmpty()) {
+            result.put(DeployerConstants.DASHBOARD_CHARTS_SHARE_DATASET_DATA, json.toJson(shareDatasetDataList));
+        }
+
+    }
+
+    private Map<String, String> processGaugeOrHistogram(GaugeImpl gauge, Json json) {
+        java.util.List<String[]> dataList = gauge.getData();
+        String[] fields = gauge.getFields();
+        int usedIndex = -1;
+        int maxIndex = -1;
+        for (int i = 0; i < fields.length; i++) {
+            String field = fields[i];
+            if (field.equals(gauge.getValueKey())) {
+                usedIndex = i;
+            } else if (field.equals(gauge.getMaxKey())) {
+                maxIndex = i;
+            }
+        }
+        if (usedIndex == -1 || maxIndex == -1) {
+            return null;
+        }
+
+        double totalUsed = 0;
+        double totalMax = 0;
+        for (String[] dataArray : dataList) {
+            if (dataArray == null) continue;
+            try {
+                totalUsed += Double.parseDouble(dataArray[usedIndex]);
+                totalMax += Double.parseDouble(dataArray[maxIndex]);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        Map<String, String> result = new HashMap<>();
+        result.put(DeployerConstants.DASHBOARD_FIELD_FIELDS, json.toJson(fields));
+        result.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(dataList));
+        result.put(DeployerConstants.DASHBOARD_RESPONSE_FIELD_USED, String.valueOf(totalUsed));
+        result.put(DeployerConstants.DASHBOARD_RESPONSE_FIELD_MAX, String.valueOf(totalMax));
+        result.put(DeployerConstants.DASHBOARD_FIELD_UNIT, gauge.getUnit());
+        result.put(DeployerConstants.DASHBOARD_FIELD_INFO, gauge.getInfo());
+        result.put(DeployerConstants.DASHBOARD_FIELD_TITLE, gauge.getTitle());
+
+        return result;
+    }
+
+    private Map<String, String> processShareDataset(ShareDatasetImpl shareDataset, Json json) {
+        try {
+            java.util.List<String[]> dataList = new LinkedList<>();
+            Map<String, String> data = shareDataset.getData();
+            Set<String> keySet = data.keySet();
+            for (String key : keySet) {
+                java.util.List<String> fieldData = new LinkedList<>();
+                fieldData.add(key);
+                fieldData.add(data.get(key));
+                dataList.add(fieldData.toArray(new String[0]));
+            }
+
+            Map<String, String> echartsDataset = new HashMap<>();
+            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(dataList));
+            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_INFO, shareDataset.getInfo());
+            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_TITLE, shareDataset.getTitle());
+
+            return echartsDataset;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
