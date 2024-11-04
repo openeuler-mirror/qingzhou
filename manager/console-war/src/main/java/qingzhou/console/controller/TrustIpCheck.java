@@ -126,7 +126,7 @@ public class TrustIpCheck implements Filter<SystemControllerContext> {
             StringBuilder re = new StringBuilder();
             for (int j = 0; j < validips.length; j++) {
                 String num = validips[j];
-                if (!num.equals("*")) {
+                if (!"*".equals(num)) {
                     re.append(num).append(".");
                 } else {
                     re.append("\\d{0,3}.");
@@ -153,7 +153,7 @@ public class TrustIpCheck implements Filter<SystemControllerContext> {
         StringBuilder realIp = new StringBuilder();
         for (int j = 0; j < ips.length; j++) {
             String num = ips[j];
-            if (!num.equals("*")) {
+            if (!"*".equals(num)) {
                 if (num.isEmpty()) {
                     int len = 9 - ips.length;//"" is one so:8+1
                     for (int t = 0; t < len; t++) {

@@ -88,7 +88,7 @@ public class Department extends AddModelBase implements Echo, Option {
     @Override
     public Map<String, String> echoData(String echoGroup, Map<String, String> params) {
         Map<String, String> map = new HashMap<>();
-        if (echoGroup.equals("aa")) {
+        if ("aa".equals(echoGroup)) {
             String superior = params.get("superior");
             String manager = params.get("manager");
             map.put("email", superior + "===" + manager);
@@ -102,11 +102,11 @@ public class Department extends AddModelBase implements Echo, Option {
                 map.put("emailSuffix", "@gov.com");
             }
             map.put("buildDate", "2024-10-24 14:39:24");
-        } else if (echoGroup.equals("bb")) {
+        } else if ("bb".equals(echoGroup)) {
             String manager = params.get("manager");
             map.put("phone", manager + "---");
             map.put("buildDate", "");
-        } else if (echoGroup.equals("cc")) {
+        } else if ("cc".equals(echoGroup)) {
             String manager = params.get("manager");
             map.put("phone", manager + "cccccccc");
             map.put("buildDate", "");
@@ -127,11 +127,11 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @Override
     public Item[] optionData(String fieldName) {
-        if (fieldName.equals("superior")) {
+        if ("superior".equals(fieldName)) {
             return Item.of(new String[]{"a", "b", "c", "d", "e"});
-        } else if (fieldName.equals("manager")) {
+        } else if ("manager".equals(fieldName)) {
             return Item.of(new String[]{"jack", "lisa", "tom"});
-        } else if (fieldName.equals("emailSuffix")) {
+        } else if ("emailSuffix".equals(fieldName)) {
             return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com", "@outlook.com", "@yahoo.com", "@tongtech.com", "@github.com"});
         }
         return new Item[0];
