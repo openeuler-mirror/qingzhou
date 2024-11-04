@@ -1232,7 +1232,7 @@ function initMonitorPage() {
 function defaultOption(infoKv, xAxisField) {
     var dimensions;
     var sourceHeader = true;
-    if (JSON.stringify(infoKv) !== '{}') {
+    if (infoKv && JSON.stringify(infoKv) !== '{}') {
         sourceHeader = false;
         if (xAxisField) {
             dimensions = [xAxisField];
