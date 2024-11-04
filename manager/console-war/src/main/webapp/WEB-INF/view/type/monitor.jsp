@@ -5,37 +5,14 @@
 	<%@ include file="../fragment/breadcrumb.jsp" %>
 
 	<%
-		if (!modelInfo.getModelActionInfo(qzAction).isAutoRefresh()) {
-			String[] fieldsToListSearch = modelInfo.getFieldsToListSearch();
-	%>
-	<%@ include file="../fragment/filter_form.jsp" %>
-	<%
-		if (fieldsToListSearch.length > 0) {
-	%>
-	<hr style="margin-top: 4px;">
-	<%
-			}
-		}
-	%>
-
-	<%
 		String url = PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, Monitor.ACTION_MONITOR + (Utils.notBlank(encodedId) ? "/" + encodedId : ""));
 
 		Map<String, String> numericData = new LinkedHashMap<>();
 		Map<String, String> basicData = new LinkedHashMap<>();
 
 		String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
-		Map<String, String> dataMap = qzResponse.getDataMap();
-		List<String[]> dataList = qzResponse.getDataList();
-		if (dataMap.isEmpty() && !dataList.isEmpty()) {
-			for (int i1 = 0; i1 < monitorFieldNames.length; i1++) {
-				String fieldName = monitorFieldNames[i1];
-				String value = dataList.get(dataList.size() - 1)[i1 + 1];
-				dataMap.put(fieldName, value);
-			}
-		}
 		for (String fieldName : monitorFieldNames) {
-			String val = dataMap.get(fieldName);
+			String val = qzResponse.getDataMap().get(fieldName);
 			if (val == null) continue;
 			ModelFieldInfo monitorField = modelInfo.getModelFieldInfo(fieldName);
 			if (monitorField.isNumeric()) {
@@ -46,7 +23,7 @@
 		}
 	%>
 
-	<div class="infoPage" chartMonitor="true" data-url="<%=url%>" autoRefresh="<%=modelInfo.getModelActionInfo(qzAction).isAutoRefresh()%>" xAxisField="<%=modelInfo.getModelActionInfo(qzAction).getxAxisField()%>">
+	<div class="infoPage" chartMonitor="true" autoRefresh="true" data-url="<%=url%>">
 		<input type="hidden" name="monitorName" value="<%=(Utils.notBlank(encodedId) ? encodedId : "")%>">
 		<div class="panel" style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
 			<div class="panel-body" style="word-break: break-all">

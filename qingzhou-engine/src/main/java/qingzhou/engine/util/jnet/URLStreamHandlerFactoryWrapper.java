@@ -39,6 +39,4 @@ public class URLStreamHandlerFactoryWrapper extends ParentAwareURLStreamHandlerF
     protected URLStreamHandler create(String protocol) {
         return this.wrapper.createURLStreamHandler(protocol);
     }
-
-
 }

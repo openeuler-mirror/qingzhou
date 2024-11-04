@@ -374,7 +374,7 @@ function bindEventForFormPage() {
                 var params = {};
                 params[getSetting("checkOtp")] = $.trim($("#randCode-OTP").val());
                 $.ajax({
-                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/")) + "/" + getSetting("confirmKey")).replace("/" + getSetting("downloadView") + "/", "/" + getSetting("jsonView") + "/"),
+                    url: (imgSrc.substring(0, imgSrc.lastIndexOf("/")) + "/confirmKey").replace("/" + getSetting("downloadView") + "/", "/" + getSetting("jsonView") + "/"),
                     async: true,
                     data: params,
                     dataType: "json",
@@ -538,13 +538,14 @@ function bindEchoItemEvent() {
 
 function echoItem(thisForm, params, item, echoGroup) {
     var action = $(thisForm).attr("action");
+    action = action.substring(0, action.lastIndexOf("/")) + "/echo";
     var url = action.substring(0, action.lastIndexOf("/"));
     var id;
     if (url.endsWith("update")) {
         id = action.substring(action.lastIndexOf("/") + 1);
         url = url.substring(0, url.lastIndexOf("/"));
     }
-    url = url + "/" + getSetting("echoActionName") + (id ? "/" + id : "");
+    url = url + "/echo" + (id ? "/" + id : "");
     let bindNames = new Set();
     $(thisForm).find('[echoGroup]').each(function () {
         for (let group of echoGroup.split(",")) {
@@ -871,10 +872,7 @@ function bindEventForListPage() {
                 return false;
             });
         },
-        "monitor": function (dom, selector, restrictedArea) {// 列表页表格操作列(监视)
-            qz.bindFill(selector, $(".bodyDiv", restrictedArea).first(), false, false, restrictedArea, null);
-        },
-        "files": function (dom, selector, restrictedArea) {// 列表页表格操作列及form页面(下载日志、快照等)
+        "download": function (dom, selector, restrictedArea) {// 列表页表格操作列及form页面(下载日志、快照等)
             $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
                 if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
@@ -913,9 +911,10 @@ function bindEventForListPage() {
         qz.bindFill("table a.dataid", ".bodyDiv", false, false, restrictedArea, null);
 
         $("table.qz-data-list a.qz-action-link", restrictedArea).each(function () {
-            if (bindingActions[$(this).attr("action-type")]) {
+            var actionTypeMethod = bindingActions[$(this).attr("action-type")];
+            if (actionTypeMethod) {
                 var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']";
-                bindingActions[$(this).attr("action-type")].call(null, this, selector, false, restrictedArea);
+                actionTypeMethod.call(null, this, selector, false, restrictedArea);
             } else {
                 if ($(this).attr("action-id") === getSetting("actionId_app_manage")) {// 集群实例点击[管理]，打开新 Tab 并切换
                     $("table.qz-data-list a.qz-action-link[action-id='" + $(this).attr("action-id") + "'][loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
@@ -1044,7 +1043,7 @@ function confirm_method(filterForm, url) {
         },
         success: function (data) {
             if (data.success === "true" || data.success === true) {
-                var searchBtn = $(".search-btn a", getRestrictedArea());
+                var searchBtn = $(".filter_search", getRestrictedArea());
                 if (searchBtn.length > 0) {
                     searchBtn.trigger('click'); //点击搜索按钮，请求list
                 } else {

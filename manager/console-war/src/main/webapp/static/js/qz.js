@@ -470,7 +470,7 @@
                     return;
                 }
                 var data = resetData ? {} : that.formToJson($("form[name='filterForm']", restrictedArea || document.body));
-                if (actionType !== undefined && actionType === getSetting("download")) {
+                if (actionType !== undefined && actionType === getSetting("manageActionName")) {
                     url += "?";
                     for (const item of data) {
                         url += item.name + "=" + item.value + "&"

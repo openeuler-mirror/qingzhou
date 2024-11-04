@@ -3,13 +3,12 @@
 <%
     //少定义变量，防止多个冲突
     try {
-        fieldValue = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[0])))
+        fieldValue = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[0])))
                 + modelField.getSeparator()
-                + new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[1])));
+                + new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[1])));
     } catch (Exception exception) {
         //转化异常表示是从request里面拿的fieldValue，此时不用转化
     }
-
 %>
 <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
        placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"
@@ -18,7 +17,7 @@
     $(function () {
         $('.dateRange').daterangepicker({
             locale: {
-                format: '<%=DeployerConstants.RANGE_DATE_TIME_FORMAT%>', // 设置日期时间格式
+                format: '<%=DeployerConstants.RANGE_DATETIME_FORMAT%>', // 设置日期时间格式
                 separator: '<%=modelField.getSeparator()%>',          // 范围分隔符
                 <%
                    if (I18n.isZH()){

@@ -1,24 +1,36 @@
 package qingzhou.app.system.business;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.FieldType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.Response;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Monitor;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.deployer.*;
+import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.ModuleContext;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
         menu = Main.Business, order = 2,
@@ -260,7 +272,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            action_type = ActionType.files,
+            action_type = ActionType.download,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。", "en:Download the log information of the instance."})
     public void files(Request request) {
@@ -269,7 +281,6 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Download.ACTION_DOWNLOAD, icon = "download-alt",
-            action_type = ActionType.download,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。", "en:Download the log information of the instance."})
     public void download(Request request) {
@@ -278,7 +289,6 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
-            action_type = ActionType.monitor,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})

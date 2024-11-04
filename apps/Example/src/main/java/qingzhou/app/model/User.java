@@ -1,6 +1,7 @@
 package qingzhou.app.model;
 
 import qingzhou.api.*;
+import qingzhou.api.type.Add;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
@@ -248,5 +249,10 @@ public class User extends AddModelBase implements Group, Option, Echo {
             map.put("position", "003");
         }
         return map;
+    }
+
+    @Override
+    public String[] headActions() {
+        return new String[]{Add.ACTION_CREATE,"share","test"};
     }
 }

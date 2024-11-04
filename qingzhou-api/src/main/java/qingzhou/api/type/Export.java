@@ -1,11 +1,9 @@
 package qingzhou.api.type;
 
-import qingzhou.api.ByteStreamSupplier;
-
-import java.util.Map;
+import qingzhou.api.type.export.ExportDataSupplier;
 
 public interface Export {
     String ACTION_EXPORT = "export";
 
-    ByteStreamSupplier exportData(String id, Map<String, String> query);
+    ExportDataSupplier exportData(String id) throws Exception;
 }

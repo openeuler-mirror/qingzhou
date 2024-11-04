@@ -15,7 +15,6 @@ import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -33,7 +32,6 @@ public class ViewManager {
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        HttpServletRequest servletRequest = restContext.req;
         HttpServletResponse servletResponse = restContext.resp;
         ModelInfo modelInfo = request.getCachedModelInfo();
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
@@ -46,8 +44,7 @@ public class ViewManager {
 
         String page = actionInfo.getAppPage();
         if (Utils.notBlank(page)) {
-            page = "/" + request.getApp() + (page.startsWith("/") ? page : "/" + page);
-            servletRequest.getRequestDispatcher(page).forward(servletRequest, restContext.resp);
+            AppPageUtil.doPage(page, restContext);
             return;
         }
 

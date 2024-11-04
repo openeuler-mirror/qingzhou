@@ -1,8 +1,38 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.Item;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Chart;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Echo;
+import qingzhou.api.type.Export;
 import qingzhou.api.type.List;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Show;
+import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
+import qingzhou.api.type.export.ExportDataSupplier;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
@@ -11,13 +41,6 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
 
 class SuperAction {
     static final java.util.List<ModelActionInfo> ALL_SUPER_ACTION_CACHE;
@@ -53,7 +76,7 @@ class SuperAction {
             name = {"回显", "en:Echo"},
             info = {"处理业务逻辑上的数据级联关系。",
                     "en:Handle data cascading relationships in business logic."})
-    public void echo(Request req) {
+    public void echo(Request req) throws Exception {
         RequestImpl request = (RequestImpl) req;
         ModelInfo modelInfo = request.getCachedModelInfo();
 
@@ -70,10 +93,12 @@ class SuperAction {
 
         ResponseImpl response = (ResponseImpl) request.getResponse();
         Echo echo = (Echo) instance;
-        echoParameters.forEach((group, groupParameters) -> {
+        for (Map.Entry<String, Map<String, String>> entry : echoParameters.entrySet()) {
+            String group = entry.getKey();
+            Map<String, String> groupParameters = entry.getValue();
             Map<String, String> echoResult = echo.echoData(group, groupParameters);
             response.getDataMap().putAll(echoResult);
-        });
+        }
     }
 
     @ModelAction(
@@ -232,15 +257,14 @@ class SuperAction {
 
     @ModelAction(
             code = Export.ACTION_EXPORT, icon = "download-alt",
-            action_type = ActionType.download,
             name = {"导出", "en:Export"},
             info = {"导出指定的文件流。", "en:Export the specified file stream."})
-    public void export(Request request) throws IOException {
+    public void export(Request request) throws Exception {
         Export stream = (Export) instance;
-        ByteStreamSupplier byteStreamSupplier = stream.exportData(request.getId(), queryParams(request));
-        if (byteStreamSupplier == null) return;
+        ExportDataSupplier exportDataSupplier = stream.exportData(request.getId());
+        if (exportDataSupplier == null) return;
 
-        downloadStream(request, byteStreamSupplier);
+        downloadStream(request, exportDataSupplier);
     }
 
     @ModelAction(
@@ -248,7 +272,7 @@ class SuperAction {
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
-    public void monitor(Request request) {
+    public void monitor(Request request) throws Exception {
         Map<String, String> p = ((Monitor) instance).monitorData(request.getId());
         if (p == null || p.isEmpty()) return;
 
@@ -257,12 +281,31 @@ class SuperAction {
     }
 
     @ModelAction(
+            code = Chart.ACTION_CHART, icon = "line-chart",
+            name = {"监视", "en:Monitor"},
+            info = {"获取该组件的历史状态信息，该信息可反映组件的健康情况。",
+                    "en:Obtain the historical status information of the component, which can reflect the health status of the component."})
+    public void chart(Request request) throws Exception {
+        Chart chart = (Chart) instance;
+        ChartDataBuilderImpl chartDataBuilder = new ChartDataBuilderImpl();
+        chart.chartData(chartDataBuilder);
+        Map<String, String[]> data = chartDataBuilder.getData();
+        java.util.List<String[]> dataList = ((ResponseImpl) request.getResponse()).getDataList();
+        data.forEach((key, value) -> {
+            java.util.List<String> viewData = new ArrayList<>();
+            viewData.add(key);
+            viewData.addAll(Arrays.asList(value));
+            dataList.add(viewData.toArray(new String[0]));
+        });
+    }
+
+    @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            action_type = ActionType.files,
+            action_type = ActionType.download,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
                     "en:Gets a list of downloadable files for this component."})
-    public void files(Request request) {
+    public void files(Request request) throws Exception {
         String id = request.getId();
         if (id != null && id.contains("..")) {
             throw new IllegalArgumentException();
@@ -298,7 +341,6 @@ class SuperAction {
 
     @ModelAction(
             code = Download.ACTION_DOWNLOAD, icon = "download-alt",
-            action_type = ActionType.download,
             name = {"下载文件", "en:Download File"},
             info = {"下载指定的文件集合，这些文件须在该组件的可下载文件列表内。",
                     "en:Downloads the specified set of files that are in the component list of downloadable files."})
@@ -328,7 +370,7 @@ class SuperAction {
         if (downloadKey.trim().isEmpty() || !new File(keyDir, downloadKey).exists()) return;
         response.getParameters().put(DeployerConstants.DOWNLOAD_SERIAL_KEY, downloadKey);
         String finalDownloadKey = downloadKey;
-        ByteStreamSupplier supplier = new ByteStreamSupplier() {
+        ExportDataSupplier supplier = new ExportDataSupplier() {
             private long currentOffset;
 
             @Override
@@ -375,12 +417,12 @@ class SuperAction {
             }
 
             @Override
-            public String getSupplierName() {
+            public String name() {
                 return finalDownloadKey + ".zip";
             }
         };
         downloadStream(request, supplier);
-        response.setDownloadName(supplier.getSupplierName());
+        response.setDownloadName(supplier.name());
     }
 
     // 为支持大文件续传，下载必需有 key
@@ -429,7 +471,7 @@ class SuperAction {
         return key;
     }
 
-    private void downloadStream(Request request, ByteStreamSupplier supplier) throws IOException {
+    private void downloadStream(Request request, ExportDataSupplier supplier) throws IOException {
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
         long offset = 0;
@@ -441,7 +483,7 @@ class SuperAction {
 
         byte[] block = supplier.read(offset);
         response.setBodyBytes(block);
-        response.setDownloadName(supplier.getSupplierName());
+        response.setDownloadName(supplier.name());
         response.getParameters().put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(supplier.offset()));
     }
 }

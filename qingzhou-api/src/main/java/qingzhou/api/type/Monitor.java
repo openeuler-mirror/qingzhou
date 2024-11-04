@@ -13,5 +13,5 @@ public interface Monitor {
      * 获包含监控数据的键值对集合。
      * 每个键值对代表一个监控数据项，其中键表示监控数据的名称，值表示监控数据的当前值。
      */
-    Map<String, String> monitorData(String id);
+    Map<String, String> monitorData(String id) throws Exception;
 }

@@ -64,6 +64,8 @@ public @interface ModelField {
 
     boolean file() default false;
 
+    boolean skip_validate() default false;  // 跳过轻舟框架校验
+
     String[] echo_group() default {};
 
     // 列表类型的相关信息
@@ -73,6 +75,7 @@ public @interface ModelField {
     boolean edit() default true; // 支持编辑修改
 
     String update_action() default ""; //标记该字段在list页面修改后走这个action
+
     boolean readonly() default false; // 表单元素级联控制只读的事件绑定
 
     boolean show() default true; // 是否显示在列表中。
@@ -86,14 +89,12 @@ public @interface ModelField {
     int width_percent() default -1;
 
     int ignore() default -1; // 列表页面上，最多显示的字符数，超出后隐藏并悬浮显示全值
-
     // 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
+
     String link_list() default "";
-
     // 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
-    String[] color() default {};
 
-    boolean skip_validate() default false;  // 跳过轻舟框架校验
+    String[] color() default {};
 
     /**
      * 以下是 FieldType.Monitor 类型的信息

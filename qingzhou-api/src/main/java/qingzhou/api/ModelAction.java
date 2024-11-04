@@ -17,8 +17,6 @@ public @interface ModelAction {
     // 提供一个国际化资源键数组，用于根据不同的语言环境加载相应的操作详细信息。
     String[] info() default {};
 
-    ActionType action_type() default ActionType.link;
-
     String code(); // 接口名
 
     String icon() default ""; // 指定与该模型操作关联的图标名称
@@ -27,13 +25,11 @@ public @interface ModelAction {
 
     boolean distribute() default false;
 
+    ActionType action_type() default ActionType.link;
+
     String[] form_fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
 
     String[] menu_models() default {}; //  弹出子级管理页面
 
     String app_page() default ""; // 跳转到指定的页面，注：app根目录后的相对路径
-
-    boolean autoRefresh() default true; // 监控图表是否自动刷新
-
-    String xAxisField() default ""; // x轴的属性名，该属性的值要在返回数组的第一个
 }

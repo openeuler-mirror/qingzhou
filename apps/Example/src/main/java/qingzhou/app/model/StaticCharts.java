@@ -1,20 +1,24 @@
 package qingzhou.app.model;
 
-import qingzhou.api.*;
-import qingzhou.api.type.Monitor;
-import qingzhou.app.ExampleMain;
-import qingzhou.deployer.ResponseImpl;
-import qingzhou.engine.util.Utils;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Chart;
+import qingzhou.api.type.chart.ChartDataBuilder;
+import qingzhou.app.ExampleMain;
+import qingzhou.engine.util.Utils;
+
 @Model(code = "charts", icon = "line-chart",
-        entrance = Monitor.ACTION_MONITOR,
-        menu = ExampleMain.MENU_1, order = 10,
+        entrance = Chart.ACTION_CHART,
+        menu = ExampleMain.MENU_1, order = 5,
         name = {"静态图表", "en:Static Charts"},
         info = {"静态图表", "en:Static Charts."})
-public class StaticCharts extends ModelBase {
+public class StaticCharts extends ModelBase implements Chart {
 
     @ModelField(
             name = {"时间", "en:Time"},
@@ -46,42 +50,34 @@ public class StaticCharts extends ModelBase {
             info = {"查询语句。", "en:sql."})
     public int sql;
 
-
-    @ModelAction(
-            code = Monitor.ACTION_MONITOR, icon = "line-chart", autoRefresh = false, /*xAxisField = "time",*/
-            name = {"监视", "en:Monitor"},
-            info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
-                    "en:Obtain the operating status information of the component, which can reflect the health of the component."})
-    public void monitor(Request request) throws Exception {
+    @Override
+    public void chartData(ChartDataBuilder dataBuilder) throws Exception {
+        Request request = getAppContext().getCurrentRequest();
         String sql = request.getParameter("sql");
-        List<String[]> dataList = ((ResponseImpl) request.getResponse()).getDataList();
 
         if (Utils.isBlank(sql)) {
             for (int i = 0; i < 10; i++) {
                 List<String> list = new ArrayList<>();
-                list.add(i + "");       // x轴属性的值要在列表的第一个
                 list.add(String.valueOf(-i * i + 1));
                 list.add(String.valueOf(-i * i + .5));
                 list.add(String.valueOf(-i * i + 5));
-                dataList.add(list.toArray(new String[0]));
+                dataBuilder.addData(i + "", list.toArray(new String[0]));
             }
         } else {
             // 不指定监控属性时，返回值的第一项会做为维度，第一项的第一个值会映射到x轴
             try {
                 int j = Integer.parseInt(sql);
                 List<String> dimensions = new ArrayList<>();
-                dimensions.add("time");   // x轴的key
                 for (int k = 0; k < j / 2; k++) {
                     dimensions.add(String.valueOf((char) ('a' + k)));
                 }
-                dataList.add(dimensions.toArray(new String[0]));
+                dataBuilder.addData("time", dimensions.toArray(new String[0]));
                 for (int i = 0; i < j; i++) {
                     List<String> list = new ArrayList<>();
-                    list.add(i + "");   // x轴属性的值要在列表的第一个
                     for (int k = 0; k < j / 2; k++) {
                         list.add(String.valueOf(-i * i + k));
                     }
-                    dataList.add(list.toArray(new String[0]));
+                    dataBuilder.addData(i + "", list.toArray(new String[0]));
                 }
             } catch (NumberFormatException ignored) {
             }

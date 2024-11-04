@@ -2,10 +2,10 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    Date date = new Date();
     if (Utils.notBlank(fieldValue) && !fieldValue.equals("0")) {
+        Date date = new Date();
         date.setTime(Long.parseLong(fieldValue));
-        fieldValue = new SimpleDateFormat(DeployerConstants.FIELD_DATETIME_FORMAT).format(date);
+        fieldValue = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(date);
     } else {
         fieldValue = "";
     }
