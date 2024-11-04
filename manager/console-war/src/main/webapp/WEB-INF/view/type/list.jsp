@@ -253,7 +253,7 @@
 					}
 					if (Utils.notBlank(value) && refModelName != null && refFieldName != null) {
 						ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
-						refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
+						refValue = modelData[modelInfo.getFieldIndex(idField)].replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
 				%>
 				<a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
 				   class="dataid qz-action-link tooltips"
