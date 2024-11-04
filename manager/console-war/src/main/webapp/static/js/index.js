@@ -853,13 +853,14 @@ function bindEventForListPage() {
             $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
                 var actUrl = $(dom).attr("href");
+                var actionId = $(dom).attr("action-id");
                 var bindId = $(dom).attr("data-id");
                 var filterForm = $("form[name='filterForm']");
                 showConfirm($(dom).attr("act-confirm"), {
                     "title": getSetting("pageConfirmTitle"),
                     "btn": [getSetting("confirmBtnText"), getSetting("cancelBtnText")]
                 }, function (index) {
-                    if (actUrl.indexOf("app/delete") != -1) {
+                    if (getSetting("actionId_app_stop-delete").indexOf(actionId) >= 0) {
                         $("label.close").each(function () {
                             if ($(this).parent().attr("bind-id") === bindId) {
                                 $(this).click();
@@ -930,14 +931,13 @@ function bindEventForListPage() {
                         }
                         return initializeManager($(this), $(this).attr("href"));
                     });
-                    //已绑定操作，无需往下
-                    return;
-                }
-                if ($(this).attr("action-type")) {
-                    // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-                    qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']" + actionIdSelector, $(".main-body", restrictedArea).first(), false, false, restrictedArea, null);
                 } else {
-                    console.log("Element binding action failed. Element html:" + $(this)[0].outerHTML);
+                    if ($(this).attr("action-type")) {
+                        // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
+                        qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']" + actionIdSelector, $(".main-body", restrictedArea).first(), false, false, restrictedArea, null);
+                    } else {
+                        console.log("Element binding action failed. Element html:" + $(this)[0].outerHTML);
+                    }
                 }
             }
         });

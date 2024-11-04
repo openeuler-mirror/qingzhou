@@ -20,6 +20,8 @@ public interface DeployerConstants {
     String ACTION_CHECK = "check";
     String ACTION_REGISTER = "register";
     String ACTION_MANAGE = "manage";
+    String ACTION_START = "start";
+    String ACTION_STOP = "stop";
     String ACTION_INDEX = "index";
     String ACTION_UPLOAD = "upload";
     // 系统内部 Action For Agent

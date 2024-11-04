@@ -201,7 +201,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     }
 
     @ModelAction(
-            code = "start", icon = "play",
+            code = DeployerConstants.ACTION_START, icon = "play",
             show = "state=" + DeployerConstants.APP_STOPPED,
             action_type = ActionType.action_list,
             name = {"启动", "en:start"},
@@ -214,7 +214,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     }
 
     @ModelAction(
-            code = "stop", icon = "stop",
+            code = DeployerConstants.ACTION_STOP, icon = "stop",
             show = "state=" + DeployerConstants.APP_STARTED,
             action_type = ActionType.action_list,
             name = {"停止", "en:end"},
