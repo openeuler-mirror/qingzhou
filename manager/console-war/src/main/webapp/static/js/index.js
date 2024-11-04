@@ -820,35 +820,8 @@ function checkboxSortable() {
 /**************************************** sortablecheckbox.jsp - end *************************************************/
 
 /**************************************** list.jsp - start *************************************************/
-/**
- * 列表页面相关事件绑定
- */
-function bindEventForListPage() {
-    // 初始化分页条
-    $("ul.pager.pager-loose[loaded!='true']").attr("loaded", "true").each(function () {
-        var partLinkUri = $(this).attr("partLinkUri");
-        $(this).pager({
-            page: Number($(this).attr("data-page")),
-            recPerPage: Number($(this).attr("recPerPage")),
-            recTotal: Number($(this).attr("data-rec-total")),
-            linkCreator: function (page, pager) {
-                var uri = partLinkUri + page;
-                return encodeURI(uri);
-            },
-            lang: getSetting("pageLang")
-        });
-    });
-
-    // 列表搜索框回车
-    $("form[name='filterForm'][loaded!='true']").attr("loaded", "true").unbind("keypress").bind("keypress", function (e) {
-        if (e.keyCode === 13) {
-            e.preventDefault();
-            qz.fill($("a", this).first().attr("href"), qz.formToJson(this), $(this).closest(".main-body"), false, null);
-        }
-    });
-
     // 列表页表格操作列特定事件绑定
-    var bindingActions = {
+var bindingActions = {
         "action_list": function (dom, selector, restrictedArea) {// 列表页表格操作列(启动、停止、应用卸载、删除等)
             $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
@@ -899,6 +872,32 @@ function bindEventForListPage() {
             });
         }
     };
+/**
+ * 列表页面相关事件绑定
+ */
+function bindEventForListPage() {
+    // 初始化分页条
+    $("ul.pager.pager-loose[loaded!='true']").attr("loaded", "true").each(function () {
+        var partLinkUri = $(this).attr("partLinkUri");
+        $(this).pager({
+            page: Number($(this).attr("data-page")),
+            recPerPage: Number($(this).attr("recPerPage")),
+            recTotal: Number($(this).attr("data-rec-total")),
+            linkCreator: function (page, pager) {
+                var uri = partLinkUri + page;
+                return encodeURI(uri);
+            },
+            lang: getSetting("pageLang")
+        });
+    });
+
+    // 列表搜索框回车
+    $("form[name='filterForm'][loaded!='true']").attr("loaded", "true").unbind("keypress").bind("keypress", function (e) {
+        if (e.keyCode === 13) {
+            e.preventDefault();
+            qz.fill($("a", this).first().attr("href"), qz.formToJson(this), $(this).closest(".main-body"), false, null);
+        }
+    });
 
     $("section.main-body", document.body).each(function () {
         var restrictedArea = $(this).parent();
