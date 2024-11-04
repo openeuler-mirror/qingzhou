@@ -210,9 +210,9 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @Override
     public Map<String, String> echoData(String echoGroup, Map<String, String> params) {
-        if (echoGroup.equals("aa")) {
+        if ("aa".equals(echoGroup)) {
             Map<String, String> map = new HashMap<>();
-            if (params.get("gender").equals("0")) {
+            if ("0".equals(params.get("gender"))) {
                 map.put("position", "003");
                 map.put("department", "一部");
                 map.put("subjects1", "123," + params.get("gender"));

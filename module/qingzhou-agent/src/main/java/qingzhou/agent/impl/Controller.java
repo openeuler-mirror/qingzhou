@@ -66,7 +66,7 @@ public class Controller implements ModuleActivator {
     private String getAgentHost(String agentHost) {
         if (agentHost == null
                 || agentHost.isEmpty()
-                || agentHost.equals("0.0.0.0")
+                || "0.0.0.0".equals(agentHost)
         ) {
             agentHost = Utils.getLocalIps().iterator().next();
         }
