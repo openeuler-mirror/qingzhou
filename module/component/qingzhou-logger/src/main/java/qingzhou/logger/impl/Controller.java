@@ -1,14 +1,15 @@
 package qingzhou.logger.impl;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.logger.Logger;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.Map;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -19,6 +20,10 @@ public class Controller implements ModuleActivator {
     public void start(ModuleContext context) {
         logger = new LoggerImpl();
         context.registerService(Logger.class, logger);
+
+        Map<String, String> config = context.getConfig();
+//        System.setOut(new SystemPrintStream(logger, false, config));
+//        System.setErr(new SystemPrintStream(logger, true, config));
 
         startInfo();
     }

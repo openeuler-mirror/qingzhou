@@ -1,16 +1,11 @@
 package qingzhou.deployer;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Response;
 import qingzhou.registry.ItemInfo;
+
+import java.io.Serializable;
+import java.util.*;
 
 public class ResponseImpl implements Response {
     private boolean success = true;

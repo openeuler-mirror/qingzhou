@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Map;
 
 public interface ModuleContext {
-    Map<String, ?> getConfig();
+    Map<String, String> getConfig();
 
     ClassLoader getApiLoader();
 

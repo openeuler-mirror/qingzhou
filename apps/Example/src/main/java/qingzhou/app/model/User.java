@@ -37,14 +37,14 @@ public class User extends AddModelBase implements Group, Option, Echo {
     @ModelField(
             group = "base",
             required = true,
-            input_type= InputType.radio, echo_group = "aa",
+            input_type = InputType.radio, echo_group = "aa",
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
     public String gender;
 
     @ModelField(
             group = "org",
-            input_type = InputType.select,  skip_validate = true,
+            input_type = InputType.select, skip_validate = true,
             // reference = Post.class,
             list = true, search = true,
             update_action = "update",
@@ -252,7 +252,12 @@ public class User extends AddModelBase implements Group, Option, Echo {
     }
 
     @Override
+    public boolean useDynamicDefaultSearch() {
+        return true;
+    }
+
+    @Override
     public String[] headActions() {
-        return new String[]{Add.ACTION_CREATE,"share","test"};
+        return new String[]{Add.ACTION_CREATE, "share", "test"};
     }
 }

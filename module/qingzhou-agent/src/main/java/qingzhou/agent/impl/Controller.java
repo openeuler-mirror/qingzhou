@@ -1,7 +1,5 @@
 package qingzhou.agent.impl;
 
-import java.util.Map;
-
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;
@@ -16,6 +14,8 @@ import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.http.Http;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+
+import java.util.Map;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -34,7 +34,7 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext moduleContext) throws Exception {
-        Map<String, String> config = (Map<String, String>) moduleContext.getConfig();
+        Map<String, String> config = moduleContext.getConfig();
         if (config == null || !Boolean.parseBoolean(config.get("enabled"))) return;
 
         String agentHost = getAgentHost(config.get("agentHost"));

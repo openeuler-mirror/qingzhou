@@ -9,6 +9,7 @@ public interface List {
     String ACTION_LIST = "list";
     String ACTION_ALL = "all";
     String ACTION_CONTAINS = "contains";
+    String ACTION_DEFAULT_SEARCH = "defaultSearch";
 
     /**
      * @param pageNum    查询此页的数据
@@ -82,6 +83,10 @@ public interface List {
      */
     default Map<String, String> defaultSearch() {
         return null;
+    }
+
+    default boolean useDynamicDefaultSearch() {
+        return false;
     }
 
     default boolean showOrderNumber() {
