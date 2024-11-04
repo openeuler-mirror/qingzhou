@@ -50,6 +50,15 @@ class SuperAction {
     }
 
     @ModelAction(
+            code = Combined.ACTION_COMBINED, icon = "folder-open-alt",
+            name = {"组合查看", "en:Combined View"},
+            info = {"查看组合视图的相关信息。", "en:View the related information for the composite view."})
+    public void Combined(Request request) throws Exception {
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        ((Combined) instance).combinedData(request.getId(), response.getDataBuilder());
+    }
+
+    @ModelAction(
             code = Echo.ACTION_ECHO, icon = "reply",
             name = {"回显", "en:Echo"},
             info = {"处理业务逻辑上的数据级联关系。",

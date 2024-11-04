@@ -67,6 +67,8 @@ public class HtmlView implements View {
                 return "sys/index";
             case DeployerConstants.ACTION_MANAGE:
                 return "sys/manage";
+            case Combined.ACTION_COMBINED:
+                return "combined";
         }
 
         ActionType actionType = request.getCachedModelInfo().getModelActionInfo(actionName).getActionType();
