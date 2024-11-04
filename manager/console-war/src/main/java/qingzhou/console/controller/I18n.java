@@ -60,6 +60,7 @@ public class I18n implements Filter<SystemControllerContext> {
         addKeyI18n("page.gotit", new String[]{"知道了", "en:Okay, got it"});
         addKeyI18n("page.thememode", new String[]{"主题模式", "en:Theme Mode"});
         addKeyI18n("page.lang.switch.confirm", new String[]{"切换语言后，所有已打开的页面将会强制刷新，请确认已保存了相关工作状态", "en:After switching the language, all open pages will be forced to refresh, please confirm that the relevant work status has been saved"});
+        addKeyI18n("page.list.switch.confirm", new String[]{"是否更改", "en:Whether to change"});
         addKeyI18n("page.logout.confirm", new String[]{"确定要退出当前用户", "en:Are you sure to exit the current user"});
         addKeyI18n("page.download.log.tip", new String[]{"请选择需要下载的文件", "en:Please select the file to download"});
         addKeyI18n("page.download.checkall", new String[]{"全选", "en:Check all"});

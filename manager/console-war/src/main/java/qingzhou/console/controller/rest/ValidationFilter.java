@@ -420,7 +420,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 }
                 return null;
             } catch (Exception e) {
-                return new String[]{"validation_datetime", DeployerConstants.RANGE_DATETIME_FORMAT};
+                return new String[]{"validation_datetime", DeployerConstants.DATETIME_FORMAT};
             }
         }
     }
