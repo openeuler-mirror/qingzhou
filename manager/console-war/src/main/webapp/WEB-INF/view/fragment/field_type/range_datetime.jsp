@@ -31,7 +31,7 @@
                 %>
             },
             opens: 'left',                 // 选择器显示方向
-            drops: 'up',
+            drops: 'auto',
             timePicker: true,               // 启用时间选择
             timePickerIncrement: 1,         // 每次增量选择的分钟数
             timePicker24Hour: true,        // 24小时制

@@ -926,6 +926,8 @@ function bindEventForListPage() {
                         }
                         return initializeManager($(this), $(this).attr("href"));
                     });
+                    //已绑定操作，无需往下
+                    return;
                 }
                 if ($(this).attr("action-type")) {
                     // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
