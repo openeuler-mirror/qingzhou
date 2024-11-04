@@ -31,7 +31,15 @@
                         fieldValue = request.getParameter(fieldName);
                     }
                     if (fieldValue == null) {
-                        Map<String, String> defaultSearch = modelInfo.getDefaultSearch();
+                        Map<String, String> defaultSearch;
+                        if (modelInfo.isUseDynamicDefaultSearch()) {
+                            RequestImpl tmp = new RequestImpl(qzRequest);
+                            tmp.setActionName(qingzhou.api.type.List.ACTION_DEFAULT_SEARCH);
+                            ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
+                            defaultSearch = tmpResp.getDataMap();
+                        } else {
+                            defaultSearch = modelInfo.getDefaultSearch();
+                        }
                         if (defaultSearch != null) {
                             fieldValue = defaultSearch.get(fieldName);
                         }

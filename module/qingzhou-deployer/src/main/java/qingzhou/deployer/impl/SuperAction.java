@@ -1,37 +1,8 @@
 package qingzhou.deployer.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.Item;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Chart;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.Echo;
-import qingzhou.api.type.Export;
+import qingzhou.api.*;
 import qingzhou.api.type.List;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Option;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
-import qingzhou.api.type.Validate;
+import qingzhou.api.type.*;
 import qingzhou.api.type.export.ExportDataSupplier;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
@@ -41,6 +12,13 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 class SuperAction {
     static final java.util.List<ModelActionInfo> ALL_SUPER_ACTION_CACHE;
@@ -253,6 +231,18 @@ class SuperAction {
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) throws Exception {
         ((Delete) instance).deleteData(request.getId());
+    }
+
+    @ModelAction(
+            code = List.ACTION_DEFAULT_SEARCH, icon = "trash",
+            distribute = true,
+            action_type = ActionType.action_list,
+            name = {"默认检索", "en:Default Search"},
+            info = {"设置列表数据默认的检索条件。", "en:Set the default search conditions for list data."})
+    public void defaultSearch(Request request) {
+        Map<String, String> defaultSearch = ((List) instance).defaultSearch();
+        ResponseImpl response = (ResponseImpl) request.getResponse();
+        response.getDataMap().putAll(defaultSearch);
     }
 
     @ModelAction(

@@ -1,26 +1,5 @@
 package qingzhou.engine.impl.core;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.Service;
@@ -29,6 +8,17 @@ import qingzhou.engine.impl.Main;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
+
+import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class ModuleLoading implements Process {
     private final EngineContext engineContext;
@@ -122,7 +112,7 @@ public class ModuleLoading implements Process {
             for (ModuleInfo moduleInfo : moduleInfoList) {
                 Object c = qzJson.get(moduleInfo.getName());
                 if (c != null) {
-                    moduleInfo.moduleContext.config = new HashMap<>((Map<String, ?>) c);
+                    moduleInfo.moduleContext.config = new HashMap<>((Map<String, String>) c);
                 }
             }
         }

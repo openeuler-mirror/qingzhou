@@ -137,7 +137,8 @@ public class ValidationFilter implements Filter<RestContext> {
 
         // 处理空值情况
         if (context.parameterVal == null || context.parameterVal.isEmpty()) {
-            if (context.isUpdateAction) { // rest 编辑，很多值都不传，只传递要修改的值
+            if (context.parameterVal == null
+                    && context.isUpdateAction) { // rest 编辑，很多值都不传，只传递要修改的值
                 return null;
             }
 

@@ -1,9 +1,5 @@
 package qingzhou.registry.impl;
 
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -12,6 +8,10 @@ import qingzhou.engine.Service;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
+
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @Module
 public class Controller implements ModuleActivator {
@@ -34,8 +34,7 @@ public class Controller implements ModuleActivator {
         registry = new RegistryImpl(json, cryptoService);
         context.registerService(Registry.class, registry);
 
-        Map<String, String> config = (Map<String, String>) context.getConfig();
-
+        Map<String, String> config = context.getConfig();
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override

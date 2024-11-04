@@ -1,17 +1,11 @@
 package qingzhou.registry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 import qingzhou.engine.util.Utils;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ModelInfo {
     private String code;
@@ -31,6 +25,7 @@ public class ModelInfo {
     private ItemInfo[] groupInfos;
     private LinkedHashMap<String, ItemInfo[]> optionInfos;
     private Map<String, String> defaultSearch;
+    private boolean useDynamicDefaultSearch;
     private String[] staticOptionFields;
     private String[] dynamicOptionFields;
     private String[] headActions;
@@ -332,6 +327,14 @@ public class ModelInfo {
 
     public void setHeadActions(String[] headActions) {
         this.headActions = headActions;
+    }
+
+    public boolean isUseDynamicDefaultSearch() {
+        return useDynamicDefaultSearch;
+    }
+
+    public void setUseDynamicDefaultSearch(boolean useDynamicDefaultSearch) {
+        this.useDynamicDefaultSearch = useDynamicDefaultSearch;
     }
 
     @Override
