@@ -279,13 +279,13 @@ public class FileUtil {
         long tb = gb * 1024;
         long eb = tb * 1024;
         if (fileLength >= kb && fileLength < mb) {
-            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(kb)).setScale(1, BigDecimal.ROUND_UP) + "K";
+            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(kb), 1, RoundingMode.UP) + "K";
         } else if (fileLength >= mb && fileLength < gb) {
-            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(mb)).setScale(1, BigDecimal.ROUND_DOWN) + "M";
+            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(mb), 1, RoundingMode.DOWN) + "M";
         } else if (fileLength >= gb && fileLength < tb) {
-            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(gb)).setScale(2, BigDecimal.ROUND_DOWN) + "G";
+            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(gb), 2, RoundingMode.DOWN) + "G";
         } else if (fileLength >= tb && fileLength < eb) {
-            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(tb)).setScale(2, BigDecimal.ROUND_DOWN) + "T";
+            fileSize = new BigDecimal(fileLength).divide(new BigDecimal(tb), 2, RoundingMode.DOWN) + "T";
         }
         return fileSize;
     }
