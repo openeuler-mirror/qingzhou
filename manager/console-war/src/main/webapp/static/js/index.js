@@ -861,7 +861,7 @@ var bindingActions = {
             $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
                 if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
-                    customAction($(this).attr("href"), $(this).attr("custom-action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"));
+                    customAction($(this).attr("href"), $(this).attr("custom-action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"), $(this).attr("form-loaded-trigger"));
                 }
                 return false;
             });
@@ -1177,7 +1177,7 @@ function downloadFiles(fileListUrl, downloadUrl) {
     });
 }
 
-function customAction(actionUrl, customActionId, title, restrictedArea) {
+function customAction(actionUrl, customActionId, title, restrictedArea, formLoadedTrigger) {
     let html = $("div[custom-action-id='" + customActionId + "']", restrictedArea).html();
     html = "<div style='padding: 10px'><form id='" + customActionId + "' method='post' class='form-horizontal'>" + html + "</form><hr style='margin-top: 4px;'><div id='custom-action-result' ></div></div>";
     openLayer({
@@ -1206,6 +1206,9 @@ function customAction(actionUrl, customActionId, title, restrictedArea) {
                     }
                 });
             });
+            if (formLoadedTrigger === "true" || formLoadedTrigger === true) {
+                $(document.getElementById(customActionId)).submit();
+            }
         }
     });
 }
