@@ -73,15 +73,15 @@ public interface DeployerConstants {
     // 定义仪表盘字段数据标识，值类型为List<String[]>
     String DASHBOARD_FIELD_DATA = "data";
     // 定义仪表盘字段使用量标识，前端返回值使用
-    String DASHBOARD_RESPONSE_FIELD_USED = "used";
+    String DASHBOARD_FIELD_USED = "used";
     // 定义仪表盘字段最大值标识，前端返回值使用
-    String DASHBOARD_RESPONSE_FIELD_MAX = "max";
+    String DASHBOARD_FIELD_MAX = "max";
     // 定义仪表盘图表的键值数据标识，前端返回值使用
-    String DASHBOARD_CHARTS_BASIC_DATA = "basicData";
+    String DASHBOARD_FIELD_BASIC_DATA = "basicData";
     // 定义仪表盘图表的仪表盘数据标识，前端返回值使用
-    String DASHBOARD_CHARTS_GAUGE_DATA = "gaugeData";
+    String DASHBOARD_FIELD_GAUGE_DATA = "gaugeData";
     // 定义仪表盘图表的直方图数据标识，前端返回值使用
-    String DASHBOARD_CHARTS_HISTOGRAM_DATA = "histogramData";
+    String DASHBOARD_FIELD_HISTOGRAM_DATA = "histogramData";
     // 定义仪表盘图表的共享数据集数据标识，前端返回值使用
-    String DASHBOARD_CHARTS_SHARE_DATASET_DATA = "shareDatasetData";
+    String DASHBOARD_FIELD_SHARE_DATASET_DATA = "shareDatasetData";
 }

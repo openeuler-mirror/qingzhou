@@ -32,7 +32,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
             for (int i = 0; i < 4; i++) {
                 int used = random.nextInt(10);
                 int max = random.nextInt(10);
-                if(max < used){
+                if (max < used) {
                     max = used;
                 }
                 gauge.addData(new String[]{"实例" + i, "127.0.0.1", String.valueOf(used), String.valueOf(max)});
@@ -40,7 +40,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
             dataBuilder.add(gauge);
         }
 
-        for (int count = 0; count < 3; count++) {
+        for (int count = 0; count < 2; count++) {
             Histogram histogram = dataBuilder.build(Histogram.class);
             histogram.info("网络使用情况" + count).title("网络" + count);
             histogram.unit("MB");
@@ -50,13 +50,23 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
             for (int i = 0; i < 4; i++) {
                 int used = random.nextInt(100);
                 int max = random.nextInt(100);
-                if(max < used){
+                if (max < used) {
                     max = used;
                 }
                 histogram.addData(new String[]{"实例" + i, "127.0.0.1", String.valueOf(used), String.valueOf(max)});
             }
             dataBuilder.add(histogram);
         }
+
+        Histogram histogram = dataBuilder.build(Histogram.class);
+        histogram.info("网络使用情况" + 3).title("网络" + 3);
+        histogram.unit("MB");
+        histogram.statusKey("used");
+        histogram.fields(new String[]{"name", "ip", "used"});
+        for (int i = 0; i < 4; i++) {
+            histogram.addData(new String[]{"实例" + i, "127.0.0.1", String.valueOf(random.nextInt(100))});
+        }
+        dataBuilder.add(histogram);
 
         for (int count = 0; count < 2; count++) {
             ShareDataset shareDataset = dataBuilder.build(ShareDataset.class);

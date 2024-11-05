@@ -1,9 +1,30 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import qingzhou.api.ActionType;
+import qingzhou.api.Item;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Chart;
+import qingzhou.api.type.Combined;
+import qingzhou.api.type.Dashboard;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Echo;
+import qingzhou.api.type.Export;
 import qingzhou.api.type.List;
-import qingzhou.api.type.*;
-import qingzhou.deployer.*;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Show;
+import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
+import qingzhou.deployer.ChartDataBuilder;
+import qingzhou.deployer.CombinedDataBuilder;
+import qingzhou.deployer.DashboardDataBuilder;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.json.Json;
 import qingzhou.registry.AppInfo;
@@ -15,7 +36,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 class SuperAction {
@@ -539,19 +570,19 @@ class SuperAction {
 
         Map<String, String> result = ((ResponseImpl) request.getResponse()).getDataMap();
         if (!basicDataMap.isEmpty()) {
-            result.put(DeployerConstants.DASHBOARD_CHARTS_BASIC_DATA, json.toJson(basicDataMap));
+            result.put(DeployerConstants.DASHBOARD_FIELD_BASIC_DATA, json.toJson(basicDataMap));
         }
 
         if (!gaugeDataList.isEmpty()) {
-            result.put(DeployerConstants.DASHBOARD_CHARTS_GAUGE_DATA, json.toJson(gaugeDataList));
+            result.put(DeployerConstants.DASHBOARD_FIELD_GAUGE_DATA, json.toJson(gaugeDataList));
         }
 
         if (!histogramDataList.isEmpty()) {
-            result.put(DeployerConstants.DASHBOARD_CHARTS_HISTOGRAM_DATA, json.toJson(histogramDataList));
+            result.put(DeployerConstants.DASHBOARD_FIELD_HISTOGRAM_DATA, json.toJson(histogramDataList));
         }
 
         if (!shareDatasetDataList.isEmpty()) {
-            result.put(DeployerConstants.DASHBOARD_CHARTS_SHARE_DATASET_DATA, json.toJson(shareDatasetDataList));
+            result.put(DeployerConstants.DASHBOARD_FIELD_SHARE_DATASET_DATA, json.toJson(shareDatasetDataList));
         }
 
     }
@@ -569,17 +600,19 @@ class SuperAction {
                 maxIndex = i;
             }
         }
-        if (usedIndex == -1 || maxIndex == -1) {
+        if (usedIndex == -1) {
             return null;
         }
 
         double totalUsed = 0;
-        double totalMax = 0;
+        double totalMax = -1;
         for (String[] dataArray : dataList) {
             if (dataArray == null) continue;
             try {
                 totalUsed += Double.parseDouble(dataArray[usedIndex]);
-                totalMax += Double.parseDouble(dataArray[maxIndex]);
+                if (maxIndex != -1) {
+                    totalMax += Double.parseDouble(dataArray[maxIndex]);
+                }
             } catch (NumberFormatException ignored) {
             }
         }
@@ -587,8 +620,10 @@ class SuperAction {
         Map<String, String> result = new HashMap<>();
         result.put(DeployerConstants.DASHBOARD_FIELD_FIELDS, json.toJson(fields));
         result.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(dataList));
-        result.put(DeployerConstants.DASHBOARD_RESPONSE_FIELD_USED, String.valueOf(totalUsed));
-        result.put(DeployerConstants.DASHBOARD_RESPONSE_FIELD_MAX, String.valueOf(totalMax));
+        result.put(DeployerConstants.DASHBOARD_FIELD_USED, String.valueOf(totalUsed));
+        if (maxIndex != -1) {
+            result.put(DeployerConstants.DASHBOARD_FIELD_MAX, String.valueOf(totalMax));
+        }
         result.put(DeployerConstants.DASHBOARD_FIELD_UNIT, gauge.getUnit());
         result.put(DeployerConstants.DASHBOARD_FIELD_INFO, gauge.getInfo());
         result.put(DeployerConstants.DASHBOARD_FIELD_TITLE, gauge.getTitle());
