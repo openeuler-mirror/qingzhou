@@ -1199,6 +1199,8 @@ label.checkbox-label.checkbox-anim .checkbox-i {
 .list-table th, .list-table td {
     padding-left: 16px;
     word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
 }
 
 .list-table {

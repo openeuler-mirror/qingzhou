@@ -15,6 +15,7 @@ public class ModelFieldInfo {
     private transient Class<?> refModelClass;
     private String defaultValue;
     private boolean show;
+    private boolean hidden;
     private boolean create;
     private boolean edit;
     private String updateAction;
@@ -43,6 +44,14 @@ public class ModelFieldInfo {
     private String[] color;
     private String[] echoGroup;
     private boolean skipValidate;
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
 
     public boolean isMultiselect() {
         return multiselect;
