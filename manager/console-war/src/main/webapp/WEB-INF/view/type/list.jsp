@@ -3,120 +3,120 @@
 <%@ include file="../fragment/head.jsp" %>
 
 <%
-	String contextPath = request.getContextPath();
-	String idField = modelInfo.getIdField();
-	ModelFieldInfo idFieldFieldInfo = modelInfo.getModelFieldInfo(idField);
+    String contextPath = request.getContextPath();
+    String idField = modelInfo.getIdField();
+    ModelFieldInfo idFieldFieldInfo = modelInfo.getModelFieldInfo(idField);
 
-	String[] listFields = modelInfo.getFieldsToList();
+    String[] listFields = modelInfo.getFieldsToList();
 
-	if (modelInfo.isHideId()) {
-		List<String> temp = new ArrayList<>(Arrays.asList(listFields));
-		temp.remove(idField);
-		listFields = temp.toArray(new String[0]);
-	}
+    if (modelInfo.isHideId()) {
+        List<String> temp = new ArrayList<>(Arrays.asList(listFields));
+        temp.remove(idField);
+        listFields = temp.toArray(new String[0]);
+    }
 
-	String[] listActions = PageUtil.filterActions(modelInfo.getListActions(), qzApp, qzModel, currentUser);
-	String[] headActions = PageUtil.filterActions(modelInfo.getHeadActions(), qzApp, qzModel, currentUser);
-	String[] batchActions = PageUtil.filterActions(modelInfo.getBatchActions(), qzApp, qzModel, currentUser);
+    String[] listActions = PageUtil.filterActions(modelInfo.getListActions(), qzApp, qzModel, currentUser);
+    String[] headActions = PageUtil.filterActions(modelInfo.getHeadActions(), qzApp, qzModel, currentUser);
+    String[] batchActions = PageUtil.filterActions(modelInfo.getBatchActions(), qzApp, qzModel, currentUser);
 
-	int totalSize = qzResponse.getTotalSize();
-	int pageNum = qzResponse.getPageNum();
-	int pageSize = qzResponse.getPageSize();
+    int totalSize = qzResponse.getTotalSize();
+    int pageNum = qzResponse.getPageNum();
+    int pageSize = qzResponse.getPageSize();
 %>
 
 <div class="bodyDiv">
-	<%-- 面包屑分级导航 --%>
-	<%@ include file="../fragment/breadcrumb.jsp" %>
+    <%-- 面包屑分级导航 --%>
+    <%@ include file="../fragment/breadcrumb.jsp" %>
 
-	<%
-		String[] fieldsToListSearch = modelInfo.getFieldsToListSearch();
-		if (fieldsToListSearch.length > 0) {
-	%>
-	<%@ include file="../fragment/filter_form.jsp" %>
-	<hr style="margin-top: 4px;">
-	<%
-		}
-	%>
+    <%
+        String[] fieldsToListSearch = modelInfo.getFieldsToListSearch();
+        if (fieldsToListSearch.length > 0) {
+    %>
+    <%@ include file="../fragment/filter_form.jsp" %>
+    <hr style="margin-top: 4px;">
+    <%
+        }
+    %>
 
-	<div class="table-tools qz-list-operate">
-		<div class="tools-group">
-			<%
-				for (String actionName : headActions) {
-					ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-					String viewName = qzRequest.getView();
+    <div class="table-tools qz-list-operate">
+        <div class="tools-group">
+            <%
+                for (String actionName : headActions) {
+                    ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
+                    String viewName = qzRequest.getView();
 
-					if (action.getActionType() == ActionType.download) {
-						viewName = DownloadView.FLAG;
-					}
+                    if (action.getActionType() == ActionType.upload) {
+                        viewName = JsonView.FLAG;
+            %>
+            <a href="javascript:;"
+               onclick="$('#<%=actionName%>').click();" class="btn uploader-btn-browse">
+                <i class="icon icon-<%=action.getIcon()%>"></i>
+                <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
+            </a>
+            <input id="<%=actionName%>" type="file" style="display:none;"
+                   onchange="upload(this.files[0],
+                           '<%= PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName) %>','<%=actionName%>')">
+            <%
+                    continue;
+                }
 
-					String customActionId = "";
-					if (action.getActionType() == ActionType.sub_form) {
-						viewName = JsonView.FLAG;
-						customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "'";
-					}
+                if (action.getActionType() == ActionType.download) {
+                    viewName = DownloadView.FLAG;
+                }
 
-					if (action.getActionType() == ActionType.upload) {
-						viewName = JsonView.FLAG;
-					%>
-					<a href="javascript:;"
-					   onclick="$('#<%=actionName%>').click();" class="btn uploader-btn-browse">
-						<i class="icon icon-<%=action.getIcon()%>"></i>
-						<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
-					</a>
-					<input id="<%=actionName%>" type="file" style="display:none;"
-						   onchange="upload(this.files[0],
-									'<%= PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName) %>','<%=actionName%>')">
+                String customActionId = "";
+                if (action.getActionType() == ActionType.sub_form) {
+                    viewName = JsonView.FLAG;
+                    customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "'";
+                }
+            %>
+            <a class="btn" data-tip-arrow="top" <%=customActionId%> action-type="<%=action.getActionType()%>"
+               data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
+               href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
+            >
+                <i class="icon icon-<%=action.getIcon()%>"></i>
+                <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
+            </a>
+            <%
+                if (action.getActionType() == ActionType.sub_form) {
+                    Map<String, String> actionFormData = new LinkedHashMap<>();
+                    for (String fieldName : modelInfo.getFormFieldNames()) {
+                        if (Utils.contains(action.getFormFields(), fieldName)) {
+                            actionFormData.put(fieldName, "");
+                        }
+                    }
+            %>
+            <div style="display: none" <%=customActionId%>>
+                <%@ include file="../fragment/action_form.jsp" %>
+            </div>
+            <%
+                    }
+                }
 
-					<%
-						continue;
-					}%>
-			<a class="btn" data-tip-arrow="top" <%=customActionId%> action-type="<%=action.getActionType()%>"
-			   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
-			   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
-			>
-				<i class="icon icon-<%=action.getIcon()%>"></i>
-				<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
-			</a>
-			<%
-				if (action.getActionType() == ActionType.sub_form) {
-					Map<String, String> actionFormData = new LinkedHashMap<>();
-					for (String fieldName : modelInfo.getFormFieldNames()) {
-						if (Utils.contains(action.getFormFields(), fieldName)) {
-							actionFormData.put(fieldName, "");
-						}
-					}
-			%>
-			<div style="display: none" <%=customActionId%>>
-				<%@ include file="../fragment/action_form.jsp" %>
-			</div>
-			<%
-					}
-				}
+                String randomId = java.util.UUID.randomUUID().toString();
+                // 支持批量操作的按钮
+                for (String actionKey : batchActions) {
+                    ModelActionInfo actionInfo = modelInfo.getModelActionInfo(actionKey);
 
-				String randomId = java.util.UUID.randomUUID().toString();
-				// 支持批量操作的按钮
-				for (String actionKey : batchActions) {
-					ModelActionInfo actionInfo = modelInfo.getModelActionInfo(actionKey);
+                    String operationConfirm = String.format(I18n.getKeyI18n("page.operationConfirm"),
+                            I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
+                            I18n.getModelI18n(qzApp, "model." + qzModel));
 
-					String operationConfirm = String.format(I18n.getKeyI18n("page.operationConfirm"),
-							I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey),
-							I18n.getModelI18n(qzApp, "model." + qzModel));
-
-					String actionUrl = PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, actionKey);
-			%>
-			<a href="<%=actionUrl%>" model-icon="<%=modelInfo.getIcon()%>" disabled="disabled"
-			   action-type="<%=actionInfo.getActionType()%>"
-			   id-name="<%=idField%>" id-separa="<%=idFieldFieldInfo.getSeparator()%>"
-			   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionKey)%>'
-			   class="btn batch-ops" act-confirm='<%=operationConfirm%> ?' binding="<%=randomId%>">
-				<i class="icon icon-<%=actionInfo.getIcon()%>"></i>
-				<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey)%>
-			</a>
-			<%
-				}
-			%>
-		</div>
-	</div>
+                    String actionUrl = PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, actionKey);
+            %>
+            <a href="<%=actionUrl%>" model-icon="<%=modelInfo.getIcon()%>" disabled="disabled"
+               action-type="<%=actionInfo.getActionType()%>"
+               id-name="<%=idField%>" id-separa="<%=idFieldFieldInfo.getSeparator()%>"
+               data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionKey)%>'
+               class="btn batch-ops" act-confirm='<%=operationConfirm%> ?' binding="<%=randomId%>">
+                <i class="icon icon-<%=actionInfo.getIcon()%>"></i>
+                <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey)%>
+            </a>
+            <%
+                }
+            %>
+        </div>
+    </div>
 
 	<table class="qz-data-list table table-striped table-hover list-table responseScroll" binding="<%=randomId%>">
 		<thead>
@@ -238,26 +238,78 @@
 						if (hasShowAction) {
 				%>
 
-				<a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , Show.ACTION_SHOW + "/" + encodedItemId)%>'
-				   class="dataid qz-action-link tooltips"
-				   data-tip-arrow="top"
-				   data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
-				   style="color:#4C638F;">
-					<%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
-				</a>
-				<%
-					} else {
-						out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
-					}
-				} else if (!fieldInfo.getUpdateAction().isEmpty()) {
-					// 兼容表单组件 例：bool.jsp中使用的是fieldValue和fieldName
-					// 避免编译报错，放入这个循环里，是避免和 list.jsp 中 的同名变量冲突
-					java.util.List<String> passwordFields = new ArrayList<>();
-					String echoGroup = "";
-					String fieldValue = value;
-					java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(fieldInfo.getSeparator()));
-					String fieldName = field;
+                <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , Show.ACTION_SHOW + "/" + encodedItemId)%>'
+                   class="dataid qz-action-link tooltips"
+                   data-tip-arrow="top"
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
+                   style="color:#4C638F;">
+                    <%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
+                </a>
+                <%
+                    } else {
+                        out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
+                    }
+                } else if (!fieldInfo.getUpdateAction().isEmpty()) {
+                    // 兼容表单组件 例：bool.jsp中使用的是fieldValue和fieldName
+                    // 避免编译报错，放入这个循环里，是避免和 list.jsp 中 的同名变量冲突
+                    java.util.List<String> passwordFields = new ArrayList<>();
+                    String echoGroup = "";
+                    String fieldValue = value;
+                    java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(fieldInfo.getSeparator()));
+                    String fieldName = field;
 
+                    if (fieldInfo.getInputType() == InputType.bool) {
+                %>
+                <%@ include file="../fragment/field_type/bool.jsp" %>
+                <%
+                } else if (ValidationFilter.isSingleSelect(fieldInfo)) {
+                %>
+                <%@ include file="../fragment/field_type/select.jsp" %>
+                <%
+                } else if (ValidationFilter.isMultipleSelect(fieldInfo)) {
+                %>
+                <%@ include file="../fragment/field_type/multiselect.jsp" %>
+                <%
+                    } else {
+                        out.print("<div class=\"input-class\"> <input type=\"text\" name=\"" + fieldName + "\" value=\"" + fieldValue + "\" class=\"form-control\"></div>");
+                    }
+                } else {
+                    String refModelName = null;
+                    String refFieldName = null;
+                    String refValue;
+                    if (Utils.notBlank(fieldInfo.getLinkList())) {
+                        String[] split = fieldInfo.getLinkList().split("\\.");
+                        refModelName = split[0];
+                        refFieldName = split[1];
+                    } else if (Utils.notBlank(fieldInfo.getRefModel())) {
+                        refModelName = fieldInfo.getRefModel();
+                        refFieldName = SystemController.getModelInfo(qzApp, refModelName).getIdField();
+                    }
+                    if (Utils.notBlank(value) && refModelName != null && refFieldName != null) {
+                        ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
+                        if (Utils.notBlank(fieldInfo.getLinkList())) {
+                            //TE: linkList 传 id 的值
+                            refValue = modelData[modelInfo.getFieldIndex(idField)];
+                        } else {
+                            //应用跳转到实例：refmodel 传点击字段的值
+                            refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
+                        }
+                %>
+                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
+                   class="dataid qz-action-link tooltips"
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
+                   style="color:#4C638F;" onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
+                    <%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
+                </a>
+                <%
+                        } else {
+                            out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
+                        }
+                    }
+                %>
+            </td>
+            <%
+                }
 					if (fieldInfo.getInputType() == InputType.bool) {
 				%>
 				<%@ include file="../fragment/field_type/bool.jsp" %>
@@ -311,93 +363,93 @@
 			<%
 				}
 
-				if (listActions.length > 0) {
-			%>
-			<td>
-				<%
-					for (String actionName : listActions) {
-						ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
-						boolean showAction = true;
-						if (Utils.notBlank(action.getShow())) {
-							showAction = SecurityController.checkRule(action.getShow(), fieldName -> modelData[modelInfo.getFieldIndex(fieldName)]);
-						}
-						if (!showAction) continue;
+                if (listActions.length > 0) {
+            %>
+            <td>
+                <%
+                    for (String actionName : listActions) {
+                        ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
+                        boolean showAction = true;
+                        if (Utils.notBlank(action.getShow())) {
+                            showAction = SecurityController.checkRule(action.getShow(), fieldName -> modelData[modelInfo.getFieldIndex(fieldName)]);
+                        }
+                        if (!showAction) continue;
 
-						String customActionId = "";
-						if (action.getActionType() == ActionType.sub_form) {
-							customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId + "'";
-						}
+                        String customActionId = "";
+                        if (action.getActionType() == ActionType.sub_form) {
+                            customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId + "'";
+                        }
 
-						boolean useJsonUri = action.getActionType() == ActionType.sub_form
-								|| action.getActionType() == ActionType.action_list
-								|| action.getActionType() == ActionType.download;
-				%>
-				<a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, useJsonUri ? JsonView.FLAG : HtmlView.FLAG, actionName + "/" + encodedItemId)%>"
-				   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
-				   data-tip-arrow="top" action-id="<%=qzApp + "-" + qzModel + "-" + actionName%>"
-				   class="qz-action-link tooltips" model-icon="<%=modelInfo.getIcon()%>"
-				   data-id="<%=(qzModel + "|" + encodedItemId)%>" action-type="<%=action.getActionType()%>"
-				   data-name="<%=originUnEncodedId%>"
-						<%
-							if (action.getActionType() == ActionType.download) {
-								out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
-							}
+                        boolean useJsonUri = action.getActionType() == ActionType.sub_form
+                                || action.getActionType() == ActionType.action_list
+                                || action.getActionType() == ActionType.download;
+                %>
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, useJsonUri ? JsonView.FLAG : HtmlView.FLAG, actionName + "/" + encodedItemId)%>"
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
+                   data-tip-arrow="top" action-id="<%=qzApp + "-" + qzModel + "-" + actionName%>"
+                   class="qz-action-link tooltips" model-icon="<%=modelInfo.getIcon()%>"
+                   data-id="<%=(qzModel + "|" + encodedItemId)%>" action-type="<%=action.getActionType()%>"
+                   data-name="<%=originUnEncodedId%>"
+                        <%
+                            if (action.getActionType() == ActionType.download) {
+                                out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
+                            }
 
-							if (Utils.notBlank(customActionId)) {
-								out.print(customActionId);
-								out.print(" form-loaded-trigger=" + action.isFormLoadedTrigger());
-							}
+                            if (Utils.notBlank(customActionId)) {
+                                out.print(customActionId);
+                                out.print(" form-loaded-trigger=" + action.isFormLoadedTrigger());
+                            }
 
-							if (action.getActionType() == ActionType.sub_form) {
-								out.print(" act-confirm='"
-										+ String.format(I18n.getKeyI18n("page.operationConfirm"),
-										I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName),
-										I18n.getModelI18n(qzApp, "model." + qzModel))
-										+ " " + originUnEncodedId + " ?"
-										+ "'");
-							}
-						%>
-				>
-					<i class="icon icon-<%=action.getIcon()%>"></i>
-					<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
-				</a>
-				<%
-					if (action.getActionType() == ActionType.sub_form) {
-						Map<String, String> actionFormData = new LinkedHashMap<>();
-						for (String fieldName : modelInfo.getFormFieldNames()) {
-							if (Utils.contains(action.getFormFields(), fieldName)) {
-								actionFormData.put(fieldName, modelData[modelInfo.getFieldIndex(fieldName)]);
-							}
-						}
-				%>
-				<div style="display: none"
-					 custom-action-id="popup-<%=qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId%>">
-					<%@ include file="../fragment/action_form.jsp" %>
-				</div>
-				<%
-						}
-					}
-				%>
-			</td>
-			<%
-				}
-			%>
-		</tr>
-		<%
-				}
-			}
-		%>
-		</tbody>
-	</table>
+                            if (action.getActionType() == ActionType.sub_form) {
+                                out.print(" act-confirm='"
+                                        + String.format(I18n.getKeyI18n("page.operationConfirm"),
+                                        I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName),
+                                        I18n.getModelI18n(qzApp, "model." + qzModel))
+                                        + " " + originUnEncodedId + " ?"
+                                        + "'");
+                            }
+                        %>
+                >
+                    <i class="icon icon-<%=action.getIcon()%>"></i>
+                    <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
+                </a>
+                <%
+                    if (action.getActionType() == ActionType.sub_form) {
+                        Map<String, String> actionFormData = new LinkedHashMap<>();
+                        for (String fieldName : modelInfo.getFormFieldNames()) {
+                            if (Utils.contains(action.getFormFields(), fieldName)) {
+                                actionFormData.put(fieldName, modelData[modelInfo.getFieldIndex(fieldName)]);
+                            }
+                        }
+                %>
+                <div style="display: none"
+                     custom-action-id="popup-<%=qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId%>">
+                    <%@ include file="../fragment/action_form.jsp" %>
+                </div>
+                <%
+                        }
+                    }
+                %>
+            </td>
+            <%
+                }
+            %>
+        </tr>
+        <%
+                }
+            }
+        %>
+        </tbody>
+    </table>
 
-	<div style="text-align: center; <%=(totalSize < 1) ? "display:none;" : ""%>">
-		<ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
-			recPerPage="<%=pageSize%>"
-			data-rec-total="<%=totalSize%>"
-			partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
-			style="margin-left:33%;color:black;margin-bottom:6px;">
-		</ul>
-	</div>
+    <div style="text-align: center; <%=(totalSize < 1) ? "display:none;" : ""%>">
+        <ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
+            recPerPage="<%=pageSize%>"
+            data-rec-total="<%=totalSize%>"
+            partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST + "?markForAddCsrf")%>&<%="pageNum"%>="
+            style="margin-left:33%;color:black;margin-bottom:6px;">
+        </ul>
+    </div>
 </div>
 
 <script>
@@ -443,20 +495,20 @@
     });
 
     function upload(file, url, id) {
-		const formData = new FormData();
-		formData.append(id, file);
-		$.ajax({
-			url: url,
-			type: 'POST',
-			data: formData,
-			processData: false,
-			contentType: false,
-			success: function(data) {
-				showMsg(data.msg, data.msg_level);
-			},
-			error: function(e) {
-				handleError(e);
-			}
-		});
-	}
+        const formData = new FormData();
+        formData.append(id, file);
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                showMsg(data.msg, data.msg_level);
+            },
+            error: function (e) {
+                handleError(e);
+            }
+        });
+    }
 </script>

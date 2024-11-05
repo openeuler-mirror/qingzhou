@@ -1,10 +1,17 @@
 package qingzhou.deployer;
 
-import java.util.Properties;
+import qingzhou.engine.ServiceInfo;
+
 import javax.management.NotificationListener;
 import javax.management.remote.JMXAuthenticator;
+import java.util.Properties;
 
-public interface JmxServiceAdapter {
+public interface JmxServiceAdapter extends ServiceInfo {
+    @Override
+    default boolean isAppShared() {
+        return false;
+    }
+
     void registerJMXAuthenticator(JMXAuthenticator authenticator);
 
     void registerJmxInvoker(JmxInvoker jmxInvoker);

@@ -1,25 +1,16 @@
 package qingzhou.command.instance;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import qingzhou.command.CommandUtil;
+
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import qingzhou.command.CommandUtil;
 
 class ConfigTool {
     private final File instanceDir;
@@ -76,7 +67,8 @@ class ConfigTool {
 
     private Map parseFileConfig() throws Exception {
         URL jsonUrl = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "module", "qingzhou-json.jar").toUri().toURL();
-        try (URLClassLoader classLoader = new URLClassLoader(new URL[]{jsonUrl})) {
+        URL engineUrl = Paths.get(CommandUtil.getLibDir().getAbsolutePath(), "engine", "qingzhou-engine.jar").toUri().toURL();
+        try (URLClassLoader classLoader = new URLClassLoader(new URL[]{engineUrl, jsonUrl})) {
             Class<?> loadedClass = classLoader.loadClass("qingzhou.json.impl.JsonImpl");
             Object instance = loadedClass.newInstance();
             Method fromJson = loadedClass.getMethod("fromJson", Reader.class, Class.class, String[].class);

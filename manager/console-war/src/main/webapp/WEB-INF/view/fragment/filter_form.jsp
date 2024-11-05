@@ -52,11 +52,11 @@
                 %>
                 <%@ include file="field_type/multiselect.jsp" %>
                 <%
-                } else if(ValidationFilter.isSingleSelect(searchFieldInfo)){
+                } else if (ValidationFilter.isSingleSelect(searchFieldInfo)) {
                 %>
                 <%@ include file="field_type/select.jsp" %>
                 <%
-                }else if (searchFieldInfo.getInputType() == InputType.textarea) {
+                } else if (searchFieldInfo.getInputType() == InputType.textarea) {
                 %>
                 <textarea name="<%=fieldName%>" value='<%=fieldValue%>' class="form-control"
                           rows="2"

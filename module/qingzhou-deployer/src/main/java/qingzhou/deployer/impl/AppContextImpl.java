@@ -1,19 +1,14 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
-import qingzhou.http.Http;
-import qingzhou.json.Json;
-import qingzhou.logger.Logger;
-import qingzhou.qr.QrGenerator;
 import qingzhou.registry.MenuInfo;
-import qingzhou.servlet.ServletService;
-import qingzhou.ssh.SSHService;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 class AppContextImpl implements AppContext {
     private final ModuleContext moduleContext;
@@ -82,19 +77,16 @@ class AppContextImpl implements AppContext {
 
     @Override
     public <T> T getService(Class<T> clazz) {
-        return getServiceTypes().contains(clazz) ? moduleContext.getService(clazz) : null;
+        if (getServiceTypes().contains(clazz)) { // 安全拦截，防止调用到系统私有服务
+            return moduleContext.getService(clazz);
+        } else {
+            throw new IllegalArgumentException("No service available for " + clazz);
+        }
     }
 
     @Override
     public Collection<Class<?>> getServiceTypes() {
-        Set<Class<?>> types = new HashSet<>();
-        Class<?>[] scopedTypes = {CryptoService.class, Http.class, Json.class, Logger.class, QrGenerator.class, ServletService.class, SSHService.class};
-        for (Class<?> serviceType : scopedTypes) {
-            if (moduleContext.getService(serviceType) != null) {
-                types.add(serviceType);
-            }
-        }
-        return types;
+        return moduleContext.allAppSharedServices();
     }
 
     @Override

@@ -1,6 +1,13 @@
 package qingzhou.crypto;
 
-public interface CryptoService {
+import qingzhou.engine.ServiceInfo;
+
+public interface CryptoService extends ServiceInfo {
+    @Override
+    default String getDescription() {
+        return "Provide practical tools related to encryption and decryption.";
+    }
+
     String generateKey();
 
     Cipher getCipher(String key);
