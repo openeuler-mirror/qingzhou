@@ -36,10 +36,29 @@ public class ModelFieldInfo {
     private String[] skip;
     private String pattern;
     private boolean readonly;
+
+    private boolean multiselect;
+    private boolean readonlyStyle;
     private String linkList;
     private String[] color;
     private String[] echoGroup;
     private boolean skipValidate;
+
+    public boolean isMultiselect() {
+        return multiselect;
+    }
+
+    public void setMultiselect(boolean multiselect) {
+        this.multiselect = multiselect;
+    }
+
+    public boolean isReadonlyStyle() {
+        return readonlyStyle;
+    }
+
+    public void setReadonlyStyle(boolean readonlyStyle) {
+        this.readonlyStyle = readonlyStyle;
+    }
 
     public String[] getColor() {
         return color;
