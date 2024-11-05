@@ -119,6 +119,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>qingzhou-uml</artifactId>
+            <version>${project.version}</version>
+            <classifier>jar-with-dependencies</classifier>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-servlet</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -11,13 +11,13 @@
         if (!dataList.isEmpty()) {
             for (Combined.CombinedData combinedData : dataList) {
                 if (combinedData instanceof Combined.ShowData) {
-                    DataBuilderImpl.ShowDataImpl showData = (DataBuilderImpl.ShowDataImpl) combinedData;
+                    CombinedDataBuilder.ShowDataImpl showData = (CombinedDataBuilder.ShowDataImpl) combinedData;
                     Map<String, String> infoData = showData.getShowData();
     %>
     <%@ include file="../fragment/info.jsp" %>
     <%
     } else if (combinedData instanceof Combined.UmlData) {
-        DataBuilderImpl.UmlDataImpl umlDataImpl = (DataBuilderImpl.UmlDataImpl) combinedData;
+        CombinedDataBuilder.UmlDataImpl umlDataImpl = (CombinedDataBuilder.UmlDataImpl) combinedData;
         hasImg = true;
         imgTitle = umlDataImpl.getHeader();
     %>
@@ -26,7 +26,7 @@
     <%
         }
         if (combinedData instanceof Combined.ListData) {
-            DataBuilderImpl.ListDataImpl listData = (DataBuilderImpl.ListDataImpl) combinedData;
+            CombinedDataBuilder.ListDataImpl listData = (CombinedDataBuilder.ListDataImpl) combinedData;
             String[] fieldNames = listData.getFieldNames();
             List<String[]> fieldValues = listData.getFieldValues();
 

@@ -1,16 +1,11 @@
 package qingzhou.json.impl;
 
+import com.google.gson.*;
+import qingzhou.json.Json;
+
 import java.io.Reader;
 import java.util.Iterator;
 import java.util.Properties;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import qingzhou.json.Json;
 
 public class JsonImpl implements Json {
     @Override
@@ -93,6 +88,7 @@ public class JsonImpl implements Json {
         for (int i = 0; i < position.length; i++) {
             String path = position[i];
             JsonElement jsonElement = jsonObject.get(path);
+            if (jsonElement == null) return null;
             if (jsonElement.isJsonArray()) {
                 if (i != position.length - 1) { // 数组类型仅限位于最后一层
                     throw new IllegalStateException();

@@ -2,12 +2,13 @@ package qingzhou.deployer;
 
 import qingzhou.api.type.Combined;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DataBuilderImpl implements Combined.DataBuilder {
+public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
     private final List<Combined.CombinedData> dataList = new ArrayList<>();
 
     @Override
@@ -27,7 +28,7 @@ public class DataBuilderImpl implements Combined.DataBuilder {
 
     @Override
     public void add(Combined.CombinedData data) {
-            this.dataList.add(data);
+        this.dataList.add(data);
     }
 
     public List<Combined.CombinedData> getDataList() {
@@ -108,5 +109,4 @@ public class DataBuilderImpl implements Combined.DataBuilder {
             return fieldValues;
         }
     }
-
 }

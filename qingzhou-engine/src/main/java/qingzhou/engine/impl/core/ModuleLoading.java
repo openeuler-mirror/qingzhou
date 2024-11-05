@@ -52,8 +52,11 @@ public class ModuleLoading implements Process {
         @Override
         public void exec() {
             File moduleDir = new File(engineContext.getLibDir(), "module");
-            File[] moduleFiles = moduleDir.listFiles();
-            if (moduleFiles == null) throw new IllegalStateException("Module Directory Not Found: " + moduleDir);
+            List<File> moduleFiles = new ArrayList<>(Arrays.asList(Objects.requireNonNull(moduleDir.listFiles())));
+            File[] pluginFiles = new File(engineContext.getLibDir(), "plugins").listFiles();
+            if (pluginFiles != null) {
+                moduleFiles.addAll(Arrays.asList(pluginFiles));
+            }
 
             for (File moduleFile : moduleFiles) {
                 String fileName = moduleFile.getName();
