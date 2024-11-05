@@ -253,7 +253,13 @@
 					}
 					if (Utils.notBlank(value) && refModelName != null && refFieldName != null) {
 						ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
-						refValue = modelData[modelInfo.getFieldIndex(idField)].replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
+						if (Utils.notBlank(fieldInfo.getLinkList())){
+							//linkList传id的值
+							refValue = modelData[modelInfo.getFieldIndex(idField)];
+						}else{
+							//refmodel传点击的值
+							refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
+						}
 				%>
 				<a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
 				   class="dataid qz-action-link tooltips"

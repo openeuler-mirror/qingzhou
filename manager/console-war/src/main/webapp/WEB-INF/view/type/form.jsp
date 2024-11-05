@@ -108,7 +108,14 @@
 								   value='<%=fieldValue%>' <%=echoGroup%>
 								   class="form-control"/>
 							<%
-							} else {
+							} else if (modelField.isReadonlyStyle()){
+							%>
+							<input type="text" readonly name="<%=fieldName%>"
+								   style="cursor: not-allowed;border: 1px solid #DCDCDC;background-color: #e5e5e5;"
+								   value='<%=fieldValue%>' <%=echoGroup%>
+								   class="form-control"/>
+							<%
+							}else {
 							%>
 							<%@ include file="../fragment/field_type.jsp" %>
 							<%
