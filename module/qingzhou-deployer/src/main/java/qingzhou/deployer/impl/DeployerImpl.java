@@ -406,6 +406,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
             modelFieldInfo.setReadonly(modelField.readonly());
+            modelFieldInfo.setMultiselect(modelField.multiselect());
             modelFieldInfo.setReadonlyStyle(modelField.readonly_style());
             modelFieldInfo.setForbid(modelField.forbid());
             modelFieldInfo.setSkip(modelField.skip());

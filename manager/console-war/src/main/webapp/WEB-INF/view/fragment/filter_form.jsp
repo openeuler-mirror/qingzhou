@@ -23,7 +23,7 @@
                 <%
                     String echoGroup = "";
                     String fieldValue = null;
-                    if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo)) {
+                    if (ValidationFilter.isMultipleSelect(searchFieldInfo) || (ValidationFilter.isSingleSelect(searchFieldInfo) && searchFieldInfo.isMultiselect())) {
                         if (request.getParameterValues(fieldName) != null) {
                             fieldValue = String.join(searchFieldInfo.getSeparator(), request.getParameterValues(fieldName));
                         }
@@ -47,12 +47,16 @@
                     if (fieldValue == null) {
                         fieldValue = "";
                     }
-                    if (ValidationFilter.filterPageIsMultipleSelect(searchFieldInfo)) {
+                    if (ValidationFilter.isMultipleSelect(searchFieldInfo) || (ValidationFilter.isSingleSelect(searchFieldInfo) && searchFieldInfo.isMultiselect())) {
                         java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
                 %>
                 <%@ include file="field_type/multiselect.jsp" %>
                 <%
-                } else if (searchFieldInfo.getInputType() == InputType.textarea) {
+                } else if(ValidationFilter.isSingleSelect(searchFieldInfo)){
+                %>
+                <%@ include file="field_type/select.jsp" %>
+                <%
+                }else if (searchFieldInfo.getInputType() == InputType.textarea) {
                 %>
                 <textarea name="<%=fieldName%>" value='<%=fieldValue%>' class="form-control"
                           rows="2"

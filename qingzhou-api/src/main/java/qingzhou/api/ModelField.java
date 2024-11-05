@@ -79,6 +79,8 @@ public @interface ModelField {
     boolean readonly() default false; // 表单元素级联控制只读的事件绑定 不会传值 样式为无样式
     boolean readonly_style() default false; // 在form页面显示为无样式 会传值 样式为readonly
 
+    boolean multiselect() default false;// 当search为ture和本值为true的时候，显示为多选下拉搜索
+
     boolean show() default true; // 是否显示在列表中。
 
     boolean list() default false; // 是否显示在列表中。
