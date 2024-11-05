@@ -18,6 +18,7 @@ import qingzhou.qr.QrGenerator;
 import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletService;
 import qingzhou.ssh.SSHService;
+import qingzhou.uml.Uml;
 
 import java.io.File;
 import java.util.Arrays;
@@ -51,6 +52,8 @@ public class Controller implements ModuleActivator {
     @Service
     private CryptoService cryptoService;
 
+    @Service
+    private Uml uml;
     private DeployerImpl deployer;
 
     @Override

@@ -60,7 +60,9 @@ public class TransactionCombination extends AddModelBase implements Combined {
 
         UmlData umlData = dataBuilder.buildUmlData();
         umlData.model("TransactionCombination").header("事务信息图片");
-        umlData.setUmlData("qqqqqqwwwwwwwwwxxxxxxxsssssssss");
+        umlData.setUmlData("@startuml\n" +
+                "Alice -> Bob: test\n" +
+                "@enduml");
         dataBuilder.add(umlData);
 
         ListData listData = dataBuilder.buildListData();

@@ -309,58 +309,6 @@
                 %>
             </td>
             <%
-                }
-					if (fieldInfo.getInputType() == InputType.bool) {
-				%>
-				<%@ include file="../fragment/field_type/bool.jsp" %>
-				<%
-				} else if (ValidationFilter.isSingleSelect(fieldInfo)) {
-				%>
-				<%@ include file="../fragment/field_type/select.jsp" %>
-				<%
-				} else if (ValidationFilter.isMultipleSelect(fieldInfo)) {
-				%>
-				<%@ include file="../fragment/field_type/multiselect.jsp" %>
-				<%
-					} else {
-						out.print("<div class=\"input-class\"> <input type=\"text\" name=\"" + fieldName + "\" value=\"" + fieldValue + "\" class=\"form-control\"></div>");
-					}
-				} else {
-					String refModelName = null;
-					String refFieldName = null;
-					String refValue;
-					if (Utils.notBlank(fieldInfo.getLinkList())) {
-						String[] split = fieldInfo.getLinkList().split("\\.");
-						refModelName = split[0];
-						refFieldName = split[1];
-					} else if (Utils.notBlank(fieldInfo.getRefModel())) {
-						refModelName = fieldInfo.getRefModel();
-						refFieldName = SystemController.getModelInfo(qzApp, refModelName).getIdField();
-					}
-					if (Utils.notBlank(value) && refModelName != null && refFieldName != null) {
-						ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
-						if (Utils.notBlank(fieldInfo.getLinkList())){
-							//linkList传refFieldName的值
-							refValue = modelData[modelInfo.getFieldIndex(refFieldName)];
-						}else{
-							//refmodel传点击的值
-							refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
-						}
-				%>
-				<a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
-				   class="dataid qz-action-link tooltips"
-				   data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
-				   style="color:#4C638F;" onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
-					<%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
-				</a>
-				<%
-						} else {
-							out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
-						}
-					}
-				%>
-			</td>
-			<%
 				}
 
                 if (listActions.length > 0) {

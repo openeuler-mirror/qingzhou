@@ -19,6 +19,8 @@ import qingzhou.api.type.Option;
 import qingzhou.api.type.Show;
 import qingzhou.api.type.Update;
 import qingzhou.api.type.Validate;
+import qingzhou.crypto.Base64Coder;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ChartDataBuilder;
 import qingzhou.deployer.CombinedDataBuilder;
 import qingzhou.deployer.DashboardDataBuilder;
@@ -26,11 +28,13 @@ import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
+import qingzhou.uml.Uml;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,6 +90,18 @@ class SuperAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         CombinedDataBuilder dataBuilder = new CombinedDataBuilder();
         ((Combined) instance).combinedData(request.getId(), dataBuilder);
+        for (Combined.CombinedData combinedData : dataBuilder.getDataList()) {
+            if (combinedData instanceof Combined.UmlData) {
+                CombinedDataBuilder.UmlDataImpl umlData = (CombinedDataBuilder.UmlDataImpl) combinedData;
+                String umlDataStr = umlData.getUmlData();
+                if (Utils.notBlank(umlDataStr)) {
+                    Uml service = app.getAppContext().getService(Uml.class);
+                    Base64Coder base64Coder = app.getAppContext().getService(CryptoService.class).getBase64Coder();
+                    umlData.setUmlData("data:image/png;base64,"+base64Coder.encode(service.toSvg(umlDataStr)));
+                    break;
+                }
+            }
+        }
         response.useCustomizedResponse(dataBuilder);
     }
 
