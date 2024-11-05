@@ -141,22 +141,34 @@
 				if (listActions.length > 0) {
 					otherTh += 1;
 				}
+                //隐藏的不计算宽度占比
+                int hiddenCount = 0;
+                for (String field : listFields) {
+                    ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
+                    if (fieldInfo.isHidden()) {
+                        hiddenCount += 1;
+                    }
+                }
 				for (String field : listFields) {
 					ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
+					String needHidden = "";
+					if (fieldInfo.isHidden()){
+						needHidden = "display:none";
+					}
 					int width;
 					if (fieldInfo.getWidthPercent() > 0) {
 						width = fieldInfo.getWidthPercent();
 					} else {
-						width = 100 / (listFields.length + otherTh);
+						width = 100 / (listFields.length + otherTh - hiddenCount);
 					}
 			%>
 			<%-- 注意这个width末尾的 % 不能删除 %>% 不是手误 --%>
-			<th style="width: <%=width%>%"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
+			<th style="width: <%=width%>%;<%=needHidden%>"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
 			</th>
 			<%
 				}
 				if (listActions.length > 0) {
-					out.print("<th>" + I18n.getKeyI18n("page.action") + "</th>");
+					out.print("<th style=\"width:"+ (100 / (listFields.length + otherTh - hiddenCount)) +"%\">" + I18n.getKeyI18n("page.action") + "</th>");
 				}
 			%>
 		</tr>
@@ -193,6 +205,10 @@
 				}
 				for (String field : listFields) {
 					ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
+					String needHidden = "";
+					if (fieldInfo.isHidden()){
+						needHidden = "display:none";
+					}
 					String value = modelData[modelInfo.getFieldIndex(field)];
 					if (value == null) {
 						value = "";
@@ -201,11 +217,11 @@
 					if (!fieldInfo.getUpdateAction().isEmpty()) {
 						fieldUpdateAction = fieldInfo.getUpdateAction();
 			%>
-			<td action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG , fieldUpdateAction + "/" + encodedItemId)%>">
+			<td style="<%=needHidden%>" action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG , fieldUpdateAction + "/" + encodedItemId)%>">
 					<%
                     }else{
             %>
-			<td>
+			<td style="<%=needHidden%>">
 				<%
 					}
 				%>
@@ -272,8 +288,8 @@
 					if (Utils.notBlank(value) && refModelName != null && refFieldName != null) {
 						ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
 						if (Utils.notBlank(fieldInfo.getLinkList())){
-							//linkList传id的值
-							refValue = modelData[modelInfo.getFieldIndex(idField)];
+							//linkList传refFieldName的值
+							refValue = modelData[modelInfo.getFieldIndex(refFieldName)];
 						}else{
 							//refmodel传点击的值
 							refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
