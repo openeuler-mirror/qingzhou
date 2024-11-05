@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%-- 左侧菜单 --%>
-<aside class="main-sidebar">
+<aside class="main-sidebar" bindingId="<%=randBindingId%>">
 	<div class="sidebar sidebar-scroll">
 		<ul class="sidebar-menu" data-widget="tree">
 			<%
