@@ -208,7 +208,10 @@
 				%>
 
 				<a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , Show.ACTION_SHOW + "/" + encodedItemId)%>'
-				   class="dataid qz-action-link tooltips" style="color:#4C638F;">
+				   class="dataid qz-action-link tooltips"
+				   data-tip-arrow="top"
+				   data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
+				   style="color:#4C638F;">
 					<%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
 				</a>
 				<%
