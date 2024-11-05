@@ -6,22 +6,22 @@ public interface Dashboard {
     void dashboardData(String id, DataBuilder builder);
 
     interface DataBuilder {
-        <T> T build(Class<? extends DataType> dataType);
+        <T> T build(Class<? extends DashboardData> dataType);
 
-        void add(DataType dataType);
+        void add(DashboardData dashboardData);
     }
 
-    interface DataType {
-        DataType title(String title);
+    interface DashboardData {
+        DashboardData title(String title);
 
-        DataType info(String info);
+        DashboardData info(String info);
     }
 
-    interface Basic extends DataType {
+    interface Basic extends DashboardData {
         Basic put(String key, String value);
     }
 
-    interface Gauge extends DataType {
+    interface Gauge extends DashboardData {
         Gauge fields(String[] fields);
 
         Gauge addData(String[] data);

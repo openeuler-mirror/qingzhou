@@ -35,7 +35,7 @@ public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
         return dataList;
     }
 
-    public static abstract class CombinedDataImpl<T> implements Combined.CombinedData, Serializable {
+    public static abstract class CombinedDataImpl implements Combined.CombinedData, Serializable {
         private String header;
         private String model;
 
@@ -61,7 +61,7 @@ public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
         }
     }
 
-    public static class ShowDataImpl extends CombinedDataImpl<Map<String, String>> implements Combined.ShowData {
+    public static class ShowDataImpl extends CombinedDataImpl implements Combined.ShowData {
         private final Map<String, String> showData = new HashMap<>();
 
         @Override
@@ -74,7 +74,7 @@ public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
         }
     }
 
-    public static class UmlDataImpl extends CombinedDataImpl<Map<String, String>> implements Combined.UmlData {
+    public static class UmlDataImpl extends CombinedDataImpl implements Combined.UmlData {
         private String umlData;
 
         @Override
@@ -87,7 +87,7 @@ public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
         }
     }
 
-    public static class ListDataImpl extends CombinedDataImpl<List<String[]>> implements Combined.ListData {
+    public static class ListDataImpl extends CombinedDataImpl implements Combined.ListData {
         private String[] fieldNames;
         private final List<String[]> fieldValues = new ArrayList<>();
 
