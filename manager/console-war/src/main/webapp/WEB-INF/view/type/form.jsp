@@ -60,6 +60,10 @@
 							String fieldName = e.getKey();
 							ModelFieldInfo modelField = e.getValue();
 
+							String needHidden = "";
+							if (modelField.isHidden()){
+								needHidden = "display:none";
+							}
 							if (isEdit) {
 								if (!modelField.isEdit()) continue;
 							} else {
@@ -85,7 +89,7 @@
 							}
 							java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
 					%>
-					<div class="form-group" id="form-item-<%=fieldName%>">
+					<div style="<%=needHidden%>" class="form-group" id="form-item-<%=fieldName%>">
 						<label for="<%=fieldName%>" class="col-sm-4">
 							<%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
 							<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>

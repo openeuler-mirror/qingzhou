@@ -83,6 +83,8 @@ public @interface ModelField {
 
     boolean show() default true; // 是否显示在列表中。
 
+    boolean hidden() default false; // 字段是否隐藏
+
     boolean list() default false; // 是否显示在列表中。
 
     boolean search() default false; // 是否支持列头搜索

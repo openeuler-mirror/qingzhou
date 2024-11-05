@@ -38,6 +38,10 @@
 				for (String fieldName : groupedFields.get(groupKey)) {
 					ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
 
+					String needHidden = "";
+					if (modelField.isHidden()){
+						needHidden = "display:none";
+					}
 					String msg = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
 					String info = "";
 					if (msg != null && !msg.startsWith("model.field.")) {
@@ -49,7 +53,7 @@
 						fieldValue = fieldValue.replace("\r\n", "<br>").replace("\n", "<br>").replace("<", "&lt;").replace(">", "&gt;");
 					}
 			%>
-			<tr row-item="<%=fieldName%>">
+			<tr row-item="<%=fieldName%>" style="<%=needHidden%>">
 				<td class="home-field-info" field="<%=fieldName%>">
 					<label><%=info%>&nbsp;
 						<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
