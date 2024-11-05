@@ -4,8 +4,6 @@
 <div class="bodyDiv" style="position: relative">
     <%@ include file="../fragment/breadcrumb.jsp" %>
     <%
-        boolean hasImg = false;
-        String imgTitle = "";
         String contextPath = request.getContextPath();
         CombinedDataBuilder customizedDataObject = (CombinedDataBuilder) qzResponse.getCustomizedDataObject();
         List<Combined.CombinedData> dataList = customizedDataObject.getDataList();
@@ -20,11 +18,11 @@
     } else if (combinedData instanceof Combined.UmlData) {
         CombinedDataBuilder.UmlDataImpl umlDataImpl = (CombinedDataBuilder.UmlDataImpl) combinedData;
         String umlData = umlDataImpl.getUmlData();
-        hasImg = true;
-        imgTitle = umlDataImpl.getHeader();
+        if (Utils.notBlank(umlData)) {
     %>
-    <img id="myImg" style="width: 600px" src="<%=contextPath%>/static/images/xxx.jpg">
+    <img style="width: 600px" src="<%=umlData%>" alt="<%=umlDataImpl.getHeader()%>">
     <%
+            }
         }
         if (combinedData instanceof Combined.ListData) {
             CombinedDataBuilder.ListDataImpl listData = (CombinedDataBuilder.ListDataImpl) combinedData;
@@ -83,14 +81,14 @@
         if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
     %>
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
-            <a class="btn"
-               onclick="returnHref('<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>')"
-               href="javascript:void(0)">
-                <%=I18n.getKeyI18n("page.return")%>
-            </a>
-        </div>
+        <a class="btn"
+           onclick="returnHref('<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>')"
+           href="javascript:void(0)">
+            <%=I18n.getKeyI18n("page.return")%>
+        </a>
     </div>
-    <%
-        }
-    %>
+</div>
+<%
+    }
+%>
 </div>
