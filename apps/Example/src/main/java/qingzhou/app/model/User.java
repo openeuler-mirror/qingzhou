@@ -160,6 +160,26 @@ public class User extends AddModelBase implements Group, Option, Echo {
         System.out.println("点击了头部按钮。。。");
     }
 
+    @ModelAction(
+            code = "upload", icon = "upload-alt",
+            action_type = ActionType.upload,
+            name = {"上传", "en:upload"},
+            info = {"将本地文件或数据发送到服务器进行存储和处理。",
+                    "en:Send local files or data to a server for storage and processing."})
+    public void upload(Request request) throws Exception {
+        System.out.println("文件已上传至临时目录："+request.getParameter("upload"));
+    }
+
+    @ModelAction(
+            code = "upload1", icon = "upload-alt",
+            action_type = ActionType.upload,
+            name = {"上传1", "en:upload1"},
+            info = {"将本地文件或数据发送到服务器进行存储和处理。",
+                    "en:Send local files or data to a server for storage and processing."})
+    public void upload1(Request request) throws Exception {
+        System.out.println("文件1已上传至临时目录："+request.getParameter("upload1"));
+    }
+
     @Override
     public String[] staticOptionFields() {
         return new String[]{"gender", "checkbox", "position"};
@@ -258,6 +278,6 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @Override
     public String[] headActions() {
-        return new String[]{Add.ACTION_CREATE, "share", "test"};
+        return new String[]{Add.ACTION_CREATE, "share", "test", "upload", "upload1"};
     }
 }
