@@ -305,6 +305,7 @@
 
 							if (Utils.notBlank(customActionId)) {
 								out.print(customActionId);
+								out.print(" form-loaded-trigger=" + action.isFormLoadedTrigger());
 							}
 
 							if (action.getActionType() == ActionType.sub_form) {

@@ -14,6 +14,7 @@ public class  ModelActionInfo {
     private String show;
     private String appPage;
     private String[] formFields;
+    private boolean formLoadedTrigger;
     private String[] menuModels;
     private ActionType actionType;
 
@@ -87,6 +88,14 @@ public class  ModelActionInfo {
 
     public void setFormFields(String[] formFields) {
         this.formFields = formFields;
+    }
+
+    public boolean isFormLoadedTrigger() {
+        return formLoadedTrigger;
+    }
+
+    public void setFormLoadedTrigger(boolean formLoadedTrigger) {
+        this.formLoadedTrigger = formLoadedTrigger;
     }
 
     public String[] getMenuModels() {

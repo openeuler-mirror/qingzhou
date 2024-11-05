@@ -107,13 +107,12 @@ public class User extends AddModelBase implements Group, Option, Echo {
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
             form_fields = {"name", "notes", "gender", "checkbox", "b"},
-            action_type = ActionType.sub_form,
-            name = {"弹出表单", "en:test"},
+            action_type = ActionType.sub_form, form_loaded_trigger = true,
+            name= {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
         String gender = request.getParameter("gender");
-        if ("0".equals(gender)) {
-            request.getResponse().setContentType("application/json");
+        if (!"1".equals(gender)) {
             HashMap<String, String> map = new HashMap<>();
             Enumeration<String> names = request.getParameterNames();
             while (names.hasMoreElements()) {
@@ -123,6 +122,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
             }
             request.getResponse().useCustomizedResponse(map);
         } else {
+            request.getResponse().setContentType("text/html;charset=UTF-8");
             String html = "<div style='background-color: #fff;color: #333;padding: 10px;'>" +
                     "<table style='width: 100%'>" +
                     "<thead><tr style='height: 20px'>" +
