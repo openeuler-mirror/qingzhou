@@ -3,6 +3,7 @@ package qingzhou.engine.impl.core;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.Service;
+import qingzhou.engine.ServiceInfo;
 import qingzhou.engine.impl.EngineContext;
 import qingzhou.engine.impl.Main;
 import qingzhou.engine.util.Utils;
@@ -23,7 +24,7 @@ import java.util.*;
 public class ModuleLoading implements Process {
     private final EngineContext engineContext;
     private final List<ModuleInfo> moduleInfoList = new ArrayList<>();
-    private final List<ModuleInfo> moduleStartedOrder = new ArrayList<>();
+    private final List<ModuleInfo> moduleStartedOrderCache = new ArrayList<>();
     private final ProcessSequence sequence;
 
     public ModuleLoading(EngineContext engineContext) {
@@ -32,7 +33,7 @@ public class ModuleLoading implements Process {
                 new BuildModuleInfo(),
                 new BuildModuleLoader(),
                 new BuildModuleActivator(),
-                new SetModuleConfig(),
+                new SetModule(),
                 new StartModule()
         );
     }
@@ -95,7 +96,7 @@ public class ModuleLoading implements Process {
         }
     }
 
-    private class SetModuleConfig implements Process {
+    private class SetModule implements Process {
 
         @Override
         public void exec() throws Exception {
@@ -112,7 +113,29 @@ public class ModuleLoading implements Process {
                 }
             }
 
+            ServiceVisitor serviceVisitor = () -> {
+                List<Class<?>> classes = new ArrayList<>();
+                moduleInfoList.forEach(moduleInfo -> {
+                    for (Map.Entry<Class<?>, Object> entry : moduleInfo.moduleContext.registeredServices.entrySet()) {
+                        Class<?> type = entry.getKey();
+                        Object service = entry.getValue();
+                        boolean skip = false;
+                        if (service instanceof ServiceInfo) {
+                            ServiceInfo serviceInfo = (ServiceInfo) service;
+                            if (!serviceInfo.isAppShared()) {
+                                skip = true;
+                            }
+                        }
+                        if (!skip) {
+                            classes.add(type);
+                        }
+                    }
+                });
+                classes.sort(Comparator.comparing(Class::getSimpleName));
+                return classes;
+            };
             for (ModuleInfo moduleInfo : moduleInfoList) {
+                moduleInfo.moduleContext.serviceVisitor = serviceVisitor;
                 Object c = qzJson.get(moduleInfo.getName());
                 if (c != null) {
                     moduleInfo.moduleContext.config = new HashMap<>((Map<String, String>) c);
@@ -167,12 +190,12 @@ public class ModuleLoading implements Process {
 
         @Override
         public void undo() {
-            Collections.reverse(moduleStartedOrder); // Qingzhou Logger module must be the last one to stop.
-            moduleStartedOrder.forEach(moduleInfo -> {
+            Collections.reverse(moduleStartedOrderCache); // Qingzhou Logger module must be the last one to stop.
+            moduleStartedOrderCache.forEach(moduleInfo -> {
                 moduleInfo.setStarted(false);
                 moduleInfo.moduleActivators.forEach(ModuleActivator::stop);
             });
-            moduleStartedOrder.clear();
+            moduleStartedOrderCache.clear();
         }
 
         Map<ModuleInfo, Class<?>> startModule(Collection<ModuleInfo> toStartList) throws Exception {
@@ -184,7 +207,7 @@ public class ModuleLoading implements Process {
                         moduleActivator.start(moduleInfo.moduleContext);
                     }
                     moduleInfo.setStarted(true);
-                    moduleStartedOrder.add(moduleInfo);
+                    moduleStartedOrderCache.add(moduleInfo);
                 } else {
                     missingServiceModule.put(moduleInfo, missing);
                 }

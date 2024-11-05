@@ -4,14 +4,10 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.app.system.Main;
-import qingzhou.app.system.ModelUtil;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ModelFieldInfo;
+import qingzhou.engine.ServiceInfo;
+import qingzhou.engine.util.Utils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,44 +33,35 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
             info = {"组件类型", "en:Component type"})
     public String type;
 
-    @Override
-    public String[] allIds(Map<String, String> query) {
-        List<String> ids = new ArrayList<>();
-        for (Class<?> serviceType : getAppContext().getServiceTypes()) {
-            ids.add(serviceType.getSimpleName());
-        }
-        List<String> result = new ArrayList<>(ids);
-        result.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
-            @Override
-            public String getFieldSeparator(String field) {
-                AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
-                ModelFieldInfo fieldInfo = appInfo.getModelInfo("component").getModelFieldInfo(field);
-                return fieldInfo.getSeparator();
-            }
-
-            @Override
-            public Map<String, String> get() {
-                return showData(id);
-            }
-        }));
-        result.sort(String::compareTo);
-        return result.toArray(new String[0]);
-    }
+    @ModelField(
+            list = true, search = true,
+            width_percent = 70,
+            name = {"描述信息", "en:Component Info"},
+            info = {"该公共组件的描述信息。", "en:A description of the common component."})
+    public String info;
 
     @Override
     public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
-        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
+        List<String[]> list = new ArrayList<>();
+        getAppContext().getServiceTypes().forEach(aClass -> {
+            Object service = getAppContext().getService(aClass);
+            String id = null;
+            String info = null;
+            if (service instanceof ServiceInfo) {
+                ServiceInfo serviceInfo = (ServiceInfo) service;
+                id = serviceInfo.getName();
+                info = serviceInfo.getDescription();
+            }
+            if (Utils.isBlank(id)) id = aClass.getSimpleName();
+            if (Utils.isBlank(info)) info = aClass.getName();
+
+            list.add(new String[]{id, aClass.getName(), info});
+        });
+        return list;
     }
 
-    public Map<String, String> showData(String id) {
-        for (Class<?> serviceType : getAppContext().getServiceTypes()) {
-            if (id.equals(serviceType.getSimpleName())) {
-                return new HashMap<String, String>() {{
-                    put(idField(), serviceType.getSimpleName());
-                    put("type", serviceType.getName());
-                }};
-            }
-        }
-        return null;
+    @Override
+    public int pageSize() {
+        return Integer.MAX_VALUE;
     }
 }

@@ -10,6 +10,7 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.*;
 
@@ -152,14 +153,15 @@ public class PageUtil {
         return date;
     }
 
-    public static String buildMenu(HttpServletRequest request, HttpServletResponse response, Request qzRequest) {
+    public static String buildMenu(HttpServletRequest request, HttpServletResponse response, RequestImpl qzRequest) {
         AppInfo appInfo = SystemController.getAppInfo(qzRequest.getApp());
-        List<String> menuModels = null;
-        for (ModelInfo modelInfo : appInfo.getModelInfos()) {
-            ModelActionInfo actionInfo = modelInfo.getModelActionInfo(qzRequest.getAction());
-            if (actionInfo != null && actionInfo.getActionType() == ActionType.sub_menu) {
-                menuModels = Arrays.asList(actionInfo.getMenuModels());
-                break;
+        ModelActionInfo actionInfo = qzRequest.getCachedModelInfo().getModelActionInfo(qzRequest.getAction());
+
+        Set<String> showSubMenus = null;
+        if (actionInfo.getActionType() == ActionType.sub_menu) {
+            String[] menuModels = actionInfo.getMenuModels();
+            if (menuModels != null && menuModels.length > 0) {
+                showSubMenus = new HashSet<>(Arrays.asList(menuModels));
             }
         }
 
@@ -183,8 +185,10 @@ public class PageUtil {
 
         // 将 Model 菜单挂到 导航 菜单上
         for (ModelInfo modelInfo : appInfo.getModelInfos()) {
-            if (menuModels != null && !menuModels.contains(modelInfo.getCode())) {
-                continue;
+            if (showSubMenus != null) { // 是否使用 子菜单 功能
+                if (!showSubMenus.contains(modelInfo.getCode())) { //  是否在子菜单范围内
+                    continue;
+                }
             }
 
             if (modelInfo.isHidden()) continue;

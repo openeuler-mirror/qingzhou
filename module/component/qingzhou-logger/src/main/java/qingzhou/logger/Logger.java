@@ -1,6 +1,13 @@
 package qingzhou.logger;
 
-public interface Logger {
+import qingzhou.engine.ServiceInfo;
+
+public interface Logger extends ServiceInfo {
+    @Override
+    default String getDescription() {
+        return "Provide practical tools related to Logger.";
+    }
+
     boolean isDebugEnabled();
 
     void debug(String msg);

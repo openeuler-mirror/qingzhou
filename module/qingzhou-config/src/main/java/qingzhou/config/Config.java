@@ -1,6 +1,13 @@
 package qingzhou.config;
 
-public interface Config {
+import qingzhou.engine.ServiceInfo;
+
+public interface Config extends ServiceInfo {
+    @Override
+    default boolean isAppShared() {
+        return false;
+    }
+
     Console getConsole();
 
     void addUser(User user) throws Exception;

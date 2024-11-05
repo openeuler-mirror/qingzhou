@@ -1,6 +1,7 @@
 package qingzhou.engine;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Map;
 
 public interface ModuleContext {
@@ -22,4 +23,6 @@ public interface ModuleContext {
      * 获取本Module开放的Service，以及从其它Module注入的Service
      */
     <T> T getService(Class<T> clazz);
+
+    Collection<Class<?>> allAppSharedServices();
 }

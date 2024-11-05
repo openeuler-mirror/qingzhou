@@ -247,19 +247,6 @@
             <li id="defaultTabBox" class="active" fixed="true">
                 <%-- 左侧菜单 --%>
                 <%@ include file="../fragment/menu.jsp" %>
-
-                <section class="main-body" bindingId="<%=randBindingId%>">
-                    <%-- 面包屑分级导航 --%>
-                    <%@ include file="../fragment/breadcrumb.jsp" %>
-
-                    <%-- 首页面主体部分 --%>
-                    <div class="bodyDiv" bindingId="<%=randBindingId%>">
-                        <%
-                            Map<String, String> infoData = qzResponse.getDataMap();
-                        %>
-                        <%@ include file="../fragment/info.jsp" %>
-                    </div>
-                </section>
             </li>
         </ul>
     </section>
@@ -299,9 +286,8 @@
         "searchHiddenTip": '<%=I18n.getKeyI18n("page.search.hidden")%>',
         "downloadView": '<%=DownloadView.FLAG%>',
         "jsonView": '<%=JsonView.FLAG%>',
-        "manageActionName": '<%=DeployerConstants.ACTION_MANAGE%>',
         "actionId_app_manage": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_MANAGE%>',
-        "actionId_app_stop-delete": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_MANAGE%>' + ',' + '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_STOP%>'
+        "actionId_app_stop-delete": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + Delete.ACTION_DELETE%>' + ',' + '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_STOP%>'
     };
 
     <%-- 显示第一个应用的管理页面--%>
