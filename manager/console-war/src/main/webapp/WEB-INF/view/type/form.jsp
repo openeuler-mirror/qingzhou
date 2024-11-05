@@ -103,6 +103,9 @@
 						<div class="col-sm-5" type="<%=modelField.getInputType().name()%>">
 							<%
 								if (readOnly) {
+									if (fieldValue.isEmpty()){
+										fieldValue = modelField.getDefaultValue();
+									}
 							%>
 							<input type="text" disabled="disabled" name="<%=fieldName%>"
 								   value='<%=fieldValue%>' <%=echoGroup%>
