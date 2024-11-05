@@ -530,6 +530,7 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setAppPage(modelAction.app_page());
             modelActionInfo.setFormFields(modelAction.form_fields());
+            modelActionInfo.setFormLoadedTrigger(modelAction.form_loaded_trigger());
             modelActionInfo.setMenuModels(modelAction.menu_models());
             modelActionInfo.setActionType(modelAction.action_type());
             modelActionInfos.add(modelActionInfo);

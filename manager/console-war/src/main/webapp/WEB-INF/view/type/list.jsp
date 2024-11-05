@@ -54,7 +54,22 @@
 						viewName = JsonView.FLAG;
 						customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "'";
 					}
-			%>
+
+					if (action.getActionType() == ActionType.upload) {
+						viewName = JsonView.FLAG;
+					%>
+					<a href="javascript:;"
+					   onclick="$('#<%=actionName%>').click();" class="btn uploader-btn-browse">
+						<i class="icon icon-<%=action.getIcon()%>"></i>
+						<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
+					</a>
+					<input id="<%=actionName%>" type="file" style="display:none;"
+						   onchange="upload(this.files[0],
+									'<%= PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName) %>','<%=actionName%>')">
+
+					<%
+						continue;
+					}%>
 			<a class="btn" data-tip-arrow="top" <%=customActionId%> action-type="<%=action.getActionType()%>"
 			   data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
 			   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
@@ -330,6 +345,7 @@
 
 							if (Utils.notBlank(customActionId)) {
 								out.print(customActionId);
+								out.print(" form-loaded-trigger=" + action.isFormLoadedTrigger());
 							}
 
 							if (action.getActionType() == ActionType.sub_form) {
@@ -425,4 +441,22 @@
     $(document).ready(function () {
         $('[data-toggle="tooltip"]').tooltip();
     });
+
+    function upload(file, url, id) {
+		const formData = new FormData();
+		formData.append(id, file);
+		$.ajax({
+			url: url,
+			type: 'POST',
+			data: formData,
+			processData: false,
+			contentType: false,
+			success: function(data) {
+				showMsg(data.msg, data.msg_level);
+			},
+			error: function(e) {
+				handleError(e);
+			}
+		});
+	}
 </script>

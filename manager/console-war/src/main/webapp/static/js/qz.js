@@ -67,7 +67,8 @@
         };
 
         this.addTab = function (dataId, title, html, options, closeable, callback) {
-            if ($(".tab-nav-item[data-id='" + dataId + "']", this.rootBox).length === 0) {
+            var exist = $(".tab-nav-item[data-id='" + dataId + "']", this.rootBox).length > 0;
+            if (!exist) {
                 $(".tab-nav-item.active", this.rootBox).removeClass("active");
                 var tab = "<span class='tab-nav-item active' data-id='" + dataId + "' ";
                 if (typeof options === "object") {
@@ -86,7 +87,7 @@
                 this.bindTabEvent();
             }
             this.activeTab($(".tab-nav-item.active", this.rootBox));
-            if ((typeof callback) === "function") {
+            if (!exist && (typeof callback) === "function") {
                 callback.call(null, $(".tab-body>div.tab-main[data-id='" + dataId + "']", this.rootBox));
             }
             return this;
@@ -467,7 +468,7 @@
             });
 
             var that = this;
-            $(triggerSelector + "[binded!='true'][action-type!='sub_form']", restrictedArea).attr("binded", "true").click(function (e) {
+            $(triggerSelector + "[loaded!='true']", restrictedArea).attr("loaded", "true").click(function (e) {
                 e.preventDefault();
                 // 跳过 href="javascript:void(0);"
                 var url = $(this).attr("href") || $(this).attr("url");

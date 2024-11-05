@@ -35,7 +35,7 @@ public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
         return dataList;
     }
 
-    public static abstract class CombinedDataImpl<T> implements Combined.CombinedData {
+    public static abstract class CombinedDataImpl<T> implements Combined.CombinedData, Serializable {
         private String header;
         private String model;
 

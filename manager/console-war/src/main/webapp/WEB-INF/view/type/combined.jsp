@@ -7,7 +7,8 @@
         boolean hasImg = false;
         String imgTitle = "";
         String contextPath = request.getContextPath();
-        List<Combined.CombinedData> dataList = qzResponse.getDataBuilder().getDataList();
+        CombinedDataBuilder customizedDataObject = (CombinedDataBuilder) qzResponse.getCustomizedDataObject();
+        List<Combined.CombinedData> dataList = customizedDataObject.getDataList();
         if (!dataList.isEmpty()) {
             for (Combined.CombinedData combinedData : dataList) {
                 if (combinedData instanceof Combined.ShowData) {
@@ -18,11 +19,11 @@
     <%
     } else if (combinedData instanceof Combined.UmlData) {
         CombinedDataBuilder.UmlDataImpl umlDataImpl = (CombinedDataBuilder.UmlDataImpl) combinedData;
+        String umlData = umlDataImpl.getUmlData();
         hasImg = true;
         imgTitle = umlDataImpl.getHeader();
     %>
-    <h4 id="img-titile" style="display: none">事务图片</h4>
-    <img id="myImg" style="display: none;width: 600px" src="<%=contextPath%>/static/images/xxx.jpg">
+    <img id="myImg" style="width: 600px" src="<%=contextPath%>/static/images/xxx.jpg">
     <%
         }
         if (combinedData instanceof Combined.ListData) {
@@ -82,14 +83,6 @@
         if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
     %>
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
-        <%
-            if (hasImg) {
-        %>
-        <div class="form-btn">
-            <a class="btn" onclick="openModal()"><%= imgTitle%></a>
-        <%
-            }
-        %>
             <a class="btn"
                onclick="returnHref('<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>')"
                href="javascript:void(0)">
@@ -101,16 +94,3 @@
         }
     %>
 </div>
-<script>
-    function openModal() {
-        var img = document.getElementById("myImg");
-        var title = document.getElementById("img-titile");
-        if (img.style.display === "block") {
-            img.style.display = "none";
-            title.style.display = "none";
-        } else {
-            img.style.display = "block";
-            title.style.display = "block";
-        }
-    }
-</script>

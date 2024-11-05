@@ -107,13 +107,12 @@ public class User extends AddModelBase implements Group, Option, Echo {
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
             form_fields = {"name", "notes", "gender", "checkbox", "b"},
-            action_type = ActionType.sub_form,
-            name = {"弹出表单", "en:test"},
+            action_type = ActionType.sub_form, form_loaded_trigger = true,
+            name= {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
         String gender = request.getParameter("gender");
-        if ("0".equals(gender)) {
-            request.getResponse().setContentType("application/json");
+        if (!"1".equals(gender)) {
             HashMap<String, String> map = new HashMap<>();
             Enumeration<String> names = request.getParameterNames();
             while (names.hasMoreElements()) {
@@ -123,6 +122,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
             }
             request.getResponse().useCustomizedResponse(map);
         } else {
+            request.getResponse().setContentType("text/html;charset=UTF-8");
             String html = "<div style='background-color: #fff;color: #333;padding: 10px;'>" +
                     "<table style='width: 100%'>" +
                     "<thead><tr style='height: 20px'>" +
@@ -158,6 +158,26 @@ public class User extends AddModelBase implements Group, Option, Echo {
             info = {"头部按钮", "en:Share"})
     public void share(Request request) {
         System.out.println("点击了头部按钮。。。");
+    }
+
+    @ModelAction(
+            code = "upload", icon = "upload-alt",
+            action_type = ActionType.upload,
+            name = {"上传", "en:upload"},
+            info = {"将本地文件或数据发送到服务器进行存储和处理。",
+                    "en:Send local files or data to a server for storage and processing."})
+    public void upload(Request request) throws Exception {
+        System.out.println("文件已上传至临时目录："+request.getParameter("upload"));
+    }
+
+    @ModelAction(
+            code = "upload1", icon = "upload-alt",
+            action_type = ActionType.upload,
+            name = {"上传1", "en:upload1"},
+            info = {"将本地文件或数据发送到服务器进行存储和处理。",
+                    "en:Send local files or data to a server for storage and processing."})
+    public void upload1(Request request) throws Exception {
+        System.out.println("文件1已上传至临时目录："+request.getParameter("upload1"));
     }
 
     @Override
@@ -258,6 +278,6 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @Override
     public String[] headActions() {
-        return new String[]{Add.ACTION_CREATE, "share", "test"};
+        return new String[]{Add.ACTION_CREATE, "share", "test", "upload", "upload1"};
     }
 }
