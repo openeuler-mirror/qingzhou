@@ -875,6 +875,7 @@ var bindingActions = {
             });
         }
     };
+
 /**
  * 列表页面相关事件绑定
  */
@@ -1582,26 +1583,28 @@ function panelUpdate(monitorData, restrictedArea) {
 
 /**************************************** monitor.jsp - end *************************************************/
 /**************************************** dashboard.jsp - start *************************************************/
-// 全局变量，用于控制是否暂停数据获取
-var hoverCount = 0;
-
+// 全局变量，用于控制定时任务
 var intervalId = null;
 
 // 存储图表实例和关联表格的对象
 var chartInstances = {};
 var tableInstances = {};
 
+// 存储 shareDatasetChart 的缓冲区
+var shareDatasetBuffers = {};
+
 // 初始化仪表板页面
 function initDashboardPage() {
+    if (intervalId != null) {
+        clearInterval(intervalId); // 停止定时任务
+        chartInstances = {};
+        tableInstances = {};
+        shareDatasetBuffers = {}; // 重置缓冲区
+    }
+
     var dashboardDiv = $("div.dashboardPage");
     var url = dashboardDiv.attr("data-url");
-
     if (!url) {
-        if (intervalId != null) {
-            clearInterval(intervalId); // 停止定时任务
-            chartInstances = {};
-            tableInstances = {};
-        }
         return;
     }
 
@@ -1615,17 +1618,12 @@ function initDashboardPage() {
 
     var failedAttempts = 0;
     var fetchDataAndRender = function () {
-        if (hoverCount > 0) {
-            // 如果有图表被悬停，暂停数据获取
-            return;
-        }
-
         fetchData(url).done(function (data) {
             // 解析数据
-            var basicData = JSON.parse(data.basicData);
-            var gaugeData = JSON.parse(data.gaugeData);
-            var histogramData = JSON.parse(data.histogramData);
-            var shareDatasetData = JSON.parse(data.shareDatasetData);
+            var basicData = JSON.parse(data[getSetting("basicData")]);
+            var gaugeData = JSON.parse(data[getSetting("gaugeData")]);
+            var histogramData = JSON.parse(data[getSetting("histogramData")]);
+            var shareDatasetData = JSON.parse(data[getSetting("shareDatasetData")]);
 
             // 渲染数据
             renderData(containers.basicData, basicData, "basicData");
@@ -1637,9 +1635,7 @@ function initDashboardPage() {
             failedAttempts = 0;
         }).fail(function (error) {
             failedAttempts++;
-            console.error("数据获取和渲染出现错误:", error);
             if (failedAttempts >= 10) {
-                console.warn("达到最大失败请求次数，停止定时任务");
                 clearInterval(intervalId); // 停止定时任务
             }
         });
@@ -1678,6 +1674,9 @@ function fetchData(url) {
 // 根据类型渲染数据
 function renderData(container, data, type) {
     try {
+        container.parent().css({
+            "padding": "0px"
+        });
         switch (type) {
             case "basicData":
                 renderBasicData(container, data);
@@ -1701,42 +1700,46 @@ function renderData(container, data, type) {
 
 // 渲染 basic 数据表格
 function renderBasicData(container, basicData) {
-    var jsonObj = JSON.parse(basicData.data);
+    var dataKey = getSetting("data");
+    var jsonObj = JSON.parse(basicData[dataKey]);
 
     // 清空现有内容
     container.empty();
 
     // 渲染标题
-    var titleText = basicData.title;
-    titleText = (titleText === null || titleText === "" || titleText === undefined) ? basicData.info : titleText;
+    var titleText = basicData[getSetting("title")] || basicData[getSetting("info")];
     var title = createTitle(titleText);
 
     // 创建展示 basic 数据的容器
-    var keyValueContainer = createChartContainer("100%");
+    var keyValueContainer = createChartContainer("99%");
     var itemDiv = $("<div></div>").addClass('basic-container');
     keyValueContainer.append(title, itemDiv);
     container.append(keyValueContainer);
 
-    Object.keys(jsonObj).forEach(key => {
+    var keys = Object.keys(jsonObj);
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
         var keyValueItem = $("<div></div>").addClass('basic-item');
         var keyElement = $("<div></div>").addClass('key').text(key);
         var valueElement = $("<div></div>").addClass('value').text(jsonObj[key]);
 
         keyValueItem.append(keyElement, valueElement);
         itemDiv.append(keyValueItem);
-    });
+    }
 }
+
 
 // 渲染或更新仪表盘数据
 function renderGaugeData(container, gaugeData) {
     gaugeData.forEach(function (chartItem, index) {
         var chartId = 'gauge_' + index;
-        var data = JSON.parse(chartItem.data);
-        var fields = JSON.parse(chartItem.fields);
-        var max = parseFloat(chartItem.max);
-        var used = parseFloat(chartItem.used);
-        var info = chartItem.info;
-        var titleText = chartItem.title || info;
+        var data = JSON.parse(chartItem[getSetting("data")]);
+        var fields = JSON.parse(chartItem[getSetting("fields")]);
+        var max = parseFloat(chartItem[getSetting("max")]);
+        var used = parseFloat(chartItem[getSetting("used")]);
+        var info = chartItem[getSetting("info")];
+        var unit = chartItem[getSetting("unit")];
+        var titleText = chartItem[getSetting("title")] || info;
 
         // 检查是否已有图表实例
         var myChart = chartInstances[chartId];
@@ -1754,13 +1757,13 @@ function renderGaugeData(container, gaugeData) {
             chartInstances[chartId] = myChart;
 
             // 获取图表的配置并渲染
-            var option = getGaugeOption({ info, unit: chartItem.unit, max, used });
+            var option = getGaugeOption({info, unit: unit, max, used});
             myChart.setOption(option);
         } else {
             // 更新图表数据和样式
             var option = getGaugeOption({
                 info,
-                unit: chartItem.unit,
+                unit: unit,
                 max,
                 used
             });
@@ -1781,7 +1784,7 @@ function renderGaugeData(container, gaugeData) {
 }
 
 // 获取仪表盘配置
-function getGaugeOption({ info, unit, max, used }) {
+function getGaugeOption({info, unit, max, used}) {
     var ratio = used / max;
 
     let statusColor = '#73c0de';
@@ -1881,19 +1884,19 @@ function getGaugeOption({ info, unit, max, used }) {
 function renderHistogramData(container, histogramData) {
     histogramData.forEach(function (chartItem, index) {
         var chartId = 'bar_' + index;
-        var data = JSON.parse(chartItem.data);
-        var fields = JSON.parse(chartItem.fields);
-        var max = parseFloat(chartItem.max);
-        var used = parseFloat(chartItem.used);
-        var info = chartItem.info;
-        var titleText = chartItem.title || info;
+        var data = JSON.parse(chartItem[getSetting("data")]);
+        var fields = JSON.parse(chartItem[getSetting("fields")]);
+        var max = chartItem[getSetting("max")] ? parseFloat(chartItem[getSetting("max")]) : undefined;
+        var used = parseFloat(chartItem[getSetting("used")]);
+        var info = chartItem[getSetting("info")];
+        var unit = chartItem[getSetting("unit")];
+        var titleText = chartItem[getSetting("title")] || info;
 
         // 检查是否已有图表实例
         var myChart = chartInstances[chartId];
         var table = tableInstances[chartId];
 
         if (!myChart) {
-            // 创建图表
             var title = createTitle(titleText);
             var chartContainer = createChartContainer(getChartContainerWidth('bar'));
             var chartDiv = $("<div></div>").addClass('chart').attr('id', chartId).css("height", "300px");
@@ -1904,43 +1907,54 @@ function renderHistogramData(container, histogramData) {
             chartInstances[chartId] = myChart;
 
             // 获取图表的配置并渲染
-            var option = getBarOption({ info, unit: chartItem.unit, max, used });
+            var option = getBarOption({info: info, unit: unit, max: max, used: used});
             myChart.setOption(option);
         } else {
-            // 更新图表数据和样式
-            var option = myChart.getOption();
-
-            // 更新最大值和使用值
-            option.yAxis[0].max = max;
-            option.series[0].data[0].value = used;
-
-            // 更新颜色
-            var newColor = getBarColor(max, used);
-            option.series[0].itemStyle.color = newColor;
-            option.series[0].label.color = newColor;
-
-            // 更新标签格式
-            option.series[0].label.formatter = '{c}（' + chartItem.unit + '）';
-
-            myChart.setOption(option, true);
+            // 更新图表配置
+            var newOption = getBarOption({info: info, unit: unit, max: max, used: used});
+            myChart.setOption(newOption, true);
         }
 
         // 处理表格
         if (!table) {
-            // 创建表格
             table = createTable(fields, data);
             container.find("#" + chartId).parent().append(table);
             tableInstances[chartId] = table;
         } else {
-            // 更新表格
             updateTable(table, fields, data);
         }
     });
 }
 
 // 获取柱状图配置
-function getBarOption({ info, unit, max, used }) {
+function getBarOption(params) {
+    var info = params.info;
+    var unit = params.unit;
+    var max = params.max;
+    var used = params.used;
     var color = getBarColor(max, used); // 动态颜色
+
+    var yAxisConfig = {
+        type: 'value',
+        axisLabel: {
+            formatter: '{value}'
+        },
+        axisLine: {
+            lineStyle: { color: '#333' }
+        },
+        axisTick: {
+            show: true,
+            lineStyle: { color: '#333' }
+        },
+        splitLine: {
+            lineStyle: { color: '#ccc' }
+        }
+    };
+
+    if (max !== undefined) {
+        yAxisConfig.max = max;
+    }
+
     return {
         tooltip: {
             trigger: 'axis',
@@ -1962,23 +1976,7 @@ function getBarOption({ info, unit, max, used }) {
                 alignWithLabel: true
             }
         },
-        yAxis: {
-            type: 'value',
-            axisLabel: {
-                formatter: '{value}' // 设置y轴刻度的格式化
-            },
-            axisLine: {
-                lineStyle: { color: '#333' }
-            },
-            axisTick: {
-                show: true,
-                lineStyle: { color: '#333' }
-            },
-            splitLine: {
-                lineStyle: { color: '#ccc' }
-            },
-            max: max
-        },
+        yAxis: yAxisConfig,
         series: [{
             type: 'bar',
             data: [used],
@@ -1992,12 +1990,20 @@ function getBarOption({ info, unit, max, used }) {
             itemStyle: {
                 color: color
             }
-        }]
+        }],
+        backgroundColor: '#f9f9f9', // 设置背景色
+        grid: {
+            top: '10%',
+            bottom: '10%'
+        }
     };
 }
 
 // 根据used和max获取柱状图颜色
 function getBarColor(max, used) {
+    if (max === undefined) {
+        return '#73c0de';
+    }
     var ratio = used / max;
     if (ratio <= 0.5) {
         return '#73c0de'; // 蓝色
@@ -2017,7 +2023,6 @@ function createTitle(info) {
 function createChartContainer(width) {
     return $("<div></div>").addClass('chart-container').css({
         "width": width,
-        "display": "inline-block",
         "margin": "10px"
     });
 }
@@ -2027,7 +2032,7 @@ function createTable(fields, dataRows) {
     var table = $("<table></table>").addClass('table-container');
 
     var thead = $("<thead></thead>");
-    var headerRow = $("<tr></tr>");
+    var headerRow = createTableTr();
     fields.forEach(field => {
         headerRow.append($("<th></th>").text(field));
     });
@@ -2035,7 +2040,7 @@ function createTable(fields, dataRows) {
 
     var tbody = $("<tbody></tbody>");
     dataRows.forEach(row => {
-        var dataRow = $("<tr></tr>");
+        var dataRow = createTableTr();
         row.forEach(cell => {
             dataRow.append($("<td></td>").text(cell));
         });
@@ -2049,7 +2054,7 @@ function createTable(fields, dataRows) {
 // 更新表格数据
 function updateTable(table, fields, dataRows) {
     var thead = table.find("thead").empty();
-    var headerRow = $("<tr></tr>");
+    var headerRow = createTableTr();
     fields.forEach(field => {
         headerRow.append($("<th></th>").text(field));
     });
@@ -2057,11 +2062,17 @@ function updateTable(table, fields, dataRows) {
 
     var tbody = table.find("tbody").empty();
     dataRows.forEach(row => {
-        var dataRow = $("<tr></tr>");
+        var dataRow = createTableTr();
         row.forEach(cell => {
             dataRow.append($("<td></td>").text(cell));
         });
         tbody.append(dataRow);
+    });
+}
+
+function createTableTr() {
+    return $("<tr></tr>").css({
+        "height": "25px"
     });
 }
 
@@ -2072,162 +2083,226 @@ function getChartContainerWidth(chartType) {
         case 'bar':
             return "calc(24% - 20px)";
         default:
-            return "100%";
+            return "99%";
     }
 }
 
 // 渲染或更新共享数据集图表
 function renderShareDatasetChart(container, shareDatasetData) {
-    shareDatasetData.forEach(function (chartItem, index) {
-        var pid = 'pid' + index;
-        var data = JSON.parse(chartItem.data);
-        var info = chartItem.info;
+    shareDatasetData.forEach((chartItem, index) => {
+        const pid = `shareDataset_${index}`;
+        const data = JSON.parse(chartItem[getSetting("data")]);
+        const info = chartItem[getSetting("info")];
+        const titleText = chartItem[getSetting("title")] || info;
 
-        var myChart = chartInstances[pid];
+        let myChart = chartInstances[pid];
         if (!myChart) {
-            var titleText = chartItem.title || info;
-            // 渲染标题
-            var title = createTitle(titleText);
-            var chartContainer = createChartContainer("100%");
-            var chart = $("<div class='chart'></div>").css("height", "400px");
-            chartContainer.append(title, chart);
-            $(container).append(chartContainer);
-
-            myChart = echarts.init(chart.get(0));
+            // 初始化图表
+            myChart = initShareDatasetChart(container, pid, titleText);
             chartInstances[pid] = myChart;
+            shareDatasetBuffers[pid] = [];
 
-            var series = [];
-            for (var i = 0; i < data.length; i++) {
-                series.push({
-                    type: 'line',
-                    smooth: true,
-                    seriesLayoutBy: 'row',
-                    emphasis: { focus: 'series' }
-                });
-            }
+            // 初始化 datasetSource
+            const datasetSource = initShareDatasetSource(data);
+            myChart.setOption(getShareDatasetChartOption(datasetSource, pid));
 
-            var dateTime = ["dataTime", getDateTime()];
-            data.unshift(dateTime);
-            var showData = data[0][1];
-            series.push({
-                type: 'pie',
-                id: pid,
-                radius: '30%',
-                center: ['50%', '25%'],
-                emphasis: { focus: 'self' },
-                label: {
-                    show: true,
-                    formatter: '{b}: {@' + showData + '} ({d}%)'
-                },
-                encode: {
-                    itemName: data[0][0],
-                    value: showData,
-                    tooltip: showData
-                }
-            });
-
-            var option = {
-                legend: {},
-                tooltip: {
-                    trigger: 'axis',
-                    showContent: false
-                },
-                dataset: {
-                    source: data
-                },
-                xAxis: {
-                    type: 'category'
-                },
-                yAxis: { gridIndex: 0 },
-                grid: { top: '55%' },
-                series: series
-            };
-
-            myChart.setOption(option);
-
-            // 绑定 ECharts 事件
-            myChart.on('mouseover', function (params) {
-                if (params.componentType === 'series') {
-                    // 如果是折线图系列
-                    if (params.seriesType === 'line') {
-                        hoverCount++;
-                    }
-                    // 处理图表高亮/降调
-                    myChart.dispatchAction({
-                        type: 'downplay',
-                        seriesIndex: params.seriesIndex
-                    });
-                }
-            });
-
-            myChart.on('mouseout', function (params) {
-                if (params.componentType === 'series') {
-                    // 如果是折线图系列
-                    if (params.seriesType === 'line') {
-                        hoverCount--;
-                        if (hoverCount < 0) hoverCount = 0; // 防止负数
-                    }
-                    // 处理图表高亮/降调
-                    myChart.dispatchAction({
-                        type: 'highlight',
-                        seriesIndex: params.seriesIndex
-                    });
-                }
-            });
-
-            myChart.on('updateAxisPointer', function (event) {
-                var xAxisInfo = event.axesInfo[0];
-                if (xAxisInfo) {
-                    var dimension = xAxisInfo.value + 1;
-                    myChart.setOption({
-                        series: [{
-                            id: pid,
-                            label: {
-                                formatter: '{b}: {@[' + dimension + ']} ({d}%)'
-                            },
-                            encode: {
-                                value: dimension,
-                                tooltip: dimension
-                            }
-                        }]
-                    });
-                }
-            });
+            // 绑定事件以控制缓冲
+            bindShareDatasetChartEvents(myChart, pid);
         } else {
-            var chartData = myChart.getOption().dataset[0].source;
-
-            if (chartData[0].length >= 20) {
-                chartData.forEach(function (item) {
-                    item.splice(1, 1);
-                });
-            }
-
-            chartData[0].push(getDateTime());
-            for (var i = 0; i < data.length; i++) {
-                chartData[i + 1].push(data[i][1]);
-            }
-
-            myChart.setOption({
-                dataset: {
-                    source: chartData
-                },
-                series: [{
-                    id: pid,
-                    label: {
-                        formatter: '{b}: {@[' + (chartData[0].length - 1) + ']} ({d}%)'
-                    },
-                    encode: {
-                        value: chartData[0].length - 1,
-                        tooltip: chartData[0].length - 1
-                    }
-                }]
-            });
-            myChart.resize();
+            // 更新图表数据
+            updateShareDatasetChartData(myChart, pid, data);
         }
     });
 }
 
+// 初始化图表容器和样式
+function initShareDatasetChart(container, pid, titleText) {
+    // 创建标题和图表容器
+    const title = createTitle(titleText);
+    const chartContainer = createChartContainer("99%");
+    const chartDiv = $("<div class='chart'></div>").css("height", "400px").attr('id', pid);
+
+    chartContainer.append(title, chartDiv);
+    $(container).append(chartContainer);
+
+    // 初始化 ECharts 实例
+    return echarts.init(chartDiv[0]);
+}
+
+// 初始化 datasetSource
+function initShareDatasetSource(data) {
+    const datasetSource = [
+        ["dataTime", getDateTime()] // 初始化X轴
+    ];
+    data.forEach(item => datasetSource.push(item));
+    return datasetSource;
+}
+
+// 创建初始图表选项
+function getShareDatasetChartOption(datasetSource, pid) {
+    const series = datasetSource.slice(1).map(() => ({
+        type: 'line',
+        smooth: true,
+        seriesLayoutBy: 'row',
+        emphasis: { focus: 'series' }
+    }));
+
+    const showDataIndex = datasetSource[0].length - 1;
+    series.push({
+        type: 'pie',
+        id: pid,
+        radius: '25%',
+        center: ['50%', '25%'],
+        emphasis: { focus: 'self' },
+        label: {
+            show: true,
+            formatter: '{b}: {@' + showDataIndex + '} ({d}%)'
+        },
+        encode: {
+            itemName: datasetSource[0][0],
+            value: showDataIndex,
+            tooltip: showDataIndex
+        }
+    });
+
+    return {
+        legend: {},
+        tooltip: {
+            trigger: 'axis',
+            showContent: false
+        },
+        dataset: {
+            source: datasetSource
+        },
+        xAxis: {
+            type: 'category'
+        },
+        yAxis: {
+            gridIndex: 0
+        },
+        grid: { top: '45%' },
+        series: series
+    };
+}
+
+// 绑定图表事件以控制缓冲区
+function bindShareDatasetChartEvents(myChart, pid) {
+    myChart.on('mouseover', params => {
+        if (isShareDatasetChartLineSeries(params)) {
+            myChart.isPaused = true;
+        }
+    });
+
+    myChart.on('mouseout', params => {
+        if (isShareDatasetChartLineSeries(params)) {
+            myChart.isPaused = false;
+            applyShareDatasetBufferedData(pid, myChart);
+        }
+    });
+}
+
+// 判断是否为折线图系列
+function isShareDatasetChartLineSeries(params) {
+    return params.componentType === 'series' && (params.seriesType === 'line' || params.seriesType === 'pie');
+}
+
+// 更新图表数据
+function updateShareDatasetChartData(myChart, pid, newData) {
+    if (myChart.isPaused) {
+        bufferShareDatasetData(pid, newData);
+        return;
+    }
+
+    const chartData = myChart.getOption().dataset[0].source;
+    const timestamp = getDateTime();
+    chartData[0].push(timestamp);
+
+    newData.forEach((item, i) => {
+        if (!chartData[i + 1]) {
+            chartData[i + 1] = [item[0]];
+        }
+        chartData[i + 1].push(item[1]);
+    });
+
+    maintainDataLength(chartData);
+
+    const latestIndex = chartData[0].length - 1;
+    myChart.setOption({
+        dataset: { source: chartData },
+        series: [{
+            id: pid,
+            label: {
+                formatter: `{b}: {@${latestIndex}} ({d}%)`
+            },
+            encode: {
+                value: latestIndex,
+                tooltip: latestIndex
+            }
+        }]
+    });
+
+    myChart.resize();
+}
+
+// 缓冲新数据
+function bufferShareDatasetData(pid, data) {
+    const buffer = shareDatasetBuffers[pid];
+    if (buffer.length >= 20) {
+        buffer.shift();
+    }
+    buffer.push({
+        timestamp: getDateTime(),
+        data: data
+    });
+}
+
+// 应用缓冲区中的数据
+function applyShareDatasetBufferedData(pid, myChart) {
+    const buffer = shareDatasetBuffers[pid];
+    if (!buffer || buffer.length === 0) return;
+
+    const chartData = myChart.getOption().dataset[0].source;
+
+    buffer.forEach(entry => {
+        chartData[0].push(entry.timestamp);
+        entry.data.forEach((item, i) => {
+            if (!chartData[i + 1]) {
+                chartData[i + 1] = [item[0]];
+            }
+            chartData[i + 1].push(item[1]);
+        });
+        maintainDataLength(chartData);
+    });
+
+    shareDatasetBuffers[pid] = [];
+
+    const latestIndex = chartData[0].length - 1;
+    myChart.setOption({
+        dataset: { source: chartData },
+        series: [{
+            id: pid,
+            label: {
+                formatter: `{b}: {@${latestIndex}} ({d}%)`
+            },
+            encode: {
+                value: latestIndex,
+                tooltip: latestIndex
+            }
+        }]
+    });
+    myChart.resize();
+}
+
+// 保持数据长度不超过20条（加上1个字段名，总长度21）
+function maintainDataLength(chartData) {
+    if (chartData[0].length > 21) {
+        chartData[0].splice(1, 1);
+        chartData.slice(1).forEach(series => series.splice(1, 1));
+    }
+}
+
 /**************************************** dashboard.jsp - end *************************************************/
+
 function autoAdaptTip() {
     var mainBody = $(".main-body:not(div.tab-container .main-body)", getRestrictedArea());
     if (mainBody.length > 0) {
