@@ -1,5 +1,6 @@
 package qingzhou.console.page;
 
+import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
 import qingzhou.console.SecurityController;
@@ -153,9 +154,16 @@ public class PageUtil {
 
     public static String buildMenu(HttpServletRequest request, HttpServletResponse response, Request qzRequest) {
         AppInfo appInfo = SystemController.getAppInfo(qzRequest.getApp());
+        List<String> menuModels = null;
+        for (ModelInfo modelInfo : appInfo.getModelInfos()) {
+            ModelActionInfo actionInfo = modelInfo.getModelActionInfo(qzRequest.getAction());
+            if (actionInfo != null && actionInfo.getActionType() == ActionType.sub_menu) {
+                menuModels = Arrays.asList(actionInfo.getMenuModels());
+                break;
+            }
+        }
 
         MenuItem rootMenu = new MenuItem();
-
         Stream<MenuInfo> temp = Arrays.stream(appInfo.getMenuInfos());
         temp.forEach(menuInfo -> {
             MenuItem menuItem = new MenuItem();
@@ -175,6 +183,10 @@ public class PageUtil {
 
         // 将 Model 菜单挂到 导航 菜单上
         for (ModelInfo modelInfo : appInfo.getModelInfos()) {
+            if (menuModels != null && !menuModels.contains(modelInfo.getCode())) {
+                continue;
+            }
+
             if (modelInfo.isHidden()) continue;
             String menu = modelInfo.getMenu();
             MenuItem foundParent = rootMenu.findMenu(menu);

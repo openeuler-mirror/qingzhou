@@ -167,7 +167,7 @@ function setOrReset() {
         return false;
     });
     // 菜单展示优化
-    $("aside.main-sidebar[loaded!='true']").attr("loaded", "true").find(".sidebar-menu>li").hover(function () {
+    $("aside.main-sidebar .sidebar-menu>li[loaded!='true']").attr("loaded", "true").hover(function () {
         if ($(document.body).hasClass("sidebar-collapse")) {// TODO Need to consider the case of multiple Tab tabs.
             $(".main-sidebar .sidebar").removeClass("sidebar-scroll");
             if ($(".treeview-menu", this).length < 1) {
@@ -263,10 +263,11 @@ function setOrReset() {
         }
     });
 
-    const restrictedArea = getRestrictedArea();
     // 左侧菜单点击菜单事件
-    $("aside.main-sidebar", document.body).each(function () {
-        qz.bindFill("ul.sidebar-menu a", ".main-body", false, true, $(this).parent(), null);
+    $("aside.main-sidebar[loaded!='true']", document.body).each(function () {
+        $(this).attr("loaded", "true");
+        var bindingId = $(this).attr("bindingId");
+        qz.bindFill("aside.main-sidebar[bindingId='" + bindingId + "'] ul.sidebar-menu a[loaded!='true']", ".main-body[bindingId='" + bindingId + "']", false, true, $(this).parent(), null);
     });
 };
 
@@ -869,7 +870,7 @@ var bindingActions = {
         "sub_menu": function (dom, selector, restrictedArea) {
             $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
-                openTab($(this).attr("data-id"), $(this).attr("href"), $(this).attr("data-name"));
+                openTab($(this).attr("href"), $(this).attr("href"), $(this).attr("data-name"));
                 return false;
             });
         }

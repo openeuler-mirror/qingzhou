@@ -28,6 +28,7 @@
 	String encodedId = RESTController.encodeId(id);
 	ResponseImpl qzResponse = (ResponseImpl) qzRequest.getResponse();
 	String themeMode = (String) session.getAttribute(Theme.KEY_THEME_MODE);
+	String randBindingId = java.util.UUID.randomUUID().toString();
 %>
 
 <script type="text/javascript">
