@@ -452,6 +452,14 @@
             processData: false,
             contentType: false,
             success: function (data) {
+                if (data.success === "true" || data.success === true) {
+					var searchBtn = $(".filter_search", getRestrictedArea());
+					if (searchBtn.length > 0) {
+						searchBtn.trigger('click'); //点击搜索按钮，请求list
+					} else {
+						$("li.treeview.active", getRestrictedArea()).find("a").trigger('click');//点击当前所在菜单，请求list
+					}
+				}
                 showMsg(data.msg, data.msg_level);
             },
             error: function (e) {
