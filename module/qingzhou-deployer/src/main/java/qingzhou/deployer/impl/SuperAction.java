@@ -67,6 +67,7 @@ class SuperAction {
                     Uml service = app.getAppContext().getService(Uml.class);
                     Base64Coder base64Coder = app.getAppContext().getService(CryptoService.class).getBase64Coder();
                     umlData.setUmlData(base64Coder.encode(service.toSvg(umlDataStr)));
+                    break;
                 }
             }
         }
