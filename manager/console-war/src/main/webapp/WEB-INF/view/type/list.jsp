@@ -227,7 +227,7 @@
                     }
                 %>
                 <%
-                    if ((field.equals(idField)) || fieldInfo.isLinkShow()) {
+                    if ((field.equals(idField))) {
                         boolean hasShowAction = false;
                         if (SecurityController.isActionPermitted(qzApp, qzModel, Show.ACTION_SHOW, currentUser)) {
                             hasShowAction = true;
@@ -250,7 +250,22 @@
                     } else {
                         out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
                     }
-                } else if (!fieldInfo.getUpdateAction().isEmpty()) {
+                } else if(!fieldInfo.getLinkAction().isEmpty()){
+                        boolean hasAction = false;
+                        if (SecurityController.isActionPermitted(qzApp, qzModel, fieldInfo.getLinkAction(), currentUser)) {
+                %>
+                    <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , fieldInfo.getLinkAction() + "/" + encodedItemId)%>'
+                       class="dataid qz-action-link tooltips"
+                       data-tip-arrow="top"
+                       data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
+                       style="color:#4C638F;">
+                        <%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
+                    </a>
+                <%
+                    }else{
+                        out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
+                    }
+                    }else if (!fieldInfo.getUpdateAction().isEmpty()) {
                     // 兼容表单组件 例：bool.jsp中使用的是fieldValue和fieldName
                     // 避免编译报错，放入这个循环里，是避免和 list.jsp 中 的同名变量冲突
                     java.util.List<String> passwordFields = new ArrayList<>();

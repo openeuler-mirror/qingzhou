@@ -22,7 +22,7 @@ public class ModelFieldInfo {
     private boolean list;
     private int ignore;
     private boolean search;
-    private boolean linkShow;
+    private String linkAction;
     private int widthPercent;
     private boolean numeric;
     private String display;
@@ -184,12 +184,12 @@ public class ModelFieldInfo {
         this.search = search;
     }
 
-    public boolean isLinkShow() {
-        return linkShow;
+    public String getLinkAction() {
+        return linkAction;
     }
 
-    public void setLinkShow(boolean linkShow) {
-        this.linkShow = linkShow;
+    public void setLinkAction(String linkAction) {
+        this.linkAction = linkAction;
     }
 
     public int getWidthPercent() {
