@@ -75,7 +75,7 @@ public class HtmlView implements View {
 
         ActionType actionType = request.getCachedModelInfo().getModelActionInfo(actionName).getActionType();
         if (actionType == ActionType.sub_menu) {
-            return "sys/sub_inddex";
+            return "sys/sub_index";
         }
 
         return "default";
