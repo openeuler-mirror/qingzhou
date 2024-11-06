@@ -1604,12 +1604,12 @@ function initDashboardPage() {
         chartInstances = {};
         tableInstances = {};
         shareDatasetBuffers = {}; // 重置缓冲区
+        window.removeEventListener('resize', resizeHandler);
     }
 
     var dashboardDiv = $("div.dashboardPage");
     var url = dashboardDiv.attr("data-url");
     if (!url) {
-        window.removeEventListener('resize', resizeHandler);
         return;
     }
 
