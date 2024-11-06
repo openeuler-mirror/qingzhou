@@ -49,12 +49,12 @@ public class PageUtil {
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
-        return response.encodeURL(url);
+        return RESTController.encodeURL(response, url);
     }
 
     public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String model, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;
-        return response.encodeURL(url);
+        return RESTController.encodeURL(response, url);
     }
 
     public static String styleFieldValue(String value, ModelFieldInfo fieldInfo, ModelInfo modelInfo) {
@@ -156,12 +156,14 @@ public class PageUtil {
     public static String buildMenu(HttpServletRequest request, HttpServletResponse response, RequestImpl qzRequest) {
         AppInfo appInfo = SystemController.getAppInfo(qzRequest.getApp());
         ModelActionInfo actionInfo = qzRequest.getCachedModelInfo().getModelActionInfo(qzRequest.getAction());
+        String modelMenuParameter = null;
 
         Set<String> showSubMenus = null;
         if (actionInfo.getActionType() == ActionType.sub_menu) {
             String[] menuModels = actionInfo.getMenuModels();
             if (menuModels != null && menuModels.length > 0) {
                 showSubMenus = new HashSet<>(Arrays.asList(menuModels));
+                modelMenuParameter = (qzRequest.getModel() + "." + qzRequest.getAction() + "=" + qzRequest.getId());
             }
         }
 
@@ -204,16 +206,16 @@ public class PageUtil {
         StringBuilder menuHtml = new StringBuilder();
         // 同一级别，Model 菜单排前面
         for (ModelInfo noMenuModel : rootMenu.getSubModelList()) {
-            menuHtml.append(buildModelMenu(0, noMenuModel, qzRequest, request, response));
+            menuHtml.append(buildModelMenu(0, noMenuModel, qzRequest, request, response, modelMenuParameter));
         }
         // 同一级别，导航 菜单排后面
         for (MenuItem levelOneMenu : rootMenu.getSubMenuList()) {
-            menuHtml.append(buildParentMenu(0, levelOneMenu, qzRequest, request, response));
+            menuHtml.append(buildParentMenu(0, levelOneMenu, qzRequest, request, response, modelMenuParameter));
         }
         return menuHtml.toString();
     }
 
-    private static String buildParentMenu(int level, MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
+    private static String buildParentMenu(int level, MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response, String modelMenuParameter) {
         StringBuilder menuHtml = new StringBuilder();
 
         // qingzhou.app.system.Main.XXX
@@ -233,7 +235,7 @@ public class PageUtil {
             menuHtml.append("<ul class=\"treeview-menu\">");
             menuBegan = true;
 
-            menuItem.getSubModelList().forEach(subModel -> menuHtml.append(buildModelMenu(menuTextLeft, subModel, qzRequest, request, response)));
+            menuItem.getSubModelList().forEach(subModel -> menuHtml.append(buildModelMenu(menuTextLeft, subModel, qzRequest, request, response, modelMenuParameter)));
         }
 
         if (!menuItem.getSubMenuList().isEmpty()) {
@@ -242,7 +244,7 @@ public class PageUtil {
                 menuBegan = true;
             }
 
-            menuItem.getSubMenuList().forEach(subMenu -> menuHtml.append(buildParentMenu(level + 1, subMenu, qzRequest, request, response)));
+            menuItem.getSubMenuList().forEach(subMenu -> menuHtml.append(buildParentMenu(level + 1, subMenu, qzRequest, request, response, modelMenuParameter)));
         }
 
         if (menuBegan) {
@@ -253,11 +255,14 @@ public class PageUtil {
         return menuHtml.toString();
     }
 
-    private static String buildModelMenu(int menuTextLeft, ModelInfo modelInfo, Request qzRequest, HttpServletRequest request, HttpServletResponse response) {
+    private static String buildModelMenu(int menuTextLeft, ModelInfo modelInfo, Request qzRequest, HttpServletRequest request, HttpServletResponse response, String urlParameter) {
         StringBuilder menuHtml = new StringBuilder();
         menuHtml.append("<li class=\"treeview ").append("\">");
         String contextPath = request.getContextPath();
         String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + qzRequest.getApp() + "/" + modelInfo.getCode() + "/" + modelInfo.getEntrance();
+        if (Utils.notBlank(urlParameter)) {
+            url += "?" + urlParameter;
+        }
         menuHtml.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(modelInfo.getCode()).append("'").append("style=\" text-indent:").append(menuTextLeft).append("px;\"").append(">");
         menuHtml.append("<i class='icon icon-").append(modelInfo.getIcon()).append("'></i>");
         menuHtml.append("<span>").append(I18n.getModelI18n(qzRequest.getApp(), "model." + modelInfo.getCode())).append("</span>");
