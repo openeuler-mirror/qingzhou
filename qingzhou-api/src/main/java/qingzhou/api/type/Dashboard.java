@@ -6,9 +6,9 @@ public interface Dashboard {
     void dashboardData(String id, DataBuilder builder);
 
     interface DataBuilder {
-        <T> T build(Class<? extends DashboardData> dataType);
+        <T> T buildData(Class<? extends DashboardData> dataType);
 
-        void add(DashboardData dashboardData);
+        void addData(DashboardData dashboardData);
     }
 
     interface DashboardData {

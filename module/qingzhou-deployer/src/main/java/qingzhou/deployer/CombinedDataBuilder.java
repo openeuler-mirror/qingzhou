@@ -5,39 +5,29 @@ import qingzhou.api.type.Combined;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
-    private final List<Combined.CombinedData> dataList = new ArrayList<>();
+    // 使用 map 是为了 json view 可以判定 CombinedData 的类型
+    public final Map<String, Combined.CombinedData> data = new LinkedHashMap<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
     @Override
-    public Combined.ShowData buildShowData() {
-        return new ShowDataImpl();
+    public <T> T buildData(Class<? extends Combined.CombinedData> dataType) {
+        if (dataType == Combined.ShowData.class) return (T) new Show();
+        if (dataType == Combined.UmlData.class) return (T) new Uml();
+        if (dataType == Combined.ListData.class) return (T) new List();
+        throw new IllegalArgumentException();
     }
 
     @Override
-    public Combined.UmlData buildUmlData() {
-        return new UmlDataImpl();
-    }
-
-    @Override
-    public Combined.ListData buildListData() {
-        return new ListDataImpl();
-    }
-
-    @Override
-    public void add(Combined.CombinedData data) {
-        this.dataList.add(data);
-    }
-
-    public List<Combined.CombinedData> getDataList() {
-        return dataList;
+    public void addData(Combined.CombinedData data) {
+        this.data.put(data.getClass().getSimpleName(), data);
     }
 
     public static abstract class CombinedDataImpl implements Combined.CombinedData, Serializable {
-        private String header;
-        private String model;
+        public String header; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public String model; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
         public Combined.CombinedData header(String header) {
@@ -50,63 +40,38 @@ public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
             this.model = model;
             return this;
         }
+    }
 
+    public static class Show extends CombinedDataImpl implements Combined.ShowData {
+        public Map<String, String> data = new HashMap<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
-        public String getHeader() {
-            return header;
-        }
-
-        public String getModel() {
-            return model;
+        @Override
+        public void addData(String fieldName, String fieldValue) {
+            this.data.put(fieldName, fieldValue);
         }
     }
 
-    public static class ShowDataImpl extends CombinedDataImpl implements Combined.ShowData {
-        private final Map<String, String> showData = new HashMap<>();
+    public static class Uml extends CombinedDataImpl implements Combined.UmlData {
+        public String data; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
-        public void putData(String fieldName, String fieldValue) {
-            this.showData.put(fieldName, fieldValue);
-        }
-
-        public Map<String, String> getShowData() {
-            return showData;
+        public void setData(String umlData) {
+            this.data = umlData;
         }
     }
 
-    public static class UmlDataImpl extends CombinedDataImpl implements Combined.UmlData {
-        private String umlData;
+    public static class List extends CombinedDataImpl implements Combined.ListData {
+        public String[] fields; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public java.util.List<String[]> values = new ArrayList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
-        public void setUmlData(String umlData) {
-            this.umlData = umlData;
-        }
-
-        public String getUmlData() {
-            return umlData;
-        }
-    }
-
-    public static class ListDataImpl extends CombinedDataImpl implements Combined.ListData {
-        private String[] fieldNames;
-        private final List<String[]> fieldValues = new ArrayList<>();
-
-        @Override
-        public void setFieldNames(String[] fieldNames) {
-            this.fieldNames = fieldNames;
+        public void setFields(String[] fields) {
+            this.fields = fields;
         }
 
         @Override
         public void addFieldValues(String[] fieldValues) {
-            this.fieldValues.add(fieldValues);
-        }
-
-        public String[] getFieldNames() {
-            return fieldNames;
-        }
-
-        public List<String[]> getFieldValues() {
-            return fieldValues;
+            this.values.add(fieldValues);
         }
     }
 }

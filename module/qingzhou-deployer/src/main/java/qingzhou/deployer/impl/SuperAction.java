@@ -59,15 +59,14 @@ class SuperAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         CombinedDataBuilder dataBuilder = new CombinedDataBuilder();
         ((Combined) instance).combinedData(request.getId(), dataBuilder);
-        for (Combined.CombinedData combinedData : dataBuilder.getDataList()) {
+        for (Combined.CombinedData combinedData : dataBuilder.data.values()) {
             if (combinedData instanceof Combined.UmlData) {
-                CombinedDataBuilder.UmlDataImpl umlData = (CombinedDataBuilder.UmlDataImpl) combinedData;
-                String umlDataStr = umlData.getUmlData();
+                CombinedDataBuilder.Uml umlData = (CombinedDataBuilder.Uml) combinedData;
+                String umlDataStr = umlData.data;
                 if (Utils.notBlank(umlDataStr)) {
                     Uml service = app.getAppContext().getService(Uml.class);
                     Base64Coder base64Coder = app.getAppContext().getService(CryptoService.class).getBase64Coder();
-                    umlData.setUmlData(base64Coder.encode(service.toSvg(umlDataStr)));
-                    break;
+                    umlData.setData(base64Coder.encode(service.toSvg(umlDataStr)));
                 }
             }
         }
@@ -507,7 +506,7 @@ class SuperAction {
         DashboardDataBuilder dashboardBuilder = new DashboardDataBuilder();
         ((Dashboard) instance).dashboardData(request.getId(), dashboardBuilder);
 
-        java.util.List<Dashboard.DashboardData> dataTypes = dashboardBuilder.getDataTypes();
+        Collection<Dashboard.DashboardData> dataTypes = dashboardBuilder.data.values();
         if (dataTypes.isEmpty()) {
             return;
         }
@@ -525,24 +524,24 @@ class SuperAction {
                 continue;
             }
             Class<? extends Dashboard.DashboardData> dataTypeClass = dashboardData.getClass();
-            if (dataTypeClass == DashboardDataBuilder.BasicImpl.class) {
-                DashboardDataBuilder.BasicImpl basic = (DashboardDataBuilder.BasicImpl) dashboardData;
-                Map<String, String> data = basic.getData();
+            if (dataTypeClass == DashboardDataBuilder.Basic.class) {
+                DashboardDataBuilder.Basic basic = (DashboardDataBuilder.Basic) dashboardData;
+                Map<String, String> data = basic.data;
                 basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(data));
-                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_INFO, basic.getInfo());
-                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_TITLE, basic.getTitle());
-            } else if (dataTypeClass == DashboardDataBuilder.GaugeImpl.class) {
-                Map<String, String> gaugeData = processGaugeOrHistogram((DashboardDataBuilder.GaugeImpl) dashboardData, json);
+                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_INFO, basic.info);
+                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_TITLE, basic.title);
+            } else if (dataTypeClass == DashboardDataBuilder.Gauge.class) {
+                Map<String, String> gaugeData = processGaugeOrHistogram((DashboardDataBuilder.Gauge) dashboardData, json);
                 if (gaugeData != null) {
                     gaugeDataList.add(gaugeData);
                 }
-            } else if (dataTypeClass == DashboardDataBuilder.HistogramImpl.class) {
-                Map<String, String> histogramData = processGaugeOrHistogram((DashboardDataBuilder.HistogramImpl) dashboardData, json);
+            } else if (dataTypeClass == DashboardDataBuilder.Histogram.class) {
+                Map<String, String> histogramData = processGaugeOrHistogram((DashboardDataBuilder.Histogram) dashboardData, json);
                 if (histogramData != null) {
                     histogramDataList.add(histogramData);
                 }
-            } else if (dataTypeClass == DashboardDataBuilder.ShareDatasetImpl.class) {
-                Map<String, String> shareDataset = processShareDataset((DashboardDataBuilder.ShareDatasetImpl) dashboardData, json);
+            } else if (dataTypeClass == DashboardDataBuilder.ShareDataset.class) {
+                Map<String, String> shareDataset = processShareDataset((DashboardDataBuilder.ShareDataset) dashboardData, json);
                 if (shareDataset != null) {
                     shareDatasetDataList.add(shareDataset);
                 }
@@ -565,19 +564,18 @@ class SuperAction {
         if (!shareDatasetDataList.isEmpty()) {
             result.put(DeployerConstants.DASHBOARD_FIELD_SHARE_DATASET_DATA, json.toJson(shareDatasetDataList));
         }
-
     }
 
-    private Map<String, String> processGaugeOrHistogram(DashboardDataBuilder.GaugeImpl gauge, Json json) {
-        java.util.List<String[]> dataList = gauge.getData();
-        String[] fields = gauge.getFields();
+    private Map<String, String> processGaugeOrHistogram(DashboardDataBuilder.Gauge gauge, Json json) {
+        java.util.List<String[]> dataList = gauge.data;
+        String[] fields = gauge.fields;
         int usedIndex = -1;
         int maxIndex = -1;
         for (int i = 0; i < fields.length; i++) {
             String field = fields[i];
-            if (field.equals(gauge.getValueKey())) {
+            if (field.equals(gauge.valueKey)) {
                 usedIndex = i;
-            } else if (field.equals(gauge.getMaxKey())) {
+            } else if (field.equals(gauge.maxKey)) {
                 maxIndex = i;
             }
         }
@@ -605,17 +603,17 @@ class SuperAction {
         if (maxIndex != -1) {
             result.put(DeployerConstants.DASHBOARD_FIELD_MAX, String.valueOf(totalMax));
         }
-        result.put(DeployerConstants.DASHBOARD_FIELD_UNIT, gauge.getUnit());
-        result.put(DeployerConstants.DASHBOARD_FIELD_INFO, gauge.getInfo());
-        result.put(DeployerConstants.DASHBOARD_FIELD_TITLE, gauge.getTitle());
+        result.put(DeployerConstants.DASHBOARD_FIELD_UNIT, gauge.unit);
+        result.put(DeployerConstants.DASHBOARD_FIELD_INFO, gauge.info);
+        result.put(DeployerConstants.DASHBOARD_FIELD_TITLE, gauge.title);
 
         return result;
     }
 
-    private Map<String, String> processShareDataset(DashboardDataBuilder.ShareDatasetImpl shareDataset, Json json) {
+    private Map<String, String> processShareDataset(DashboardDataBuilder.ShareDataset shareDataset, Json json) {
         try {
             java.util.List<String[]> dataList = new LinkedList<>();
-            Map<String, String> data = shareDataset.getData();
+            Map<String, String> data = shareDataset.data;
             Set<String> keySet = data.keySet();
             for (String key : keySet) {
                 java.util.List<String> fieldData = new LinkedList<>();
@@ -626,8 +624,8 @@ class SuperAction {
 
             Map<String, String> echartsDataset = new HashMap<>();
             echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(dataList));
-            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_INFO, shareDataset.getInfo());
-            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_TITLE, shareDataset.getTitle());
+            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_INFO, shareDataset.info);
+            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_TITLE, shareDataset.title);
 
             return echartsDataset;
         } catch (Exception e) {

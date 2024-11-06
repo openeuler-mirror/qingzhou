@@ -4,7 +4,7 @@ import qingzhou.api.ActionType;
 
 import java.lang.reflect.Method;
 
-public class  ModelActionInfo {
+public class ModelActionInfo {
     private transient Method method;
     private String code;
     private String[] name;
@@ -14,7 +14,7 @@ public class  ModelActionInfo {
     private String show;
     private String appPage;
     private String[] formFields;
-    private boolean formLoadedTrigger;
+    private boolean subFormSubmitOnOpen;
     private String[] menuModels;
     private ActionType actionType;
 
@@ -90,12 +90,12 @@ public class  ModelActionInfo {
         this.formFields = formFields;
     }
 
-    public boolean isFormLoadedTrigger() {
-        return formLoadedTrigger;
+    public boolean isSubFormSubmitOnOpen() {
+        return subFormSubmitOnOpen;
     }
 
-    public void setFormLoadedTrigger(boolean formLoadedTrigger) {
-        this.formLoadedTrigger = formLoadedTrigger;
+    public void setSubFormSubmitOnOpen(boolean subFormSubmitOnOpen) {
+        this.subFormSubmitOnOpen = subFormSubmitOnOpen;
     }
 
     public String[] getMenuModels() {

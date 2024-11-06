@@ -1,4 +1,3 @@
-<%@ page import="java.net.URLEncoder" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ include file="../fragment/head.jsp" %>
@@ -119,29 +118,29 @@
         </div>
     </div>
 
-	<table class="qz-data-list table table-striped table-hover list-table responseScroll" binding="<%=randomId%>">
-		<thead>
-		<tr style="height:20px;">
-			<%
-				int otherTh = 0;
-				if (batchActions.length > 0) {
-					otherTh += 1;
-			%>
-			<th class="custom-checkbox">
-				<input type="checkbox" class="allcheck"/>
-			</th>
-			<%
-				}
-				if (modelInfo.isShowOrderNumber()) {
-					otherTh += 1;
-			%>
-			<th class="sequence"><%=I18n.getKeyI18n("page.list.order")%>
-			</th>
-			<%
-				}
-				if (listActions.length > 0) {
-					otherTh += 1;
-				}
+    <table class="qz-data-list table table-striped table-hover list-table responseScroll" binding="<%=randomId%>">
+        <thead>
+        <tr style="height:20px;">
+            <%
+                int otherTh = 0;
+                if (batchActions.length > 0) {
+                    otherTh += 1;
+            %>
+            <th class="custom-checkbox">
+                <input type="checkbox" class="allcheck"/>
+            </th>
+            <%
+                }
+                if (modelInfo.isShowOrderNumber()) {
+                    otherTh += 1;
+            %>
+            <th class="sequence"><%=I18n.getKeyI18n("page.list.order")%>
+            </th>
+            <%
+                }
+                if (listActions.length > 0) {
+                    otherTh += 1;
+                }
                 //隐藏的不计算宽度占比
                 int hiddenCount = 0;
                 for (String field : listFields) {
@@ -150,94 +149,95 @@
                         hiddenCount += 1;
                     }
                 }
-				for (String field : listFields) {
-					ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
-					String needHidden = "";
-					if (fieldInfo.isHidden()){
-						needHidden = "display:none";
-					}
-					int width;
-					if (fieldInfo.getWidthPercent() > 0) {
-						width = fieldInfo.getWidthPercent();
-					} else {
-						width = 100 / (listFields.length + otherTh - hiddenCount);
-					}
-			%>
-			<%-- 注意这个width末尾的 % 不能删除 %>% 不是手误 --%>
-			<th style="width: <%=width%>%;<%=needHidden%>"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
-			</th>
-			<%
-				}
-				if (listActions.length > 0) {
-					out.print("<th style=\"width:"+ (100 / (listFields.length + otherTh - hiddenCount)) +"%\">" + I18n.getKeyI18n("page.action") + "</th>");
-				}
-			%>
-		</tr>
-		</thead>
-		<tbody>
-		<%
-			java.util.List<String[]> modelDataList = qzResponse.getDataList();
-			if (modelDataList.isEmpty()) {
-				String dataEmpty = "<tr><td colspan='" + (((batchActions.length > 0) ? 1 : 0) + (modelInfo.isShowOrderNumber() ? 1 : 0) + listFields.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
-						+ "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
-						+ "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getKeyI18n("page.none") + "</span></td>";
-				out.print(dataEmpty);
-			} else {
-				int listOrder = (pageNum - 1) * pageSize;
-				int idIndex = modelInfo.getIdIndex();
-				for (String[] modelData : modelDataList) {
-					String originUnEncodedId = modelData[idIndex];
-					String encodedItemId = RESTController.encodeId(originUnEncodedId);
-		%>
-		<tr>
-			<%
-				if (batchActions.length > 0) {
-			%>
-			<td class="custom-checkbox">
-				<input type="checkbox" class='morecheck' value="<%=encodedItemId%>"/>
-			</td>
-			<%
-				}
-				if (modelInfo.isShowOrderNumber()) {
-			%>
-			<td class="sequence"><%=++listOrder%>
-			</td>
-			<%
-				}
-				for (String field : listFields) {
-					ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
-					String needHidden = "";
-					if (fieldInfo.isHidden()){
-						needHidden = "display:none";
-					}
-					String value = modelData[modelInfo.getFieldIndex(field)];
-					if (value == null) {
-						value = "";
-					}
-					String fieldUpdateAction = "";
-					if (!fieldInfo.getUpdateAction().isEmpty()) {
-						fieldUpdateAction = fieldInfo.getUpdateAction();
-			%>
-			<td style="<%=needHidden%>" action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG , fieldUpdateAction + "/" + encodedItemId)%>">
-					<%
+                for (String field : listFields) {
+                    ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
+                    String needHidden = "";
+                    if (fieldInfo.isHidden()) {
+                        needHidden = "display:none";
+                    }
+                    int width;
+                    if (fieldInfo.getWidthPercent() > 0) {
+                        width = fieldInfo.getWidthPercent();
+                    } else {
+                        width = 100 / (listFields.length + otherTh - hiddenCount);
+                    }
+            %>
+            <%-- 注意这个width末尾的 % 不能删除 %>% 不是手误 --%>
+            <th style="width: <%=width%>%;<%=needHidden%>"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + field)%>
+            </th>
+            <%
+                }
+                if (listActions.length > 0) {
+                    out.print("<th style=\"width:" + (100 / (listFields.length + otherTh - hiddenCount)) + "%\">" + I18n.getKeyI18n("page.action") + "</th>");
+                }
+            %>
+        </tr>
+        </thead>
+        <tbody>
+        <%
+            java.util.List<String[]> modelDataList = qzResponse.getDataList();
+            if (modelDataList.isEmpty()) {
+                String dataEmpty = "<tr><td colspan='" + (((batchActions.length > 0) ? 1 : 0) + (modelInfo.isShowOrderNumber() ? 1 : 0) + listFields.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
+                        + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
+                        + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getKeyI18n("page.none") + "</span></td>";
+                out.print(dataEmpty);
+            } else {
+                int listOrder = (pageNum - 1) * pageSize;
+                int idIndex = modelInfo.getIdIndex();
+                for (String[] modelData : modelDataList) {
+                    String originUnEncodedId = modelData[idIndex];
+                    String encodedItemId = RESTController.encodeId(originUnEncodedId);
+        %>
+        <tr>
+            <%
+                if (batchActions.length > 0) {
+            %>
+            <td class="custom-checkbox">
+                <input type="checkbox" class='morecheck' value="<%=encodedItemId%>"/>
+            </td>
+            <%
+                }
+                if (modelInfo.isShowOrderNumber()) {
+            %>
+            <td class="sequence"><%=++listOrder%>
+            </td>
+            <%
+                }
+                for (String field : listFields) {
+                    ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
+                    String needHidden = "";
+                    if (fieldInfo.isHidden()) {
+                        needHidden = "display:none";
+                    }
+                    String value = modelData[modelInfo.getFieldIndex(field)];
+                    if (value == null) {
+                        value = "";
+                    }
+                    String fieldUpdateAction = "";
+                    if (!fieldInfo.getUpdateAction().isEmpty()) {
+                        fieldUpdateAction = fieldInfo.getUpdateAction();
+            %>
+            <td style="<%=needHidden%>"
+                action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG , fieldUpdateAction + "/" + encodedItemId)%>">
+                    <%
                     }else{
             %>
-			<td style="<%=needHidden%>">
-				<%
-					}
-				%>
-				<%
-					if ((field.equals(idField)) || fieldInfo.isLinkShow()) {
-						boolean hasShowAction = false;
-						if (SecurityController.isActionPermitted(qzApp, qzModel, Show.ACTION_SHOW, currentUser)) {
-							hasShowAction = true;
-							String condition = modelInfo.getModelActionInfo(Show.ACTION_SHOW).getShow();
-							if (Utils.notBlank(condition)) {
-								hasShowAction = SecurityController.checkRule(condition, fieldName -> modelData[modelInfo.getFieldIndex(fieldName)]);
-							}
-						}
-						if (hasShowAction) {
-				%>
+            <td style="<%=needHidden%>">
+                <%
+                    }
+                %>
+                <%
+                    if ((field.equals(idField)) || fieldInfo.isLinkShow()) {
+                        boolean hasShowAction = false;
+                        if (SecurityController.isActionPermitted(qzApp, qzModel, Show.ACTION_SHOW, currentUser)) {
+                            hasShowAction = true;
+                            String condition = modelInfo.getModelActionInfo(Show.ACTION_SHOW).getShow();
+                            if (Utils.notBlank(condition)) {
+                                hasShowAction = SecurityController.checkRule(condition, fieldName -> modelData[modelInfo.getFieldIndex(fieldName)]);
+                            }
+                        }
+                        if (hasShowAction) {
+                %>
 
                 <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , Show.ACTION_SHOW + "/" + encodedItemId)%>'
                    class="dataid qz-action-link tooltips"
@@ -288,9 +288,9 @@
                     } else if (Utils.notBlank(fieldInfo.getRefModel())) {
                         refModelName = fieldInfo.getRefModel();
                         refFieldName = SystemController.getModelInfo(qzApp, refModelName).getIdField();
-                        ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
-                        if (Utils.notBlank(value)){
+                        if (Utils.notBlank(value)) {
                             //应用跳转到实例：refmodel 传点击字段的值
+                            ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
                             refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
                         }
                     }
@@ -310,7 +310,7 @@
                 %>
             </td>
             <%
-				}
+                }
 
                 if (listActions.length > 0) {
             %>
@@ -346,7 +346,7 @@
 
                             if (Utils.notBlank(customActionId)) {
                                 out.print(customActionId);
-                                out.print(" form-loaded-trigger=" + action.isFormLoadedTrigger());
+                                out.print(" form-loaded-trigger=" + action.isSubFormSubmitOnOpen());
                             }
 
                             if (action.getActionType() == ActionType.sub_form) {
@@ -442,30 +442,4 @@
     $(document).ready(function () {
         $('[data-toggle="tooltip"]').tooltip();
     });
-
-    function upload(file, url, id) {
-        const formData = new FormData();
-        formData.append(id, file);
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success === "true" || data.success === true) {
-					var searchBtn = $(".filter_search", getRestrictedArea());
-					if (searchBtn.length > 0) {
-						searchBtn.trigger('click'); //点击搜索按钮，请求list
-					} else {
-						$("li.treeview.active", getRestrictedArea()).find("a").trigger('click');//点击当前所在菜单，请求list
-					}
-				}
-                showMsg(data.msg, data.msg_level);
-            },
-            error: function (e) {
-                handleError(e);
-            }
-        });
-    }
 </script>

@@ -7,35 +7,35 @@
     <%
         String contextPath = request.getContextPath();
         CombinedDataBuilder customizedDataObject = (CombinedDataBuilder) qzResponse.getCustomizedDataObject();
-        List<Combined.CombinedData> dataList = customizedDataObject.getDataList();
+        Collection<Combined.CombinedData> dataList = customizedDataObject.data.values();
         if (!dataList.isEmpty()) {
             for (Combined.CombinedData combinedData : dataList) {
 
                 if (combinedData instanceof Combined.ShowData) {
-                    CombinedDataBuilder.ShowDataImpl showData = (CombinedDataBuilder.ShowDataImpl) combinedData;
-                    Map<String, String> infoData = showData.getShowData();
+                    CombinedDataBuilder.Show showData = (CombinedDataBuilder.Show) combinedData;
+                    Map<String, String> infoData = showData.data;
     %>
     <%@ include file="../fragment/info.jsp" %>
     <%
         }
 
         if (combinedData instanceof Combined.UmlData) {
-            CombinedDataBuilder.UmlDataImpl umlDataImpl = (CombinedDataBuilder.UmlDataImpl) combinedData;
-            String umlData = umlDataImpl.getUmlData();
+            CombinedDataBuilder.Uml umlDataImpl = (CombinedDataBuilder.Uml) combinedData;
+            String umlData = umlDataImpl.data;
             if (Utils.notBlank(umlData)) {
     %>
-    <img style="width: 600px" src="data:image/svg+xml;base64,<%=umlData%>" alt="<%=umlDataImpl.getHeader()%>">
+    <img src="data:image/svg+xml;base64,<%=umlData%>">
     <%
             }
         }
 
         if (combinedData instanceof Combined.ListData) {
-            CombinedDataBuilder.ListDataImpl listData = (CombinedDataBuilder.ListDataImpl) combinedData;
-            String[] fieldNames = listData.getFieldNames();
-            List<String[]> fieldValues = listData.getFieldValues();
+            CombinedDataBuilder.List listData = (CombinedDataBuilder.List) combinedData;
+            String[] fieldNames = listData.fields;
+            List<String[]> fieldValues = listData.values;
 
     %>
-    <h4><%=listData.getHeader()%>
+    <h4><%=listData.header%>
     </h4>
     <table class="qz-data-list table table-striped table-hover list-table responseScroll">
         <thead>

@@ -114,9 +114,21 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return options != null ? options : new ItemInfo[0];
     }
 
-    public static String[] getColor(ModelInfo modelInfo, String fieldName) {
+    public static String getColorStyle(ModelInfo modelInfo, String fieldName, String value) {
         ModelFieldInfo modelFieldInfo = modelInfo.getModelFieldInfo(fieldName);
-        return modelFieldInfo.getColor();
+        String[] color = modelFieldInfo.getColor();
+        if (color != null) {
+            for (String condition : color) {
+                String[] array = condition.split(":");
+                if (array.length != 2) {
+                    continue;
+                }
+                if (array[0].equals(value)) {
+                    return "color:" + array[1];
+                }
+            }
+        }
+        return "";
     }
 
     private static ItemInfo[] getOptions0(String qzApp, ModelInfo modelInfo, String fieldName) {
