@@ -5,6 +5,8 @@ import qingzhou.api.type.Dashboard;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +57,7 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
     }
 
     public static class BasicImpl extends DashboardDataImpl implements Dashboard.Basic {
-        private final Map<String, String> data = new HashMap<>();
+        private final Map<String, String> data = new LinkedHashMap<>();
 
         @Override
         public Dashboard.Basic put(String key, String value) {
@@ -70,7 +72,7 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
 
     public static class GaugeImpl extends DashboardDataImpl implements Dashboard.Gauge {
         private String[] fields;
-        private final List<String[]> data = new ArrayList<>();
+        private final List<String[]> data = new LinkedList<>();
         private String valueKey;
         private String maxKey;
         private String unit;
