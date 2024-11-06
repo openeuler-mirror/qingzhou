@@ -24,7 +24,7 @@
             String umlData = umlDataImpl.getUmlData();
             if (Utils.notBlank(umlData)) {
     %>
-    <img style="width: 600px" src="<%=umlData%>" alt="<%=umlDataImpl.getHeader()%>">
+    <img style="width: 600px" src="data:image/svg+xml;base64,<%=umlData%>" alt="<%=umlDataImpl.getHeader()%>">
     <%
             }
         }
