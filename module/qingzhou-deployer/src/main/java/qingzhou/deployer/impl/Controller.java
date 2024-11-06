@@ -54,6 +54,7 @@ public class Controller implements ModuleActivator {
 
     @Service
     private Uml uml;
+
     private DeployerImpl deployer;
 
     @Override

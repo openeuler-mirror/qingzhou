@@ -1,7 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
+
 <%@ include file="../fragment/head.jsp" %>
 
-<div class="bodyDiv" style="position: relative">
+<div class="bodyDiv">
     <%@ include file="../fragment/breadcrumb.jsp" %>
     <%
         String contextPath = request.getContextPath();
@@ -9,21 +10,25 @@
         List<Combined.CombinedData> dataList = customizedDataObject.getDataList();
         if (!dataList.isEmpty()) {
             for (Combined.CombinedData combinedData : dataList) {
+
                 if (combinedData instanceof Combined.ShowData) {
                     CombinedDataBuilder.ShowDataImpl showData = (CombinedDataBuilder.ShowDataImpl) combinedData;
                     Map<String, String> infoData = showData.getShowData();
     %>
     <%@ include file="../fragment/info.jsp" %>
     <%
-    } else if (combinedData instanceof Combined.UmlData) {
-        CombinedDataBuilder.UmlDataImpl umlDataImpl = (CombinedDataBuilder.UmlDataImpl) combinedData;
-        String umlData = umlDataImpl.getUmlData();
-        if (Utils.notBlank(umlData)) {
+        }
+
+        if (combinedData instanceof Combined.UmlData) {
+            CombinedDataBuilder.UmlDataImpl umlDataImpl = (CombinedDataBuilder.UmlDataImpl) combinedData;
+            String umlData = umlDataImpl.getUmlData();
+            if (Utils.notBlank(umlData)) {
     %>
     <img style="width: 600px" src="<%=umlData%>" alt="<%=umlDataImpl.getHeader()%>">
     <%
             }
         }
+
         if (combinedData instanceof Combined.ListData) {
             CombinedDataBuilder.ListDataImpl listData = (CombinedDataBuilder.ListDataImpl) combinedData;
             String[] fieldNames = listData.getFieldNames();
@@ -51,7 +56,7 @@
         <%
             for (String[] fieldValueArr : fieldValues) {
                 if (fieldValueArr.length == 0) {
-                    String dataEmpty = "<tr><td colspan='" + (modelInfo.isShowOrderNumber() ? 1 : 0) + fieldNames.length + "' align='center'>"
+                    String dataEmpty = "<tr><td colspan='" + fieldNames.length + "' align='center'>"
                             + "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
                             + "<span style='font-size:14px; font-weight:600; letter-spacing: 2px;'>" + I18n.getKeyI18n("page.none") + "</span></td>";
                     out.print(dataEmpty);
@@ -61,15 +66,14 @@
             <%
                 for (int j = 0; j < fieldValueArr.length; j++) {
             %>
-            <td>
-                <%=fieldValueArr[j]%>
+            <td><%=fieldValueArr[j]%>
             </td>
             <%
-                    }
                 }
             %>
         </tr>
         <%
+                }
             }
         %>
         </tbody>
@@ -78,6 +82,7 @@
                 }
             }
         }
+
         if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
     %>
     <div class="block-bg" style="margin-top: 15px; height: 64px; text-align: center;">
@@ -87,8 +92,7 @@
             <%=I18n.getKeyI18n("page.return")%>
         </a>
     </div>
-</div>
-<%
-    }
-%>
+    <%
+        }
+    %>
 </div>

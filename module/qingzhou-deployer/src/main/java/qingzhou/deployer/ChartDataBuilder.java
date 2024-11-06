@@ -2,10 +2,11 @@ package qingzhou.deployer;
 
 import qingzhou.api.type.Chart;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class ChartDataBuilder implements Chart.DataBuilder {
+public class ChartDataBuilder implements Chart.DataBuilder, Serializable {
     private final Map<String, String[]> data = new LinkedHashMap<>();
 
     @Override

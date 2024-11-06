@@ -2,67 +2,45 @@ package qingzhou.deployer;
 
 import qingzhou.api.type.Dashboard;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DashboardDataBuilder implements Dashboard.DataBuilder {
-    private java.util.List<Dashboard.DataType> dataTypes = new ArrayList<>();
+public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable {
+    private final java.util.List<Dashboard.DashboardData> dataTypes = new ArrayList<>();
 
     @Override
-    public <T> T build(Class<? extends Dashboard.DataType> dataType) {
-        if (dataType.equals(Dashboard.Basic.class)) {
-            return (T) new BasicImpl();
-        }
-        if (dataType.equals(Dashboard.Gauge.class)) {
-            return (T) new GaugeImpl();
-        }
-        if (dataType.equals(Dashboard.Histogram.class)) {
-            return (T) new HistogramImpl();
-        }
-        if (dataType.equals(Dashboard.ShareDataset.class)) {
-            return (T) new ShareDatasetImpl();
-        }
-
-        return null;
+    public <T> T build(Class<? extends Dashboard.DashboardData> dataType) {
+        if (dataType == Dashboard.Basic.class) return (T) new BasicImpl();
+        if (dataType == Dashboard.Gauge.class) return (T) new GaugeImpl();
+        if (dataType == Dashboard.Histogram.class) return (T) new HistogramImpl();
+        if (dataType == Dashboard.ShareDataset.class) return (T) new ShareDatasetImpl();
+        throw new IllegalArgumentException();
     }
 
     @Override
-    public void add(Dashboard.DataType dataType) {
-        dataTypes.add(dataType);
+    public void add(Dashboard.DashboardData dashboardData) {
+        this.dataTypes.add(dashboardData);
     }
 
-    public List<Dashboard.DataType> getDataTypes() {
+    public List<Dashboard.DashboardData> getDataTypes() {
         return dataTypes;
     }
 
-    public static class BasicImpl extends DataTypeImpl implements Dashboard.Basic {
-        private Map<String, String> data = new HashMap<>();
-
-        @Override
-        public Dashboard.Basic put(String key, String value) {
-            data.put(key, value);
-            return this;
-        }
-
-        public Map<String, String> getData() {
-            return data;
-        }
-    }
-
-    public static class DataTypeImpl implements Dashboard.DataType {
+    public static abstract class DashboardDataImpl implements Dashboard.DashboardData, Serializable {
         private String title;
         private String info;
 
         @Override
-        public Dashboard.DataType title(String title) {
+        public Dashboard.DashboardData title(String title) {
             this.title = title;
             return this;
         }
 
         @Override
-        public Dashboard.DataType info(String info) {
+        public Dashboard.DashboardData info(String info) {
             this.info = info;
             return this;
         }
@@ -76,9 +54,23 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder {
         }
     }
 
-    public static class GaugeImpl extends DataTypeImpl implements Dashboard.Gauge {
+    public static class BasicImpl extends DashboardDataImpl implements Dashboard.Basic {
+        private final Map<String, String> data = new HashMap<>();
+
+        @Override
+        public Dashboard.Basic put(String key, String value) {
+            data.put(key, value);
+            return this;
+        }
+
+        public Map<String, String> getData() {
+            return data;
+        }
+    }
+
+    public static class GaugeImpl extends DashboardDataImpl implements Dashboard.Gauge {
         private String[] fields;
-        private List<String[]> data = new ArrayList<>();
+        private final List<String[]> data = new ArrayList<>();
         private String valueKey;
         private String maxKey;
         private String unit;
