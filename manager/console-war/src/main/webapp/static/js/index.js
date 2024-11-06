@@ -1054,10 +1054,14 @@ function initializeManager(element, url) {
     $(".tab-box>ul").append(tabHtml);
     $(".content-box>ul").append("<li></li>");
     bindTabEvent();
-    $(".tab-box>ul>li").last().click();
-    qz.fill(url, {}, $(".content-box>ul>li").last(), false, null);
-    $("ul[data-widget='tree']", $(".content-box>ul>li").last()).menuTree();
-    $("[data-toggle='push-menu']", $(".content-box>ul>li").last()).pushMenu({});
+    qz.fill(url, {}, $(".content-box>ul>li").last(), false, function() {
+        $("ul[data-widget='tree']", $(".content-box>ul>li").last()).menuTree();
+        $("[data-toggle='push-menu']", $(".content-box>ul>li").last()).pushMenu({});
+        $(".tab-box>ul>li.active").removeClass("active").addClass("inactive");
+        $(".content-box>ul>li.active").removeClass("active").addClass("inactive");
+        $(".tab-box>ul>li").last().removeClass("inactive").addClass("active");
+        $(".content-box>ul>li").last().removeClass("inactive").addClass("active");
+    });    
     return false;
 }
 
