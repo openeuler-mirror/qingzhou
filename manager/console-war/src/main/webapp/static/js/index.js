@@ -93,7 +93,7 @@ $(document).ready(function () {
     $("#reset-password-btn").unbind("click").bind("click", function (e) {
         e.preventDefault();
         $(".tab-box>ul>li[fixed='true']").click();
-        const restrictedArea = getRestrictedArea();
+        var restrictedArea = getRestrictedArea();
         var lis = $(".sidebar-menu .active", restrictedArea);// TODO 需要考虑二级 Tab 标签的情况
         lis.removeClass("menu-open active");
         for (var i = 0; i < lis.length; i++) {
@@ -273,7 +273,7 @@ function setOrReset() {
 
 function gotoTarget(model, action, group, field) {
     var boxes = new Array(".content-box>ul>li.active:first", ".content-box>ul>li:eq(1)", ".content-box>ul>li:eq(0)");
-    const restrictedArea = getRestrictedArea();// TODO 待调整
+    var restrictedArea = getRestrictedArea();// TODO 待调整
     for (var i = 0; i < boxes.length; i++) {
         var menuItemLink = $("ul.sidebar-menu li a[modelName='" + model + "']", $(boxes[i])).not(":has(div.tab-container)");
         if (menuItemLink.length > 0) {
@@ -557,7 +557,7 @@ function echoItem(thisForm, params, item, echoGroup) {
             }
         }
     });
-    const submitValue = params.filter(item => bindNames.has(item.name));
+    var submitValue = params.filter(item => bindNames.has(item.name));
     $.post(url, submitValue, function (data) {
         if (data.success === "true" || data.success === true) {
             updateFormData(thisForm, data.data);
@@ -570,12 +570,12 @@ function echoItem(thisForm, params, item, echoGroup) {
 
 function updateFormData(thisForm, data) {
     for (let key in data) {
-        const value = data[key];
-        const formItem = $("#form-item-" + key + " > div", thisForm);
-        const type = formItem.attr("type")
+        var value = data[key];
+        var formItem = $("#form-item-" + key + " > div", thisForm);
+        var type = formItem.attr("type")
         switch (type) {
             case "bool":
-                const val = $("input[name='" + key + "']", formItem).val();
+                var val = $("input[name='" + key + "']", formItem).val();
                 if (val !== value) {
                     $("div.switch-btn", formItem).trigger("click");
                 }
@@ -604,7 +604,7 @@ function updateFormData(thisForm, data) {
                 break;
             case "sortable_checkbox":
                 $("a", formItem).each(function () {
-                    const val = $("input[name=" + key + "]", this).attr("value");
+                    var val = $("input[name=" + key + "]", this).attr("value");
                     if (value.split(",").includes(val)) {
                         $("input[name=" + key + "]", this).prop("checked", true);
                     } else {
@@ -615,14 +615,14 @@ function updateFormData(thisForm, data) {
             case "sortable":
                 $("input[name='" + key + "']", formItem).val(value);
                 $('ul.sortable li:not(:first)', formItem).remove();
-                const valArr = value.split(",");
-                const ulEl = $("ul.sortable", formItem);
-                const firstLi = ulEl.find('li:first');
+                var valArr = value.split(",");
+                var ulEl = $("ul.sortable", formItem);
+                var firstLi = ulEl.find('li:first');
                 for (let i = 0; i < valArr.length; i++) {
                     if (i === 0) {
                         $("td.editable label", firstLi).text(valArr[i]);
                     } else {
-                        const clonedLi = firstLi.clone();
+                        var clonedLi = firstLi.clone();
                         $("td.editable label", clonedLi).text(valArr[i]);
                         ulEl.append(clonedLi);
                     }
@@ -630,12 +630,12 @@ function updateFormData(thisForm, data) {
                 break;
             case "kv":
                 $("tbody tr:not(:first,:last)", formItem).remove();
-                const alink = $("tbody tr:last td a", formItem);
-                const separator = $(formItem).children("div").attr("separator");
+                var alink = $("tbody tr:last td a", formItem);
+                var separator = $(formItem).children("div").attr("separator");
                 if (value !== null && value !== '') {
-                    const valArr = value.split(separator);
+                    var valArr = value.split(separator);
                     for (let val of valArr) {
-                        const arr = val.split("=");
+                        var arr = val.split("=");
                         addDictRow(alink, false, arr[0], arr[1]);
                     }
                 }
@@ -1388,7 +1388,7 @@ function getDateTime() {
 }
 
 function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, timerFn) {
-    const formData = $(restrictedArea).siblings("form.filterForm").serializeArray();
+    var formData = $(restrictedArea).siblings("form.filterForm").serializeArray();
     $.ajax({
         type: "POST",
         data: formData,
@@ -1497,10 +1497,10 @@ function addData(chartObj, option, models, keys, restrictedArea) {
 }
 
 function setSeriesAndLegend(option, line_num_each_row) {
-    let seriesData = option.series;
+    var seriesData = option.series;
 
-    let newLegendData = [];
-    let newSeriesData = [];
+    var newLegendData = [];
+    var newSeriesData = [];
 
     seriesData.forEach((el, index) => {
 
@@ -1737,8 +1737,8 @@ function renderGaugeData(container, gaugeData) {
         var fields = JSON.parse(chartItem[getSetting("fields")]);
         var max = parseFloat(chartItem[getSetting("max")]);
         var used = parseFloat(chartItem[getSetting("used")]);
-        var info = chartItem[getSetting("info")];
-        var unit = chartItem[getSetting("unit")];
+        var info = chartItem[getSetting("info")] || "";
+        var unit = chartItem[getSetting("unit")] || "";
         var titleText = chartItem[getSetting("title")] || info;
 
         // 检查是否已有图表实例
@@ -1761,12 +1761,7 @@ function renderGaugeData(container, gaugeData) {
             myChart.setOption(option);
         } else {
             // 更新图表数据和样式
-            var option = getGaugeOption({
-                info,
-                unit: unit,
-                max,
-                used
-            });
+            var option = getGaugeOption({info, unit: unit, max, used});
             myChart.setOption(option, true);
         }
 
@@ -1774,8 +1769,10 @@ function renderGaugeData(container, gaugeData) {
         if (!table) {
             // 创建表格
             table = createTable(fields, data);
-            container.find("#" + chartId).parent().append(table);
-            tableInstances[chartId] = table;
+            if(table !== null){
+                container.find("#" + chartId).parent().append(table);
+                tableInstances[chartId] = table;
+            }
         } else {
             // 更新表格
             updateTable(table, fields, data);
@@ -1787,7 +1784,7 @@ function renderGaugeData(container, gaugeData) {
 function getGaugeOption({info, unit, max, used}) {
     var ratio = used / max;
 
-    let statusColor = '#73c0de';
+    var statusColor = '#73c0de';
     if (ratio > 0.8) {
         statusColor = '#ef6666'; // 红色
     } else if (ratio > 0.5) {
@@ -1888,8 +1885,8 @@ function renderHistogramData(container, histogramData) {
         var fields = JSON.parse(chartItem[getSetting("fields")]);
         var max = chartItem[getSetting("max")] ? parseFloat(chartItem[getSetting("max")]) : undefined;
         var used = parseFloat(chartItem[getSetting("used")]);
-        var info = chartItem[getSetting("info")];
-        var unit = chartItem[getSetting("unit")];
+        var info = chartItem[getSetting("info")] || "";
+        var unit = chartItem[getSetting("unit")] || "";
         var titleText = chartItem[getSetting("title")] || info;
 
         // 检查是否已有图表实例
@@ -1918,8 +1915,10 @@ function renderHistogramData(container, histogramData) {
         // 处理表格
         if (!table) {
             table = createTable(fields, data);
-            container.find("#" + chartId).parent().append(table);
-            tableInstances[chartId] = table;
+            if(table !== null){
+                container.find("#" + chartId).parent().append(table);
+                tableInstances[chartId] = table;
+            }
         } else {
             updateTable(table, fields, data);
         }
@@ -1960,6 +1959,13 @@ function getBarOption(params) {
             trigger: 'axis',
             axisPointer: {
                 type: 'shadow'
+            },
+            formatter: function (params) {
+                var tooltipText = params[0].name + '<br/>';
+                params.forEach(function(item) {
+                    tooltipText += item.marker + item.axisValue + ': ' + item.value + ' ' + unit + '<br/>';
+                });
+                return tooltipText;
             }
         },
         xAxis: {
@@ -1983,7 +1989,7 @@ function getBarOption(params) {
             label: {
                 show: true,
                 position: 'top',
-                formatter: '{c}（' + unit + '）', // 在柱状图顶部显示值和单位
+                formatter: '{c} ' + unit, // 在柱状图顶部显示值和单位
                 color: color,
                 fontSize: 12
             },
@@ -2029,6 +2035,9 @@ function createChartContainer(width) {
 
 // 创建表格
 function createTable(fields, dataRows) {
+    if(dataRows.length <= 0){
+        return null;
+    }
     var table = $("<table></table>").addClass('table-container');
 
     var thead = $("<thead></thead>");
@@ -2053,6 +2062,9 @@ function createTable(fields, dataRows) {
 
 // 更新表格数据
 function updateTable(table, fields, dataRows) {
+    if (table == null || dataRows.length <= 0) {
+        return;
+    }
     var thead = table.find("thead").empty();
     var headerRow = createTableTr();
     fields.forEach(field => {
@@ -2090,12 +2102,12 @@ function getChartContainerWidth(chartType) {
 // 渲染或更新共享数据集图表
 function renderShareDatasetChart(container, shareDatasetData) {
     shareDatasetData.forEach((chartItem, index) => {
-        const pid = `shareDataset_${index}`;
-        const data = JSON.parse(chartItem[getSetting("data")]);
-        const info = chartItem[getSetting("info")];
-        const titleText = chartItem[getSetting("title")] || info;
+        var pid = `shareDataset_${index}`;
+        var data = JSON.parse(chartItem[getSetting("data")]);
+        var info = chartItem[getSetting("info")];
+        var titleText = chartItem[getSetting("title")] || info;
 
-        let myChart = chartInstances[pid];
+        var myChart = chartInstances[pid];
         if (!myChart) {
             // 初始化图表
             myChart = initShareDatasetChart(container, pid, titleText);
@@ -2103,7 +2115,7 @@ function renderShareDatasetChart(container, shareDatasetData) {
             shareDatasetBuffers[pid] = [];
 
             // 初始化 datasetSource
-            const datasetSource = initShareDatasetSource(data);
+            var datasetSource = initShareDatasetSource(data);
             myChart.setOption(getShareDatasetChartOption(datasetSource, pid));
 
             // 绑定事件以控制缓冲
@@ -2118,9 +2130,9 @@ function renderShareDatasetChart(container, shareDatasetData) {
 // 初始化图表容器和样式
 function initShareDatasetChart(container, pid, titleText) {
     // 创建标题和图表容器
-    const title = createTitle(titleText);
-    const chartContainer = createChartContainer("99%");
-    const chartDiv = $("<div class='chart'></div>").css("height", "400px").attr('id', pid);
+    var title = createTitle(titleText);
+    var chartContainer = createChartContainer("99%");
+    var chartDiv = $("<div class='chart'></div>").css("height", "400px").attr('id', pid);
 
     chartContainer.append(title, chartDiv);
     $(container).append(chartContainer);
@@ -2131,7 +2143,7 @@ function initShareDatasetChart(container, pid, titleText) {
 
 // 初始化 datasetSource
 function initShareDatasetSource(data) {
-    const datasetSource = [
+    var datasetSource = [
         ["dataTime", getDateTime()] // 初始化X轴
     ];
     data.forEach(item => datasetSource.push(item));
@@ -2140,14 +2152,14 @@ function initShareDatasetSource(data) {
 
 // 创建初始图表选项
 function getShareDatasetChartOption(datasetSource, pid) {
-    const series = datasetSource.slice(1).map(() => ({
+    var series = datasetSource.slice(1).map(() => ({
         type: 'line',
         smooth: true,
         seriesLayoutBy: 'row',
         emphasis: { focus: 'series' }
     }));
 
-    const showDataIndex = datasetSource[0].length - 1;
+    var showDataIndex = datasetSource[0].length - 1;
     series.push({
         type: 'pie',
         id: pid,
@@ -2169,7 +2181,22 @@ function getShareDatasetChartOption(datasetSource, pid) {
         legend: {},
         tooltip: {
             trigger: 'axis',
-            showContent: false
+            showContent: true,
+            axisPointer: {
+                type: 'cross',
+                crossStyle: {
+                    color: '#999'
+                }
+            },
+            formatter: function (params) {
+                var tooltipText = params[0].axisValue + '<br/>';
+                params.forEach(item => {
+                    if (item.seriesType === 'line') {
+                        tooltipText += `${item.marker} ${item.seriesName}: ${item.data[item.seriesIndex+1]} <br/>`;
+                    }
+                });
+                return tooltipText;
+            }
         },
         dataset: {
             source: datasetSource
@@ -2199,6 +2226,25 @@ function bindShareDatasetChartEvents(myChart, pid) {
             applyShareDatasetBufferedData(pid, myChart);
         }
     });
+
+    myChart.on('updateAxisPointer', function (event) {
+        var xAxisInfo = event.axesInfo[0];
+        if (xAxisInfo) {
+            var dimension = xAxisInfo.value + 1;
+            myChart.setOption({
+                series: [{
+                    id: pid,
+                    label: {
+                        formatter: '{b}: {@[' + dimension + ']} ({d}%)'
+                    },
+                    encode: {
+                        value: dimension,
+                        tooltip: dimension
+                    }
+                }]
+            });
+        }
+    });
 }
 
 // 判断是否为折线图系列
@@ -2213,8 +2259,8 @@ function updateShareDatasetChartData(myChart, pid, newData) {
         return;
     }
 
-    const chartData = myChart.getOption().dataset[0].source;
-    const timestamp = getDateTime();
+    var chartData = myChart.getOption().dataset[0].source;
+    var timestamp = getDateTime();
     chartData[0].push(timestamp);
 
     newData.forEach((item, i) => {
@@ -2226,7 +2272,7 @@ function updateShareDatasetChartData(myChart, pid, newData) {
 
     maintainDataLength(chartData);
 
-    const latestIndex = chartData[0].length - 1;
+    var latestIndex = chartData[0].length - 1;
     myChart.setOption({
         dataset: { source: chartData },
         series: [{
@@ -2246,7 +2292,7 @@ function updateShareDatasetChartData(myChart, pid, newData) {
 
 // 缓冲新数据
 function bufferShareDatasetData(pid, data) {
-    const buffer = shareDatasetBuffers[pid];
+    var buffer = shareDatasetBuffers[pid];
     if (buffer.length >= 20) {
         buffer.shift();
     }
@@ -2258,10 +2304,10 @@ function bufferShareDatasetData(pid, data) {
 
 // 应用缓冲区中的数据
 function applyShareDatasetBufferedData(pid, myChart) {
-    const buffer = shareDatasetBuffers[pid];
+    var buffer = shareDatasetBuffers[pid];
     if (!buffer || buffer.length === 0) return;
 
-    const chartData = myChart.getOption().dataset[0].source;
+    var chartData = myChart.getOption().dataset[0].source;
 
     buffer.forEach(entry => {
         chartData[0].push(entry.timestamp);
@@ -2276,7 +2322,7 @@ function applyShareDatasetBufferedData(pid, myChart) {
 
     shareDatasetBuffers[pid] = [];
 
-    const latestIndex = chartData[0].length - 1;
+    var latestIndex = chartData[0].length - 1;
     myChart.setOption({
         dataset: { source: chartData },
         series: [{
