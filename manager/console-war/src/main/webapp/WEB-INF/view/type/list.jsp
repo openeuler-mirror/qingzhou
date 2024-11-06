@@ -1,3 +1,4 @@
+<%@ page import="java.net.URLEncoder" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ include file="../fragment/head.jsp" %>
@@ -276,26 +277,26 @@
                 } else {
                     String refModelName = null;
                     String refFieldName = null;
-                    String refValue;
+                    String refValue = null;
                     if (Utils.notBlank(fieldInfo.getLinkList())) {
-                        String[] split = fieldInfo.getLinkList().split("\\.");
-                        refModelName = split[0];
-                        refFieldName = split[1];
+                        //currentModelFieldName>targetModelName
+                        String[] split = fieldInfo.getLinkList().split(">");
+                        refFieldName = split[0];
+                        refModelName = split[1];
+                        //linkList传表达式指定的值
+                        refValue = modelData[modelInfo.getFieldIndex(refFieldName)];
                     } else if (Utils.notBlank(fieldInfo.getRefModel())) {
                         refModelName = fieldInfo.getRefModel();
                         refFieldName = SystemController.getModelInfo(qzApp, refModelName).getIdField();
-                    }
-                    if (Utils.notBlank(value) && refModelName != null && refFieldName != null) {
                         ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
-                        if (Utils.notBlank(fieldInfo.getLinkList())) {
-                            //linkList传refFieldName的值
-                            refValue = modelData[modelInfo.getFieldIndex(refFieldName)];
-                        } else {
+                        if (Utils.notBlank(value)){
                             //应用跳转到实例：refmodel 传点击字段的值
                             refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
                         }
+                    }
+                    if (refModelName != null && refFieldName != null && refValue != null) {
                 %>
-                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + refValue)%>'
+                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + URLEncoder.encode(refValue,"UTF-8"))%>'
                    class="dataid qz-action-link tooltips"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
                    style="color:#4C638F;" onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'>

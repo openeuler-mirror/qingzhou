@@ -97,7 +97,7 @@ public @interface ModelField {
     int ignore() default -1; // 列表页面上，最多显示的字符数，超出后隐藏并悬浮显示全值
     // 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
 
-    String link_list() default "";
+    String link_list() default ""; //内容：currentModelFieldName>targetModelName
     // 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
 
     String[] color() default {};
