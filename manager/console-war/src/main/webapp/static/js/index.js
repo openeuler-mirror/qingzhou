@@ -1942,14 +1942,14 @@ function getBarOption(params) {
             formatter: '{value}'
         },
         axisLine: {
-            lineStyle: { color: '#333' }
+            lineStyle: {color: '#333'}
         },
         axisTick: {
             show: true,
-            lineStyle: { color: '#333' }
+            lineStyle: {color: '#333'}
         },
         splitLine: {
-            lineStyle: { color: '#ccc' }
+            lineStyle: {color: '#ccc'}
         }
     };
 
@@ -1975,7 +1975,7 @@ function getBarOption(params) {
             type: 'category',
             data: [info],
             axisLine: {
-                lineStyle: { color: '#333' }
+                lineStyle: {color: '#333'}
             },
             axisLabel: {
                 color: '#333',
@@ -2159,7 +2159,7 @@ function getShareDatasetChartOption(datasetSource, pid) {
         type: 'line',
         smooth: true,
         seriesLayoutBy: 'row',
-        emphasis: { focus: 'series' }
+        emphasis: {focus: 'series'}
     }));
 
     var showDataIndex = datasetSource[0].length - 1;
@@ -2168,7 +2168,7 @@ function getShareDatasetChartOption(datasetSource, pid) {
         id: pid,
         radius: '25%',
         center: ['50%', '25%'],
-        emphasis: { focus: 'self' },
+        emphasis: {focus: 'self'},
         label: {
             show: true,
             formatter: '{b}: {@' + showDataIndex + '} ({d}%)'
@@ -2210,7 +2210,7 @@ function getShareDatasetChartOption(datasetSource, pid) {
         yAxis: {
             gridIndex: 0
         },
-        grid: { top: '45%' },
+        grid: {top: '45%'},
         series: series
     };
 }
@@ -2277,7 +2277,7 @@ function updateShareDatasetChartData(myChart, pid, newData) {
 
     var latestIndex = chartData[0].length - 1;
     myChart.setOption({
-        dataset: { source: chartData },
+        dataset: {source: chartData},
         series: [{
             id: pid,
             label: {
@@ -2327,7 +2327,7 @@ function applyShareDatasetBufferedData(pid, myChart) {
 
     var latestIndex = chartData[0].length - 1;
     myChart.setOption({
-        dataset: { source: chartData },
+        dataset: {source: chartData},
         series: [{
             id: pid,
             label: {
@@ -2421,4 +2421,30 @@ function switchTabView(show, id) {
         $("#" + id, restrictedArea).fadeOut("fast");
         $("aside.main-sidebar,section.main-body", restrictedArea).filter(":not(div.tab-container aside.main-sidebar, div.tab-container section.main-body)").fadeIn("slow");
     }
+}
+
+function upload(file, url, id) {
+    const formData = new FormData();
+    formData.append(id, file);
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (data) {
+            if (data.success === "true" || data.success === true) {
+                var searchBtn = $(".filter_search", getRestrictedArea());
+                if (searchBtn.length > 0) {
+                    searchBtn.trigger('click'); //点击搜索按钮，请求list
+                } else {
+                    $("li.treeview.active", getRestrictedArea()).find("a").trigger('click');//点击当前所在菜单，请求list
+                }
+            }
+            showMsg(data.msg, data.msg_level);
+        },
+        error: function (e) {
+            handleError(e);
+        }
+    });
 }

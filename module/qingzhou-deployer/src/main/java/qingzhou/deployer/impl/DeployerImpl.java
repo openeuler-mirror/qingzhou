@@ -406,9 +406,9 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setPattern(modelField.pattern());
             modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
+            modelFieldInfo.setPlainText(modelField.plain_text());
+            modelFieldInfo.setMultipleSearch(modelField.multiple_search());
             modelFieldInfo.setReadonly(modelField.readonly());
-            modelFieldInfo.setMultiselect(modelField.multiselect());
-            modelFieldInfo.setReadonlyStyle(modelField.readonly_style());
             modelFieldInfo.setForbid(modelField.forbid());
             modelFieldInfo.setSkip(modelField.skip());
             modelFieldInfo.setEmail(modelField.email());
@@ -530,7 +530,7 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setAppPage(modelAction.app_page());
             modelActionInfo.setFormFields(modelAction.form_fields());
-            modelActionInfo.setFormLoadedTrigger(modelAction.form_loaded_trigger());
+            modelActionInfo.setSubFormSubmitOnOpen(modelAction.sub_form_submit_on_open());
             modelActionInfo.setMenuModels(modelAction.menu_models());
             modelActionInfo.setActionType(modelAction.action_type());
             modelActionInfos.add(modelActionInfo);

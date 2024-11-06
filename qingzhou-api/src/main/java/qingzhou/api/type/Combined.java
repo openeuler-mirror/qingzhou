@@ -9,13 +9,9 @@ public interface Combined {
     void combinedData(String id, DataBuilder dataBuilder) throws Exception;
 
     interface DataBuilder {
-        ShowData buildShowData();
+        <T> T buildData(Class<? extends CombinedData> dataType);
 
-        UmlData buildUmlData();
-
-        ListData buildListData();
-
-        void add(CombinedData data);
+        void addData(CombinedData data);
     }
 
     interface CombinedData {
@@ -25,15 +21,15 @@ public interface Combined {
     }
 
     interface ShowData extends CombinedData {
-        void putData(String fieldName, String fieldValue);
+        void addData(String fieldName, String fieldValue);
     }
 
     interface UmlData extends CombinedData {
-        void setUmlData(String umlData);
+        void setData(String umlData);
     }
 
     interface ListData extends CombinedData {
-        void setFieldNames(String[] fieldNames);
+        void setFields(String[] fields);
 
         void addFieldValues(String[] fieldValues);
     }

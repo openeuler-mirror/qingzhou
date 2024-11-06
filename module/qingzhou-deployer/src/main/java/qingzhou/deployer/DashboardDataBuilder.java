@@ -3,37 +3,31 @@ package qingzhou.deployer;
 import qingzhou.api.type.Dashboard;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable {
-    private final java.util.List<Dashboard.DashboardData> dataTypes = new ArrayList<>();
+    public Map<String, Dashboard.DashboardData> data = new LinkedHashMap<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
     @Override
-    public <T> T build(Class<? extends Dashboard.DashboardData> dataType) {
-        if (dataType == Dashboard.Basic.class) return (T) new BasicImpl();
-        if (dataType == Dashboard.Gauge.class) return (T) new GaugeImpl();
-        if (dataType == Dashboard.Histogram.class) return (T) new HistogramImpl();
-        if (dataType == Dashboard.ShareDataset.class) return (T) new ShareDatasetImpl();
+    public <T> T buildData(Class<? extends Dashboard.DashboardData> dataType) {
+        if (dataType == Dashboard.Basic.class) return (T) new Basic();
+        if (dataType == Dashboard.Gauge.class) return (T) new Gauge();
+        if (dataType == Dashboard.Histogram.class) return (T) new Histogram();
+        if (dataType == Dashboard.ShareDataset.class) return (T) new ShareDataset();
         throw new IllegalArgumentException();
     }
 
     @Override
-    public void add(Dashboard.DashboardData dashboardData) {
-        this.dataTypes.add(dashboardData);
-    }
-
-    public List<Dashboard.DashboardData> getDataTypes() {
-        return dataTypes;
+    public void addData(Dashboard.DashboardData dashboardData) {
+        this.data.put(dashboardData.getClass().getSimpleName(), dashboardData);
     }
 
     public static abstract class DashboardDataImpl implements Dashboard.DashboardData, Serializable {
-        private String title;
-        private String info;
+        public String title; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public String info; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
         public Dashboard.DashboardData title(String title) {
@@ -46,36 +40,24 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
             this.info = info;
             return this;
         }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public String getInfo() {
-            return info;
-        }
     }
 
-    public static class BasicImpl extends DashboardDataImpl implements Dashboard.Basic {
-        private final Map<String, String> data = new LinkedHashMap<>();
+    public static class Basic extends DashboardDataImpl implements Dashboard.Basic {
+        public Map<String, String> data = new LinkedHashMap<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
         public Dashboard.Basic put(String key, String value) {
             data.put(key, value);
             return this;
         }
-
-        public Map<String, String> getData() {
-            return data;
-        }
     }
 
-    public static class GaugeImpl extends DashboardDataImpl implements Dashboard.Gauge {
-        private String[] fields;
-        private final List<String[]> data = new LinkedList<>();
-        private String valueKey;
-        private String maxKey;
-        private String unit;
+    public static class Gauge extends DashboardDataImpl implements Dashboard.Gauge {
+        public String[] fields; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public List<String[]> data = new LinkedList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public String valueKey; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public String maxKey; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public String unit; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
         public Dashboard.Gauge fields(String[] fields) {
@@ -106,31 +88,11 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
             this.maxKey = maxKey;
             return this;
         }
-
-        public String[] getFields() {
-            return fields;
-        }
-
-        public List<String[]> getData() {
-            return data;
-        }
-
-        public String getValueKey() {
-            return valueKey;
-        }
-
-        public String getMaxKey() {
-            return maxKey;
-        }
-
-        public String getUnit() {
-            return unit;
-        }
     }
 
-    public static class HistogramImpl extends GaugeImpl implements Dashboard.Histogram {
+    public static class Histogram extends Gauge implements Dashboard.Histogram {
     }
 
-    public static class ShareDatasetImpl extends BasicImpl implements Dashboard.ShareDataset {
+    public static class ShareDataset extends Basic implements Dashboard.ShareDataset {
     }
 }

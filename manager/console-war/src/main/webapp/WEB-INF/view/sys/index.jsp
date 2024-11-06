@@ -288,17 +288,18 @@
         "jsonView": '<%=JsonView.FLAG%>',
         "actionId_app_manage": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_MANAGE%>',
         "actionId_app_stop-delete": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + Delete.ACTION_DELETE%>' + ',' + '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_STOP%>',
-        "data":'<%=DeployerConstants.DASHBOARD_FIELD_DATA%>',
-        "unit":'<%=DeployerConstants.DASHBOARD_FIELD_UNIT%>',
-        "fields":'<%=DeployerConstants.DASHBOARD_FIELD_FIELDS%>',
-        "info":'<%=DeployerConstants.DASHBOARD_FIELD_INFO%>',
-        "title":'<%=DeployerConstants.DASHBOARD_FIELD_TITLE%>',
-        "max":'<%=DeployerConstants.DASHBOARD_FIELD_MAX%>',
-        "used":'<%=DeployerConstants.DASHBOARD_FIELD_USED%>',
-        "basicData":'<%=DeployerConstants.DASHBOARD_FIELD_BASIC_DATA%>',
-        "gaugeData":'<%=DeployerConstants.DASHBOARD_FIELD_GAUGE_DATA%>',
-        "histogramData":'<%=DeployerConstants.DASHBOARD_FIELD_HISTOGRAM_DATA%>',
-        "shareDatasetData":'<%=DeployerConstants.DASHBOARD_FIELD_SHARE_DATASET_DATA%>'
+
+        "data": '<%=DeployerConstants.DASHBOARD_FIELD_DATA%>',
+        "unit": '<%=DeployerConstants.DASHBOARD_FIELD_UNIT%>',
+        "fields": '<%=DeployerConstants.DASHBOARD_FIELD_FIELDS%>',
+        "info": '<%=DeployerConstants.DASHBOARD_FIELD_INFO%>',
+        "title": '<%=DeployerConstants.DASHBOARD_FIELD_TITLE%>',
+        "max": '<%=DeployerConstants.DASHBOARD_FIELD_MAX%>',
+        "used": '<%=DeployerConstants.DASHBOARD_FIELD_USED%>',
+        "basicData": '<%=DeployerConstants.DASHBOARD_FIELD_BASIC_DATA%>',
+        "gaugeData": '<%=DeployerConstants.DASHBOARD_FIELD_GAUGE_DATA%>',
+        "histogramData": '<%=DeployerConstants.DASHBOARD_FIELD_HISTOGRAM_DATA%>',
+        "shareDatasetData": '<%=DeployerConstants.DASHBOARD_FIELD_SHARE_DATASET_DATA%>'
     };
 
     <%-- 显示第一个应用的管理页面--%>

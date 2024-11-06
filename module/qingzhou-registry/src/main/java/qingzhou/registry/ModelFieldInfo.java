@@ -36,10 +36,10 @@ public class ModelFieldInfo {
     private String[] forbid;
     private String[] skip;
     private String pattern;
-    private boolean readonly;
+    private boolean plainText;
 
-    private boolean multiselect;
-    private boolean readonlyStyle;
+    private boolean multipleSearch;
+    private boolean readonly;
     private String linkList;
     private String[] color;
     private String[] echoGroup;
@@ -53,20 +53,20 @@ public class ModelFieldInfo {
         this.hidden = hidden;
     }
 
-    public boolean isMultiselect() {
-        return multiselect;
+    public boolean isMultipleSearch() {
+        return multipleSearch;
     }
 
-    public void setMultiselect(boolean multiselect) {
-        this.multiselect = multiselect;
+    public void setMultipleSearch(boolean multipleSearch) {
+        this.multipleSearch = multipleSearch;
     }
 
-    public boolean isReadonlyStyle() {
-        return readonlyStyle;
+    public boolean isReadonly() {
+        return readonly;
     }
 
-    public void setReadonlyStyle(boolean readonlyStyle) {
-        this.readonlyStyle = readonlyStyle;
+    public void setReadonly(boolean readonly) {
+        this.readonly = readonly;
     }
 
     public String[] getColor() {
@@ -336,12 +336,12 @@ public class ModelFieldInfo {
         this.forbid = forbid;
     }
 
-    public boolean isReadonly() {
-        return readonly;
+    public boolean isPlainText() {
+        return plainText;
     }
 
-    public void setReadonly(boolean readonly) {
-        this.readonly = readonly;
+    public void setPlainText(boolean plainText) {
+        this.plainText = plainText;
     }
 
     public boolean isEmail() {

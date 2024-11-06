@@ -93,7 +93,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
     public String subjects3;
 
     @ModelField(
-            readonly = true,
+            plain_text = true,
             name = {"创建后不可编辑", "en:"})
     public String noEdit;
 
@@ -107,7 +107,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
             form_fields = {"name", "notes", "gender", "checkbox", "b"},
-            action_type = ActionType.sub_form, form_loaded_trigger = true,
+            action_type = ActionType.sub_form, sub_form_submit_on_open = true,
             name= {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {

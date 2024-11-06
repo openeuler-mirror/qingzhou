@@ -2,6 +2,7 @@
 
 <%@ page import="java.util.*" %>
 <%@ page import="java.util.stream.*" %>
+<%@ page import="java.net.URLEncoder" %>
 <%@ page import="qingzhou.api.*" %>
 <%@ page import="qingzhou.engine.util.*" %>
 <%@ page import="qingzhou.api.type.*" %>

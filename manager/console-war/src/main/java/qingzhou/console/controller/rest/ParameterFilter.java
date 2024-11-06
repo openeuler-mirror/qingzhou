@@ -60,7 +60,7 @@ public class ParameterFilter implements Filter<RestContext> {
                 }
 
                 // readonly 要从后端数据校验，避免通过 rest api 绕过前端进入数据写入
-                if (fieldInfo.isReadonly()) {
+                if (fieldInfo.isPlainText()) {
                     toRemove.add(name);
                     continue;
                 }
