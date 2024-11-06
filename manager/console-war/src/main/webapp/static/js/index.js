@@ -1600,6 +1600,7 @@ var shareDatasetBuffers = {};
 function initDashboardPage() {
     if (intervalId != null) {
         clearInterval(intervalId); // 停止定时任务
+        disposeCacheChart();
         chartInstances = {};
         tableInstances = {};
         shareDatasetBuffers = {}; // 重置缓冲区
@@ -1608,8 +1609,12 @@ function initDashboardPage() {
     var dashboardDiv = $("div.dashboardPage");
     var url = dashboardDiv.attr("data-url");
     if (!url) {
+        window.removeEventListener('resize', resizeHandler);
         return;
     }
+
+    // 绑定新的 resize 事件监听器
+    window.addEventListener('resize', resizeHandler);
 
     // 缓存容器选择器
     var containers = {
@@ -1649,6 +1654,22 @@ function initDashboardPage() {
 
     // 使用 setInterval 执行定时任务
     intervalId = setInterval(fetchDataAndRender, 2000);
+}
+
+function resizeHandler() {
+    for (var chartId in chartInstances) {
+        if (chartInstances.hasOwnProperty(chartId)) {
+            chartInstances[chartId].resize();
+        }
+    }
+}
+
+function disposeCacheChart() {
+    for (var chartId in chartInstances) {
+        if (chartInstances.hasOwnProperty(chartId)) {
+            chartInstances[chartId].dispose();
+        }
+    }
 }
 
 // 使用 jQuery 的 Deferred 对象进行数据获取
@@ -1833,7 +1854,7 @@ function getGaugeOption({info, unit, max, used}) {
                 }
             },
             axisLabel: {
-                distance: -40,
+                distance: -30,
                 color: '#333',
                 fontSize: 10,
                 formatter: function (value) {
@@ -1874,8 +1895,11 @@ function getGaugeOption({info, unit, max, used}) {
         }],
         backgroundColor: '#f9f9f9', // 设置背景色
         grid: {
+            left: '10%',
+            right: '10%',
             top: '10%',
-            bottom: '10%'
+            bottom: '10%',
+            containLabel: true
         }
     };
 }
@@ -2002,8 +2026,11 @@ function getBarOption(params) {
         }],
         backgroundColor: '#f9f9f9', // 设置背景色
         grid: {
+            left: '10%',
+            right: '10%',
             top: '10%',
-            bottom: '10%'
+            bottom: '10%',
+            containLabel: true
         }
     };
 }
@@ -2289,8 +2316,6 @@ function updateShareDatasetChartData(myChart, pid, newData) {
             }
         }]
     });
-
-    myChart.resize();
 }
 
 // 缓冲新数据
@@ -2339,7 +2364,6 @@ function applyShareDatasetBufferedData(pid, myChart) {
             }
         }]
     });
-    myChart.resize();
 }
 
 // 保持数据长度不超过20条（加上1个字段名，总长度21）
