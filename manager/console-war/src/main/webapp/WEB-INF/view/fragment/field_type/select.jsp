@@ -17,15 +17,29 @@
     boolean selected = false;
     for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldName)) {
         String option = itemInfo.getName();
+        String[] color = SystemController.getColor(modelInfo, fieldName);
+        String colorStyle = "";
+        if (color != null){
+            for (String condition : color) {
+                String[] array = condition.split(":");
+                if (array.length != 2) {
+                    continue;
+                }
+                if (array[0].equals(option)) {
+                    colorStyle = "color:" + array[1];
+                    break;
+                }
+            }
+        }
         String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
         if (Objects.equals(fieldValue, option)) {
             selected = true;
             selectVal = option;
             selectText = optionI18n;
             tabIndex = index;
-            selectHtml += "<li data-value=\"" + option + "\" class=\"option selected focus\" format=\"" + option + "\">" + optionI18n + "</li>";
+            selectHtml += "<li style=\""+ colorStyle +"\" data-value=\"" + option + "\" class=\"option selected focus\" format=\"" + option + "\">" + optionI18n + "</li>";
         } else {
-            selectHtml += "<li data-value=\"" + option + "\" class=\"option\" format=\"" + option + "\">" + optionI18n + "</li>";
+            selectHtml += "<li style=\""+ colorStyle +"\" data-value=\"" + option + "\" class=\"option\" format=\"" + option + "\">" + optionI18n + "</li>";
         }
         index++;
     }

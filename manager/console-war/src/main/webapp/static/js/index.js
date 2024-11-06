@@ -210,6 +210,9 @@ function setOrReset() {
             onAfterCreate: function () {
                 $("ul li.multiple", $($this).next(".ms-parent")).each(function () {
                     $(this).attr("title", $("label>span", this).first().text());
+                    var name = $("label>input", this).first().val();
+                    var color = $(this).parent().parent().parent().siblings("select[multiple='multiple']").find("option[value="+ name +"]").css("color")
+                    $("label>span", this).css("color", color);
                     $(this).hover(function () {
                         $("label>span", this).css({"white-space": "normal"});
                     }, function () {
