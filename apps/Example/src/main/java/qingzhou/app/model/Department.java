@@ -28,6 +28,7 @@ public class Department extends AddModelBase implements Echo, Option {
             required = true,
             list = true, search = true, echo_group = {"aa"},
             name = {"上级部门", "en:Superior Department"},
+            color = {"a:red","b:green","c:blue","e:yellow"},
             info = {"该部门所属的上级部门。",
                     "en:The superior department to which the department belongs."})
     public String superior = "";
@@ -36,6 +37,7 @@ public class Department extends AddModelBase implements Echo, Option {
             input_type = InputType.checkbox,
             list = true, search = true, echo_group = {"aa", "bb"},
             name = {"负责人", "en:Department Manager"},
+            color = {"lisa:red","jack:green","tom:blue"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
     public String manager;
 
