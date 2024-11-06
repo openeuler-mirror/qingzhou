@@ -288,8 +288,8 @@
                     if (Utils.notBlank(value) && refModelName != null && refFieldName != null) {
                         ModelFieldInfo refFieldInfo = SystemController.getModelInfo(qzApp, refModelName).getModelFieldInfo(refFieldName);
                         if (Utils.notBlank(fieldInfo.getLinkList())) {
-                            //TE: linkList 传 id 的值
-                            refValue = modelData[modelInfo.getFieldIndex(idField)];
+                            //linkList传refFieldName的值
+                            refValue = modelData[modelInfo.getFieldIndex(refFieldName)];
                         } else {
                             //应用跳转到实例：refmodel 传点击字段的值
                             refValue = value.replace(fieldInfo.getSeparator(), refFieldInfo.getSeparator());
