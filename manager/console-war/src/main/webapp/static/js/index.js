@@ -2186,7 +2186,11 @@ function getShareDatasetChartOption(datasetSource, pid) {
         type: 'line',
         smooth: true,
         seriesLayoutBy: 'row',
-        emphasis: {focus: 'series'}
+        emphasis: {focus: 'series'},
+        lineStyle: { width: 2 },
+        showSymbol: true,
+        symbol: 'circle',
+        symbolSize: 6
     }));
 
     var showDataIndex = datasetSource[0].length - 1;
@@ -2232,13 +2236,16 @@ function getShareDatasetChartOption(datasetSource, pid) {
             source: datasetSource
         },
         xAxis: {
-            type: 'category'
+            type: 'category',
+            boundaryGap: false
         },
         yAxis: {
             gridIndex: 0
         },
         grid: {top: '45%'},
-        series: series
+        series: series,
+        animation: true,
+        animationDuration: 500
     };
 }
 
