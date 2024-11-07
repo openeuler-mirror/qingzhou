@@ -8,6 +8,8 @@ import qingzhou.api.type.Echo;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -95,23 +97,17 @@ public class Department extends AddModelBase implements Echo, Option {
             String manager = params.get("manager");
             map.put("email", superior + "===" + manager);
             map.put("phone", superior + "&&&" + manager);
-            map.put("manager", "lisa");
-            if ("a".equals(params.get("superior")) || "c".equals(params.get("superior"))) {
+            if ("a".equals(superior) || "c".equals(superior)) {
                 map.put("active", "false");
                 map.put("emailSuffix", "@qq.com");
             } else {
                 map.put("active", "true");
-                map.put("emailSuffix", "@gov.com");
+                map.put("emailSuffix", "@163.com");
             }
-            map.put("buildDate", "2024-10-24 14:39:24");
+            map.put("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         } else if ("bb".equals(echoGroup)) {
-            String manager = params.get("manager");
-            map.put("phone", manager + "---");
-            map.put("buildDate", "");
         } else if ("cc".equals(echoGroup)) {
-            String manager = params.get("manager");
-            map.put("phone", manager + "cccccccc");
-            map.put("buildDate", "");
+            map.put("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         }
         return map;
     }
