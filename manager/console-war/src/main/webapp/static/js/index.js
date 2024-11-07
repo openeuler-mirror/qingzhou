@@ -211,7 +211,7 @@ function setOrReset() {
                 $("ul li.multiple", $($this).next(".ms-parent")).each(function () {
                     $(this).attr("title", $("label>span", this).first().text());
                     var name = $("label>input", this).first().val();
-                    var color = $(this).parent().parent().parent().siblings("select[multiple='multiple']").find("option[value="+ name +"]").css("color")
+                    var color = $(this).parent().parent().parent().siblings("select[multiple='multiple']").find("option[value=" + name + "]").css("color")
                     $("label>span", this).css("color", color);
                     $(this).hover(function () {
                         $("label>span", this).css({"white-space": "normal"});
@@ -1061,14 +1061,14 @@ function initializeManager(element, url) {
     $(".tab-box>ul").append(tabHtml);
     $(".content-box>ul").append("<li></li>");
     bindTabEvent();
-    qz.fill(url, {}, $(".content-box>ul>li").last(), false, function() {
+    qz.fill(url, {}, $(".content-box>ul>li").last(), false, function () {
         $("ul[data-widget='tree']", $(".content-box>ul>li").last()).menuTree();
         $("[data-toggle='push-menu']", $(".content-box>ul>li").last()).pushMenu({});
         $(".tab-box>ul>li.active").removeClass("active").addClass("inactive");
         $(".content-box>ul>li.active").removeClass("active").addClass("inactive");
         $(".tab-box>ul>li").last().removeClass("inactive").addClass("active");
         $(".content-box>ul>li").last().removeClass("inactive").addClass("active");
-    });    
+    });
     return false;
 }
 
@@ -1649,31 +1649,50 @@ function initDashboardPage() {
     window.addEventListener('resize', resizeHandler);
 
     // 缓存容器选择器
-    var containers = {
-        basicData: dashboardDiv.find("[container='basicData']"),
-        gaugeChart: dashboardDiv.find("[container='gaugeChart']"),
-        histogramChart: dashboardDiv.find("[container='histogramChart']"),
-        shareDatasetChart: dashboardDiv.find("[container='shareDatasetChart']")
-    };
+    var containers = null;
 
     var failedAttempts = 0;
     var fetchDataAndRender = function () {
-        fetchData(url).done(function (data) {
-            // 解析数据
-            var basicData = JSON.parse(data[getSetting("basicData")]);
-            var gaugeData = JSON.parse(data[getSetting("gaugeData")]);
-            var histogramData = JSON.parse(data[getSetting("histogramData")]);
-            var shareDatasetData = JSON.parse(data[getSetting("shareDatasetData")]);
+        fetchData(url).done(function (groupData) {
+            if (containers == null) {
+                containers = [];
+                for (var i in groupData) {
+                    var groupContainer = createGroupContainer(dashboardDiv, "dashboardData" + i);
+                    containers[i] = groupContainer;
+                }
+            }
 
-            // 渲染数据
-            renderData(containers.basicData, basicData, "basicData");
-            renderData(containers.gaugeChart, gaugeData, "gaugeData");
-            renderData(containers.histogramChart, histogramData, "histogramData");
-            renderData(containers.shareDatasetChart, shareDatasetData, "shareDatasetData");
+            for (var index in groupData) {
+                var container = containers[index];
+                var data = groupData[index];
+                for (var count in data) {
+                    try {
+                        var dashboardData = data[count];
+                        switch (dashboardData.type) {
+                            case getSetting("basicData"):
+                                renderBasicData(container, dashboardData);
+                                break;
+                            case getSetting("gaugeData"):
+                                renderGaugeData(container, dashboardData, count);
+                                break;
+                            case getSetting("histogramData"):
+                                renderHistogramData(container, dashboardData, count);
+                                break;
+                            case getSetting("shareDatasetData"):
+                                renderShareDatasetChart(container, dashboardData, count);
+                                break;
+                            default:
+                                console.warn("无效的数据类型：" + type);
+                        }
+                    } catch (err) {
+                        console.error("渲染数据时出错:", err);
+                    }
+                }
+            }
 
             // 重置失败次数
             failedAttempts = 0;
-        }).fail(function (error) {
+        }).fail(function () {
             failedAttempts++;
             if (failedAttempts >= 10) {
                 clearInterval(intervalId); // 停止定时任务
@@ -1713,51 +1732,17 @@ function fetchData(url) {
         url: url,
         dataType: 'json',
         success: function (data) {
-            if (data.success === "true" || data.success === true) {
-                deferred.resolve(data.data);
-            } else {
-                deferred.reject(data.msg || "未知错误");
-            }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            deferred.reject(textStatus || errorThrown);
+            deferred.resolve(data.data);
         }
     });
 
     return deferred.promise();
 }
 
-// 根据类型渲染数据
-function renderData(container, data, type) {
-    try {
-        container.parent().css({
-            "padding": "0px"
-        });
-        switch (type) {
-            case "basicData":
-                renderBasicData(container, data);
-                break;
-            case "gaugeData":
-                renderGaugeData(container, data);
-                break;
-            case "histogramData":
-                renderHistogramData(container, data);
-                break;
-            case "shareDatasetData":
-                renderShareDatasetChart(container, data);
-                break;
-            default:
-                console.warn("无效的数据类型：" + type);
-        }
-    } catch (err) {
-        console.error("渲染数据时出错:", err);
-    }
-}
-
 // 渲染 basic 数据表格
 function renderBasicData(container, basicData) {
     var dataKey = getSetting("data");
-    var jsonObj = JSON.parse(basicData[dataKey]);
+    var jsonObj = basicData[dataKey];
 
     // 清空现有内容
     container.empty();
@@ -1786,65 +1771,77 @@ function renderBasicData(container, basicData) {
 
 
 // 渲染或更新仪表盘数据
-function renderGaugeData(container, gaugeData) {
-    gaugeData.forEach(function (chartItem, index) {
-        var chartId = 'gauge_' + index;
-        var data = JSON.parse(chartItem[getSetting("data")]);
-        var fields = JSON.parse(chartItem[getSetting("fields")]);
-        var max = parseFloat(chartItem[getSetting("max")]);
-        var used = parseFloat(chartItem[getSetting("used")]);
-        var info = chartItem[getSetting("info")] || "";
-        var unit = chartItem[getSetting("unit")] || "";
-        var titleText = chartItem[getSetting("title")] || info;
+function renderGaugeData(container, chartItem, index) {
+    var chartId = $(container).attr("container") + '_gauge_' + index;
+    var data = chartItem[getSetting("data")];
+    var fields = chartItem[getSetting("fields")];
+    var max = parseFloat(chartItem[getSetting("max")]);
+    var used = parseFloat(chartItem[getSetting("used")]);
+    var info = chartItem[getSetting("info")] || "";
+    var unit = chartItem[getSetting("unit")] || "";
+    var titleText = chartItem[getSetting("title")] || info;
 
-        // 检查是否已有图表实例
-        var myChart = chartInstances[chartId];
-        var table = tableInstances[chartId];
+    // 检查是否已有图表实例
+    var myChart = chartInstances[chartId];
+    var table = tableInstances[chartId];
 
-        if (!myChart) {
-            // 创建图表
-            var title = createTitle(titleText);
-            var chartContainer = createChartContainer(getChartContainerWidth('gauge'));
-            var chartDiv = $("<div></div>").addClass('chart').attr('id', chartId).css("height", "300px");
-            chartContainer.append(title, chartDiv);
-            container.append(chartContainer);
+    if (!myChart) {
+        // 创建图表
+        var title = createTitle(titleText);
+        var chartContainer = createChartContainer(getChartContainerWidth('gauge'));
+        var chartDiv = $("<div></div>").addClass('chart').attr('id', chartId).css("height", "260px");
+        chartContainer.append(title, chartDiv);
+        container.append(chartContainer);
 
-            myChart = echarts.init(chartDiv[0]);
-            chartInstances[chartId] = myChart;
+        myChart = echarts.init(chartDiv[0]);
+        chartInstances[chartId] = myChart;
 
-            // 获取图表的配置并渲染
-            var option = getGaugeOption({info, unit: unit, max, used});
-            myChart.setOption(option);
-        } else {
-            // 更新图表数据和样式
-            var option = getGaugeOption({info, unit: unit, max, used});
-            myChart.setOption(option, true);
+        // 获取图表的配置并渲染
+        var option = getGaugeOption({info, unit: unit, max, used});
+        myChart.setOption(option);
+    } else {
+        // 更新图表数据和样式
+        var option = getGaugeOption({info, unit: unit, max, used});
+        myChart.setOption(option, true);
+    }
+
+    // 处理表格
+    if (!table) {
+        // 创建表格
+        table = createTable(fields, data);
+        if (table !== null) {
+            container.find("#" + chartId).parent().append(table);
+            tableInstances[chartId] = table;
         }
-
-        // 处理表格
-        if (!table) {
-            // 创建表格
-            table = createTable(fields, data);
-            if(table !== null){
-                container.find("#" + chartId).parent().append(table);
-                tableInstances[chartId] = table;
-            }
-        } else {
-            // 更新表格
-            updateTable(table, fields, data);
-        }
-    });
+    } else {
+        // 更新表格
+        updateTable(table, fields, data);
+    }
 }
 
 // 获取仪表盘配置
 function getGaugeOption({info, unit, max, used}) {
     var ratio = used / max;
+    // 透明度：0.5:7f、0.55:8c、0.6:99、0.65:a5、0.7:b2、0.75:bf、0.8:cc、0.85:d8、0.9:e5、0.95:f2
+    var chartTransparency = "a5";
+    // 阈值
+    var threshold = {"warn": 0.5, "alarm": 0.85, "full": 1};
+    // 阈值对应颜色
+    var colors = {"normal": "#9acd32", "warn": "#ffd700", "alarm": "#fd2100"};
 
-    var statusColor = '#73c0de';
-    if (ratio > 0.8) {
-        statusColor = '#ef6666'; // 红色
-    } else if (ratio > 0.5) {
-        statusColor = '#f7ba2a'; // 黄色
+    var color = colors.normal;
+    var gradualColors = [{offset: 0, color: colors.normal + chartTransparency}];
+    if (ratio < threshold.warn) {
+        gradualColors.push({offset: 1, color: colors.normal});
+    } else if (ratio >= threshold.warn && ratio <= threshold.alarm) {
+        color = colors.warn;
+        gradualColors.push({offset: threshold.warn, color: colors.normal});
+        gradualColors.push({offset: threshold.full, color: colors.warn});
+    } else if (ratio > threshold.alarm) {
+        color = colors.alarm;
+        gradualColors.push({offset: threshold.warn, color: colors.normal});
+        gradualColors.push({offset: threshold.alarm, color: colors.warn});
+        gradualColors.push({offset: threshold.full, color: colors.alarm});
     }
 
     return {
@@ -1854,134 +1851,132 @@ function getGaugeOption({info, unit, max, used}) {
         series: [{
             name: info,
             type: 'gauge',
-            radius: '80%',
-            startAngle: 225,
-            endAngle: -45,
+            radius: '100%',
+            center: ['50%', '61%'], // 调整中心位置
             min: 0,
             max: max,
-            axisLine: {
-                lineStyle: {
-                    width: 15,
-                    color: [
-                        [0.5, '#73c0de'],
-                        [0.8, '#f7ba2a'],
-                        [1, '#ef6666']
-                    ]
-                }
+            splitNumber: 8,
+            startAngle: 180,
+            endAngle: 0,
+            itemStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, gradualColors),
+                shadowColor: '#008aff72',
+                shadowBlur: 10,
+                shadowOffsetX: 2,
+                shadowOffsetY: 2
             },
-            axisTick: {
-                distance: -20,
-                length: 10,
-                lineStyle: {
-                    color: '#333',
-                    width: 2
-                }
-            },
-            splitLine: {
-                distance: -20,
-                length: 20,
-                lineStyle: {
-                    color: '#333',
-                    width: 4
-                }
-            },
-            axisLabel: {
-                distance: -30,
-                color: '#333',
-                fontSize: 10,
-                formatter: function (value) {
-                    return value;
-                }
+            progress: {
+                show: true,
+                roundCap: true,
+                width: 10
             },
             pointer: {
-                length: '70%',
-                width: 4,
+                width: 8,
+                length: '65%',
+                offsetCenter: ['0', '5%'],
+                icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.194028 2092.44859,617.312956 L2096.90698,728.755929 C2097.05155,732.369577 2094.2393,735.416212 2090.62566,735.56078 C2090.53845,735.564269 2090.45117,735.566014 2090.36389,735.566014 L2090.36389,735.566014 C2086.74736,735.566014 2083.81557,732.63423 2083.81557,729.017692 C2083.81557,728.930412 2083.81732,728.84314 2083.82081,728.755929 L2088.2792,617.312956 C2088.32396,616.194028 2089.24407,615.30999 2090.36389,615.30999 Z',
                 itemStyle: {
-                    color: statusColor
+                    color: color
+                }
+            },
+            axisLine: {
+                roundCap: true,
+                lineStyle: {
+                    width: 10
+                }
+            },
+            axisTick: {splitNumber: 2, lineStyle: {width: 2, color: '#999'}},
+            splitLine: {length: 8, lineStyle: {width: 3, color: '#999'}},
+            axisLabel: {
+                distance: 18,
+                color: '#999',
+                fontSize: 14,
+                padding: [-2, -2, 0, -2],
+                formatter: function (v) {
+                    return new Number(v).toFixed(1);
                 }
             },
             title: {
                 show: true,
-                offsetCenter: [0, '110%'], // 标题位置
                 textStyle: {
                     fontSize: 14
                 },
-                formatter: info
+                formatter: info,
+                offsetCenter: [0, '51%']
             },
             detail: {
-                valueAnimation: true,
-                formatter: '{value} ' + unit,
                 backgroundColor: 'rgba(0,0,0,0)',
                 borderWidth: 0,
                 borderColor: '#ccc',
                 width: 100,
+                lineHeight: 40,
                 height: 40,
-                fontSize: 14,
-                color: statusColor,
-                rich: {}
+                borderRadius: 8,
+                offsetCenter: [0, '22%'],
+                valueAnimation: true,
+                rich: {
+                    value: {fontSize: 20, fontWeight: 'bolder', color: '#777'},
+                    unit: {fontSize: 20, color: '#999', padding: [0, 0, 0, 10]}
+                },
+                fontSize: 16,
+                formatter: '{value} ' + unit,
+                color: color
             },
-            data: [{
-                value: used,
-                name: info
-            }]
+            data: [
+                {
+                    value: used,
+                    name: info
+                }
+            ]
         }],
-        backgroundColor: '#f9f9f9', // 设置背景色
-        grid: {
-            left: '10%',
-            right: '10%',
-            top: '10%',
-            bottom: '10%',
-            containLabel: true
-        }
+        backgroundColor: '#f9f9f9' // 设置背景色
     };
 }
 
 // 渲染或更新柱状图数据
-function renderHistogramData(container, histogramData) {
-    histogramData.forEach(function (chartItem, index) {
-        var chartId = 'bar_' + index;
-        var data = JSON.parse(chartItem[getSetting("data")]);
-        var fields = JSON.parse(chartItem[getSetting("fields")]);
-        var max = chartItem[getSetting("max")] ? parseFloat(chartItem[getSetting("max")]) : undefined;
-        var used = parseFloat(chartItem[getSetting("used")]);
-        var info = chartItem[getSetting("info")] || "";
-        var unit = chartItem[getSetting("unit")] || "";
-        var titleText = chartItem[getSetting("title")] || info;
+function renderHistogramData(container, chartItem, index) {
+    var chartId = $(container).attr("container") + '_bar_' + index;
+    var data = chartItem[getSetting("data")];
+    var fields = chartItem[getSetting("fields")];
+    var max = chartItem[getSetting("max")] ? parseFloat(chartItem[getSetting("max")]) : undefined;
+    var used = parseFloat(chartItem[getSetting("used")]);
+    var info = chartItem[getSetting("info")] || "";
+    var unit = chartItem[getSetting("unit")] || "";
+    var titleText = chartItem[getSetting("title")] || info;
 
-        // 检查是否已有图表实例
-        var myChart = chartInstances[chartId];
-        var table = tableInstances[chartId];
+    // 检查是否已有图表实例
+    var myChart = chartInstances[chartId];
+    var table = tableInstances[chartId];
 
-        if (!myChart) {
-            var title = createTitle(titleText);
-            var chartContainer = createChartContainer(getChartContainerWidth('bar'));
-            var chartDiv = $("<div></div>").addClass('chart').attr('id', chartId).css("height", "300px");
-            chartContainer.append(title, chartDiv);
-            container.append(chartContainer);
+    if (!myChart) {
+        var title = createTitle(titleText);
+        var chartContainer = createChartContainer(getChartContainerWidth('bar'));
+        var chartDiv = $("<div></div>").addClass('chart').attr('id', chartId).css("height", "300px");
+        chartContainer.append(title, chartDiv);
+        container.append(chartContainer);
 
-            myChart = echarts.init(chartDiv[0]);
-            chartInstances[chartId] = myChart;
+        myChart = echarts.init(chartDiv[0]);
+        chartInstances[chartId] = myChart;
 
-            // 获取图表的配置并渲染
-            var option = getBarOption({info: info, unit: unit, max: max, used: used});
-            myChart.setOption(option);
-        } else {
-            // 更新图表配置
-            var newOption = getBarOption({info: info, unit: unit, max: max, used: used});
-            myChart.setOption(newOption, true);
+        // 获取图表的配置并渲染
+        var option = getBarOption({info: info, unit: unit, max: max, used: used});
+        myChart.setOption(option);
+    } else {
+        // 更新图表配置
+        var newOption = getBarOption({info: info, unit: unit, max: max, used: used});
+        myChart.setOption(newOption, true);
+    }
+
+    // 处理表格
+    if (!table) {
+        table = createTable(fields, data);
+        if (table !== null) {
+            container.find("#" + chartId).parent().append(table);
+            tableInstances[chartId] = table;
         }
-
-        // 处理表格
-        if (!table) {
-            table = createTable(fields, data);
-            if(table !== null){
-                container.find("#" + chartId).parent().append(table);
-                tableInstances[chartId] = table;
-            }
-        } else {
-            updateTable(table, fields, data);
-        }
-    });
+    } else {
+        updateTable(table, fields, data);
+    }
 }
 
 // 获取柱状图配置
@@ -2009,7 +2004,7 @@ function getBarOption(params) {
         }
     };
 
-    if (max !== undefined) {
+    if (max !== undefined && max !== -1) {
         yAxisConfig.max = max;
     }
 
@@ -2021,7 +2016,7 @@ function getBarOption(params) {
             },
             formatter: function (params) {
                 var tooltipText = params[0].name + '<br/>';
-                params.forEach(function(item) {
+                params.forEach(function (item) {
                     tooltipText += item.marker + item.axisValue + ': ' + item.value + ' ' + unit + '<br/>';
                 });
                 return tooltipText;
@@ -2035,7 +2030,8 @@ function getBarOption(params) {
             },
             axisLabel: {
                 color: '#333',
-                fontSize: 12
+                fontSize: 14,
+                padding: [15, 0, 0, 0]
             },
             axisTick: {
                 alignWithLabel: true
@@ -2050,7 +2046,7 @@ function getBarOption(params) {
                 position: 'top',
                 formatter: '{c} ' + unit, // 在柱状图顶部显示值和单位
                 color: color,
-                fontSize: 12
+                fontSize: 14
             },
             itemStyle: {
                 color: color
@@ -2069,7 +2065,7 @@ function getBarOption(params) {
 
 // 根据used和max获取柱状图颜色
 function getBarColor(max, used) {
-    if (max === undefined) {
+    if (max === undefined || max === -1) {
         return '#73c0de';
     }
     var ratio = used / max;
@@ -2080,6 +2076,26 @@ function getBarColor(max, used) {
     } else {
         return '#ef6666'; // 红色
     }
+}
+
+function createGroupContainer(parentDiv, containerFlag) {
+    var panel = $("<div></div>").addClass("panel").css({
+        "border-radius": "2px",
+        "border-color": "#EFEEEE",
+        "background-color": "#FFFFFF;"
+    });
+    var panelBody = $("<div></div>").addClass("panel-body").css({
+        "word-break": "break-all",
+        "padding": "0px"
+    });
+    var group = $("<div container=" + containerFlag + "></div>").css({
+        "width": "100%"
+    });
+    parentDiv.append(panel);
+    panel.append(panelBody);
+    panelBody.append(group);
+
+    return group;
 }
 
 // 创建标题
@@ -2097,7 +2113,7 @@ function createChartContainer(width) {
 
 // 创建表格
 function createTable(fields, dataRows) {
-    if(dataRows.length <= 0){
+    if (dataRows.length <= 0) {
         return null;
     }
     var table = $("<table></table>").addClass('table-container');
@@ -2162,31 +2178,29 @@ function getChartContainerWidth(chartType) {
 }
 
 // 渲染或更新共享数据集图表
-function renderShareDatasetChart(container, shareDatasetData) {
-    shareDatasetData.forEach((chartItem, index) => {
-        var pid = `shareDataset_${index}`;
-        var data = JSON.parse(chartItem[getSetting("data")]);
-        var info = chartItem[getSetting("info")];
-        var titleText = chartItem[getSetting("title")] || info;
+function renderShareDatasetChart(container, chartItem, index) {
+    var pid = $(container).attr("container") + `_shareDataset_${index}`;
+    var data = chartItem[getSetting("data")];
+    var info = chartItem[getSetting("info")];
+    var titleText = chartItem[getSetting("title")] || info;
 
-        var myChart = chartInstances[pid];
-        if (!myChart) {
-            // 初始化图表
-            myChart = initShareDatasetChart(container, pid, titleText);
-            chartInstances[pid] = myChart;
-            shareDatasetBuffers[pid] = [];
+    var myChart = chartInstances[pid];
+    if (!myChart) {
+        // 初始化图表
+        myChart = initShareDatasetChart(container, pid, titleText);
+        chartInstances[pid] = myChart;
+        shareDatasetBuffers[pid] = [];
 
-            // 初始化 datasetSource
-            var datasetSource = initShareDatasetSource(data);
-            myChart.setOption(getShareDatasetChartOption(datasetSource, pid));
+        // 初始化 datasetSource
+        var datasetSource = initShareDatasetSource(data);
+        myChart.setOption(getShareDatasetChartOption(datasetSource, pid));
 
-            // 绑定事件以控制缓冲
-            bindShareDatasetChartEvents(myChart, pid);
-        } else {
-            // 更新图表数据
-            updateShareDatasetChartData(myChart, pid, data);
-        }
-    });
+        // 绑定事件以控制缓冲
+        bindShareDatasetChartEvents(myChart, pid);
+    } else {
+        // 更新图表数据
+        updateShareDatasetChartData(myChart, pid, data);
+    }
 }
 
 // 初始化图表容器和样式
@@ -2219,7 +2233,7 @@ function getShareDatasetChartOption(datasetSource, pid) {
         smooth: true,
         seriesLayoutBy: 'row',
         emphasis: {focus: 'series'},
-        lineStyle: { width: 2 },
+        lineStyle: {width: 2},
         showSymbol: true,
         symbol: 'circle',
         symbolSize: 6
@@ -2258,7 +2272,7 @@ function getShareDatasetChartOption(datasetSource, pid) {
                 var tooltipText = params[0].axisValue + '<br/>';
                 params.forEach(item => {
                     if (item.seriesType === 'line') {
-                        tooltipText += `${item.marker} ${item.seriesName}: ${item.data[item.seriesIndex+1]} <br/>`;
+                        tooltipText += `${item.marker} ${item.seriesName}: ${item.data[item.seriesIndex + 1]} <br/>`;
                     }
                 });
                 return tooltipText;

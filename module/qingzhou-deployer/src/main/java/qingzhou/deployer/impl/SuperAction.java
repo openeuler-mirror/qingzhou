@@ -1,14 +1,34 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import qingzhou.api.ActionType;
+import qingzhou.api.Item;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Chart;
+import qingzhou.api.type.Combined;
+import qingzhou.api.type.Dashboard;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Echo;
+import qingzhou.api.type.Export;
 import qingzhou.api.type.List;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Show;
+import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.*;
+import qingzhou.deployer.ChartDataBuilder;
+import qingzhou.deployer.CombinedDataBuilder;
+import qingzhou.deployer.DashboardDataBuilder;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
-import qingzhou.json.Json;
 import qingzhou.registry.AppInfo;
 import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
@@ -19,7 +39,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 class SuperAction {
@@ -506,130 +534,8 @@ class SuperAction {
         DashboardDataBuilder dashboardBuilder = new DashboardDataBuilder();
         ((Dashboard) instance).dashboardData(request.getId(), dashboardBuilder);
 
-        Collection<Dashboard.DashboardData> dataTypes = dashboardBuilder.data.values();
-        if (dataTypes.isEmpty()) {
-            return;
-        }
+        dashboardBuilder.transformData();// 转换为前端需要的格式
 
-        Json json = app.getAppContext().getService(Json.class);
-
-        // 初始化各类数据的集合
-        Map<String, String> basicDataMap = new HashMap<>();
-        java.util.List<Map<String, String>> gaugeDataList = new ArrayList<>();
-        java.util.List<Map<String, String>> histogramDataList = new ArrayList<>();
-        java.util.List<Map<String, String>> shareDatasetDataList = new ArrayList<>();
-
-        for (Dashboard.DashboardData dashboardData : dataTypes) {
-            if (dashboardData == null) {
-                continue;
-            }
-            Class<? extends Dashboard.DashboardData> dataTypeClass = dashboardData.getClass();
-            if (dataTypeClass == DashboardDataBuilder.Basic.class) {
-                DashboardDataBuilder.Basic basic = (DashboardDataBuilder.Basic) dashboardData;
-                Map<String, String> data = basic.data;
-                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(data));
-                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_INFO, basic.info);
-                basicDataMap.put(DeployerConstants.DASHBOARD_FIELD_TITLE, basic.title);
-            } else if (dataTypeClass == DashboardDataBuilder.Gauge.class) {
-                Map<String, String> gaugeData = processGaugeOrHistogram((DashboardDataBuilder.Gauge) dashboardData, json);
-                if (gaugeData != null) {
-                    gaugeDataList.add(gaugeData);
-                }
-            } else if (dataTypeClass == DashboardDataBuilder.Histogram.class) {
-                Map<String, String> histogramData = processGaugeOrHistogram((DashboardDataBuilder.Histogram) dashboardData, json);
-                if (histogramData != null) {
-                    histogramDataList.add(histogramData);
-                }
-            } else if (dataTypeClass == DashboardDataBuilder.ShareDataset.class) {
-                Map<String, String> shareDataset = processShareDataset((DashboardDataBuilder.ShareDataset) dashboardData, json);
-                if (shareDataset != null) {
-                    shareDatasetDataList.add(shareDataset);
-                }
-            }
-        }
-
-        Map<String, String> result = ((ResponseImpl) request.getResponse()).getDataMap();
-        if (!basicDataMap.isEmpty()) {
-            result.put(DeployerConstants.DASHBOARD_FIELD_BASIC_DATA, json.toJson(basicDataMap));
-        }
-
-        if (!gaugeDataList.isEmpty()) {
-            result.put(DeployerConstants.DASHBOARD_FIELD_GAUGE_DATA, json.toJson(gaugeDataList));
-        }
-
-        if (!histogramDataList.isEmpty()) {
-            result.put(DeployerConstants.DASHBOARD_FIELD_HISTOGRAM_DATA, json.toJson(histogramDataList));
-        }
-
-        if (!shareDatasetDataList.isEmpty()) {
-            result.put(DeployerConstants.DASHBOARD_FIELD_SHARE_DATASET_DATA, json.toJson(shareDatasetDataList));
-        }
-    }
-
-    private Map<String, String> processGaugeOrHistogram(DashboardDataBuilder.Gauge gauge, Json json) {
-        java.util.List<String[]> dataList = gauge.data;
-        String[] fields = gauge.fields;
-        int usedIndex = -1;
-        int maxIndex = -1;
-        for (int i = 0; i < fields.length; i++) {
-            String field = fields[i];
-            if (field.equals(gauge.valueKey)) {
-                usedIndex = i;
-            } else if (field.equals(gauge.maxKey)) {
-                maxIndex = i;
-            }
-        }
-        if (usedIndex == -1) {
-            return null;
-        }
-
-        double totalUsed = 0;
-        double totalMax = -1;
-        for (String[] dataArray : dataList) {
-            if (dataArray == null) continue;
-            try {
-                totalUsed += Double.parseDouble(dataArray[usedIndex]);
-                if (maxIndex != -1) {
-                    totalMax += Double.parseDouble(dataArray[maxIndex]);
-                }
-            } catch (NumberFormatException ignored) {
-            }
-        }
-
-        Map<String, String> result = new HashMap<>();
-        result.put(DeployerConstants.DASHBOARD_FIELD_FIELDS, json.toJson(fields));
-        result.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(dataList));
-        result.put(DeployerConstants.DASHBOARD_FIELD_USED, String.valueOf(totalUsed));
-        if (maxIndex != -1) {
-            result.put(DeployerConstants.DASHBOARD_FIELD_MAX, String.valueOf(totalMax));
-        }
-        result.put(DeployerConstants.DASHBOARD_FIELD_UNIT, gauge.unit);
-        result.put(DeployerConstants.DASHBOARD_FIELD_INFO, gauge.info);
-        result.put(DeployerConstants.DASHBOARD_FIELD_TITLE, gauge.title);
-
-        return result;
-    }
-
-    private Map<String, String> processShareDataset(DashboardDataBuilder.ShareDataset shareDataset, Json json) {
-        try {
-            java.util.List<String[]> dataList = new LinkedList<>();
-            Map<String, String> data = shareDataset.data;
-            Set<String> keySet = data.keySet();
-            for (String key : keySet) {
-                java.util.List<String> fieldData = new LinkedList<>();
-                fieldData.add(key);
-                fieldData.add(data.get(key));
-                dataList.add(fieldData.toArray(new String[0]));
-            }
-
-            Map<String, String> echartsDataset = new HashMap<>();
-            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_DATA, json.toJson(dataList));
-            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_INFO, shareDataset.info);
-            echartsDataset.put(DeployerConstants.DASHBOARD_FIELD_TITLE, shareDataset.title);
-
-            return echartsDataset;
-        } catch (Exception e) {
-            return null;
-        }
+        request.getResponse().useCustomizedResponse(dashboardBuilder);
     }
 }
