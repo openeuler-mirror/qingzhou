@@ -87,7 +87,7 @@ public class ModelInfo {
     }
 
     public String[] getFieldsToListSearch() {
-        List<String> list = new ArrayList<>();
+        List<String> list = new LinkedList<>();
         for (ModelFieldInfo fieldInfo : modelFieldInfos) {
             if (fieldInfo.isSearch()) {
                 list.add(fieldInfo.getCode());
@@ -115,7 +115,7 @@ public class ModelInfo {
     }
 
     public String[] getFieldsToList() {
-        List<String> list = new ArrayList<>();
+        List<String> list = new LinkedList<>();
         for (String formFieldName : getFormFieldNames()) {
             ModelFieldInfo modelFieldInfo = getModelFieldInfo(formFieldName);
             if (modelFieldInfo.isList() && modelFieldInfo.isShow()) {
