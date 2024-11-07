@@ -17,17 +17,19 @@
     boolean selected = false;
     for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldName)) {
         String option = itemInfo.getName();
+        //处理option当中有双引号
+        String optionHtmlStr = option.replaceAll("\"", "&quot;");
         String colorStyle = SystemController.getColorStyle(modelInfo, fieldName, option);
 
         String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
         if (Objects.equals(fieldValue, option)) {
             selected = true;
-            selectVal = option;
+            selectVal = optionHtmlStr;
             selectText = optionI18n;
             tabIndex = index;
-            selectHtml += "<li style=\"" + colorStyle + "\" data-value=\"" + option + "\" class=\"option selected focus\" format=\"" + option + "\">" + optionI18n + "</li>";
+            selectHtml += "<li style=\"" + colorStyle + "\" data-value=\"" + optionHtmlStr + "\" class=\"option selected focus\" format=\"" + optionHtmlStr + "\">" + optionI18n + "</li>";
         } else {
-            selectHtml += "<li style=\"" + colorStyle + "\" data-value=\"" + option + "\" class=\"option\" format=\"" + option + "\">" + optionI18n + "</li>";
+            selectHtml += "<li style=\"" + colorStyle + "\" data-value=\"" + optionHtmlStr + "\" class=\"option\" format=\"" + optionHtmlStr + "\">" + optionI18n + "</li>";
         }
         index++;
     }
