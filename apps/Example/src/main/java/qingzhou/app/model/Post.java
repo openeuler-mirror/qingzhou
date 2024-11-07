@@ -19,7 +19,7 @@ public class Post extends AddModelBase {
     public String postCode;
 
     @ModelField(
-            required = true, link_show = true,
+            required = true, link_action = "show",
             ignore = 15,
             search = true, list = true,
             name = {"岗位名称", "en:Post Name"},

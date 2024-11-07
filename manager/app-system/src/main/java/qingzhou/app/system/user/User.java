@@ -150,7 +150,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             list = true, search = true,
-            link_show = true,
+            link_action = "show",
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;

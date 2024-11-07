@@ -90,7 +90,7 @@ public @interface ModelField {
 
     boolean multiple_search() default false;// 当search为ture和本值为true的时候，显示为多选下拉搜索
 
-    boolean link_show() default false; // 点击此字段调整到详情页面，模块须支持 show
+    String link_action() default ""; // 点击此字段调整到详情页面，模块须支持 show
 
     int width_percent() default -1;
 

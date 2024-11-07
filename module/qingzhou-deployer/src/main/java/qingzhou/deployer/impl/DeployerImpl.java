@@ -393,7 +393,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setList(modelField.list());
             modelFieldInfo.setIgnore(modelField.ignore());
             modelFieldInfo.setSearch(modelField.search());
-            modelFieldInfo.setLinkShow(modelField.link_show());
+            modelFieldInfo.setLinkAction(modelField.link_action());
             modelFieldInfo.setWidthPercent(modelField.width_percent());
             modelFieldInfo.setFieldType(modelField.field_type());
             modelFieldInfo.setNumeric(modelField.numeric());
