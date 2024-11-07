@@ -364,7 +364,7 @@
                                 out.print(" form-loaded-trigger=" + action.isSubFormSubmitOnOpen());
                             }
 
-                            if (action.getActionType() == ActionType.sub_form) {
+                            if (action.getActionType() == ActionType.sub_form || action.getActionType() == ActionType.action_list) {
                                 out.print(" act-confirm='"
                                         + String.format(I18n.getKeyI18n("page.operationConfirm"),
                                         I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName),
