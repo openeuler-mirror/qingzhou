@@ -39,18 +39,29 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>assembly</id>
-                        <phase>prepare-package</phase>
+                        <id>unpack</id>
+                        <phase>generate-sources</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>unpack</goal>
                         </goals>
                         <configuration>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.tinylog</groupId>
+                                    <artifactId>tinylog-api</artifactId>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.tinylog</groupId>
+                                    <artifactId>tinylog-impl</artifactId>
+                                    <overWrite>false</overWrite>
+                                    <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
                         </configuration>
                     </execution>
                 </executions>

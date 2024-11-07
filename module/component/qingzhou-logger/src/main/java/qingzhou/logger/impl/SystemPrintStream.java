@@ -8,16 +8,14 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Formatter;
 import java.util.Locale;
-import java.util.Map;
 
 class SystemPrintStream extends PrintStream {
-    private static final ThreadLocal<Formatter> FORMATTER_THREAD_LOCAL = ThreadLocal.withInitial(() -> new Formatter(new StringBuilder()));
-    private static volatile boolean takeoverSystemPrint = false;
+    private final ThreadLocal<Formatter> FORMATTER_THREAD_LOCAL = ThreadLocal.withInitial(() -> new Formatter(new StringBuilder()));
 
     private final Logger logger;
     private final boolean useWarnLevel;
 
-    SystemPrintStream(Logger logger, boolean useWarnLevel, Map<String, String> config) {
+    SystemPrintStream(Logger logger, boolean useWarnLevel) {
         super(new OutputStream() {
             @Override
             public void write(int b) {
@@ -26,12 +24,9 @@ class SystemPrintStream extends PrintStream {
 
         this.logger = logger;
         this.useWarnLevel = useWarnLevel;
-        takeoverSystemPrint = Boolean.parseBoolean(config.get("takeoverSystemPrint"));
     }
 
     private void logMsg(String msg) {
-        if (!takeoverSystemPrint) return;
-
         if (useWarnLevel) {
             logger.warn(msg);
         } else {

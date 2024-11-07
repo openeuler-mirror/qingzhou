@@ -5,6 +5,7 @@ import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
 import qingzhou.logger.Logger;
 
+import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -13,6 +14,9 @@ import java.util.Map;
 
 @Module
 public class Controller implements ModuleActivator {
+    public static final PrintStream out = System.out; // for bak
+    public static final PrintStream err = System.err; // for bak
+
     private LoggerImpl logger;
     private long startTime;
 
@@ -22,9 +26,10 @@ public class Controller implements ModuleActivator {
         context.registerService(Logger.class, logger);
 
         Map<String, String> config = context.getConfig();
-//        System.setOut(new SystemPrintStream(logger, false, config));
-//        System.setErr(new SystemPrintStream(logger, true, config));
-
+        if (Boolean.parseBoolean(config.get("takeoverSystemPrint"))) {
+            System.setOut(new SystemPrintStream(logger, false));
+            System.setErr(new SystemPrintStream(logger, true));
+        }
         startInfo();
     }
 

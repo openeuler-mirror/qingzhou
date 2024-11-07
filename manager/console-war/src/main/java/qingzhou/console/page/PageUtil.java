@@ -191,9 +191,11 @@ public class PageUtil {
                 if (!showSubMenus.contains(modelInfo.getCode())) { //  是否在子菜单范围内
                     continue;
                 }
+            } else {
+                // 未使用子菜单，需要判断是否 hidden
+                if (modelInfo.isHidden()) continue;
             }
 
-            if (modelInfo.isHidden()) continue;
             String menu = modelInfo.getMenu();
             MenuItem foundParent = rootMenu.findMenu(menu);
             if (foundParent != null) {
@@ -216,6 +218,12 @@ public class PageUtil {
     }
 
     private static String buildParentMenu(int level, MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response, String modelMenuParameter) {
+        // 空菜单不显示
+        if (menuItem.getSubModelList().isEmpty()
+                && menuItem.getSubMenuList().isEmpty()) {
+            return "";
+        }
+
         StringBuilder menuHtml = new StringBuilder();
 
         // qingzhou.app.system.Main.XXX
