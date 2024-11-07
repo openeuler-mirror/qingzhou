@@ -294,6 +294,10 @@ class DeployerImpl implements Deployer {
                 modelInfo.setIdField(((List) instance).idField());
             }
             ModelFieldInfo[] modelFieldInfos = getModelFieldInfos(annotation, instance);
+            // 按 order 升序排序
+            modelFieldInfos = Arrays.stream(modelFieldInfos)
+                    .sorted(Comparator.comparingInt(ModelFieldInfo::getOrder))
+                    .toArray(ModelFieldInfo[]::new);
             modelInfo.setModelFieldInfos(modelFieldInfos);
             java.util.List<ModelActionInfo> methodModelActionInfoMap = parseModelActionInfos(annotation);
             modelInfo.setModelActionInfos(methodModelActionInfoMap.toArray(new ModelActionInfo[0]));
@@ -417,6 +421,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setColor(modelField.color());
             modelFieldInfo.setEchoGroup(modelField.echo_group());
             modelFieldInfo.setSkipValidate(modelField.skip_validate());
+            modelFieldInfo.setOrder(modelField.order());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);

@@ -107,4 +107,6 @@ public @interface ModelField {
      */
 
     boolean numeric() default false;  // 该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
+
+    int order() default 0; //正序排练
 }
