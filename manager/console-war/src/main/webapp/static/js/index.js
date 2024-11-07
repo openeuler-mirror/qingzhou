@@ -238,6 +238,8 @@ function setOrReset() {
     bindEventForFormPage();
     // monitor.jsp 页面加载
     initMonitorPage();
+    // chart.jsp 页面加载
+    initChartPage();
     // dashboard.jsp 页面加载
     initDashboardPage();
     // grid.jsp 页面初始化
@@ -1228,6 +1230,62 @@ function customAction(actionUrl, customActionId, title, restrictedArea, formLoad
 }
 
 /**************************************** list.jsp - end *************************************************/
+/**************************************** chart.jsp - start *************************************************/
+function initChartPage() {
+    $(".bodyDiv>div.infoPage[chart='true'][loaded!='true']").attr("loaded", "true").each(function (i) {
+        var thisDiv = $(this);
+        var chartOption = defaultOption();
+        var myChart = echarts.init($("div[container='chart']", this)[0]);
+        myChart.renderFlag = true;
+        myChart.on('mouseover', {seriesType: 'line'}, function () {
+            myChart.renderFlag = false;
+        });
+        myChart.on('mouseout', {seriesType: 'line'}, function () {
+            myChart.renderFlag = true;
+        });
+        myChart.legendselect = {};
+        myChart.on('legendselectchanged', function (params) {
+            myChart.legendselect = params.selected;
+        });
+        handlerChart(myChart, chartOption, $(thisDiv).attr("data-url"), thisDiv);
+    });
+};
+
+function handlerChart(chartObj, chartOption, url, restrictedArea) {
+    var formData = $(restrictedArea).siblings("form.filterForm").serializeArray();
+    $.ajax({
+        type: "POST",
+        data: formData,
+        url: url,
+        dataType: 'json',
+        success: function (res) {
+            if (res.xValues && res.xValues.length > 0) {
+                var xValues = res.xValues;
+                var data = res.data;
+                var dimensions = ['xValue'];
+                var keys = Object.keys(data);
+                dimensions = [...dimensions, ...keys];
+                chartOption.dataset.dimensions = dimensions;
+                chartOption.dataset.sourceHeader = false;
+
+                for (let i = 0; i < xValues.length; i++) {
+                    var model = {};
+                    model.xValue = xValues[i];
+                    for (let key in data) {
+                        model[key] = data[key][i];
+                    }
+                    addData(chartObj, chartOption, model, data);
+                }
+                resizeChart(chartObj, chartOption);
+            }
+        },
+        error: function (e) {
+            handleError(e);
+        }
+    });
+}
+
+/**************************************** chart.jsp - end *************************************************/
 
 /**************************************** monitor.jsp - start *************************************************/
 function initMonitorPage() {
@@ -1235,7 +1293,7 @@ function initMonitorPage() {
     $(".bodyDiv>div.infoPage[chartMonitor='true'][loaded!='true']").attr("loaded", "true").each(function (i) {
         var thisDiv = $(this);
         var monitorI18nInfo = eval("(" + $("textarea[name='monitorI18nInfo']", thisDiv).val() + ")");
-        var chartOption = defaultOption(monitorI18nInfo, $(this).attr("xAxisField"));
+        var chartOption = defaultOption(monitorI18nInfo);
         var myChart = echarts.init($("div[container='chart']", this)[0]);
         myChart.renderFlag = true;
         myChart.on('mouseover', {seriesType: 'line'}, function () {
@@ -1251,39 +1309,20 @@ function initMonitorPage() {
         (function (chartObj, option, url, keys, restrictedArea, tempId) {
             $(thisDiv).append("<span id=\"monitor-timer-" + tempId + "\" style=\"display:none;\"></span>");
             var retryOption = {retryLimit: 10};
-            var autoRefresh = $(restrictedArea).attr("autoRefresh");
-            if ("true" === autoRefresh) {
-                window.setTimeout(function fn(retryRemain) {
-                    if (retryRemain === undefined) {
-                        retryRemain = retryOption.retryLimit;
-                    }
-                    if (retryRemain > 0 && retryRemain <= retryOption.retryLimit && $("span#monitor-timer-" + tempId).length > 0) {
-                        retryOption["retryRemain"] = retryRemain;
-                        handler(chartObj, option, url, keys, restrictedArea, retryOption, fn);
-                    }
-                }, 10);
-            } else {
-                handler(myChart, chartOption, $(thisDiv).attr("data-url"), monitorI18nInfo, thisDiv, retryOption);
-            }
+            window.setTimeout(function fn(retryRemain) {
+                if (retryRemain === undefined) {
+                    retryRemain = retryOption.retryLimit;
+                }
+                if (retryRemain > 0 && retryRemain <= retryOption.retryLimit && $("span#monitor-timer-" + tempId).length > 0) {
+                    retryOption["retryRemain"] = retryRemain;
+                    handler(chartObj, option, url, keys, restrictedArea, retryOption, fn);
+                }
+            }, 10);
         })(myChart, chartOption, $(thisDiv).attr("data-url"), monitorI18nInfo, thisDiv, randId + i);
     });
 };
 
-function defaultOption(infoKv, xAxisField) {
-    var dimensions;
-    var sourceHeader = true;
-    if (infoKv && JSON.stringify(infoKv) !== '{}') {
-        sourceHeader = false;
-        if (xAxisField) {
-            dimensions = [xAxisField];
-        } else {
-            dimensions = ['dataTime'];
-        }
-        for (let key in infoKv) {
-            dimensions.push(key);
-        }
-    }
-
+function defaultOption(infoKv) {
     return {
         width: 'auto',
         title: {text: ''},
@@ -1374,9 +1413,9 @@ function defaultOption(infoKv, xAxisField) {
             left: '95%'
         },
         dataset: {
-            dimensions: dimensions,
+            dimensions: null,
             source: [],
-            sourceHeader: sourceHeader,
+            sourceHeader: true,
         },
         xAxis: {
             type: 'category',
@@ -1400,10 +1439,17 @@ function getDateTime() {
 }
 
 function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, timerFn) {
-    var formData = $(restrictedArea).siblings("form.filterForm").serializeArray();
+    if (keys && JSON.stringify(keys) !== '{}') {
+        var dimensions = ['dataTime'];
+        for (let key in keys) {
+            dimensions.push(key);
+        }
+        chartOption.dataset.dimensions = dimensions;
+        chartOption.dataset.sourceHeader = false;
+    }
+
     $.ajax({
-        type: "POST",
-        data: formData,
+        type: "GET",
         url: url,
         dataType: 'json',
         complete: function (xhr, status) {
@@ -1421,16 +1467,13 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
         success: function (data) {
             if (data.success === "true" || data.success === true) {
                 var monitorData = data.data;
-                if (monitorData instanceof Array) {
-                    addData(chartObj, chartOption, monitorData, keys, restrictedArea);
-                } else {
-                    monitorData.dataTime = getDateTime();
-                    let models = [monitorData];
-                    if (chartOption.dataset.source.length >= 20) {
-                        chartOption.dataset.source.shift();
-                    }
-                    addData(chartObj, chartOption, models, keys, restrictedArea);
+                monitorData.dataTime = getDateTime();
+                if (chartOption.dataset.source.length >= 20) {
+                    chartOption.dataset.source.shift();
                 }
+                addData(chartObj, chartOption, monitorData, keys);
+                resizeChart(chartObj, chartOption);
+                panelUpdate(monitorData, restrictedArea);
             } else {
                 showMsg(data.msg, data.msg_level);
             }
@@ -1441,8 +1484,8 @@ function handler(chartObj, chartOption, url, keys, restrictedArea, retryOption, 
     });
 };
 
-function addData(chartObj, option, models, keys, restrictedArea) {
-    if (models === null || models.length === 0) {
+function addData(chartObj, option, model, keys) {
+    if (!model || JSON.stringify(model) === '{}') {
         return;
     }
 
@@ -1459,31 +1502,14 @@ function addData(chartObj, option, models, keys, restrictedArea) {
             option.legend.data.push(key);
             option.series.push({name: key, type: 'line'});
         }
-    }
-    if (option.series.length === 0) {
-        if (models[0] instanceof Array) {
-            for (let i = 1; i < models[0].length; i++) {
-                option.series.push({name: models[0][i], type: 'line'});
-            }
-        } else {
-            let i = 0;
-            for (let modelKey in models[0]) {
-                if (i++ > 0) {
-                    option.series.push({name: modelKey, type: 'line'});
-                }
-            }
+        var value = model[key];
+        if (!(/(^[0-9]\d*$)/.test(value))) {
+            valueIsItAnInteger = 'false';
         }
     }
-    for (let i in models) {
-        let data = models[i];
-        for (let key in keys) {
-            var value = data[key];
-            if (!(/(^[0-9]\d*$)/.test(value))) {
-                valueIsItAnInteger = 'false';
-            }
-        }
-        option.dataset.source.push(models[i]);
-    }
+
+    option.dataset.source.push(model);
+
     if (valueIsItAnInteger === 'true') {
         option.yAxis.minInterval = 1;
     }
@@ -1493,6 +1519,9 @@ function addData(chartObj, option, models, keys, restrictedArea) {
             option.title.text = hiddenFieldValue;
         }
     }
+}
+
+function resizeChart(chartObj, option) {
     let line_num_each_row = 6;// 图例中每行显示的线条数目
     this.setSeriesAndLegend(option, line_num_each_row);
     this.setGrid(option, line_num_each_row);
@@ -1504,7 +1533,6 @@ function addData(chartObj, option, models, keys, restrictedArea) {
         // 更新数据展示
         chartObj.setOption(option, false);
         chartObj.resize();
-        panelUpdate(models, restrictedArea);
     }
 }
 
@@ -1554,39 +1582,34 @@ function setGrid(option, line_num_each_row) {
 }
 
 function panelUpdate(monitorData, restrictedArea) {
-    if (monitorData.length === 0) {
-        return;
-    }
     $(".panel-body table tr", restrictedArea).each(function () {
         var key = $($("td", this)[0]).attr("key");
         var fieldName = $($("td", this)[0]).attr("field");
         var text = undefined;
 
-        for (var i in monitorData) {
-            for (var k in monitorData[i]) {
-                if (k != "dataTime") {
-                    if (monitorData[i][k] instanceof Array) {
-                        if (monitorData[i][k].length > 0) {
-                            text = monitorData[i][k][0][fieldName];
+        for (var k in monitorData) {
+            if (k != "dataTime") {
+                if (monitorData[k] instanceof Array) {
+                    if (monitorData[k].length > 0) {
+                        text = monitorData[k][0][fieldName];
+                    }
+                } else if (monitorData[k] instanceof Object) {
+                    if (key !== undefined) {
+                        if (monitorData[k][key] === undefined) {
+                            continue;
                         }
-                    } else if (monitorData[i][k] instanceof Object) {
-                        if (key !== undefined) {
-                            if (monitorData[i][k][key] === undefined) {
-                                continue;
-                            }
-                            text = monitorData[i][k][key][fieldName];
-                        } else {
-                            text = monitorData[i][k][fieldName];
-                        }
-                    } else if (monitorData[i][k] instanceof String && k == fieldName) {
-                        text = monitorData[i][k];
+                        text = monitorData[k][key][fieldName];
                     } else {
-                        continue;
+                        text = monitorData[k][fieldName];
                     }
-                    if (text !== undefined) {
-                        $($("td", this)[1]).text(text);
-                        break;
-                    }
+                } else if (monitorData[k] instanceof String && k == fieldName) {
+                    text = monitorData[k];
+                } else {
+                    continue;
+                }
+                if (text !== undefined) {
+                    $($("td", this)[1]).text(text);
+                    break;
                 }
             }
         }
