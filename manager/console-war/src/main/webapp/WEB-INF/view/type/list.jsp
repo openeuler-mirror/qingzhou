@@ -214,30 +214,30 @@
                         value = "";
                     }
                     String fieldUpdateAction = "";
-                    if (!fieldInfo.getUpdateAction().isEmpty()) {
+                    if (Utils.notBlank(fieldInfo.getUpdateAction())) {
                         fieldUpdateAction = fieldInfo.getUpdateAction();
             %>
             <td style="<%=needHidden%>"
                 action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG , fieldUpdateAction + "/" + encodedItemId)%>">
                     <%
-                    }else{
+            } else {
             %>
-            <td style="<%=needHidden%>">
-                <%
-                    }
-                %>
-                <%
-                    if ((field.equals(idField))) {
-                        boolean hasShowAction = false;
-                        if (SecurityController.isActionPermitted(qzApp, qzModel, Show.ACTION_SHOW, currentUser)) {
-                            hasShowAction = true;
-                            String condition = modelInfo.getModelActionInfo(Show.ACTION_SHOW).getShow();
-                            if (Utils.notBlank(condition)) {
-                                hasShowAction = SecurityController.checkRule(condition, fieldName -> modelData[modelInfo.getFieldIndex(fieldName)]);
-                            }
+            <td style="<%=needHidden%>"><%
+                }
+
+                // 以下是 当前 <td> 的内容
+
+                if ((field.equals(idField))) {
+                    boolean hasShowAction = false;
+                    if (SecurityController.isActionPermitted(qzApp, qzModel, Show.ACTION_SHOW, currentUser)) {
+                        hasShowAction = true;
+                        String condition = modelInfo.getModelActionInfo(Show.ACTION_SHOW).getShow();
+                        if (Utils.notBlank(condition)) {
+                            hasShowAction = SecurityController.checkRule(condition, fieldName -> modelData[modelInfo.getFieldIndex(fieldName)]);
                         }
-                        if (hasShowAction) {
-                %>
+                    }
+                    if (hasShowAction) {
+            %>
 
                 <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , Show.ACTION_SHOW + "/" + encodedItemId)%>'
                    class="dataid qz-action-link tooltips"
@@ -250,22 +250,21 @@
                     } else {
                         out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
                     }
-                } else if(!fieldInfo.getLinkAction().isEmpty()){
-                        boolean hasAction = false;
-                        if (SecurityController.isActionPermitted(qzApp, qzModel, fieldInfo.getLinkAction(), currentUser)) {
+                } else if (Utils.notBlank(fieldInfo.getLinkAction())) {
+                    if (SecurityController.isActionPermitted(qzApp, qzModel, fieldInfo.getLinkAction(), currentUser)) {
                 %>
-                    <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , fieldInfo.getLinkAction() + "/" + encodedItemId)%>'
-                       class="dataid qz-action-link tooltips"
-                       data-tip-arrow="top"
-                       data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
-                       style="color:#4C638F;">
-                        <%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
-                    </a>
+                <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , fieldInfo.getLinkAction() + "/" + encodedItemId)%>'
+                   class="dataid qz-action-link tooltips"
+                   data-tip-arrow="top"
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
+                   style="color:#4C638F;">
+                    <%=PageUtil.styleFieldValue(value, fieldInfo, modelInfo)%>
+                </a>
                 <%
-                    }else{
+                    } else {
                         out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
                     }
-                    }else if (!fieldInfo.getUpdateAction().isEmpty()) {
+                } else if (Utils.notBlank(fieldInfo.getUpdateAction())) {
                     // 兼容表单组件 例：bool.jsp中使用的是fieldValue和fieldName
                     // 避免编译报错，放入这个循环里，是避免和 list.jsp 中 的同名变量冲突
                     java.util.List<String> passwordFields = new ArrayList<>();
@@ -322,6 +321,8 @@
                             out.print(PageUtil.styleFieldValue(value, fieldInfo, modelInfo));
                         }
                     }
+
+                    // 以上是 当前 <td> 的内容
                 %>
             </td>
             <%

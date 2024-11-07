@@ -1,16 +1,12 @@
 package qingzhou.app.model;
 
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Chart;
 import qingzhou.app.ExampleMain;
-import qingzhou.engine.util.Utils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Model(code = "charts", icon = "line-chart",
         entrance = Chart.ACTION_CHART,
@@ -44,46 +40,34 @@ public class StaticCharts extends ModelBase implements Chart {
 
     @ModelField(
             search = true,
-            input_type = InputType.textarea,
+            input_type = InputType.number,
             name = {"sql", "en:sql"},
             info = {"查询语句。", "en:sql."})
     public int sql;
 
     @Override
-    public void chartData(DataBuilder dataBuilder) throws Exception {
+    public void chartData(DataBuilder dataBuilder) {
         Request request = getAppContext().getCurrentRequest();
         String sql = request.getParameter("sql");
+        int j = 10;
+        try {
+            j = Integer.parseInt(sql);
+        } catch (Exception e) {
+            System.err.println("参数需要数字类型的");
+        }
+        List<String> xValues = new ArrayList<>();
+        for (int i = 0; i < j; i++) {
+            xValues.add(i + "");
+        }
+        dataBuilder.setXAxis(xValues.toArray(new String[0]));    // 设置x轴数据
 
-        if (Utils.isBlank(sql)) {
-            // 第一种设置数据方式：addMap 每次设置x轴上的多个维度
-            for (int i = 0; i < 10; i++) {
-                Map<String, String> map = new HashMap<>();
-                map.put("a", String.valueOf(-i * i + ThreadLocalRandom.current().nextInt(20)));
-                map.put("b", String.valueOf(-i * i + ThreadLocalRandom.current().nextInt(20)));
-                map.put("c", String.valueOf(-i * i + ThreadLocalRandom.current().nextInt(20)));
-                dataBuilder.addMap(i + "", map);
+        for (int k = 0; k < j / 2; k++) {
+            String group = String.valueOf((char) ('a' + k));
+            List<String> list = new ArrayList<>();
+            for (int i = 0; i < xValues.size(); i++) {
+                list.add(String.valueOf(-i * k + ThreadLocalRandom.current().nextInt(20)));
             }
-        } else {
-            // 第二种设置数据方式：addData + setxValues 每次设置一个维度上的一组值
-            try {
-                int j = Integer.parseInt(sql);
-                List<String> xValues = new ArrayList<>();
-                for (int i = 0; i < j; i++) {
-                    xValues.add(i + "");
-
-                }
-                dataBuilder.setxValues(xValues);    // 设置x轴数据
-
-                for (int k = 0; k < j / 2; k++) {
-                    String group = String.valueOf((char) ('a' + k));
-                    List<String> list = new ArrayList<>();
-                    for (int i = 0; i < xValues.size(); i++) {
-                        list.add(String.valueOf(-i * k + ThreadLocalRandom.current().nextInt(20)));
-                    }
-                    dataBuilder.addData(group, list.toArray(new String[0]));    // 设置每个维度的数据
-                }
-            } catch (NumberFormatException ignored) {
-            }
+            dataBuilder.addLineData(group, list.toArray(new String[0]));    // 设置每个维度的数据
         }
     }
 }

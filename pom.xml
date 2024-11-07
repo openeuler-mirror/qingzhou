@@ -18,7 +18,7 @@
         <module>apps</module>
         <module>package</module>
         <module>plugins</module>
-        <!--        <module>auto-test</module>-->
+        <module>auto-test</module>
     </modules>
 
     <properties>

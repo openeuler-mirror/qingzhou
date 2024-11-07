@@ -1259,8 +1259,8 @@ function handlerChart(chartObj, chartOption, url, restrictedArea) {
         url: url,
         dataType: 'json',
         success: function (res) {
-            if (res.xValues && res.xValues.length > 0) {
-                var xValues = res.xValues;
+            if (res.xAxis && res.xAxis.length > 0) {
+                var xAxis = res.xAxis;
                 var data = res.data;
                 var dimensions = ['xValue'];
                 var keys = Object.keys(data);
@@ -1268,9 +1268,9 @@ function handlerChart(chartObj, chartOption, url, restrictedArea) {
                 chartOption.dataset.dimensions = dimensions;
                 chartOption.dataset.sourceHeader = false;
 
-                for (let i = 0; i < xValues.length; i++) {
+                for (let i = 0; i < xAxis.length; i++) {
                     var model = {};
-                    model.xValue = xValues[i];
+                    model.xValue = xAxis[i];
                     for (let key in data) {
                         model[key] = data[key][i];
                     }
