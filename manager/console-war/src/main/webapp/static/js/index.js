@@ -982,7 +982,12 @@ function bindEventForListPage() {
         var that = this
         if ($(this).attr("class").includes("switch")) {
             $(this).unbind("click").bind("click", function () {
-                showConfirm(getSetting("switchText"), {
+                var thText = $(this).closest('table').find('thead th').eq($(this).closest('td').index()).text();
+                var confirmDetail = getSetting("switchText");
+                if (thText !== undefined){
+                    confirmDetail += thText;
+                }
+                showConfirm(confirmDetail, {
                     "title": getSetting("pageConfirmTitle"),
                     "btn": [getSetting("confirmBtnText"), getSetting("cancelBtnText")]
                 }, function (index) {
