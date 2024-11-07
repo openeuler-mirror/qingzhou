@@ -15,7 +15,7 @@
 		String url = PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, qzAction + (Utils.notBlank(encodedId) ? "/" + encodedId : ""));
 	%>
 
-	<div class="infoPage" chartMonitor="true" data-url="<%=url%>" xAxisField="">
+	<div class="infoPage" chart="true" data-url="<%=url%>" xAxisField="">
 		<div class="panel" style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
 			<div class="panel-body" style="word-break: break-all">
 				<div container="chart" style="height: 600px;width: 100%;"></div>

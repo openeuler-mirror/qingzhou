@@ -1,7 +1,7 @@
 package qingzhou.app.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
@@ -55,28 +55,32 @@ public class StaticCharts extends ModelBase implements Chart {
         String sql = request.getParameter("sql");
 
         if (Utils.isBlank(sql)) {
+            // 第一种设置数据方式：addMap 每次设置x轴上的多个维度
             for (int i = 0; i < 10; i++) {
-                List<String> list = new ArrayList<>();
-                list.add(String.valueOf(-i * i + 1));
-                list.add(String.valueOf(-i * i + .5));
-                list.add(String.valueOf(-i * i + 5));
-                dataBuilder.addData(i + "", list.toArray(new String[0]));
+                Map<String, String> map = new HashMap<>();
+                map.put("a", String.valueOf(-i * i + ThreadLocalRandom.current().nextInt(20)));
+                map.put("b", String.valueOf(-i * i + ThreadLocalRandom.current().nextInt(20)));
+                map.put("c", String.valueOf(-i * i + ThreadLocalRandom.current().nextInt(20)));
+                dataBuilder.addMap(i + "", map);
             }
         } else {
-            // 不指定监控属性时，返回值的第一项会做为维度，第一项的第一个值会映射到x轴
+            // 第二种设置数据方式：addData + setxValues 每次设置一个维度上的一组值
             try {
                 int j = Integer.parseInt(sql);
-                List<String> dimensions = new ArrayList<>();
-                for (int k = 0; k < j / 2; k++) {
-                    dimensions.add(String.valueOf((char) ('a' + k)));
-                }
-                dataBuilder.addData("time", dimensions.toArray(new String[0]));
+                List<String> xValues = new ArrayList<>();
                 for (int i = 0; i < j; i++) {
+                    xValues.add(i + "");
+
+                }
+                dataBuilder.setxValues(xValues);    // 设置x轴数据
+
+                for (int k = 0; k < j / 2; k++) {
+                    String group = String.valueOf((char) ('a' + k));
                     List<String> list = new ArrayList<>();
-                    for (int k = 0; k < j / 2; k++) {
-                        list.add(String.valueOf(-i * i + k));
+                    for (int i = 0; i < xValues.size(); i++) {
+                        list.add(String.valueOf(-i * k + ThreadLocalRandom.current().nextInt(20)));
                     }
-                    dataBuilder.addData(i + "", list.toArray(new String[0]));
+                    dataBuilder.addData(group, list.toArray(new String[0]));    // 设置每个维度的数据
                 }
             } catch (NumberFormatException ignored) {
             }
