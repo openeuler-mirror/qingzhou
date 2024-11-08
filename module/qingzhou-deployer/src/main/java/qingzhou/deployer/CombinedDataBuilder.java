@@ -3,14 +3,10 @@ package qingzhou.deployer;
 import qingzhou.api.type.Combined;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
-    // 使用 map 是为了 json view 可以判定 CombinedData 的类型
-    public final Map<String, Combined.CombinedData> data = new LinkedHashMap<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+    public final java.util.List<Combined.CombinedData> dataList = new ArrayList<>();; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
     @Override
     public <T> T buildData(Class<? extends Combined.CombinedData> dataType) {
@@ -22,12 +18,13 @@ public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
 
     @Override
     public void addData(Combined.CombinedData data) {
-        this.data.put(data.getClass().getSimpleName(), data);
+        this.dataList.add(data);
     }
 
     public static abstract class CombinedDataImpl implements Combined.CombinedData, Serializable {
         public String header; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String model; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public String type; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
         public Combined.CombinedData header(String header) {
@@ -38,6 +35,12 @@ public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
         @Override
         public Combined.CombinedData model(String model) {
             this.model = model;
+            return this;
+        }
+
+        @Override
+        public Combined.CombinedData type(String type) {
+            this.type = type;
             return this;
         }
     }
