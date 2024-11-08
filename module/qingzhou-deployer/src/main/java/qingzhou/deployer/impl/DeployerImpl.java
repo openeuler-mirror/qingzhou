@@ -422,6 +422,8 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setEchoGroup(modelField.echo_group());
             modelFieldInfo.setSkipValidate(modelField.skip_validate());
             modelFieldInfo.setOrder(modelField.order());
+            modelFieldInfo.setSameLines(modelField.same_lines());
+            modelFieldInfo.setShowLabel(modelField.showLabel());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);

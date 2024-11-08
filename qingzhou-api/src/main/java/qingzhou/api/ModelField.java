@@ -102,6 +102,10 @@ public @interface ModelField {
 
     String[] color() default {};
 
+    String[] same_lines() default {};
+
+    boolean showLabel() default true;       // 表单页是否显示标签名
+
     /**
      * 以下是 FieldType.Monitor 类型的信息
      */
