@@ -831,7 +831,7 @@ function checkboxSortable() {
     // 列表页表格操作列特定事件绑定
 var bindingActions = {
         "action_list": function (dom, selector, restrictedArea) {// 列表页表格操作列(启动、停止、应用卸载、删除等)
-            $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
+            $(dom).attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
                 var actUrl = $(dom).attr("href");
                 var actionId = $(dom).attr("action-id");
