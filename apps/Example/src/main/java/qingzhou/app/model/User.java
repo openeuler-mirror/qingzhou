@@ -108,17 +108,26 @@ public class User extends AddModelBase implements Group, Option, Echo {
             code = "test", icon = "circle-arrow-up",
             form_fields = {"name", "notes", "gender", "checkbox", "b"},
             action_type = ActionType.sub_form, sub_form_submit_on_open = true,
-            name= {"弹出表单", "en:test"},
+            name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
         String gender = request.getParameter("gender");
         if (!"1".equals(gender)) {
+            String checkbox = request.getParameter("checkbox");
             HashMap<String, String> map = new HashMap<>();
-            Enumeration<String> names = request.getParameterNames();
-            while (names.hasMoreElements()) {
-                String key = names.nextElement();
-                String value = request.getParameter(key);
-                map.put(key, value);
+            if ("java".equals(checkbox)) {
+                Enumeration<String> names = request.getParameterNames();
+                while (names.hasMoreElements()) {
+                    String key = names.nextElement();
+                    String value = request.getParameter(key);
+                    map.put(key, value);
+                }
+            } else if ("python".equals(checkbox)) {
+                map.put("success", "false");
+                map.put("msg", "处理异常");
+            } else if ("js".equals(checkbox)) {
+                map.put("success", "true");
+                map.put("msg", "处理完成！");
             }
             request.getResponse().useCustomizedResponse(map);
         } else {
@@ -167,7 +176,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
             info = {"将本地文件或数据发送到服务器进行存储和处理。",
                     "en:Send local files or data to a server for storage and processing."})
     public void upload(Request request) throws Exception {
-        System.out.println("文件已上传至临时目录："+request.getParameter("upload"));
+        System.out.println("文件已上传至临时目录：" + request.getParameter("upload"));
     }
 
     @ModelAction(
@@ -177,7 +186,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
             info = {"将本地文件或数据发送到服务器进行存储和处理。",
                     "en:Send local files or data to a server for storage and processing."})
     public void upload1(Request request) throws Exception {
-        System.out.println("文件1已上传至临时目录："+request.getParameter("upload1"));
+        System.out.println("文件1已上传至临时目录：" + request.getParameter("upload1"));
     }
 
     @Override
