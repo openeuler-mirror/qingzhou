@@ -743,8 +743,12 @@ function niceSelect() {
 
 function difModelActive(omodel, nmodel) {
     if (omodel !== nmodel) {
-        var omenuItemLink = $("ul.sidebar-menu li a[modelName='" + omodel + "']");
-        var nmenuItemLink = $("ul.sidebar-menu li a[modelName='" + nmodel + "']");
+        var omenuItemLink = $("li.active ul.sidebar-menu li a[modelName='" + omodel + "']");
+        var nmenuItemLink = $("li.active ul.sidebar-menu li a[modelName='" + nmodel + "']");
+        //隐藏的model，不对菜单进行修改
+        if (nmenuItemLink.length === 0){
+            return;
+        }
         if (omenuItemLink.length > 0) {
             if ($(omenuItemLink).parent().hasClass("treeview")) {
                 $(omenuItemLink).parents("li.treeview").removeClass("active");

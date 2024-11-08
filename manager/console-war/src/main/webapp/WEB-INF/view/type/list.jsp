@@ -41,6 +41,40 @@
     <div class="table-tools qz-list-operate">
         <div class="tools-group">
             <%
+                //link_list的返回按钮 只有link_list跳转过来的时候才会渲染 url从reques获取
+                final String[] strings = {"pn","ps","mn"};
+                final String pn = request.getParameter("pn");
+                final String ps = request.getParameter("ps");
+                final String mn = request.getParameter("mn");
+                if (Utils.notBlank(pn) && Utils.notBlank(ps) && Utils.notBlank(mn)) {
+                    //传递所有参数
+                    StringBuilder customParams = new StringBuilder("?");
+                    final Map<String, String[]> parameterMap = request.getParameterMap();
+                    for (String key : parameterMap.keySet()) {
+                        if (Arrays.asList(strings).contains(key)){
+                            continue;
+                        }
+                        String paramValue = String.join(",", parameterMap.get(key));
+                        if (paramValue.endsWith(",")) {
+                            paramValue = paramValue.substring(0, paramValue.length() - 1);
+                        }
+                        customParams.append("&")
+                                .append(key)
+                                .append("=")
+                                .append(paramValue);
+                    }
+                    customParams.append("&").append("pageNum").append("=").append(pn);
+                    customParams.append("&").append("pageSize").append("=").append(ps);
+            %>
+            <a class="btn"  onclick='difModelActive("<%=qzRequest.getModel()%>","<%=mn%>")'
+               href="<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, mn, qingzhou.api.type.List.ACTION_LIST + customParams)%>">
+                <i class="icon icon-reply"></i>
+                <%=I18n.getKeyI18n("page.return")%>
+            </a>
+            <%
+                }
+            %>
+            <%
                 for (String actionName : headActions) {
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     String viewName = qzRequest.getView();
@@ -309,8 +343,10 @@
                         }
                     }
                     if (refModelName != null && refFieldName != null && refValue != null) {
+                        //传递分页参数和返回modelName
+                        String returnParams = "&pn=" + pageNum + "&ps=" + pageSize + "&mn=" + qzRequest.getModel();
                 %>
-                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + URLEncoder.encode(refValue,"UTF-8"))%>'
+                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + URLEncoder.encode(refValue,"UTF-8") + returnParams)%>'
                    class="dataid qz-action-link tooltips"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
                    style="color:#4C638F;" onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
