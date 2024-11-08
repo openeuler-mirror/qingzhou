@@ -3,14 +3,10 @@ package qingzhou.deployer;
 import qingzhou.api.type.Dashboard;
 
 import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable {
-    public java.util.List<Dashboard.DashboardData[]> data = new LinkedList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+    public List<Dashboard.DashboardData[]> data = new LinkedList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
     public void transformData() {
         for (Dashboard.DashboardData[] dashboardData : data) {
