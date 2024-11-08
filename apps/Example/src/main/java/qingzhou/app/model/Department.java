@@ -37,9 +37,9 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             input_type = InputType.checkbox,
-            list = true, search = true, echo_group = {"aa", "bb"},
+            list = true, search = true, echo_group = {"aa", "bb"}, same_lines = {"phone", "buildDate"},
             name = {"负责人", "en:Department Manager"},
-            color = {"lisa:red","jack:green","tom:blue"},
+            color = {"lisa:red", "jack:green", "tom:blue"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
     public String manager;
 
@@ -55,6 +55,7 @@ public class Department extends AddModelBase implements Echo, Option {
     @ModelField(
             list = true, search = true,
             email = true,
+            same_lines = {"emailSuffix"},
             name = {"电子邮箱", "en:Department Email"},
             info = {"可以与该部门取得联系的电子邮箱。", "en:An E-mail address where the department can be contacted."})
     public String email;
@@ -62,7 +63,7 @@ public class Department extends AddModelBase implements Echo, Option {
     @ModelField(
             input_type = InputType.select,
             update_action = "update",
-            list = true, search = true,
+            list = true, search = true, showLabel = false,
             name = {"邮箱后缀", "en:Email Suffix"},
             info = {"邮箱后缀。", "en:Email Suffix."})
     public String emailSuffix;
@@ -83,7 +84,7 @@ public class Department extends AddModelBase implements Echo, Option {
     public long buildDate;
 
     @ModelField(
-            input_type = InputType.range_datetime,
+            input_type = InputType.range_datetime, showLabel = false,
             list = true, search = true,
             name = {"日期范围", "en:dateRange"}
     )

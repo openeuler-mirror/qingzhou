@@ -24,7 +24,7 @@
     int pageSize = qzResponse.getPageSize();
 %>
 
-<div class="bodyDiv">
+<div class="bodyDiv" bindingId="<%=randBindingId%>">
     <%-- 面包屑分级导航 --%>
     <%@ include file="../fragment/breadcrumb.jsp" %>
 

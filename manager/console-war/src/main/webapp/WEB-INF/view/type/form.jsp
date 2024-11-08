@@ -9,7 +9,7 @@
     String[] formActions = PageUtil.filterActions(modelInfo.getFormActions(), qzApp, qzModel, currentUser);
 %>
 
-<div class="bodyDiv">
+<div class="bodyDiv" bindingId="<%=randBindingId%>">
     <%-- 面包屑分级导航 --%>
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
@@ -47,6 +47,7 @@
             %>
             <div class="tab-content" style="padding-top: 24px; padding-bottom: 12px;">
                 <%
+                    List<String> sameLineField = new ArrayList<>();
                     boolean isFirstGroup = true;
                     for (String group : groups) {
                 %>
@@ -58,6 +59,9 @@
                         Map<String, ModelFieldInfo> groupFieldMap = formGroup.get(group);
                         for (Map.Entry<String, ModelFieldInfo> e : groupFieldMap.entrySet()) {
                             String fieldName = e.getKey();
+                            if (sameLineField.contains(fieldName)) {
+                                continue;
+                            }
                             ModelFieldInfo modelField = e.getValue();
 
                             String needHidden = "";
@@ -90,7 +94,10 @@
                             java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
                     %>
                     <div style="<%=needHidden%>" class="form-group" id="form-item-<%=fieldName%>">
-                        <label for="<%=fieldName%>" class="col-sm-4">
+                        <label for="<%=fieldName%>" class="col-sm-4" >
+                            <%
+                                if (modelField.isShowLabel()) {
+                            %>
                             <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
                             <%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
                             <%
@@ -103,8 +110,11 @@
                                 }
                             %>
                             <%=fieldInfo%>
+                            <%
+                                }
+                            %>
                         </label>
-                        <div class="col-sm-5" type="<%=modelField.getInputType().name()%>">
+                        <div class="col-sm-<%=modelField.getSameLines().length > 0 ? 2 : 5%>" type="<%=modelField.getInputType().name()%>">
                             <%
                                 if (isDisabled) {
                                     if (fieldValue.isEmpty()) {
@@ -130,6 +140,82 @@
                             %>
                             <label class="qz-error-info"></label>
                         </div>
+                        <%
+                            for (String f : modelField.getSameLines()) {
+                                sameLineField.add(f);
+                                fieldName = f;
+                                modelField = groupFieldMap.get(f);
+
+                                if (isEdit) {
+                                    if (!modelField.isEdit()) continue;
+                                } else {
+                                    if (!modelField.isCreate()) continue;
+                                }
+
+                                required = fieldName.equals(idField) || modelField.isRequired();
+
+                                isDisabled = fieldName.equals(idField) && isEdit;
+                                if (!isDisabled) {
+                                    isDisabled = modelField.isPlainText();
+                                }
+
+                                echoGroup = "";
+                                if (modelField.getEchoGroup().length > 0) {
+                                    String echoGroups = String.join(",", modelField.getEchoGroup());
+                                    echoGroup = "echoGroup='" + echoGroups + "'";
+                                }
+
+                                fieldValue = modelData.get(fieldName);
+                                if (fieldValue == null) {
+                                    fieldValue = "";
+                                }
+                                fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
+                        %>
+                        <div id="form-item-<%=fieldName%>">
+                            <label for="<%=fieldName%>" class="col-sm-1" style="text-align: right; <%=modelField.isShowLabel()?"":"display:none"%>">
+                                <%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
+                                <%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
+                                <%
+                                    String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
+                                    if (fieldInfo != null) {
+                                        // 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
+                                        fieldInfo = "<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>";
+                                    } else {
+                                        fieldInfo = "";
+                                    }
+                                %>
+                                <%=fieldInfo%>
+                            </label>
+                            <div class="col-sm-2" type="<%=modelField.getInputType().name()%>">
+                                <%
+                                    if (isDisabled) {
+                                        if (fieldValue.isEmpty()) {
+                                            fieldValue = modelField.getDefaultValue();
+                                        }
+                                %>
+                                <input type="text" disabled="disabled" name="<%=fieldName%>"
+                                       value='<%=fieldValue%>' <%=echoGroup%>
+                                       class="form-control"/>
+                                <%
+                                } else if (modelField.isReadonly()) {
+                                %>
+                                <input type="text" readonly name="<%=fieldName%>"
+                                       style="cursor: not-allowed;border: 1px solid #DCDCDC;background-color: #e5e5e5;"
+                                       value='<%=fieldValue%>' <%=echoGroup%>
+                                       class="form-control"/>
+                                <%
+                                } else {
+                                %>
+                                <%@ include file="../fragment/field_type.jsp" %>
+                                <%
+                                    }
+                                %>
+                                <label class="qz-error-info"></label>
+                            </div>
+                        </div>
+                        <%
+                            }
+                        %>
                     </div>
                     <%
                         }
@@ -177,9 +263,7 @@
                 <%
                     if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
                 %>
-                <a class="btn"
-                   onclick="returnHref('<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>')"
-                   href="javascript:void(0)">
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>" class="btn" onclick="returnHref(this);">
                     <%=I18n.getKeyI18n("page.return")%>
                 </a>
                 <%
