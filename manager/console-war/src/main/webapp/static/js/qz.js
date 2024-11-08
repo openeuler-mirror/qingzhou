@@ -267,12 +267,16 @@
         }
         var tipContent = document.createElement("div");
         Array.prototype.slice.call(document.querySelectorAll(ele)).forEach(function (el) {
+            var dataTip = el.getAttribute("data-tip");
+            if (dataTip == undefined || dataTip == null || dataTip === "null" || dataTip === "undefined") {
+                return;
+            }
             var showEvent = function () {
                 var pos = el.getBoundingClientRect(), currenLeft = pos.left, currenTop = pos.top,
                     currenWidth = pos.width,
                     currenHeight = pos.height,
                     direction = (el.getAttribute("data-tip-arrow") || "top").replace(/_/g, "-");
-                tipContentSetter(tipContent, el.getAttribute("data-tip"), direction);
+                tipContentSetter(tipContent, dataTip, direction);
                 var tipContentWidth = tipContent.offsetWidth, tipContentHeight = tipContent.offsetHeight;
                 switch (direction) {
                     case "top":

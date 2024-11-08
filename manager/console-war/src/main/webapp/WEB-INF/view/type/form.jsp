@@ -9,7 +9,7 @@
     String[] formActions = PageUtil.filterActions(modelInfo.getFormActions(), qzApp, qzModel, currentUser);
 %>
 
-<div class="bodyDiv">
+<div class="bodyDiv" bindingId="<%=randBindingId%>">
     <%-- 面包屑分级导航 --%>
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
@@ -177,9 +177,7 @@
                 <%
                     if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
                 %>
-                <a class="btn"
-                   onclick="returnHref('<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>')"
-                   href="javascript:void(0)">
+                <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST)%>" class="btn" onclick="returnHref(this);">
                     <%=I18n.getKeyI18n("page.return")%>
                 </a>
                 <%

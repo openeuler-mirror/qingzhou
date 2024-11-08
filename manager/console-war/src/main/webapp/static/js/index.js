@@ -497,21 +497,21 @@ function bindFormEvent() {
                         }
                         $(".nav.nav-tabs > li", thisForm).each(function (i) {
                             $(this).removeClass("active");
-                            $($("a", this).attr("href")).removeClass("active");
-                            if ($(".has-error", $($("a", this).attr("href"))).length > 0) {
+                            $($("a", this).attr("href"), thisForm).removeClass("active");
+                            if ($(".has-error", $($("a", this).attr("href")), thisForm).length > 0) {
                                 $(this).addClass("tab-has-error");
                             }
                         });
                         $(".nav.nav-tabs > li.tab-has-error", thisForm).each(function (i) {
                             if (i === 0) {
                                 $(this).addClass("active");
-                                $($("a", this).attr("href")).addClass("active");
+                                $($("a", this).attr("href"), thisForm).addClass("active");
                             }
-                            $(".has-error", $($("a", this).attr("href"))).each(function () {
+                            $(".has-error", $($("a", this).attr("href"), thisForm)).each(function () {
                                 $("label.qz-error-info", this).html(errorData[$(this).attr("error-key")]);
                             });
                         });
-                        $($("a", $(".nav.nav-tabs > li.tab-has-error").first()).attr("href")).addClass("active");// TODO 需要考虑多级 Tab 标签。
+                        $($("a", $(".nav.nav-tabs > li.tab-has-error", thisForm).first()).attr("href"), thisForm).addClass("active");// TODO 需要考虑多级 Tab 标签。
                         //$("html, body").animate({scrollTop: $(".has-error", thisForm).first().offset().top - 100}, 500);
                     } else {
                         showMsg(data.msg, data.msg_level);
@@ -909,15 +909,17 @@ function bindEventForListPage() {
     });
 
     $("section.main-body", document.body).each(function () {
+        var preSelector = "section[bindingId='" + $(this).attr("bindingId") + "'] ";
+        console.warn(preSelector);
         var restrictedArea = $(this).parent();
         // 搜索按钮
-        qz.bindFill(".search-btn a", ".main-body", false, false, restrictedArea, null);
+        qz.bindFill(preSelector + ".search-btn a", preSelector + ".main-body:first", false, false, restrictedArea, null);
         // 列表页表格顶部操作按钮
-        qz.bindFill(".tools-group a:not([act-confirm])", ".bodyDiv", false, false, restrictedArea, null);
+        qz.bindFill(preSelector + ".tools-group a:not([act-confirm])", preSelector + ".bodyDiv:first", false, false, restrictedArea, null);
         // 分页(页码及上一页、下一页、首页、尾页等)
-        qz.bindFill("ul.pager.pager-loose a", ".main-body", false, false, restrictedArea, null);
+        qz.bindFill(preSelector + "ul.pager.pager-loose a", preSelector + ".main-body:first", false, false, restrictedArea, null);
         // 列表页表格单元格操作
-        qz.bindFill("table a.dataid", ".bodyDiv", false, false, restrictedArea, null);
+        qz.bindFill(preSelector + "table a.dataid", preSelector + ".bodyDiv:first", false, false, restrictedArea, null);
 
         $("table.qz-data-list a.qz-action-link", restrictedArea).each(function () {
             var actionTypeMethod = bindingActions[$(this).attr("action-type")];
@@ -942,7 +944,7 @@ function bindEventForListPage() {
                 } else {
                     if ($(this).attr("action-type")) {
                         // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-                        qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']" + actionIdSelector, $(".main-body", restrictedArea).first(), false, false, restrictedArea, null);
+                        qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']" + actionIdSelector, preSelector + ".main-body:first", false, false, restrictedArea, null);
                     } else {
                         console.log("Element binding action failed. Element html:" + $(this)[0].outerHTML);
                     }
@@ -969,7 +971,7 @@ function bindEventForListPage() {
                 $.post($(dom).attr("href"), data, function (data) {
                     closeLayer(index);
                     if (data.success === "true") {
-                        $(dom).closest("div.bodyDiv").find("form[name='filterForm']").first().find("a.filter_search").click();
+                        $(dom).closest("div.bodyDiv").find("form[name='filterForm']:first").find("a.filter_search").click();
                     } else {
                         showMsg(data.msg, "error");
                     }
@@ -1044,8 +1046,8 @@ function bindEventForListPage() {
 }
 
 //返回列表页面
-function returnHref(href) {
-    $(".content-box li.active a[href='" + href + "']").click()
+function returnHref(backDom) {
+    $(".treeview.active:last > a", $(backDom).closest("section.main-body").prev()).click();
 }
 
 function initializeManager(element, url) {
@@ -1068,7 +1070,18 @@ function initializeManager(element, url) {
         $(".content-box>ul>li.active").removeClass("active").addClass("inactive");
         $(".tab-box>ul>li").last().removeClass("inactive").addClass("active");
         $(".content-box>ul>li").last().removeClass("inactive").addClass("active");
-    });
+        var firstMenu = $(".sidebar-menu li a[modelname]", $(".content-box>ul>li").last()).first();
+        if (firstMenu.length > 0) {
+            //$(".sidebar-menu li", $(".content-box>ul>li").last()).removeClass("active");
+            //$(".sidebar-menu li.treeview.menu-open", $(".content-box>ul>li").last()).removeClass("menu-open");
+            $(firstMenu).parent().addClass("active");
+            //$(firstMenu).parents(".treeview-menu").show();
+            $(firstMenu).parents(".treeview-menu").each(function() {
+                $(this).show().parent(".treeview").addClass("menu-open");
+            });
+            $(firstMenu).click();
+        }
+    });    
     return false;
 }
 
@@ -2483,6 +2496,17 @@ function openTab(dataId, dataUrl, tabTitle) {
             $("aside.main-sidebar .menu-toggle-btn", tabDom).css({"margin-bottom": "0px"});
             $("ul[data-widget='tree']", tabDom).menuTree();
             $("a[data-toggle='push-menu']", tabDom).pushMenu({});
+            var firstMenu = $(".sidebar-menu li a[modelname]", tabDom).first();
+            if (firstMenu.length > 0) {
+                //$(".sidebar-menu li", tabDom).removeClass("active");
+                //$(".sidebar-menu li.treeview.menu-open", tabDom).removeClass("menu-open");
+                $(firstMenu).parent().addClass("active");
+                //$(firstMenu).parents(".treeview-menu").show();
+                $(firstMenu).parents(".treeview-menu").each(function() {
+                    $(this).show().parent(".treeview").addClass("menu-open");
+                });
+                $(firstMenu).click();
+            }
         });
     });
     switchTabView(true, bindId);
