@@ -44,6 +44,8 @@ public class ModelFieldInfo {
     private String[] color;
     private String[] echoGroup;
     private boolean skipValidate;
+    private String[] sameLines;
+    private boolean showLabel;
 
     private int order;
 
@@ -384,5 +386,21 @@ public class ModelFieldInfo {
 
     public void setSkipValidate(boolean skipValidate) {
         this.skipValidate = skipValidate;
+    }
+
+    public String[] getSameLines() {
+        return sameLines;
+    }
+
+    public void setSameLines(String[] sameLines) {
+        this.sameLines = sameLines;
+    }
+
+    public boolean isShowLabel() {
+        return showLabel;
+    }
+
+    public void setShowLabel(boolean showLabel) {
+        this.showLabel = showLabel;
     }
 }

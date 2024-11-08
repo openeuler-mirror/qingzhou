@@ -490,9 +490,9 @@ function bindFormEvent() {
                     if (data.data) {
                         var errorData = data.data;
                         for (var key in errorData) {
-                            $("#form-item-" + key + " > div", thisForm).attr("error-key", key).addClass("has-error");
+                            $("#form-item-" + key + " > div:first", thisForm).attr("error-key", key).addClass("has-error");
                             if ($(".nav.nav-tabs", thisForm).length < 1) {
-                                $("#form-item-" + key + " > div .qz-error-info", thisForm).html(errorData[key]);
+                                $("#form-item-" + key + " > div:first .qz-error-info", thisForm).html(errorData[key]);
                             }
                         }
                         $(".nav.nav-tabs > li", thisForm).each(function (i) {
@@ -576,7 +576,7 @@ function echoItem(thisForm, params, item, echoGroup) {
 function updateFormData(thisForm, data) {
     for (let key in data) {
         var value = data[key];
-        var formItem = $("#form-item-" + key + " > div", thisForm);
+        var formItem = $("#form-item-" + key + " > div:first", thisForm);
         var type = formItem.attr("type")
         switch (type) {
             case "bool":
