@@ -1552,10 +1552,17 @@ a.cancelfavorites:active {
 }
 
 /* 图表容器样式 */
+.dashboardPage,
+.dashboardPage .chart-container,
+.dashboardPage .chart-container * {
+    box-sizing: border-box;
+}
+
 .dashboardPage .chart-container {
+    box-sizing: border-box;
+    overflow: hidden;
     width: 100%;
     margin: 3px;
-    overflow: visible;
     display: inline-block;
     border: 1px solid #e0e0e0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -1564,6 +1571,8 @@ a.cancelfavorites:active {
 }
 
 .dashboardPage .chart-container .chart {
+    box-sizing: border-box;
+    flex: 1;
     height: 300px;
 }
 

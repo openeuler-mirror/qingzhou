@@ -1752,7 +1752,7 @@ function renderBasicData(container, basicData) {
     var title = createTitle(titleText);
 
     // 创建展示 basic 数据的容器
-    var keyValueContainer = createChartContainer("99%");
+    var keyValueContainer = createChartContainer("98%");
     var itemDiv = $("<div></div>").addClass('basic-container');
     keyValueContainer.append(title, itemDiv);
     container.append(keyValueContainer);
@@ -1768,7 +1768,6 @@ function renderBasicData(container, basicData) {
         itemDiv.append(keyValueItem);
     }
 }
-
 
 // 渲染或更新仪表盘数据
 function renderGaugeData(container, chartItem, index) {
@@ -2171,7 +2170,7 @@ function getChartContainerWidth(chartType) {
     switch (chartType) {
         case 'gauge':
         case 'bar':
-            return "calc(24% - 20px)";
+            return "23%";
         default:
             return "99%";
     }
@@ -2207,7 +2206,7 @@ function renderShareDatasetChart(container, chartItem, index) {
 function initShareDatasetChart(container, pid, titleText) {
     // 创建标题和图表容器
     var title = createTitle(titleText);
-    var chartContainer = createChartContainer("99%");
+    var chartContainer = createChartContainer("98%");
     var chartDiv = $("<div class='chart'></div>").css("height", "400px").attr('id', pid);
 
     chartContainer.append(title, chartDiv);
