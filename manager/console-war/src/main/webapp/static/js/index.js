@@ -1208,14 +1208,15 @@ function downloadFiles(fileListUrl, downloadUrl) {
 
 function customAction(actionUrl, customActionId, title, restrictedArea, formLoadedTrigger) {
     let html = $("div[custom-action-id='" + customActionId + "']", restrictedArea).html();
-    html = "<div style='padding: 10px'><form id='" + customActionId + "' method='post' class='form-horizontal'>" + html + "</form><hr style='margin-top: 4px;'><div id='custom-action-result' ></div></div>";
+    html = "<div style='padding: 10px'><form id='" + customActionId + "' method='post' class='form-horizontal'>" + html + "</form></div>";
     openLayer({
         type: 1,
         shadeClose: true,
         title: title,
-        area: ['700px', '500px'],
+        area: ['700px', 'auto'],
+        maxHeight: 500,
         content: html,
-        success: function () {
+        success: function (layero, index, that) {
             $(document.getElementById(customActionId)).on('submit', function (e) {
                 e.preventDefault();
                 let formData = $(this).serialize();
@@ -1224,10 +1225,20 @@ function customAction(actionUrl, customActionId, title, restrictedArea, formLoad
                     url: actionUrl,
                     data: formData,
                     success: function (res, textStatus, xhr) {
+                        var $customForm = $(document.getElementById(customActionId));
+                        $customForm.nextAll().remove();
                         if (xhr.getResponseHeader("Content-Type") && xhr.getResponseHeader("Content-Type").includes("application/json")) {
-                            $('#custom-action-result').html("<pre style='background-color: #333;color: #fff;padding: 10px;'>" + JSON.stringify(res, null, 4) + "</pre>");
+                            if ((res.success === false || res.success === 'false') && res.msg) {
+                                showMsg(res.msg, 'error');
+                            } else if ((res.success === true || res.success === 'true') && res.msg) {
+                                showMsg(res.msg, 'info');
+                            } else if (JSON.stringify(res) !== '{}') {
+                                $customForm.after("<hr style=\'margin-top: 4px;\'><pre style='background-color: #333;color: #fff;padding: 10px;'>" + JSON.stringify(res, null, 4) + "</pre>");
+                                layer.style(index, {height: '500px'});
+                            }
                         } else {
-                            $('#custom-action-result').html(res);
+                            $customForm.after('<hr style=\'margin-top: 4px;\'>' + res);
+                            layer.style(index, {height: '500px'});
                         }
                     },
                     error: function (e) {
