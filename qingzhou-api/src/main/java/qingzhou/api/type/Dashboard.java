@@ -8,7 +8,7 @@ public interface Dashboard {
     interface DataBuilder {
         <T> T buildData(Class<? extends DashboardData> dataType);
 
-        void addData(DashboardData dashboardData);
+        void addData(DashboardData[] dashboardDataList);
     }
 
     interface DashboardData {
