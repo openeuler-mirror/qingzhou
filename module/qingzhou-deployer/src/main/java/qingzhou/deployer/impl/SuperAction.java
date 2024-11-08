@@ -87,7 +87,7 @@ class SuperAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         CombinedDataBuilder dataBuilder = new CombinedDataBuilder();
         ((Combined) instance).combinedData(request.getId(), dataBuilder);
-        for (Combined.CombinedData combinedData : dataBuilder.data.values()) {
+        for (Combined.CombinedData combinedData : dataBuilder.dataList) {
             if (combinedData instanceof Combined.UmlData) {
                 CombinedDataBuilder.Uml umlData = (CombinedDataBuilder.Uml) combinedData;
                 String umlDataStr = umlData.data;

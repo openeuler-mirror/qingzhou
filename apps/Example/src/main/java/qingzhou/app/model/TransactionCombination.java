@@ -52,29 +52,29 @@ public class TransactionCombination extends AddModelBase implements Combined {
     @Override
     public void combinedData(String id, DataBuilder dataBuilder) throws Exception {
         ShowData showData = dataBuilder.buildData(ShowData.class);
-        showData.model("TransactionCombination").header("事务信息");
+        showData.model("TransactionCombination").header("事务信息").type("show");
         showData.addData("id", "qqqqq11111");
         showData.addData("branchStatus", "回滚成功");
         showData.addData("initiatorApplication", "test-app");
         dataBuilder.addData(showData);
 
         UmlData umlData = dataBuilder.buildData(UmlData.class);
-        umlData.model("TransactionCombination").header("事务信息图片");
+        umlData.model("TransactionCombination").header("事务信息图片").type("uml");
         umlData.setData("@startuml\n" +
                 "Alice -> Bob: test\n" +
                 "@enduml");
         dataBuilder.addData(umlData);
 
         ListData listData = dataBuilder.buildData(ListData.class);
-        listData.model("TransactionCombination").header("全局事务相关联的分支事务");
-        listData.setFields(new String[]{"branchId", "application", "branchStatus"});
+        listData.model("TransactionCombination").header("全局事务相关联的分支事务").type("list");
+        listData.setFields(new String[]{"id", "initiatorApplication", "branchStatus"});
         listData.addFieldValues(new String[]{"transaction11111", "stock-xa", "未知"});
         listData.addFieldValues(new String[]{"transaction22222", "order-xa", "分支事务一阶段失败"});
         dataBuilder.addData(listData);
 
         ListData listData2 = dataBuilder.buildData(ListData.class);
-        listData2.model("User").header("全局事务关联日志");
-        listData2.setFields(new String[]{"time", "branchId", "other"});
+        listData2.model("User").header("全局事务关联日志").type("list");
+        listData2.setFields(new String[]{"id", "phoneNumber", "position"});
         listData2.addFieldValues(new String[]{"2024-10-27 18:00:00", "transaction11111", "第1条日志"});
         listData2.addFieldValues(new String[]{"2024-10-28 09:00:00", "transaction22222", "第2条日志"});
         dataBuilder.addData(listData2);

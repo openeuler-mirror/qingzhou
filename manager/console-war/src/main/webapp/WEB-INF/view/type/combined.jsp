@@ -7,7 +7,7 @@
     <%
         String contextPath = request.getContextPath();
         CombinedDataBuilder customizedDataObject = (CombinedDataBuilder) qzResponse.getCustomizedDataObject();
-        Collection<Combined.CombinedData> dataList = customizedDataObject.data.values();
+        Collection<Combined.CombinedData> dataList = customizedDataObject.dataList;
         if (!dataList.isEmpty()) {
             for (Combined.CombinedData combinedData : dataList) {
                 if (combinedData instanceof Combined.ShowData) {
@@ -117,7 +117,7 @@
                     int listWidth = 100 / (fieldNames.length);
             %>
             <%-- 注意这个width末尾的 % 不能删除 %>% 不是手误 --%>
-            <th style="width: <%=listWidth%>%"><%=field%>
+            <th style="width: <%=listWidth%>%"><%=I18n.getModelI18n(qzApp, "model.field." + listData.model + "." + field)%>
             </th>
             <%
                 }
