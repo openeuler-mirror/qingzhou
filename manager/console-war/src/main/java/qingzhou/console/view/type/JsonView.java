@@ -1,5 +1,13 @@
 package qingzhou.console.view.type;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Request;
 import qingzhou.api.type.Monitor;
@@ -12,12 +20,6 @@ import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.json.Json;
 import qingzhou.registry.ModelInfo;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.util.*;
 
 public class JsonView implements View {
     public static final String FLAG = DeployerConstants.JSON_VIEW_FLAG;
@@ -50,30 +52,17 @@ public class JsonView implements View {
                 writeJson = json.toJson(customizedDataObject);
             }
         } else {
-            switch (request.getAction()) {
-                case Monitor.ACTION_MONITOR:
-                    if (!response.getDataMap().isEmpty()) {
-                        String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
-                        Map<String, String> orderedData = new LinkedHashMap<>();
+            if (request.getAction().equals(Monitor.ACTION_MONITOR)) {
+                if (!response.getDataMap().isEmpty()) {
+                    String[] monitorFieldNames = modelInfo.getMonitorFieldNames();
+                    Map<String, String> orderedData = new LinkedHashMap<>();
 
-                        for (String fieldName : monitorFieldNames) {
-                            orderedData.put(fieldName, response.getDataMap().get(fieldName));
-                        }
-                        response.getDataMap().clear();
-                        response.getDataMap().putAll(orderedData);
+                    for (String fieldName : monitorFieldNames) {
+                        orderedData.put(fieldName, response.getDataMap().get(fieldName));
                     }
-                    break;
-                case qingzhou.api.type.List.ACTION_LIST:
-                    if (modelInfo.isHideId()) {
-                        int idIndex = modelInfo.getIdIndex();
-                        List<String[]> dataList = response.getDataList();
-                        for (int i = 0; i < dataList.size(); i++) {
-                            List<String> temp = new ArrayList<>(Arrays.asList(dataList.get(i)));
-                            temp.remove(idIndex);
-                            dataList.set(i, temp.toArray(new String[0]));
-                        }
-                    }
-                    break;
+                    response.getDataMap().clear();
+                    response.getDataMap().putAll(orderedData);
+                }
             }
             writeJson = buildJsonResult(request);
         }

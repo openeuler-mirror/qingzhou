@@ -1,8 +1,8 @@
 package qingzhou.registry;
 
-import qingzhou.api.ActionType;
-
 import java.lang.reflect.Method;
+
+import qingzhou.api.ActionType;
 
 public class ModelActionInfo {
     private transient Method method;

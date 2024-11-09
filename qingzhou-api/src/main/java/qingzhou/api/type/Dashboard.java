@@ -13,24 +13,24 @@ public interface Dashboard {
 
     interface DashboardData {
         DashboardData title(String title);
-
-        DashboardData info(String info);
     }
 
     interface Basic extends DashboardData {
-        Basic put(String key, String value);
+        Basic addData(String key, String value);
     }
 
     interface Gauge extends DashboardData {
+        Gauge info(String info);
+
         Gauge fields(String[] fields);
 
         Gauge addData(String[] data);
 
-        Gauge unit(String unit);
-
-        Gauge statusKey(String statusKey);
+        Gauge usedKey(String usedKey);
 
         Gauge maxKey(String maxKey);
+
+        Gauge unit(String unit);
     }
 
     interface Histogram extends Gauge {

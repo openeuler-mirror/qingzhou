@@ -1,5 +1,21 @@
 package qingzhou.console.page;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
@@ -12,16 +28,46 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.*;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Stream;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ItemInfo;
+import qingzhou.registry.MenuInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
+
+    public static Map<String, List<String>> groupedFields(Collection<String> fieldNames, ModelInfo modelInfo) {
+        Map<String, List<String>> groupedFields = new LinkedHashMap<>();
+        List<String> defaultGroup = new ArrayList<>();
+        for (String fieldName : fieldNames) {
+            ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
+            if (modelField == null) continue; // 用户模块没有 enableOtp 字段，但配置的数据是有的，这里会为 null
+            String group = modelField.getGroup();
+            if (Utils.isBlank(group)) {
+                defaultGroup.add(fieldName);
+            } else {
+                List<String> fields = groupedFields.computeIfAbsent(group, s -> new ArrayList<>());
+                fields.add(fieldName);
+            }
+        }
+
+
+        if (!defaultGroup.isEmpty()) {
+            groupedFields.put("", defaultGroup);
+        }
+
+        return groupedFields;
+    }
+
+    public static boolean hasGroup(Map<String, List<String>> groupedFields) {
+        if (!groupedFields.isEmpty()) {
+            return groupedFields.size() > 1 || Utils.notBlank(groupedFields.keySet().iterator().next());
+        }
+        return false;
+    }
 
     public static String[] filterActions(String[] checkActions, String qzApp, String qzModel, String currentUser) {
         List<String> filteredActions = new ArrayList<>();
@@ -57,7 +103,7 @@ public class PageUtil {
         return RESTController.encodeURL(response, url);
     }
 
-    public static String styleFieldValue(String value, ModelFieldInfo fieldInfo, ModelInfo modelInfo) {
+    public static String styleFieldValue(String value, ModelFieldInfo fieldInfo) {
         if (Utils.isBlank(value)) return value;
 
         //时间转化

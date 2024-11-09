@@ -1,8 +1,38 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Supplier;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+import java.util.stream.Collectors;
+
+import qingzhou.api.AppContext;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Group;
 import qingzhou.api.type.List;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
 import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -11,21 +41,12 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
-import qingzhou.registry.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.Supplier;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
-import java.util.stream.Collectors;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ItemInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
@@ -293,12 +314,7 @@ class DeployerImpl implements Deployer {
             if (instance instanceof List) {
                 modelInfo.setIdField(((List) instance).idField());
             }
-            ModelFieldInfo[] modelFieldInfos = getModelFieldInfos(annotation, instance);
-            // 按 order 升序排序
-            modelFieldInfos = Arrays.stream(modelFieldInfos)
-                    .sorted(Comparator.comparingInt(ModelFieldInfo::getOrder))
-                    .toArray(ModelFieldInfo[]::new);
-            modelInfo.setModelFieldInfos(modelFieldInfos);
+            modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
             java.util.List<ModelActionInfo> methodModelActionInfoMap = parseModelActionInfos(annotation);
             modelInfo.setModelActionInfos(methodModelActionInfoMap.toArray(new ModelActionInfo[0]));
             modelInfo.setGroupInfos(getGroupInfo(instance));
@@ -339,8 +355,10 @@ class DeployerImpl implements Deployer {
 
         List listInstance = (List) instance;
         modelInfo.setShowOrderNumber(listInstance.showOrderNumber());
-        modelInfo.setDefaultSearch(listInstance.defaultSearch());
         modelInfo.setUseDynamicDefaultSearch(listInstance.useDynamicDefaultSearch());
+        if (!modelInfo.isUseDynamicDefaultSearch()) {
+            modelInfo.setDefaultSearch(listInstance.defaultSearch());
+        }
         modelInfo.setListActions(listInstance.listActions());
         modelInfo.setHeadActions(listInstance.headActions());
         modelInfo.setBatchActions(listInstance.batchActions());
@@ -411,6 +429,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setHost(modelField.host());
             modelFieldInfo.setPort(modelField.port());
             modelFieldInfo.setPlainText(modelField.plain_text());
+            modelFieldInfo.setPlaceholder(modelField.placeholder());
             modelFieldInfo.setMultipleSearch(modelField.multiple_search());
             modelFieldInfo.setReadonly(modelField.readonly());
             modelFieldInfo.setForbid(modelField.forbid());
@@ -421,9 +440,9 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setColor(modelField.color());
             modelFieldInfo.setEchoGroup(modelField.echo_group());
             modelFieldInfo.setSkipValidate(modelField.skip_validate());
-            modelFieldInfo.setOrder(modelField.order());
-            modelFieldInfo.setSameLines(modelField.same_lines());
-            modelFieldInfo.setShowLabel(modelField.showLabel());
+            modelFieldInfo.setIndex(modelField.index());
+            modelFieldInfo.setSameLine(modelField.same_line());
+            modelFieldInfo.setShowLabel(modelField.show_label());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);

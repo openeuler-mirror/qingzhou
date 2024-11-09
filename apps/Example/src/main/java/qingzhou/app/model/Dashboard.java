@@ -1,10 +1,10 @@
 package qingzhou.app.model;
 
+import java.util.Random;
+
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.app.ExampleMain;
-
-import java.util.Random;
 
 @Model(code = "dashboard", icon = "dashboard", menu = ExampleMain.MENU_1,
         entrance = Dashboard.ACTION_DASHBOARD,
@@ -16,10 +16,10 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
     public void dashboardData(String id, DataBuilder dataBuilder) {
         Random random = new Random();
         Basic basic = dataBuilder.buildData(Basic.class);
-        basic.info("测试").title("基础数据");
+        basic.title("基础数据");
         String[] units = new String[]{"GB", "MB", "KB"};
         for (int i = 0; i < 6; i++) {
-            basic.put("key" + i, random.nextInt(10) + units[random.nextInt(2)]);
+            basic.addData("key" + i, random.nextInt(10) + units[random.nextInt(2)]);
         }
         Basic[] basics = new Basic[]{basic};
         dataBuilder.addData(basics);
@@ -28,7 +28,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         for (int count = 0; count < 5; count++) {
             Gauge gauge = dataBuilder.buildData(Gauge.class);
             gauge.info("内存使用情况" + count).title("内存" + count);
-            gauge.maxKey("max").unit("GB").statusKey("used").fields(new String[]{"name", "ip", "used", "max"});
+            gauge.maxKey("max").unit("GB").usedKey("used").fields(new String[]{"name", "ip", "used", "max"});
             for (int i = 0; i < 4; i++) {
                 int used = random.nextInt(10);
                 int max = random.nextInt(10);
@@ -47,7 +47,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
             histogram.info("网络使用情况" + count).title("网络" + count);
             histogram.unit("MB");
             histogram.maxKey("max");
-            histogram.statusKey("used");
+            histogram.usedKey("used");
             histogram.fields(new String[]{"name", "ip", "used", "max"});
             for (int i = 0; i < 4; i++) {
                 int used = random.nextInt(100);
@@ -66,7 +66,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         for (int count = 0; count < 2; count++) {
             Gauge gauge = dataBuilder.buildData(Gauge.class);
             gauge.info("硬盘使用情况" + count).title("硬盘" + count);
-            gauge.maxKey("max").unit("GB").statusKey("used").fields(new String[]{"name", "ip", "used", "max"});
+            gauge.maxKey("max").unit("GB").usedKey("used").fields(new String[]{"name", "ip", "used", "max"});
             for (int i = 0; i < 4; i++) {
                 int used = random.nextInt(10);
                 int max = random.nextInt(10);
@@ -82,7 +82,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         Histogram histogram = dataBuilder.buildData(Histogram.class);
         histogram.info("网络使用情况" + 3).title("网络" + 3);
         histogram.unit("MB");
-        histogram.statusKey("used");
+        histogram.usedKey("used");
         histogram.fields(new String[]{"name", "ip", "used"});
         for (int i = 0; i < 4; i++) {
             histogram.addData(new String[]{"实例" + i, "127.0.0.1", String.valueOf(random.nextInt(100))});
@@ -91,19 +91,19 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         dataBuilder.addData(histograms1);
 
         Basic basic1 = dataBuilder.buildData(Basic.class);
-        basic1.info("统计").title("销售数据");
-        basic1.put("销售额", random.nextInt(100)+"（万元）");
-        basic1.put("销售量", random.nextInt(100)+"（套）");
-        basic1.put("成交率", random.nextInt(100)+" %");
+        basic1.title("销售数据");
+        basic1.addData("销售额", random.nextInt(100) + "（万元）");
+        basic1.addData("销售量", random.nextInt(100) + "（套）");
+        basic1.addData("成交率", random.nextInt(100) + " %");
         Basic[] basics1 = new Basic[]{basic1};
         dataBuilder.addData(basics1);
 
         ShareDataset[] shareDatasets = new ShareDataset[2];
         for (int count = 0; count < 2; count++) {
             ShareDataset shareDataset = dataBuilder.buildData(ShareDataset.class);
-            shareDataset.info("分享数据集" + count).title("数据集" + count);
+            shareDataset.title("数据集" + count);
             for (int i = 0; i < 4; i++) {
-                shareDataset.put("key" + i, String.valueOf(random.nextInt(10)));
+                shareDataset.addData("key" + i, String.valueOf(random.nextInt(10)));
             }
             shareDatasets[count] = shareDataset;
         }

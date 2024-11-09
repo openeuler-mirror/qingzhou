@@ -62,6 +62,9 @@ public interface DeployerConstants {
     String DOWNLOAD_FILE_NAMES_SP = "/"; // |/\:*?"<> 这些都是 windows 平台u支持的文件名，linux 上 / 不支持文件名
     String DOWNLOAD_FILE_GROUP_SP = "/";
 
+    String PAGE_NUM = "pageNum";
+    String PAGE_SIZE = "pageSize";
+
     // 定义仪表盘字段数据标识
     String DASHBOARD_FIELD_INFO = "info";
     String DASHBOARD_FIELD_TITLE = "title";

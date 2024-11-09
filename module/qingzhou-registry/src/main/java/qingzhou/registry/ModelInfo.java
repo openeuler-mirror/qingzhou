@@ -1,11 +1,19 @@
 package qingzhou.registry;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 import qingzhou.engine.util.Utils;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class ModelInfo {
     private String code;
@@ -32,6 +40,26 @@ public class ModelInfo {
     private String[] listActions;
     private String[] batchActions;
     private String[] formActions;
+
+    public Map<String, List<String>> getSameLineMap() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        List<String> formFieldNames = new LinkedList<>(Arrays.asList(getFormFieldNames()));
+        boolean doContinue;
+        do {
+            doContinue = false;
+            for (int i = 1; i < formFieldNames.size(); i++) {
+                String sameLineField = formFieldNames.get(i);
+                ModelFieldInfo modelFieldInfo = getModelFieldInfo(sameLineField);
+                if (modelFieldInfo.isSameLine()) {
+                    map.compute(formFieldNames.get(i - 1), (s, strings) -> new ArrayList<>()).add(sameLineField);
+                    formFieldNames.remove(i);
+                    doContinue = true;
+                    break;
+                }
+            }
+        } while (doContinue);
+        return map;
+    }
 
     public ModelActionInfo getModelActionInfo(String actionName) {
         return Arrays.stream(modelActionInfos).filter(modelActionInfo -> modelActionInfo.getCode().equals(actionName)).findAny().orElse(null);
@@ -74,7 +102,10 @@ public class ModelInfo {
     }
 
     public Map<String, String> getFormFieldDefaultValues() {
-        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.FORM).collect(Collectors.toMap(ModelFieldInfo::getCode, ModelFieldInfo::getDefaultValue));
+        return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.FORM)
+                .collect(Collectors.toMap(ModelFieldInfo::getCode, ModelFieldInfo::getDefaultValue, (s, s2) -> {
+                    throw new IllegalStateException(String.format("Duplicate key %s", s));
+                }, (Supplier<Map<String, String>>) LinkedHashMap::new)); // 保证 form 表单的 顺序
     }
 
     public ModelFieldInfo getModelFieldInfo(String fieldName) {
@@ -94,24 +125,6 @@ public class ModelInfo {
             }
         }
         return list.toArray(new String[0]);
-    }
-
-    public boolean isHideId() {
-        return !getModelFieldInfo(idField).isShow();
-    }
-
-    public int getIdIndex() {
-        return getFieldIndex(idField);
-    }
-
-    public int getFieldIndex(String field) {
-        String[] fieldsToList = getFieldsToList();
-        for (int i = 0; i < fieldsToList.length; i++) {
-            if (fieldsToList[i].equals(field)) {
-                return i;
-            }
-        }
-        throw new IllegalStateException();
     }
 
     public String[] getFieldsToList() {
@@ -150,30 +163,6 @@ public class ModelInfo {
             }
         }
         return data;
-    }
-
-    public Map<String, Map<String, ModelFieldInfo>> getFormGroupedFields() {
-        return getGroupedFields(getFormFieldNames());
-    }
-
-    private Map<String, Map<String, ModelFieldInfo>> getGroupedFields(String[] fieldNames) {
-        Map<String, Map<String, ModelFieldInfo>> result = new LinkedHashMap<>();
-        Map<String, ModelFieldInfo> defaultGroup = new LinkedHashMap<>();
-        for (String formField : fieldNames) {
-            ModelFieldInfo fieldInfo = getModelFieldInfo(formField);
-            String group = fieldInfo.getGroup();
-            if (Utils.isBlank(group)) {
-                defaultGroup.put(formField, fieldInfo);
-            } else {
-                result.computeIfAbsent(group, k -> new LinkedHashMap<>()).put(formField, fieldInfo);
-            }
-        }
-
-        if (!defaultGroup.isEmpty()) {
-            result.put("", defaultGroup);
-        }
-
-        return result;
     }
 
     public String getCode() {
@@ -269,6 +258,17 @@ public class ModelInfo {
     }
 
     public void setModelFieldInfos(ModelFieldInfo[] modelFieldInfos) {
+        Map<Integer, Integer> temp = new LinkedHashMap<>();
+        for (int i = 0; i < modelFieldInfos.length; i++) {
+            int index = modelFieldInfos[i].getIndex();
+            if (index >= 0 && index < modelFieldInfos.length) {
+                temp.put(i, index);
+            }
+        }
+        for (Map.Entry<Integer, Integer> e : temp.entrySet()) {
+            Utils.swap(modelFieldInfos, e.getKey(), e.getValue());
+        }
+
         this.modelFieldInfos = modelFieldInfos;
     }
 

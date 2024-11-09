@@ -44,17 +44,26 @@ public class ModelFieldInfo {
     private String[] color;
     private String[] echoGroup;
     private boolean skipValidate;
-    private String[] sameLines;
     private boolean showLabel;
+    private boolean sameLine;
+    private String placeholder;
 
-    private int order;
+    private int index;
 
-    public int getOrder() {
-        return order;
+    public String getPlaceholder() {
+        return placeholder;
     }
 
-    public void setOrder(int order) {
-        this.order = order;
+    public void setPlaceholder(String placeholder) {
+        this.placeholder = placeholder;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     public boolean isHidden() {
@@ -388,12 +397,12 @@ public class ModelFieldInfo {
         this.skipValidate = skipValidate;
     }
 
-    public String[] getSameLines() {
-        return sameLines;
+    public boolean isSameLine() {
+        return sameLine;
     }
 
-    public void setSameLines(String[] sameLines) {
-        this.sameLines = sameLines;
+    public void setSameLine(boolean sameLine) {
+        this.sameLine = sameLine;
     }
 
     public boolean isShowLabel() {
