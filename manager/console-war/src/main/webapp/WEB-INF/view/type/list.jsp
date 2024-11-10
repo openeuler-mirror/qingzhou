@@ -1,3 +1,4 @@
+<%@ page import="java.io.Serializable" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ include file="../fragment/head.jsp" %>
@@ -20,12 +21,13 @@
 	String[] headActions = PageUtil.filterActions(modelInfo.getHeadActions(), qzApp, qzModel, currentUser);
 	String[] batchActions = PageUtil.filterActions(modelInfo.getBatchActions(), qzApp, qzModel, currentUser);
 
-	int totalSize = qzResponse.getTotalSize();
-	int pageNum = qzResponse.getPageNum();
-	int pageSize = qzResponse.getPageSize();
+	ListData listData = (ListData) qzResponse.getInternalData();
+	int totalSize = listData.totalSize;
+	int pageNum = listData.pageNum;
+	int pageSize = listData.pageSize;
 
 	boolean isEdit = false; // for field_type.jsp
-	boolean isDisabled = false;; // for field_type.jsp
+	boolean isDisabled = false; // for field_type.jsp
 %>
 
 <div class="bodyDiv" bindingId="<%=randBindingId%>">
@@ -185,7 +187,7 @@
 		</thead>
 		<tbody>
 		<%
-			List<String[]> modelDataList = qzResponse.getDataList();
+			List<String[]> modelDataList = listData.dataList;
 			if (modelDataList.isEmpty()) {
 				String dataEmpty = "<tr><td colspan='" + (((batchActions.length > 0) ? 1 : 0) + (modelInfo.isShowOrderNumber() ? 1 : 0) + displayListFields.length + (listActions.length > 0 ? 1 : 0)) + "' align='center'>"
 						+ "<img src='" + contextPath + "/static/images/data-empty.svg' style='width:160px; height: 160px;'><br>"
@@ -314,7 +316,7 @@
 				   class="dataid qz-action-link tooltips"
 				   action-type="<%=linkRefModelActionInfo.getActionType()%>"
 				   data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
-				   style="color:#4C638F;" onclick='difModelActive("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
+				   style="color:#4C638F;" onclick='actionModelMenu("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
 					<%=PageUtil.styleFieldValue(value, fieldInfo)%>
 				</a>
 				<%
@@ -441,43 +443,10 @@
 		<ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
 			recPerPage="<%=pageSize%>"
 			data-rec-total="<%=totalSize%>"
-			partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST + "?markForAddCsrf")%>&<%=DeployerConstants.PAGE_NUM%>="
+			partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST + "?markForAddCsrf")%>&<%=ListData.PAGE_NUM%>="
 			style="margin-left:33%;color:black;margin-bottom:6px;">
 		</ul>
 	</div>
-	<%
-		}
-
-		//link_list的返回按钮 只有link_list跳转过来的时候才会渲染 url从reques获取
-		final String[] strings = {"pn", "ps", "mn"};
-		final String pn = request.getParameter("pn");
-		final String ps = request.getParameter("ps");
-		final String mn = request.getParameter("mn");
-		if (Utils.notBlank(pn) && Utils.notBlank(ps) && Utils.notBlank(mn)) {
-			//传递所有参数
-			StringBuilder customParams = new StringBuilder("?");
-			final Map<String, String[]> parameterMap = request.getParameterMap();
-			for (String key : parameterMap.keySet()) {
-				if (Arrays.asList(strings).contains(key)) {
-					continue;
-				}
-				String paramValue = String.join(",", parameterMap.get(key));
-				if (paramValue.endsWith(",")) {
-					paramValue = paramValue.substring(0, paramValue.length() - 1);
-				}
-				customParams.append("&")
-						.append(key)
-						.append("=")
-						.append(paramValue);
-			}
-			customParams.append("&").append(DeployerConstants.PAGE_NUM).append("=").append(pn);
-			customParams.append("&").append(DeployerConstants.PAGE_SIZE).append("=").append(ps);
-	%>
-	<a class="btn" onclick='difModelActive("<%=qzRequest.getModel()%>","<%=mn%>")'
-	   href="<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, mn, qingzhou.api.type.List.ACTION_LIST + customParams)%>">
-		<i class="icon icon-reply"></i>
-		<%=I18n.getKeyI18n("page.return")%>
-	</a>
 	<%
 		}
 	%>

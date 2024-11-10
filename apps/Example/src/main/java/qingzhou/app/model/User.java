@@ -129,7 +129,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
                     String value = request.getParameter(key);
                     map.put(key, value);
                 }
-                request.getResponse().useCustomizedResponse(map);
+                request.getResponse().setData(map);
             } else if ("python".equals(checkbox)) {
                 request.getResponse().setSuccess(false);
                 request.getResponse().setMsg("处理异常");
@@ -152,7 +152,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
                     "</tr></tbody>" +
                     "</table>" +
                     "</div>";
-            request.getResponse().useCustomizedResponse(html);
+            request.getResponse().setData(html);
         }
     }
 

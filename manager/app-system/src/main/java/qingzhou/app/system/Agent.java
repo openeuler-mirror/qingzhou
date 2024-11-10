@@ -23,6 +23,7 @@ import qingzhou.api.Request;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
 import qingzhou.deployer.App;
+import qingzhou.deployer.AppPageData;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
@@ -107,18 +108,18 @@ public class Agent extends ModelBase implements Download {
     }
 
     @ModelAction(
-            code = DeployerConstants.ACTION_DOWNLOAD_PAGE,
+            code = AppPageData.ACTION_DOWNLOAD_PAGE,
             name = {"", "en:"})
     public void downloadPage(Request request) throws IOException {
-        String app = request.getParameter(DeployerConstants.DOWNLOAD_PAGE_APP);
-        String dir = request.getParameter(DeployerConstants.DOWNLOAD_PAGE_DIR);
+        String app = request.getParameter(AppPageData.DOWNLOAD_PAGE_APP);
+        String dir = request.getParameter(AppPageData.DOWNLOAD_PAGE_DIR);
         File appPageDir = FileUtil.newFile(getAppsDir(), app, dir);
         if (appPageDir.exists()) {
             File zipFile = FileUtil.newFile(Main.getService(ModuleContext.class).getTemp(), dir + ".zip");
             try {
                 FileUtil.zipFiles(appPageDir, zipFile, true);
                 ResponseImpl response = (ResponseImpl) request.getResponse();
-                response.setBodyBytes(Files.readAllBytes(zipFile.toPath()));
+                response.setInternalData(Files.readAllBytes(zipFile.toPath()));
             } finally {
                 FileUtil.forceDelete(zipFile);
             }
@@ -140,7 +141,7 @@ public class Agent extends ModelBase implements Download {
     public void monitor(Request request) {
         OperatingSystemMXBean mxBean = ManagementFactory.getOperatingSystemMXBean();
 
-        Map<String, String> data = new HashMap<>();
+        HashMap<String, String> data = new HashMap<>();
         data.put("osName", mxBean.getName());
         data.put("osVer", mxBean.getVersion());
         data.put("arch", mxBean.getArch());
@@ -175,7 +176,7 @@ public class Agent extends ModelBase implements Download {
         data.put("nonHeapUsed", maskMBytes(memoryMXBean.getNonHeapMemoryUsage().getUsed()));
 
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.getDataMap().putAll(data);
+        response.setInternalData(data);
     }
 
     private String maskGBytes(long val) {

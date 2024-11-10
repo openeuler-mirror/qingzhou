@@ -38,7 +38,7 @@ public class Index extends ModelBase {
                     "en:View Qingzhou platform information."})
     public void show(Request request) throws Exception {
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.getDataMap().putAll(new HashMap<String, String>() {{
+        response.setInternalData(new HashMap<String, String>() {{
             put("name", "Qingzhou（轻舟）");
             put("version", getAppContext().getPlatformVersion());
             put("javaHome", System.getProperty("java.home"));

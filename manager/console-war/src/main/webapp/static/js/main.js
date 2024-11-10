@@ -741,10 +741,10 @@ function niceSelect() {
     }
 }
 
-function difModelActive(omodel, nmodel) {
-    if (omodel !== nmodel) {
-        var omenuItemLink = $("li.active ul.sidebar-menu li a[modelName='" + omodel + "']");
-        var nmenuItemLink = $("li.active ul.sidebar-menu li a[modelName='" + nmodel + "']");
+function actionModelMenu(originModel, targetModel) {
+    if (originModel !== targetModel) {
+        var omenuItemLink = $("li.active ul.sidebar-menu li a[modelName='" + originModel + "']");
+        var nmenuItemLink = $("li.active ul.sidebar-menu li a[modelName='" + targetModel + "']");
         //隐藏的model，不对菜单进行修改
         if (nmenuItemLink.length === 0){
             return;
@@ -768,8 +768,4 @@ function difModelActive(omodel, nmodel) {
             $(nmenuItemLink).parent().addClass("active");
         }
     }
-}
-
-function filter_reset(subEle) {
-    returnHref($(subEle).parent().parent().find("a.filter_search").attr("href"))
 }

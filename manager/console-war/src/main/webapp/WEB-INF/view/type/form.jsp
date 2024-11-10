@@ -10,7 +10,7 @@
 	String idField = modelInfo.getIdField();
 	String[] formActions = PageUtil.filterActions(modelInfo.getFormActions(), qzApp, qzModel, currentUser);
 
-	Map<String, String> modelData = qzResponse.getDataMap();
+	Map<String, String> modelData = (Map<String, String>) qzResponse.getInternalData();
 	Map<String, List<String>> sameLineMap = modelInfo.getSameLineMap();
 	Map<String, String> sameLineModelData = new LinkedHashMap<>();
 	sameLineMap.values().stream().flatMap((Function<List<String>, Stream<String>>) Collection::stream).forEach((Consumer<String>) f -> sameLineModelData.put(f, modelData.remove(f)));

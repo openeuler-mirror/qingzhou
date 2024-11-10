@@ -141,6 +141,10 @@ public class ModelInfo {
         return list.toArray(new String[0]);
     }
 
+    public String[] getAllFieldNames() {
+        return Arrays.stream(modelFieldInfos).map(ModelFieldInfo::getCode).toArray(String[]::new);
+    }
+
     public String[] getMonitorFieldNames() {
         return Arrays.stream(modelFieldInfos).filter(modelFieldInfo -> modelFieldInfo.getFieldType() == FieldType.MONITOR).map(ModelFieldInfo::getCode).toArray(String[]::new);
     }

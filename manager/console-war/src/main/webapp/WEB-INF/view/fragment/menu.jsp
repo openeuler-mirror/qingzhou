@@ -24,7 +24,7 @@
     <%-- 首页面主体部分 --%>
     <div class="bodyDiv" bindingId="<%=randBindingId%>">
         <%
-            Map<String, String> infoData = qzResponse.getDataMap();
+            Map<String, String> infoData = (Map<String, String>) qzResponse.getInternalData();
         %>
         <%@ include file="../fragment/info.jsp" %>
     </div>

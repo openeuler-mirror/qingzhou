@@ -21,7 +21,7 @@ public class Master extends ModelBase {
         String fingerprint = request.getParameter(DeployerConstants.CHECK_FINGERPRINT);
         if (fingerprint != null) {
             Registry registry = Main.getService(Registry.class);
-            request.getResponse().useCustomizedResponse(String.valueOf(registry.checkRegistry(fingerprint)));
+            request.getResponse().setData(String.valueOf(registry.checkRegistry(fingerprint)));
         }
     }
 

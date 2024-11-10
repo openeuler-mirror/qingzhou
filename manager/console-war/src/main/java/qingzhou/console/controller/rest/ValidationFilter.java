@@ -1,5 +1,15 @@
 package qingzhou.console.controller.rest;
 
+import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import qingzhou.api.InputType;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
@@ -18,16 +28,6 @@ import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
-
-import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
@@ -104,13 +104,14 @@ public class ValidationFilter implements Filter<RestContext> {
                 context.request.getParameters().forEach(tmp::setParameter);
                 tmp.setParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER, String.valueOf(isAddAction));
                 ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
-                errorMsg.putAll(tmpResp.getErrorInfo());
+                Map<String, String> result = (Map<String, String>) tmpResp.getInternalData();
+                errorMsg.putAll(result);
             }
         }
 
         if (!errorMsg.isEmpty()) {
             response.setSuccess(false);
-            errorMsg.forEach(response::addErrorInfo);
+            response.setInternalData(new HashMap<>(errorMsg));
         }
 
         return response.isSuccess();
