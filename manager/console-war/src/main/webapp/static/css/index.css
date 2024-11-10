@@ -1577,6 +1577,12 @@ a.cancelfavorites:active {
 }
 
 /* 表格样式 */
+th{
+    white-space: nowrap !important;
+    font-size: 10px !important;
+}
+
+
 .dashboardPage .table-container {
     width: 99%;
     margin: 3px auto;
