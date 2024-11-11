@@ -278,7 +278,7 @@
 				   data-tip-arrow="top"
 				   data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
 				   style="color:#4C638F;">
-					<%=PageUtil.styleFieldValue(value, fieldInfo)%>
+					<%=PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo)%>
 				</a>
 				<%
 				} else {
@@ -317,7 +317,7 @@
 				   action-type="<%=linkRefModelActionInfo.getActionType()%>"
 				   data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
 				   style="color:#4C638F;" onclick='actionModelMenu("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
-					<%=PageUtil.styleFieldValue(value, fieldInfo)%>
+					<%=PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo)%>
 				</a>
 				<%
 				} else if (field.equals(idField)
@@ -337,14 +337,14 @@
 				   data-tip-arrow="top"
 				   data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
 				   style="color:#4C638F;">
-					<%=PageUtil.styleFieldValue(value, fieldInfo)%>
+					<%=PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo)%>
 				</a>
 				<%
 							} else {
-								out.print(PageUtil.styleFieldValue(value, fieldInfo));
+								out.print(PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo));
 							}
 						} else {
-							out.print(PageUtil.styleFieldValue(value, fieldInfo));
+							out.print(PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo));
 						}
 					}
 

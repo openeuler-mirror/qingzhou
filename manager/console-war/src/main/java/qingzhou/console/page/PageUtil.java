@@ -103,24 +103,13 @@ public class PageUtil {
         return RESTController.encodeURL(response, url);
     }
 
-    public static String styleFieldValue(String value, ModelFieldInfo fieldInfo) {
-        if (Utils.isBlank(value)) return value;
+    public static String styleFieldValue(String value, String qzApp, ModelInfo modelInfo, ModelFieldInfo fieldInfo) {
+        String styleValue = getInputTypeStyle(value, qzApp, modelInfo, fieldInfo);
+        if (Utils.isBlank(styleValue)) return styleValue;
 
-        //时间转化
-        if (fieldInfo.getInputType().equals(InputType.datetime)) {
-            value = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(new Date(Long.parseLong(value)));
-        }
-        if (fieldInfo.getInputType().equals(InputType.range_datetime)) {
-            SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT);
-            List<String> timeValues = new LinkedList<>();
-            for (String v : value.split(fieldInfo.getSeparator())) {
-                timeValues.add(format.format(new Date(Long.parseLong(v))));
-            }
-            value = String.join(fieldInfo.getSeparator(), timeValues);
-        }
         try {
             String[] colorInfo = fieldInfo.getColor();
-            if (colorInfo == null) return value;
+            if (colorInfo == null) return styleValue;
 
             String colorStyle = "";
             for (String condition : colorInfo) {
@@ -133,17 +122,17 @@ public class PageUtil {
                 }
             }
             int ignore = fieldInfo.getIgnore();
-            if (ignore > 0 && value.length() > ignore) {
-                return "<span style=\" " + colorStyle + " \" data-toggle=\"tooltip\" title=\"" + value + "\">" + value.substring(0, ignore) + "...</span>";
+            if (ignore > 0 && styleValue.length() > ignore) {
+                return "<span style=\" " + colorStyle + " \" data-toggle=\"tooltip\" title=\"" + value + "\">" + styleValue.substring(0, ignore) + "...</span>";
             } else {
                 if (Utils.notBlank(colorStyle)) {
-                    return "<span style=\"" + colorStyle + "\">" + value + "</span>";
+                    return "<span style=\"" + colorStyle + "\">" + styleValue + "</span>";
                 }
             }
 
-            return value;
+            return styleValue;
         } catch (Exception e) {
-            return value;
+            return styleValue;
         }
     }
 
