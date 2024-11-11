@@ -19,7 +19,7 @@
 	boolean hasGroup = PageUtil.hasGroup(groupedFields);
 %>
 
-<div class="bodyDiv" bindingId="<%=randBindingId%>">
+<div class="bodyDiv">
 	<%-- 面包屑分级导航 --%>
 	<%@ include file="../fragment/breadcrumb.jsp" %>
 

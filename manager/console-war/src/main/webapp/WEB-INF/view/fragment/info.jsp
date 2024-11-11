@@ -1,6 +1,9 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
+        if (infoData == null) {
+            infoData = new HashMap<>();
+        }
 	Map<String, List<String>> groupedFields = PageUtil.groupedFields(infoData.keySet(), modelInfo);
 	boolean hasGroup = PageUtil.hasGroup(groupedFields);
 

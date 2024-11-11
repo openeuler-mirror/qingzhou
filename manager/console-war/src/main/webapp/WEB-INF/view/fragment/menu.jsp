@@ -22,7 +22,7 @@
     <%@ include file="../fragment/breadcrumb.jsp" %>
 
     <%-- 首页面主体部分 --%>
-    <div class="bodyDiv" bindingId="<%=randBindingId%>">
+    <div class="bodyDiv">
         <%
             Map<String, String> infoData = (Map<String, String>) qzResponse.getInternalData();
         %>
