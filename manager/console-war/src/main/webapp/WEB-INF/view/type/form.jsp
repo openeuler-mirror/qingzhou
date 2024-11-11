@@ -116,15 +116,44 @@
 								for (String sameLineField : sameLineFields) {
 									fieldName = sameLineField;
 									modelField = modelInfo.getModelFieldInfo(fieldName);
+									needHidden = "";
+									if (modelField.isHidden()) {
+										needHidden = "display:none";
+									}
+									required = fieldName.equals(idField) || modelField.isRequired();
+
 									fieldValue = sameLineModelData.get(fieldName);
 									if (fieldValue == null) {
 										fieldValue = "";
 									}
 									fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
+
 						%>
-						<div class="col-sm-<%=(5-3/sameLineFields.size())/sameLineFields.size()%>">
-							<%@ include file="../fragment/field_type.jsp" %>
-							<label class="qz-error-info"></label>
+						<div style="<%=needHidden%>" id="form-item-<%=fieldName%>">
+							<%
+								if (modelField.isShowLabel()) {
+							%>
+							<label for="<%=fieldName%>" class="col-sm-1">
+								<%=required ? "<span  style=\"color:red;\">* </span>" : ""%>
+								<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
+								<%
+									String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
+									if (Utils.notBlank(fieldInfo)) {
+										// 注意：下面这个 title=xxxx 必须使用单引号，因为 Model 的注解里面用了双引号，会导致显示内容被截断!
+								%>
+								<span class='tooltips' data-tip='<%=fieldInfo%>' data-tip-arrow='bottom-right'>
+								<i class='icon icon-info-sign'></i>
+								</span>
+							</label>
+							<%
+									}
+								}
+							%>
+							<div class="col-sm-<%=(5-3/sameLineFields.size())/sameLineFields.size()%>"
+								 type="<%=modelField.getInputType().name()%>">
+								<%@ include file="../fragment/field_type.jsp" %>
+								<label class="qz-error-info"></label>
+							</div>
 						</div>
 						<%
 								}
