@@ -909,7 +909,7 @@ function bindEventForListPage() {
     });
 
     $("section.main-body", document.body).each(function () {
-        var preSelector = "section[bindingId='" + $(this).attr("bindingId") + "'] ";
+        var preSelector = "";//"section[bindingId='" + $(this).attr("bindingId") + "'] ";
         var restrictedArea = $(this).parent();
         // 搜索按钮
         qz.bindFill(preSelector + ".search-btn a", preSelector + ".main-body:first", false, false, restrictedArea, null);
@@ -943,7 +943,7 @@ function bindEventForListPage() {
                 } else {
                     if ($(this).attr("action-type")) {
                         // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-                        qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']" + actionIdSelector, preSelector + ".main-body:first", false, false, restrictedArea, null);
+                        qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "'][action-id!='" + getSetting("actionId_app_manage") + "']" + actionIdSelector, preSelector + ".main-body:first", false, false, restrictedArea, null);
                     } else {
                         console.error("Element binding action failed. Element html:" + $(this)[0].outerHTML);
                     }
