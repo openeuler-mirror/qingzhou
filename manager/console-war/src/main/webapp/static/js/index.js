@@ -909,7 +909,7 @@ function bindEventForListPage() {
     });
 
     $("section.main-body", document.body).each(function () {
-        var preSelector = "section[bindingId='" + $(this).attr("bindingId") + "'] ";
+        var preSelector = "";//"section[bindingId='" + $(this).attr("bindingId") + "'] ";
         var restrictedArea = $(this).parent();
         // 搜索按钮
         qz.bindFill(preSelector + ".search-btn a", preSelector + ".main-body:first", false, false, restrictedArea, null);
