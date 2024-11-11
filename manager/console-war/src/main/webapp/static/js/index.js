@@ -812,7 +812,7 @@ function checkboxSortable() {
         draging = e.target;
     }).bind("dragover", function (e) {
         e.preventDefault();
-        var target = e.target;
+        var target = $(e.target).parents("a[draggable='true']")[0];
         if ($(e.target).parents(".checkbox-group").length > 0 && target !== draging) {
             if ($(target).index() < $(draging).index()) {
                 $(target).before(draging);
