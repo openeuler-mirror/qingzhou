@@ -1047,7 +1047,12 @@ function bindEventForListPage() {
 
 //返回列表页面
 function returnHref(backDom) {
-    $(".treeview.active:last > a", $(backDom).closest("section.main-body").prev()).click();
+    var sidebar = $(backDom).closest("section.main-body").prev();
+    var menuLink = $(".treeview.active:last > a", sidebar);
+    $(menuLink).trigger("click");
+    $(".menu-open", sidebar).removeClass("menu-open").find(".treeview-menu").hide();
+    $(menuLink).parent().parents("li.treeview.active").removeClass("active").addClass("menu-open").find(".treeview-menu");
+    $(menuLink).parent().parents("li.treeview.menu-open").children(".treeview-menu").show();
 }
 
 function initializeManager(element, url) {
