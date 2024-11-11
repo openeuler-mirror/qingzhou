@@ -86,7 +86,7 @@
 							java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
 					%>
 					<div style="<%=needHidden%>" class="form-group" id="form-item-<%=fieldName%>">
-						<label for="<%=fieldName%>" class="col-sm-4">
+						<label class="col-sm-4">
 							<%
 								if (modelField.isShowLabel()) {
 							%>

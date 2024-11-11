@@ -18,6 +18,7 @@ public class TransactionCombination extends AddModelBase implements Combined {
     public static final String code = "this-model-code";
     @ModelField(
             required = true,
+            link_action = Combined.ACTION_COMBINED,
             search = true,
             name = {"事务名称", "en:Transaction Name"},
             info = {"该事务的详细名称。", "en:The name of the transaction."})
@@ -36,19 +37,6 @@ public class TransactionCombination extends AddModelBase implements Combined {
             info = {"发起方应用。",
                     "en:Initiator application."})
     public String initiatorApplication = "";
-
-    @ModelAction(
-            code = Combined.ACTION_COMBINED, icon = "folder-open-alt",
-            name = {"事务信息", "en:Show"},
-            info = {"查看事务信息。", "en:View the information of this model."})
-    public void Combined(Request request) throws Exception {
-        getAppContext().invokeSuperAction(request);
-    }
-
-    @Override
-    public String[] listActions() {
-        return new String[]{Update.ACTION_EDIT, Delete.ACTION_DELETE, Combined.ACTION_COMBINED};
-    }
 
     @Override
     public void combinedData(String id, DataBuilder dataBuilder) {
@@ -80,4 +68,10 @@ public class TransactionCombination extends AddModelBase implements Combined {
         listData2.addFieldValues(new String[]{"2024-10-28 09:00:00", "transaction22222", "第2条日志"});
         dataBuilder.addData(listData2);
     }
+
+    @Override
+    public boolean showOrderNumber() {
+        return true;
+    }
+
 }

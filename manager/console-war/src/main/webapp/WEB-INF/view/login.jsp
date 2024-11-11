@@ -57,7 +57,7 @@
 					   name="<%=LoginManager.LOGIN_USER%>" required
 					   class="form-control"
 					   placeholder="<%=I18n.getKeyI18n( "page.login.user")%>" autofocus>
-				<label for="<%=LoginManager.LOGIN_USER%>" class="input-control-icon-left" style="line-height: 44px;">
+				<label class="input-control-icon-left" style="line-height: 44px;">
 					<i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_SYSTEM).getModelInfo(DeployerConstants.MODEL_USER).getIcon()%> "></i>
 				</label>
 			</div>
@@ -69,11 +69,11 @@
 					   dotted>
 				<input value="qingzhou123.com" type="hidden" id="<%=LoginManager.LOGIN_PASSWORD%>"
 					   name="<%=LoginManager.LOGIN_PASSWORD%>">
-				<label for="<%=LoginManager.LOGIN_PASSWORD%>_txt" class="input-control-icon-left"
+				<label class="input-control-icon-left"
 					   style="line-height: 44px;">
 					<i class="icon icon-<%=SystemController.getAppInfo(DeployerConstants.APP_SYSTEM).getModelInfo(DeployerConstants.MODEL_PASSWORD).getIcon()%>"></i>
 				</label>
-				<label id="<%=LoginManager.LOGIN_PASSWORD%>_eye" for="<%=LoginManager.LOGIN_PASSWORD%>_txt"
+				<label id="<%=LoginManager.LOGIN_PASSWORD%>_eye"
 					   class="input-control-icon-right" style="margin-right: 28px; margin-top: 5px; cursor: pointer;">
 					<i class="icon icon-eye-close"></i>
 				</label>
@@ -83,7 +83,7 @@
 					   placeholder="<%=I18n.getKeyI18n( "page.info.otp")%>"
 					   onchange="document.getElementById('<%=LoginManager.LOGIN_OTP%>').value = this.value;">
 				<input type="hidden" id="<%=LoginManager.LOGIN_OTP%>" name="<%=LoginManager.LOGIN_OTP%>">
-				<label for="<%=LoginManager.LOGIN_OTP%>_txt" class="input-control-icon-left"
+				<label class="input-control-icon-left"
 					   style="line-height: 44px;"><i class="icon icon-shield"></i></label>
 			</div>
 
