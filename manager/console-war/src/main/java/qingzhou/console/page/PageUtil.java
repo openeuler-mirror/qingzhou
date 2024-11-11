@@ -1,21 +1,5 @@
 package qingzhou.console.page;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
@@ -35,6 +19,21 @@ import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 import qingzhou.registry.Registry;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
@@ -95,12 +94,21 @@ public class PageUtil {
 
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
-        return RESTController.encodeURL(response, url);
+        return RESTController.encodeURL(response, appendQueryString(servletRequest, url));
     }
 
     public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String model, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;
-        return RESTController.encodeURL(response, url);
+        return RESTController.encodeURL(response, appendQueryString(servletRequest, url));
+    }
+
+    private static String appendQueryString(HttpServletRequest servletRequest, String url) {// 此方法只能给buildRequestUrl、buildCustomUrl这两个拼接url的方法使用
+        String queryString = servletRequest.getQueryString();
+        if (queryString != null) { // 这里因为二级Tab中的key无法固定且目前只有跳转到二级Tab时，这里会有queryString，暂时以是否携带queryString来进行追加
+            url += "?" + queryString;
+        }
+
+        return url;
     }
 
     public static String styleFieldValue(String value, String qzApp, ModelInfo modelInfo, ModelFieldInfo fieldInfo) {
