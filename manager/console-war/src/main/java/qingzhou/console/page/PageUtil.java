@@ -27,8 +27,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,7 +42,7 @@ public class PageUtil {
 
     public static Map<String, List<String>> groupedFields(Collection<String> fieldNames, ModelInfo modelInfo) {
         Map<String, List<String>> groupedFields = new LinkedHashMap<>();
-        List<String> defaultGroup = new ArrayList<>();
+        List<String> defaultGroup = new LinkedList<>();
         for (String fieldName : fieldNames) {
             ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
             if (modelField == null) continue; // 用户模块没有 enableOtp 字段，但配置的数据是有的，这里会为 null
@@ -48,7 +50,7 @@ public class PageUtil {
             if (Utils.isBlank(group)) {
                 defaultGroup.add(fieldName);
             } else {
-                List<String> fields = groupedFields.computeIfAbsent(group, s -> new ArrayList<>());
+                List<String> fields = groupedFields.computeIfAbsent(group, s -> new LinkedList<>());
                 fields.add(fieldName);
             }
         }
@@ -176,14 +178,20 @@ public class PageUtil {
             case checkbox:
             case sortable_checkbox:
                 String[] split = value.split(fieldInfo.getSeparator());
-                List<String> list = new ArrayList<>(split.length);
+                List<String> list = new LinkedList<>();
+
+                Map<String, String> optionI18nMap = new HashMap<>();// 这里将i18n的数据提前整理好，否则会影响排序
                 for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldInfo.getCode())) {
-                    String option = itemInfo.getName();
-                    String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
-                    if (Utils.contains(split, option)) {
+                    optionI18nMap.put(itemInfo.getName(), I18n.getStringI18n(itemInfo.getI18n()));
+                }
+
+                for (String option : split) {
+                    String optionI18n = optionI18nMap.get(option);
+                    if (optionI18n != null) {
                         list.add(optionI18n);
                     }
                 }
+
                 value = String.join(fieldInfo.getSeparator(), list);
                 break;
         }
