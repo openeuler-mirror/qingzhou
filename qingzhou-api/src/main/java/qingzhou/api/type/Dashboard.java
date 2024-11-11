@@ -5,6 +5,10 @@ public interface Dashboard {
 
     void dashboardData(String id, DataBuilder builder);
 
+    default int period() {
+        return 2000;
+    }
+
     interface DataBuilder {
         <T> T buildData(Class<? extends DashboardData> dataType);
 

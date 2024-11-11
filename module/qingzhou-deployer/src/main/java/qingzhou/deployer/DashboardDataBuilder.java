@@ -1,11 +1,11 @@
 package qingzhou.deployer;
 
+import qingzhou.api.type.Dashboard;
+
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import qingzhou.api.type.Dashboard;
 
 public class DashboardDataBuilder extends ResponseData implements Dashboard.DataBuilder {
     // 定义仪表盘字段数据标识
@@ -31,6 +31,12 @@ public class DashboardDataBuilder extends ResponseData implements Dashboard.Data
     public static final String DASHBOARD_FIELD_SHARE_DATASET_DATA = ShareDataset.class.getSimpleName();
 
     public List<Dashboard.DashboardData[]> data = new LinkedList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+
+    public int period = 2000;
+
+    public void setPeriod(int period) {
+        this.period = period;
+    }
 
     public void transformData() {
         for (Dashboard.DashboardData[] dashboardData : data) {

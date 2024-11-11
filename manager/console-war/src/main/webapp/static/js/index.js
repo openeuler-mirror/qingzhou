@@ -1643,7 +1643,7 @@ function panelUpdate(monitorData, restrictedArea) {
 /**************************************** monitor.jsp - end *************************************************/
 /**************************************** dashboard.jsp - start *************************************************/
 // 全局变量，用于控制定时任务
-var intervalId = null;
+var timeoutId = null;
 
 // 存储图表实例和关联表格的对象
 var chartInstances = {};
@@ -1654,8 +1654,8 @@ var shareDatasetBuffers = {};
 
 // 初始化仪表板页面
 function initDashboardPage() {
-    if (intervalId != null) {
-        clearInterval(intervalId); // 停止定时任务
+    if (timeoutId !== null) {
+        clearTimeout(timeoutId); // 停止定时任务
         disposeCacheChart();
         chartInstances = {};
         tableInstances = {};
@@ -1677,64 +1677,76 @@ function initDashboardPage() {
 
     var failedAttempts = 0;
     var fetchDataAndRender = function () {
-        fetchData(url).done(function (groupData) {
-            if (containers == null) {
+        fetchData(url).done(function (groupData, period) {
+            if (containers === null) {
                 containers = [];
                 for (var i in groupData) {
-                    var groupContainer = createGroupContainer(dashboardDiv, "dashboardData" + i);
-                    containers[i] = groupContainer;
+                    if (groupData.hasOwnProperty(i)) {
+                        containers[i] = createGroupContainer(dashboardDiv, "dashboardData" + i);
+                    }
                 }
             }
 
             for (var index in groupData) {
-                var container = containers[index];
-                var data = groupData[index];
-                for (var count in data) {
-                    try {
-                        var dashboardData = data[count];
-                        switch (dashboardData.type) {
-                            case getSetting("basicData"):
-                                renderBasicData(container, dashboardData);
-                                break;
-                            case getSetting("gaugeData"):
-                                renderGaugeData(container, dashboardData, count);
-                                break;
-                            case getSetting("histogramData"):
-                                renderHistogramData(container, dashboardData, count);
-                                break;
-                            case getSetting("shareDatasetData"):
-                                renderShareDatasetChart(container, dashboardData, count);
-                                break;
-                            default:
-                                console.warn("无效的数据类型：" + type);
+                if (groupData.hasOwnProperty(index)) {
+                    var container = containers[index];
+                    var data = groupData[index];
+                    for (var count in data) {
+                        if (data.hasOwnProperty(count)) {
+                            try {
+                                var dashboardData = data[count];
+                                switch (dashboardData.type) {
+                                    case getSetting("basicData"):
+                                        renderBasicData(container, dashboardData);
+                                        break;
+                                    case getSetting("gaugeData"):
+                                        renderGaugeData(container, dashboardData, count);
+                                        break;
+                                    case getSetting("histogramData"):
+                                        renderHistogramData(container, dashboardData, count);
+                                        break;
+                                    case getSetting("shareDatasetData"):
+                                        renderShareDatasetChart(container, dashboardData, count);
+                                        break;
+                                    default:
+                                        console.warn("无效的数据类型：" + dashboardData.type);
+                                }
+                            } catch (err) {
+                                console.error("渲染数据时出错:", err);
+                            }
                         }
-                    } catch (err) {
-                        console.error("渲染数据时出错:", err);
                     }
                 }
             }
 
             // 重置失败次数
             failedAttempts = 0;
+
+            var interval = 2000; // 默认间隔
+            if (typeof period === 'number' && period > 0) {
+                interval = period;
+            }
+            timeoutId = setTimeout(fetchDataAndRender, interval);
         }).fail(function () {
             failedAttempts++;
             if (failedAttempts >= 10) {
-                clearInterval(intervalId); // 停止定时任务
+                return;
             }
+            // 使用默认间隔重试，例如 2000ms
+            timeoutId = setTimeout(fetchDataAndRender, 2000);
         });
     };
 
     // 首次获取并渲染
     fetchDataAndRender();
-
-    // 使用 setInterval 执行定时任务
-    intervalId = setInterval(fetchDataAndRender, 2000);
 }
 
 function resizeHandler() {
     for (var chartId in chartInstances) {
         if (chartInstances.hasOwnProperty(chartId)) {
-            chartInstances[chartId].resize();
+            if (typeof chartInstances[chartId].resize === 'function') {
+                chartInstances[chartId].resize();
+            }
         }
     }
 }
@@ -1742,7 +1754,9 @@ function resizeHandler() {
 function disposeCacheChart() {
     for (var chartId in chartInstances) {
         if (chartInstances.hasOwnProperty(chartId)) {
-            chartInstances[chartId].dispose();
+            if (typeof chartInstances[chartId].dispose === 'function') {
+                chartInstances[chartId].dispose();
+            }
         }
     }
 }
@@ -1756,7 +1770,11 @@ function fetchData(url) {
         url: url,
         dataType: 'json',
         success: function (data) {
-            deferred.resolve(data.data);
+            deferred.resolve(data.data, data.period);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            console.error("数据请求失败:", textStatus, errorThrown);
+            deferred.reject();
         }
     });
 
