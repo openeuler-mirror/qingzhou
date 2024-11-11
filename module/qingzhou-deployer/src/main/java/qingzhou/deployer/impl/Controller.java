@@ -9,7 +9,7 @@ import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.Service;
+import qingzhou.engine.Resource;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.http.Http;
 import qingzhou.json.Json;
@@ -17,7 +17,6 @@ import qingzhou.logger.Logger;
 import qingzhou.qr.QrGenerator;
 import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletService;
-import qingzhou.ssh.SSHService;
 import qingzhou.uml.Uml;
 
 import java.io.File;
@@ -25,34 +24,31 @@ import java.util.Arrays;
 
 @Module
 public class Controller implements ModuleActivator {
-    @Service
+    @Resource
     private Logger logger;
 
-    @Service
+    @Resource
     private Registry registry;
 
-    @Service
+    @Resource
     private Config config;
 
-    @Service
+    @Resource
     private Json json;
 
-    @Service
+    @Resource
     private QrGenerator qrGenerator;
 
-    @Service
-    private SSHService sshService;
-
-    @Service
+    @Resource
     private Http http;
 
-    @Service
+    @Resource
     private ServletService servletService;
 
-    @Service
+    @Resource
     private CryptoService cryptoService;
 
-    @Service
+    @Resource
     private Uml uml;
 
     private DeployerImpl deployer;

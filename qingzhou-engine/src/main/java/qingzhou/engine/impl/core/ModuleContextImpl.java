@@ -4,14 +4,12 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 class ModuleContextImpl implements ModuleContext {
     private final ModuleInfo moduleInfo;
 
-    ServiceVisitor serviceVisitor;
     Map<String, String> config;
     ClassLoader apiLoader;
     final Map<Class<?>, Object> registeredServices = new HashMap<>();
@@ -57,11 +55,6 @@ class ModuleContextImpl implements ModuleContext {
         if (selfService != null) return selfService;
 
         return (T) injectedServices.get(clazz);
-    }
-
-    @Override
-    public Collection<Class<?>> allAppSharedServices() {
-        return serviceVisitor.allAppSharedServices();
     }
 
     @Override

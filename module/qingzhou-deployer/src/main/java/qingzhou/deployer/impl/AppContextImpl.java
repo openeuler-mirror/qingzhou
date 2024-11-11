@@ -1,12 +1,21 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
+import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
+import qingzhou.http.Http;
+import qingzhou.json.Json;
+import qingzhou.logger.Logger;
+import qingzhou.qr.QrGenerator;
 import qingzhou.registry.MenuInfo;
+import qingzhou.servlet.ServletService;
+import qingzhou.ssh.SSHService;
+import qingzhou.uml.Uml;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -86,7 +95,9 @@ class AppContextImpl implements AppContext {
 
     @Override
     public Collection<Class<?>> getServiceTypes() {
-        return moduleContext.allAppSharedServices();
+        // TODO 需要自动根据标记 & 服务是存在来动态显示列表
+        Class<?>[] scopedTypes = {CryptoService.class, Http.class, Json.class, Logger.class, QrGenerator.class, ServletService.class, SSHService.class, Uml.class};
+        return Arrays.asList(scopedTypes);
     }
 
     @Override

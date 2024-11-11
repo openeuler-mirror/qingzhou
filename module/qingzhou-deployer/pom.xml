@@ -39,17 +39,18 @@
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
-            <artifactId>qingzhou-ssh</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>qingzhou</groupId>
             <artifactId>qingzhou-http</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-servlet</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-ssh</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

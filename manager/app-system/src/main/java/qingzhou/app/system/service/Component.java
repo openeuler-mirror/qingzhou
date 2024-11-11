@@ -4,8 +4,6 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.app.system.Main;
-import qingzhou.engine.ServiceInfo;
-import qingzhou.engine.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,21 +39,10 @@ public class Component extends ModelBase implements qingzhou.api.type.List {
     public String info;
 
     @Override
-    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
+    public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
         List<String[]> list = new ArrayList<>();
         getAppContext().getServiceTypes().forEach(aClass -> {
-            Object service = getAppContext().getService(aClass);
-            String id = null;
-            String info = null;
-            if (service instanceof ServiceInfo) {
-                ServiceInfo serviceInfo = (ServiceInfo) service;
-                id = serviceInfo.getName();
-                info = serviceInfo.getDescription();
-            }
-            if (Utils.isBlank(id)) id = aClass.getSimpleName();
-            if (Utils.isBlank(info)) info = aClass.getName();
-
-            list.add(new String[]{id, aClass.getName(), info});
+            list.add(new String[]{aClass.getSimpleName(), aClass.getName(), ""});
         });
         return list;
     }

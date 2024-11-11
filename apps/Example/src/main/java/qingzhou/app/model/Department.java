@@ -46,6 +46,7 @@ public class Department extends AddModelBase implements Echo, Option {
             list = true, search = true,
             echo_group = {"cc"}, placeholder = "写负责人的电话",
             same_line = true, required = true,
+            show_label = false,
             color = {"AAAAA:Green",
                     "BBBBB:Gray"},
             name = {"联系电话", "en:Department Phone"},
