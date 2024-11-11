@@ -595,7 +595,7 @@ function triggerAction(ele, condition) {
     }
 }
 
-function selectOption() {
+function selectOption(triggerChange) {
     var $option = $(this);
     var $dropdown = $option.closest(".nice-select");
     $(".selected", $dropdown).removeClass("selected");
@@ -604,7 +604,9 @@ function selectOption() {
     $("input[type='hidden']", $dropdown).val($option.attr("data-value"));
     $("input[type='hidden']", $dropdown).attr("format", $option.attr("format"));
     $("input[type='text']", $dropdown).attr("text", $option.text()).val($option.text());
-    $("input[type='hidden']", $dropdown).change();
+    if (triggerChange){
+        $("input[type='hidden']", $dropdown).change();
+    }
     if ($("span", $dropdown).length > 0) {
         if ($.trim($option.text()) !== "") {
             $("span", $dropdown).html($option.text());
