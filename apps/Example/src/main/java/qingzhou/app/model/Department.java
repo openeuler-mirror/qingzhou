@@ -1,10 +1,5 @@
 package qingzhou.app.model;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
 import qingzhou.api.InputType;
 import qingzhou.api.Item;
 import qingzhou.api.Model;
@@ -12,6 +7,10 @@ import qingzhou.api.ModelField;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
 
 @Model(code = "department", icon = "sitemap",
         menu = qingzhou.app.ExampleMain.MENU_1, order = 2,
@@ -92,26 +91,24 @@ public class Department extends AddModelBase implements Echo, Option {
     public long dateRange;
 
     @Override
-    public Map<String, String> echoData(String echoGroup, Map<String, String> params) {
-        Map<String, String> map = new HashMap<>();
+    public void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder) {
         if ("aa".equals(echoGroup)) {
             String superior = params.get("superior");
             String manager = params.get("manager");
-            map.put("email", superior + "===" + manager);
-            map.put("phone", superior + "&&&" + manager);
+            dataBuilder.addData("email", superior + "===" + manager);
+            dataBuilder.addData("phone", superior + "&&&" + manager);
             if ("a".equals(superior) || "c".equals(superior)) {
-                map.put("active", "false");
-                map.put("emailSuffix", "@qq.com");
+                dataBuilder.addData("active", "false");
+                dataBuilder.addData("emailSuffix", "@qq.com");
             } else {
-                map.put("active", "true");
-                map.put("emailSuffix", "@163.com");
+                dataBuilder.addData("active", "true");
+                dataBuilder.addData("emailSuffix", "@163.com");
             }
-            map.put("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            dataBuilder.addData("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         } else if ("bb".equals(echoGroup)) {
         } else if ("cc".equals(echoGroup)) {
-            map.put("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            dataBuilder.addData("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         }
-        return map;
     }
 
 
@@ -138,7 +135,7 @@ public class Department extends AddModelBase implements Echo, Option {
     }
 
     @Override
-    public Map<String, String> editData(String id) throws Exception {
+    public Map<String, String> editData(String id) {
         Map<String, String> map = showData(id);
         map.put("emailSuffix", null);
         return map;

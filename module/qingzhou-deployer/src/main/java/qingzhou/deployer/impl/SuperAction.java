@@ -1,48 +1,11 @@
 package qingzhou.deployer.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.Item;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Chart;
-import qingzhou.api.type.Combined;
-import qingzhou.api.type.Dashboard;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.Echo;
-import qingzhou.api.type.Export;
+import qingzhou.api.*;
 import qingzhou.api.type.List;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Option;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
-import qingzhou.api.type.Validate;
+import qingzhou.api.type.*;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.ChartDataBuilder;
-import qingzhou.deployer.CombinedDataBuilder;
-import qingzhou.deployer.DashboardDataBuilder;
-import qingzhou.deployer.DownloadData;
-import qingzhou.deployer.ListData;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.*;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
@@ -50,6 +13,13 @@ import qingzhou.registry.ItemInfo;
 import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelInfo;
 import qingzhou.uml.Uml;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 class SuperAction {
     static final java.util.List<ModelActionInfo> ALL_SUPER_ACTION_CACHE;
@@ -124,12 +94,13 @@ class SuperAction {
 
         ResponseImpl response = (ResponseImpl) request.getResponse();
         Echo echo = (Echo) instance;
+        EchoDataBuilder dataBuilder = new EchoDataBuilder();
         for (Map.Entry<String, Map<String, String>> entry : echoParameters.entrySet()) {
             String group = entry.getKey();
             Map<String, String> groupParameters = entry.getValue();
-            Map<String, String> echoResult = echo.echoData(group, groupParameters);
-            response.setInternalData(new HashMap<>(echoResult));
+            echo.echoData(group, groupParameters, dataBuilder);
         }
+        response.setData(dataBuilder);
     }
 
     @ModelAction(
