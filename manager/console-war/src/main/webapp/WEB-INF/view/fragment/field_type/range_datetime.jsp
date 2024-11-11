@@ -11,6 +11,7 @@
     }
 %>
 <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
+       placeholder="<%=modelField.getPlaceholder()%>"
        placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"
        class="form-control dateRange"/>
 <script type="text/javascript">

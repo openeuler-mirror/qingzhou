@@ -1,5 +1,7 @@
 package qingzhou.api.type;
 
+import qingzhou.api.Item;
+
 import java.util.Map;
 
 /**
@@ -8,5 +10,11 @@ import java.util.Map;
 public interface Echo {
     String ACTION_ECHO = "echo";
 
-    Map<String, String> echoData(String echoGroup, Map<String, String> params) throws Exception;
+    void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder) throws Exception;
+
+    interface DataBuilder {
+        void addData(String field, String value);
+
+        void addData(String field, String value, Item[] options);
+    }
 }

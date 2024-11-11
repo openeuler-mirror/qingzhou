@@ -1,32 +1,11 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.ActionType;
-import qingzhou.api.Item;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.Request;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Chart;
-import qingzhou.api.type.Combined;
-import qingzhou.api.type.Dashboard;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.Echo;
-import qingzhou.api.type.Export;
+import qingzhou.api.*;
 import qingzhou.api.type.List;
-import qingzhou.api.type.Monitor;
-import qingzhou.api.type.Option;
-import qingzhou.api.type.Show;
-import qingzhou.api.type.Update;
-import qingzhou.api.type.Validate;
+import qingzhou.api.type.*;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.ChartDataBuilder;
-import qingzhou.deployer.CombinedDataBuilder;
-import qingzhou.deployer.DashboardDataBuilder;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.*;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
@@ -39,15 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 class SuperAction {
@@ -76,7 +47,7 @@ class SuperAction {
     public void show(Request request) throws Exception {
         Map<String, String> data = ((Show) instance).showData(request.getId());
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.getDataMap().putAll(data);
+        response.setInternalData(new HashMap<>(data));
     }
 
     @ModelAction(
@@ -87,7 +58,7 @@ class SuperAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         CombinedDataBuilder dataBuilder = new CombinedDataBuilder();
         ((Combined) instance).combinedData(request.getId(), dataBuilder);
-        for (Combined.CombinedData combinedData : dataBuilder.dataList) {
+        for (Combined.CombinedData combinedData : dataBuilder.data) {
             if (combinedData instanceof Combined.UmlData) {
                 CombinedDataBuilder.Uml umlData = (CombinedDataBuilder.Uml) combinedData;
                 String umlDataStr = umlData.data;
@@ -98,7 +69,7 @@ class SuperAction {
                 }
             }
         }
-        response.useCustomizedResponse(dataBuilder);
+        response.setData(dataBuilder);
     }
 
     @ModelAction(
@@ -123,12 +94,13 @@ class SuperAction {
 
         ResponseImpl response = (ResponseImpl) request.getResponse();
         Echo echo = (Echo) instance;
+        EchoDataBuilder dataBuilder = new EchoDataBuilder();
         for (Map.Entry<String, Map<String, String>> entry : echoParameters.entrySet()) {
             String group = entry.getKey();
             Map<String, String> groupParameters = entry.getValue();
-            Map<String, String> echoResult = echo.echoData(group, groupParameters);
-            response.getDataMap().putAll(echoResult);
+            echo.echoData(group, groupParameters, dataBuilder);
         }
+        response.setData(dataBuilder);
     }
 
     @ModelAction(
@@ -145,7 +117,7 @@ class SuperAction {
             itemInfos[i] = new ItemInfo(items[i]);
         }
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.setItemInfos(itemInfos);
+        response.setInternalData(itemInfos);
     }
 
     @ModelAction(
@@ -165,8 +137,8 @@ class SuperAction {
         Validate validate = (Validate) instance;
         ResponseImpl response = (ResponseImpl) request.getResponse();
         Map<String, String> errors = validate.validate(request);
-        errors.forEach(response::addErrorInfo);
-        response.setSuccess(response.getDataList().isEmpty());
+        response.setInternalData(new HashMap<>(errors));
+        response.setSuccess(errors.isEmpty());
     }
 
     @ModelAction(
@@ -179,7 +151,7 @@ class SuperAction {
         String[] ids = list.allIds(query);
         if (ids == null) return;
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.setIds(ids);
+        response.setInternalData(ids);
     }
 
     @ModelAction(
@@ -190,7 +162,7 @@ class SuperAction {
         ResponseImpl responseImpl = (ResponseImpl) request.getResponse();
         int pageNum = 1;
         try {
-            pageNum = Integer.parseInt(request.getParameter("pageNum"));
+            pageNum = Integer.parseInt(request.getParameter(ListData.PAGE_NUM));
         } catch (NumberFormatException ignored) {
         }
         List list = (List) instance;
@@ -201,11 +173,12 @@ class SuperAction {
         java.util.List<String[]> result = list.listData(pageNum, pageSize, fieldNamesToList, query);
         if (result == null) return;
 
-        responseImpl.setDataList(result);
-        int totalSize = list.totalSize(query);
-        responseImpl.setTotalSize(totalSize);
-        responseImpl.setPageSize(pageSize);
-        responseImpl.setPageNum(pageNum);
+        ListData listData = new ListData();
+        listData.dataList = result;
+        listData.totalSize = list.totalSize(query);
+        listData.pageSize = pageSize;
+        listData.pageNum = pageNum;
+        responseImpl.setInternalData(listData);
     }
 
     private Map<String, String> queryParams(Request request) {
@@ -233,7 +206,7 @@ class SuperAction {
     public void create(Request request) {
         Map<String, String> properties = getAppInfo().getModelInfo(request.getModel()).getFormFieldDefaultValues();
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.getDataMap().putAll(properties);
+        response.setInternalData(new HashMap<>(properties));
     }
 
     @ModelAction(
@@ -260,7 +233,7 @@ class SuperAction {
     public void edit(Request request) throws Exception {
         Map<String, String> data = ((Update) instance).editData(request.getId());
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.getDataMap().putAll(data);
+        response.setInternalData(new HashMap<>(data));
     }
 
     @ModelAction(
@@ -294,7 +267,7 @@ class SuperAction {
     public void defaultSearch(Request request) {
         Map<String, String> defaultSearch = ((List) instance).defaultSearch();
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.getDataMap().putAll(defaultSearch);
+        response.setInternalData(new HashMap<>(defaultSearch));
     }
 
     @ModelAction(
@@ -320,7 +293,7 @@ class SuperAction {
         if (p == null || p.isEmpty()) return;
 
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.getDataMap().putAll(p);
+        response.setInternalData(new HashMap<>(p));
     }
 
     @ModelAction(
@@ -334,7 +307,7 @@ class SuperAction {
         Chart chart = (Chart) instance;
         ChartDataBuilder chartDataBuilder = new ChartDataBuilder();
         chart.chartData(chartDataBuilder);
-        response.useCustomizedResponse(chartDataBuilder);
+        response.setData(chartDataBuilder);
     }
 
     @ModelAction(
@@ -366,7 +339,7 @@ class SuperAction {
                 if (subFiles != null) {
                     Arrays.sort(subFiles, Comparator.comparing(File::getName));
                     for (File subFile : subFiles) {
-                        map.put(rootFile.getName() + DeployerConstants.DOWNLOAD_FILE_GROUP_SP + subFile.getName(),
+                        map.put(rootFile.getName() + DownloadData.DOWNLOAD_FILE_GROUP_SP + subFile.getName(),
                                 subFile.getName() + " (" + FileUtil.getFileSize(subFile) + ")");
                     }
                 }
@@ -374,7 +347,7 @@ class SuperAction {
         }
 
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.getDataMap().putAll(map);
+        response.setInternalData(new HashMap<>(map));
     }
 
     @ModelAction(
@@ -386,9 +359,9 @@ class SuperAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         File keyDir = new File(app.getAppContext().getTemp(), "download");
 
-        String downloadKey = request.getParameter(DeployerConstants.DOWNLOAD_SERIAL_KEY);
+        String downloadKey = request.getParameter(DownloadData.DOWNLOAD_SERIAL_KEY);
         if (downloadKey == null || downloadKey.trim().isEmpty()) {
-            String downloadFileNames = request.getParameter(DeployerConstants.DOWNLOAD_FILE_NAMES);
+            String downloadFileNames = request.getParameter(DownloadData.DOWNLOAD_FILE_NAMES);
 
             // check
             if (downloadFileNames == null || downloadFileNames.trim().isEmpty()) {
@@ -400,13 +373,13 @@ class SuperAction {
 
             File fileBase = ((Download) instance).downloadData(request.getId());
             java.util.List<File> downloadFiles = new ArrayList<>();
-            for (String s : downloadFileNames.split(DeployerConstants.DOWNLOAD_FILE_NAMES_SP)) {
+            for (String s : downloadFileNames.split(DownloadData.DOWNLOAD_FILE_NAMES_SP)) {
                 downloadFiles.add(FileUtil.newFile(fileBase, s));//防止路径穿越：FileUtil.newFile
             }
             downloadKey = buildDownloadKey(downloadFiles, keyDir);
         }
         if (downloadKey.trim().isEmpty() || !new File(keyDir, downloadKey).exists()) return;
-        response.getParameters().put(DeployerConstants.DOWNLOAD_SERIAL_KEY, downloadKey);
+        response.getParameters().put(DownloadData.DOWNLOAD_SERIAL_KEY, downloadKey);
         String finalDownloadKey = downloadKey;
         Export.DataSupplier supplier = new Export.DataSupplier() {
             private long currentOffset;
@@ -460,7 +433,6 @@ class SuperAction {
             }
         };
         downloadStream(request, supplier);
-        response.setDownloadName(supplier.name());
     }
 
     // 为支持大文件续传，下载必需有 key
@@ -513,16 +485,18 @@ class SuperAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
 
         long offset = 0;
-        String downloadOffsetParameter = request.getParameter(DeployerConstants.DOWNLOAD_OFFSET);
+        String downloadOffsetParameter = request.getParameter(DownloadData.DOWNLOAD_OFFSET);
         if (downloadOffsetParameter != null && !downloadOffsetParameter.trim().isEmpty()) {
             offset = Long.parseLong(downloadOffsetParameter.trim());
         }
         if (offset < 0) return;
 
         byte[] block = supplier.read(offset);
-        response.setBodyBytes(block);
-        response.setDownloadName(supplier.name());
-        response.getParameters().put(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(supplier.offset()));
+        DownloadData dd = new DownloadData();
+        dd.block = block;
+        dd.downloadName = supplier.name();
+        response.setInternalData(dd);
+        response.getParameters().put(DownloadData.DOWNLOAD_OFFSET, String.valueOf(supplier.offset()));
     }
 
     @ModelAction(
@@ -536,6 +510,6 @@ class SuperAction {
 
         dashboardBuilder.transformData();// 转换为前端需要的格式
 
-        request.getResponse().useCustomizedResponse(dashboardBuilder);
+        request.getResponse().setData(dashboardBuilder);
     }
 }

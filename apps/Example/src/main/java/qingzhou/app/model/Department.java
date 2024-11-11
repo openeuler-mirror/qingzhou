@@ -10,7 +10,6 @@ import qingzhou.app.AddModelBase;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = "department", icon = "sitemap",
@@ -30,14 +29,14 @@ public class Department extends AddModelBase implements Echo, Option {
             required = true,
             list = true, search = true, echo_group = {"aa"},
             name = {"上级部门", "en:Superior Department"},
-            color = {"a:red","b:green","c:blue","e:yellow"},
+            color = {"a:red", "b:green", "c:blue", "e:yellow"},
             info = {"该部门所属的上级部门。",
                     "en:The superior department to which the department belongs."})
     public String superior = "";
 
     @ModelField(
             input_type = InputType.checkbox,
-            list = true, search = true, echo_group = {"aa", "bb"}, same_lines = {"phone", "buildDate"},
+            list = true, search = true, echo_group = {"aa", "bb"},
             name = {"负责人", "en:Department Manager"},
             color = {"lisa:red", "jack:green", "tom:blue"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
@@ -45,7 +44,8 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             list = true, search = true,
-            echo_group = {"cc"},
+            echo_group = {"cc"}, placeholder = "写负责人的电话",
+            same_line = true, required = true,
             color = {"AAAAA:Green",
                     "BBBBB:Gray"},
             name = {"联系电话", "en:Department Phone"},
@@ -55,7 +55,6 @@ public class Department extends AddModelBase implements Echo, Option {
     @ModelField(
             list = true, search = true,
             email = true,
-            same_lines = {"emailSuffix"},
             name = {"电子邮箱", "en:Department Email"},
             info = {"可以与该部门取得联系的电子邮箱。", "en:An E-mail address where the department can be contacted."})
     public String email;
@@ -63,7 +62,8 @@ public class Department extends AddModelBase implements Echo, Option {
     @ModelField(
             input_type = InputType.select,
             update_action = "update",
-            list = true, search = true, showLabel = false,
+            same_line = true, required = true, placeholder = "aaaHolder",
+            list = true, search = true, show_label = false,
             name = {"邮箱后缀", "en:Email Suffix"},
             info = {"邮箱后缀。", "en:Email Suffix."})
     public String emailSuffix;
@@ -84,33 +84,31 @@ public class Department extends AddModelBase implements Echo, Option {
     public long buildDate;
 
     @ModelField(
-            input_type = InputType.range_datetime, showLabel = false,
+            input_type = InputType.range_datetime,
             list = true, search = true,
             name = {"日期范围", "en:dateRange"}
     )
     public long dateRange;
 
     @Override
-    public Map<String, String> echoData(String echoGroup, Map<String, String> params) {
-        Map<String, String> map = new HashMap<>();
+    public void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder) {
         if ("aa".equals(echoGroup)) {
             String superior = params.get("superior");
             String manager = params.get("manager");
-            map.put("email", superior + "===" + manager);
-            map.put("phone", superior + "&&&" + manager);
+            dataBuilder.addData("email", superior + "===" + manager);
+            dataBuilder.addData("phone", superior + "&&&" + manager);
             if ("a".equals(superior) || "c".equals(superior)) {
-                map.put("active", "false");
-                map.put("emailSuffix", "@qq.com");
+                dataBuilder.addData("active", "false");
+                dataBuilder.addData("emailSuffix", "@qq.com");
             } else {
-                map.put("active", "true");
-                map.put("emailSuffix", "@163.com");
+                dataBuilder.addData("active", "true");
+                dataBuilder.addData("emailSuffix", "@163.com");
             }
-            map.put("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            dataBuilder.addData("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         } else if ("bb".equals(echoGroup)) {
         } else if ("cc".equals(echoGroup)) {
-            map.put("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            dataBuilder.addData("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         }
-        return map;
     }
 
 
@@ -137,7 +135,7 @@ public class Department extends AddModelBase implements Echo, Option {
     }
 
     @Override
-    public Map<String, String> editData(String id) throws Exception {
+    public Map<String, String> editData(String id) {
         Map<String, String> map = showData(id);
         map.put("emailSuffix", null);
         return map;

@@ -1,7 +1,18 @@
 package qingzhou.agent.impl;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+
 import qingzhou.crypto.Cipher;
-import qingzhou.deployer.*;
+import qingzhou.deployer.App;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
@@ -11,9 +22,6 @@ import qingzhou.http.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.ModelInfo;
-
-import java.io.*;
-import java.nio.charset.StandardCharsets;
 
 class Service implements Process {
     private final Http http;
@@ -104,10 +112,10 @@ class Service implements Process {
 
         // 将 request 收集的 session 参数，通过 response 回传到调用端
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        Serializable customizedDataObject = response.getCustomizedDataObject();
-        if (customizedDataObject != null) { // 数据清洗提炼，减少传输压力
+        Serializable appData = response.getAppData();
+        if (appData != null) { // 数据清洗提炼，减少传输压力
             ResponseImpl liteResponse = new ResponseImpl();
-            liteResponse.useCustomizedResponse(customizedDataObject);
+            liteResponse.setData(appData);
             response = liteResponse;
         }
         response.getParametersInSession().putAll(request.getParametersInSession());

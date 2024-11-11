@@ -12,12 +12,12 @@
 
 	%>
 	<div class="form-group" id="form-item-<%=fieldName%>">
-		<label for="<%=fieldName%>" class="col-sm-4">
+		<label class="col-sm-4">
 			<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>
 			<%
 				String fieldInfo = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
 				if (fieldInfo != null) {
-					out.print("<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-question-sign'></i></span>");
+					out.print("<span class='tooltips' data-tip='" + fieldInfo + "' data-tip-arrow='bottom-right'><i class='icon icon-info-sign'></i></span>");
 				}
 			%>
 		</label>

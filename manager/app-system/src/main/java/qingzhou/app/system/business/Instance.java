@@ -295,7 +295,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
     public void monitor(Request request) throws Exception {
         invokeOnAgent(request, request.getId());
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        tempData.set(response.getDataMap()); // dataList 不应为空，来自：qingzhou.app.system.Agent.monitor（xxx）
+        tempData.set((Map<String, String>) response.getInternalData()); // dataList 不应为空，来自：qingzhou.app.system.Agent.monitor（xxx）
         getAppContext().invokeSuperAction(request); // 触发调用下面的 monitorData（使用 tempData）；
         tempData.remove();
     }

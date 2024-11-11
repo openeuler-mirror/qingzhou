@@ -258,9 +258,9 @@
 
 <script>
     var global_setting = {
-        "DOWNLOAD_FILE_NAMES_SP": '<%=DeployerConstants.DOWNLOAD_FILE_NAMES_SP%>',
-        "downdloadGroupSepara": '<%=DeployerConstants.DOWNLOAD_FILE_GROUP_SP%>',
-        "downloadFileNames": '<%=DeployerConstants.DOWNLOAD_FILE_NAMES%>',
+        "DOWNLOAD_FILE_NAMES_SP": '<%=DownloadData.DOWNLOAD_FILE_NAMES_SP%>',
+        "downdloadGroupSepara": '<%=DownloadData.DOWNLOAD_FILE_GROUP_SP%>',
+        "downloadFileNames": '<%=DownloadData.DOWNLOAD_FILE_NAMES%>',
         "checkOtp": '<%=LoginManager.LOGIN_OTP%>',
         "locale": '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',
         "pageLang": '<%=(I18n.isZH() ? "zh_cn" : "en")%>',
@@ -289,17 +289,17 @@
         "actionId_app_manage": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_MANAGE%>',
         "actionId_app_stop-delete": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + Delete.ACTION_DELETE%>' + ',' + '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_STOP%>',
 
-        "data": '<%=DeployerConstants.DASHBOARD_FIELD_DATA%>',
-        "unit": '<%=DeployerConstants.DASHBOARD_FIELD_UNIT%>',
-        "fields": '<%=DeployerConstants.DASHBOARD_FIELD_FIELDS%>',
-        "info": '<%=DeployerConstants.DASHBOARD_FIELD_INFO%>',
-        "title": '<%=DeployerConstants.DASHBOARD_FIELD_TITLE%>',
-        "max": '<%=DeployerConstants.DASHBOARD_FIELD_MAX%>',
-        "used": '<%=DeployerConstants.DASHBOARD_FIELD_USED%>',
-        "basicData": '<%=DeployerConstants.DASHBOARD_FIELD_BASIC_DATA%>',
-        "gaugeData": '<%=DeployerConstants.DASHBOARD_FIELD_GAUGE_DATA%>',
-        "histogramData": '<%=DeployerConstants.DASHBOARD_FIELD_HISTOGRAM_DATA%>',
-        "shareDatasetData": '<%=DeployerConstants.DASHBOARD_FIELD_SHARE_DATASET_DATA%>'
+        "data": '<%=DashboardDataBuilder.DASHBOARD_FIELD_DATA%>',
+        "unit": '<%=DashboardDataBuilder.DASHBOARD_FIELD_UNIT%>',
+        "fields": '<%=DashboardDataBuilder.DASHBOARD_FIELD_FIELDS%>',
+        "info": '<%=DashboardDataBuilder.DASHBOARD_FIELD_INFO%>',
+        "title": '<%=DashboardDataBuilder.DASHBOARD_FIELD_TITLE%>',
+        "max": '<%=DashboardDataBuilder.DASHBOARD_FIELD_MAX%>',
+        "used": '<%=DashboardDataBuilder.DASHBOARD_FIELD_USED%>',
+        "basicData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_BASIC_DATA%>',
+        "gaugeData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_GAUGE_DATA%>',
+        "histogramData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HISTOGRAM_DATA%>',
+        "shareDatasetData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_SHARE_DATASET_DATA%>'
     };
 
     <%-- 显示第一个应用的管理页面--%>

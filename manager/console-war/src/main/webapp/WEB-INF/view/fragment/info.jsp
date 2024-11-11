@@ -1,18 +1,8 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-	Map<String, List<String>> groupedFields = new LinkedHashMap<>();
-	for (String fieldName : infoData.keySet()) {
-		ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
-		if (modelField == null) continue; // 用户模块没有 enableOtp 字段，但配置的数据是有的，这里会为 null
-		List<String> fields = groupedFields.computeIfAbsent(modelField.getGroup(), s -> new ArrayList<>());
-		fields.add(fieldName);
-	}
-
-	boolean hasGroup = false;
-	if (!groupedFields.isEmpty()) {
-		hasGroup = groupedFields.size() > 1 || Utils.notBlank(groupedFields.keySet().iterator().next());
-	}
+	Map<String, List<String>> groupedFields = PageUtil.groupedFields(infoData.keySet(), modelInfo);
+	boolean hasGroup = PageUtil.hasGroup(groupedFields);
 
 	Double width = 99.6 / Math.min(3, groupedFields.size());
 	ItemInfo[] groupInfos = modelInfo.getGroupInfos();
@@ -39,13 +29,13 @@
 					ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
 
 					String needHidden = "";
-					if (modelField.isHidden()){
+					if (modelField.isHidden()) {
 						needHidden = "display:none";
 					}
 					String msg = I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName);
 					String info = "";
 					if (msg != null && !msg.startsWith("model.field.")) {
-						info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-question-sign' data-tip-arrow=\"right\"></i></span>";
+						info = "<span class='tooltips' data-tip='" + msg + "'><i class='icon icon-info-sign' data-tip-arrow=\"right\"></i></span>";
 					}
 					String fieldValue = infoData.get(fieldName);
 					fieldValue = fieldValue != null ? fieldValue : "";

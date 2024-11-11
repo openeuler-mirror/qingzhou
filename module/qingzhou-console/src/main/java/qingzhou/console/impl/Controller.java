@@ -5,8 +5,8 @@ import qingzhou.config.Console;
 import qingzhou.console.ContextHelper;
 import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.AppPageData;
 import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
@@ -109,7 +109,7 @@ public class Controller implements ModuleActivator {
             String docBase = consoleApp.getAbsolutePath();
             contextPath = console.getWeb().getContextRoot();
             servletContainer.addWebapp(contextPath, docBase, new Properties() {{
-                setProperty("webResources", "/=" + FileUtil.newFile(moduleContext.getTemp(), DeployerConstants.DOWNLOAD_PAGE_ROOT_DIR).getAbsoluteFile());
+                setProperty("webResources", "/=" + FileUtil.newFile(moduleContext.getTemp(), AppPageData.DOWNLOAD_PAGE_ROOT_DIR).getAbsoluteFile());
             }});
             logger.info("Open a browser to access the Qingzhou console: http://localhost:" + console.getWeb().getPort() + contextPath);
         }

@@ -18,8 +18,6 @@ public interface Combined {
         CombinedData header(String header);
 
         CombinedData model(String model);
-
-        CombinedData type(String type);
     }
 
     interface ShowData extends CombinedData {

@@ -8,17 +8,17 @@ import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 
-@Model(code = "user", icon = "user",
+@Model(code = User.code, icon = "user",
         menu = ExampleMain.MENU_1, order = 1,
         name = {"用户", "en:User management"},
         info = {"用户管理", "en:User management."})
 public class User extends AddModelBase implements Group, Option, Echo {
+    public static final String code = "user-model-code";
     @ModelField(
             group = "base",
             required = true,
@@ -62,7 +62,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.sortable,
-            list = true,
+            list = true, index = 3,
             separator = "@",
             name = {"项目1", "en:1"})
     public String subjects1;
@@ -82,13 +82,13 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.sortable_checkbox,
-            separator = "#",
+            separator = "#", index = 2,
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
             input_type = InputType.sortable_checkbox,
-            separator = "#",
+            separator = "#", index = 1,
             name = {"项目3", "en:3"})
     public String subjects3;
 
@@ -106,7 +106,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            form_fields = {"name", "notes", "gender", "checkbox", "b"},
+            form_fields = {"id", "gender", "checkbox", "notes", "b"},
             action_type = ActionType.sub_form, sub_form_submit_on_open = true,
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
@@ -122,14 +122,13 @@ public class User extends AddModelBase implements Group, Option, Echo {
                     String value = request.getParameter(key);
                     map.put(key, value);
                 }
+                request.getResponse().setData(map);
             } else if ("python".equals(checkbox)) {
-                map.put("success", "false");
-                map.put("msg", "处理异常");
+                request.getResponse().setSuccess(false);
+                request.getResponse().setMsg("处理异常");
             } else if ("js".equals(checkbox)) {
-                map.put("success", "true");
-                map.put("msg", "处理完成！");
+                request.getResponse().setMsg("处理完成！");
             }
-            request.getResponse().useCustomizedResponse(map);
         } else {
             request.getResponse().setContentType("text/html;charset=UTF-8");
             String html = "<div style='background-color: #fff;color: #333;padding: 10px;'>" +
@@ -146,7 +145,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
                     "</tr></tbody>" +
                     "</table>" +
                     "</div>";
-            request.getResponse().useCustomizedResponse(html);
+            request.getResponse().setData(html);
         }
     }
 
@@ -238,29 +237,24 @@ public class User extends AddModelBase implements Group, Option, Echo {
     }
 
     @Override
-    public Map<String, String> echoData(String echoGroup, Map<String, String> params) {
+    public void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder) {
         if ("aa".equals(echoGroup)) {
-            Map<String, String> map = new HashMap<>();
             if ("0".equals(params.get("gender"))) {
-                map.put("position", "003");
-                map.put("department", "一部");
-                map.put("subjects1", "123," + params.get("gender"));
-                map.put("checkbox", "python");
-                map.put("subjects2", "3,2");
-                map.put("kv", "a=123@b=addf");
+                dataBuilder.addData("position", "003");
+                dataBuilder.addData("department", "一部");
+                dataBuilder.addData("subjects1", "123," + params.get("gender"));
+                dataBuilder.addData("checkbox", "python");
+                dataBuilder.addData("subjects2", "3,2");
+                dataBuilder.addData("kv", "a=123@b=addf");
             } else {
-                map.put("position", "002");
-                map.put("department", "二部");
-                map.put("subjects1", params.get("gender"));
-                map.put("checkbox", "js");
-                map.put("subjects2", "1,2");
-                map.put("kv", "hello=world@lang=");
+                dataBuilder.addData("position", "002");
+                dataBuilder.addData("department", "二部");
+                dataBuilder.addData("subjects1", params.get("gender"));
+                dataBuilder.addData("checkbox", "js");
+                dataBuilder.addData("subjects2", "1,2");
+                dataBuilder.addData("kv", "hello=world@lang=");
             }
-            map.put("notes", params.get("gender"));
-
-            return map;
-        } else {
-            return Collections.emptyMap();
+            dataBuilder.addData("notes", params.get("gender"));
         }
     }
 
