@@ -1,10 +1,10 @@
 package qingzhou.app.model;
 
-import java.util.Random;
-
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.app.ExampleMain;
+
+import java.util.Random;
 
 @Model(code = "dashboard", icon = "dashboard", menu = ExampleMain.MENU_1,
         entrance = Dashboard.ACTION_DASHBOARD,
@@ -110,4 +110,8 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         dataBuilder.addData(shareDatasets);
     }
 
+    @Override
+    public int period() {
+        return 3000;
+    }
 }

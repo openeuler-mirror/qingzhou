@@ -1,11 +1,34 @@
 package qingzhou.deployer.impl;
 
-import qingzhou.api.*;
+import qingzhou.api.ActionType;
+import qingzhou.api.Item;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.Request;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Chart;
+import qingzhou.api.type.Combined;
+import qingzhou.api.type.Dashboard;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Echo;
+import qingzhou.api.type.Export;
 import qingzhou.api.type.List;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Show;
+import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.*;
+import qingzhou.deployer.ChartDataBuilder;
+import qingzhou.deployer.CombinedDataBuilder;
+import qingzhou.deployer.DashboardDataBuilder;
+import qingzhou.deployer.DownloadData;
+import qingzhou.deployer.EchoDataBuilder;
+import qingzhou.deployer.ListData;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.registry.AppInfo;
@@ -18,7 +41,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 class SuperAction {
@@ -505,8 +536,12 @@ class SuperAction {
             info = {"获取该组件的组合监视概览信息。",
                     "en:Obtain an overview of the combined monitoring of the component."})
     public void dashboard(Request request) {
+        Dashboard instance = (Dashboard) this.instance;
         DashboardDataBuilder dashboardBuilder = new DashboardDataBuilder();
-        ((Dashboard) instance).dashboardData(request.getId(), dashboardBuilder);
+
+        instance.dashboardData(request.getId(), dashboardBuilder);
+
+        dashboardBuilder.setPeriod(instance.period());
 
         dashboardBuilder.transformData();// 转换为前端需要的格式
 
