@@ -598,7 +598,9 @@ function updateFormData(thisForm, data) {
             case "select":
                 var $li = $("li[data-value='" + value + "']", formItem);
                 if ($li.length > 0) {
-                    $li.each(selectOption);
+                    $li.each(function (index,ele){
+                        selectOption.call(ele,false)
+                    });
                 } else {
                     $("input[type='hidden']", formItem).val(value);
                     $("input[type='hidden']", formItem).attr("format", value);
