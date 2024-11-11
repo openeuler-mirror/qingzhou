@@ -1,7 +1,7 @@
 package qingzhou.deployer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import qingzhou.api.type.Combined;
@@ -41,7 +41,7 @@ public class CombinedDataBuilder extends ResponseData implements Combined.DataBu
     }
 
     public static class Show extends CombinedDataImpl implements Combined.ShowData {
-        public Map<String, String> data = new HashMap<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public Map<String, String> data = new LinkedHashMap<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
         public void addData(String fieldName, String fieldValue) {

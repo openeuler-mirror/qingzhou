@@ -1,17 +1,13 @@
 package qingzhou.app.model;
 
 import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
 import qingzhou.api.ModelField;
-import qingzhou.api.Request;
 import qingzhou.api.type.Combined;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Update;
 import qingzhou.app.AddModelBase;
 
 
 @Model(code = TransactionCombination.code, icon = "sitemap",
-        menu = qingzhou.app.ExampleMain.MENU_11, order = 1,
+        menu = qingzhou.app.ExampleMain.MENU_1, order = 5,
         name = {"事务信息", "en:Transaction Info"},
         info = {"事务信息示例，展示组合详情查看。", "en:Transaction information example, showing combination details to view."})
 public class TransactionCombination extends AddModelBase implements Combined {

@@ -138,7 +138,7 @@
 				if (batchActions.length > 0) {
 					otherTh += 1;
 			%>
-			<th class="custom-checkbox">
+			<th class="custom-checkbox" style="width: 3%">
 				<input type="checkbox" class="allcheck"/>
 			</th>
 			<%
@@ -146,7 +146,7 @@
 				if (modelInfo.isShowOrderNumber()) {
 					otherTh += 1;
 			%>
-			<th class="sequence"><%=I18n.getKeyI18n("page.list.order")%>
+			<th class="sequence" style="width: 5%"><%=I18n.getKeyI18n("page.list.order")%>
 			</th>
 			<%
 				}
