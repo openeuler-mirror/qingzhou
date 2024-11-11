@@ -2,7 +2,7 @@
 
 <%@ include file="../fragment/head.jsp" %>
 
-<div class="bodyDiv" bindingId="<%=randBindingId%>">
+<div class="bodyDiv">
 	<%@ include file="../fragment/breadcrumb.jsp" %>
 	<%
 		String contextPath = request.getContextPath();

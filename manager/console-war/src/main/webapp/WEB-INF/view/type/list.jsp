@@ -30,7 +30,7 @@
 	boolean isDisabled = false; // for field_type.jsp
 %>
 
-<div class="bodyDiv" bindingId="<%=randBindingId%>">
+<div class="bodyDiv">
 	<%-- 面包屑分级导航 --%>
 	<%@ include file="../fragment/breadcrumb.jsp" %>
 

@@ -161,6 +161,9 @@ function bindTabEvent() {
  * 设置(如绑定事件或设置初始值等) 或 重新设置
  */
 function setOrReset() {
+    $("section.main-body", document.body).each(function () {
+        $(this).children(".bodyDiv").attr("bindingId", $(this).attr("bindingId"));
+    });
     // 菜单区域禁止鼠标右键
     $(".main-sidebar").unbind("contextmenu").bind("contextmenu", function (e) {
         e.preventDefault();
@@ -573,7 +576,7 @@ function updateFormData(thisForm, data) {
     for (let key in data) {
         var value = data[key];
         var formItem = $("#form-item-" + key + " > div:first", thisForm);
-        var type = formItem.attr("type")
+        var type = formItem.attr("type");
         switch (type) {
             case "bool":
                 var val = $("input[name='" + key + "']", formItem).val();
@@ -595,7 +598,7 @@ function updateFormData(thisForm, data) {
                 var $li = $("li[data-value='" + value + "']", formItem);
                 if ($li.length > 0) {
                     $li.each(function (index,ele){
-                        selectOption.call(ele,false)
+                        selectOption.call(ele,false);
                     });
                 } else {
                     $("input[type='hidden']", formItem).val(value);
@@ -907,16 +910,16 @@ function bindEventForListPage() {
     });
 
     $("section.main-body", document.body).each(function () {
-        var preSelector = "";//"section[bindingId='" + $(this).attr("bindingId") + "'] ";
+        var domSelector = "section.main-body[bindingId='" + $(this).attr("bindingId") + "']";
         var restrictedArea = $(this).parent();
         // 搜索按钮
-        qz.bindFill(preSelector + ".search-btn a", preSelector + ".main-body:first", false, false, restrictedArea, null);
+        qz.bindFill(domSelector + " .search-btn a", domSelector, false, false, restrictedArea, null);
         // 列表页表格顶部操作按钮
-        qz.bindFill(preSelector + ".tools-group a:not([act-confirm])", preSelector + ".bodyDiv:first", false, false, restrictedArea, null);
+        qz.bindFill(domSelector + " .tools-group a:not([act-confirm])", domSelector + ">.bodyDiv:first", false, false, restrictedArea, null);
         // 分页(页码及上一页、下一页、首页、尾页等)
-        qz.bindFill(preSelector + "ul.pager.pager-loose a", preSelector + ".main-body:first", false, false, restrictedArea, null);
+        qz.bindFill(domSelector + " ul.pager.pager-loose a", domSelector, false, false, restrictedArea, null);
         // 列表页表格单元格操作
-        qz.bindFill(preSelector + "table a.dataid", preSelector + ".bodyDiv:first", false, false, restrictedArea, null);
+        qz.bindFill(domSelector + " table a.dataid", domSelector + ">.bodyDiv:first", false, false, restrictedArea, null);
 
         $("table.qz-data-list a.qz-action-link", restrictedArea).each(function () {
             var actionTypeMethod = bindingActions[$(this).attr("action-type")];
@@ -941,7 +944,8 @@ function bindEventForListPage() {
                 } else {
                     if ($(this).attr("action-type")) {
                         // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-                        qz.bindFill("table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "'][action-id!='" + getSetting("actionId_app_manage") + "']" + actionIdSelector, preSelector + ".main-body:first", false, false, restrictedArea, null);
+                        var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "'][action-id!='" + getSetting("actionId_app_manage") + "']" + actionIdSelector;
+                        qz.bindFill(selector, domSelector, false, false, restrictedArea, null);
                     } else {
                         console.error("Element binding action failed. Element html:" + $(this)[0].outerHTML);
                     }
@@ -980,7 +984,7 @@ function bindEventForListPage() {
 
     //列表修改值
     $('table .switch-btn, table .input-class, table .nice-select').each(function () {
-        var that = this
+        var that = this;
         if ($(this).attr("class").includes("switch")) {
             $(this).unbind("click").bind("click", function () {
                 var thText = $(this).closest('table').find('thead th').eq($(this).closest('td').index()).text();
@@ -996,10 +1000,10 @@ function bindEventForListPage() {
                     $(".circle", that).toggleClass("switch-right");
                     $("input", that).val($("input", that).val() === "true" ? false : true);
                     closeLayer(index);
-                    updateListValue(null, $("input", $(that)))
+                    updateListValue(null, $("input", $(that)));
                 }, function () {
                 });
-            })
+            });
         } else {
             $("input", $(this)).bind("change", function (event) {
                 updateListValue(event, this);
@@ -1008,17 +1012,17 @@ function bindEventForListPage() {
     });
 
     function updateListValue(even, target) {
-        let fieldStr = $(target).attr("name")
-        let v = $(target).val()
+        let fieldStr = $(target).attr("name");
+        let v = $(target).val();
         let tempUrl = $(target).closest('td').attr("action");
         if (tempUrl === undefined || tempUrl === "") {
             return;
         }
-        let resData
+        let resData;
         if (Array.isArray(v)) {
-            resData = [{}]
+            resData = [{}];
             v.forEach(function (currentV) {
-                resData.push({"name": fieldStr, "value": currentV})
+                resData.push({"name": fieldStr, "value": currentV});
             });
         } else {
             resData = {};
@@ -1039,7 +1043,6 @@ function bindEventForListPage() {
     $("select[multiple='multiple']").on("change", function (event) {
         updateListValue(event, this);
     });
-
 }
 
 //返回列表页面
