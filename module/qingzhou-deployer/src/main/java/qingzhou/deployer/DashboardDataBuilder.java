@@ -1,33 +1,55 @@
 package qingzhou.deployer;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import qingzhou.api.type.Dashboard;
 
-import java.io.Serializable;
-import java.util.*;
+public class DashboardDataBuilder extends ResponseData implements Dashboard.DataBuilder {
+    // 定义仪表盘字段数据标识
+    public static final String DASHBOARD_FIELD_INFO = "info";
+    public static final String DASHBOARD_FIELD_TITLE = "title";
+    // 定义仪表盘字段单位标识
+    public static final String DASHBOARD_FIELD_UNIT = "unit";
+    // 定义仪表盘字段字段标识，值类型为String[]
+    public static final String DASHBOARD_FIELD_FIELDS = "fields";
+    // 定义仪表盘字段数据标识，值类型为List<String[]>
+    public static final String DASHBOARD_FIELD_DATA = "data";
+    // 定义仪表盘字段使用量标识，前端返回值使用
+    public static final String DASHBOARD_FIELD_USED = "used";
+    // 定义仪表盘字段最大值标识，前端返回值使用
+    public static final String DASHBOARD_FIELD_MAX = "max";
+    // 定义仪表盘图表的键值数据标识，前端返回值使用
+    public static final String DASHBOARD_FIELD_BASIC_DATA = Basic.class.getSimpleName();
+    // 定义仪表盘图表的仪表盘数据标识，前端返回值使用
+    public static final String DASHBOARD_FIELD_GAUGE_DATA = Gauge.class.getSimpleName();
+    // 定义仪表盘图表的直方图数据标识，前端返回值使用
+    public static final String DASHBOARD_FIELD_HISTOGRAM_DATA = Histogram.class.getSimpleName();
+    // 定义仪表盘图表的共享数据集数据标识，前端返回值使用
+    public static final String DASHBOARD_FIELD_SHARE_DATASET_DATA = ShareDataset.class.getSimpleName();
 
-public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable {
     public List<Dashboard.DashboardData[]> data = new LinkedList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
     public void transformData() {
         for (Dashboard.DashboardData[] dashboardData : data) {
             for (Dashboard.DashboardData dashboard : dashboardData) {
                 if (dashboard instanceof Gauge) {
-                    processGaugeOrHistogram((Gauge) dashboard);
-                } else if (dashboard instanceof ShareDataset) {
-                    processShareDataset((ShareDataset) dashboard);
+                    sumUsedMax((Gauge) dashboard);
                 }
             }
         }
     }
 
-    private void processGaugeOrHistogram(DashboardDataBuilder.Gauge gauge) {
+    private void sumUsedMax(DashboardDataBuilder.Gauge gauge) {
         java.util.List<String[]> dataList = gauge.data;
         String[] fields = gauge.fields;
         int usedIndex = -1;
         int maxIndex = -1;
         for (int i = 0; i < fields.length; i++) {
             String field = fields[i];
-            if (field.equals(gauge.valueKey)) {
+            if (field.equals(gauge.usedKey)) {
                 usedIndex = i;
             } else if (field.equals(gauge.maxKey)) {
                 maxIndex = i;
@@ -54,22 +76,6 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
         gauge.used = String.valueOf(totalUsed);
     }
 
-    private void processShareDataset(DashboardDataBuilder.ShareDataset shareDataset) {
-        try {
-            java.util.List<String[]> dataList = new LinkedList<>();
-            Map<String, String> data = shareDataset.sourceData;
-            Set<String> keySet = data.keySet();
-            for (String key : keySet) {
-                java.util.List<String> fieldData = new LinkedList<>();
-                fieldData.add(key);
-                fieldData.add(data.get(key));
-                dataList.add(fieldData.toArray(new String[0]));
-            }
-            shareDataset.data = dataList;
-        } catch (Exception ignored) {
-        }
-    }
-
     @Override
     public <T> T buildData(Class<? extends Dashboard.DashboardData> dataType) {
         if (dataType == Dashboard.Basic.class) return (T) new Basic();
@@ -84,20 +90,13 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
         this.data.add(dashboardData);
     }
 
-    public static abstract class DashboardDataImpl implements Dashboard.DashboardData, Serializable {
+    public static abstract class DashboardDataImpl extends ResponseData implements Dashboard.DashboardData {
         public String title; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
-        public String info; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String type = this.getClass().getSimpleName();
 
         @Override
         public Dashboard.DashboardData title(String title) {
             this.title = title;
-            return this;
-        }
-
-        @Override
-        public Dashboard.DashboardData info(String info) {
-            this.info = info;
             return this;
         }
     }
@@ -106,20 +105,27 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
         public Map<String, String> data = new LinkedHashMap<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
-        public Dashboard.Basic put(String key, String value) {
+        public Dashboard.Basic addData(String key, String value) {
             data.put(key, value);
             return this;
         }
     }
 
     public static class Gauge extends DashboardDataImpl implements Dashboard.Gauge {
+        public String info; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String[] fields; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public List<String[]> data = new LinkedList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
-        public String valueKey; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public String usedKey; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String maxKey; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String unit; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String max; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String used; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+
+        @Override
+        public Dashboard.Gauge info(String info) {
+            this.info = info;
+            return this;
+        }
 
         @Override
         public Dashboard.Gauge fields(String[] fields) {
@@ -140,8 +146,8 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
         }
 
         @Override
-        public Dashboard.Gauge statusKey(String statusKey) {
-            this.valueKey = statusKey;
+        public Dashboard.Gauge usedKey(String usedKey) {
+            this.usedKey = usedKey;
             return this;
         }
 
@@ -156,13 +162,11 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
     }
 
     public static class ShareDataset extends DashboardDataImpl implements Dashboard.ShareDataset {
-        public Map<String, String> sourceData = new LinkedHashMap<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
-
-        public java.util.List<String[]> data = new LinkedList<>();
+        public java.util.List<String[]> data = new LinkedList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
-        public Dashboard.Basic put(String key, String value) {
-            sourceData.put(key, value);
+        public Dashboard.Basic addData(String key, String value) {
+            data.add(new String[]{key, value});
             return this;
         }
     }

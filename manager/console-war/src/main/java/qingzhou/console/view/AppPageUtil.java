@@ -1,17 +1,23 @@
 package qingzhou.console.view;
 
-import qingzhou.api.Response;
-import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.rest.RestContext;
-import qingzhou.deployer.*;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.logger.Logger;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import qingzhou.api.Response;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.rest.RestContext;
+import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.AppListener;
+import qingzhou.deployer.AppPageData;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.logger.Logger;
 
 class AppPageUtil {
     static void doPage(String actionPage, RestContext restContext) throws Exception {
@@ -19,7 +25,7 @@ class AppPageUtil {
         HttpServletRequest servletRequest = restContext.req;
         HttpServletResponse servletResponse = restContext.resp;
 
-        File appPageCacheDir = FileUtil.newFile(SystemController.getModuleContext().getTemp(), DeployerConstants.DOWNLOAD_PAGE_ROOT_DIR, request.getApp());
+        File appPageCacheDir = FileUtil.newFile(SystemController.getModuleContext().getTemp(), AppPageData.DOWNLOAD_PAGE_ROOT_DIR, request.getApp());
         File actionPageFile = FileUtil.newFile(appPageCacheDir, actionPage);
         if (!actionPageFile.exists()) {
             requestPage(request.getApp(), appPageCacheDir, actionPage);
@@ -38,19 +44,19 @@ class AppPageUtil {
         RequestImpl fileReq = new RequestImpl();
         fileReq.setAppName(DeployerConstants.APP_SYSTEM);
         fileReq.setModelName(DeployerConstants.MODEL_AGENT);
-        fileReq.setActionName(DeployerConstants.ACTION_DOWNLOAD_PAGE);
-        fileReq.setParameter(DeployerConstants.DOWNLOAD_PAGE_APP, targetAppName);
+        fileReq.setActionName(AppPageData.ACTION_DOWNLOAD_PAGE);
+        fileReq.setParameter(AppPageData.DOWNLOAD_PAGE_APP, targetAppName);
         String pageRootDirName = getPageRootDirName(actionPage);
-        fileReq.setParameter(DeployerConstants.DOWNLOAD_PAGE_DIR, pageRootDirName);
+        fileReq.setParameter(AppPageData.DOWNLOAD_PAGE_DIR, pageRootDirName);
 
         Map<String, Response> invokeOnInstances = SystemController.getService(ActionInvoker.class)
                 .invokeOnInstances(fileReq, SystemController.getAppInstances(targetAppName).get(0));
         Response next = invokeOnInstances.values().iterator().next();
         ResponseImpl res = (ResponseImpl) next;
-        if (res.isSuccess() && res.getBodyBytes() != null) {
+        if (res.isSuccess() && res.getInternalData() != null) {
             File tempFile = FileUtil.newFile(appPageCacheDir, pageRootDirName + ".zip");
             try {
-                FileUtil.writeFile(tempFile, res.getBodyBytes(), false);
+                FileUtil.writeFile(tempFile, (byte[]) res.getInternalData(), false);
                 FileUtil.unZipToDir(tempFile, appPageCacheDir);
                 SystemController.getService(Deployer.class).addAppListener(new AppListener() {
                     @Override

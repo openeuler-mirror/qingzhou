@@ -78,13 +78,21 @@ public @interface ModelField {
 
     boolean plain_text() default false; // 表单元素级联控制只读的事件绑定 不会传值 样式为无样式
 
+    String placeholder() default "";
+
     boolean readonly() default false; // 在form页面显示为无样式 会传值 样式为readonly
 
-    boolean show() default true; // 是否显示在列表中。
+    boolean show() default true; // 是否显示在 show 中。
+
+    boolean show_label() default true;       // 表单页是否显示标签名
+
+    boolean same_line() default false;
 
     boolean hidden() default false; // 字段是否隐藏
 
     boolean list() default false; // 是否显示在列表中。
+
+    int index() default -1; // 排到指定的索引位置
 
     boolean search() default false; // 是否支持列头搜索
 
@@ -102,15 +110,9 @@ public @interface ModelField {
 
     String[] color() default {};
 
-    String[] same_lines() default {};
-
-    boolean showLabel() default true;       // 表单页是否显示标签名
-
     /**
      * 以下是 FieldType.Monitor 类型的信息
      */
 
     boolean numeric() default false;  // 该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
-
-    int order() default 0; //正序排练
 }

@@ -1,18 +1,18 @@
 package qingzhou.console.view.type;
 
+import java.net.URLEncoder;
+import java.util.Map;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.deployer.ActionInvoker;
-import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.DownloadData;
 import qingzhou.engine.util.Utils;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-import java.net.URLEncoder;
-import java.util.Map;
 
 public class DownloadView implements View {
     public static final String FLAG = "download";
@@ -21,7 +21,8 @@ public class DownloadView implements View {
     public void render(RestContext restContext) throws Exception {
         RequestImpl request = restContext.request;
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        String downloadName = response.getDownloadName();
+        DownloadData downloadData = (DownloadData) response.getInternalData();
+        String downloadName = downloadData.downloadName;
         if (Utils.isBlank(downloadName)) {
             downloadName = request.getId();
         }
@@ -32,7 +33,7 @@ public class DownloadView implements View {
         String encodedFileName = URLEncoder.encode(downloadName, "UTF-8");
         servletResponse.setHeader("Content-disposition", "attachment; filename=" + encodedFileName);
 
-        byte[] content = response.getBodyBytes();
+        byte[] content = downloadData.block;
         Map<String, String> result = response.getParameters();
         while (true) {
             if (content == null || content.length == 0) break;
@@ -42,18 +43,18 @@ public class DownloadView implements View {
             outputStream.flush();
 
             // 判断是否需要续传
-            String s = result.get(DeployerConstants.DOWNLOAD_OFFSET);
+            String s = result.get(DownloadData.DOWNLOAD_OFFSET);
             if (s == null) break;
             long offset = Long.parseLong(s);
             if (offset <= 0) break;
 
             // 要续传
             RequestImpl req = new RequestImpl(request);
-            req.setParameter(DeployerConstants.DOWNLOAD_SERIAL_KEY, result.get(DeployerConstants.DOWNLOAD_SERIAL_KEY));
-            req.setParameter(DeployerConstants.DOWNLOAD_OFFSET, String.valueOf(offset));
+            req.setParameter(DownloadData.DOWNLOAD_SERIAL_KEY, result.get(DownloadData.DOWNLOAD_SERIAL_KEY));
+            req.setParameter(DownloadData.DOWNLOAD_OFFSET, String.valueOf(offset));
             ResponseImpl res = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(req);
             if (res.isSuccess()) {
-                content = res.getBodyBytes();
+                content = (byte[]) res.getInternalData();
                 result = res.getParameters();
             } else {
                 response.setSuccess(false);

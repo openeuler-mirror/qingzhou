@@ -1,5 +1,19 @@
 package qingzhou.console.controller;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
@@ -18,21 +32,22 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;
-import qingzhou.deployer.*;
+import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.JmxServiceAdapter;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
-import qingzhou.registry.*;
-
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ItemInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
@@ -100,13 +115,13 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return null;
     }
 
-    private static String[] getAllIds(String app, String model, ModelFieldInfo fieldInfo) {
+    private static String[] getAllIds(String app, String model) {
         RequestImpl req = new RequestImpl();
         req.setAppName(app);
         req.setModelName(model);
         req.setActionName(List.ACTION_ALL);
         ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
-        return res.getIds();
+        return (String[]) res.getInternalData();
     }
 
     public static ItemInfo[] getOptions(String qzApp, ModelInfo modelInfo, String fieldName) {
@@ -142,7 +157,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                     req.setActionName(Option.ACTION_OPTION);
                     req.setParameter(Option.FIELD_NAME_PARAMETER, fieldName);
                     ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
-                    return res.getItemInfos();
+                    return (ItemInfo[]) res.getInternalData();
                 }
             }
         }
@@ -162,7 +177,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(fieldName);
         String refModel = fieldInfo.getRefModel();
         if (Utils.notBlank(refModel)) {
-            String[] allIds = getAllIds(qzApp, refModel, fieldInfo);
+            String[] allIds = getAllIds(qzApp, refModel);
             if (allIds != null) {
                 return Arrays.stream(allIds).map(s -> new ItemInfo(s, new String[]{s, "en:" + s})).toArray(ItemInfo[]::new);
             }

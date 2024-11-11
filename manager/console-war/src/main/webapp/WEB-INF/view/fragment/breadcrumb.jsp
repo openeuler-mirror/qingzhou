@@ -7,7 +7,7 @@
             <span><%=I18n.getModelI18n(qzApp, "model." + qzModel)%></span>
             <span class="tooltips" data-tip='<%=I18n.getModelI18n(qzApp, "model.info." + qzModel)%>'
                   data-tip-arrow="bottom-right" style="line-height:25px;">
-                <i class="icon icon-question-sign"></i>
+                <i class="icon icon-info-sign"></i>
             </span>
         </div>
     </li>

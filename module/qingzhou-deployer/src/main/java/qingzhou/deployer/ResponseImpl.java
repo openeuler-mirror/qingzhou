@@ -1,11 +1,13 @@
 package qingzhou.deployer;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Response;
-import qingzhou.registry.ItemInfo;
-
-import java.io.Serializable;
-import java.util.*;
 
 public class ResponseImpl implements Response {
     private boolean success = true;
@@ -16,21 +18,8 @@ public class ResponseImpl implements Response {
     private final Map<String, String> parametersInSession = new HashMap<>();
     private final Map<String, String> headers = new LinkedHashMap<>();
     private final Map<String, Long> dateHeaders = new LinkedHashMap<>();
-    private byte[] bodyBytes;
-    private String downloadName;
-    private ItemInfo[] itemInfos;
-    private String[] ids;
-
-    private Serializable customizedDataObject;
-
-    private final Map<String, String> dataMap = new LinkedHashMap<>();
-
-    private final Map<String, String> errorInfo = new LinkedHashMap<>();
-
-    private List<String[]> dataList = new ArrayList<>();
-    private int totalSize = -1;
-    private int pageSize = -1;
-    private int pageNum = -1;
+    private Serializable appData;
+    private Serializable internalData;
 
     @Override
     public void setSuccess(boolean success) {
@@ -57,38 +46,6 @@ public class ResponseImpl implements Response {
 
     public MsgLevel getMsgLevel() {
         return this.msgLevel;
-    }
-
-    public void addErrorInfo(String key, String value) {
-        errorInfo.put(key, value);
-    }
-
-    public Map<String, String> getErrorInfo() {
-        return errorInfo;
-    }
-
-    public int getTotalSize() {
-        return totalSize;
-    }
-
-    public void setTotalSize(int totalSize) {
-        this.totalSize = totalSize;
-    }
-
-    public int getPageSize() {
-        return pageSize;
-    }
-
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-    }
-
-    public int getPageNum() {
-        return pageNum;
-    }
-
-    public void setPageNum(int pageNum) {
-        this.pageNum = pageNum;
     }
 
     @Override
@@ -126,33 +83,21 @@ public class ResponseImpl implements Response {
         return dateHeaders.keySet();
     }
 
-    public void setBodyBytes(byte[] bytes) {
-        bodyBytes = bytes;
-    }
-
-    public byte[] getBodyBytes() {
-        return bodyBytes;
-    }
-
-    public String getDownloadName() {
-        return downloadName;
-    }
-
-    public void setDownloadName(String downloadName) {
-        this.downloadName = downloadName;
-    }
-
-    public Serializable getCustomizedDataObject() {
-        return customizedDataObject;
+    public Serializable getAppData() {
+        return appData;
     }
 
     @Override
-    public void useCustomizedResponse(Serializable customizedDataObject) {
-        this.customizedDataObject = customizedDataObject;
+    public void setData(Serializable data) {
+        this.appData = data;
     }
 
-    public Map<String, String> getDataMap() {
-        return dataMap;
+    public Serializable getInternalData() {
+        return internalData;
+    }
+
+    public void setInternalData(Serializable internalData) {
+        this.internalData = internalData;
     }
 
     public Map<String, String> getParametersInSession() {
@@ -161,29 +106,5 @@ public class ResponseImpl implements Response {
 
     public Map<String, String> getParameters() {
         return parameters;
-    }
-
-    public ItemInfo[] getItemInfos() {
-        return itemInfos;
-    }
-
-    public void setItemInfos(ItemInfo[] itemInfos) {
-        this.itemInfos = itemInfos;
-    }
-
-    public void setDataList(List<String[]> dataList) {
-        this.dataList = dataList;
-    }
-
-    public List<String[]> getDataList() {
-        return dataList;
-    }
-
-    public String[] getIds() {
-        return ids;
-    }
-
-    public void setIds(String[] ids) {
-        this.ids = ids;
     }
 }

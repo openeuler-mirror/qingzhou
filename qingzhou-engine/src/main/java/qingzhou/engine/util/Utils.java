@@ -29,6 +29,37 @@ import javassist.CtClass;
 import javassist.LoaderClassPath;
 
 public class Utils {
+    public static int getIndex(Object[] objects, Object object) {
+        for (int i = 0; i < objects.length; i++) {
+            if (objects[i].equals(object)) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("not found");
+    }
+
+    /**
+     * 交换数组中两个元素的位置
+     *
+     * @param array  待交换元素的数组
+     * @param index1 第一个元素的下标
+     * @param index2 第二个元素的下标
+     */
+    public static void swap(Object[] array, int index1, int index2) {
+        // 如果入参为空，则返回null
+        if (array == null || array.length == 0) {
+            return;
+        }
+        // 如果下标越界，则返回原数组
+        if (index1 < 0 || index1 >= array.length || index2 < 0 || index2 >= array.length) {
+            return;
+        }
+        // 交换数组中两个元素的位置
+        Object temp = array[index1];
+        array[index1] = array[index2];
+        array[index2] = temp;
+    }
+
     public static <T> T doInThreadContextClassLoader(ClassLoader useLoader, InvokeInThreadContextClassLoader<T> invoker) throws Exception {
         if (useLoader == null) return invoker.invoke();
 
