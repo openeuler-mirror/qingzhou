@@ -61,7 +61,7 @@
                         customParams.append("&")
                                 .append(key)
                                 .append("=")
-                                .append(paramValue);
+                                .append(URLEncoder.encode(paramValue,"UTF-8"));
                     }
                     customParams.append("&").append("pageNum").append("=").append(pn);
                     customParams.append("&").append("pageSize").append("=").append(ps);
