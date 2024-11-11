@@ -263,10 +263,19 @@ public class PageUtil {
         return menuHtml.toString();
     }
 
+    private static boolean isEmptyMenu(MenuItem menuItem) {
+        if (!menuItem.getSubModelList().isEmpty()) return false;
+
+        for (MenuItem item : menuItem.getSubMenuList()) {
+            if (!isEmptyMenu(item)) return false;
+        }
+
+        return true;
+    }
+
     private static String buildParentMenu(int level, MenuItem menuItem, Request qzRequest, HttpServletRequest request, HttpServletResponse response, String modelMenuParameter) {
         // 空菜单不显示
-        if (menuItem.getSubModelList().isEmpty()
-                && menuItem.getSubMenuList().isEmpty()) {
+        if (isEmptyMenu(menuItem)) {
             return "";
         }
 

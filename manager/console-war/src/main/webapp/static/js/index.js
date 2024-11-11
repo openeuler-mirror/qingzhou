@@ -564,11 +564,7 @@ function echoItem(thisForm, params, item, echoGroup) {
     });
     var submitValue = params.filter(item => bindNames.has(item.name));
     $.post(url, submitValue, function (data) {
-        if (data.success === "true" || data.success === true) {
-            updateFormData(thisForm, data.data);
-        } else {
-            showMsg(data.msg, data.msg_level);
-        }
+        updateFormData(thisForm, data.data);
     }, "json");
 }
 
