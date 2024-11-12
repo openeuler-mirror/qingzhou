@@ -436,12 +436,18 @@
 
 	<%
 		if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
+			String url = PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST);
+			int endIndex = url.indexOf("?");
+			if (endIndex > 0) {
+				url = url.substring(0, endIndex);
+			}
+			url = url + "?markForAddCsrf&" + ListData.PAGE_NUM + "=";
 	%>
 	<div style="text-align: center; <%=(totalSize < 1) ? "display:none;" : ""%>">
 		<ul class="pager pager-loose" data-ride="pager" data-page="<%=pageNum%>"
 			recPerPage="<%=pageSize%>"
 			data-rec-total="<%=totalSize%>"
-			partLinkUri="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST + "?markForAddCsrf")%>&<%=ListData.PAGE_NUM%>="
+			partLinkUri="<%=url%>"
 			style="margin-left:33%;color:black;margin-bottom:6px;">
 		</ul>
 	</div>
