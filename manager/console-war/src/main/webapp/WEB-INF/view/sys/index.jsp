@@ -285,6 +285,7 @@
         "bindFailOtp": '<%=I18n.getKeyI18n("page.bindfail.otp")%>',
         "searchHiddenTip": '<%=I18n.getKeyI18n("page.search.hidden")%>',
         "downloadView": '<%=DownloadView.FLAG%>',
+        "htmlView": '<%=HtmlView.FLAG%>',
         "jsonView": '<%=JsonView.FLAG%>',
         "actionId_app_manage": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_MANAGE%>',
         "actionId_app_stop-delete": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + Delete.ACTION_DELETE%>' + ',' + '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_STOP%>',
