@@ -567,12 +567,103 @@ function echoItem(thisForm, params, item, echoGroup) {
     });
     var submitValue = params.filter(item => bindNames.has(item.name));
     $.post(url, submitValue, function (data) {
-        updateFormData(thisForm, data.data);
+        updateFormData(thisForm, data.data, data.options);
     }, "json");
 }
 
-
-function updateFormData(thisForm, data) {
+function updateFormData(thisForm, data, options) {
+    for (let option of options){
+        var formItem = $("#form-item-" + option.field + " > div:first", thisForm);
+        var type = formItem.attr("type");
+        let html = "";
+        let echoGroup = "";
+        switch (type) {
+            case "multiselect":
+                break;
+            case "select":
+                //渲染列表
+                html = "<li data-value=\"\" class=\"option focus\" format=\"\"></li>"
+                for(let op of option.options){
+                    //todo 国际化
+                    html += "<li data-value=\""+ op.name +"\" class=\"option\" format=\""+ op.name +"\">"+ op.i18n[0] +"</li>"
+                }
+                $("ul",formItem).html(html);
+                //渲染选中
+                var $li = $("li[data-value='" + option.value + "']", formItem);
+                if ($li.length > 0) {
+                    $li.each(function (index,ele){
+                        selectOption.call(ele,false);
+                    });
+                } else {
+                    $("input[type='hidden']", formItem).val(option.value);
+                    $("input[type='hidden']", formItem).attr("format", option.value);
+                    $("input[type='text']", formItem).attr("text", option.value).val(option.value);
+                    $("div.nice-select span", formItem).html(option.value);
+                }
+                break;
+            case "sortable_checkbox":
+                //渲染页面
+                for(let op of option.options){
+                    html += "<a draggable=\"true\" href=\"javascript:void(0);\">\n" +
+                        "        <input type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name +"\">\n" +
+                        "        <label>"+ op.i18n[0] +"\n" +
+                        "        </label>\n" +
+                        "    </a>";
+                }
+                $("div",formItem).html(html);
+                //选中
+                $("a", formItem).each(function () {
+                    var val = $("input[name=" + option.field + "]", this).attr("value");
+                    if (option.value.split(",").includes(val)) {
+                        $("input[name=" + option.field + "]", this).prop("checked", true);
+                    } else {
+                        $("input[name=" + option.field + "]", this).prop("checked", false);
+                    }
+                });
+                break;
+            case "checkbox":
+                //获取echoGroup
+                echoGroup = $(formItem).find("input[name='" + option.field + "']").attr("echoGroup");
+                //渲染页面
+                for(let op of option.options){
+                    html += "<label class=\"checkbox-inline checkbox-label checkbox-anim\">\n" +
+                        "    <input echoGroup=\""+ echoGroup +"\" type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name +"\">\n" +
+                        "    <i class=\"checkbox-i\"></i> "+ op.i18n[0] +"\n" +
+                        "</label>"
+                }
+                $(formItem).html(html);
+                //选中
+                $(formItem).find("input[name='" + option.field + "']").each(function () {
+                    if ($(this).attr("value") !== option.value) {
+                        $(this).prop("checked", false);
+                    } else {
+                        $(this).prop("checked", true);
+                    }
+                });
+                break;
+            case "radio":
+                //获取echoGroup
+                echoGroup = $(formItem).find("input[name='" + option.field + "']").attr("echoGroup");
+                for(let op of option.options){
+                    html += "<label class=\"radio-inline radio-label radio-anim\">\n" +
+                        "    <input type=\"radio\" name=\""+ option.field +"\" value=\""+ op.name +"\" echogroup=\""+ echoGroup +"\">\n" +
+                        "    <i class=\"radio-i\"></i> "+ op.i18n[0] +"\n" +
+                        "</label>";
+                }
+                $(formItem).html(html);
+                //选中
+                $(formItem).find("input[name='" + option.field + "']").each(function () {
+                    if ($(this).attr("value") !== option.value) {
+                        $(this).prop("checked", false);
+                    } else {
+                        $(this).prop("checked", true);
+                    }
+                });
+                break;
+        }
+    }
+    //因为重新渲染了option，所以需要重新绑定echoData
+    bindEchoItemEvent();
     for (let key in data) {
         var value = data[key];
         var formItem = $("#form-item-" + key + " > div:first", thisForm);
