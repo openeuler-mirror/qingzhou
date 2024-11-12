@@ -1579,9 +1579,15 @@ a.cancelfavorites:active {
 /* 表格样式 */
 th{
     white-space: nowrap !important;
-    font-size: 10px !important;
+    overflow-x: scroll;
 }
-
+table{
+    table-layout: auto!important;
+}
+td{
+    word-wrap: break-word !important;
+    white-space: normal; /* 允许文本换行 */
+}
 
 .dashboardPage .table-container {
     width: 99%;
