@@ -134,11 +134,11 @@ public class Department extends AddModelBase implements Echo, Option {
         if ("superior".equals(fieldName)) {
             return Item.of(new String[]{"a", "b", "c", "d", "e"});
         } else if ("manager".equals(fieldName)) {
-            return Item.of(new String[]{"jack", "lisa", "tom"});
+            return new Item[]{Item.of("tt",new String[]{"天天"}),Item.of("lisa",new String[]{"丽莎"}),Item.of("jack",new String[]{"杰克"}),Item.of("tom",new String[]{"汤姆"})};
         } else if ("emailSuffix".equals(fieldName)) {
             return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com", "@outlook.com", "@yahoo.com", "@tongtech.com", "@github.com"});
         }else if("multiselect".equals(fieldName)){
-            return new Item[]{Item.of("multi1",new String[]{"多选1"}),Item.of("multi2",new String[]{"多选2"}),Item.of("multi3",new String[]{"多选3"})};
+            return new Item[]{Item.of("multi1",new String[]{"多选1"}),Item.of("multi2",new String[]{"多选2"}),Item.of("multi3",new String[]{"多选3"}),Item.of("multi4",new String[]{"多选4"}),Item.of("multi5",new String[]{"多选5"}),Item.of("multi6",new String[]{"多选6"})};
         }
         return new Item[0];
     }
