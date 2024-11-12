@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import qingzhou.api.InputType;
 import qingzhou.api.type.Add;
@@ -394,18 +395,23 @@ public class ValidationFilter implements Filter<RestContext> {
 
             if (isSingleSelect(context.fieldInfo)) {
                 if (Arrays.stream(options).noneMatch(itemInfo -> itemInfo.getName().equals(context.parameterVal))) {
-                    return new String[]{"validation_options", Arrays.toString(options)};
+                    return optionsError(options);
                 }
             } else if (isMultipleSelect(context.fieldInfo)) {
                 String[] vals = context.parameterVal.split(context.fieldInfo.getSeparator());
                 for (String v : vals) {
                     if (Arrays.stream(options).noneMatch(itemInfo -> itemInfo.getName().equals(v))) {
-                        return new String[]{"validation_options", Arrays.toString(options)};
+                        return optionsError(options);
                     }
                 }
             }
 
             return null;
+        }
+
+        String[] optionsError(ItemInfo[] options) {
+            String collect = Arrays.stream(options).map(ItemInfo::getName).collect(Collectors.joining(","));
+            return new String[]{"validation_options", collect};
         }
     }
 
