@@ -49,7 +49,7 @@ public class DashboardDataBuilder extends ResponseData implements Dashboard.Data
     }
 
     private void sumUsedMax(DashboardDataBuilder.Gauge gauge) {
-        java.util.List<String[]> dataList = gauge.data;
+        List<String[]> dataList = gauge.data;
         String[] fields = gauge.fields;
         int usedIndex = -1;
         int maxIndex = -1;
@@ -168,7 +168,7 @@ public class DashboardDataBuilder extends ResponseData implements Dashboard.Data
     }
 
     public static class ShareDataset extends DashboardDataImpl implements Dashboard.ShareDataset {
-        public java.util.List<String[]> data = new LinkedList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
+        public List<String[]> data = new LinkedList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
         @Override
         public Dashboard.Basic addData(String key, String value) {
