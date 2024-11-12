@@ -1213,7 +1213,7 @@ function echoList(thisForm, params) {
         url = url.substring(0, url.lastIndexOf("/"));
     }
     url = url + "/echo" + (id ? "/" + id : "");
-
+    url = url.replace(getSetting("htmlView"), getSetting("jsonView"));
     $.post(url, params, function (data) {
         updateFormData(thisForm, data.data, data.options);
     }, "json");
