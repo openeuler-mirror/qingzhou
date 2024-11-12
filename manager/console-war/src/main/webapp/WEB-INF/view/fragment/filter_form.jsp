@@ -5,7 +5,7 @@
 %>
 
 <form name="filterForm" class="filterForm" method="POST"
-	  action="<%=RESTController.encodeURL( response, HtmlView.FLAG + "/" + qzApp + "/" + qzModel + "/" + qzAction + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>">
+	  action="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qzAction + (Utils.notBlank(encodedId) ? "/" + encodedId : ""))%>">
 	<div class="row" style="margin-top: 10px;">
 		<%
 			for (String fieldName : fieldsToListSearch) {
@@ -46,6 +46,10 @@
 					}
 					if (fieldValue == null) {
 						fieldValue = "";
+					}
+					if (modelField.getEchoGroup().length > 0) {
+						String echoGroups = String.join(",", modelField.getEchoGroup());
+						echoGroup = "echoGroup=" + echoGroups ;
 					}
 					if (ValidationFilter.isMultipleSelect(searchFieldInfo) || (ValidationFilter.isSingleSelect(searchFieldInfo) && searchFieldInfo.isMultipleSearch())) {
 						java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
