@@ -426,16 +426,20 @@ function bindEventForFormPage() {
 function bindEchoSelectEvent() {
     //列表搜搜框下拉选级联回显
     var currentform = $("form[name='filterForm']", getRestrictedArea());
-    var echoGroupElements = currentform.find('input[echogroup]');
+    var echoGroupElements = currentform.find('input[echogroup], select[echogroup]');
     if (echoGroupElements.length > 0 ) {
         echoGroupElements.each(function () {
             var current = $(this);
-            current.parent().bind("change", function (e) {
+            var target;
+            if ($(this).prop("tagName").toLowerCase() === "input") {
+                target = $(this).parent()
+            } else if ($(this).prop("tagName").toLowerCase() === "select") {
+                target = $(this)
+            }
+            target.bind("change", function (e) {
                 e.preventDefault();
-                var params = {};
-                var key = current.next().attr("name");
-                params[key] = current.next().attr("value")
-                if (current.attr("echoGroup") !== undefined && current.attr("echoGroup") !== "" && params[key] != "") {
+                var params = $("form[name='filterForm']").formToArray();
+                if (current.attr("echoGroup") !== undefined && current.attr("echoGroup") !== "") {
                     echoList(currentform, params);
                 }
             });
@@ -588,22 +592,28 @@ function echoItem(thisForm, params, item, echoGroup) {
     });
     var submitValue = params.filter(item => bindNames.has(item.name));
     $.post(url, submitValue, function (data) {
-        updateFormData(thisForm, data.data, data.options);
+        updateFormData(thisForm, data.data, data.options, false);
     }, "json");
 }
 
-function updateFormData(thisForm, data, options) {
+function updateFormData(thisForm, data, options, isList) {
     for (let option of options){
-        var formItem = $("#form-item-" + option.field + " > div:first", thisForm);
+        var formItem;
+        if (isList){
+            formItem = $("#form-item-" + option.field, thisForm);
+        }else{
+            formItem = $("#form-item-" + option.field + " > div:first", thisForm);
+        }
         var type = formItem.attr("type");
         let html = "";
         let echoGroup = "";
         switch (type) {
             case "multiselect":
+                echoGroup = $(formItem).find("select[name='" + option.field + "']").attr("echoGroup");
                 //获取placeholder
                 let placeholder = $("select",formItem).attr("placeholder");
                 //渲染原始html
-                html += "<select name=\""+ option.field +"\" multiple=\"multiple\" style=\"width:100%;\"\n" +
+                html += "<select echoGroup=\"+ echoGroup +\" name=\""+ option.field +"\" multiple=\"multiple\" style=\"width:100%;\"\n" +
                     "        placeholder=\""+ placeholder +"\">"
                 for (let op of option.options) {
                     if (op.name === option.value){
@@ -613,7 +623,9 @@ function updateFormData(thisForm, data, options) {
                     }
                 }
                 html += "</select>"
-                html += "<label class=\"qz-error-info\"></label>"
+                if (!isList){
+                    html += "<label class=\"qz-error-info\"></label>"
+                }
                 $(formItem).html(html);
                 //初始化select
                 $("select[multiple='multiple'][loaded!='true']").attr("loaded", "true").each(function () {
@@ -694,7 +706,9 @@ function updateFormData(thisForm, data, options) {
                         "    <i class=\"checkbox-i\"></i> "+ op.i18n[0] +"\n" +
                         "</label>"
                 }
-                html += "<label class=\"qz-error-info\"></label>"
+                if (!isList){
+                    html += "<label class=\"qz-error-info\"></label>"
+                }
                 $(formItem).html(html);
                 //选中
                 $(formItem).find("input[name='" + option.field + "']").each(function () {
@@ -714,7 +728,9 @@ function updateFormData(thisForm, data, options) {
                         "    <i class=\"radio-i\"></i> "+ op.i18n[0] +"\n" +
                         "</label>";
                 }
-                html += "<label class=\"qz-error-info\"></label>"
+                if (!isList){
+                    html += "<label class=\"qz-error-info\"></label>"
+                }
                 $(formItem).html(html);
                 //选中
                 $(formItem).find("input[name='" + option.field + "']").each(function () {
@@ -728,7 +744,11 @@ function updateFormData(thisForm, data, options) {
         }
     }
     //因为重新渲染了option，所以需要重新绑定echoData
-    bindEchoItemEvent();
+    if (isList){
+        bindEchoSelectEvent()
+    }else{
+        bindEchoItemEvent();
+    }
     for (let key in data) {
         var value = data[key];
         var formItem = $("#form-item-" + key + " > div:first", thisForm);
@@ -1215,7 +1235,7 @@ function echoList(thisForm, params) {
     url = url + "/echo" + (id ? "/" + id : "");
     url = url.replace(getSetting("htmlView"), getSetting("jsonView"));
     $.post(url, params, function (data) {
-        updateFormData(thisForm, data.data, data.options);
+        updateFormData(thisForm, data.data, data.options, true);
     }, "json");
 }
 

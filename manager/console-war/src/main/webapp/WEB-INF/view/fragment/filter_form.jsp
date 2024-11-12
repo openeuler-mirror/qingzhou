@@ -11,6 +11,13 @@
 			for (String fieldName : fieldsToListSearch) {
 				ModelFieldInfo searchFieldInfo = modelInfo.getModelFieldInfo(fieldName);
 				ModelFieldInfo modelField = searchFieldInfo; // range_datetime.jsp 使用
+				String inputType = "";
+				if (ValidationFilter.isMultipleSelect(searchFieldInfo) || (ValidationFilter.isSingleSelect(searchFieldInfo) && searchFieldInfo.isMultipleSearch())){
+					inputType = "multiselect";
+				}else if(ValidationFilter.isSingleSelect(searchFieldInfo)){
+					inputType = "select";
+				}
+
 				String colClass = "col-md-2 col-sm-3 col-xs-4";
 				if (searchFieldInfo.getInputType() == InputType.textarea) {
 					colClass = "col-md-12 col-sm-12 col-xs-12";
@@ -19,7 +26,7 @@
 				}
 		%>
 		<div class='<%=colClass%> list-page-padding-bottom'>
-			<div class="input-control">
+			<div class="input-control" id="form-item-<%=fieldName%>" type="<%=inputType%>">
 				<%
 					String echoGroup = "";
 					String fieldValue = null;
