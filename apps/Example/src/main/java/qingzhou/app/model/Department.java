@@ -36,12 +36,25 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             input_type = InputType.checkbox,
-            list = true, search = true, echo_group = {"aa", "bb"},
+            list = true, search = true, echo_group = {"bb"},
             name = {"负责人", "en:Department Manager"},
             color = {"lisa:red", "jack:green", "tom:blue"},
             info = {"该部门的负责人姓名。", "en:Name of the head of the department."})
     public String manager;
 
+    @ModelField(
+            input_type = InputType.sortable_checkbox,
+            list = true, search = true,
+            name = {"排序复选", "en:Department Manager"},
+            info = {"排序复选。", "en:Name of the head of the department."})
+    public String sortableCheckbox;
+
+    @ModelField(
+            input_type = InputType.multiselect,
+            list = true, search = true,
+            name = {"多选下拉", "en:Department Manager"},
+            info = {"多选下拉。", "en:Name of the head of the department."})
+    public String multiselect;
     @ModelField(
             list = true, search = true,
             echo_group = {"cc"}, placeholder = "写负责人的电话",
@@ -93,28 +106,21 @@ public class Department extends AddModelBase implements Echo, Option {
     @Override
     public void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder) {
         if ("aa".equals(echoGroup)) {
-            String superior = params.get("superior");
-            String manager = params.get("manager");
-            dataBuilder.addData("email", superior + "===" + manager);
-            dataBuilder.addData("phone", superior + "&&&" + manager);
-            if ("a".equals(superior) || "c".equals(superior)) {
-                dataBuilder.addData("active", "false");
-                dataBuilder.addData("emailSuffix", "@qq.com");
-            } else {
-                dataBuilder.addData("active", "true");
-                dataBuilder.addData("emailSuffix", "@163.com");
-            }
-            dataBuilder.addData("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            dataBuilder.addData("manager","tt",new Item[]{Item.of("tt",new String[]{"天天"}),Item.of("lisa",new String[]{"丽莎"})});
+            dataBuilder.addData("sortableCheckbox","test",new Item[]{Item.of("test",new String[]{"测试"}),Item.of("test2",new String[]{"测试2"})});
+            dataBuilder.addData("emailSuffix","@tongtech.com",new Item[]{Item.of("@tongtech.com",new String[]{"东方通"}),Item.of("@yahoo.com",new String[]{"雅虎"}),Item.of("@github.com",new String[]{"哈布"})});
+            dataBuilder.addData("multiselect","multi6",new Item[]{Item.of("multi4",new String[]{"多选4"}),Item.of("multi5",new String[]{"多选5"}),Item.of("multi6",new String[]{"多选6"})});
         } else if ("bb".equals(echoGroup)) {
-        } else if ("cc".equals(echoGroup)) {
-            dataBuilder.addData("buildDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            dataBuilder.addData("superior","a",new Item[]{Item.of("a",new String[]{"啊"}),Item.of("b",new String[]{"不"})});
+            dataBuilder.addData("sortableCheckbox","test2",new Item[]{Item.of("test",new String[]{"测试"}),Item.of("test2",new String[]{"测试2"})});
+            dataBuilder.addData("emailSuffix","@yahoo.com",new Item[]{Item.of("@tongtech.com",new String[]{"东方通"}),Item.of("@yahoo.com",new String[]{"雅虎"}),Item.of("@github.com",new String[]{"哈布"})});
         }
     }
 
 
     @Override
     public String[] staticOptionFields() {
-        return new String[]{"manager", "emailSuffix"};
+        return new String[]{"manager", "emailSuffix","multiselect"};
     }
 
     @Override
@@ -130,6 +136,8 @@ public class Department extends AddModelBase implements Echo, Option {
             return Item.of(new String[]{"jack", "lisa", "tom"});
         } else if ("emailSuffix".equals(fieldName)) {
             return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com", "@outlook.com", "@yahoo.com", "@tongtech.com", "@github.com"});
+        }else if("multiselect".equals(fieldName)){
+            return new Item[]{Item.of("multi1",new String[]{"多选1"}),Item.of("multi2",new String[]{"多选2"}),Item.of("multi3",new String[]{"多选3"})};
         }
         return new Item[0];
     }
