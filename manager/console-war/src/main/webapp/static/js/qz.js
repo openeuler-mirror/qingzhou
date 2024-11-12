@@ -467,7 +467,7 @@
         bindFill: function (triggerSelector, targetSelector, append, resetData, restrictedArea, afterRenderCall) {
             $(triggerSelector + "[action-type='sub_form']", restrictedArea).each(function (){
                 var actionType = $(this).attr("action-type");
-                var actionTypeMethod = bindingActions[actionType];``
+                var actionTypeMethod = bindingActions[actionType];
                 actionTypeMethod.call(null, null, triggerSelector + "[action-type='sub_form']", false, restrictedArea);
             });
 
@@ -484,7 +484,7 @@
                 if (actionType !== undefined && actionType === getSetting("downloadView")) {
                     url += "?";
                     for (const item of data) {
-                        url += item.name + "=" + item.value + "&"
+                        url += item.name + "=" + item.value + "&";
                     }
                     window.location.href = url;
                     return;
