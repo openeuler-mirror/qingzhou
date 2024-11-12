@@ -438,9 +438,11 @@ function bindEchoSelectEvent() {
             }
             target.bind("change", function (e) {
                 e.preventDefault();
-                var params = $("form[name='filterForm']").formToArray();
-                if (current.attr("echoGroup") !== undefined && current.attr("echoGroup") !== "") {
-                    echoList(currentform, params);
+                var params = {};
+                var key = current.next().attr("name");
+                params[key] = current.next().attr("value")
+                if (current.attr("echoGroup") !== undefined && current.attr("echoGroup") !== "" && params[key] !== "") { //搜索列表下拉选支持选空，如空则不必调接口
+                    echoItem(currentform, params,"","");
                 }
             });
         });
@@ -573,6 +575,7 @@ function bindEchoItemEvent() {
 }
 
 function echoItem(thisForm, params, item, echoGroup) {
+    var isList = true;
     var action = $(thisForm).attr("action");
     action = action.substring(0, action.lastIndexOf("/")) + "/echo";
     var url = action.substring(0, action.lastIndexOf("/"));
@@ -582,17 +585,23 @@ function echoItem(thisForm, params, item, echoGroup) {
         url = url.substring(0, url.lastIndexOf("/"));
     }
     url = url + "/echo" + (id ? "/" + id : "");
-    let bindNames = new Set();
-    $(thisForm).find('[echoGroup]').each(function () {
-        for (let group of echoGroup.split(",")) {
-            if ($(this).attr("echoGroup").split(",").includes(group)) {
-                bindNames.add($(this).attr("name"));
+    url = url.replace(getSetting("htmlView"), getSetting("jsonView"));
+    var submitValue = params;
+    if (item !== "" && echoGroup !== "") {
+        let bindNames = new Set();
+        $(thisForm).find('[echoGroup]').each(function () {
+            for (let group of echoGroup.split(",")) {
+                if ($(this).attr("echoGroup").split(",").includes(group)) {
+                    bindNames.add($(this).attr("name"));
+                }
             }
-        }
-    });
-    var submitValue = params.filter(item => bindNames.has(item.name));
+        });
+        submitValue = params.filter(item => bindNames.has(item.name));
+        isList = false;
+    }
+
     $.post(url, submitValue, function (data) {
-        updateFormData(thisForm, data.data, data.options, false);
+        updateFormData(thisForm, data.data, data.options, isList);
     }, "json");
 }
 
@@ -1224,22 +1233,6 @@ function bindEventForListPage() {
     $("select[multiple='multiple']").on("change", function (event) {
         updateListValue(event, this);
     });
-}
-
-function echoList(thisForm, params) {
-    var action = $(thisForm).attr("action");
-    action = action.substring(0, action.lastIndexOf("/")) + "/echo";
-    var url = action.substring(0, action.lastIndexOf("/"));
-    var id;
-    if (url.endsWith("update")) {
-        id = action.substring(action.lastIndexOf("/") + 1);
-        url = url.substring(0, url.lastIndexOf("/"));
-    }
-    url = url + "/echo" + (id ? "/" + id : "");
-    url = url.replace(getSetting("htmlView"), getSetting("jsonView"));
-    $.post(url, params, function (data) {
-        updateFormData(thisForm, data.data, data.options, true);
-    }, "json");
 }
 
 //返回列表页面
