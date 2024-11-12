@@ -2,8 +2,7 @@ package qingzhou.engine.impl.core;
 
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
-import qingzhou.engine.Service;
-import qingzhou.engine.ServiceInfo;
+import qingzhou.engine.Resource;
 import qingzhou.engine.impl.EngineContext;
 import qingzhou.engine.impl.Main;
 import qingzhou.engine.util.Utils;
@@ -113,29 +112,7 @@ public class ModuleLoading implements Process {
                 }
             }
 
-            ServiceVisitor serviceVisitor = () -> {
-                List<Class<?>> classes = new ArrayList<>();
-                moduleInfoList.forEach(moduleInfo -> {
-                    for (Map.Entry<Class<?>, Object> entry : moduleInfo.moduleContext.registeredServices.entrySet()) {
-                        Class<?> type = entry.getKey();
-                        Object service = entry.getValue();
-                        boolean skip = false;
-                        if (service instanceof ServiceInfo) {
-                            ServiceInfo serviceInfo = (ServiceInfo) service;
-                            if (!serviceInfo.isAppShared()) {
-                                skip = true;
-                            }
-                        }
-                        if (!skip) {
-                            classes.add(type);
-                        }
-                    }
-                });
-                classes.sort(Comparator.comparing(Class::getSimpleName));
-                return classes;
-            };
             for (ModuleInfo moduleInfo : moduleInfoList) {
-                moduleInfo.moduleContext.serviceVisitor = serviceVisitor;
                 Object c = qzJson.get(moduleInfo.getName());
                 if (c != null) {
                     moduleInfo.moduleContext.config = new HashMap<>((Map<String, String>) c);
@@ -225,13 +202,13 @@ public class ModuleLoading implements Process {
                     throw e;
                 }
                 for (Field field : fields) {
-                    Service service = field.getAnnotation(Service.class);
-                    if (service == null) continue;
+                    Resource resource = field.getAnnotation(Resource.class);
+                    if (resource == null) continue;
 
                     Class<?> serviceType = field.getType();
                     Object serviceObj = findService(serviceType);
                     if (serviceObj == null) {
-                        return service.optional() ? null : serviceType;
+                        return resource.optional() ? null : serviceType;
                     }
 
                     field.setAccessible(true);

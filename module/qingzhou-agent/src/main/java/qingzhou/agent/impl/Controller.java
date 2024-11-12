@@ -8,7 +8,7 @@ import qingzhou.deployer.Deployer;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.Service;
+import qingzhou.engine.Resource;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.http.Http;
@@ -19,15 +19,15 @@ import java.util.Map;
 
 @Module
 public class Controller implements ModuleActivator {
-    @Service
+    @Resource
     private Json json;
-    @Service
+    @Resource
     private Http http;
-    @Service
+    @Resource
     private Logger logger;
-    @Service
+    @Resource
     private Deployer deployer;
-    @Service
+    @Resource
     private CryptoService cryptoService;
 
     private ProcessSequence sequence;

@@ -4,7 +4,7 @@ import qingzhou.crypto.CryptoService;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.Service;
+import qingzhou.engine.Resource;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.Registry;
@@ -15,13 +15,13 @@ import java.util.TimerTask;
 
 @Module
 public class Controller implements ModuleActivator {
-    @Service
+    @Resource
     private Json json;
 
-    @Service
+    @Resource
     private Logger logger;
 
-    @Service
+    @Resource
     private CryptoService cryptoService;
 
     // 定时清理超时的自动注册实例

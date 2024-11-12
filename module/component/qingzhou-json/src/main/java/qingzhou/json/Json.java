@@ -1,16 +1,9 @@
 package qingzhou.json;
 
-import qingzhou.engine.ServiceInfo;
-
 import java.io.Reader;
 import java.util.Properties;
 
-public interface Json extends ServiceInfo {
-    @Override
-    default String getDescription() {
-        return "Provide practical tools related to Json.";
-    }
-
+public interface Json {
     String toJson(Object src);
 
     <T> T fromJson(String json, Class<T> classOfT);

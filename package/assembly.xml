@@ -95,7 +95,6 @@
                 <include>${project.groupId}:qingzhou-logger</include>
                 <include>${project.groupId}:qingzhou-json</include>
                 <include>${project.groupId}:qingzhou-http</include>
-                <include>${project.groupId}:qingzhou-ssh</include>
                 <include>${project.groupId}:qingzhou-qr</include>
                 <include>${project.groupId}:qingzhou-crypto</include>
             </includes>
@@ -108,6 +107,7 @@
 
         <dependencySet>
             <includes>
+                <include>${project.groupId}:qingzhou-ssh</include>
                 <include>${project.groupId}:qingzhou-uml</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>

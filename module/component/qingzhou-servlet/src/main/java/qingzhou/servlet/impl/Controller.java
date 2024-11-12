@@ -4,15 +4,15 @@ import qingzhou.config.Config;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.Service;
+import qingzhou.engine.Resource;
 import qingzhou.logger.Logger;
 import qingzhou.servlet.ServletService;
 
 @Module
 public class Controller implements ModuleActivator {
-    @Service
+    @Resource
     static Logger logger;
-    @Service
+    @Resource
     static Config config;
 
     @Override

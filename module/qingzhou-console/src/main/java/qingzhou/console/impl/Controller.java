@@ -11,7 +11,7 @@ import qingzhou.deployer.JmxServiceAdapter;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
-import qingzhou.engine.Service;
+import qingzhou.engine.Resource;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
@@ -26,23 +26,23 @@ import java.util.Properties;
 
 @Module
 public class Controller implements ModuleActivator {
-    @Service
+    @Resource
     private Logger logger;
-    @Service
+    @Resource
     private Config config;
-    @Service
+    @Resource
     private ServletService servletService;
-    @Service
+    @Resource
     private Deployer deployer;
-    @Service
+    @Resource
     private Registry registry;
-    @Service
+    @Resource
     private CryptoService cryptoService;
-    @Service
+    @Resource
     private Json json;// RemoteClient会用到
-    @Service(optional = true) // console 禁用（远程受管实例）后，此对象为 null，optional = true
+    @Resource(optional = true) // console 禁用（远程受管实例）后，此对象为 null，optional = true
     private JmxServiceAdapter jmxServiceAdapter;
-    @Service
+    @Resource
     private ActionInvoker actionInvoker;
 
     private Console console;
