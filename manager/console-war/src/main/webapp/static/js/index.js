@@ -1090,27 +1090,29 @@ function bindEventForListPage() {
     $("section.main-body", document.body).each(function () {
         var domSelector = "section.main-body[bindingId='" + $(this).attr("bindingId") + "']";
         var restrictedArea = $(this).parent();
+        var containSubTab = $(".tab-wrapper", restrictedArea).length > 0;
         // 搜索按钮
-        qz.bindFill(domSelector + " .search-btn a", domSelector, false, false, restrictedArea, null);
+        qz.bindFill(domSelector + " .search-btn a" + (containSubTab ? ":not(div.tab-container a)" : ""), domSelector, false, false, restrictedArea, null);
         // 列表页表格顶部操作按钮
-        qz.bindFill(domSelector + " .tools-group a:not([act-confirm])", domSelector + ">.bodyDiv:first", false, false, restrictedArea, null);
+        qz.bindFill(domSelector + " .tools-group a:not([act-confirm]" + (containSubTab ? ", div.tab-container a" : "") + ")", domSelector + ">.bodyDiv:first", false, false, restrictedArea, null);
         // 分页(页码及上一页、下一页、首页、尾页等)
-        qz.bindFill(domSelector + " ul.pager.pager-loose a", domSelector, false, false, restrictedArea, null);
+        qz.bindFill(domSelector + " ul.pager.pager-loose a" + (containSubTab ? ":not(div.tab-container a)" : ""), domSelector, false, false, restrictedArea, null);
         // 列表页表格单元格操作
-        qz.bindFill(domSelector + " table a.dataid", domSelector + ">.bodyDiv:first", false, false, restrictedArea, null);
+        qz.bindFill(domSelector + " table a.dataid" + (containSubTab ? ":not(div.tab-container a)" : ""), domSelector + ">.bodyDiv:first", false, false, restrictedArea, null);
 
-        $("table.qz-data-list a.qz-action-link", restrictedArea).each(function () {
+        $("table.qz-data-list a.qz-action-link" + (containSubTab ? ":not(div.tab-container a)" : ""), restrictedArea).each(function () {
             var actionTypeMethod = bindingActions[$(this).attr("action-type")];
             var actionIdSelector = "";
             if ($(this).attr("action-id") !== undefined) {
                 actionIdSelector = "[action-id='" + $(this).attr("action-id") + "']";
             }
             if (actionTypeMethod) {
-                var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']" + actionIdSelector;
+                var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "']" + actionIdSelector + (containSubTab ? ":not(div.tab-container a)" : "");
                 actionTypeMethod.call(null, this, selector, false, restrictedArea);
             } else {
                 if ($(this).attr("action-id") === getSetting("actionId_app_manage")) {// 集群实例点击[管理]，打开新 Tab 并切换
-                    $("table.qz-data-list a.qz-action-link" + actionIdSelector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
+                    $("table.qz-data-list a.qz-action-link" + actionIdSelector + "[loaded!='true']" + (containSubTab ? ":not(div.tab-container a)" : ""), restrictedArea)
+                    .attr("loaded", "true").bind("click", function (e) {
                         e.preventDefault();
                         var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");
                         if (tab.length > 0) {
@@ -1122,7 +1124,8 @@ function bindEventForListPage() {
                 } else {
                     if ($(this).attr("action-type")) {
                         // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
-                        var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "'][action-id!='" + getSetting("actionId_app_manage") + "']" + actionIdSelector;
+                        var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "'][action-id!='" + getSetting("actionId_app_manage") + "']" + actionIdSelector
+                         + (containSubTab ? ":not(div.tab-container a)" : "");
                         qz.bindFill(selector, domSelector, false, false, restrictedArea, null);
                     } else {
                         console.error("Element binding action failed. Element html:" + $(this)[0].outerHTML);
