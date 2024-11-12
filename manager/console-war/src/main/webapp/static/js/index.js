@@ -579,13 +579,55 @@ function updateFormData(thisForm, data, options) {
         let echoGroup = "";
         switch (type) {
             case "multiselect":
+                //获取placeholder
+                let placeholder = $("select",formItem).attr("placeholder");
+                //渲染原始html
+                html += "<select name=\""+ option.field +"\" multiple=\"multiple\" style=\"width:100%;\"\n" +
+                    "        placeholder=\""+ placeholder +"\">"
+                for (let op of option.options) {
+                    if (op.name === option.value){
+                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\" selected>\n"+ op.i18n[0] +"</option>";
+                    }else{
+                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\">\n"+ op.i18n[0] +"</option>";
+                    }
+                }
+                html += "</select>"
+                html += "<label class=\"qz-error-info\"></label>"
+                $(formItem).html(html);
+                //初始化select
+                $("select[multiple='multiple'][loaded!='true']").attr("loaded", "true").each(function () {
+                    var $this = $(this);
+                    $(this).multipleSelect({
+                        locale: getSetting("locale"),
+                        multiple: true,
+                        multipleWidth: 180,
+                        filter: true,
+                        filterGroup: true,
+                        showClear: true,
+                        animate: "fade",
+                        onAfterCreate: function () {
+                            $("ul li.multiple", $($this).next(".ms-parent")).each(function () {
+                                $(this).attr("title", $("label>span", this).first().text());
+                                var name = $("label>input", this).first().val();
+                                var color = $(this).parent().parent().parent().siblings("select[multiple='multiple']").find("option[value=" + name + "]").css("color")
+                                $("label>span", this).css("color", color);
+                                $(this).hover(function () {
+                                    $("label>span", this).css({"white-space": "normal"});
+                                }, function () {
+                                    $("label>span", this).css({"white-space": "nowrap"});
+                                });
+                            });
+                            return true;
+                        }
+                    });
+                });
                 break;
             case "select":
                 //渲染列表
                 html = "<li data-value=\"\" class=\"option focus\" format=\"\"></li>"
                 for(let op of option.options){
                     //todo 国际化
-                    html += "<li data-value=\""+ op.name +"\" class=\"option\" format=\""+ op.name +"\">"+ op.i18n[0] +"</li>"
+                    html += "<li data-value=\""+ op.name.replace(/"/g, '&quot;') +"\" class=\"option\" format=\""+ op.name.replace(/"/g, '&quot;') +"\">"+ op.i18n[0] +"</li>"
                 }
                 $("ul",formItem).html(html);
                 //渲染选中
@@ -605,7 +647,7 @@ function updateFormData(thisForm, data, options) {
                 //渲染页面
                 for(let op of option.options){
                     html += "<a draggable=\"true\" href=\"javascript:void(0);\">\n" +
-                        "        <input type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name +"\">\n" +
+                        "        <input type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\">\n" +
                         "        <label>"+ op.i18n[0] +"\n" +
                         "        </label>\n" +
                         "    </a>";
@@ -627,10 +669,11 @@ function updateFormData(thisForm, data, options) {
                 //渲染页面
                 for(let op of option.options){
                     html += "<label class=\"checkbox-inline checkbox-label checkbox-anim\">\n" +
-                        "    <input echoGroup=\""+ echoGroup +"\" type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name +"\">\n" +
+                        "    <input echoGroup=\""+ echoGroup +"\" type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\">\n" +
                         "    <i class=\"checkbox-i\"></i> "+ op.i18n[0] +"\n" +
                         "</label>"
                 }
+                html += "<label class=\"qz-error-info\"></label>"
                 $(formItem).html(html);
                 //选中
                 $(formItem).find("input[name='" + option.field + "']").each(function () {
@@ -646,10 +689,11 @@ function updateFormData(thisForm, data, options) {
                 echoGroup = $(formItem).find("input[name='" + option.field + "']").attr("echoGroup");
                 for(let op of option.options){
                     html += "<label class=\"radio-inline radio-label radio-anim\">\n" +
-                        "    <input type=\"radio\" name=\""+ option.field +"\" value=\""+ op.name +"\" echogroup=\""+ echoGroup +"\">\n" +
+                        "    <input type=\"radio\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\" echogroup=\""+ echoGroup +"\">\n" +
                         "    <i class=\"radio-i\"></i> "+ op.i18n[0] +"\n" +
                         "</label>";
                 }
+                html += "<label class=\"qz-error-info\"></label>"
                 $(formItem).html(html);
                 //选中
                 $(formItem).find("input[name='" + option.field + "']").each(function () {
