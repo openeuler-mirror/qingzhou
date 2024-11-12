@@ -309,10 +309,8 @@
 						}
 					}
 					if (linkRefModelActionInfo != null) {
-						//传递分页参数和返回modelName
-						String returnParams = "&pn=" + pageNum + "&ps=" + pageSize + "&mn=" + qzRequest.getModel();
 				%>
-				<a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + URLEncoder.encode(refValue,"UTF-8") + returnParams)%>'
+				<a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + URLEncoder.encode(refValue,"UTF-8"))%>'
 				   class="dataid qz-action-link tooltips"
 				   action-type="<%=linkRefModelActionInfo.getActionType()%>"
 				   data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
