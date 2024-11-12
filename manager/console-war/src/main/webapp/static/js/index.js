@@ -423,6 +423,26 @@ function bindEventForFormPage() {
     bindFormEvent();
 };
 
+function bindEchoSelectEvent() {
+    //列表搜搜框下拉选级联回显
+    var currentform = $("form[name='filterForm']", getRestrictedArea());
+    var echoGroupElements = currentform.find('input[echogroup]');
+    if (echoGroupElements.length > 0 ) {
+        echoGroupElements.each(function () {
+            var current = $(this);
+            current.parent().bind("change", function (e) {
+                e.preventDefault();
+                var params = {};
+                var key = current.next().attr("name");
+                params[key] = current.next().attr("value")
+                if (current.attr("echoGroup") !== undefined && current.attr("echoGroup") !== "" && params[key] != "") {
+                    echoList(currentform, params);
+                }
+            });
+        });
+    }
+}
+
 function bindFormEvent() {
     $("form[name='pageForm'][loaded!='true']").attr("loaded", "true").each(function () {
         var thisForm = $(this);
@@ -535,13 +555,14 @@ function bindFormEvent() {
 
 function bindEchoItemEvent() {
     //查找当前表单下所有回显数据元素，添加失去焦点事件
-    var echoGroupElements = $("form[name='pageForm']").find('[echoGroup]');
+    var currentform = $("form[name='pageForm']",getRestrictedArea());
+    var echoGroupElements = currentform.find('[echoGroup]');
     echoGroupElements.each(function () {
         $(this).bind("change", function (e) {
             e.preventDefault();
             var params = $("form[name='pageForm']").formToArray();
             if ($(this).attr("echoGroup") !== undefined && $(this).attr("echoGroup") !== "") {
-                echoItem($("form[name='pageForm']", getRestrictedArea()), params, $(this).attr("name"), $(this).attr("echoGroup"));
+                echoItem(currentform, params, $(this).attr("name"), $(this).attr("echoGroup"));
             }
         });
     });
@@ -1036,6 +1057,8 @@ function bindEventForListPage() {
         });
     });
 
+    bindEchoSelectEvent();
+
     // 列表搜索框回车
     $("form[name='filterForm'][loaded!='true']").attr("loaded", "true").unbind("keypress").bind("keypress", function (e) {
         if (e.keyCode === 13) {
@@ -1178,6 +1201,22 @@ function bindEventForListPage() {
     $("select[multiple='multiple']").on("change", function (event) {
         updateListValue(event, this);
     });
+}
+
+function echoList(thisForm, params) {
+    var action = $(thisForm).attr("action");
+    action = action.substring(0, action.lastIndexOf("/")) + "/echo";
+    var url = action.substring(0, action.lastIndexOf("/"));
+    var id;
+    if (url.endsWith("update")) {
+        id = action.substring(action.lastIndexOf("/") + 1);
+        url = url.substring(0, url.lastIndexOf("/"));
+    }
+    url = url + "/echo" + (id ? "/" + id : "");
+
+    $.post(url, params, function (data) {
+        updateFormData(thisForm, data.data, data.options);
+    }, "json");
 }
 
 //返回列表页面
