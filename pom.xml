@@ -17,7 +17,7 @@
         <module>manager</module>
         <module>apps</module>
         <module>package</module>
-        <module>plugins</module>
+        <module>plugin-service</module>
         <module>auto-test</module>
     </modules>
 

@@ -9,12 +9,11 @@
         <version>1.3.0</version>
     </parent>
 
-    <artifactId>plugins</artifactId>
+    <artifactId>plugin-service</artifactId>
     <packaging>pom</packaging>
 
     <modules>
         <module>qingzhou-ssh</module>
-        <module>qingzhou-uml</module>
     </modules>
 
     <dependencies>

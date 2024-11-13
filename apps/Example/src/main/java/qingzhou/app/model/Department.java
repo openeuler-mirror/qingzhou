@@ -8,8 +8,6 @@ import qingzhou.api.type.Echo;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Map;
 
 @Model(code = "department", icon = "sitemap",
@@ -113,21 +111,21 @@ public class Department extends AddModelBase implements Echo, Option {
     @Override
     public void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder) {
         if ("aa".equals(echoGroup)) {
-            dataBuilder.addData("manager","tt",new Item[]{Item.of("tt",new String[]{"天天"}),Item.of("lisa",new String[]{"丽莎"})});
-            dataBuilder.addData("sortableCheckbox","test",new Item[]{Item.of("test",new String[]{"测试"}),Item.of("test2",new String[]{"测试2"})});
-            dataBuilder.addData("emailSuffix","@tongtech.com",new Item[]{Item.of("@tongtech.com",new String[]{"东方通"}),Item.of("@yahoo.com",new String[]{"雅虎"}),Item.of("@github.com",new String[]{"哈布"})});
-            dataBuilder.addData("multiselect","multi6",new Item[]{Item.of("multi4",new String[]{"多选4"}),Item.of("multi5",new String[]{"多选5"}),Item.of("multi6",new String[]{"多选6"})});
+            dataBuilder.addData("manager", "tt", new Item[]{Item.of("tt", new String[]{"天天"}), Item.of("lisa", new String[]{"丽莎"})});
+            dataBuilder.addData("sortableCheckbox", "test", new Item[]{Item.of("test", new String[]{"测试"}), Item.of("test2", new String[]{"测试2"})});
+            dataBuilder.addData("emailSuffix", "@tongtech.com", new Item[]{Item.of("@tongtech.com", new String[]{"东方通"}), Item.of("@yahoo.com", new String[]{"雅虎"}), Item.of("@github.com", new String[]{"哈布"})});
+            dataBuilder.addData("multiselect", "multi6", new Item[]{Item.of("multi4", new String[]{"多选4"}), Item.of("multi5", new String[]{"多选5"}), Item.of("multi6", new String[]{"多选6"})});
         } else if ("bb".equals(echoGroup)) {
-            dataBuilder.addData("superior","a",new Item[]{Item.of("a",new String[]{"啊"}),Item.of("b",new String[]{"不"})});
-            dataBuilder.addData("sortableCheckbox","test2",new Item[]{Item.of("test",new String[]{"测试"}),Item.of("test2",new String[]{"测试2"})});
-            dataBuilder.addData("emailSuffix","@yahoo.com",new Item[]{Item.of("@tongtech.com",new String[]{"东方通"}),Item.of("@yahoo.com",new String[]{"雅虎"}),Item.of("@github.com",new String[]{"哈布"})});
+            dataBuilder.addData("superior", "a", new Item[]{Item.of("a", new String[]{"啊"}), Item.of("b", new String[]{"不"})});
+            dataBuilder.addData("sortableCheckbox", "test2", new Item[]{Item.of("test", new String[]{"测试"}), Item.of("test2", new String[]{"测试2"})});
+            dataBuilder.addData("emailSuffix", "@yahoo.com", new Item[]{Item.of("@tongtech.com", new String[]{"东方通"}), Item.of("@yahoo.com", new String[]{"雅虎"}), Item.of("@github.com", new String[]{"哈布"})});
         }
     }
 
 
     @Override
     public String[] staticOptionFields() {
-        return new String[]{"manager", "emailSuffix","multiselect"};
+        return new String[]{"manager", "emailSuffix", "multiselect"};
     }
 
     @Override
@@ -140,19 +138,17 @@ public class Department extends AddModelBase implements Echo, Option {
         if ("superior".equals(fieldName)) {
             return Item.of(new String[]{"a", "b", "c", "d", "e"});
         } else if ("manager".equals(fieldName)) {
-            return new Item[]{Item.of("tt",new String[]{"天天"}),Item.of("lisa",new String[]{"丽莎"}),Item.of("jack",new String[]{"杰克"}),Item.of("tom",new String[]{"汤姆"})};
+            return new Item[]{Item.of("tt", new String[]{"天天"}), Item.of("lisa", new String[]{"丽莎"}), Item.of("jack", new String[]{"杰克"}), Item.of("tom", new String[]{"汤姆"})};
         } else if ("emailSuffix".equals(fieldName)) {
             return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com", "@outlook.com", "@yahoo.com", "@tongtech.com", "@github.com"});
-        }else if("multiselect".equals(fieldName)){
-            return new Item[]{Item.of("multi1",new String[]{"多选1"}),Item.of("multi2",new String[]{"多选2"}),Item.of("multi3",new String[]{"多选3"}),Item.of("multi4",new String[]{"多选4"}),Item.of("multi5",new String[]{"多选5"}),Item.of("multi6",new String[]{"多选6"})};
+        } else if ("multiselect".equals(fieldName)) {
+            return new Item[]{Item.of("multi1", new String[]{"多选1"}), Item.of("multi2", new String[]{"多选2"}), Item.of("multi3", new String[]{"多选3"}), Item.of("multi4", new String[]{"多选4"}), Item.of("multi5", new String[]{"多选5"}), Item.of("multi6", new String[]{"多选6"})};
         }
         return new Item[0];
     }
 
     @Override
     public Map<String, String> editData(String id) {
-        Map<String, String> map = showData(id);
-        map.put("emailSuffix", null);
-        return map;
+        return showData(id);
     }
 }

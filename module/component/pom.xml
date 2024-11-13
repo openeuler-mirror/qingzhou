@@ -19,6 +19,7 @@
         <module>qingzhou-servlet</module>
         <module>qingzhou-qr</module>
         <module>qingzhou-crypto</module>
+        <module>qingzhou-uml</module>
     </modules>
 
 </project>

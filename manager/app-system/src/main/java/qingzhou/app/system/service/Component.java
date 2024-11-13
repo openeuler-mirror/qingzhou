@@ -4,6 +4,8 @@ import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
 import qingzhou.api.ModelField;
 import qingzhou.app.system.Main;
+import qingzhou.engine.Service;
+import qingzhou.engine.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,33 +20,58 @@ import java.util.Map;
 )
 public class Component extends ModelBase implements qingzhou.api.type.List {
     @ModelField(
-            search = true,
-            width_percent = 30,
-            name = {"组件名称", "en:Component Name"},
-            info = {"组件名称", "en:Component Name"})
+            hidden = true,
+            name = {"ID", "en:ID"})
     public String id;
 
     @ModelField(
             list = true, search = true,
-            width_percent = 70,
+            width_percent = 20,
+            name = {"组件名称", "en:Component Name"},
+            info = {"组件名称", "en:Component Name"})
+    public String name;
+
+    @ModelField(
+            list = true, search = true,
+            width_percent = 30,
             name = {"组件类型", "en:Component Type"},
             info = {"组件类型", "en:Component type"})
     public String type;
 
     @ModelField(
             list = true, search = true,
-            width_percent = 70,
+            width_percent = 40,
             name = {"描述信息", "en:Component Info"},
             info = {"该公共组件的描述信息。", "en:A description of the common component."})
     public String info;
 
+    private volatile List<String[]> cache;
+
     @Override
     public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) {
-        List<String[]> list = new ArrayList<>();
-        getAppContext().getServiceTypes().forEach(aClass -> {
-            list.add(new String[]{aClass.getSimpleName(), aClass.getName(), ""});
-        });
-        return list;
+        if (cache == null) {
+            synchronized (this) {
+                if (cache == null) {
+                    cache = new ArrayList<>();
+                    getAppContext().getServiceTypes().forEach(aClass -> {
+                        String name = null;
+                        String info = null;
+                        Service annotation = aClass.getAnnotation(Service.class);
+                        if (annotation != null) {
+                            if (!annotation.shareable()) return;
+
+                            name = annotation.name();
+                            info = annotation.description();
+                        }
+                        if (Utils.isBlank(name)) {
+                            name = aClass.getSimpleName();
+                        }
+                        cache.add(new String[]{aClass.getName(), name, aClass.getName(), info});
+                    });
+                }
+            }
+        }
+        return cache;
     }
 
     @Override

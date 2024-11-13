@@ -1,10 +1,12 @@
 package qingzhou.deployer;
 
+import qingzhou.engine.Service;
 import qingzhou.registry.AppInfo;
 
 import java.io.File;
 import java.util.List;
 
+@Service(shareable = false)
 public interface Deployer {
     void addAppListener(AppListener appListener);
 

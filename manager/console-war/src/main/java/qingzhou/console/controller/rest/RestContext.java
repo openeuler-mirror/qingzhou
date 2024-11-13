@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 public class RestContext {
     public final HttpServletRequest req;
     public final HttpServletResponse resp;
-    public /*final*/ RequestImpl request;
+    public RequestImpl request;
 
     public RestContext(HttpServletRequest req, HttpServletResponse resp, RequestImpl request) {
         this.req = req;

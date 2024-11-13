@@ -1,4 +1,4 @@
-package qingzhou.engine.impl.core;
+package qingzhou.engine.impl;
 
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
@@ -38,7 +38,7 @@ class ModuleContextImpl implements ModuleContext {
 
     @Override
     public File getLibDir() {
-        return moduleInfo.getEngineContext().getLibDir();
+        return moduleInfo.engineContext.getLibDir();
     }
 
     @Override
@@ -51,21 +51,23 @@ class ModuleContextImpl implements ModuleContext {
 
     @Override
     public <T> T getService(Class<T> clazz) {
-        T selfService = (T) registeredServices.get(clazz);
-        if (selfService != null) return selfService;
+        Object injected = injectedServices.get(clazz);
+        if (injected != null) {
+            return (T) injected;
+        }
 
-        return (T) injectedServices.get(clazz);
+        return (T) registeredServices.get(clazz);
     }
 
     @Override
     public File getInstanceDir() {
-        return moduleInfo.getEngineContext().getInstanceDir();
+        return moduleInfo.engineContext.getInstanceDir();
     }
 
     @Override
     public File getTemp() {
         if (temp == null) {
-            temp = FileUtil.newFile(moduleInfo.getEngineContext().getTemp(), moduleInfo.getName());
+            temp = FileUtil.newFile(moduleInfo.engineContext.getTemp(), moduleInfo.getName());
             FileUtil.mkdirs(temp);
         }
         return temp;

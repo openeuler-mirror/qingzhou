@@ -8,5 +8,5 @@
 		Map<String, String> infoData = (Map) qzResponse.getInternalData();
 	%>
 	<%@ include file="../fragment/info.jsp" %>
-	<%@ include file="../fragment/return_list.jsp" %>
+	<%@ include file="../fragment/back.jsp" %>
 </div>

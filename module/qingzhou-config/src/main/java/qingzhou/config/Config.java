@@ -1,5 +1,8 @@
 package qingzhou.config;
 
+import qingzhou.engine.Service;
+
+@Service(shareable = false)
 public interface Config {
     Console getConsole();
 

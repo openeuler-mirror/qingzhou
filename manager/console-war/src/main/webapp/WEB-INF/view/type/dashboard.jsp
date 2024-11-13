@@ -11,4 +11,6 @@
 
     <div class="dashboardPage" data-url="<%=url%>">
     </div>
+
+    <%@ include file="../fragment/back.jsp" %>
 </div>
