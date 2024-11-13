@@ -12,12 +12,29 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ItemInfo;
+import qingzhou.registry.MenuInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class PageUtil {
@@ -80,19 +97,62 @@ public class PageUtil {
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
                                          Request request, String viewName, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
-        return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, url));
+        return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, request, url));
     }
 
     public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response,
                                         Request request, String viewName, String model, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;
-        return RESTController.encodeURL(response, appendQueryString(servletRequest, url));
+        return RESTController.encodeURL(response, appendQueryString(servletRequest, request, url));
     }
 
-    private static String appendQueryString(HttpServletRequest servletRequest, String url) {// 此方法只能给buildRequestUrl、buildCustomUrl这两个拼接url的方法使用
+    private static String appendQueryString(HttpServletRequest servletRequest, Request request, String url) {// 此方法只能给buildRequestUrl、buildCustomUrl这两个拼接url的方法使用
         String queryString = servletRequest.getQueryString();
-        if (queryString != null) { // 这里因为二级Tab中的key无法固定且目前只有跳转到二级Tab时，这里会有queryString，暂时以是否携带queryString来进行追加
-            url += "?" + queryString;
+        if (queryString == null || queryString.isEmpty()) {
+            return url;
+        }
+
+        AppInfo appInfo = SystemController.getAppInfo(request.getApp());
+        if (appInfo == null) {
+            return url;
+        }
+
+        Set<String> seenParamNames = new HashSet<>();
+        StringBuilder newQueryString = new StringBuilder();
+
+        String[] params = queryString.split("&");
+        for (String param : params) {
+            int equalsIndex = param.indexOf('=');
+            if (equalsIndex <= 0) {
+                continue;
+            }
+
+            String name = param.substring(0, equalsIndex);
+
+            if (seenParamNames.contains(name)) {
+                continue;
+            }
+            seenParamNames.add(name);
+
+            int dotIndex = name.indexOf('.');
+            if (dotIndex <= 0) {
+                continue;
+            }
+
+            String modelName = name.substring(0, dotIndex);
+            ModelInfo modelInfo = appInfo.getModelInfo(modelName);
+            if (modelInfo == null) {
+                continue;
+            }
+
+            if (newQueryString.length() > 0) {
+                newQueryString.append('&');
+            }
+            newQueryString.append(param);
+        }
+
+        if (newQueryString.length() > 0) {
+            url += (url.contains("?") ? "&" : "?") + newQueryString;
         }
 
         return url;
