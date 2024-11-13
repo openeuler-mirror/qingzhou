@@ -449,7 +449,7 @@ function bindEchoSelectEvent() {
             } else if ($(this).prop("tagName").toLowerCase() === "select") {
                 target = $(this)
             }
-            target.bind("change", function (e) {
+            target.unbind("change").bind("change", function (e) {
                 e.preventDefault();
                 var params = {};
                 var key = current.next().attr("name");
@@ -577,7 +577,7 @@ function bindEchoItemEvent() {
     var currentform = $("form[name='pageForm']",getRestrictedArea());
     var echoGroupElements = currentform.find('[echoGroup]');
     echoGroupElements.each(function () {
-        $(this).bind("change", function (e) {
+        $(this).unbind("change").bind("change", function (e) {
             e.preventDefault();
             var params = $("form[name='pageForm']").formToArray();
             if ($(this).attr("echoGroup") !== undefined && $(this).attr("echoGroup") !== "") {
