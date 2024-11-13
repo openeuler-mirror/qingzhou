@@ -29,14 +29,7 @@
 			<div class="input-control" id="form-item-<%=fieldName%>" type="<%=inputType%>">
 				<%
 					String echoGroup = "";
-					String fieldValue = null;
-					if (ValidationFilter.isMultipleSelect(searchFieldInfo) || (ValidationFilter.isSingleSelect(searchFieldInfo) && searchFieldInfo.isMultipleSearch())) {
-						if (request.getParameterValues(fieldName) != null) {
-							fieldValue = String.join(searchFieldInfo.getSeparator(), request.getParameterValues(fieldName));
-						}
-					} else {
-						fieldValue = request.getParameter(fieldName);
-					}
+					String fieldValue = qzRequest.getParameter(fieldName);
 					if (fieldValue == null) {
 						Map<String, String> defaultSearch;
 						if (modelInfo.isUseDynamicDefaultSearch()) {
