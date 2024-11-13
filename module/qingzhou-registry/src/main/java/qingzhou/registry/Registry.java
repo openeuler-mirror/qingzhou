@@ -1,7 +1,10 @@
 package qingzhou.registry;
 
+import qingzhou.engine.Service;
+
 import java.util.List;
 
+@Service(shareable = false)
 public interface Registry {
     boolean checkRegistry(String dataFingerprint);
 

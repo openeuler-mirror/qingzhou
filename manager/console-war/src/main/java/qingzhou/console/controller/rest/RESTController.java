@@ -19,7 +19,6 @@ import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
-import qingzhou.registry.ModelActionInfo;
 import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.ModelInfo;
 
@@ -255,12 +254,7 @@ public class RESTController extends HttpServlet {
         request.setUserName(LoginManager.getLoginUser(req));
         request.setI18nLang(I18n.getI18nLang());
 
-        if (request.getAction().equals(BackFilter.BACK_URI)) {
-            return request;
-        }
-
         ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
-
 
         StringBuilder id = new StringBuilder();
         if (rest.size() > restDepth) {
@@ -272,14 +266,6 @@ public class RESTController extends HttpServlet {
             request.setId(decodeId);
             // Update 更新操作参数里需要id
             request.setParameter(modelInfo.getIdField(), decodeId);
-        }
-
-        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
-        if (actionInfo == null) {
-            String msg = "Not Found: " + req.getRequestURI();
-            JsonView.responseErrorJson(resp, msg);
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, msg);
-            return null;
         }
 
         HashMap<String, String> data = new HashMap<>();

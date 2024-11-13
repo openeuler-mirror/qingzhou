@@ -6,24 +6,16 @@ import qingzhou.api.Request;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.rest.BackFilter;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ItemInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Stream;
@@ -85,12 +77,14 @@ public class PageUtil {
         return null;
     }
 
-    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String actionName) {
+    public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+                                         Request request, String viewName, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
-        return RESTController.encodeURL(response, appendQueryString(servletRequest, url));
+        return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, url));
     }
 
-    public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response, Request request, String viewName, String model, String actionName) {
+    public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response,
+                                        Request request, String viewName, String model, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;
         return RESTController.encodeURL(response, appendQueryString(servletRequest, url));
     }
@@ -328,19 +322,5 @@ public class PageUtil {
         menuHtml.append("</a>");
         menuHtml.append("</li>");
         return menuHtml.toString();
-    }
-
-    public static String getBackModel(HttpSession session, Request qzRequest) {
-        Map<String, Deque<RequestImpl>> historyMap = (Map<String, Deque<RequestImpl>>) session.getAttribute(BackFilter.HISTORY_KEY);
-        if (historyMap != null) {
-            Deque<RequestImpl> appHistory = historyMap.computeIfAbsent(qzRequest.getApp(), k -> new ArrayDeque<>(10));
-            if (appHistory.size() > 1) {
-                RequestImpl currentReq = appHistory.removeFirst();  // 当前页
-                RequestImpl lastReq = appHistory.peekFirst();
-                appHistory.addFirst(currentReq);
-                return lastReq.getModel();
-            }
-        }
-        return null;
     }
 }

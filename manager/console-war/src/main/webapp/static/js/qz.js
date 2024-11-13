@@ -465,7 +465,7 @@
          * @returns {unresolved}
          */
         bindFill: function (triggerSelector, targetSelector, append, resetData, restrictedArea, afterRenderCall) {
-            $(triggerSelector + "[action-type='sub_form']", restrictedArea).each(function (){
+            $(triggerSelector + "[action-type='sub_form']", restrictedArea).each(function () {
                 var actionType = $(this).attr("action-type");
                 var actionTypeMethod = bindingActions[actionType];
                 actionTypeMethod.call(null, null, triggerSelector + "[action-type='sub_form']", false, restrictedArea);
@@ -489,7 +489,7 @@
                     window.location.href = url;
                     return;
                 }
-                if (actionType !== undefined && actionType === "back") {
+                if (actionType !== undefined && actionType === getSetting("back")) {
                     var modelname = $(this).attr("modelname")
                     var menuLink = $("li.treeview a[modelname='" + modelname + "']", restrictedArea);
                     var sidebar = $("aside.main-sidebar", restrictedArea);

@@ -5,17 +5,39 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>qingzhou</groupId>
-        <artifactId>plugins</artifactId>
+        <artifactId>plugin-service</artifactId>
         <version>1.3.0</version>
     </parent>
 
-    <artifactId>qingzhou-uml</artifactId>
+    <artifactId>qingzhou-ssh</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>net.sourceforge.plantuml</groupId>
-            <artifactId>plantuml-asl</artifactId>
-            <version>1.2024.5</version>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-core</artifactId>
+            <version>2.12.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-sftp</artifactId>
+            <version>2.12.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-common</artifactId>
+            <version>2.12.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -46,5 +68,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

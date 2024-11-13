@@ -264,7 +264,7 @@
         "checkOtp": '<%=LoginManager.LOGIN_OTP%>',
         "locale": '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',
         "pageLang": '<%=(I18n.isZH() ? "zh_cn" : "en")%>',
-        "langFlag":'<%=I18n.getI18nLang().flag%>',
+        "langFlag": '<%=I18n.getI18nLang().flag%>',
         "pageErrorMsg": '<%=I18n.getKeyI18n("page.error")%>',
         "pageConfirmTitle": '<%=I18n.getKeyI18n("page.confirm.title")%>',
         "confirmBtnText": '<%=I18n.getKeyI18n("page.confirm")%>',
@@ -290,7 +290,7 @@
         "jsonView": '<%=JsonView.FLAG%>',
         "actionId_app_manage": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_MANAGE%>',
         "actionId_app_stop-delete": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + Delete.ACTION_DELETE%>' + ',' + '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_STOP%>',
-
+        "back": '<%=BackFilter.BACK_URI%>',
         "data": '<%=DashboardDataBuilder.DASHBOARD_FIELD_DATA%>',
         "unit": '<%=DashboardDataBuilder.DASHBOARD_FIELD_UNIT%>',
         "fields": '<%=DashboardDataBuilder.DASHBOARD_FIELD_FIELDS%>',

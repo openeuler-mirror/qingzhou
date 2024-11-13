@@ -205,13 +205,19 @@
                 <%
                         }
                     }
-                    String modelName = PageUtil.getBackModel(session, qzRequest);
 
+                    String modelName = BackFilter.getBackModel(session, qzRequest);
+                    if (Utils.notBlank(modelName)) {
                 %>
-                <a class="btn" action-type="<%=BackFilter.BACK_URI%>" <%=modelName==null?"disabled='disabled'":""%> modelname="<%=modelName%>"
+                <a modelname="<%=modelName%>"
+                   class="btn"
+                   action-type="<%=BackFilter.BACK_URI%>"
                    href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, BackFilter.BACK_URI)%>">
                     <%=I18n.getKeyI18n("page.return")%>
                 </a>
+                <%
+                    }
+                %>
             </div>
         </div>
 

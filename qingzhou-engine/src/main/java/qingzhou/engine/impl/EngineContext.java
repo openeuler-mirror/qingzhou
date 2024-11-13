@@ -1,16 +1,19 @@
 package qingzhou.engine.impl;
 
+import qingzhou.engine.util.FileUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-
-import qingzhou.engine.util.FileUtil;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EngineContext {
     private File libDir;
     private File instanceDir;
     private File temp;
+    final List<ModuleInfo> moduleInfoList = new ArrayList<>();
 
     public File getLibDir() {
         if (libDir == null) {

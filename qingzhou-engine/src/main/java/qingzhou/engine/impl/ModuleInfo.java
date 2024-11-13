@@ -1,30 +1,28 @@
-package qingzhou.engine.impl.core;
+package qingzhou.engine.impl;
+
+import qingzhou.engine.ModuleActivator;
 
 import java.io.File;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-import qingzhou.engine.ModuleActivator;
-import qingzhou.engine.impl.EngineContext;
-
 class ModuleInfo {
-    private final EngineContext engineContext;
+    final EngineContext engineContext;
+
+    final ModuleContextImpl moduleContext;
+    final List<ModuleActivator> moduleActivators;
+
     private final File file;
-
-    final ModuleContextImpl moduleContext = new ModuleContextImpl(this);
-    final List<ModuleActivator> moduleActivators = new ArrayList<>();
-
     private URLClassLoader loader;
     private boolean started;
 
     ModuleInfo(File file, EngineContext engineContext) {
         this.engineContext = engineContext;
         this.file = file;
-    }
 
-    EngineContext getEngineContext() {
-        return engineContext;
+        moduleContext = new ModuleContextImpl(this);
+        moduleActivators = new ArrayList<>();
     }
 
     String getName() {

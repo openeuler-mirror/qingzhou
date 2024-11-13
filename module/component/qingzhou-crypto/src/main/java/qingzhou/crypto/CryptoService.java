@@ -1,5 +1,8 @@
 package qingzhou.crypto;
 
+import qingzhou.engine.Service;
+
+@Service(name = "Encryption Tools", description = "Provide tools for encryption and decryption.")
 public interface CryptoService {
     String generateKey();
 

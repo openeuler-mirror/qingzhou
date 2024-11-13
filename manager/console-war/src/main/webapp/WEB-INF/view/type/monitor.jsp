@@ -55,5 +55,5 @@
 		<%@ include file="../fragment/info.jsp" %>
 	</div>
 
-	<%@ include file="../fragment/return_list.jsp" %>
+	<%@ include file="../fragment/back.jsp" %>
 </div>

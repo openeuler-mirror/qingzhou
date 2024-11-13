@@ -1,10 +1,8 @@
-package qingzhou.engine.impl.core;
+package qingzhou.engine.impl;
 
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.Resource;
-import qingzhou.engine.impl.EngineContext;
-import qingzhou.engine.impl.Main;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
@@ -22,7 +20,6 @@ import java.util.*;
 
 public class ModuleLoading implements Process {
     private final EngineContext engineContext;
-    private final List<ModuleInfo> moduleInfoList = new ArrayList<>();
     private final List<ModuleInfo> moduleStartedOrderCache = new ArrayList<>();
     private final ProcessSequence sequence;
 
@@ -61,14 +58,14 @@ public class ModuleLoading implements Process {
             for (File moduleFile : moduleFiles) {
                 String fileName = moduleFile.getName();
                 if (fileName.startsWith("qingzhou-") && fileName.endsWith(".jar")) {
-                    moduleInfoList.add(new ModuleInfo(moduleFile, engineContext));
+                    engineContext.moduleInfoList.add(new ModuleInfo(moduleFile, engineContext));
                 }
             }
         }
 
         @Override
         public void undo() {
-            moduleInfoList.clear();
+            engineContext.moduleInfoList.clear();
         }
     }
 
@@ -79,12 +76,12 @@ public class ModuleLoading implements Process {
             URLClassLoader parentLoader = new URLClassLoader(
                     new URL[]{new File(engineContext.getLibDir(), "qingzhou-api.jar").toURI().toURL()},
                     Main.class.getClassLoader());
-            new FilterLoading().setModuleLoader(moduleInfoList, parentLoader);
+            new FilterLoading().setModuleLoader(engineContext.moduleInfoList, parentLoader);
         }
 
         @Override
         public void undo() {
-            moduleInfoList.forEach(moduleInfo -> {
+            engineContext.moduleInfoList.forEach(moduleInfo -> {
                 try {
                     moduleInfo.getLoader().close();
                 } catch (IOException e) {
@@ -112,7 +109,7 @@ public class ModuleLoading implements Process {
                 }
             }
 
-            for (ModuleInfo moduleInfo : moduleInfoList) {
+            for (ModuleInfo moduleInfo : engineContext.moduleInfoList) {
                 Object c = qzJson.get(moduleInfo.getName());
                 if (c != null) {
                     moduleInfo.moduleContext.config = new HashMap<>((Map<String, String>) c);
@@ -125,7 +122,7 @@ public class ModuleLoading implements Process {
 
         @Override
         public void exec() throws Exception {
-            for (ModuleInfo moduleInfo : moduleInfoList) {
+            for (ModuleInfo moduleInfo : engineContext.moduleInfoList) {
                 Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
                         new File[]{moduleInfo.getFile()},
                         Module.class, "qingzhou.", moduleInfo.getLoader());
@@ -139,7 +136,7 @@ public class ModuleLoading implements Process {
 
         @Override
         public void undo() {
-            moduleInfoList.forEach(moduleInfo -> moduleInfo.moduleActivators.clear());
+            engineContext.moduleInfoList.forEach(moduleInfo -> moduleInfo.moduleActivators.clear());
         }
     }
 
@@ -147,7 +144,7 @@ public class ModuleLoading implements Process {
 
         @Override
         public void exec() throws Exception {
-            Collection<ModuleInfo> toStartList = moduleInfoList;
+            Collection<ModuleInfo> toStartList = engineContext.moduleInfoList;
             while (true) {
                 Map<ModuleInfo, Class<?>> missingServiceModule = startModule(toStartList);
                 if (missingServiceModule.isEmpty()) break; // 已经全部启动完毕
@@ -228,7 +225,7 @@ public class ModuleLoading implements Process {
 
         Object findService(Class<?> serviceType) {
             final Object[] serviceObj = {null};
-            moduleInfoList.stream().filter(ModuleInfo::isStarted).forEach(moduleInfo -> {
+            engineContext.moduleInfoList.stream().filter(ModuleInfo::isStarted).forEach(moduleInfo -> {
                 Map<Class<?>, Object> registeredServices = moduleInfo.moduleContext.registeredServices;
                 Object foundService = registeredServices.get(serviceType);
                 if (foundService != null) {

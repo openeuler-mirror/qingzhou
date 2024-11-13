@@ -1,15 +1,15 @@
 package qingzhou.deployer;
 
+import qingzhou.api.MsgLevel;
+import qingzhou.api.Response;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import qingzhou.api.MsgLevel;
-import qingzhou.api.Response;
-
-public class ResponseImpl implements Response {
+public class ResponseImpl implements Response, Serializable {
     private boolean success = true;
     private String msg;
     private MsgLevel msgLevel;
