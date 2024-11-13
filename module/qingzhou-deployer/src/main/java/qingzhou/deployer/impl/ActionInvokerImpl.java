@@ -1,40 +1,21 @@
 package qingzhou.deployer.impl;
 
-import java.io.File;
-import java.io.RandomAccessFile;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.config.Config;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.ActionInvoker;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.*;
 import qingzhou.engine.util.Utils;
 import qingzhou.http.Http;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.logger.Logger;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.InstanceInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
+
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 class ActionInvokerImpl implements ActionInvoker {
     private final Deployer deployer;
@@ -42,16 +23,14 @@ class ActionInvokerImpl implements ActionInvoker {
     private final Json json;
     private final CryptoService crypto;
     private final Http http;
-    private final Logger logger;
     private final Config config;
 
-    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, CryptoService crypto, Http http, Logger logger, Config config) {
+    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, CryptoService crypto, Http http, Config config) {
         this.deployer = deployer;
         this.registry = registry;
         this.json = json;
         this.crypto = crypto;
         this.http = http;
-        this.logger = logger;
         this.config = config;
     }
 
@@ -181,7 +160,7 @@ class ActionInvokerImpl implements ActionInvoker {
         String error = instance + ": " + (tmp.getMessage() != null ? tmp.getMessage() : "internal errors");
         response.setMsg(error);
 
-        logger.error(error, e);
+        Controller.logger.error(error, e);
         return response;
     }
 

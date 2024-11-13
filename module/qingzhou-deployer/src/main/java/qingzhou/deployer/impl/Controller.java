@@ -28,7 +28,7 @@ import java.util.Map;
 @Module
 public class Controller implements ModuleActivator {
     @Resource
-    private Logger logger;
+    static Logger logger;
 
     @Resource
     private Registry registry;
@@ -78,11 +78,11 @@ public class Controller implements ModuleActivator {
 
         @Override
         public void exec() {
-            deployer = new DeployerImpl(moduleContext, registry, logger);
+            deployer = new DeployerImpl(moduleContext, registry);
             deployer.appsBase = FileUtil.newFile(moduleContext.getInstanceDir(), "apps");
 
             moduleContext.registerService(Deployer.class, deployer);
-            moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, cryptoService, http, logger, config));
+            moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, cryptoService, http, config));
         }
     }
 
