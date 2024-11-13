@@ -104,6 +104,7 @@ public class RESTController extends HttpServlet {
     private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
             new ResetPassword(),
+            new BackFilter(),
             new ParameterFilter(), // 解密前端的 password 类型的表单域
             new ActionFilter(),
             new ValidationFilter(), // 参数校验
@@ -253,6 +254,10 @@ public class RESTController extends HttpServlet {
         request.setActionName(rest.get(3));
         request.setUserName(LoginManager.getLoginUser(req));
         request.setI18nLang(I18n.getI18nLang());
+
+        if (request.getAction().equals(BackFilter.BACK_URI)) {
+            return request;
+        }
 
         ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
 
