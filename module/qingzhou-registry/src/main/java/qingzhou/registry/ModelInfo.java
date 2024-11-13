@@ -1,13 +1,6 @@
 package qingzhou.registry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -44,20 +37,15 @@ public class ModelInfo {
     public Map<String, List<String>> getSameLineMap() {
         Map<String, List<String>> map = new LinkedHashMap<>();
         List<String> formFieldNames = new LinkedList<>(Arrays.asList(getFormFieldNames()));
-        boolean doContinue;
-        do {
-            doContinue = false;
-            for (int i = 1; i < formFieldNames.size(); i++) {
-                String sameLineField = formFieldNames.get(i);
-                ModelFieldInfo modelFieldInfo = getModelFieldInfo(sameLineField);
-                if (modelFieldInfo.isSameLine()) {
-                    map.compute(formFieldNames.get(i - 1), (s, strings) -> new ArrayList<>()).add(sameLineField);
-                    formFieldNames.remove(i);
-                    doContinue = true;
-                    break;
-                }
+        String firstFieldName = null;
+        for (String formFieldName : formFieldNames) {
+            ModelFieldInfo modelFieldInfo = getModelFieldInfo(formFieldName);
+            if (firstFieldName != null && modelFieldInfo.isSameLine()) {
+                map.computeIfAbsent(firstFieldName, key -> new ArrayList<>()).add(formFieldName);
+            } else {
+                firstFieldName = formFieldName;
             }
-        } while (doContinue);
+        }
         return map;
     }
 
