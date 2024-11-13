@@ -1132,7 +1132,7 @@ function bindEventForListPage() {
         // 列表页表格单元格操作
         qz.bindFill(domSelector + " table a.dataid" + (containSubTab ? ":not(div.tab-container a)" : ""), domSelector + ">.bodyDiv:first", false, false, restrictedArea, null);
         // 返回按钮
-        qz.bindFill(domSelector + " a[action-type='back']", domSelector + ">.bodyDiv:first", false, false, restrictedArea, null);
+        qz.bindFill(domSelector + " a[action-type='" + getSetting('back') + "']", domSelector + ">.bodyDiv:first", false, false, restrictedArea, null);
 
         $("table.qz-data-list a.qz-action-link" + (containSubTab ? ":not(div.tab-container a)" : ""), restrictedArea).each(function () {
             var actionTypeMethod = bindingActions[$(this).attr("action-type")];
