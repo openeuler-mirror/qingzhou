@@ -1,22 +1,16 @@
 package qingzhou.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.crypto.CryptoService;
 import qingzhou.deployer.I18nTool;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
-import qingzhou.http.Http;
-import qingzhou.json.Json;
-import qingzhou.logger.Logger;
-import qingzhou.qr.QrGenerator;
 import qingzhou.registry.MenuInfo;
-import qingzhou.servlet.ServletService;
-import qingzhou.uml.Uml;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 class AppContextImpl implements AppContext {
     private final ModuleContext moduleContext;
@@ -94,25 +88,10 @@ class AppContextImpl implements AppContext {
 
     @Override
     public Collection<Class<?>> getServiceTypes() {
-        Class<?>[] injectedServices = {CryptoService.class, Http.class, Json.class, Logger.class, QrGenerator.class, ServletService.class, Uml.class};
-        Set<Class<?>> types = new HashSet<>(Arrays.asList(injectedServices));
-        File pluginsDir = FileUtil.newFile(moduleContext.getLibDir(), "plugins");
-        File[] listFiles = pluginsDir.listFiles();
-        if (listFiles != null) {
-            try {
-                ClassLoader apiLoader = moduleContext.getApiLoader();
-                Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
-                        listFiles,
-                        Service.class, apiLoader);
-                for (String a : annotatedClasses) {
-                    Class<?> moduleClass = apiLoader.loadClass(a);
-                    System.out.println(moduleClass);
-                }
-            } catch (Exception e) {
-                Controller.logger.warn(e.getMessage(), e);
-            }
-        }
-        return types;
+        return moduleContext.getAvailableServiceTypes().stream().filter(aClass -> {
+            Service annotation = aClass.getAnnotation(Service.class);
+            return annotation == null || annotation.shareable();
+        }).collect(Collectors.toList());
     }
 
     @Override

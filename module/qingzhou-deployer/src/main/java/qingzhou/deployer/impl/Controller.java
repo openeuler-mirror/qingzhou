@@ -6,11 +6,9 @@ import qingzhou.deployer.ActionInvoker;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
-import qingzhou.engine.Module;
-import qingzhou.engine.ModuleActivator;
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.Resource;
+import qingzhou.engine.*;
 import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.http.Http;
@@ -19,10 +17,12 @@ import qingzhou.logger.Logger;
 import qingzhou.qr.QrGenerator;
 import qingzhou.registry.Registry;
 import qingzhou.servlet.ServletService;
+import qingzhou.uml.Uml;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 @Module
@@ -51,6 +51,9 @@ public class Controller implements ModuleActivator {
     @Resource
     private CryptoService cryptoService;
 
+    @Resource
+    private Uml uml; // 引用类：qingzhou.deployer.impl.SuperAction.combined
+
     private DeployerImpl deployer;
     private ProcessSequence sequence;
 
@@ -58,7 +61,7 @@ public class Controller implements ModuleActivator {
     public void start(ModuleContext moduleContext) throws Exception {
         sequence = new ProcessSequence(
                 new RegisterService(moduleContext),
-                new InjectPluginsForApp(moduleContext),
+                new InjectShareablePluginsForApp(moduleContext),
                 new InstallApp(moduleContext)
         );
         sequence.exec();
@@ -86,19 +89,38 @@ public class Controller implements ModuleActivator {
         }
     }
 
-    private static class InjectPluginsForApp implements Process {
+    private static class InjectShareablePluginsForApp implements Process {
         final ModuleContext moduleContext;
 
-        InjectPluginsForApp(ModuleContext moduleContext) {
+        InjectShareablePluginsForApp(ModuleContext moduleContext) {
             this.moduleContext = moduleContext;
         }
 
         @Override
         public void exec() throws Exception {
-            // hack into ModuleContextImpl
-            Field field = moduleContext.getClass().getDeclaredField("injectedServices");
-            field.setAccessible(true);
-            Map<Class<?>, Object> injectedServices = (Map<Class<?>, Object>) field.get(moduleContext);
+            File pluginsDir = FileUtil.newFile(moduleContext.getLibDir(), "plugins");
+            File[] listFiles = pluginsDir.listFiles();
+            if (listFiles != null) {
+                // hack into ModuleContextImpl:
+                // 因底层服务管理模块约束，未经过 @Resource 注入的服务无法通过 getService(xx) 使用，因此，
+                // 为了使得应用可以依赖到插件里自定义的服务，强行修改底层服务管理的注册表
+                Field field = moduleContext.getClass().getDeclaredField("injectedServices");
+                field.setAccessible(true);
+                Map<Class<?>, Object> injectedServices = (Map<Class<?>, Object>) field.get(moduleContext);
+
+                try {
+                    ClassLoader apiLoader = moduleContext.getApiLoader();
+                    Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
+                            listFiles,
+                            Service.class, apiLoader);
+                    for (String a : annotatedClasses) {
+                        Class<?> moduleClass = apiLoader.loadClass(a);
+                        injectedServices.put(moduleClass, null);
+                    }
+                } catch (Exception e) {
+                    Controller.logger.warn(e.getMessage(), e);
+                }
+            }
         }
     }
 

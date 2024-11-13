@@ -4,7 +4,9 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 class ModuleContextImpl implements ModuleContext {
@@ -42,21 +44,34 @@ class ModuleContextImpl implements ModuleContext {
     }
 
     @Override
-    public <T> void registerService(Class<T> serviceType, T service) {
+    public <T> void registerService(Class<T> serviceType, T serviceObj) {
         if (registeredServices.containsKey(serviceType)) {
             throw new IllegalStateException("Re-registration is not allowed: " + serviceType.getName());
         }
-        registeredServices.put(serviceType, service);
+        registeredServices.put(serviceType, serviceObj);
     }
 
     @Override
-    public <T> T getService(Class<T> clazz) {
-        Object injected = injectedServices.get(clazz);
+    public <T> T getService(Class<T> serviceType) {
+        Object injected = injectedServices.get(serviceType);
         if (injected != null) {
             return (T) injected;
         }
 
-        return (T) registeredServices.get(clazz);
+        Object registered = registeredServices.get(serviceType);
+        if (registered != null) {
+            return (T) registered;
+        }
+
+        throw new IllegalArgumentException("No service available for " + serviceType);
+    }
+
+    @Override
+    public Collection<Class<?>> getAvailableServiceTypes() {
+        return new HashSet<Class<?>>() {{
+            addAll(registeredServices.keySet());
+            addAll(injectedServices.keySet());
+        }};
     }
 
     @Override
