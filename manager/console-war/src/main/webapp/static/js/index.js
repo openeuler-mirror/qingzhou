@@ -1,3 +1,4 @@
+var tabMap = {};
 /**
  * 获取全局配置项
  * @param key 配置 key
@@ -12,9 +13,21 @@ function getActiveTabContent() {
     return $(".content-box>ul>li")[$(".tab-box>ul>li.active").index()];
 };
 
-// 获取限定区域
-function getRestrictedArea() {
-    return getActiveTabContent();
+/**
+ * 获取限定区域
+ * @param {type} inSubTab (false 返回当前 Tab 标签 | true 返回二级Tab标签中的活动Tab标签作为限定区域)
+ */
+function getRestrictedArea(inSubTab) {
+    var restrictedArea = getActiveTabContent();
+    if (!inSubTab) {
+        return restrictedArea;
+    }
+    var tabContainer = $("div.tab-container:first", restrictedArea);
+    if ($(tabContainer).length > 0) {
+        var qzTab = tabMap[$(tabContainer).attr("id")];
+        return qzTab.getActiveTab();
+    }
+    return restrictedArea;
 };
 
 $(document).ready(function () {
@@ -2700,8 +2713,6 @@ function autoAdaptTip() {
         document.body.removeChild(ruler);
     }
 };
-
-var tabMap = {};
 
 function openTab(dataId, dataUrl, tabTitle) {
     var restrictedArea = getRestrictedArea();
