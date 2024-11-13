@@ -5,9 +5,10 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.registry.ModelInfo;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class RequestImpl implements Request {
+public class RequestImpl implements Request, Serializable {
     private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
     private transient Response response = new ResponseImpl();
     private transient ModelInfo cachedModelInfo = null;

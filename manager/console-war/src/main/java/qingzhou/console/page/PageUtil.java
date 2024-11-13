@@ -6,6 +6,7 @@ import qingzhou.api.Request;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.rest.BackFilter;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.deployer.Deployer;
@@ -22,19 +23,9 @@ import qingzhou.registry.Registry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class PageUtil {
@@ -337,5 +328,19 @@ public class PageUtil {
         menuHtml.append("</a>");
         menuHtml.append("</li>");
         return menuHtml.toString();
+    }
+
+    public static String getBackModel(HttpSession session, Request qzRequest) {
+        Map<String, Deque<RequestImpl>> historyMap = (Map<String, Deque<RequestImpl>>) session.getAttribute(BackFilter.HISTORY_KEY);
+        if (historyMap != null) {
+            Deque<RequestImpl> appHistory = historyMap.computeIfAbsent(qzRequest.getApp(), k -> new ArrayDeque<>(10));
+            if (appHistory.size() > 1) {
+                RequestImpl currentReq = appHistory.removeFirst();  // 当前页
+                RequestImpl lastReq = appHistory.peekFirst();
+                appHistory.addFirst(currentReq);
+                return lastReq.getModel();
+            }
+        }
+        return null;
     }
 }

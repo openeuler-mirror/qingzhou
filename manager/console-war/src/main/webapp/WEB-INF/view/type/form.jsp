@@ -205,17 +205,13 @@
                 <%
                         }
                     }
-                %>
+                    String modelName = PageUtil.getBackModel(session, qzRequest);
 
-                <%
-                    if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
                 %>
-                <a href="javascript:void(0)" class="btn" onclick="returnHref(this);">
+                <a class="btn" action-type="<%=BackFilter.BACK_URI%>" <%=modelName==null?"disabled='disabled'":""%> modelname="<%=modelName%>"
+                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, BackFilter.BACK_URI)%>">
                     <%=I18n.getKeyI18n("page.return")%>
                 </a>
-                <%
-                    }
-                %>
             </div>
         </div>
 

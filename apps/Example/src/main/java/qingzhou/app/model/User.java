@@ -283,4 +283,9 @@ public class User extends AddModelBase implements Group, Option, Echo {
     public String[] headActions() {
         return new String[]{Add.ACTION_CREATE, "share", "test", "upload", "upload1"};
     }
+
+    @Override
+    public int pageSize() {
+        return 1;
+    }
 }
