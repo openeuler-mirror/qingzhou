@@ -129,6 +129,10 @@
             $(".tab-nav-box", this.rootBox).animate({"marginLeft": 0 - hidewidth + "px"}, "fast");
             return this;
         };
+        
+        this.getActiveTab = function() {
+            return $("div.tab-main[data-id='" + $(".tab-nav-item.active", this.rootBox).attr("data-id") + "']", this.rootBox);
+        };
 
         this.calcWidth = function (tabs) {
             var sumWidth = 0;
