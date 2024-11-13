@@ -264,6 +264,7 @@
         "checkOtp": '<%=LoginManager.LOGIN_OTP%>',
         "locale": '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',
         "pageLang": '<%=(I18n.isZH() ? "zh_cn" : "en")%>',
+        "langFlag":'<%=I18n.getI18nLang().flag%>',
         "pageErrorMsg": '<%=I18n.getKeyI18n("page.error")%>',
         "pageConfirmTitle": '<%=I18n.getKeyI18n("page.confirm.title")%>',
         "confirmBtnText": '<%=I18n.getKeyI18n("page.confirm")%>',

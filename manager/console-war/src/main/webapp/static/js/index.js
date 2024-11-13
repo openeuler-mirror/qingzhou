@@ -605,6 +605,16 @@ function echoItem(thisForm, params, item, echoGroup) {
     }, "json");
 }
 
+function getI18n(i18nArr){
+    var flag = getSetting("langFlag")
+    for (let item of i18nArr) {
+        if (item.startsWith(flag+":")){
+            return item.split(":")[1]
+        }
+    }
+    return i18nArr[0];
+}
+
 function updateFormData(thisForm, data, options, isList) {
     for (let option of options){
         var formItem;
@@ -626,9 +636,9 @@ function updateFormData(thisForm, data, options, isList) {
                     "        placeholder=\""+ placeholder +"\">"
                 for (let op of option.options) {
                     if (op.name === option.value){
-                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\" selected>\n"+ op.i18n[0] +"</option>";
+                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\" selected>\n"+ getI18n(op.i18n) +"</option>";
                     }else{
-                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\">\n"+ op.i18n[0] +"</option>";
+                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\">\n"+ getI18n(op.i18n) +"</option>";
                     }
                 }
                 html += "</select>"
@@ -669,7 +679,7 @@ function updateFormData(thisForm, data, options, isList) {
                 html = "<li data-value=\"\" class=\"option focus\" format=\"\"></li>"
                 for(let op of option.options){
                     //todo 国际化
-                    html += "<li data-value=\""+ op.name.replace(/"/g, '&quot;') +"\" class=\"option\" format=\""+ op.name.replace(/"/g, '&quot;') +"\">"+ op.i18n[0] +"</li>"
+                    html += "<li data-value=\""+ op.name.replace(/"/g, '&quot;') +"\" class=\"option\" format=\""+ op.name.replace(/"/g, '&quot;') +"\">"+ getI18n(op.i18n) +"</li>"
                 }
                 $("ul",formItem).html(html);
                 //渲染选中
@@ -690,7 +700,7 @@ function updateFormData(thisForm, data, options, isList) {
                 for(let op of option.options){
                     html += "<a draggable=\"true\" href=\"javascript:void(0);\">\n" +
                         "        <input type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\">\n" +
-                        "        <label>"+ op.i18n[0] +"\n" +
+                        "        <label>"+ getI18n(op.i18n) +"\n" +
                         "        </label>\n" +
                         "    </a>";
                 }
@@ -712,7 +722,7 @@ function updateFormData(thisForm, data, options, isList) {
                 for(let op of option.options){
                     html += "<label class=\"checkbox-inline checkbox-label checkbox-anim\">\n" +
                         "    <input echoGroup=\""+ echoGroup +"\" type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\">\n" +
-                        "    <i class=\"checkbox-i\"></i> "+ op.i18n[0] +"\n" +
+                        "    <i class=\"checkbox-i\"></i> "+ getI18n(op.i18n) +"\n" +
                         "</label>"
                 }
                 if (!isList){
@@ -734,7 +744,7 @@ function updateFormData(thisForm, data, options, isList) {
                 for(let op of option.options){
                     html += "<label class=\"radio-inline radio-label radio-anim\">\n" +
                         "    <input type=\"radio\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\" echogroup=\""+ echoGroup +"\">\n" +
-                        "    <i class=\"radio-i\"></i> "+ op.i18n[0] +"\n" +
+                        "    <i class=\"radio-i\"></i> "+ getI18n(op.i18n) +"\n" +
                         "</label>";
                 }
                 if (!isList){
