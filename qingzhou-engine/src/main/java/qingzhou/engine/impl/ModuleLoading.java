@@ -125,7 +125,7 @@ public class ModuleLoading implements Process {
             for (ModuleInfo moduleInfo : engineContext.moduleInfoList) {
                 Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
                         new File[]{moduleInfo.getFile()},
-                        Module.class, "qingzhou.", moduleInfo.getLoader());
+                        Module.class, moduleInfo.getLoader());
                 for (String a : annotatedClasses) {
                     Class<?> moduleClass = moduleInfo.getLoader().loadClass(a);
                     ModuleActivator activator = (ModuleActivator) moduleClass.newInstance();

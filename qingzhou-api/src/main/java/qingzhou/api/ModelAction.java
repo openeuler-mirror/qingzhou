@@ -25,6 +25,8 @@ public @interface ModelAction {
 
     boolean distribute() default false;
 
+    boolean clean_parameters() default true; // add 和 update 时，自动清理未在 ModelField 定义的数据
+
     ActionType action_type() default ActionType.link;
 
     String[] form_fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段

@@ -47,19 +47,6 @@
     <div class="table-tools qz-list-operate">
         <div class="tools-group">
             <%
-                String modelName = BackFilter.getBackModel(session, qzRequest);
-                if (Utils.notBlank(modelName)) {
-            %>
-            <a <%=modelName == null ? "disabled='disabled'" : ""%>
-                    modelname="<%=modelName%>"
-                    action-type="<%=BackFilter.BACK_URI%>" class="btn"
-                    href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, BackFilter.BACK_URI)%>">
-                <i class="icon icon-reply"></i>
-                <%=I18n.getKeyI18n("page.return")%>
-            </a>
-            <%
-                }
-
                 for (String actionName : headActions) {
                     boolean actionPermitted = SecurityController.isActionPermitted(qzApp, qzModel, actionName, currentUser);
                     if (!actionPermitted) continue;
@@ -136,6 +123,19 @@
                class="btn batch-ops" act-confirm='<%=operationConfirm%> ?' binding="<%=randomId%>">
                 <i class="icon icon-<%=actionInfo.getIcon()%>"></i>
                 <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionKey)%>
+            </a>
+            <%
+                }
+
+                String modelName = BackFilter.getBackModel(session, qzRequest);
+                if (Utils.notBlank(modelName)) {
+            %>
+            <a <%=modelName == null ? "disabled='disabled'" : ""%>
+                    modelname="<%=modelName%>"
+                    action-type="<%=BackFilter.BACK_URI%>" class="btn"
+                    href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, BackFilter.BACK_URI)%>">
+                <i class="icon icon-reply"></i>
+                <%=I18n.getKeyI18n("page.return")%>
             </a>
             <%
                 }

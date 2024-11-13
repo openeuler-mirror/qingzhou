@@ -1,8 +1,8 @@
 package qingzhou.registry;
 
-import java.lang.reflect.Method;
-
 import qingzhou.api.ActionType;
+
+import java.lang.reflect.Method;
 
 public class ModelActionInfo {
     private transient Method method;
@@ -11,6 +11,7 @@ public class ModelActionInfo {
     private String[] info;
     private String icon;
     private boolean distribute;
+    private boolean cleanParameters;
     private String show;
     private String appPage;
     private String[] formFields;
@@ -64,6 +65,14 @@ public class ModelActionInfo {
 
     public void setDistribute(boolean distribute) {
         this.distribute = distribute;
+    }
+
+    public boolean isCleanParameters() {
+        return cleanParameters;
+    }
+
+    public void setCleanParameters(boolean cleanParameters) {
+        this.cleanParameters = cleanParameters;
     }
 
     public String getAppPage() {

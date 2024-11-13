@@ -1,32 +1,16 @@
 package qingzhou.engine.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
+
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class Utils {
     public static int getIndex(Object[] objects, Object object) {
@@ -200,7 +184,7 @@ public class Utils {
         return msg.toString();
     }
 
-    public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, String scopePrefix, ClassLoader classLoader) throws Exception {
+    public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, ClassLoader classLoader) throws Exception {
         return Utils.doInThreadContextClassLoader(classLoader, () -> {
             Collection<String> targetClasses = new HashSet<>();
             ClassPool classPool;
@@ -211,7 +195,7 @@ public class Utils {
                 classPool = ClassPool.getDefault();
                 classPool.appendPathList(Arrays.stream(libs).map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator)));
             }
-            getScopeClasses(libs, scopePrefix).forEach(s -> {
+            getScopeClasses(libs).forEach(s -> {
                 try {
                     CtClass ctClass = classPool.get(s);
                     if (ctClass.getAnnotation(annotationClass) != null) {
@@ -225,7 +209,7 @@ public class Utils {
         });
     }
 
-    private static Collection<String> getScopeClasses(File[] libs, String scopePrefix) throws IOException {
+    private static Collection<String> getScopeClasses(File[] libs) throws IOException {
         Collection<String> scopeClasses = new HashSet<>();
         // 找出类名范围
         for (File file : libs) {
@@ -238,8 +222,6 @@ public class Utils {
                     int i = entryName.indexOf(".class");
                     if (i < 1) continue;
                     String className = entryName.substring(0, i).replace("/", ".");
-                    if (scopePrefix != null && !className.startsWith(scopePrefix)) continue;
-
                     scopeClasses.add(className);
                 }
             }

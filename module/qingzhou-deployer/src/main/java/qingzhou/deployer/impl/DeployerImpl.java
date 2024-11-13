@@ -1,38 +1,8 @@
 package qingzhou.deployer.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.Supplier;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
-import java.util.stream.Collectors;
-
-import qingzhou.api.AppContext;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingzhouApp;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Group;
+import qingzhou.api.*;
 import qingzhou.api.type.List;
-import qingzhou.api.type.Option;
-import qingzhou.api.type.Update;
-import qingzhou.api.type.Validate;
+import qingzhou.api.type.*;
 import qingzhou.deployer.AppListener;
 import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
@@ -40,13 +10,21 @@ import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
-import qingzhou.logger.Logger;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ItemInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Supplier;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
@@ -54,16 +32,14 @@ class DeployerImpl implements Deployer {
 
     private final ModuleContext moduleContext;
     private final Registry registry;
-    private final Logger logger;
     private LoaderPolicy loaderPolicy;
     File appsBase = null;
 
     private final java.util.List<AppListener> appListeners = new ArrayList<>();
 
-    DeployerImpl(ModuleContext moduleContext, Registry registry, Logger logger) {
+    DeployerImpl(ModuleContext moduleContext, Registry registry) {
         this.moduleContext = moduleContext;
         this.registry = registry;
-        this.logger = logger;
     }
 
     @Override
@@ -89,7 +65,7 @@ class DeployerImpl implements Deployer {
         apps.put(name, app);
         appListeners.forEach(appListener -> appListener.onInstalled(name));
 
-        logger.info("The app has been successfully installed: " + appDir.getName());
+        Controller.logger.info("The app has been successfully installed: " + appDir.getName());
     }
 
     private void startModel(AppImpl app) throws Exception {
@@ -278,7 +254,7 @@ class DeployerImpl implements Deployer {
     }
 
     private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader) throws Exception {
-        Collection<String> modelClassName = Utils.detectAnnotatedClass(appLibs, Model.class, null, loader);
+        Collection<String> modelClassName = Utils.detectAnnotatedClass(appLibs, Model.class, loader);
 
         Map<ModelBase, ModelInfo> modelInfos = new HashMap<>();
 
@@ -471,7 +447,7 @@ class DeployerImpl implements Deployer {
     }
 
     private QingzhouApp buildQingzhouApp(File[] appLibs, URLClassLoader loader) throws Exception {
-        Collection<String> annotatedClass = Utils.detectAnnotatedClass(appLibs, qingzhou.api.App.class, null, loader);
+        Collection<String> annotatedClass = Utils.detectAnnotatedClass(appLibs, qingzhou.api.App.class, loader);
         if (annotatedClass.size() == 1) {
             Class<?> cls = loader.loadClass(annotatedClass.iterator().next());
             return (QingzhouApp) cls.newInstance();
@@ -553,6 +529,7 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setInfo(modelAction.info());
             modelActionInfo.setIcon(modelAction.icon());
             modelActionInfo.setDistribute(modelAction.distribute());
+            modelActionInfo.setCleanParameters(modelAction.clean_parameters());
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setAppPage(modelAction.app_page());
             modelActionInfo.setFormFields(modelAction.form_fields());
