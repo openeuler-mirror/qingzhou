@@ -438,7 +438,7 @@ function bindEventForFormPage() {
 
 function bindEchoSelectEvent() {
     //列表搜搜框下拉选级联回显
-    var currentform = $("form[name='filterForm']", getRestrictedArea());
+    var currentform = $("form[name='filterForm']", getRestrictedArea(true));
     var echoGroupElements = currentform.find('input[echogroup], select[echogroup]');
     if (echoGroupElements.length > 0 ) {
         echoGroupElements.each(function () {
@@ -574,7 +574,7 @@ function bindFormEvent() {
 
 function bindEchoItemEvent() {
     //查找当前表单下所有回显数据元素，添加失去焦点事件
-    var currentform = $("form[name='pageForm']",getRestrictedArea());
+    var currentform = $("form[name='pageForm']",getRestrictedArea(true));
     var echoGroupElements = currentform.find('[echoGroup]');
     echoGroupElements.each(function () {
         $(this).unbind("change").bind("change", function (e) {
