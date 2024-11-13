@@ -93,7 +93,7 @@
 
 			<span class="input-group-btn col-md-4" style="width: 18%;padding-left:0;margin-left: 45px;">
                 <a class="btn" href="javascript:void(0);"
-				   onclick="returnHref(this.parent().parent().find('a.filter_search').attr('href'));">
+				   onclick="(function(element) {$('.treeview.active:last > a', $(element).closest('section.main-body').prev()).trigger('click')})(this);">
                     <i class="icon icon-search"></i> <%=I18n.getKeyI18n("page.filter.reset")%>
                 </a>
             </span>
