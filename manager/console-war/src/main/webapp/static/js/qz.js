@@ -269,6 +269,9 @@
                 });
                 this.activeTab($(".tab-nav-item.active", this.rootBox));
             }
+            if ($("div.tab-nav-box>span.tab-nav-item").length === 0) {
+                $("div.tab-header>.destroy", this.rootBox).click();
+            }
             return false;
         };
     };
