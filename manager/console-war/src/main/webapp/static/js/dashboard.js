@@ -921,7 +921,7 @@
                 }
             };
 
-            if (max !== undefined && max !== -1) {
+            if (max !== undefined && max !== 0) {
                 yAxisConfig.max = max;
             }
 
@@ -982,7 +982,7 @@
 
         // 获取柱状图的颜色
         function getColor(used, max) {
-            if (max === undefined || max === -1) {
+            if (max === undefined || max === 0) {
                 return '#73c0de';
             }
             var ratio = used / max;
