@@ -130,6 +130,9 @@ $(document).ready(function () {
 
     // 设置或重新设置（如事件绑定、赋初始值等）
     setOrReset();
+    $(document.body).resize(function() {
+        $("div.tab-container").css({"height": ($(document.body).height() - 170) + "px"});
+    });
 });
 
 // 绑定本机、集群、实例 Tab 标签事件
@@ -1283,7 +1286,7 @@ function returnHref(backDom) {
     var sidebar = $(backDom).closest("section.main-body").prev();
     var menuLink = $(".treeview.active:last > a", sidebar);
     $(menuLink).trigger("click");
-    $(".menu-open", sidebar).removeClass("menu-open").find(".treeview-menu").hide();
+    //$(".menu-open", sidebar).removeClass("menu-open").find(".treeview-menu").hide();
     $(menuLink).parent().parents("li.treeview.active").removeClass("active").addClass("menu-open").find(".treeview-menu");
     $(menuLink).parent().parents("li.treeview.menu-open").children(".treeview-menu").show();
 }
@@ -1926,8 +1929,8 @@ function openTab(dataId, dataUrl, tabTitle) {
     if ($("div.tab-container", restrictedArea).length === 0) {
         var randId = qz.randomStr(8);
         var html = ""
-            + "<div id=\"" + randId + "\" class=\"tab-container\">"
-            + "    <div class=\"tab-container-box\"></div>"
+            + "<div id=\"" + randId + "\" class=\"tab-container\" style=\"width:100%;height:" + $(".main-body", restrictedArea).first().height() + "px;\">"
+            + "    <div class=\"tab-container-box\" style=\"height:100%;\"></div>"
             + "</div>";
         $(restrictedArea).append(html);
     }
@@ -1945,7 +1948,6 @@ function openTab(dataId, dataUrl, tabTitle) {
     var qzTab = tabMap[bindId];
     qzTab.addTab(dataId, tabTitle, "", {}, true, function (tabDom) {
         qz.fill(dataUrl, {}, tabDom, false, function () {
-            $(tabDom).css({"height": $(".main-body", restrictedArea).first().height()});
             $("aside.main-sidebar", tabDom).css({"margin-top": "0px"});
             $("aside.main-sidebar .menu-toggle-btn", tabDom).css({"margin-bottom": "0px"});
             $("ul[data-widget='tree']", tabDom).menuTree();

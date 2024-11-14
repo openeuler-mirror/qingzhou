@@ -211,8 +211,8 @@
                 %>
                 <a modelname="<%=modelName%>"
                    class="btn"
-                   action-type="<%=BackFilter.BACK_URI%>"
-                   href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, BackFilter.BACK_URI)%>">
+                   action-type="<%=BackFilter.BACK_URI%>" onclick="returnHref(this);"
+                   href="javascript:void(0);" back-link="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, BackFilter.BACK_URI)%>">
                     <%=I18n.getKeyI18n("page.return")%>
                 </a>
                 <%
