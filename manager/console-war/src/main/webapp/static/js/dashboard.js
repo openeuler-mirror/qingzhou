@@ -126,19 +126,7 @@
 
             if (typeof dashboard.fetchDataAndRender === 'function') {
                 dashboard.fetchDataAndRender();
-
-                if (dashboard.chartInstances && typeof dashboard.chartInstances === 'object') {
-                    for (var chartInstancesKey in dashboard.chartInstances) {
-                        if (dashboard.chartInstances.hasOwnProperty(chartInstancesKey)) {
-                            var chartInstance = dashboard.chartInstances[chartInstancesKey];
-                            if (chartInstance) {
-                                setTimeout(function() {
-                                    chartInstance.resize();
-                                }, 100); // 延迟 100ms
-                            }
-                        }
-                    }
-                }
+                resizeHandler(dashboard);
             }
         }
 
@@ -272,7 +260,9 @@
             for (var chartId in dashboard.chartInstances) {
                 if (dashboard.chartInstances.hasOwnProperty(chartId)) {
                     if (typeof dashboard.chartInstances[chartId].resize === 'function') {
-                        dashboard.chartInstances[chartId].resize();
+                        setTimeout(function () {
+                            dashboard.chartInstances[chartId].resize();
+                        }, 100); // 延迟 100ms
                     }
                 }
             }
