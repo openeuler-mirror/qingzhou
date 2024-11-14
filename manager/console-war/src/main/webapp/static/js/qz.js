@@ -571,7 +571,6 @@
                         $(container).html(html);
                     }
                     setOrReset(container);
-                    console.log(container.html())
                     if ((typeof callback) === "function") {
                         callback.call(null, container);
                     }
