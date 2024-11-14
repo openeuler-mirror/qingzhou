@@ -457,7 +457,7 @@ function bindEchoSelectEvent() {
                 var params = {};
                 var key = current.next().attr("name");
                 params[key] = current.next().attr("value")
-                if (current.attr("echoGroup") !== undefined && current.attr("echoGroup") !== "" && params[key] !== "") { //搜索列表下拉选支持选空，如空则不必调接口
+                if (current.attr("echogroup") !== undefined && current.attr("echogroup") !== "" && params[key] !== "") { //搜索列表下拉选支持选空，如空则不必调接口
                     echoItem(currentform, params,"","");
                 }
             });
@@ -583,11 +583,18 @@ function bindEchoItemEvent() {
     var currentform = $("form[name='pageForm']",getRestrictedArea(true));
     var echoGroupElements = currentform.find('[echoGroup]');
     echoGroupElements.each(function () {
-        $(this).unbind("change").bind("change", function (e) {
+        //通过
+        var current = $(this);
+        var target = $(this);
+        //nice-select需拿hidden的input框
+        if ($(this).prop("tagName").toLowerCase() === "input" && $(this).attr("type") === "text") {
+            target = $(this).closest(".nice-select").find("input[type='hidden']");
+        }
+        $(target).unbind("change").bind("change", function (e) {
             e.preventDefault();
             var params = $("form[name='pageForm']").formToArray();
-            if ($(this).attr("echoGroup") !== undefined && $(this).attr("echoGroup") !== "") {
-                echoItem(currentform, params, $(this).attr("name"), $(this).attr("echoGroup"));
+            if ($(current).attr("echogroup") !== undefined && $(current).attr("echogroup") !== "") {
+                echoItem(currentform, params, $(target).attr("name"), $(current).attr("echogroup"));
             }
         });
     });
@@ -610,8 +617,13 @@ function echoItem(thisForm, params, item, echoGroup) {
         let bindNames = new Set();
         $(thisForm).find('[echoGroup]').each(function () {
             for (let group of echoGroup.split(",")) {
-                if ($(this).attr("echoGroup").split(",").includes(group)) {
-                    bindNames.add($(this).attr("name"));
+                if ($(this).attr("echogroup").split(",").includes(group)) {
+                    if ($(this).attr("name") === undefined){
+                        //nice-select需拿hidden的input框的值
+                        bindNames.add($(this).closest(".nice-select").find("input[type='hidden']").attr("name"))
+                    }else{
+                        bindNames.add($(this).attr("name"));
+                    }
                 }
             }
         });
@@ -647,7 +659,7 @@ function updateFormData(thisForm, data, options, isList) {
         let echoGroup = "";
         switch (type) {
             case "multiselect":
-                echoGroup = $(formItem).find("select[name='" + option.field + "']").attr("echoGroup");
+                echoGroup = $(formItem).find("select[name='" + option.field + "']").attr("echogroup");
                 //获取placeholder
                 let placeholder = $("select",formItem).attr("placeholder");
                 //渲染原始html
@@ -736,7 +748,7 @@ function updateFormData(thisForm, data, options, isList) {
                 break;
             case "checkbox":
                 //获取echoGroup
-                echoGroup = $(formItem).find("input[name='" + option.field + "']").attr("echoGroup");
+                echoGroup = $(formItem).find("input[name='" + option.field + "']").attr("echogroup");
                 //渲染页面
                 for(let op of option.options){
                     html += "<label class=\"checkbox-inline checkbox-label checkbox-anim\">\n" +
@@ -759,7 +771,7 @@ function updateFormData(thisForm, data, options, isList) {
                 break;
             case "radio":
                 //获取echoGroup
-                echoGroup = $(formItem).find("input[name='" + option.field + "']").attr("echoGroup");
+                echoGroup = $(formItem).find("input[name='" + option.field + "']").attr("echogroup");
                 for(let op of option.options){
                     html += "<label class=\"radio-inline radio-label radio-anim\">\n" +
                         "    <input type=\"radio\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\" echogroup=\""+ echoGroup +"\">\n" +
