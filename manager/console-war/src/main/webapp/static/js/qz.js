@@ -33,8 +33,9 @@
             });
             if (typeof minFn === "function") {
                 $("div.tab-header>.mintab", this.rootBox).unbind("click").bind("click", function (e) {
-                    DashboardManager.hide($("div.tab-container", getRestrictedArea()));
-
+                    $(".tab-main", this.rootBox).each(function () {
+                        DashboardManager.hide($(this));
+                    });
                     e.preventDefault();
                     minFn.call(null);
                 });
@@ -219,6 +220,7 @@
                     $(ele).next(".tab-nav-item:eq(0)").addClass("active");
                     $(".tab-main", this.rootBox).each(function () {
                         if ($(this).attr("data-id") === dataId) {
+                            DashboardManager.close($(this));
                             $(this).show().siblings(".tab-main").hide();
                             return false;
                         }
@@ -240,6 +242,7 @@
                     $(ele).prev(".tab-nav-item:last").addClass("active");
                     $(".tab-main", this.rootBox).each(function () {
                         if ($(this).attr("data-id") === dataId) {
+                            DashboardManager.close($(this));
                             $(this).show().siblings(".tab-main").hide();
                             return false;
                         }
