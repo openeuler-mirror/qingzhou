@@ -42,8 +42,9 @@
             }
             if (typeof destroyFn === "function") {
                 $("div.tab-header>.destroy", this.rootBox).unbind("click").bind("click", function (e) {
-                    DashboardManager.close($("div.tab-container", getRestrictedArea()));
-
+                    $(".tab-main", this.rootBox).each(function () {
+                        DashboardManager.close($(this));
+                    });
                     e.preventDefault();
                     destroyFn.call(null);
                 });
