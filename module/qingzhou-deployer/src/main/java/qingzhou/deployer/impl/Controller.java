@@ -23,6 +23,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @Module
@@ -100,27 +101,58 @@ public class Controller implements ModuleActivator {
         public void exec() throws Exception {
             File pluginsDir = FileUtil.newFile(moduleContext.getLibDir(), "plugins");
             File[] listFiles = pluginsDir.listFiles();
-            if (listFiles != null) {
-                // hack into ModuleContextImpl:
-                // 因底层服务管理模块约束，未经过 @Resource 注入的服务无法通过 getService(xx) 使用，因此，
-                // 为了使得应用可以依赖到插件里自定义的服务，强行修改底层服务管理的注册表
-                Field field = moduleContext.getClass().getDeclaredField("injectedServices");
-                field.setAccessible(true);
-                Map<Class<?>, Object> injectedServices = (Map<Class<?>, Object>) field.get(moduleContext);
+            if (listFiles == null || listFiles.length == 0) return;
 
-                try {
-                    ClassLoader apiLoader = moduleContext.getApiLoader();
-                    Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
-                            listFiles,
-                            Service.class, apiLoader);
-                    for (String a : annotatedClasses) {
-                        Class<?> moduleClass = apiLoader.loadClass(a);
-                        injectedServices.put(moduleClass, null);
+            // hack into ModuleContextImpl:
+            // 因底层服务管理模块约束，未经过 @Resource 注入的服务无法通过 getService(xx) 使用，因此，
+            // 为了使得应用可以依赖到插件里自定义的服务，强行修改底层服务管理的注册表
+            Field field = moduleContext.getClass().getDeclaredField("injectedServices");
+            field.setAccessible(true);
+            Map<Class<?>, Object> injectedServices = (Map<Class<?>, Object>) field.get(moduleContext);
+
+            try {
+                ClassLoader apiLoader = moduleContext.getApiLoader();
+                Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
+                        listFiles, Service.class, apiLoader);
+                for (String detectedService : annotatedClasses) {
+                    Class<?> serviceClass = apiLoader.loadClass(detectedService);
+                    Object service = getService(serviceClass);
+                    if (service != null) {
+                        injectedServices.put(serviceClass, service);
                     }
-                } catch (Exception e) {
-                    Controller.logger.warn(e.getMessage(), e);
                 }
+            } catch (Exception e) {
+                Controller.logger.warn(e.getMessage(), e);
             }
+        }
+
+        private Object getService(Class<?> serviceClass) throws Exception {
+            List moduleInfoList = (List) getAllModuleInfos();
+            Field moduleContextField = null;
+            for (Object otherModuleInfo : moduleInfoList) {
+                if (moduleContextField == null) {
+                    moduleContextField = otherModuleInfo.getClass().getDeclaredField("moduleContext");
+                    moduleContextField.setAccessible(true);
+                }
+                ModuleContext context = (ModuleContext) moduleContextField.get(otherModuleInfo);
+                Object service = context.getService(serviceClass);
+                if (service != null) return service;
+            }
+            return null;
+        }
+
+        private Object getAllModuleInfos() throws NoSuchFieldException, IllegalAccessException {
+            Field fieldModuleInfo = moduleContext.getClass().getDeclaredField("moduleInfo");
+            fieldModuleInfo.setAccessible(true);
+            Object moduleInfo = fieldModuleInfo.get(moduleContext);
+
+            Field engineContextField = moduleInfo.getClass().getDeclaredField("engineContext");
+            engineContextField.setAccessible(true);
+            Object engineContext = engineContextField.get(moduleInfo);
+
+            Field moduleInfoListField = engineContext.getClass().getDeclaredField("moduleInfoList");
+            moduleInfoListField.setAccessible(true);
+            return moduleInfoListField.get(engineContext);
         }
     }
 

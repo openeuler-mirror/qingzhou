@@ -63,7 +63,7 @@ class ModuleContextImpl implements ModuleContext {
             return (T) registered;
         }
 
-        throw new IllegalArgumentException("No service available for " + serviceType);
+        return null;
     }
 
     @Override
