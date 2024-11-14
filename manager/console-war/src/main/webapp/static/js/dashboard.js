@@ -126,6 +126,19 @@
 
             if (typeof dashboard.fetchDataAndRender === 'function') {
                 dashboard.fetchDataAndRender();
+
+                if (dashboard.chartInstances && typeof dashboard.chartInstances === 'object') {
+                    for (var chartInstancesKey in dashboard.chartInstances) {
+                        if (dashboard.chartInstances.hasOwnProperty(chartInstancesKey)) {
+                            var chartInstance = dashboard.chartInstances[chartInstancesKey];
+                            if (chartInstance) {
+                                setTimeout(function() {
+                                    chartInstance.resize();
+                                }, 100); // 延迟 100ms
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -193,7 +206,7 @@
                                         var dashboardData = data[count];
                                         switch (dashboardData.type) {
                                             case getSetting("basicData"):
-                                                renderBasicData(container, dashboardData, dashboard);
+                                                renderBasicData(container, dashboardData);
                                                 break;
                                             case getSetting("gaugeData"):
                                                 renderGaugeData(container, dashboardData, count, dashboard);
@@ -318,7 +331,7 @@
         }
 
         // 渲染基本数据
-        function renderBasicData(container, basicData, dashboard) {
+        function renderBasicData(container, basicData) {
             var dataKey = getSetting("data");
             var jsonObj = basicData[dataKey];
 
