@@ -33,8 +33,9 @@
             });
             if (typeof minFn === "function") {
                 $("div.tab-header>.mintab", this.rootBox).unbind("click").bind("click", function (e) {
-                    DashboardManager.hide($("div.tab-container", getRestrictedArea()));
-
+                    $(".tab-main", this.rootBox).each(function () {
+                        DashboardManager.hide($(this));
+                    });
                     e.preventDefault();
                     minFn.call(null);
                 });
