@@ -1,20 +1,18 @@
 package qingzhou.app.system;
 
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.engine.util.Utils;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ModelFieldInfo;
+
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.engine.util.Utils;
+import java.util.*;
 
 public class ModelUtil {
     private static final String STRING_PROPERTIES_SP = DeployerConstants.DEFAULT_DATA_SEPARATOR;
@@ -156,7 +154,9 @@ public class ModelUtil {
             String val = data.get(queryField);
             if (val == null) return false;
 
-            String querySP = supplier.getFieldSeparator(queryField);
+            AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
+            ModelFieldInfo fieldInfo = appInfo.getModelInfo(supplier.getModelName()).getModelFieldInfo(queryField);
+            String querySP = fieldInfo.getSeparator();
             if (queryValue.contains(querySP)) {
                 boolean found = false;
                 for (String q : queryValue.split(querySP)) {
@@ -199,7 +199,7 @@ public class ModelUtil {
     }
 
     public interface Supplier {
-        String getFieldSeparator(String field);
+        String getModelName();
 
         Map<String, String> get();
     }

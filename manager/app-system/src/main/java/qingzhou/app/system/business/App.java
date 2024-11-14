@@ -9,7 +9,6 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.registry.AppInfo;
-import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
 
 import java.util.*;
@@ -44,10 +43,8 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
         result.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
             @Override
-            public String getFieldSeparator(String field) {
-                AppInfo appInfo = deployer.getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
-                ModelFieldInfo fieldInfo = appInfo.getModelInfo(DeployerConstants.MODEL_APP).getModelFieldInfo(field);
-                return fieldInfo.getSeparator();
+            public String getModelName() {
+                return DeployerConstants.MODEL_APP;
             }
 
             @Override

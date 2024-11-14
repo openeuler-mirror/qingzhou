@@ -1,20 +1,6 @@
 package qingzhou.app.system.business;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.FieldType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.Response;
+import qingzhou.api.*;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.List;
@@ -22,15 +8,18 @@ import qingzhou.api.type.Monitor;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.deployer.ActionInvoker;
-import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.ModuleContext;
-import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
-import qingzhou.registry.ModelFieldInfo;
 import qingzhou.registry.Registry;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
         menu = Main.Business, order = 2,
@@ -228,10 +217,8 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
         });
         ids.removeIf(id -> !ModelUtil.query(query, new ModelUtil.Supplier() {
             @Override
-            public String getFieldSeparator(String field) {
-                AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
-                ModelFieldInfo fieldInfo = appInfo.getModelInfo(DeployerConstants.MODEL_INSTANCE).getModelFieldInfo(field);
-                return fieldInfo.getSeparator();
+            public String getModelName() {
+                return DeployerConstants.MODEL_INSTANCE;
             }
 
             @Override

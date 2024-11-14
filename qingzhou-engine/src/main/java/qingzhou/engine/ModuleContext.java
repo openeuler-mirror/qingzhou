@@ -1,6 +1,7 @@
 package qingzhou.engine;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Map;
 
 public interface ModuleContext {
@@ -16,10 +17,12 @@ public interface ModuleContext {
 
     File getTemp();
 
-    <T> void registerService(Class<T> clazz, T service);
+    <T> void registerService(Class<T> serviceType, T serviceObj);
 
     /**
      * 获取本Module开放的Service，以及从其它Module注入的Service
      */
-    <T> T getService(Class<T> clazz);
+    <T> T getService(Class<T> serviceType);
+
+    Collection<Class<?>> getAvailableServiceTypes();
 }
