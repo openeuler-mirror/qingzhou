@@ -407,7 +407,7 @@
             var chartId = containerAttr + '_bar_' + index;
             var data = chartItem[getSetting("data")];
             var fields = chartItem[getSetting("fields")];
-            var max = chartItem[getSetting("max")] ? parseFloat(chartItem[getSetting("max")]) : undefined;
+            var max = parseFloat(chartItem[getSetting("max")]);
             var used = parseFloat(chartItem[getSetting("used")]);
             var info = chartItem[getSetting("info")] || "";
             var unit = chartItem[getSetting("unit")] || "";
@@ -908,7 +908,7 @@
             var unit = params.unit;
             var max = params.max;
             var used = params.used;
-            var color = getColor(max, used); // 动态颜色
+            var color = getColor(used, max); // 动态颜色
 
             var yAxisConfig = {
                 type: 'value',
