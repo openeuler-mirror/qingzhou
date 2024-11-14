@@ -294,7 +294,7 @@
                    class="dataid qz-action-link tooltips"
                    action-type="<%=linkActionInfo.getActionType()%>"
                    data-tip-arrow="top"
-                   data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
+                   data-tip='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + linkActionInfo.getCode())%>'
                    style="color:#4C638F;">
                     <%=PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo)%>
                 </a>
