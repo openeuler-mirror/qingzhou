@@ -175,7 +175,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
     public void add(Request request) {
-        String instances = ((RequestImpl) request).removeParameter("instances");
+        String instances = ((RequestImpl) request).getParameters().remove("instances");
         Main.invokeAgentOnInstances(request, DeployerConstants.ACTION_INSTALL_APP, instances.split(App.INSTANCE_SP));
     }
 

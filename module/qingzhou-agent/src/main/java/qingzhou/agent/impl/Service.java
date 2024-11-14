@@ -1,18 +1,7 @@
 package qingzhou.agent.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-
 import qingzhou.crypto.Cipher;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.*;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
@@ -22,6 +11,9 @@ import qingzhou.http.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.ModelInfo;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 class Service implements Process {
     private final Http http;
@@ -118,7 +110,7 @@ class Service implements Process {
             liteResponse.setData(appData);
             response = liteResponse;
         }
-        response.getParametersInSession().putAll(request.getParametersInSession());
+        response.getParametersInSession().putAll(request.parametersForSession());
 
         // 5. 响应数据
         return json.toJson(response).getBytes(DeployerConstants.ACTION_INVOKE_CHARSET);
@@ -141,7 +133,7 @@ class Service implements Process {
             File[] listFiles = uploadDir.listFiles();
             if (listFiles == null || listFiles.length != 1) continue;
 
-            request.setParameter(uploadField, listFiles[0].getAbsolutePath());
+            request.getParameters().put(uploadField, listFiles[0].getAbsolutePath());
         }
     }
 }

@@ -1,17 +1,6 @@
 package qingzhou.app.system.user;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
@@ -23,6 +12,11 @@ import qingzhou.crypto.TotpCipher;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         hidden = true,
@@ -121,7 +115,7 @@ public class Password extends ModelBase implements Update, Export {
         boolean result = false;
         String reqCode = request.getParameter("otp");
         if (Utils.notBlank(reqCode)) {
-            String keyForOtp = request.getParameterInSession(KEY_IN_SESSION_FLAG);
+            String keyForOtp = request.parametersForSession().get(KEY_IN_SESSION_FLAG);
             TotpCipher totpCipher = getAppContext().getService(CryptoService.class).getTotpCipher();
             result = totpCipher.verifyCode(keyForOtp, reqCode);
             if (result) {
@@ -129,7 +123,7 @@ public class Password extends ModelBase implements Update, Export {
                 data.put(User.ID_KEY, request.getUser());
                 data.put("keyForOtp", keyForOtp);
                 User.updateDataForUser(data);
-                request.removeParameterInSession(KEY_IN_SESSION_FLAG);
+                request.parametersForSession().remove(KEY_IN_SESSION_FLAG);
             }
         }
         request.getResponse().setSuccess(result);
@@ -155,7 +149,7 @@ public class Password extends ModelBase implements Update, Export {
             public byte[] read(long offset) throws IOException {
                 TotpCipher totpCipher = Main.getService(CryptoService.class).getTotpCipher();
                 String keyForOtp = totpCipher.generateKey();
-                request.setParameterInSession(KEY_IN_SESSION_FLAG, keyForOtp);
+                request.parametersForSession().put(KEY_IN_SESSION_FLAG, keyForOtp);
 
                 request.getResponse().setContentType("image/" + format);
 

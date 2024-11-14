@@ -54,11 +54,9 @@ public interface Request {
 
     Enumeration<String> getParameterNames();
 
-    String getParameterInSession(String name);
+    Parameters parametersForSession();
 
-    void removeParameterInSession(String name);
-
-    void setParameterInSession(String key, String val);
+    Parameters parametersForSubMenu();
 
     /**
      * 获取用户名。
@@ -75,4 +73,14 @@ public interface Request {
     Lang getLang();
 
     Response getResponse();
+
+    interface Parameters {
+        String put(String key, String value);
+
+        void putAll(Parameters parameters);
+
+        String get(String key);
+
+        String remove(String key);
+    }
 }

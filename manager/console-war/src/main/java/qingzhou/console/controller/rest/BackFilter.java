@@ -64,7 +64,7 @@ public class BackFilter implements Filter<RestContext> {
             RequestImpl backRequest = new RequestImpl(request);
             backRequest.setCachedModelInfo(request.getCachedModelInfo());
             for (Map.Entry<String, String> e : request.getParameters().entrySet()) {
-                backRequest.setParameter(e.getKey(), e.getValue());
+                backRequest.getParameters().put(e.getKey(), e.getValue());
             }
             appHistory.addFirst(backRequest);
         }

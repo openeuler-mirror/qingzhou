@@ -1,18 +1,18 @@
 package qingzhou.console.view.type;
 
-import java.net.URLEncoder;
-import java.util.Map;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.DownloadData;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.deployer.ResponseImpl;
-import qingzhou.deployer.DownloadData;
 import qingzhou.engine.util.Utils;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.net.URLEncoder;
+import java.util.Map;
 
 public class DownloadView implements View {
     public static final String FLAG = "download";
@@ -50,8 +50,8 @@ public class DownloadView implements View {
 
             // 要续传
             RequestImpl req = new RequestImpl(request);
-            req.setParameter(DownloadData.DOWNLOAD_SERIAL_KEY, result.get(DownloadData.DOWNLOAD_SERIAL_KEY));
-            req.setParameter(DownloadData.DOWNLOAD_OFFSET, String.valueOf(offset));
+            req.getParameters().put(DownloadData.DOWNLOAD_SERIAL_KEY, result.get(DownloadData.DOWNLOAD_SERIAL_KEY));
+            req.getParameters().put(DownloadData.DOWNLOAD_OFFSET, String.valueOf(offset));
             ResponseImpl res = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(req);
             if (res.isSuccess()) {
                 content = (byte[]) res.getInternalData();

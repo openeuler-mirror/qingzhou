@@ -15,7 +15,7 @@ public class ResponseImpl implements Response, Serializable {
     private MsgLevel msgLevel;
     private String contentType;
     private final Map<String, String> parameters = new HashMap<>();
-    private final Map<String, String> parametersInSession = new HashMap<>();
+    private final ParametersImpl parametersInSession = new ParametersImpl();
     private final Map<String, String> headers = new LinkedHashMap<>();
     private final Map<String, Long> dateHeaders = new LinkedHashMap<>();
     private Serializable appData;
@@ -100,7 +100,7 @@ public class ResponseImpl implements Response, Serializable {
         this.internalData = internalData;
     }
 
-    public Map<String, String> getParametersInSession() {
+    public ParametersImpl getParametersInSession() {
         return parametersInSession;
     }
 

@@ -265,7 +265,7 @@ public class RESTController extends HttpServlet {
             String decodeId = RESTController.decodeId(id.toString());
             request.setId(decodeId);
             // Update 更新操作参数里需要id
-            request.setParameter(modelInfo.getIdField(), decodeId);
+            request.getParameters().put(modelInfo.getIdField(), decodeId);
         }
 
         HashMap<String, String> data = new HashMap<>();
@@ -295,17 +295,18 @@ public class RESTController extends HttpServlet {
             data.putAll(fileAttachments);
         }
 
-        data.forEach(request::setParameter);
+        data.forEach((k, v) -> request.getParameters().put(k, v));
 
         HttpSession session = req.getSession(false);
         if (session != null) {
-            Map<String, String> paramsInSession = new HashMap<>();
             Enumeration<String> attributeNames = session.getAttributeNames();
             while (attributeNames.hasMoreElements()) {
                 String key = attributeNames.nextElement();
-                paramsInSession.put(key, String.valueOf(session.getAttribute(key)));
+                Object value = session.getAttribute(key);
+                if (value instanceof String) {
+                    request.parametersForSession().put(key, (String) value);
+                }
             }
-            request.getParametersInSession().putAll(paramsInSession);
         }
 
         request.setCachedModelInfo(modelInfo);

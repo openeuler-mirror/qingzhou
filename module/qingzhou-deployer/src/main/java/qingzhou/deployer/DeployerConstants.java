@@ -1,5 +1,7 @@
 package qingzhou.deployer;
 
+import qingzhou.api.ActionType;
+
 public interface DeployerConstants {
     // 系统环境
     String APP_SYSTEM = "-";
@@ -50,4 +52,5 @@ public interface DeployerConstants {
     String APP_STARTED = "Started";
     String APP_STOPPED = "Stopped";
     String DEFAULT_DATA_SEPARATOR = ",";
+    String SUB_MENU_PARAMETER_FLAG = ActionType.sub_menu.name() + "_parameter_flag_";
 }
