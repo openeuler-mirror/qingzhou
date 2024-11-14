@@ -521,11 +521,14 @@ function bindFormEvent() {
                 $("#mask-loading").hide();
                 $(".form-btn .btn", thisForm).removeAttr("disabled");
                 if (data.success === "true" || data.success === true) {
-                    $(".sidebar-menu", getRestrictedArea()).not(":has(div.tab-container)").find("li.active").each(function () {
-                        if (!$(this).hasClass("menu-open")) {
-                            $("a", this).click();
-                        }
-                    });
+                    $(".sidebar-menu:visible", getRestrictedArea()).not(":has(div.tab-container)")
+                        .find("li.active:visible")
+                        .each(function () {
+                            if (!$(this).hasClass("menu-open")) {
+                                $("a", this).click();
+                            }
+                        });
+
                     showMsg(data.msg, data.msg_level);
                 } else {
                     $("#tempZone", thisForm).html("");
