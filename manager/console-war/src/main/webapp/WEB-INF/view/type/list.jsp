@@ -43,7 +43,7 @@
     <%
         }
 
-        List<String> actions = new ArrayList<>(Arrays.asList(headActions));
+        Set<String> actions = new HashSet<>(Arrays.asList(headActions));
         actions.addAll(Arrays.asList(listActions));
         for (String actionName : actions) {
             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);

@@ -69,7 +69,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.checkbox,
-            separator = "@", list = true,
+            separator = "@",
             reference = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
@@ -99,7 +99,6 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.textarea,
-            list = true,
             skip = {">", "("},
             name = {"备注", "en:Notes"})
     public String notes = "只读控制";
