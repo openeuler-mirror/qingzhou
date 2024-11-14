@@ -810,7 +810,9 @@
                 gradualColors.push({offset: threshold.alarm, color: colors.warn});
                 gradualColors.push({offset: threshold.full, color: colors.alarm});
             }
-
+            if(max <= 0){
+                max = 10;
+            }
             return {
                 tooltip: {
                     formatter: '{a} <br/>{b}: {c} ' + unit
@@ -822,7 +824,7 @@
                     center: ['50%', '61%'], // 调整中心位置
                     min: 0,
                     max: max,
-                    splitNumber: Math.min(10, max),
+                    splitNumber: Math.min(10, Math.floor(max)),
                     startAngle: 180,
                     endAngle: 0,
                     itemStyle: {
@@ -925,7 +927,7 @@
                 }
             };
 
-            if (max !== undefined && max !== 0) {
+            if (max !== undefined && max > 0) {
                 yAxisConfig.max = max;
             }
 
@@ -986,7 +988,7 @@
 
         // 获取柱状图的颜色
         function getColor(used, max) {
-            if (max === undefined || max === 0) {
+            if (max === undefined || max <= 0) {
                 return '#73c0de';
             }
             var ratio = used / max;
