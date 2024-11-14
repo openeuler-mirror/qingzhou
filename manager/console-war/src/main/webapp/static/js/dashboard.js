@@ -126,6 +126,7 @@
 
             if (typeof dashboard.fetchDataAndRender === 'function') {
                 dashboard.fetchDataAndRender();
+                resizeHandler(dashboard);
             }
         }
 
@@ -193,7 +194,7 @@
                                         var dashboardData = data[count];
                                         switch (dashboardData.type) {
                                             case getSetting("basicData"):
-                                                renderBasicData(container, dashboardData, dashboard);
+                                                renderBasicData(container, dashboardData);
                                                 break;
                                             case getSetting("gaugeData"):
                                                 renderGaugeData(container, dashboardData, count, dashboard);
@@ -258,8 +259,11 @@
         function resizeHandler(dashboard) {
             for (var chartId in dashboard.chartInstances) {
                 if (dashboard.chartInstances.hasOwnProperty(chartId)) {
-                    if (typeof dashboard.chartInstances[chartId].resize === 'function') {
-                        dashboard.chartInstances[chartId].resize();
+                    var chartInstance = dashboard.chartInstances[chartId];
+                    if (typeof chartInstance.resize === 'function') {
+                        setTimeout(function () {
+                            chartInstance.resize();
+                        }, 100); // 延迟 100ms
                     }
                 }
             }
@@ -318,7 +322,7 @@
         }
 
         // 渲染基本数据
-        function renderBasicData(container, basicData, dashboard) {
+        function renderBasicData(container, basicData) {
             var dataKey = getSetting("data");
             var jsonObj = basicData[dataKey];
 
