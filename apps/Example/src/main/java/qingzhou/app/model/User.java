@@ -69,7 +69,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.checkbox,
-            separator = "@", list = true,
+            separator = "@",
             reference = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
@@ -99,7 +99,6 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.textarea,
-            list = true,
             skip = {">", "("},
             name = {"备注", "en:Notes"})
     public String notes = "只读控制";
@@ -122,6 +121,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
                     String value = request.getParameter(key);
                     map.put(key, value);
                 }
+                updateData(map);
                 request.getResponse().setData(map);
             } else if ("python".equals(checkbox)) {
                 request.getResponse().setSuccess(false);

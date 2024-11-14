@@ -21,7 +21,7 @@
 				}
 			%>
 		</label>
-		<div class="col-sm-5">
+		<div class="col-sm-5" type="<%=modelField.getInputType().name()%>">
 			<%@ include file="../fragment/field_type.jsp" %>
 		</div>
 	</div>
