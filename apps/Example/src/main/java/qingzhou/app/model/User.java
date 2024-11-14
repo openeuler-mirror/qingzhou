@@ -122,6 +122,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
                     String value = request.getParameter(key);
                     map.put(key, value);
                 }
+                updateData(map);
                 request.getResponse().setData(map);
             } else if ("python".equals(checkbox)) {
                 request.getResponse().setSuccess(false);

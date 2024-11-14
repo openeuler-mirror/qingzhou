@@ -1094,7 +1094,7 @@ var bindingActions = {
             $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
                 if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
-                    customAction($(this).attr("href"), $(this).attr("custom-action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"), $(this).attr("form-loaded-trigger"));
+                    popupAction($(this).attr("href"), $(this).attr("action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"), $(this).attr("form-loaded-trigger"),$(this).attr("get-data-url"));
                 }
                 return false;
             });
@@ -1444,9 +1444,10 @@ function downloadFiles(fileListUrl, downloadUrl) {
     });
 }
 
-function customAction(actionUrl, customActionId, title, restrictedArea, formLoadedTrigger) {
-    let html = $("div[custom-action-id='" + customActionId + "']", restrictedArea).html();
-    html = "<div style='padding: 10px'><form id='" + customActionId + "' method='post' class='form-horizontal'>" + html + "</form></div>";
+function popupAction(actionUrl, actionId, title, restrictedArea, formLoadedTrigger, getDataUrl) {
+    let html = $("div[popup-action-id='" + actionId + "']", restrictedArea).html();
+    var formId = actionId + Math.floor(Math.random() * 100);
+    html = "<div style='padding: 10px'><form id='" + formId + "' method='post' class='form-horizontal'>" + html + "</form></div>";
     openLayer({
         type: 1,
         shadeClose: true,
@@ -1455,7 +1456,7 @@ function customAction(actionUrl, customActionId, title, restrictedArea, formLoad
         maxHeight: 500,
         content: html,
         success: function (layero, index, that) {
-            $(document.getElementById(customActionId)).on('submit', function (e) {
+            $(document.getElementById(formId)).on('submit', function (e) {
                 e.preventDefault();
                 let formData = $(this).serialize();
                 $.ajax({
@@ -1463,19 +1464,19 @@ function customAction(actionUrl, customActionId, title, restrictedArea, formLoad
                     url: actionUrl,
                     data: formData,
                     success: function (res, textStatus, xhr) {
-                        var $customForm = $(document.getElementById(customActionId));
-                        $customForm.nextAll().remove();
+                        var $popupForm = $(document.getElementById(formId));
+                        $popupForm.nextAll().remove();
                         if (xhr.getResponseHeader("Content-Type") && xhr.getResponseHeader("Content-Type").includes("application/json")) {
                             if ((res.success === false || res.success === 'false') && res.msg) {
                                 showMsg(res.msg, 'error');
                             } else if ((res.success === true || res.success === 'true') && res.msg) {
                                 showMsg(res.msg, 'info');
                             } else if (JSON.stringify(res) !== '{}') {
-                                $customForm.after("<hr style=\'margin-top: 4px;\'><pre style='background-color: #333;color: #fff;padding: 10px;'>" + JSON.stringify(res, null, 4) + "</pre>");
+                                $popupForm.after("<hr style=\'margin-top: 4px;\'><pre style='background-color: #333;color: #fff;padding: 10px;'>" + JSON.stringify(res, null, 4) + "</pre>");
                                 layer.style(index, {height: '500px'});
                             }
                         } else {
-                            $customForm.after('<hr style=\'margin-top: 4px;\'>' + res);
+                            $popupForm.after('<hr style=\'margin-top: 4px;\'>' + res);
                             layer.style(index, {height: '500px'});
                         }
                     },
@@ -1484,8 +1485,24 @@ function customAction(actionUrl, customActionId, title, restrictedArea, formLoad
                     }
                 });
             });
-            if (formLoadedTrigger === "true" || formLoadedTrigger === true) {
-                $(document.getElementById(customActionId)).submit();
+            if (getDataUrl) {
+                $.ajax({
+                    type: "GET",
+                    url: getDataUrl,
+                    success: function (res) {
+                        if (res.success === 'true' || res.success === true) {
+                            updateFormData($(document.getElementById(formId)), res.data, []);
+                            if (formLoadedTrigger === "true" || formLoadedTrigger === true) {
+                                $(document.getElementById(formId)).submit();
+                            }
+                        } else {
+                            showMsg(res.msg, res.msg_level);
+                        }
+                    },
+                    error: function (e) {
+                        handleError(e);
+                    }
+                });
             }
         }
     });

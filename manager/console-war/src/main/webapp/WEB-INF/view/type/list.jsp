@@ -42,6 +42,26 @@
     <hr style="margin-top: 4px;">
     <%
         }
+
+        List<String> actions = new ArrayList<>(Arrays.asList(headActions));
+        actions.addAll(Arrays.asList(listActions));
+        for (String actionName : actions) {
+            ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
+            if (action.getActionType() == ActionType.sub_form) {
+                Map<String, String> actionFormData = new LinkedHashMap<>();
+                for (String fieldName : action.getFormFields()) {
+                    if (modelInfo.getModelFieldInfo(fieldName) != null) {
+                        actionFormData.put(fieldName, "");
+                    }
+                }
+                String popupActionId = " popup-action-id='" + qzApp + "-" + qzModel + "-" + actionName + "'";
+    %>
+        <div style="display: none" <%=popupActionId%>>
+            <%@ include file="../fragment/action_form.jsp" %>
+        </div>
+        <%
+                }
+            }
     %>
 
     <div class="table-tools qz-list-operate">
@@ -73,13 +93,11 @@
                     viewName = DownloadView.FLAG;
                 }
 
-                String customActionId = "";
                 if (action.getActionType() == ActionType.sub_form) {
                     viewName = JsonView.FLAG;
-                    customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "'";
                 }
             %>
-            <a class="btn" data-tip-arrow="top" <%=customActionId%> action-type="<%=action.getActionType()%>"
+            <a class="btn" data-tip-arrow="top" action-id="<%=qzApp + "-" + qzModel + "-" + actionName%>" action-type="<%=action.getActionType()%>"
                data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
             >
@@ -87,19 +105,6 @@
                 <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
             </a>
             <%
-                if (action.getActionType() == ActionType.sub_form) {
-                    Map<String, String> actionFormData = new LinkedHashMap<>();
-                    for (String fieldName : action.getFormFields()) {
-                        if (modelInfo.getModelFieldInfo(fieldName) != null) {
-                            actionFormData.put(fieldName, "");
-                        }
-                    }
-            %>
-            <div style="display: none" <%=customActionId%>>
-                <%@ include file="../fragment/action_form.jsp" %>
-            </div>
-            <%
-                    }
                 }
 
                 String randomId = UUID.randomUUID().toString();
@@ -380,11 +385,6 @@
                         }
                         if (!showAction) continue;
 
-                        String customActionId = "";
-                        if (action.getActionType() == ActionType.sub_form) {
-                            customActionId = " custom-action-id='popup-" + qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId + "'";
-                        }
-
                         boolean useJsonUri = action.getActionType() == ActionType.sub_form
                                 || action.getActionType() == ActionType.action_list
                                 || action.getActionType() == ActionType.download;
@@ -398,14 +398,10 @@
                         <%
                             if (action.getActionType() == ActionType.download) {
                                 out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
-                            }
-
-                            if (Utils.notBlank(customActionId)) {
-                                out.print(customActionId);
+                            } else if (action.getActionType() == ActionType.sub_form) {
                                 out.print(" form-loaded-trigger=" + action.isSubFormSubmitOnOpen());
-                            }
-
-                            if (action.getActionType() == ActionType.sub_form || action.getActionType() == ActionType.action_list) {
+                                out.print(" get-data-url='" + PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, Show.ACTION_SHOW + "/" + encodedItemId) + "'");
+                            } else if (action.getActionType() == ActionType.action_list) {
                                 out.print(" act-confirm='"
                                         + String.format(I18n.getKeyI18n("page.operationConfirm"),
                                         I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName),
@@ -419,20 +415,6 @@
                     <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
                 </a>
                 <%
-                    if (action.getActionType() == ActionType.sub_form) {
-                        Map<String, String> actionFormData = new LinkedHashMap<>();
-                        for (String fieldName : action.getFormFields()) {
-                            if (modelInfo.getModelFieldInfo(fieldName) != null) {
-                                actionFormData.put(fieldName, modelData[Utils.getIndex(dataListFields, fieldName)]);
-                            }
-                        }
-                %>
-                <div style="display: none"
-                     custom-action-id="popup-<%=qzApp + "-" + qzModel + "-" + action.getCode() + "-" + encodedItemId%>">
-                    <%@ include file="../fragment/action_form.jsp" %>
-                </div>
-                <%
-                        }
                     }
                 %>
             </td>
