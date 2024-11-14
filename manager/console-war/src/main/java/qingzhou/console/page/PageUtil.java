@@ -12,12 +12,29 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.ItemInfo;
+import qingzhou.registry.MenuInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelFieldInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class PageUtil {
@@ -95,11 +112,6 @@ public class PageUtil {
             return url;
         }
 
-        AppInfo appInfo = SystemController.getAppInfo(request.getApp());
-        if (appInfo == null) {
-            return url;
-        }
-
         Set<String> seenParamNames = new HashSet<>();
         StringBuilder newQueryString = new StringBuilder();
 
@@ -115,16 +127,9 @@ public class PageUtil {
             if (seenParamNames.contains(name)) {
                 continue;
             }
+
             seenParamNames.add(name);
-
-            int dotIndex = name.indexOf('.');
-            if (dotIndex <= 0) {
-                continue;
-            }
-
-            String modelName = name.substring(0, dotIndex);
-            ModelInfo modelInfo = appInfo.getModelInfo(modelName);
-            if (modelInfo == null) {
+            if (!name.startsWith(DeployerConstants.SUB_MENU_PARAMETER_FLAG)) {
                 continue;
             }
 
