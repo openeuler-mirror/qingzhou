@@ -259,9 +259,10 @@
         function resizeHandler(dashboard) {
             for (var chartId in dashboard.chartInstances) {
                 if (dashboard.chartInstances.hasOwnProperty(chartId)) {
-                    if (typeof dashboard.chartInstances[chartId].resize === 'function') {
+                    var chartInstance = dashboard.chartInstances[chartId];
+                    if (typeof chartInstance.resize === 'function') {
                         setTimeout(function () {
-                            dashboard.chartInstances[chartId].resize();
+                            chartInstance.resize();
                         }, 100); // 延迟 100ms
                     }
                 }
