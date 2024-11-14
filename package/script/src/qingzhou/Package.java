@@ -14,7 +14,7 @@ import java.util.zip.ZipOutputStream;
 public class Package {
     public static void main(String[] args) throws Exception {
         File versionDir = new File(args[0]);
-        boolean devMode = Boolean.parseBoolean(System.getProperty("devMode"));
+        boolean devMode = Boolean.parseBoolean(args[1]);
 
         System.out.println("版本目录：" + versionDir);
 

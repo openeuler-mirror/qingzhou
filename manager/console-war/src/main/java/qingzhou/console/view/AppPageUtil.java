@@ -1,23 +1,17 @@
 package qingzhou.console.view;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import qingzhou.api.Response;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
-import qingzhou.deployer.ActionInvoker;
-import qingzhou.deployer.AppListener;
-import qingzhou.deployer.AppPageData;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.*;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.logger.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 
 class AppPageUtil {
     static void doPage(String actionPage, RestContext restContext) throws Exception {
@@ -45,9 +39,9 @@ class AppPageUtil {
         fileReq.setAppName(DeployerConstants.APP_SYSTEM);
         fileReq.setModelName(DeployerConstants.MODEL_AGENT);
         fileReq.setActionName(AppPageData.ACTION_DOWNLOAD_PAGE);
-        fileReq.setParameter(AppPageData.DOWNLOAD_PAGE_APP, targetAppName);
+        fileReq.getParameters().put(AppPageData.DOWNLOAD_PAGE_APP, targetAppName);
         String pageRootDirName = getPageRootDirName(actionPage);
-        fileReq.setParameter(AppPageData.DOWNLOAD_PAGE_DIR, pageRootDirName);
+        fileReq.getParameters().put(AppPageData.DOWNLOAD_PAGE_DIR, pageRootDirName);
 
         Map<String, Response> invokeOnInstances = SystemController.getService(ActionInvoker.class)
                 .invokeOnInstances(fileReq, SystemController.getAppInstances(targetAppName).get(0));

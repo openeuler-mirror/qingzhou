@@ -30,6 +30,8 @@ public class ParameterFilter implements Filter<RestContext> {
         datetime(request);
         // 设置批量处理的标记
         batchId(request);
+        // 设置 ActionType.sub_menu 相关参数
+        subMenu(request);
 
         return true;
     }
@@ -77,7 +79,7 @@ public class ParameterFilter implements Filter<RestContext> {
         String idField = modelInfo.getIdField();
         for (String f : toRemove) {
             if (f.equals(idField)) continue;
-            request.removeParameter(f);
+            request.getParameters().remove(f);
         }
     }
 
@@ -87,7 +89,7 @@ public class ParameterFilter implements Filter<RestContext> {
             String name = paramNames.nextElement();
             String val = request.getParameter(name);
             if (val != null) {
-                request.setParameter(name, val.trim());
+                request.getParameters().put(name, val.trim());
             }
         }
     }
@@ -105,7 +107,7 @@ public class ParameterFilter implements Filter<RestContext> {
                     String val = request.getParameter(fieldName);
                     if (Utils.notBlank(val)) {
                         long time = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).parse(val).getTime();
-                        request.setParameter(fieldName, String.valueOf(time));
+                        request.getParameters().put(fieldName, String.valueOf(time));
                     }
                 } catch (Exception ignored) {
                 }
@@ -120,7 +122,7 @@ public class ParameterFilter implements Filter<RestContext> {
                         SimpleDateFormat format = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT);
                         Date v1 = format.parse(values[0]);
                         Date v2 = format.parse(values[1]);
-                        request.setParameter(fieldName, String.join(sp, v1.getTime() + sp + v2.getTime()));
+                        request.getParameters().put(fieldName, String.join(sp, v1.getTime() + sp + v2.getTime()));
                     }
                 } catch (Exception ignored) {
                 }
@@ -140,7 +142,7 @@ public class ParameterFilter implements Filter<RestContext> {
                     String val = request.getParameter(fieldName);
                     String result = SystemController.decryptWithConsolePrivateKey(val, false);
                     if (result != null) { // 可能是空串
-                        request.setParameter(fieldName, result);
+                        request.getParameters().put(fieldName, result);
                     }
                 } catch (Exception ignored) {
                 }
@@ -168,6 +170,24 @@ public class ParameterFilter implements Filter<RestContext> {
             }
         }
         request.setBatchId(batchIds.toArray(new String[0]));
-        request.removeParameter(idField);
+        request.getParameters().remove(idField);
+    }
+
+    private void subMenu(RequestImpl request) {
+        List<String> toMove = new ArrayList<>();
+
+        Enumeration<String> parameterNames = request.getParameterNames();
+        while (parameterNames.hasMoreElements()) {
+            String name = parameterNames.nextElement();
+            if (name.startsWith(DeployerConstants.SUB_MENU_PARAMETER_FLAG)) {
+                toMove.add(name);
+            }
+        }
+
+        for (String subMenuParam : toMove) {
+            String value = request.getParameters().remove(subMenuParam);
+            String key = subMenuParam.substring(DeployerConstants.SUB_MENU_PARAMETER_FLAG.length());
+            request.parametersForSubMenu().put(key, value);
+        }
     }
 }

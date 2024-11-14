@@ -1,4 +1,4 @@
-package test;
+package qingzhou.test;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;

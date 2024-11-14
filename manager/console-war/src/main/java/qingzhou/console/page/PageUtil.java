@@ -12,29 +12,12 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ItemInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class PageUtil {
@@ -259,7 +242,7 @@ public class PageUtil {
             String[] menuModels = actionInfo.getMenuModels();
             if (menuModels != null && menuModels.length > 0) {
                 showSubMenus = new HashSet<>(Arrays.asList(menuModels));
-                modelMenuParameter = (qzRequest.getModel() + "." + qzRequest.getAction() + "=" + qzRequest.getId());
+                modelMenuParameter = (DeployerConstants.SUB_MENU_PARAMETER_FLAG + qzRequest.getModel() + "." + qzRequest.getAction() + "=" + qzRequest.getId());
             }
         }
 

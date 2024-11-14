@@ -1,4 +1,3 @@
-<%@ page import="java.io.Serializable" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ include file="../fragment/head.jsp" %>
@@ -43,7 +42,7 @@
     <%
         }
 
-        Set<String> actions = new HashSet<>(Arrays.asList(headActions));
+        Set<String> actions = new LinkedHashSet<>(Arrays.asList(headActions));
         actions.addAll(Arrays.asList(listActions));
         for (String actionName : actions) {
             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
@@ -56,12 +55,12 @@
                 }
                 String popupActionId = " popup-action-id='" + qzApp + "-" + qzModel + "-" + actionName + "'";
     %>
-        <div style="display: none" <%=popupActionId%>>
-            <%@ include file="../fragment/action_form.jsp" %>
-        </div>
-        <%
-                }
+    <div style="display: none" <%=popupActionId%>>
+        <%@ include file="../fragment/action_form.jsp" %>
+    </div>
+    <%
             }
+        }
     %>
 
     <div class="table-tools qz-list-operate">
@@ -97,7 +96,8 @@
                     viewName = JsonView.FLAG;
                 }
             %>
-            <a class="btn" data-tip-arrow="top" action-id="<%=qzApp + "-" + qzModel + "-" + actionName%>" action-type="<%=action.getActionType()%>"
+            <a class="btn" data-tip-arrow="top" action-id="<%=qzApp + "-" + qzModel + "-" + actionName%>"
+               action-type="<%=action.getActionType()%>"
                data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
             >

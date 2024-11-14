@@ -6,10 +6,12 @@ import qingzhou.api.Response;
 import qingzhou.registry.ModelInfo;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RequestImpl implements Request, Serializable {
-    private transient final List<SessionParameterListener> sessionParameterListener = new ArrayList<>();
     private transient Response response = new ResponseImpl();
     private transient ModelInfo cachedModelInfo = null;
     private transient Map<String, Response> invokeOnInstances;
@@ -24,7 +26,8 @@ public class RequestImpl implements Request, Serializable {
     private Lang lang;
     private byte[] byteParameter; // 发送上传的附件到远程实例上
     private final Map<String, String> parameters = new HashMap<>();
-    private final Map<String, String> parametersInSession = new HashMap<>();
+    private final ParametersImpl parametersForSession = new ParametersImpl();
+    private final ParametersImpl parametersForSubMenu = new ParametersImpl();
 
     public RequestImpl() {
     }
@@ -85,29 +88,18 @@ public class RequestImpl implements Request, Serializable {
         return Collections.enumeration(parameters.keySet());
     }
 
+    @Override
+    public Parameters parametersForSession() {
+        return parametersForSession;
+    }
+
+    @Override
+    public Parameters parametersForSubMenu() {
+        return parametersForSubMenu;
+    }
+
     public Map<String, String> getParameters() {
         return parameters;
-    }
-
-    @Override
-    public String getParameterInSession(String name) {
-        return parametersInSession.get(name);
-    }
-
-    @Override
-    public void removeParameterInSession(String name) {
-        parametersInSession.remove(name);
-    }
-
-    @Override
-    public void setParameterInSession(String key, String val) {
-        if (key == null) return;
-        if (val == null) {
-            parametersInSession.remove(key);
-        }
-        parametersInSession.put(key, val);
-
-        sessionParameterListener.forEach(sessionParameterListener -> sessionParameterListener.onParameterSet(key, val));
     }
 
     public void setId(String id) {
@@ -153,22 +145,6 @@ public class RequestImpl implements Request, Serializable {
         this.lang = lang;
     }
 
-    public String removeParameter(String parameterName) {
-        return parameters.remove(parameterName);
-    }
-
-    public void setParameter(String parameterName, String parameterValue) {
-        parameters.put(parameterName, parameterValue);
-    }
-
-    public Map<String, String> getParametersInSession() {
-        return parametersInSession;
-    }
-
-    public void addSessionParameterListener(SessionParameterListener sessionParameterListener) {
-        this.sessionParameterListener.add(sessionParameterListener);
-    }
-
     public void setResponse(Response response) {
         this.response = response;
     }
@@ -195,5 +171,9 @@ public class RequestImpl implements Request, Serializable {
 
     public void setInvokeOnInstances(Map<String, Response> invokeOnInstances) {
         this.invokeOnInstances = invokeOnInstances;
+    }
+
+    public void addSessionParameterListener(ParameterListener parameterListener) {
+        this.parametersForSession.addParameterListener(parameterListener);
     }
 }

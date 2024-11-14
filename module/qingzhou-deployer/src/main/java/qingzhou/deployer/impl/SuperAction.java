@@ -225,11 +225,8 @@ class SuperAction {
         if (Add.ACTION_ADD.equals(action)
                 || Update.ACTION_UPDATE.equals(action)) {
             ModelInfo modelInfo = getAppInfo().getModelInfo(request.getModel());
-            ModelActionInfo actionInfo = modelInfo.getModelActionInfo(action);
-            if (actionInfo.isCleanParameters()) {
-                java.util.List<String> toRemove = params.keySet().stream().filter(param -> Arrays.stream(modelInfo.getFormFieldNames()).noneMatch(s -> s.equals(param))).collect(Collectors.toList());
-                toRemove.forEach(params::remove);
-            }
+            java.util.List<String> toRemove = params.keySet().stream().filter(param -> Arrays.stream(modelInfo.getFormFieldNames()).noneMatch(s -> s.equals(param))).collect(Collectors.toList());
+            toRemove.forEach(params::remove);
         }
     }
 

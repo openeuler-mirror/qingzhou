@@ -1,14 +1,10 @@
 package qingzhou.app.common;
 
+import qingzhou.api.*;
+import qingzhou.api.type.Show;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Show;
 
 @Model(code = "home", icon = "home",
         entrance = "show",
@@ -31,6 +27,16 @@ public class Home extends ModelBase implements Show {
             info = {"运行 Qingzhou 实例的 Java 环境。", "en:The Java environment in which Qingzhou instance is running."})
     public String javaHome;
 
+    @ModelField(
+            name = {"平台名称", "en:Platform Name"},
+            info = {"Qingzhou 平台的名称。", "en:The name of Qingzhou platform."})
+    public String platformName;
+
+    @ModelField(
+            name = {"平台版本", "en:Platform Version"},
+            info = {"Qingzhou 平台的版本。", "en:This version of this Qingzhou platform."})
+    public String platformVersion;
+
     @ModelAction(
             code = Show.ACTION_SHOW,
             name = {"首页", "en:Home"},
@@ -46,6 +52,8 @@ public class Home extends ModelBase implements Show {
             put("appName", getAppContext().getCurrentRequest().getApp());
             put("appDir", getAppContext().getAppDir().getAbsolutePath());
             put("javaHome", System.getProperty("java.home"));
+            put("platformName", "Qingzhou（轻舟）");
+            put("platformVersion", getAppContext().getPlatformVersion());
         }};
     }
 }

@@ -100,9 +100,9 @@ class ActionInvokerImpl implements ActionInvoker {
             tmp.setAppName(DeployerConstants.APP_SYSTEM);
             tmp.setModelName(DeployerConstants.MODEL_AGENT);
             tmp.setActionName(DeployerConstants.ACTION_UPLOAD);
-            tmp.setParameter(DeployerConstants.UPLOAD_FILE_ID, uploadId);
-            tmp.setParameter(DeployerConstants.UPLOAD_FILE_NAME, file.getName());
-            tmp.setParameter(DeployerConstants.UPLOAD_APP_NAME, request.getApp());
+            tmp.getParameters().put(DeployerConstants.UPLOAD_FILE_ID, uploadId);
+            tmp.getParameters().put(DeployerConstants.UPLOAD_FILE_NAME, file.getName());
+            tmp.getParameters().put(DeployerConstants.UPLOAD_APP_NAME, request.getApp());
             try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
                 byte[] block = new byte[1024 * 1024 * 15];
                 long offset = 0;
@@ -123,7 +123,7 @@ class ActionInvokerImpl implements ActionInvoker {
                 }
             }
             // 上传成功后，更新为远程实例上的地址
-            ((RequestImpl) request).setParameter(field, DeployerConstants.UPLOAD_FILE_PREFIX_FLAG + uploadId);
+            ((RequestImpl) request).getParameters().put(field, DeployerConstants.UPLOAD_FILE_PREFIX_FLAG + uploadId);
         }
 
         return sendRemote(request, remoteUrl, cipher); // 发送请求

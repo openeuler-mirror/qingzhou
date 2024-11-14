@@ -140,7 +140,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                     req.setAppName(qzApp);
                     req.setModelName(modelInfo.getCode());
                     req.setActionName(Option.ACTION_OPTION);
-                    req.setParameter(Option.FIELD_NAME_PARAMETER, fieldName);
+                    req.getParameters().put(Option.FIELD_NAME_PARAMETER, fieldName);
                     ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
                     return (ItemInfo[]) res.getInternalData();
                 }
