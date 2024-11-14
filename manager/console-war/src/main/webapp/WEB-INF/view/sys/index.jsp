@@ -333,6 +333,7 @@
     %>
 
 </script>
+<script src="<%=contextPath%>/static/js/dashboard.js"></script>
 <script src="<%=contextPath%>/static/js/qz.js"></script>
 <script src="<%=contextPath%>/static/js/main.js"></script>
 <script src="<%=contextPath%>/static/js/index.js"></script>
