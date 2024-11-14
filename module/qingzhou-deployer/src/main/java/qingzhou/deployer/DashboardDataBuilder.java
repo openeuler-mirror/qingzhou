@@ -66,7 +66,7 @@ public class DashboardDataBuilder extends ResponseData implements Dashboard.Data
         }
 
         double totalUsed = 0;
-        double totalMax = -1;
+        double totalMax = 0;
         for (String[] dataArray : dataList) {
             if (dataArray == null) continue;
             try {
