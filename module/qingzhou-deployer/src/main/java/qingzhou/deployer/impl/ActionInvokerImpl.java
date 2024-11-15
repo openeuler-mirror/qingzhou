@@ -1,40 +1,23 @@
 package qingzhou.deployer.impl;
 
+import qingzhou.api.ActionType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.config.Config;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.ActionInvoker;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.*;
 import qingzhou.engine.util.Utils;
 import qingzhou.http.Http;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.InstanceInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 import qingzhou.serializer.Serializer;
 
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 class ActionInvokerImpl implements ActionInvoker {
     private final Deployer deployer;
@@ -78,13 +61,11 @@ class ActionInvokerImpl implements ActionInvoker {
                             appInfo = deployer.getApp(request.getApp()).getAppInfo();
                         }
                         ModelInfo modelInfo = Objects.requireNonNull(appInfo).getModelInfo(request.getModel());
-                        String[] uploadFieldNames = modelInfo.getFileUploadFieldNames();
-                        if (uploadFieldNames != null) {
-                            for (String uploadField : uploadFieldNames) {
-                                String uploadFile = request.getParameter(uploadField);
-                                if (Utils.notBlank(uploadFile)) {
-                                    fieldUploadFile.put(uploadField, new File(uploadFile));
-                                }
+                        List<String> uploadFieldNames = getUploadFieldNames(modelInfo);
+                        for (String uploadField : uploadFieldNames) {
+                            String uploadFile = request.getParameter(uploadField);
+                            if (Utils.notBlank(uploadFile)) {
+                                fieldUploadFile.put(uploadField, new File(uploadFile));
                             }
                         }
 
@@ -105,6 +86,16 @@ class ActionInvokerImpl implements ActionInvoker {
         }
 
         return responseList;
+    }
+
+    private static List<String> getUploadFieldNames(ModelInfo modelInfo) {
+        List<String> uploadFieldNames = new LinkedList<>(Arrays.asList(modelInfo.getFileUploadFieldNames()));
+        for (ModelActionInfo modelActionInfo : modelInfo.getModelActionInfos()) {
+            if (modelActionInfo.getActionType() == ActionType.upload) {
+                uploadFieldNames.add(modelActionInfo.getCode());
+            }
+        }
+        return uploadFieldNames;
     }
 
     private Response callRemoteInstance(RequestImpl request, Map<String, File> fieldUploadFile,
@@ -143,7 +134,7 @@ class ActionInvokerImpl implements ActionInvoker {
                 }
             }
             // 上传成功后，更新为远程实例上的地址
-            ((RequestImpl) request).getParameters().put(field, DeployerConstants.UPLOAD_FILE_PREFIX_FLAG + uploadId);
+            request.getParameters().put(field, DeployerConstants.UPLOAD_FILE_PREFIX_FLAG + uploadId);
         }
 
         return sendRemote(request, remoteUrl, cipher); // 发送请求
