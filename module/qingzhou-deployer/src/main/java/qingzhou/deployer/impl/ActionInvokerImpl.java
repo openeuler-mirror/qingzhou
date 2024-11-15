@@ -5,33 +5,54 @@ import qingzhou.api.Response;
 import qingzhou.config.Config;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
-import qingzhou.deployer.*;
+import qingzhou.deployer.ActionInvoker;
+import qingzhou.deployer.App;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.http.Http;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
-import qingzhou.registry.*;
+import qingzhou.registry.AppInfo;
+import qingzhou.registry.InstanceInfo;
+import qingzhou.registry.ModelActionInfo;
+import qingzhou.registry.ModelInfo;
+import qingzhou.registry.Registry;
+import qingzhou.serializer.Serializer;
 
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 class ActionInvokerImpl implements ActionInvoker {
     private final Deployer deployer;
     private final Registry registry;
     private final Json json;
+    private final Serializer serializer;
     private final CryptoService crypto;
     private final Http http;
     private final Config config;
 
-    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, CryptoService crypto, Http http, Config config) {
+    ActionInvokerImpl(Deployer deployer, Registry registry, Json json, CryptoService crypto, Http http, Config config, Serializer serializer) {
         this.deployer = deployer;
         this.registry = registry;
         this.json = json;
         this.crypto = crypto;
         this.http = http;
         this.config = config;
+        this.serializer = serializer;
     }
 
     @Override
@@ -46,8 +67,6 @@ class ActionInvokerImpl implements ActionInvoker {
             try {
                 if (instance.equals(DeployerConstants.INSTANCE_LOCAL)) {
                     App instanceApp = deployer.getApp(request.getApp());
-                    AppContextImpl appContext = (AppContextImpl) instanceApp.getAppContext();
-                    appContext.setCurrentRequest(request);
                     instanceApp.invoke(request);
                     responseList.put(instance, request.getResponse());
                 } else {
@@ -141,12 +160,8 @@ class ActionInvokerImpl implements ActionInvoker {
         } catch (Exception e) {
             decryptedData = responseBody;
         }
-        String result = new String(decryptedData, DeployerConstants.ACTION_INVOKE_CHARSET);
-        ResponseImpl res = json.fromJson(result, ResponseImpl.class);
-        if (res == null) {
-            throw new Exception(result);
-        }
-        return res;
+
+        return serializer.deserialize(decryptedData, ResponseImpl.class);
     }
 
     private Response buildErrorResponse(String instance, Exception e) {

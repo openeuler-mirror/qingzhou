@@ -48,7 +48,8 @@ public class User extends AddModelBase implements Group, Option, Echo {
             // reference = Post.class,
             list = true, search = true,
             // update_action = "update",
-            name = {"岗位", "en:Position"})
+            name = {"岗位", "en:Position"},
+            info = {"岗位", "en:Position"})
     public String position;
 
     @ModelField(
