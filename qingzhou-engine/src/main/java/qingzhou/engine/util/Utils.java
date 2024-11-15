@@ -4,10 +4,26 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -168,6 +184,18 @@ public class Utils {
             localIps.add("127.0.0.1");
         }
         return localIps;
+    }
+
+    public static Throwable getCause(Throwable e) {
+        Throwable cause = e.getCause();
+        while (cause != null) {
+            if (cause.getCause() == null || cause.getCause() == cause) {
+                return cause;
+            }
+            cause = cause.getCause();
+        }
+
+        return e;
     }
 
     public static String exceptionToString(Throwable e) {

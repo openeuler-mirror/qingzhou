@@ -1,7 +1,11 @@
 package qingzhou.agent.impl;
 
 import qingzhou.crypto.Cipher;
-import qingzhou.deployer.*;
+import qingzhou.deployer.App;
+import qingzhou.deployer.Deployer;
+import qingzhou.deployer.DeployerConstants;
+import qingzhou.deployer.RequestImpl;
+import qingzhou.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
@@ -11,14 +15,20 @@ import qingzhou.http.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.registry.ModelInfo;
+import qingzhou.serializer.Serializer;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 
 class Service implements Process {
     private final Http http;
     private final Logger logger;
     private final Json json;
+    private final Serializer serializer;
     private final Deployer deployer;
 
     private final Cipher agentCipher;
@@ -27,7 +37,7 @@ class Service implements Process {
     private String path;
     private HttpServer server;
 
-    Service(String agentHost, int agentPort, Cipher agentCipher, Http http, Logger logger, Json json, Deployer deployer) {
+    Service(String agentHost, int agentPort, Cipher agentCipher, Http http, Logger logger, Json json, Deployer deployer, Serializer serializer) {
         this.agentHost = agentHost;
         this.agentPort = agentPort;
         this.agentCipher = agentCipher;
@@ -35,6 +45,7 @@ class Service implements Process {
         this.logger = logger;
         this.json = json;
         this.deployer = deployer;
+        this.serializer = serializer;
     }
 
     @Override
@@ -51,7 +62,10 @@ class Service implements Process {
                     result = process(inputStream);
                     exchange.setStatus(200);
                 } catch (Exception e) {
-                    result = Utils.exceptionToString(e).getBytes(StandardCharsets.UTF_8);
+                    Throwable cause = Utils.getCause(e);
+                    String error = Utils.exceptionToString(cause);
+                    logger.error(error);
+                    result = error.getBytes(StandardCharsets.UTF_8);
                     exchange.setStatus(500);
                 }
                 if (result == null || result.length == 0) return;
@@ -113,7 +127,7 @@ class Service implements Process {
         response.getParametersInSession().putAll(request.parametersForSession());
 
         // 5. 响应数据
-        return json.toJson(response).getBytes(DeployerConstants.ACTION_INVOKE_CHARSET);
+        return serializer.serialize(response);
     }
 
     private void preProcess(RequestImpl request, App app) {

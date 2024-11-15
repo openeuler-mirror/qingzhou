@@ -90,7 +90,7 @@ public class Controller implements ModuleActivator {
             deployer.appsBase = FileUtil.newFile(moduleContext.getInstanceDir(), "apps");
 
             moduleContext.registerService(Deployer.class, deployer);
-            moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, cryptoService, http, config));
+            moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(deployer, registry, json, cryptoService, http, config, serializer));
         }
     }
 

@@ -14,6 +14,7 @@ import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.http.Http;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+import qingzhou.serializer.Serializer;
 
 import java.util.Map;
 
@@ -21,6 +22,8 @@ import java.util.Map;
 public class Controller implements ModuleActivator {
     @Resource
     private Json json;
+    @Resource
+    private Serializer serializer;
     @Resource
     private Http http;
     @Resource
@@ -50,7 +53,7 @@ public class Controller implements ModuleActivator {
         Heartbeat heartbeat = new Heartbeat(agentHost, agentPort, encryptedAgentKey, config, json, deployer, logger, cryptoService.getMessageDigest(), http, moduleContext);
         sequence = new ProcessSequence(
                 () -> deployer.addAppListener(new AppListenerImpl(heartbeat)),
-                new qingzhou.agent.impl.Service(agentHost, agentPort, agentCipher, http, logger, json, deployer),
+                new qingzhou.agent.impl.Service(agentHost, agentPort, agentCipher, http, logger, json, deployer, serializer),
                 heartbeat
         );
         sequence.exec();

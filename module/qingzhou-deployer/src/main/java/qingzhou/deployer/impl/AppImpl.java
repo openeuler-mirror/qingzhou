@@ -59,7 +59,7 @@ class AppImpl implements App {
         String actionName = request.getAction();
         ActionMethod actionMethod = methodMap.get(actionName);
         if (actionMethod == null) return;
-
+        getAppContext().setCurrentRequest(request);
         actionMethod.invoke(request);
     }
 
