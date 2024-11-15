@@ -1,5 +1,6 @@
 package qingzhou.registry;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -8,7 +9,7 @@ import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 import qingzhou.engine.util.Utils;
 
-public class ModelInfo {
+public class ModelInfo implements Serializable {
     private String code;
     private String[] name;
     private String[] info;

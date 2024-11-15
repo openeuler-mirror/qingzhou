@@ -1,5 +1,6 @@
 package qingzhou.registry.impl;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,7 +13,7 @@ import qingzhou.registry.AppInfo;
 import qingzhou.registry.InstanceInfo;
 import qingzhou.registry.Registry;
 
-class RegistryImpl implements Registry {
+class RegistryImpl implements Registry, Serializable {
     private final Json json;
     private final CryptoService cryptoService;
 
