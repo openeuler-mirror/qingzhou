@@ -16,6 +16,7 @@ import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 import qingzhou.qr.QrGenerator;
 import qingzhou.registry.Registry;
+import qingzhou.serializer.Serializer;
 import qingzhou.servlet.ServletService;
 import qingzhou.uml.Uml;
 
@@ -39,6 +40,9 @@ public class Controller implements ModuleActivator {
 
     @Resource
     private Json json;
+
+    @Resource
+    private Serializer serializer;
 
     @Resource
     private QrGenerator qrGenerator;
