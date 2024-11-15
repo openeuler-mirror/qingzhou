@@ -1,11 +1,7 @@
 package qingzhou.agent.impl;
 
 import qingzhou.crypto.Cipher;
-import qingzhou.deployer.App;
-import qingzhou.deployer.Deployer;
-import qingzhou.deployer.DeployerConstants;
-import qingzhou.deployer.RequestImpl;
-import qingzhou.deployer.ResponseImpl;
+import qingzhou.deployer.*;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
@@ -14,15 +10,11 @@ import qingzhou.http.HttpContext;
 import qingzhou.http.HttpServer;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-import qingzhou.registry.ModelInfo;
 import qingzhou.serializer.Serializer;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 class Service implements Process {
     private final Http http;
@@ -132,15 +124,13 @@ class Service implements Process {
 
     private void preProcess(RequestImpl request, App app) {
         request.setCachedModelInfo(app.getAppInfo().getModelInfo(request.getModel()));
-        ModelInfo modelInfo = request.getCachedModelInfo();
-        String[] uploadFieldNames = modelInfo.getFileUploadFieldNames();
-        if (uploadFieldNames == null) return;
-        for (String uploadField : uploadFieldNames) {
-            String uploadFile = request.getParameter(uploadField);
-            if (Utils.isBlank(uploadFile) ||
-                    !uploadFile.startsWith(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG)) continue;
+        Set<String> parameterNames = request.getParameters().keySet();
+        for (String uploadField : parameterNames) {
+            String detectUploadFile = request.getParameter(uploadField);
+            if (Utils.isBlank(detectUploadFile) ||
+                    !detectUploadFile.startsWith(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG)) continue;
 
-            String uploadId = uploadFile.substring(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG.length());
+            String uploadId = detectUploadFile.substring(DeployerConstants.UPLOAD_FILE_PREFIX_FLAG.length());
             File uploadDir = FileUtil.newFile(app.getAppContext().getTemp(), DeployerConstants.UPLOAD_FILE_TEMP_SUB_DIR, uploadId);
             if (!uploadDir.isDirectory()) continue;
 
