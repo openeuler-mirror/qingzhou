@@ -1,27 +1,30 @@
-<%@ page import="java.text.SimpleDateFormat" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
-    //少定义变量，防止多个冲突
-    try {
-        fieldValue = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[0])))
-                + modelField.getSeparator()
-                + new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[1])));
-    } catch (Exception exception) {
-        //转化异常表示是从request里面拿的fieldValue，此时不用转化
-    }
+    {
+        String tempId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
+        String fieldValueForTemp = "";
+        //少定义变量，防止多个冲突
+        try {
+            fieldValueForTemp = new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[0])))
+                    + modelField.getSeparator()
+                    + new SimpleDateFormat(DeployerConstants.DATETIME_FORMAT).format(new Date(Long.parseLong(fieldValue.split(modelField.getSeparator())[1])));
+        } catch (Exception exception) {
+            //转化异常表示是从request里面拿的fieldValue，此时不用转化
+        }
 %>
-<input type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
+<input type="text" name="<%=fieldName%>" value='<%=fieldValueForTemp%>'
        placeholder="<%=modelField.getPlaceholder()%>"
        placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"
-       class="form-control dateRange"/>
+       id="<%=tempId%>"
+       class="form-control"/>
 <script type="text/javascript">
     $(function () {
-        $('.dateRange').daterangepicker({
+        $('#<%=tempId%>').daterangepicker({
             locale: {
                 format: 'yyyy-MM-DD HH:mm:ss',
                 separator: '<%=modelField.getSeparator()%>',          // 范围分隔符
                 <%
-                   if (I18n.isZH()){
+                   if (I18n.isZH()) {
                 %>
                 applyLabel: '确认',
                 cancelLabel: '取消',
@@ -40,11 +43,14 @@
             autoUpdateInput: true           // 自动更新输入框
         });
         <%
-            if (fieldValue.isEmpty()){
+            if (fieldValueForTemp.isEmpty()){
         %>
-        $('.dateRange').val("")
+        $('#<%=tempId%>').val("")
         <%
             }
         %>
     });
 </script>
+<%
+    }
+%>

@@ -1,8 +1,9 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    String tempId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
-    String tempEleId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
+    {
+        String tempId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
+        String tempEleId = java.util.UUID.randomUUID().toString().replaceAll("-", "");
 %>
 <div id="uploader" class="uploader">
     <a href="javascript:;" onclick="$('#<%=tempId%>').click();" class="btn uploader-btn-browse"
@@ -14,3 +15,6 @@
     <input id="<%=tempId%>" type="file" name="<%=fieldName%>" style="display:none;"
            onchange="$('#<%=tempEleId%>').html(this.value.indexOf('fakepath') > 0 ? this.value.substring(this.value.indexOf('fakepath') + 'fakepath'.length + 1) : this.value);">
 </div>
+<%
+    }
+%>

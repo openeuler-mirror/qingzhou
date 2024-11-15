@@ -1,5 +1,3 @@
-<%@ page import="java.util.function.Function" %>
-<%@ page import="java.util.function.Consumer" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 
@@ -206,13 +204,11 @@
                         }
                     }
 
-                    String modelName = BackFilter.getBackModel(session, qzRequest);
-                    if (Utils.notBlank(modelName)) {
+
+                    if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
                 %>
-                <a modelname="<%=modelName%>"
-                   class="btn"
-                   action-type="<%=BackFilter.BACK_URI%>" onclick="returnHref(this);"
-                   href="javascript:void(0);" back-link="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, BackFilter.BACK_URI)%>">
+                <a class="btn" modelname="<%=qzModel%>"
+                   href="javascript:void(0);" onclick="returnHref(this);">
                     <%=I18n.getKeyI18n("page.return")%>
                 </a>
                 <%

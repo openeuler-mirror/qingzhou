@@ -518,14 +518,6 @@
                     window.location.href = url;
                     return;
                 }
-                if (actionType !== undefined && actionType === getSetting("back")) {
-                    var modelname = $(this).attr("modelname")
-                    var menuLink = $("li.treeview a[modelname='" + modelname + "']", restrictedArea);
-                    var sidebar = $("aside.main-sidebar", restrictedArea);
-                    $(".menu-open", sidebar).removeClass("menu-open").find(".treeview-menu").hide();
-                    $("ul li.treeview.active", sidebar).removeClass("active");
-                    menuLink.parent().addClass("active").parents("li.treeview").addClass("menu-open").children(".treeview-menu").show();
-                }
 
                 that.fill(url, data, $(targetSelector, restrictedArea), append, afterRenderCall);
             });

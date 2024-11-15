@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.api.type.Dashboard" %>
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="../fragment/head.jsp" %>
 

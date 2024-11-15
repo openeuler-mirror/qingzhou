@@ -11,6 +11,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
+//            new BackFilter(), // 因前端 子菜单跳转 等功能支持，暂无法结合后端历史请求处理，会导致前端控制不到显示区域和菜单定位等问题
 public class BackFilter implements Filter<RestContext> {
     public static final String BACK_URI = "qz_back_action"; // 避免和应用的 action 名字冲突
     private static final String BACK_KEY = "qz_back_cache";

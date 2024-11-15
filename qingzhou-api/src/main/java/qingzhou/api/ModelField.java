@@ -110,7 +110,7 @@ public @interface ModelField {
 
     String[] color() default {};
 
-    String[] comboFields() default {};  // 组合条件属性
+    String[] combo_fields() default {};  // 组合条件属性
 
     /**
      * 以下是 FieldType.Monitor 类型的信息
