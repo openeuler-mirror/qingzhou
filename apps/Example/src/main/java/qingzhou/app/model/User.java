@@ -104,6 +104,35 @@ public class User extends AddModelBase implements Group, Option, Echo {
             name = {"备注", "en:Notes"})
     public String notes = "只读控制";
 
+    @ModelField(
+            input_type = InputType.select, create = false, edit = false,
+            name = {"字段", "en:field"})
+    public String field;
+
+    @ModelField(
+            input_type = InputType.select,  create = false, edit = false,
+            name = {"操作符", "en:operator"})
+    public String operator;
+
+    @ModelField(
+            create = false, edit = false,
+            name = {"值", "en:value"})
+    public String value;
+
+    @ModelField(
+            create = false, edit = false,
+            input_type = InputType.bool,
+            name = {"自定义标签", "en:Custom labels"})
+    public boolean customLabel;
+
+    @ModelField(
+            input_type = InputType.combo,
+            comboFields = {"field", "operator", "value", "customLabel"},
+            create = false, search = true,
+            name = {"组合查询", "en:comboQuery"},
+            info = {"添加过滤条件", "en:Add filters"})
+    public String comboQuery;
+
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
             form_fields = {"id", "gender", "position", "checkbox", "notes", "b"},
@@ -191,7 +220,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @Override
     public String[] staticOptionFields() {
-        return new String[]{"gender", "checkbox", "position"};
+        return new String[]{"gender", "checkbox", "position", "field", "operator", "customLabel"};
     }
 
     @Override
@@ -224,6 +253,12 @@ public class User extends AddModelBase implements Group, Option, Echo {
                         Item.of("001", new String[]{"开发", "en:Dev"}),
                         Item.of("002", new String[]{"测试", "en:Test"}),
                 };
+            case "field":
+                return Item.of(new String[]{"gender", "position", "checkbox"});
+            case "operator":
+                return Item.of(new String[]{">", "=", "<", "<=", "!=", "in", "not in", "like", "not like", "is null", "is not null"});
+            case "customLabel":
+                return Item.of(new String[]{"true", "false"});
         }
 
         return null;

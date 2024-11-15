@@ -22,5 +22,6 @@ public enum InputType {
     multiselect,        // 多选下拉框，允许用户从列表中选择多个选项。
     sortable,           // 可排序输入框，允许用户通过拖放操作对输入内容进行排序。
     kv,                 // Key-Value 输入框，允许用户以键值对的形式输入数据。
-    markdown            // Markdown 样式，用于以Markdown格式显示文本内容。
+    markdown,            // Markdown 样式，用于以Markdown格式显示文本内容。
+    combo,
 }
