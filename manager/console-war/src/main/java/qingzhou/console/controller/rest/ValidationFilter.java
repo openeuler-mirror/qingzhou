@@ -390,7 +390,7 @@ public class ValidationFilter implements Filter<RestContext> {
     static class options implements Validator {
         @Override
         public String[] validate(ValidationContext context) {
-            ItemInfo[] options = SystemController.getOptions(context.request.getApp(), context.modelInfo, context.fieldInfo.getCode());
+            ItemInfo[] options = SystemController.getOptions(context.request, context.fieldInfo.getCode());
             if (options.length == 0) return null;
 
             if (isSingleSelect(context.fieldInfo)) {

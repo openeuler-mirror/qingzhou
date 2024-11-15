@@ -35,7 +35,8 @@ class ActionInvokerImpl implements ActionInvoker {
     }
 
     @Override
-    public Map<String, Response> invokeOnInstances(Request request, String... onInstances) {
+    public Map<String, Response> invokeOnInstances(Request qzRequest, String... onInstances) {
+        RequestImpl request = (RequestImpl) qzRequest;
         Map<String, Response> responseList = new LinkedHashMap<>();
 
         Cipher cipher = null;
@@ -87,7 +88,7 @@ class ActionInvokerImpl implements ActionInvoker {
         return responseList;
     }
 
-    private Response callRemoteInstance(Request request, Map<String, File> fieldUploadFile,
+    private Response callRemoteInstance(RequestImpl request, Map<String, File> fieldUploadFile,
                                         String host, int port, Cipher cipher) throws Exception {
         String remoteUrl = String.format("http://%s:%s", host, port);
 
@@ -96,7 +97,7 @@ class ActionInvokerImpl implements ActionInvoker {
             File file = e.getValue();
             String uploadId = UUID.randomUUID().toString().replace("-", "");
 
-            RequestImpl tmp = new RequestImpl();
+            RequestImpl tmp = new RequestImpl(request);
             tmp.setAppName(DeployerConstants.APP_SYSTEM);
             tmp.setModelName(DeployerConstants.MODEL_AGENT);
             tmp.setActionName(DeployerConstants.ACTION_UPLOAD);

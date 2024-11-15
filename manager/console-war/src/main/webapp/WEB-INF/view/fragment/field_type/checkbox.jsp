@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldName)) {
+    for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldName)) {
         String option = itemInfo.getName();
 %>
 <label class="checkbox-inline checkbox-label checkbox-anim">

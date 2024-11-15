@@ -100,17 +100,16 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return null;
     }
 
-    private static String[] getAllIds(String app, String model) {
-        RequestImpl req = new RequestImpl();
-        req.setAppName(app);
+    private static String[] getAllIds(RequestImpl request, String model) {
+        RequestImpl req = new RequestImpl(request);
         req.setModelName(model);
         req.setActionName(List.ACTION_ALL);
         ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
         return (String[]) res.getInternalData();
     }
 
-    public static ItemInfo[] getOptions(String qzApp, ModelInfo modelInfo, String fieldName) {
-        ItemInfo[] options = getOptions0(qzApp, modelInfo, fieldName);
+    public static ItemInfo[] getOptions(RequestImpl request, String fieldName) {
+        ItemInfo[] options = getOptions0(request, fieldName);
         return options != null ? options : new ItemInfo[0];
     }
 
@@ -131,14 +130,13 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return "";
     }
 
-    private static ItemInfo[] getOptions0(String qzApp, ModelInfo modelInfo, String fieldName) {
+    private static ItemInfo[] getOptions0(RequestImpl request, String fieldName) {
+        ModelInfo modelInfo = request.getCachedModelInfo();
         String[] dynamicOptionFields = modelInfo.getDynamicOptionFields();
         if (dynamicOptionFields != null) {
             for (String dynamicOptionField : dynamicOptionFields) {
                 if (fieldName.equals(dynamicOptionField)) {
-                    RequestImpl req = new RequestImpl();
-                    req.setAppName(qzApp);
-                    req.setModelName(modelInfo.getCode());
+                    RequestImpl req = new RequestImpl(request);
                     req.setActionName(Option.ACTION_OPTION);
                     req.getParameters().put(Option.FIELD_NAME_PARAMETER, fieldName);
                     ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
@@ -162,7 +160,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(fieldName);
         String refModel = fieldInfo.getRefModel();
         if (Utils.notBlank(refModel)) {
-            String[] allIds = getAllIds(qzApp, refModel);
+            String[] allIds = getAllIds(request, refModel);
             if (allIds != null) {
                 return Arrays.stream(allIds).map(s -> new ItemInfo(s, new String[]{s, "en:" + s})).toArray(ItemInfo[]::new);
             }
