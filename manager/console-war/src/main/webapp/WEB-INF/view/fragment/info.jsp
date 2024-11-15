@@ -61,7 +61,7 @@
                     </a>
                     <%
                         } else {
-                            out.print(PageUtil.getInputTypeStyle(fieldValue, qzApp, modelInfo, modelField));
+                            out.print(PageUtil.getInputTypeStyle(fieldValue, qzRequest, modelField));
                         }
                     %>
                 </td>

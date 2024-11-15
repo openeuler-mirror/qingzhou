@@ -22,7 +22,7 @@ class AppPageUtil {
         File appPageCacheDir = FileUtil.newFile(SystemController.getModuleContext().getTemp(), AppPageData.DOWNLOAD_PAGE_ROOT_DIR, request.getApp());
         File actionPageFile = FileUtil.newFile(appPageCacheDir, actionPage);
         if (!actionPageFile.exists()) {
-            requestPage(request.getApp(), appPageCacheDir, actionPage);
+            requestPage(request, appPageCacheDir, actionPage);
         }
 
         try {
@@ -34,8 +34,9 @@ class AppPageUtil {
         }
     }
 
-    private static void requestPage(String targetAppName, File appPageCacheDir, String actionPage) throws IOException {
-        RequestImpl fileReq = new RequestImpl();
+    private static void requestPage(RequestImpl request, File appPageCacheDir, String actionPage) throws IOException {
+        RequestImpl fileReq = new RequestImpl(request);
+        String targetAppName = request.getApp();
         fileReq.setAppName(DeployerConstants.APP_SYSTEM);
         fileReq.setModelName(DeployerConstants.MODEL_AGENT);
         fileReq.setActionName(AppPageData.ACTION_DOWNLOAD_PAGE);

@@ -15,7 +15,7 @@
         selectHtml += "<li data-value=\"\" class=\"option\" format=\"\"></li>";
     }
     boolean selected = false;
-    for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldName)) {
+    for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldName)) {
         String option = itemInfo.getName();
         //处理option当中有双引号
         String optionHtmlStr = option.replaceAll("\"", "&quot;");

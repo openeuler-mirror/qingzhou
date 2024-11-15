@@ -12,29 +12,12 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;
-import qingzhou.registry.AppInfo;
-import qingzhou.registry.ItemInfo;
-import qingzhou.registry.MenuInfo;
-import qingzhou.registry.ModelActionInfo;
-import qingzhou.registry.ModelFieldInfo;
-import qingzhou.registry.ModelInfo;
-import qingzhou.registry.Registry;
+import qingzhou.registry.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class PageUtil {
@@ -146,8 +129,8 @@ public class PageUtil {
         return url;
     }
 
-    public static String styleFieldValue(String value, String qzApp, ModelInfo modelInfo, ModelFieldInfo fieldInfo) {
-        String styleValue = getInputTypeStyle(value, qzApp, modelInfo, fieldInfo);
+    public static String styleFieldValue(String value, RequestImpl qzRequest, ModelFieldInfo fieldInfo) {
+        String styleValue = getInputTypeStyle(value, qzRequest, fieldInfo);
         if (Utils.isBlank(styleValue)) return styleValue;
 
         try {
@@ -179,7 +162,7 @@ public class PageUtil {
         }
     }
 
-    public static String getInputTypeStyle(String value, String qzApp, ModelInfo modelInfo, ModelFieldInfo fieldInfo) {
+    public static String getInputTypeStyle(String value, RequestImpl qzRequest, ModelFieldInfo fieldInfo) {
         if (Utils.isBlank(value)) return value;
 
         InputType inputType = fieldInfo.getInputType();
@@ -198,7 +181,7 @@ public class PageUtil {
                 break;
             case radio:
             case select:
-                for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldInfo.getCode())) {
+                for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldInfo.getCode())) {
                     String option = itemInfo.getName();
                     String optionI18n = I18n.getStringI18n(itemInfo.getI18n());
                     if (Objects.equals(value, option)) {
@@ -214,7 +197,7 @@ public class PageUtil {
                 List<String> list = new LinkedList<>();
 
                 Map<String, String> optionI18nMap = new HashMap<>();// 这里将i18n的数据提前整理好，否则会影响排序
-                for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldInfo.getCode())) {
+                for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldInfo.getCode())) {
                     optionI18nMap.put(itemInfo.getName(), I18n.getStringI18n(itemInfo.getI18n()));
                 }
 

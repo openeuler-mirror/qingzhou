@@ -138,7 +138,8 @@
             <a <%=modelName == null ? "disabled='disabled'" : ""%>
                     modelname="<%=modelName%>"
                     action-type="<%=BackFilter.BACK_URI%>" class="btn" onclick="returnHref(this);"
-                    href="javascript:void(0);" back-link="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, BackFilter.BACK_URI)%>">
+                    href="javascript:void(0);"
+                    back-link="<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, BackFilter.BACK_URI)%>">
                 <i class="icon icon-reply"></i>
                 <%=I18n.getKeyI18n("page.return")%>
             </a>
@@ -296,7 +297,7 @@
                    data-tip-arrow="top"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + linkActionInfo.getCode())%>'
                    style="color:#4C638F;">
-                    <%=PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo)%>
+                    <%=PageUtil.styleFieldValue(value, qzRequest, fieldInfo)%>
                 </a>
                 <%
                 } else {
@@ -333,7 +334,7 @@
                    action-type="<%=linkRefModelActionInfo.getActionType()%>"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
                    style="color:#4C638F;" onclick='actionModelMenu("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
-                    <%=PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo)%>
+                    <%=PageUtil.styleFieldValue(value, qzRequest, fieldInfo)%>
                 </a>
                 <%
                 } else if (field.equals(idField)
@@ -353,14 +354,14 @@
                    data-tip-arrow="top"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + field)%>'
                    style="color:#4C638F;">
-                    <%=PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo)%>
+                    <%=PageUtil.styleFieldValue(value, qzRequest, fieldInfo)%>
                 </a>
                 <%
                             } else {
-                                out.print(PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo));
+                                out.print(PageUtil.styleFieldValue(value, qzRequest, fieldInfo));
                             }
                         } else {
-                            out.print(PageUtil.styleFieldValue(value, qzApp, modelInfo, fieldInfo));
+                            out.print(PageUtil.styleFieldValue(value, qzRequest, fieldInfo));
                         }
                     }
 

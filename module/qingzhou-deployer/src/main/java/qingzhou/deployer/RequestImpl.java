@@ -41,6 +41,9 @@ public class RequestImpl implements Request, Serializable {
         this.userName = origin.userName;
         this.batchId = origin.batchId;
         this.lang = origin.lang;
+        this.parameters.putAll(origin.parameters);
+        this.parametersForSubMenu.putAll(origin.parametersForSubMenu);
+        this.parametersForSession.putAll(origin.parametersForSession);
         this.byteParameter = null; // 数据量大，且目前大部分业务并不需要它
     }
 

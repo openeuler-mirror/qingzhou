@@ -1,9 +1,9 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <select <%=echoGroup%> name="<%=fieldName%>" multiple="multiple" style="width:100%;"
-        placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>">
+                       placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>">
     <%
-        for (ItemInfo itemInfo : SystemController.getOptions(qzApp, modelInfo, fieldName)) {
+        for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldName)) {
             String option = itemInfo.getName();
             String colorStyle = SystemController.getColorStyle(modelInfo, fieldName, option);
     %>
