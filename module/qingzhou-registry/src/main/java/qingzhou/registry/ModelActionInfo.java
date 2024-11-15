@@ -2,9 +2,10 @@ package qingzhou.registry;
 
 import qingzhou.api.ActionType;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 
-public class ModelActionInfo {
+public class ModelActionInfo implements Serializable {
     private transient Method method;
     private String code;
     private String[] name;

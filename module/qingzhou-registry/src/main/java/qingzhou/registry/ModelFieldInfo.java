@@ -3,7 +3,9 @@ package qingzhou.registry;
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 
-public class ModelFieldInfo {
+import java.io.Serializable;
+
+public class ModelFieldInfo implements Serializable {
     private String code;
     private String[] name;
     private String[] info;

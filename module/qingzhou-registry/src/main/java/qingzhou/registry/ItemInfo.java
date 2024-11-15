@@ -2,7 +2,9 @@ package qingzhou.registry;
 
 import qingzhou.api.Item;
 
-public class ItemInfo {
+import java.io.Serializable;
+
+public class ItemInfo implements Serializable {
     private String name;
     private String[] i18n;
 

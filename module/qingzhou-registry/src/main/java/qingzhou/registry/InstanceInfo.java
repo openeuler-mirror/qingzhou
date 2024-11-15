@@ -1,6 +1,8 @@
 package qingzhou.registry;
 
-public class InstanceInfo {
+import java.io.Serializable;
+
+public class InstanceInfo implements Serializable {
     private String name;
     private String host;
     private int port;

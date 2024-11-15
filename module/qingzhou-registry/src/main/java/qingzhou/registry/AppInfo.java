@@ -1,9 +1,10 @@
 package qingzhou.registry;
 
+import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class AppInfo {
+public class AppInfo implements Serializable {
     private String name;
     private String filePath;
     private String state;
