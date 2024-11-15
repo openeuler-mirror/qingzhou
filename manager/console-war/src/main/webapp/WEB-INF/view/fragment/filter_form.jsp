@@ -23,6 +23,8 @@
 					colClass = "col-md-12 col-sm-12 col-xs-12";
 				} else if (searchFieldInfo.getInputType() == InputType.range_datetime) {
 					colClass = "col-md-3 col-sm-5 col-xs-7";
+				} else if (searchFieldInfo.getInputType() == InputType.combo) {
+					colClass = "col-md-6 col-sm-12 col-xs-12";
 				}
 		%>
 		<div class='<%=colClass%> list-page-padding-bottom'>
@@ -69,6 +71,10 @@
 				} else if (searchFieldInfo.getInputType() == InputType.range_datetime) {
 				%>
 				<%@ include file="field_type/range_datetime.jsp" %>
+				<%
+				} else if (searchFieldInfo.getInputType() == InputType.combo){
+				%>
+				<%@ include file="field_type/combofilter.jsp" %>
 				<%
 				} else {
 				%>

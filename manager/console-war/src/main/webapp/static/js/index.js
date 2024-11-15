@@ -30,6 +30,42 @@ function getRestrictedArea(inSubTab) {
     return restrictedArea;
 };
 
+function addFilterItemGroup(target, fieldName) {
+    var title = $(target).attr("data-tip");
+    var html = $("#filter-group-" + fieldName).html();
+    var id = "filter-item-group-" + fieldName;
+    html = "<form style='margin-top: 10px;' id='" + id + "' >" + html + "</form>";
+    openLayer({
+        type: 0,
+        title: title,
+        shade: 0,
+        area: ['700px', '300px'],
+        content: html,
+        yes: function (index, layero, that) {
+            var formDataArray = $("#" + id).serializeArray();
+            data = {};
+            formDataArray.forEach(function (item) {
+                data[item.name] = item.value;
+            });
+            console.log(data);
+            var $formItem = $("#form-item-" + fieldName + " input[name='" + fieldName + "']");
+            var value = $formItem.val();
+            if (value) {
+                value = JSON.parse(value);
+            } else {
+                value = [];
+            }
+            value.push(data);
+            $formItem.val(JSON.stringify(value));
+            layer.close(index);
+        },
+        cancel: function () {
+            return true;
+        },
+    });
+
+}
+
 $(document).ready(function () {
     // ITAIT-4984 微软自研浏览器 Edge 样式特殊处理，解决滚动条样式问题
     var browserInfo = qz.browserNV();
