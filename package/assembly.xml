@@ -94,6 +94,7 @@
                 <include>${project.groupId}:qingzhou-config</include>
                 <include>${project.groupId}:qingzhou-logger</include>
                 <include>${project.groupId}:qingzhou-json</include>
+                <include>${project.groupId}:qingzhou-serializer</include>
                 <include>${project.groupId}:qingzhou-http</include>
                 <include>${project.groupId}:qingzhou-qr</include>
                 <include>${project.groupId}:qingzhou-crypto</include>

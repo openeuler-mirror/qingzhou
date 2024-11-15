@@ -52,5 +52,10 @@
             <artifactId>qingzhou-uml</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-serializer</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
