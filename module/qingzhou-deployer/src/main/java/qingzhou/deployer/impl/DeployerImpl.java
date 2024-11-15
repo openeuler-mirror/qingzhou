@@ -419,7 +419,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setIndex(modelField.index());
             modelFieldInfo.setSameLine(modelField.same_line());
             modelFieldInfo.setShowLabel(modelField.show_label());
-            modelFieldInfo.setComboFields(modelField.comboFields());
+            modelFieldInfo.setComboFields(modelField.combo_fields());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);

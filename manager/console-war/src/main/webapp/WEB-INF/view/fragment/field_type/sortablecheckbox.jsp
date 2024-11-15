@@ -1,11 +1,12 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <%
-    // 获取所有选项并放入 map
-    Map<String, ItemInfo> optionMap = new LinkedHashMap<>();
-    for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldName)) {
-        optionMap.put(itemInfo.getName(), itemInfo);
-    }
+    {
+        // 获取所有选项并放入 map
+        Map<String, ItemInfo> optionMap = new LinkedHashMap<>();
+        for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldName)) {
+            optionMap.put(itemInfo.getName(), itemInfo);
+        }
 %>
 <div class="checkbox-group sortable">
     <%
@@ -37,3 +38,6 @@
         }
     %>
 </div>
+<%
+    }
+%>

@@ -127,7 +127,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.combo,
-            comboFields = {"field", "operator", "value", "customLabel"},
+            combo_fields = {"field", "operator", "value", "customLabel"},
             create = false, search = true,
             name = {"组合查询", "en:comboQuery"},
             info = {"添加过滤条件", "en:Add filters"})
