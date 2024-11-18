@@ -138,6 +138,7 @@
 %>
 <%@ include file="field_type/combine.jsp" %>
 <%
+                break;
             default:
                 throw new IllegalStateException(modelField.getInputType().name() + ".jsp not found.");
         }
