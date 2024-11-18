@@ -126,18 +126,18 @@ public class User extends AddModelBase implements Group, Option, Echo {
     public boolean customLabel;
 
     @ModelField(
-            field_type = FieldType.OTHER,
             input_type = InputType.combine,
             combine_fields = {"field", "operator", "value", "customLabel"},
+            skip = {"[", "]", "\"", ">", "<", "'"},
             search = true,
             name = {"组合查询", "en:comboQuery"},
             info = {"添加过滤条件", "en:Add filters"})
     public String comboQuery;
 
     @ModelField(
-            field_type = FieldType.OTHER,
             input_type = InputType.combine,
             combine_fields = {"field", "operator", "value", "customLabel"},
+            skip = {"[", "]", "\"", ">", "<", "'"},
             search = true,
             name = {"组合查询2", "en:comboQuery2"},
             info = {"添加过滤条件2", "en:Add filters2"})
