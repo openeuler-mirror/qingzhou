@@ -419,7 +419,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setIndex(modelField.index());
             modelFieldInfo.setSameLine(modelField.same_line());
             modelFieldInfo.setShowLabel(modelField.show_label());
-            modelFieldInfo.setComboFields(modelField.combo_fields());
+            modelFieldInfo.setCombineFields(modelField.combine_fields());
             modelFieldInfoList.add(modelFieldInfo);
         });
         return modelFieldInfoList.toArray(new ModelFieldInfo[0]);
@@ -532,9 +532,9 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setDistribute(modelAction.distribute());
             modelActionInfo.setShow(modelAction.show());
             modelActionInfo.setAppPage(modelAction.app_page());
-            modelActionInfo.setFormFields(modelAction.form_fields());
+            modelActionInfo.setSubFormFields(modelAction.sub_form_fields());
             modelActionInfo.setSubFormSubmitOnOpen(modelAction.sub_form_submit_on_open());
-            modelActionInfo.setMenuModels(modelAction.menu_models());
+            modelActionInfo.setSubMenuModels(modelAction.sub_menu_models());
             modelActionInfo.setActionType(modelAction.action_type());
             modelActionInfos.add(modelActionInfo);
         });

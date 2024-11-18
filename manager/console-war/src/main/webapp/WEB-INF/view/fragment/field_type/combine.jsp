@@ -16,7 +16,7 @@
 <div style="display: none" id="filter-group-<%=fieldName%>">
     <%
         String fieldNameForTemp = fieldName;
-        for (String f : modelField.getComboFields()) {
+        for (String f : modelField.getCombineFields()) {
             fieldName = f;
             ModelFieldInfo mfiTemp = modelInfo.getModelFieldInfo(fieldName);
             String inputTypeTemp = "";

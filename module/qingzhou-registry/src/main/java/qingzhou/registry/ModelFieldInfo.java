@@ -49,16 +49,16 @@ public class ModelFieldInfo implements Serializable {
     private boolean showLabel;
     private boolean sameLine;
     private String placeholder;
-    private String[] comboFields;
+    private String[] combineFields;
 
     private int index;
 
-    public String[] getComboFields() {
-        return comboFields;
+    public String[] getCombineFields() {
+        return combineFields;
     }
 
-    public void setComboFields(String[] comboFields) {
-        this.comboFields = comboFields;
+    public void setCombineFields(String[] combineFields) {
+        this.combineFields = combineFields;
     }
 
     public String getPlaceholder() {
