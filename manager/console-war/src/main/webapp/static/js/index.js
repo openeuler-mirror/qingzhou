@@ -39,15 +39,18 @@ function addFilterItemGroup(target, fieldName) {
         type: 0,
         title: title,
         shade: 0,
-        area: ['700px', '300px'],
+        area: ['600px', '250px'],
+        btn: [getSetting("confirmBtnText"), getSetting("cancelBtnText")],
         content: html,
+        success: function (layero, index, that) {
+            $(layero).children("div.layui-layer-content").css("overflow", "visible");
+        },
         yes: function (index, layero, that) {
             var formDataArray = $("#" + id).serializeArray();
             data = {};
             formDataArray.forEach(function (item) {
                 data[item.name] = item.value;
             });
-            console.log(data);
             var $formItem = $("#form-item-" + fieldName + " input[name='" + fieldName + "']");
             var value = $formItem.val();
             if (value) {
@@ -58,10 +61,8 @@ function addFilterItemGroup(target, fieldName) {
             value.push(data);
             $formItem.val(JSON.stringify(value));
             layer.close(index);
-        },
-        cancel: function () {
             return true;
-        },
+        }
     });
 
 }
@@ -166,7 +167,7 @@ $(document).ready(function () {
 
     // 设置或重新设置（如事件绑定、赋初始值等）
     setOrReset();
-    $(document.body).resize(function() {
+    $(document.body).resize(function () {
         $("div.tab-container").css({"height": ($(document.body).height() - 170) + "px"});
     });
 });
@@ -482,7 +483,7 @@ function bindEchoSelectEvent() {
     //列表搜搜框下拉选级联回显
     var currentform = $("form[name='filterForm']", getRestrictedArea(true));
     var echoGroupElements = currentform.find('input[echogroup], select[echogroup]');
-    if (echoGroupElements.length > 0 ) {
+    if (echoGroupElements.length > 0) {
         echoGroupElements.each(function () {
             var current = $(this);
             var target;
@@ -497,7 +498,7 @@ function bindEchoSelectEvent() {
                 var key = current.next().attr("name");
                 params[key] = current.next().attr("value")
                 if (current.attr("echogroup") !== undefined && current.attr("echogroup") !== "" && params[key] !== "") { //搜索列表下拉选支持选空，如空则不必调接口
-                    echoItem(currentform, params,"","");
+                    echoItem(currentform, params, "", "");
                 }
             });
         });
@@ -619,7 +620,7 @@ function bindFormEvent() {
 
 function bindEchoItemEvent() {
     //查找当前表单下所有回显数据元素，添加失去焦点事件
-    var currentform = $("form[name='pageForm']",getRestrictedArea(true));
+    var currentform = $("form[name='pageForm']", getRestrictedArea(true));
     var echoGroupElements = currentform.find('[echoGroup]');
     echoGroupElements.each(function () {
         //通过
@@ -657,10 +658,10 @@ function echoItem(thisForm, params, item, echoGroup) {
         $(thisForm).find('[echoGroup]').each(function () {
             for (let group of echoGroup.split(",")) {
                 if ($(this).attr("echogroup").split(",").includes(group)) {
-                    if ($(this).attr("name") === undefined){
+                    if ($(this).attr("name") === undefined) {
                         //nice-select需拿hidden的input框的值
                         bindNames.add($(this).closest(".nice-select").find("input[type='hidden']").attr("name"))
-                    }else{
+                    } else {
                         bindNames.add($(this).attr("name"));
                     }
                 }
@@ -675,10 +676,10 @@ function echoItem(thisForm, params, item, echoGroup) {
     }, "json");
 }
 
-function getI18n(i18nArr){
+function getI18n(i18nArr) {
     var flag = getSetting("langFlag")
     for (let item of i18nArr) {
-        if (item.startsWith(flag+":")){
+        if (item.startsWith(flag + ":")) {
             return item.split(":")[1]
         }
     }
@@ -686,11 +687,11 @@ function getI18n(i18nArr){
 }
 
 function updateFormData(thisForm, data, options, isList) {
-    for (let option of options){
+    for (let option of options) {
         var formItem;
-        if (isList){
+        if (isList) {
             formItem = $("#form-item-" + option.field, thisForm);
-        }else{
+        } else {
             formItem = $("#form-item-" + option.field + " > div:first", thisForm);
         }
         var type = formItem.attr("type");
@@ -700,19 +701,19 @@ function updateFormData(thisForm, data, options, isList) {
             case "multiselect":
                 echoGroup = $(formItem).find("select[name='" + option.field + "']").attr("echogroup");
                 //获取placeholder
-                let placeholder = $("select",formItem).attr("placeholder");
+                let placeholder = $("select", formItem).attr("placeholder");
                 //渲染原始html
-                html += "<select echoGroup=\"+ echoGroup +\" name=\""+ option.field +"\" multiple=\"multiple\" style=\"width:100%;\"\n" +
-                    "        placeholder=\""+ placeholder +"\">"
+                html += "<select echoGroup=\"+ echoGroup +\" name=\"" + option.field + "\" multiple=\"multiple\" style=\"width:100%;\"\n" +
+                    "        placeholder=\"" + placeholder + "\">"
                 for (let op of option.options) {
-                    if (op.name === option.value){
-                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\" selected>\n"+ getI18n(op.i18n) +"</option>";
-                    }else{
-                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\">\n"+ getI18n(op.i18n) +"</option>";
+                    if (op.name === option.value) {
+                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\" selected>\n" + getI18n(op.i18n) + "</option>";
+                    } else {
+                        html += "<option value=\"" + op.name.replace(/"/g, '&quot;') + "\">\n" + getI18n(op.i18n) + "</option>";
                     }
                 }
                 html += "</select>"
-                if (!isList){
+                if (!isList) {
                     html += "<label class=\"qz-error-info\"></label>"
                 }
                 $(formItem).html(html);
@@ -747,16 +748,16 @@ function updateFormData(thisForm, data, options, isList) {
             case "select":
                 //渲染列表
                 html = "<li data-value=\"\" class=\"option focus\" format=\"\"></li>"
-                for(let op of option.options){
+                for (let op of option.options) {
                     //todo 国际化
-                    html += "<li data-value=\""+ op.name.replace(/"/g, '&quot;') +"\" class=\"option\" format=\""+ op.name.replace(/"/g, '&quot;') +"\">"+ getI18n(op.i18n) +"</li>"
+                    html += "<li data-value=\"" + op.name.replace(/"/g, '&quot;') + "\" class=\"option\" format=\"" + op.name.replace(/"/g, '&quot;') + "\">" + getI18n(op.i18n) + "</li>"
                 }
-                $("ul",formItem).html(html);
+                $("ul", formItem).html(html);
                 //渲染选中
                 var $li = $("li[data-value='" + option.value + "']", formItem);
                 if ($li.length > 0) {
-                    $li.each(function (index,ele){
-                        selectOption.call(ele,false);
+                    $li.each(function (index, ele) {
+                        selectOption.call(ele, false);
                     });
                 } else {
                     $("input[type='hidden']", formItem).val(option.value);
@@ -767,14 +768,14 @@ function updateFormData(thisForm, data, options, isList) {
                 break;
             case "sortable_checkbox":
                 //渲染页面
-                for(let op of option.options){
+                for (let op of option.options) {
                     html += "<a draggable=\"true\" href=\"javascript:void(0);\">\n" +
-                        "        <input type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\">\n" +
-                        "        <label>"+ getI18n(op.i18n) +"\n" +
+                        "        <input type=\"checkbox\" name=\"" + option.field + "\" value=\"" + op.name.replace(/"/g, '&quot;') + "\">\n" +
+                        "        <label>" + getI18n(op.i18n) + "\n" +
                         "        </label>\n" +
                         "    </a>";
                 }
-                $("div",formItem).html(html);
+                $("div", formItem).html(html);
                 //选中
                 $("a", formItem).each(function () {
                     var val = $("input[name=" + option.field + "]", this).attr("value");
@@ -789,13 +790,13 @@ function updateFormData(thisForm, data, options, isList) {
                 //获取echoGroup
                 echoGroup = $(formItem).find("input[name='" + option.field + "']").attr("echogroup");
                 //渲染页面
-                for(let op of option.options){
+                for (let op of option.options) {
                     html += "<label class=\"checkbox-inline checkbox-label checkbox-anim\">\n" +
-                        "    <input echoGroup=\""+ echoGroup +"\" type=\"checkbox\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\">\n" +
-                        "    <i class=\"checkbox-i\"></i> "+ getI18n(op.i18n) +"\n" +
+                        "    <input echoGroup=\"" + echoGroup + "\" type=\"checkbox\" name=\"" + option.field + "\" value=\"" + op.name.replace(/"/g, '&quot;') + "\">\n" +
+                        "    <i class=\"checkbox-i\"></i> " + getI18n(op.i18n) + "\n" +
                         "</label>"
                 }
-                if (!isList){
+                if (!isList) {
                     html += "<label class=\"qz-error-info\"></label>"
                 }
                 $(formItem).html(html);
@@ -811,13 +812,13 @@ function updateFormData(thisForm, data, options, isList) {
             case "radio":
                 //获取echoGroup
                 echoGroup = $(formItem).find("input[name='" + option.field + "']").attr("echogroup");
-                for(let op of option.options){
+                for (let op of option.options) {
                     html += "<label class=\"radio-inline radio-label radio-anim\">\n" +
-                        "    <input type=\"radio\" name=\""+ option.field +"\" value=\""+ op.name.replace(/"/g, '&quot;') +"\" echogroup=\""+ echoGroup +"\">\n" +
-                        "    <i class=\"radio-i\"></i> "+ getI18n(op.i18n) +"\n" +
+                        "    <input type=\"radio\" name=\"" + option.field + "\" value=\"" + op.name.replace(/"/g, '&quot;') + "\" echogroup=\"" + echoGroup + "\">\n" +
+                        "    <i class=\"radio-i\"></i> " + getI18n(op.i18n) + "\n" +
                         "</label>";
                 }
-                if (!isList){
+                if (!isList) {
                     html += "<label class=\"qz-error-info\"></label>"
                 }
                 $(formItem).html(html);
@@ -833,9 +834,9 @@ function updateFormData(thisForm, data, options, isList) {
         }
     }
     //因为重新渲染了option，所以需要重新绑定echoData
-    if (isList){
+    if (isList) {
         bindEchoSelectEvent()
-    }else{
+    } else {
         bindEchoItemEvent();
     }
     for (let key in data) {
@@ -862,8 +863,8 @@ function updateFormData(thisForm, data, options, isList) {
             case "select":
                 var $li = $("li[data-value='" + value + "']", formItem);
                 if ($li.length > 0) {
-                    $li.each(function (index,ele){
-                        selectOption.call(ele,false);
+                    $li.each(function (index, ele) {
+                        selectOption.call(ele, false);
                     });
                 } else {
                     $("input[type='hidden']", formItem).val(value);
@@ -1133,7 +1134,7 @@ var bindingActions = {
             $(selector + "[loaded!='true']", restrictedArea).attr("loaded", "true").bind("click", function (e) {
                 e.preventDefault();
                 if ($(this).attr("href") !== "#" && $(this).attr("href").indexOf("javascript:") < 0) {
-                    popupAction($(this).attr("href"), $(this).attr("action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"), $(this).attr("form-loaded-trigger"),$(this).attr("get-data-url"));
+                    popupAction($(this).attr("href"), $(this).attr("action-id"), $(this).attr("data-tip"), $(this).closest("section.main-body"), $(this).attr("form-loaded-trigger"), $(this).attr("get-data-url"));
                 }
                 return false;
             });
@@ -1203,7 +1204,7 @@ function bindEventForListPage() {
             } else {
                 if ($(this).attr("action-id") === getSetting("actionId_app_manage")) {// 集群实例点击[管理]，打开新 Tab 并切换
                     $("table.qz-data-list a.qz-action-link" + actionIdSelector + "[loaded!='true']" + (containSubTab ? ":not(div.tab-container a)" : ""), restrictedArea)
-                    .attr("loaded", "true").bind("click", function (e) {
+                        .attr("loaded", "true").bind("click", function (e) {
                         e.preventDefault();
                         var tab = $(".tab-box>ul>li[bind-id='" + $(this).attr("data-id") + "']");
                         if (tab.length > 0) {
@@ -1216,7 +1217,7 @@ function bindEventForListPage() {
                     if ($(this).attr("action-type")) {
                         // 列表页表格操作列(【注意】：此行需要后置于具体操作列的事件绑定，否则具体操作列的事件绑定将失效)
                         var selector = "table.qz-data-list a.qz-action-link[action-type='" + $(this).attr("action-type") + "'][action-id!='" + getSetting("actionId_app_manage") + "']" + actionIdSelector
-                         + (containSubTab ? ":not(div.tab-container a)" : "");
+                            + (containSubTab ? ":not(div.tab-container a)" : "");
                         qz.bindFill(selector, domSelector, false, false, restrictedArea, null);
                     } else {
                         console.error("Element binding action failed. Element html:" + $(this)[0].outerHTML);
@@ -1261,7 +1262,7 @@ function bindEventForListPage() {
             $(this).unbind("click").bind("click", function () {
                 var thText = $(this).closest('table').find('thead th').eq($(this).closest('td').index()).text();
                 var confirmDetail = getSetting("switchText");
-                if (thText !== undefined){
+                if (thText !== undefined) {
                     confirmDetail += thText;
                 }
                 showConfirm(confirmDetail, {
@@ -1353,12 +1354,12 @@ function initializeManager(element, url) {
             //$(".sidebar-menu li.treeview.menu-open", $(".content-box>ul>li").last()).removeClass("menu-open");
             $(firstMenu).parent().addClass("active");
             //$(firstMenu).parents(".treeview-menu").show();
-            $(firstMenu).parents(".treeview-menu").each(function() {
+            $(firstMenu).parents(".treeview-menu").each(function () {
                 $(this).show().parent(".treeview").addClass("menu-open");
             });
             $(firstMenu).click();
         }
-    });    
+    });
     return false;
 }
 
@@ -1994,7 +1995,7 @@ function openTab(dataId, dataUrl, tabTitle) {
                 //$(".sidebar-menu li.treeview.menu-open", tabDom).removeClass("menu-open");
                 $(firstMenu).parent().addClass("active");
                 //$(firstMenu).parents(".treeview-menu").show();
-                $(firstMenu).parents(".treeview-menu").each(function() {
+                $(firstMenu).parents(".treeview-menu").each(function () {
                     $(this).show().parent(".treeview").addClass("menu-open");
                 });
                 $(firstMenu).click();

@@ -15,9 +15,10 @@
 
 <div style="display: none" id="filter-group-<%=fieldName%>">
     <%
+        String fieldNameForTemp = fieldName;
         for (String f : modelField.getComboFields()) {
-            String fieldNameForTemp = f;
-            ModelFieldInfo mfiTemp = modelInfo.getModelFieldInfo(fieldNameForTemp);
+            fieldName = f;
+            ModelFieldInfo mfiTemp = modelInfo.getModelFieldInfo(fieldName);
             String inputTypeTemp = "";
             if (ValidationFilter.isSingleSelect(mfiTemp)) {
                 inputTypeTemp = "select";
@@ -25,7 +26,7 @@
 
     %>
     <div class='col-xs-4 list-page-padding-bottom'>
-        <div class="input-control" id="form-item-<%=fieldNameForTemp%>" type="<%=inputTypeTemp%>">
+        <div class="input-control" id="form-item-<%=fieldName%>" type="<%=inputTypeTemp%>">
             <%
                 echoGroup = "";
                 fieldValue = "";
@@ -35,9 +36,9 @@
             <%
             } else {
             %>
-            <input id="<%=fieldNameForTemp%>" type="text" name="<%=fieldNameForTemp%>" value='<%=fieldValue%>'
+            <input type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
                    class="form-control"
-                   placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldNameForTemp)%>">
+                   placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>">
             <%
                 }
             %>
@@ -45,5 +46,6 @@
     </div>
     <%
         }
+        fieldName = fieldNameForTemp;
     %>
 </div>
