@@ -48,7 +48,7 @@
             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
             if (action.getActionType() == ActionType.sub_form) {
                 Map<String, String> actionFormData = new LinkedHashMap<>();
-                for (String fieldName : action.getFormFields()) {
+                for (String fieldName : action.getSubFormFields()) {
                     if (modelInfo.getModelFieldInfo(fieldName) != null) {
                         actionFormData.put(fieldName, "");
                     }

@@ -110,7 +110,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
     public String field;
 
     @ModelField(
-            input_type = InputType.select,  create = false, edit = false,
+            input_type = InputType.select, create = false, edit = false,
             name = {"操作符", "en:operator"})
     public String operator;
 
@@ -126,16 +126,26 @@ public class User extends AddModelBase implements Group, Option, Echo {
     public boolean customLabel;
 
     @ModelField(
-            input_type = InputType.combo,
-            combo_fields = {"field", "operator", "value", "customLabel"},
-            create = false, search = true,
+            field_type = FieldType.OTHER,
+            input_type = InputType.combine,
+            combine_fields = {"field", "operator", "value", "customLabel"},
+            search = true,
             name = {"组合查询", "en:comboQuery"},
             info = {"添加过滤条件", "en:Add filters"})
     public String comboQuery;
 
+    @ModelField(
+            field_type = FieldType.OTHER,
+            input_type = InputType.combine,
+            combine_fields = {"field", "operator", "value", "customLabel"},
+            search = true,
+            name = {"组合查询2", "en:comboQuery2"},
+            info = {"添加过滤条件2", "en:Add filters2"})
+    public String comboQuery2;
+
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            form_fields = {"id", "gender", "position", "checkbox", "notes", "b"},
+            sub_form_fields = {"id", "gender", "position", "checkbox", "notes", "b"},
             action_type = ActionType.sub_form, sub_form_submit_on_open = true,
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})

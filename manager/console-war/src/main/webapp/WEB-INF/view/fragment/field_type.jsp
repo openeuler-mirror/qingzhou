@@ -134,9 +134,9 @@
 <%@ include file="field_type/range_datetime.jsp" %>
 <%
         break;
-    case combo:
+    case combine:
 %>
-<%@ include file="field_type/combofilter.jsp" %>
+<%@ include file="field_type/combine.jsp" %>
 <%
             default:
                 throw new IllegalStateException(modelField.getInputType().name() + ".jsp not found.");

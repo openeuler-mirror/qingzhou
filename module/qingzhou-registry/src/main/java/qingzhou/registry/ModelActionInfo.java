@@ -14,9 +14,9 @@ public class ModelActionInfo implements Serializable {
     private boolean distribute;
     private String show;
     private String appPage;
-    private String[] formFields;
+    private String[] subFormFields;
     private boolean subFormSubmitOnOpen;
-    private String[] menuModels;
+    private String[] subMenuModels;
     private ActionType actionType;
 
     public Method getMethod() {
@@ -83,12 +83,12 @@ public class ModelActionInfo implements Serializable {
         this.icon = icon;
     }
 
-    public String[] getFormFields() {
-        return formFields;
+    public String[] getSubFormFields() {
+        return subFormFields;
     }
 
-    public void setFormFields(String[] formFields) {
-        this.formFields = formFields;
+    public void setSubFormFields(String[] subFormFields) {
+        this.subFormFields = subFormFields;
     }
 
     public boolean isSubFormSubmitOnOpen() {
@@ -99,12 +99,12 @@ public class ModelActionInfo implements Serializable {
         this.subFormSubmitOnOpen = subFormSubmitOnOpen;
     }
 
-    public String[] getMenuModels() {
-        return menuModels;
+    public String[] getSubMenuModels() {
+        return subMenuModels;
     }
 
-    public void setMenuModels(String[] menuModels) {
-        this.menuModels = menuModels;
+    public void setSubMenuModels(String[] subMenuModels) {
+        this.subMenuModels = subMenuModels;
     }
 
     public ActionType getActionType() {

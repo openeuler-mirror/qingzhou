@@ -227,7 +227,7 @@ public class PageUtil {
 
         Set<String> showSubMenus = null;
         if (actionInfo.getActionType() == ActionType.sub_menu) {
-            String[] menuModels = actionInfo.getMenuModels();
+            String[] menuModels = actionInfo.getSubMenuModels();
             if (menuModels != null && menuModels.length > 0) {
                 showSubMenus = new HashSet<>(Arrays.asList(menuModels));
                 modelMenuParameter = (DeployerConstants.SUB_MENU_PARAMETER_FLAG + qzRequest.getModel() + "." + qzRequest.getAction() + "=" + qzRequest.getId());
