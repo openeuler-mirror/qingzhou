@@ -2,13 +2,15 @@ package qingzhou.core;
 
 import qingzhou.api.Item;
 import qingzhou.api.type.Echo;
+import qingzhou.core.registry.ItemInfo;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class EchoDataBuilder extends ResponseData implements Echo.DataBuilder {
+public class EchoDataBuilder implements Echo.DataBuilder, Serializable {
     public Map<String, String> data = new LinkedHashMap<>();
     public List<EchoData> options = new LinkedList<>();
 

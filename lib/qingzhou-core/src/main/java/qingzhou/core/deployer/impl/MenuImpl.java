@@ -1,7 +1,7 @@
 package qingzhou.core.deployer.impl;
 
 import qingzhou.api.Menu;
-import qingzhou.core.MenuInfo;
+import qingzhou.core.registry.MenuInfo;
 
 class MenuImpl implements Menu {
     private final MenuInfo newMenuInfo;

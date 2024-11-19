@@ -5,7 +5,7 @@ import javax.servlet.http.HttpSession;
 
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.core.JmxServiceAdapter;
+import qingzhou.core.console.JmxServiceAdapter;
 
 public class JmxInvokerImpl implements JmxServiceAdapter.JmxInvoker {
     static {

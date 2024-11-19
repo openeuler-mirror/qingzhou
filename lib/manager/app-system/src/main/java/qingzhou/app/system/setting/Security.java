@@ -9,7 +9,7 @@ import qingzhou.api.ModelField;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.config.Config;
+import qingzhou.core.config.Config;
 
 @Model(code = "security", icon = "shield",
         menu = Main.Setting, order = 3,
@@ -71,14 +71,14 @@ public class Security extends ModelBase implements Update {
 
     @Override
     public Map<String, String> editData(String id) {
-        qingzhou.config.Security security = Main.getService(Config.class).getCore().getConsole().getSecurity();
+        qingzhou.core.config.Security security = Main.getService(Config.class).getCore().getConsole().getSecurity();
         return ModelUtil.getPropertiesFromObj(security);
     }
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
         Config config = Main.getService(Config.class);
-        qingzhou.config.Security security = config.getCore().getConsole().getSecurity();
+        qingzhou.core.config.Security security = config.getCore().getConsole().getSecurity();
         ModelUtil.setPropertiesToObj(security, data);
         config.setSecurity(security);
     }

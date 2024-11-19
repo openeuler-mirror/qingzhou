@@ -1,8 +1,8 @@
 package qingzhou.console;
 
 import qingzhou.console.controller.SystemController;
-import qingzhou.core.ModelActionInfo;
-import qingzhou.core.ModelInfo;
+import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.core.registry.ModelInfo;
 
 import java.util.ArrayList;
 import java.util.List;

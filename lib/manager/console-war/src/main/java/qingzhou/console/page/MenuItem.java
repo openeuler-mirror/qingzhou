@@ -5,7 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import qingzhou.engine.util.Utils;
-import qingzhou.core.ModelInfo;
+import qingzhou.core.registry.ModelInfo;
 
 class MenuItem {
     private String name;

@@ -11,8 +11,8 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.RequestImpl;
-import qingzhou.core.ResponseImpl;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.json.Json;
 
 public class JsonView implements View {

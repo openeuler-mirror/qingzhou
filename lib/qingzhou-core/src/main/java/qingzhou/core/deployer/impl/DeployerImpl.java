@@ -3,22 +3,25 @@ package qingzhou.core.deployer.impl;
 import qingzhou.api.*;
 import qingzhou.api.type.List;
 import qingzhou.api.type.*;
-import qingzhou.core.*;
-import qingzhou.core.App;
-import qingzhou.core.AppListener;
-import qingzhou.core.Deployer;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.App;
+import qingzhou.core.deployer.AppListener;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.QingzhouSystemApp;
+import qingzhou.core.registry.*;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Supplier;
@@ -157,9 +160,11 @@ class DeployerImpl implements Deployer {
         URLClassLoader loader = buildLoader(appLibs);
         app.setLoader(loader);
 
-        //先从配置文件获取
-        QingzhouApp qingzhouAppFromProperties = buildQingzhouAppFromProperties(appDir, loader);
-        QingzhouApp qingzhouApp = qingzhouAppFromProperties == null ? buildQingzhouApp(appLibs, loader) : qingzhouAppFromProperties;
+        // 解析应用的配置文件
+        Properties appProperties = buildAppProperties(appDir);
+        app.setAppProperties(appProperties);
+
+        QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader, appProperties);
         if (qingzhouApp instanceof QingzhouSystemApp) {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
@@ -450,43 +455,51 @@ class DeployerImpl implements Deployer {
         }
     }
 
-    private QingzhouApp buildQingzhouApp(File[] appLibs, URLClassLoader loader) throws Exception {
-        Collection<String> annotatedClass = Utils.detectAnnotatedClass(appLibs, qingzhou.api.App.class, loader);
-        if (annotatedClass.size() == 1) {
-            Class<?> cls = loader.loadClass(annotatedClass.iterator().next());
+    private QingzhouApp buildQingzhouApp(File[] appLibs, URLClassLoader loader, Properties appProperties) throws Exception {
+        String mainClass = null;
+        if (appProperties != null) {
+            mainClass = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_MAIN_CLASS);
+        }
+        if (mainClass == null) {
+            Collection<String> annotatedClass = Utils.detectAnnotatedClass(appLibs, qingzhou.api.App.class, loader);
+            if (annotatedClass.size() == 1) {
+                mainClass = annotatedClass.iterator().next();
+            }
+        }
+
+        try {
+            Class<?> cls = loader.loadClass(mainClass);
             return (QingzhouApp) cls.newInstance();
-        } else {
-            throw new IllegalStateException("An app must have and can only have one implementation class for " + QingzhouApp.class.getName());
+        } catch (Exception e) {
+            throw new IllegalStateException("An app must have and can only have one implementation class for " + QingzhouApp.class.getName(), e);
         }
     }
 
-    private QingzhouApp buildQingzhouAppFromProperties(File appDir, URLClassLoader loader) throws Exception {
-        QingzhouApp qingzhouApp = null;
-        //qingzhou.properties是否存在
-        Properties properties = new Properties();
-        String propertiesFilePath = "qingzhou.properties";
+    private Properties buildAppProperties(File appDir) throws Exception {
         if (appDir.isDirectory()) {
-            propertiesFilePath = appDir.getCanonicalPath() + File.separator + propertiesFilePath;
-        } else {
-            propertiesFilePath = appDir.getParentFile().getCanonicalPath() + File.separator + propertiesFilePath;
-        }
-
-        try (FileInputStream inputStream = new FileInputStream(propertiesFilePath)) {
-            // 加载 properties 文件
-            properties.load(inputStream);
-            String mainClass = properties.getProperty("main.class");
-            if (mainClass != null && !mainClass.isEmpty()) {
-                Class<?> cls = loader.loadClass(mainClass);
-                if (cls.getConstructor(Properties.class) != null) {
-                    qingzhouApp = (QingzhouApp) cls.getConstructor(Properties.class).newInstance(properties);
-                } else {
-                    qingzhouApp = (QingzhouApp) cls.newInstance();
+            File file = new File(appDir, DeployerConstants.QINGZHOU_PROPERTIES_FILE);
+            if (file.exists()) {
+                try (InputStream in = Files.newInputStream(file.toPath())) {
+                    return Utils.streamToProperties(in);
                 }
             }
-        } catch (IOException e) {
-            //nothing
+
+            File[] listFiles = appDir.listFiles();
+            for (File jarFile : Objects.requireNonNull(listFiles)) {
+                if (jarFile.getName().endsWith(".jar")) {
+                    Properties properties = Utils.zipEntryToProperties(jarFile, DeployerConstants.QINGZHOU_PROPERTIES_FILE);
+                    if (properties != null) {
+                        return properties;
+                    }
+                }
+            }
         }
-        return qingzhouApp;
+
+        if (appDir.isFile()) {
+            return Utils.zipEntryToProperties(appDir, DeployerConstants.QINGZHOU_PROPERTIES_FILE);
+        }
+
+        return null;
     }
 
     private AppContextImpl buildAppContext(AppImpl app) {

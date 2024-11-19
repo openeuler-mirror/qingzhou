@@ -4,10 +4,10 @@ import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.core.ActionInvoker;
+import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.QingzhouSystemApp;
-import qingzhou.core.RequestImpl;
+import qingzhou.core.deployer.QingzhouSystemApp;
+import qingzhou.core.deployer.RequestImpl;
 import qingzhou.engine.ModuleContext;
 
 import java.io.File;

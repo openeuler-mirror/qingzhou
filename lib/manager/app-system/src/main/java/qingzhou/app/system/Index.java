@@ -9,7 +9,7 @@ import qingzhou.api.ModelField;
 import qingzhou.api.Request;
 import qingzhou.api.type.Show;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.ResponseImpl;
+import qingzhou.core.deployer.ResponseImpl;
 
 @Model(code = DeployerConstants.MODEL_INDEX, icon = "home",
         entrance = Show.ACTION_SHOW,

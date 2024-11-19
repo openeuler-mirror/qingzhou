@@ -7,7 +7,7 @@ import qingzhou.api.type.Option;
 import qingzhou.api.type.Validate;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.config.Config;
+import qingzhou.core.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.core.DeployerConstants;
@@ -45,7 +45,7 @@ public class User extends ModelBase implements General, Validate, Option {
                         return ModelUtil.getPropertiesFromObj(user);
                     }
                 }))
-                .map(qingzhou.config.User::getName)
+                .map(qingzhou.core.config.User::getName)
                 .toArray(String[]::new);
     }
 
@@ -166,7 +166,7 @@ public class User extends ModelBase implements General, Validate, Option {
         // 添加密码更新时间戳
         insertPasswordModifiedTime(data);
 
-        qingzhou.config.User u = new qingzhou.config.User();
+        qingzhou.core.config.User u = new qingzhou.core.config.User();
         ModelUtil.setPropertiesToObj(u, data);
         Main.getService(Config.class).addUser(u);
     }
@@ -234,7 +234,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     static Map<String, String> showDataForUserInternal(String userId) {
-        for (qingzhou.config.User user : Main.getService(Config.class).getCore().getConsole().getUser()) {
+        for (qingzhou.core.config.User user : Main.getService(Config.class).getCore().getConsole().getUser()) {
             if (user.getName().equals(userId)) {
                 Map<String, String> data = ModelUtil.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
@@ -253,7 +253,7 @@ public class User extends ModelBase implements General, Validate, Option {
     static void updateDataForUser(Map<String, String> data) throws Exception {
         Config config = Main.getService(Config.class);
         String id = data.get(ID_KEY);
-        qingzhou.config.User user = config.getCore().getConsole().getUser(id);
+        qingzhou.core.config.User user = config.getCore().getConsole().getUser(id);
         config.deleteUser(id);
         if (PASSWORD_FLAG.equals(data.get("password"))) {
             data.remove("password");

@@ -1,9 +1,9 @@
 package qingzhou.core.agent.impl;
 
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.Deployer;
-import qingzhou.core.AppInfo;
-import qingzhou.core.InstanceInfo;
+import qingzhou.core.registry.InstanceInfo;
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.pattern.Process;

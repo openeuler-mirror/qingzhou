@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.core.ActionInvoker" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%

@@ -53,4 +53,7 @@ public interface DeployerConstants {
     String APP_STOPPED = "Stopped";
     String DEFAULT_DATA_SEPARATOR = ",";
     String SUB_MENU_PARAMETER_FLAG = ActionType.sub_menu.name() + "_parameter_flag_";
+
+    String QINGZHOU_PROPERTIES_FILE = "qingzhou.properties";
+    String QINGZHOU_PROPERTIES_APP_MAIN_CLASS = "qingzhou.app.main.class";
 }

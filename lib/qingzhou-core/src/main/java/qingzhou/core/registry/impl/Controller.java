@@ -1,6 +1,6 @@
 package qingzhou.core.registry.impl;
 
-import qingzhou.core.Registry;
+import qingzhou.core.registry.Registry;
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.pattern.Process;

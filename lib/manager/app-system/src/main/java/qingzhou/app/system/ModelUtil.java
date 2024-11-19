@@ -1,10 +1,10 @@
 package qingzhou.app.system;
 
-import qingzhou.core.Deployer;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.DeployerConstants;
 import qingzhou.engine.util.Utils;
-import qingzhou.core.AppInfo;
-import qingzhou.core.ModelFieldInfo;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelFieldInfo;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;

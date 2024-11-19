@@ -2,12 +2,13 @@ package qingzhou.core;
 
 import qingzhou.api.type.Dashboard;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class DashboardDataBuilder extends ResponseData implements Dashboard.DataBuilder {
+public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable {
     // 定义仪表盘字段数据标识
     public static final String DASHBOARD_FIELD_INFO = "info";
     public static final String DASHBOARD_FIELD_TITLE = "title";
@@ -96,7 +97,7 @@ public class DashboardDataBuilder extends ResponseData implements Dashboard.Data
         this.data.add(dashboardData);
     }
 
-    public static abstract class DashboardDataImpl extends ResponseData implements Dashboard.DashboardData {
+    public static abstract class DashboardDataImpl implements Dashboard.DashboardData, Serializable {
         public String title; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String type = this.getClass().getSimpleName();
 

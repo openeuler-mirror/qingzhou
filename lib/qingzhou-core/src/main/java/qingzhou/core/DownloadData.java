@@ -1,6 +1,8 @@
 package qingzhou.core;
 
-public class DownloadData extends ResponseData {
+import java.io.Serializable;
+
+public class DownloadData implements Serializable {
     public static final String DOWNLOAD_SERIAL_KEY = "DOWNLOAD_SERIAL_KEY";
     public static final String DOWNLOAD_OFFSET = "DOWNLOAD_OFFSET";
     public static final String DOWNLOAD_FILE_NAMES = "DOWNLOAD_FILE_NAMES";

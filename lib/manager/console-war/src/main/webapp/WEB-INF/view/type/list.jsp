@@ -1,6 +1,3 @@
-<%@ page import="qingzhou.app.*" %>
-<%@ page import="qingzhou.core.ModelActionInfo" %>
-<%@ page import="qingzhou.core.ListData" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ include file="../fragment/head.jsp" %>

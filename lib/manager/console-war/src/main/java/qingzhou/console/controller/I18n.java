@@ -10,13 +10,13 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.I18nTool;
+import qingzhou.core.deployer.I18nTool;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
-import qingzhou.core.AppInfo;
-import qingzhou.core.ModelActionInfo;
-import qingzhou.core.ModelFieldInfo;
-import qingzhou.core.ModelInfo;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.core.registry.ModelInfo;
 
 public class I18n implements Filter<SystemControllerContext> {
     public static final String LANG_SWITCH_URI = "/lang";

@@ -5,11 +5,11 @@ import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.core.Deployer;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.RequestImpl;
-import qingzhou.core.AppInfo;
-import qingzhou.core.Registry;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.Registry;
 
 import java.util.*;
 
@@ -117,7 +117,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         AppInfo appInfo = null;
         List<String> instances = new ArrayList<>();
 
-        qingzhou.core.App app = Main.getService(Deployer.class).getApp(id);
+        qingzhou.core.deployer.App app = Main.getService(Deployer.class).getApp(id);
         if (app != null) {
             appInfo = app.getAppInfo();
             instances = new ArrayList<>();

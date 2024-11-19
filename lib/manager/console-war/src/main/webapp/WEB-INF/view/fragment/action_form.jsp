@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.core.ModelFieldInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <div class="tab-content" style="padding-top: 12px; padding-bottom: 12px;">

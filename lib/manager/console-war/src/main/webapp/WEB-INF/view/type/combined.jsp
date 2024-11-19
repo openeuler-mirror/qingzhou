@@ -1,6 +1,3 @@
-<%@ page import="qingzhou.core.ItemInfo" %>
-<%@ page import="qingzhou.core.ModelFieldInfo" %>
-<%@ page import="qingzhou.core.CombinedDataBuilder" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%@ include file="../fragment/head.jsp" %>

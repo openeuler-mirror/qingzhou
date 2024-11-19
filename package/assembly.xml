@@ -86,9 +86,7 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-servlet</include>
                 <include>${project.groupId}:qingzhou-core</include>
-                <include>${project.groupId}:qingzhou-config</include>
                 <include>${project.groupId}:qingzhou-logger</include>
                 <include>${project.groupId}:qingzhou-json</include>
                 <include>${project.groupId}:qingzhou-serializer</include>
