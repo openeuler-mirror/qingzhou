@@ -3,7 +3,7 @@ package qingzhou.api.type;
 import java.util.Map;
 
 /**
- * Showable接口定义了展示数据的能力。
+ * Show接口定义了展示数据的能力。
  */
 public interface Show {
     String ACTION_SHOW = "show";

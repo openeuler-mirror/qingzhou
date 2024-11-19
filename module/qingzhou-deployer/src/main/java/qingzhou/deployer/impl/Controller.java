@@ -7,6 +7,7 @@ import qingzhou.deployer.Deployer;
 import qingzhou.deployer.DeployerConstants;
 import qingzhou.deployer.QingzhouSystemApp;
 import qingzhou.engine.*;
+import qingzhou.engine.Module;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
