@@ -129,11 +129,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-console</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-api</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -146,11 +141,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>qingzhou-serializer</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-registry</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -170,12 +160,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-agent</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>qingzhou-deployer</artifactId>
+            <artifactId>qingzhou-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

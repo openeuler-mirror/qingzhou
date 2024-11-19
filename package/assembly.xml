@@ -86,11 +86,8 @@
 
         <dependencySet>
             <includes>
-                <include>${project.groupId}:qingzhou-console</include>
                 <include>${project.groupId}:qingzhou-servlet</include>
-                <include>${project.groupId}:qingzhou-agent</include>
-                <include>${project.groupId}:qingzhou-deployer</include>
-                <include>${project.groupId}:qingzhou-registry</include>
+                <include>${project.groupId}:qingzhou-core</include>
                 <include>${project.groupId}:qingzhou-config</include>
                 <include>${project.groupId}:qingzhou-logger</include>
                 <include>${project.groupId}:qingzhou-json</include>
@@ -142,7 +139,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/-</outputDirectory>
+            <outputDirectory>lib/version${project.version}/module/qingzhou-core/-</outputDirectory>
         </dependencySet>
 
         <dependencySet>
@@ -153,7 +150,7 @@
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/module/qingzhou-deployer/common</outputDirectory>
+            <outputDirectory>lib/version${project.version}/module/qingzhou-core/common</outputDirectory>
         </dependencySet>
     </dependencySets>
 </assembly>
