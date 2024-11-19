@@ -147,6 +147,7 @@ public class PageUtil {
             }
             int ignore = fieldInfo.getIgnore();
             if (ignore > 0 && styleValue.length() > ignore) {
+                value = value.replaceAll("\"", "&quot;");
                 return "<span style=\" " + colorStyle + " \" data-toggle=\"tooltip\" title=\"" + value + "\">" + styleValue.substring(0, ignore) + "...</span>";
             } else {
                 if (Utils.notBlank(colorStyle)) {
