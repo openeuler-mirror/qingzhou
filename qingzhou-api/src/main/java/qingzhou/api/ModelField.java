@@ -34,7 +34,7 @@ public @interface ModelField {
 
     InputType input_type() default InputType.text; // 字段的显示类型
 
-    String display() default ""; // 允许指定值
+    String display() default ""; // 在页面上显示或隐藏的条件
 
     boolean required() default false;
 
@@ -98,23 +98,17 @@ public @interface ModelField {
 
     boolean multiple_search() default false;// 当search为ture和本值为true的时候，显示为多选下拉搜索
 
-    String link_action() default ""; // 点击此字段调整到详情页面，模块须支持 show
-
     int width_percent() default -1;
 
     int ignore() default -1; // 列表页面上，最多显示的字符数，超出后隐藏并悬浮显示全值
-    // 标注需要跳转到其他页面的链接字段，不要标注在id字段上，格式为 linkModel="modelname.fieldname"，根据modelname跳转到固定action-list，fieldname为链接携带的参数key,即跳转后的搜索条件参数
 
-    String link_list() default ""; //内容：currentModelFieldName>targetModelName
-    // 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
+    String link_action() default ""; // 链接到模块内部的 action 上
 
-    String[] color() default {};
+    String link_list() default ""; // 链接到其他模块的 list action，格式：currentModelFieldName>targetModelName
 
-    String[] combo_fields() default {};  // 组合条件属性
-
-    /**
-     * 以下是 FieldType.Monitor 类型的信息
-     */
+    String[] color() default {}; // 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
 
     boolean numeric() default false;  // 该属性为监视类型中的动态数字类型，可用于绘制折线图。在该属性为监视类型时有效。
+
+    String[] combine_fields() default {};  // 组合条件属性
 }

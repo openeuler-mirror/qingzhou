@@ -5,12 +5,19 @@ import qingzhou.api.AppContext;
 import qingzhou.api.QingzhouApp;
 import qingzhou.logger.Logger;
 
+import java.util.Properties;
+
 @App
 public class ExampleMain implements QingzhouApp {
     public static final String MENU_1 = "MENU_1";
     public static final String MENU_11 = "MENU_11";
 
     public static Logger logger;
+
+    public ExampleMain() {
+    }
+    public ExampleMain(Properties properties) {
+    }
 
     @Override
     public void start(AppContext appContext) {

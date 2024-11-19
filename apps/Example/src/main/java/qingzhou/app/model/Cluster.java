@@ -18,7 +18,7 @@ public class Cluster extends AddModelBase {
 
     @ModelAction(
             code = "user", icon = "location-arrow",
-            menu_models = {"user"},
+            sub_menu_models = {"user"},
             action_type = ActionType.sub_menu,
             name = {"跳1菜单", "en:User"},
             info = {"打开只有用户菜单的管理页面。", "en:Go to the page."})
@@ -27,7 +27,7 @@ public class Cluster extends AddModelBase {
 
     @ModelAction(
             code = "org", icon = "location-arrow",
-            menu_models = {"department", "post"},
+            sub_menu_models = {"department", "post"},
             action_type = ActionType.sub_menu,
             name = {"跳2菜单", "en:Org"},
             info = {"打开有部门和岗位菜单的管理页面，默认展开第一个，即部门的模块入口页面。", "en:Go to the page."})
