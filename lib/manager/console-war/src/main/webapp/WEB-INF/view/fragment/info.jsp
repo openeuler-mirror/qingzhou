@@ -1,5 +1,3 @@
-<%@ page import="qingzhou.core.ItemInfo" %>
-<%@ page import="qingzhou.core.ModelFieldInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%

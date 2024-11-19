@@ -3,9 +3,9 @@ package qingzhou.console.controller.rest;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.type.Echo;
 import qingzhou.console.controller.SystemController;
-import qingzhou.core.ActionInvoker;
-import qingzhou.core.RequestImpl;
-import qingzhou.core.ResponseImpl;
+import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.engine.util.pattern.Filter;
 
 public class EchoFilter implements Filter<RestContext> {

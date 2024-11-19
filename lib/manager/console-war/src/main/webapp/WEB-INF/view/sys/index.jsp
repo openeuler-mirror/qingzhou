@@ -1,6 +1,3 @@
-<%@ page import="qingzhou.core.DeployerConstants" %>
-<%@ page import="qingzhou.core.DashboardDataBuilder" %>
-<%@ page import="qingzhou.core.DownloadData" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%

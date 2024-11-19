@@ -3,7 +3,7 @@ package qingzhou.app.system.jmx;
 import javax.management.NotificationListener;
 import javax.management.remote.JMXAuthenticator;
 
-import qingzhou.core.JmxServiceAdapter;
+import qingzhou.core.console.JmxServiceAdapter;
 
 class JmxServiceAdapterImpl implements JmxServiceAdapter {
     private static final JmxServiceAdapterImpl INSTANCE = new JmxServiceAdapterImpl();

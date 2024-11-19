@@ -1,8 +1,8 @@
 package qingzhou.core.registry.impl;
 
-import qingzhou.core.AppInfo;
-import qingzhou.core.InstanceInfo;
-import qingzhou.core.Registry;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.InstanceInfo;
+import qingzhou.core.registry.Registry;
 import qingzhou.crypto.CryptoService;
 import qingzhou.json.Json;
 

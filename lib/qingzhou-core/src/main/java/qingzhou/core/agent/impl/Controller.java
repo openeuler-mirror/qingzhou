@@ -1,7 +1,7 @@
 package qingzhou.core.agent.impl;
 
-import qingzhou.core.AppListener;
-import qingzhou.core.Deployer;
+import qingzhou.core.deployer.AppListener;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.crypto.Cipher;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.PairCipher;

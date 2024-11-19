@@ -1,15 +1,13 @@
 package qingzhou.core.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.core.I18nTool;
+import qingzhou.core.deployer.I18nTool;
+import qingzhou.core.registry.MenuInfo;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
-import qingzhou.core.MenuInfo;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 class AppContextImpl implements AppContext {
@@ -26,6 +24,11 @@ class AppContextImpl implements AppContext {
     AppContextImpl(ModuleContext moduleContext, AppImpl app) {
         this.moduleContext = moduleContext;
         this.app = app;
+    }
+
+    @Override
+    public Properties getAppProperties() {
+        return app.getAppProperties();
     }
 
     @Override
@@ -91,7 +94,7 @@ class AppContextImpl implements AppContext {
         return moduleContext.getAvailableServiceTypes().stream().filter(aClass -> {
             Service annotation = aClass.getAnnotation(Service.class);
             return annotation == null || annotation.shareable();
-        }).collect(Collectors.toList());
+        }).sorted(Comparator.comparing(o -> o.getAnnotation(Service.class).name())).collect(Collectors.toList());
     }
 
     @Override

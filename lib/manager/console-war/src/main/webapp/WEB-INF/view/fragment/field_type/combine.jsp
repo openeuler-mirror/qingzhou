@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.core.ModelFieldInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <div style="width: 80%; float: left">

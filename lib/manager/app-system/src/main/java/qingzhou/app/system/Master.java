@@ -5,7 +5,7 @@ import qingzhou.api.ModelAction;
 import qingzhou.api.ModelBase;
 import qingzhou.api.Request;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.Registry;
+import qingzhou.core.registry.Registry;
 
 @Model(code = DeployerConstants.MODEL_MASTER,
         hidden = true,

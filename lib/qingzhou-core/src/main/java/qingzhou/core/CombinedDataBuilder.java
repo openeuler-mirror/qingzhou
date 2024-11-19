@@ -2,11 +2,12 @@ package qingzhou.core;
 
 import qingzhou.api.type.Combined;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class CombinedDataBuilder extends ResponseData implements Combined.DataBuilder {
+public class CombinedDataBuilder implements Combined.DataBuilder, Serializable {
     public final java.util.List<Combined.CombinedData> data = new ArrayList<>(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
 
     @Override
@@ -22,7 +23,7 @@ public class CombinedDataBuilder extends ResponseData implements Combined.DataBu
         this.data.add(data);
     }
 
-    public static abstract class CombinedDataImpl extends ResponseData implements Combined.CombinedData {
+    public static abstract class CombinedDataImpl implements Combined.CombinedData, Serializable {
         public String header; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String model; // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动
         public String type = this.getClass().getSimpleName(); // public 是为了凸显 该字段会映射为 json 的 key，最好不要变动

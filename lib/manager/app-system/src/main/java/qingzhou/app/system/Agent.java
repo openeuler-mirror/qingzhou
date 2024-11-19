@@ -22,12 +22,12 @@ import qingzhou.api.ModelField;
 import qingzhou.api.Request;
 import qingzhou.api.type.Download;
 import qingzhou.api.type.Monitor;
-import qingzhou.core.App;
+import qingzhou.core.deployer.App;
 import qingzhou.core.AppPageData;
-import qingzhou.core.Deployer;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.RequestImpl;
-import qingzhou.core.ResponseImpl;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 

@@ -1,6 +1,6 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.core.RequestImpl;
+import qingzhou.core.deployer.RequestImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

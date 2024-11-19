@@ -4,18 +4,16 @@ import qingzhou.api.ActionFilter;
 import qingzhou.api.ModelBase;
 import qingzhou.api.QingzhouApp;
 import qingzhou.api.Request;
-import qingzhou.core.App;
+import qingzhou.core.deployer.App;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.engine.util.Utils;
-import qingzhou.core.AppInfo;
-import qingzhou.core.ModelActionInfo;
 
 import java.net.URLClassLoader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 class AppImpl implements App {
+    private Properties appProperties;
     private URLClassLoader loader;
     private AppInfo appInfo;
     private AppContextImpl appContext;
@@ -123,5 +121,13 @@ class AppImpl implements App {
 
     Map<String, ModelBase> getModelBaseMap() {
         return modelBaseMap;
+    }
+
+    public Properties getAppProperties() {
+        return appProperties;
+    }
+
+    public void setAppProperties(Properties appProperties) {
+        this.appProperties = appProperties;
     }
 }

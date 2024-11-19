@@ -14,12 +14,12 @@ import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.type.DownloadView;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.core.RequestImpl;
-import qingzhou.core.ResponseImpl;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
-import qingzhou.core.ModelActionInfo;
-import qingzhou.core.ModelFieldInfo;
-import qingzhou.core.ModelInfo;
+import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.core.registry.ModelInfo;
 
 public class ViewManager {
     private final Map<String, View> views = new HashMap<>();

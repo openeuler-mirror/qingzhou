@@ -2,7 +2,7 @@ package qingzhou.console.controller.rest;
 
 import qingzhou.api.Request;
 import qingzhou.console.view.type.HtmlView;
-import qingzhou.core.RequestImpl;
+import qingzhou.core.deployer.RequestImpl;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpSession;

@@ -17,11 +17,12 @@
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.page.*" %>
-<%@ page import="qingzhou.app.registry.*" %>
-<%@ page import="qingzhou.app.deployer.*" %>
-<%@ page import="qingzhou.core.RequestImpl" %>
-<%@ page import="qingzhou.core.ResponseImpl" %>
-<%@ page import="qingzhou.core.ModelInfo" %>
+<%@ page import="qingzhou.core.*" %>
+<%@ page import="qingzhou.core.registry.*" %>
+<%@ page import="qingzhou.core.deployer.*" %>
+<%@ page import="qingzhou.core.deployer.RequestImpl" %>
+<%@ page import="qingzhou.core.deployer.ResponseImpl" %>
+<%@ page import="qingzhou.core.registry.ModelInfo" %>
 
 <%
     String currentUser = LoginManager.getLoginUser(request);

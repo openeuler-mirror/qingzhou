@@ -5,7 +5,7 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.engine.util.Utils;
-import qingzhou.core.ModelInfo;
+import qingzhou.core.registry.ModelInfo;
 
 import javax.security.auth.Subject;
 import javax.servlet.*;

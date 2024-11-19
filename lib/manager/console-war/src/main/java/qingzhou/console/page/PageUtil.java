@@ -4,12 +4,14 @@ import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
 import qingzhou.core.*;
-import qingzhou.core.Deployer;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.type.HtmlView;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.registry.*;
 import qingzhou.engine.util.Utils;
 
 import javax.servlet.http.HttpServletRequest;

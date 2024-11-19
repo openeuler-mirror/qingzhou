@@ -1,9 +1,10 @@
 package qingzhou.core.deployer.impl;
 
-import qingzhou.core.ActionInvoker;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.Deployer;
-import qingzhou.core.Registry;
+import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.QingzhouSystemApp;
+import qingzhou.core.registry.Registry;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 import qingzhou.engine.util.FileUtil;
@@ -138,7 +139,7 @@ public class Controller implements Process {
             deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
                 @Override
                 public ClassLoader getClassLoader() {
-                    return qingzhou.core.impl.Controller.class.getClassLoader();
+                    return QingzhouSystemApp.class.getClassLoader();
                 }
 
                 @Override

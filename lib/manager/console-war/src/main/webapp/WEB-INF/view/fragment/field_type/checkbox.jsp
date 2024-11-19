@@ -1,4 +1,3 @@
-<%@ page import="qingzhou.core.ItemInfo" %>
 <%@ page pageEncoding="UTF-8" %>
 
 <%
