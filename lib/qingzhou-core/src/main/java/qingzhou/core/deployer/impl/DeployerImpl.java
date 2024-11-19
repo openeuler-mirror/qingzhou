@@ -13,6 +13,7 @@ import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -156,7 +157,9 @@ class DeployerImpl implements Deployer {
         URLClassLoader loader = buildLoader(appLibs);
         app.setLoader(loader);
 
-        QingzhouApp qingzhouApp = buildQingzhouApp(appLibs, loader);
+        //先从配置文件获取
+        QingzhouApp qingzhouAppFromProperties = buildQingzhouAppFromProperties(appDir, loader);
+        QingzhouApp qingzhouApp = qingzhouAppFromProperties == null ? buildQingzhouApp(appLibs, loader) : qingzhouAppFromProperties;
         if (qingzhouApp instanceof QingzhouSystemApp) {
             QingzhouSystemApp qingzhouSystemApp = (QingzhouSystemApp) qingzhouApp;
             qingzhouSystemApp.setModuleContext(moduleContext);
@@ -455,6 +458,35 @@ class DeployerImpl implements Deployer {
         } else {
             throw new IllegalStateException("An app must have and can only have one implementation class for " + QingzhouApp.class.getName());
         }
+    }
+
+    private QingzhouApp buildQingzhouAppFromProperties(File appDir, URLClassLoader loader) throws Exception {
+        QingzhouApp qingzhouApp = null;
+        //qingzhou.properties是否存在
+        Properties properties = new Properties();
+        String propertiesFilePath = "qingzhou.properties";
+        if (appDir.isDirectory()) {
+            propertiesFilePath = appDir.getCanonicalPath() + File.separator + propertiesFilePath;
+        } else {
+            propertiesFilePath = appDir.getParentFile().getCanonicalPath() + File.separator + propertiesFilePath;
+        }
+
+        try (FileInputStream inputStream = new FileInputStream(propertiesFilePath)) {
+            // 加载 properties 文件
+            properties.load(inputStream);
+            String mainClass = properties.getProperty("main.class");
+            if (mainClass != null && !mainClass.isEmpty()) {
+                Class<?> cls = loader.loadClass(mainClass);
+                if (cls.getConstructor(Properties.class) != null) {
+                    qingzhouApp = (QingzhouApp) cls.getConstructor(Properties.class).newInstance(properties);
+                } else {
+                    qingzhouApp = (QingzhouApp) cls.newInstance();
+                }
+            }
+        } catch (IOException e) {
+            //nothing
+        }
+        return qingzhouApp;
     }
 
     private AppContextImpl buildAppContext(AppImpl app) {
