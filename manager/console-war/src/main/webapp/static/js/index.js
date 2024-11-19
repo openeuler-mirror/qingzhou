@@ -1474,6 +1474,7 @@ function popupAction(actionUrl, actionId, title, restrictedArea, formLoadedTrigg
                                 showMsg(res.msg, 'error');
                             } else if ((res.success === true || res.success === 'true') && res.msg) {
                                 showMsg(res.msg, 'info');
+                                document.getElementsByClassName("layui-layer-ico layui-layer-close layui-layer-close1")[0].click();
                             } else if (JSON.stringify(res) !== '{}') {
                                 $popupForm.after("<hr style=\'margin-top: 4px;\'><pre style='background-color: #333;color: #fff;padding: 10px;'>" + JSON.stringify(res, null, 4) + "</pre>");
                                 layer.style(index, {height: '500px'});
