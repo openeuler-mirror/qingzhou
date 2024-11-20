@@ -1,14 +1,14 @@
 package qingzhou.core.registry;
 
-import java.io.Serializable;
-import java.util.*;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 import qingzhou.core.ItemInfo;
 import qingzhou.engine.util.Utils;
+
+import java.io.Serializable;
+import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ModelInfo implements Serializable {
     private String code;
@@ -31,10 +31,6 @@ public class ModelInfo implements Serializable {
     private boolean useDynamicDefaultSearch;
     private String[] staticOptionFields;
     private String[] dynamicOptionFields;
-    private String[] headActions;
-    private String[] listActions;
-    private String[] batchActions;
-    private String[] formActions;
 
     public Map<String, List<String>> getSameLineMap() {
         Map<String, List<String>> map = new LinkedHashMap<>();
@@ -56,39 +52,29 @@ public class ModelInfo implements Serializable {
     }
 
     public String[] getHeadActions() {
-        return existsActions(headActions);
+        return existsActions(Arrays.stream(modelActionInfos).filter(ModelActionInfo::isHeadAction).collect(Collectors.toList()));
     }
 
     public String[] getListActions() {
-        return existsActions(listActions);
+        return existsActions(Arrays.stream(modelActionInfos).filter(ModelActionInfo::isListAction).collect(Collectors.toList()));
     }
 
     public String[] getBatchActions() {
-        return existsActions(batchActions);
+        return existsActions(Arrays.stream(modelActionInfos).filter(ModelActionInfo::isBatchAction).collect(Collectors.toList()));
     }
 
     public String[] getFormActions() {
-        return existsActions(formActions);
+        return existsActions(Arrays.stream(modelActionInfos).filter(ModelActionInfo::isFormAction).collect(Collectors.toList()));
     }
 
-    public void setBatchActions(String[] batchActions) {
-        this.batchActions = batchActions;
-    }
+    private String[] existsActions(List<ModelActionInfo> modelActionInfos) {
+        if (modelActionInfos == null) return new String[0];
 
-    public void setFormActions(String[] formActions) {
-        this.formActions = formActions;
-    }
-
-    private String[] existsActions(String[] scope) {
-        if (scope == null) return new String[0];
-
-        List<String> fountActions = new ArrayList<>();
-        for (String action : scope) {
-            if (getModelActionInfo(action) != null) {
-                fountActions.add(action);
-            }
+        List<String> checkedActions = new ArrayList<>();
+        for (ModelActionInfo action : modelActionInfos) {
+            checkedActions.add(action.getCode());
         }
-        return fountActions.toArray(new String[0]);
+        return checkedActions.toArray(new String[0]);
     }
 
     public Map<String, String> getFormFieldDefaultValues() {
@@ -313,14 +299,6 @@ public class ModelInfo implements Serializable {
 
     public void setDynamicOptionFields(String[] dynamicOptionFields) {
         this.dynamicOptionFields = dynamicOptionFields;
-    }
-
-    public void setListActions(String[] listActions) {
-        this.listActions = listActions;
-    }
-
-    public void setHeadActions(String[] headActions) {
-        this.headActions = headActions;
     }
 
     public boolean isUseDynamicDefaultSearch() {

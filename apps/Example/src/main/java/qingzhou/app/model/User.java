@@ -1,7 +1,7 @@
 package qingzhou.app.model;
 
 import qingzhou.api.*;
-import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
@@ -17,7 +17,7 @@ import java.util.Map;
         menu = ExampleMain.MENU_1, order = 1,
         name = {"用户", "en:User management"},
         info = {"用户管理", "en:User management."})
-public class User extends AddModelBase implements Group, Option, Echo {
+public class User extends AddModelBase implements Delete, Group, Option, Echo {
     public static final String code = "user-model-code";
     @ModelField(
             group = "base",
@@ -145,6 +145,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
+            head_action = true, list_action = true,
             sub_form_fields = {"id", "gender", "position", "checkbox", "notes", "b"},
             action_type = ActionType.sub_form, sub_form_submit_on_open = true,
             name = {"弹出表单", "en:test"},
@@ -190,17 +191,13 @@ public class User extends AddModelBase implements Group, Option, Echo {
     }
 
     @Override
-    public String[] listActions() {
-        return new String[]{"test", "edit"};
-    }
-
-    @Override
     public boolean showOrderNumber() {
         return false;
     }
 
     @ModelAction(
             code = "share", icon = "share-alt",
+            head_action = true,
             action_type = ActionType.action_list,
             name = {"头部按钮", "en:Share"},
             info = {"头部按钮", "en:Share"})
@@ -210,6 +207,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelAction(
             code = "upload", icon = "upload-alt",
+            head_action = true,
             action_type = ActionType.upload,
             name = {"上传", "en:upload"},
             info = {"将本地文件或数据发送到服务器进行存储和处理。",
@@ -220,6 +218,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
 
     @ModelAction(
             code = "upload1", icon = "upload-alt",
+            head_action = true,
             action_type = ActionType.upload,
             name = {"上传1", "en:upload1"},
             info = {"将本地文件或数据发送到服务器进行存储和处理。",
@@ -323,11 +322,6 @@ public class User extends AddModelBase implements Group, Option, Echo {
     @Override
     public boolean useDynamicDefaultSearch() {
         return true;
-    }
-
-    @Override
-    public String[] headActions() {
-        return new String[]{Add.ACTION_CREATE, "share", "test", "upload", "upload1"};
     }
 
     @Override

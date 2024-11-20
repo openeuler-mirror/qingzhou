@@ -13,6 +13,10 @@ public class ModelActionInfo implements Serializable {
     private String icon;
     private boolean distribute;
     private String show;
+    private boolean listAction;
+    private boolean headAction;
+    private boolean batchAction;
+    private boolean formAction;
     private String appPage;
     private String[] subFormFields;
     private boolean subFormSubmitOnOpen;
@@ -57,6 +61,38 @@ public class ModelActionInfo implements Serializable {
 
     public void setShow(String show) {
         this.show = show;
+    }
+
+    public boolean isListAction() {
+        return listAction;
+    }
+
+    public void setListAction(boolean listAction) {
+        this.listAction = listAction;
+    }
+
+    public boolean isHeadAction() {
+        return headAction;
+    }
+
+    public void setHeadAction(boolean headAction) {
+        this.headAction = headAction;
+    }
+
+    public boolean isBatchAction() {
+        return batchAction;
+    }
+
+    public void setBatchAction(boolean batchAction) {
+        this.batchAction = batchAction;
+    }
+
+    public boolean isFormAction() {
+        return formAction;
+    }
+
+    public void setFormAction(boolean formAction) {
+        this.formAction = formAction;
     }
 
     public boolean isDistribute() {

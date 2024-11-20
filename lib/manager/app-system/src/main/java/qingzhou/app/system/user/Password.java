@@ -4,12 +4,12 @@ import qingzhou.api.*;
 import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
+import qingzhou.core.DeployerConstants;
 import qingzhou.core.config.Config;
 import qingzhou.core.config.Console;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.crypto.TotpCipher;
-import qingzhou.core.DeployerConstants;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
 
@@ -131,6 +131,7 @@ public class Password extends ModelBase implements Update, Export {
 
     @ModelAction(
             code = Export.ACTION_EXPORT,
+            form_action = true,
             action_type = ActionType.qr,
             icon = "shield",
             name = {"刷新动态密码", "en:Refresh OTP"},
@@ -225,10 +226,5 @@ public class Password extends ModelBase implements Update, Export {
         }
 
         User.updateDataForUser(baseData);
-    }
-
-    @Override
-    public String[] formActions() {
-        return new String[]{Export.ACTION_EXPORT};
     }
 }

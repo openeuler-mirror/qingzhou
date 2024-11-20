@@ -306,11 +306,6 @@ class DeployerImpl implements Deployer {
             modelInfo.setValidate(instance instanceof Validate);
             initOptionInfo(modelInfo, instance);
             initListInfo(modelInfo, instance);
-            if (instance instanceof Update) {
-                Update update = (Update) instance;
-                modelInfo.setFormActions(update.formActions());
-            }
-
             modelInfos.put(instance, modelInfo);
         }
 
@@ -344,9 +339,6 @@ class DeployerImpl implements Deployer {
         if (!modelInfo.isUseDynamicDefaultSearch()) {
             modelInfo.setDefaultSearch(listInstance.defaultSearch());
         }
-        modelInfo.setListActions(listInstance.listActions());
-        modelInfo.setHeadActions(listInstance.headActions());
-        modelInfo.setBatchActions(listInstance.batchActions());
     }
 
     private void initOptionInfo(ModelInfo modelInfo, ModelBase instance) {
@@ -577,6 +569,10 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setIcon(modelAction.icon());
             modelActionInfo.setDistribute(modelAction.distribute());
             modelActionInfo.setShow(modelAction.show());
+            modelActionInfo.setListAction(modelAction.list_action());
+            modelActionInfo.setHeadAction(modelAction.head_action());
+            modelActionInfo.setBatchAction(modelAction.batch_action());
+            modelActionInfo.setFormAction(modelAction.form_action());
             modelActionInfo.setAppPage(modelAction.app_page());
             modelActionInfo.setSubFormFields(modelAction.sub_form_fields());
             modelActionInfo.setSubFormSubmitOnOpen(modelAction.sub_form_submit_on_open());

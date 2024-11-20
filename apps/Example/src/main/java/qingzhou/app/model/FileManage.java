@@ -23,13 +23,9 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     public String file;
 
     @ModelAction(code = "showhtml", icon = "share-alt", name = {"Html", "en:Html"},
+            list_action = true,
             app_page = "static/test.html", info = {"查看该组件的相关信息。", "en:View the information of this model."})
     public void showHtml(Request request) {
-    }
-
-    @Override
-    public String[] listActions() {
-        return new String[]{"showhtml", Download.ACTION_FILES, Delete.ACTION_DELETE};
     }
 
     @Override

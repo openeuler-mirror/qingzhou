@@ -66,18 +66,6 @@ public interface List {
         return 10;
     }
 
-    default String[] headActions() {
-        return new String[]{Add.ACTION_CREATE};
-    }
-
-    default String[] batchActions() {
-        return null;
-    }
-
-    default String[] listActions() {
-        return new String[]{Update.ACTION_EDIT, Delete.ACTION_DELETE};
-    }
-
     /**
      * 设置进入列表页面默认的搜索条件
      */
@@ -89,6 +77,9 @@ public interface List {
         return false;
     }
 
+    /**
+     * 设置列表页面是否显示数据序号（注：该序号由轻舟生成，为方便用户UI定位，与业务数据无关）
+     */
     default boolean showOrderNumber() {
         return true;
     }
