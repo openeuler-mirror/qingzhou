@@ -14,7 +14,7 @@ import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
-import qingzhou.core.registry.ItemInfo;
+import qingzhou.core.ItemInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;

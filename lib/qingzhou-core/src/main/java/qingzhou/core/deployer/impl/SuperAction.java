@@ -7,7 +7,7 @@ import qingzhou.core.*;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.core.registry.AppInfo;
-import qingzhou.core.registry.ItemInfo;
+import qingzhou.core.ItemInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.crypto.Base64Coder;
