@@ -22,6 +22,7 @@ import org.tinylog.core.ConfigurationParser;
 import org.tinylog.core.LogEntry;
 import org.tinylog.core.LogEntryValue;
 import org.tinylog.provider.InternalLogger;
+import qingzhou.logger.Logger;
 import qingzhou.logger.impl.Controller;
 
 /**
@@ -87,11 +88,11 @@ public final class ConsoleWriter extends AbstractFormatPatternWriter {
     @Override
     public void write(final LogEntry logEntry) {
         if (logEntry.getLevel().ordinal() < errorLevel.ordinal()) {
-            // System.out.print(render(logEntry)); // modified by wangpl for console output
-            Controller.out.print(render(logEntry));
+            System.out.print(render(logEntry)); // modified by wangpl for console output
+            // Controller.out.print(render(logEntry));
         } else {
-            // System.err.print(render(logEntry)); // modified by wangpl for console output
-            Controller.err.print(render(logEntry));
+            System.err.print(render(logEntry)); // modified by wangpl for console output
+            // Controller.err.print(render(logEntry));
         }
     }
 

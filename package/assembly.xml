@@ -105,6 +105,7 @@
         <dependencySet>
             <includes>
                 <include>${project.groupId}:qingzhou-ssh</include>
+                <include>${project.groupId}:qingzhou-logger-tinylog</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>

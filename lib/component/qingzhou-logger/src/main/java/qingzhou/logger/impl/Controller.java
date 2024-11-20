@@ -3,6 +3,7 @@ package qingzhou.logger.impl;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
+import qingzhou.logger.LogService;
 import qingzhou.logger.Logger;
 
 import java.io.PrintStream;
@@ -16,13 +17,16 @@ import java.util.Map;
 public class Controller implements ModuleActivator {
     public static final PrintStream out = System.out; // for bak
     public static final PrintStream err = System.err; // for bak
-
-    private LoggerImpl logger;
+    private Logger logger;
     private long startTime;
 
     @Override
     public void start(ModuleContext context) {
-        logger = new LoggerImpl();
+        LogServiceImpl logService = new LogServiceImpl(context);
+        context.registerService(LogService.class, logService);
+
+        logger = logService.getLogger(this.getClass());
+
         context.registerService(Logger.class, logger);
 
         Map<String, String> config = (Map<String, String>) context.getConfig();
