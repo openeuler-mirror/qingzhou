@@ -4,6 +4,7 @@ import qingzhou.api.*;
 import qingzhou.api.type.List;
 import qingzhou.api.type.*;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.ItemInfo;
 import qingzhou.core.deployer.App;
 import qingzhou.core.deployer.AppListener;
 import qingzhou.core.deployer.Deployer;

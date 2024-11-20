@@ -2,7 +2,6 @@ package qingzhou.core;
 
 import qingzhou.api.Item;
 import qingzhou.api.type.Echo;
-import qingzhou.core.registry.ItemInfo;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;

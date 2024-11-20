@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
+import qingzhou.core.ItemInfo;
 import qingzhou.engine.util.Utils;
 
 public class ModelInfo implements Serializable {
