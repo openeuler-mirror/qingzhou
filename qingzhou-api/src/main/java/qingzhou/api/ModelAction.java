@@ -21,11 +21,19 @@ public @interface ModelAction {
 
     String icon() default ""; // 指定与该模型操作关联的图标名称
 
-    String show() default ""; // 设置该操作的可用条件
-
     boolean distribute() default false;
 
     ActionType action_type() default ActionType.link;
+
+    String show() default ""; // 设置该操作的可用条件
+
+    boolean list_action() default false;
+
+    boolean head_action() default false;
+
+    boolean batch_action() default false;
+
+    boolean form_action() default false;
 
     String[] sub_form_fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
 

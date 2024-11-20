@@ -12,8 +12,4 @@ public interface Update {
     Map<String, String> editData(String id) throws Exception;
 
     void updateData(Map<String, String> data) throws Exception;
-
-    default String[] formActions() {
-        return null;
-    }
 }

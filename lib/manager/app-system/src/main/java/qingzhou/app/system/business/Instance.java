@@ -7,13 +7,13 @@ import qingzhou.api.type.List;
 import qingzhou.api.type.Monitor;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
-import qingzhou.engine.ModuleContext;
 import qingzhou.core.registry.InstanceInfo;
 import qingzhou.core.registry.Registry;
+import qingzhou.engine.ModuleContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -259,6 +259,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
+            list_action = true,
             action_type = ActionType.download,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。", "en:Download the log information of the instance."})
@@ -276,6 +277,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
+            list_action = true,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -285,11 +287,6 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
         tempData.set((Map<String, String>) response.getInternalData()); // dataList 不应为空，来自：qingzhou.app.system.Agent.monitor（xxx）
         getAppContext().invokeSuperAction(request); // 触发调用下面的 monitorData（使用 tempData）；
         tempData.remove();
-    }
-
-    @Override
-    public String[] listActions() {
-        return new String[]{ACTION_MONITOR, Download.ACTION_FILES};
     }
 
     // 为了复用 SuperAction 的 monitor 方法逻辑

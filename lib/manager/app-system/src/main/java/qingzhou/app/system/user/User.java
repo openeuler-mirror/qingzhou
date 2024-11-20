@@ -7,10 +7,10 @@ import qingzhou.api.type.Option;
 import qingzhou.api.type.Validate;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
+import qingzhou.core.DeployerConstants;
 import qingzhou.core.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
-import qingzhou.core.DeployerConstants;
 import qingzhou.engine.util.Utils;
 
 import java.io.IOException;
@@ -222,6 +222,8 @@ public class User extends ModelBase implements General, Validate, Option {
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
             show = "name!=qingzhou",
+            distribute = true,
+            action_type = ActionType.action_list,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
@@ -407,10 +409,5 @@ public class User extends ModelBase implements General, Validate, Option {
     @Override
     public boolean showOrderNumber() {
         return false;
-    }
-
-    @Override
-    public String[] batchActions() {
-        return new String[]{Delete.ACTION_DELETE};
     }
 }

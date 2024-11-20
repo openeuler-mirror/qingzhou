@@ -7,7 +7,6 @@ import qingzhou.core.*;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.core.registry.AppInfo;
-import qingzhou.core.ItemInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.crypto.Base64Coder;
@@ -234,6 +233,7 @@ class SuperAction {
 
     @ModelAction(
             code = Update.ACTION_EDIT, icon = "edit",
+            list_action = true,
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
@@ -255,6 +255,7 @@ class SuperAction {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
+            head_action = true, batch_action = true, list_action = true,
             distribute = true,
             action_type = ActionType.action_list,
             name = {"删除", "en:Delete"},
@@ -291,6 +292,7 @@ class SuperAction {
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
+            list_action = true,
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -318,6 +320,7 @@ class SuperAction {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
+            list_action = true,
             action_type = ActionType.download,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",

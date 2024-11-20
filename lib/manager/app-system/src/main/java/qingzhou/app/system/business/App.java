@@ -5,8 +5,8 @@ import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.core.deployer.Deployer;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.Registry;
@@ -149,15 +149,11 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
+            list_action = true,
             show = "state=" + DeployerConstants.APP_STARTED,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request) {
-    }
-
-    @Override
-    public String[] listActions() {
-        return new String[]{DeployerConstants.ACTION_MANAGE, "start", "stop", Delete.ACTION_DELETE};
     }
 
     @ModelAction(
@@ -199,6 +195,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = DeployerConstants.ACTION_START, icon = "play",
+            list_action = true,
             show = "state=" + DeployerConstants.APP_STOPPED,
             action_type = ActionType.action_list,
             name = {"启动", "en:start"},
@@ -212,6 +209,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = DeployerConstants.ACTION_STOP, icon = "stop",
+            list_action = true,
             show = "state=" + DeployerConstants.APP_STARTED,
             action_type = ActionType.action_list,
             name = {"停止", "en:end"},
