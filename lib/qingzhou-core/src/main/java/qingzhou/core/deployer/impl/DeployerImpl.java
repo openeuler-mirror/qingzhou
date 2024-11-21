@@ -283,9 +283,14 @@ class DeployerImpl implements Deployer {
 
 
     private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader, Properties appProperties) throws Exception {
-        String filename = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_FILENAME);
-        String include = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_EXCLUDE);
-        String exclude = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_INCLUDE);
+        String filename = null;
+        String include = null;
+        String exclude = null;
+        if (appProperties != null){
+            filename = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_FILENAME);
+            include = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_EXCLUDE);
+            exclude = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_INCLUDE);
+        }
         //filename过滤扫描jar
         if (filename != null && !filename.isEmpty()) {
             Set<String> filenameSet = Arrays.stream(filename.split(","))
