@@ -92,7 +92,7 @@ public @interface ModelField {
 
     boolean list() default false; // 是否显示在列表中。
 
-    int index() default -1; // 排到指定的索引位置
+    String order() default "5"; // 排序符，按自然顺序
 
     boolean search() default false; // 是否支持列头搜索
 

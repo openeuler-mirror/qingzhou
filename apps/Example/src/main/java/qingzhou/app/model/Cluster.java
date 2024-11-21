@@ -5,7 +5,7 @@ import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
 
 @Model(code = "cluster", icon = "node",
-        menu = ExampleMain.MENU_1, order = 4,
+        menu = ExampleMain.MENU_1, order = "4",
         name = {"集群", "en:Cluster"},
         info = {"集群数据管理", "en:Cluster."})
 public class Cluster extends AddModelBase {

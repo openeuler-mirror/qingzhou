@@ -53,18 +53,17 @@ JDK >= 1.8
 
 【前端】
 
++ Date Range Picker ([https://daterangepicker.com/])
 + Muuri ([https://github.com/haltu/muuri](https://github.com/haltu/muuri))
 + marked ([https://github.com/markedjs/marked](https://github.com/markedjs/marked))
 + Multiple Select ([http://multiple-select.wenzhixin.net.cn](http://multiple-select.wenzhixin.net.cn))
 + Layui layer ([https://gitee.com/layui/layer](https://gitee.com/layui/layer))
 + ZUI ([https://openzui.com](https://openzui.com))
 + jQuery ([https://jquery.com](https://jquery.com))
-+ Date Range Picker ([https://daterangepicker.com/])
 
 【后端】
 
-+
-QR-Code-generator ([https://www.nayuki.io/page/qr-code-generator-library](https://www.nayuki.io/page/qr-code-generator-library))
++ QR-Code-generator ([https://www.nayuki.io/page/qr-code-generator-library](https://www.nayuki.io/page/qr-code-generator-library))
 + Apache Tomcat ([https://tomcat.apache.org](https://tomcat.apache.org))
 + Apache MINA SSHD ([https://mina.apache.org/sshd-project/](https://mina.apache.org/sshd-project/))
 + Gson ([https://github.com/google/gson](https://github.com/google/gson))

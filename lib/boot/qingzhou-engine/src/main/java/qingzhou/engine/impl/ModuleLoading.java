@@ -50,7 +50,7 @@ public class ModuleLoading implements Process {
         public void exec() {
             File moduleDir = new File(engineContext.getLibDir(), "module");
             List<File> moduleFiles = new ArrayList<>(Arrays.asList(Objects.requireNonNull(moduleDir.listFiles())));
-            File[] pluginFiles = new File(engineContext.getLibDir(), "plugins").listFiles();
+            File[] pluginFiles = new File(engineContext.getLibDir(), "addons").listFiles(); // 保持一致 ：assembly.xml 里的 addons
             if (pluginFiles != null) {
                 moduleFiles.addAll(Arrays.asList(pluginFiles));
             }

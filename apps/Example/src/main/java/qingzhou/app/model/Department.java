@@ -1,21 +1,17 @@
 package qingzhou.app.model;
 
-import qingzhou.api.InputType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelField;
+import qingzhou.api.*;
 import qingzhou.api.type.Echo;
-import qingzhou.api.type.MenuHealthCheck;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 
 import java.util.Map;
 
 @Model(code = Department.code, icon = "sitemap",
-        menu = qingzhou.app.ExampleMain.MENU_1, order = 2,
+        menu = qingzhou.app.ExampleMain.MENU_1, order = "2",
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
-public class Department extends AddModelBase implements Echo, Option, MenuHealthCheck {
+public class Department extends AddModelBase implements Echo, Option {
     public static final String code = "department";
 
     @ModelField(
@@ -155,8 +151,12 @@ public class Department extends AddModelBase implements Echo, Option, MenuHealth
         return showData(id);
     }
 
-    @Override
-    public String menuHealthCheck(){
-        return "success, Department MenuHealthCheck Action";
+    @ModelAction(
+            code = "menuHealthCheck", icon = "chat-dot",
+            name = {"菜单健康检查", "en:Menu Health Check"},
+            info = {"为菜单配置健康检查提示信息。", "en:Configure health check prompts for menus."})
+    public void menuHealthCheck(Request request) throws Exception {
+        request.getResponse().setMsg("Success，这里应该使用国际化输出一些提示信息！");
+        request.getResponse().setMsgLevel(MsgLevel.WARN);
     }
 }

@@ -19,7 +19,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 @Model(code = DeployerConstants.MODEL_USER, icon = "user",
-        menu = Main.User, order = 1,
+        menu = Main.User, order = "1",
         name = {"账户", "en:User"},
         info = {"管理登录和操作服务器的账户，账户可登录控制台、REST接口等。", "en:Manages the user who logs in and operates the server. The user can log in to the console, REST interface, etc."})
 public class User extends ModelBase implements General, Validate, Option {
@@ -32,7 +32,17 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
-    public String[] allIds(Map<String, String> query) {
+    public boolean contains(String id) {
+        String[] ids = allIds(null);
+        for (String s : ids) {
+            if (s.equals(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String[] allIds(Map<String, String> query) {
         return Arrays.stream(Main.getService(Config.class).getCore().getConsole().getUser())
                 .filter(user -> ModelUtil.query(query, new ModelUtil.Supplier() {
                     @Override
@@ -222,8 +232,8 @@ public class User extends ModelBase implements General, Validate, Option {
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
             show = "name!=qingzhou",
-            distribute = true,
-            action_type = ActionType.action_list,
+            batch_action = true,
+            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})

@@ -26,36 +26,23 @@ public interface List {
         return "id";
     }
 
-    /**
-     * 返回此模块所有数据的 ID，返回 null，视作无效，若希望获得以下能力则需要正确实现此方法：
-     * 1. 其它模块中有字段通过 ModelField.refModel() 引用了本模块；
-     * 2. 需要由轻舟平台在创建本模块数据时候，自动验证是否已经存在
-     */
-    default String[] allIds(Map<String, String> query) throws Exception {
-        return null;
-    }
-
     default boolean contains(String id) throws Exception {
-        if (id == null || id.isEmpty()) return false;
-
-        String[] ids = allIds(null);
-        if (ids == null) return false;
-
-        for (String s : ids) {
-            if (s.equals(id)) {
-                return true;
-            }
-        }
-        return false;
+        return id == null || id.isEmpty();
     }
 
     /**
      * 如果需要使用列表数据分页查看，则需要覆写此方法，表示所有数据的条数
      * 返回值小于 1 时无效
      */
-    default int totalSize(Map<String, String> query) throws Exception {
-        String[] ids = allIds(query);
-        return ids != null ? ids.length : -1;
+    default int totalSize(Map<String, String> query) {
+        return -1;
+    }
+
+    /**
+     * 单次请求可获取的最大数据条数
+     */
+    default int maxResponseDataSize() {
+        return 500;
     }
 
     /**

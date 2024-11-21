@@ -18,7 +18,6 @@
         <module>qingzhou-json</module>
         <module>qingzhou-qr</module>
         <module>qingzhou-crypto</module>
-        <module>qingzhou-uml</module>
         <module>qingzhou-serializer</module>
     </modules>
 

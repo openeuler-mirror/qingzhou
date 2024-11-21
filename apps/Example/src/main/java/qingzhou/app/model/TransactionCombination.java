@@ -7,7 +7,7 @@ import qingzhou.app.AddModelBase;
 
 
 @Model(code = TransactionCombination.code, icon = "sitemap",
-        menu = qingzhou.app.ExampleMain.MENU_1, order = 5,
+        menu = qingzhou.app.ExampleMain.MENU_1, order = "5",
         name = {"事务信息", "en:Transaction Info"},
         info = {"事务信息示例，展示组合详情查看。", "en:Transaction information example, showing combination details to view."})
 public class TransactionCombination extends AddModelBase implements Combined {

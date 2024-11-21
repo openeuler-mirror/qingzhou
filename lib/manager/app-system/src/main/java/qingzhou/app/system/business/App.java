@@ -14,7 +14,7 @@ import qingzhou.core.registry.Registry;
 import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
-        menu = Main.Business, order = 1,
+        menu = Main.Business, order = "1",
         name = {"应用", "en:App"},
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
@@ -26,8 +26,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         return "name";
     }
 
-    @Override
-    public String[] allIds(Map<String, String> query) {
+    private String[] allIds(Map<String, String> query) {
         Set<String> allAppNames = new HashSet<>();
 
         Deployer deployer = Main.getService(Deployer.class);
@@ -147,6 +146,17 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
     }
 
+    @Override
+    public boolean contains(String id) {
+        String[] ids = allIds(null);
+        for (String s : ids) {
+            if (s.equals(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
             list_action = true,
@@ -158,6 +168,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
+            head_action = true,
             name = {"安装", "en:Install"},
             info = {"安装应用包到指定的轻舟实例上。",
                     "en:Install the application package to the specified Qingzhou instance."})
@@ -182,7 +193,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            action_type = ActionType.action_list,
+            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
             name = {"卸载", "en:UnInstall"},
             info = {"卸载应用，注：卸载应用会删除应用包下的所有文件，且不可恢复。",
                     "en:Uninstall the app, Note: Uninstalling the app will delete all the files under the app package and cannot be recovered."})

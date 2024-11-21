@@ -4,10 +4,7 @@ import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.QingzhouApp;
 import qingzhou.app.model.Department;
-import qingzhou.logger.LogService;
 import qingzhou.logger.Logger;
-
-import java.util.Properties;
 
 @App
 public class ExampleMain implements QingzhouApp {
@@ -16,19 +13,13 @@ public class ExampleMain implements QingzhouApp {
 
     public static Logger logger;
 
-    public ExampleMain() {
-    }
-    public ExampleMain(Properties properties) {
-    }
-
     @Override
     public void start(AppContext appContext) {
-        LogService service = appContext.getService(LogService.class);
-        logger = service.getLogger(ExampleMain.class);
+        logger = appContext.getService(Logger.class);
         logger.info("启动样例应用");
 
-        appContext.addMenu(MENU_1, new String[]{"一级菜单", "en:1"}).icon("folder-open").order(1);
-        appContext.addMenu(MENU_11, new String[]{"二级菜单", "en:11"}).icon("leaf").order(1).parent(MENU_1).model(Department.code).action(Department.ACTION_MENUHEALTHCHECK);
+        appContext.addMenu(MENU_1, new String[]{"一级菜单", "en:1"}).icon("folder-open").order("1");
+        appContext.addMenu(MENU_11, new String[]{"二级菜单", "en:11"}).icon("leaf").order("1").parent(MENU_1).action(Department.code, "menuHealthCheck");
 
         appContext.addActionFilter(request -> {
             String msg = String.format("有请求进入，模块：%s，操作：%s", request.getModel(), request.getAction());
@@ -39,6 +30,6 @@ public class ExampleMain implements QingzhouApp {
 
     @Override
     public void stop() {
-        System.out.println("停止样例应用");
+        logger.info("停止样例应用");
     }
 }

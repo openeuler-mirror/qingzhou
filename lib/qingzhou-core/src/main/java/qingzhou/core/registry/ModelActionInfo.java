@@ -17,6 +17,7 @@ public class ModelActionInfo implements Serializable {
     private boolean headAction;
     private boolean batchAction;
     private boolean formAction;
+    private String order;
     private String appPage;
     private String[] subFormFields;
     private boolean subFormSubmitOnOpen;
@@ -93,6 +94,14 @@ public class ModelActionInfo implements Serializable {
 
     public void setFormAction(boolean formAction) {
         this.formAction = formAction;
+    }
+
+    public String getOrder() {
+        return order;
+    }
+
+    public void setOrder(String order) {
+        this.order = order;
     }
 
     public boolean isDistribute() {

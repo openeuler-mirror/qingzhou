@@ -108,6 +108,7 @@
             <groupId>qingzhou</groupId>
             <artifactId>qingzhou-uml</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>qingzhou</groupId>

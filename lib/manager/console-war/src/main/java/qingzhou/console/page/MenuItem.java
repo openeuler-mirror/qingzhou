@@ -1,16 +1,16 @@
 package qingzhou.console.page;
 
+import qingzhou.core.registry.ModelInfo;
+import qingzhou.engine.util.Utils;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import qingzhou.engine.util.Utils;
-import qingzhou.core.registry.ModelInfo;
-
 class MenuItem {
     private String name;
     private String icon;
-    private int order;
+    private String order;
     private String[] i18n = new String[0];
     private final List<MenuItem> subMenuList = new ArrayList<>();
     private final List<ModelInfo> subModelList = new ArrayList<>();
@@ -29,7 +29,7 @@ class MenuItem {
 
     void addModelInfo(ModelInfo modelInfo) {
         subModelList.add(modelInfo);
-        subModelList.sort(Comparator.comparingInt(ModelInfo::getOrder));
+        subModelList.sort(Comparator.comparing(ModelInfo::getOrder));
     }
 
     List<ModelInfo> getSubModelList() {
@@ -38,7 +38,7 @@ class MenuItem {
 
     void addMenuItem(MenuItem menuItem) {
         subMenuList.add(menuItem);
-        subMenuList.sort(Comparator.comparingInt(MenuItem::getOrder));
+        subMenuList.sort(Comparator.comparing(MenuItem::getOrder));
     }
 
     List<MenuItem> getSubMenuList() {
@@ -69,27 +69,27 @@ class MenuItem {
         this.i18n = i18n;
     }
 
-    int getOrder() {
+    String getOrder() {
         return order;
     }
 
-    void setOrder(int order) {
+    void setOrder(String order) {
         this.order = order;
     }
 
-    public String getModel() {
+    String getModel() {
         return model;
     }
 
-    public void setModel(String model) {
+    void setModel(String model) {
         this.model = model;
     }
 
-    public String getAction() {
+    String getAction() {
         return action;
     }
 
-    public void setAction(String action) {
+    void setAction(String action) {
         this.action = action;
     }
 }

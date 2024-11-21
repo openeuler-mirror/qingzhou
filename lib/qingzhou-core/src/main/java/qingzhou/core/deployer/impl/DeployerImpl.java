@@ -13,7 +13,6 @@ import qingzhou.core.registry.*;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
-import qingzhou.logger.LogService;
 import qingzhou.logger.Logger;
 
 import java.io.File;
@@ -121,7 +120,6 @@ class DeployerImpl implements Deployer {
         }
 
         try {
-            moduleContext.getService(LogService.class).remove(app.getLoader());
             app.getLoader().close();
         } catch (Exception ignored) {
         }
@@ -264,35 +262,34 @@ class DeployerImpl implements Deployer {
         }
     }
 
-    private Collection<String> filterClasses(Collection<String> classNames, String filter, boolean include) {
-        if (filter == null || filter.isEmpty()) {
-            return classNames;
-        }
-        final Set<String> filterSet = Arrays.stream(filter.split(","))
-                .map(String::trim)
-                .map(String::toLowerCase)
-                .collect(Collectors.toSet());
+    private Collection<String> filterClasses(Collection<String> classNames, String filter, boolean match) {
+        if (classNames == null || classNames.isEmpty()) return classNames;
+        if (Utils.isBlank(filter)) return classNames;
 
+        Set<String> filterPattern = Arrays.stream(filter.split(","))
+                .map(String::trim)
+                .map(String::toLowerCase).collect(Collectors.toSet());
         return classNames.stream()
                 .filter(className -> {
-                    boolean match = filterSet.stream().anyMatch(className.toLowerCase()::contains);
-                    return include ? match : !match;
-                })
-                .collect(Collectors.toSet());
+                    if (match) {
+                        return filterPattern.stream().anyMatch(className.toLowerCase()::contains);
+                    } else {
+                        return filterPattern.stream().noneMatch(className.toLowerCase()::contains);
+                    }
+                }).collect(Collectors.toSet());
     }
-
 
     private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader, Properties appProperties) throws Exception {
         String filename = null;
         String include = null;
         String exclude = null;
-        if (appProperties != null){
+        if (appProperties != null) {
             filename = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_FILENAME);
-            include = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_EXCLUDE);
-            exclude = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_INCLUDE);
+            include = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_INCLUDE);
+            exclude = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_EXCLUDE);
         }
         //filename过滤扫描jar
-        if (filename != null && !filename.isEmpty()) {
+        if (Utils.notBlank(filename)) {
             Set<String> filenameSet = Arrays.stream(filename.split(","))
                     .map(String::trim)
                     .map(String::toLowerCase)
@@ -302,7 +299,6 @@ class DeployerImpl implements Deployer {
                             .anyMatch(appLib.getName().toLowerCase()::contains))
                     .toArray(File[]::new);
         }
-
 
         Collection<String> modelClassName = Utils.detectAnnotatedClass(appLibs, Model.class, loader);
         //include和exclude过滤类
@@ -461,7 +457,7 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setColor(modelField.color());
             modelFieldInfo.setEchoGroup(modelField.echo_group());
             modelFieldInfo.setSkipValidate(modelField.skip_validate());
-            modelFieldInfo.setIndex(modelField.index());
+            modelFieldInfo.setOrder(modelField.order());
             modelFieldInfo.setSameLine(modelField.same_line());
             modelFieldInfo.setShowLabel(modelField.show_label());
             modelFieldInfo.setCombineFields(modelField.combine_fields());
@@ -617,6 +613,7 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setHeadAction(modelAction.head_action());
             modelActionInfo.setBatchAction(modelAction.batch_action());
             modelActionInfo.setFormAction(modelAction.form_action());
+            modelActionInfo.setOrder(modelAction.order());
             modelActionInfo.setAppPage(modelAction.app_page());
             modelActionInfo.setSubFormFields(modelAction.sub_form_fields());
             modelActionInfo.setSubFormSubmitOnOpen(modelAction.sub_form_submit_on_open());

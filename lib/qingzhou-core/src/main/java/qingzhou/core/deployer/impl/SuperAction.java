@@ -12,8 +12,7 @@ import qingzhou.core.registry.ModelInfo;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
-import qingzhou.uml.Uml;
+import qingzhou.logger.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,17 +58,29 @@ class SuperAction {
         ResponseImpl response = (ResponseImpl) request.getResponse();
         CombinedDataBuilder dataBuilder = new CombinedDataBuilder();
         ((Combined) instance).combinedData(request.getId(), dataBuilder);
-        for (Combined.CombinedData combinedData : dataBuilder.data) {
-            if (combinedData instanceof Combined.UmlData) {
-                CombinedDataBuilder.Uml umlData = (CombinedDataBuilder.Uml) combinedData;
-                String umlDataStr = umlData.data;
-                if (Utils.notBlank(umlDataStr)) {
-                    Uml service = app.getAppContext().getService(Uml.class);
-                    Base64Coder base64Coder = app.getAppContext().getService(CryptoService.class).getBase64Coder();
-                    umlData.setData(base64Coder.encode(service.toSvg(umlDataStr)));
+
+        Object service = null; // 没有安装时，类会找不到，故使用 Object 类型
+        try {
+            service = app.getAppContext().getService(qingzhou.uml.Uml.class);
+        } catch (Throwable e) {
+            app.getAppContext().getService(Logger.class).error("The UML Generator service is not installed: " + e.getMessage());
+        }
+
+        Iterator<Combined.CombinedData> iterator = dataBuilder.data.iterator();
+        while (iterator.hasNext()) {
+            Combined.CombinedData data = iterator.next();
+            if (data instanceof Combined.UmlData) {
+                if (service == null) {
+                    iterator.remove();
+                    continue;
                 }
+                CombinedDataBuilder.Uml umlData = (CombinedDataBuilder.Uml) data;
+                Base64Coder base64Coder = app.getAppContext().getService(CryptoService.class).getBase64Coder();
+                qingzhou.uml.Uml uml = (qingzhou.uml.Uml) service;
+                umlData.setData(base64Coder.encode(uml.toSvg(umlData.data)));
             }
         }
+
         response.setData(dataBuilder);
     }
 
@@ -144,13 +155,12 @@ class SuperAction {
 
     @ModelAction(
             code = List.ACTION_ALL, icon = "list",
-            name = {"列表所有", "en:List All"},
-            info = {"展示该类型的所有组件数据或界面。", "en:Show all component data or interfaces of this type."})
-    public void listAll(Request request) throws Exception {
+            name = {"列出所有", "en:List All"},
+            info = {"获取该模块的所有ID数据。", "en:Get all the ID data for the module."})
+    public void all(Request request) throws Exception {
         List list = (List) instance;
-        Map<String, String> query = queryParams(request);
-        String[] ids = list.allIds(query);
-        if (ids == null) return;
+        java.util.List<String[]> result = list.listData(1, list.maxResponseDataSize(), new String[]{list.idField()}, null);
+        String[] ids = result.stream().map(fields -> fields[0]).toArray(String[]::new);
         ResponseImpl response = (ResponseImpl) request.getResponse();
         response.setInternalData(ids);
     }
@@ -167,7 +177,7 @@ class SuperAction {
         } catch (NumberFormatException ignored) {
         }
         List list = (List) instance;
-        int pageSize = list.pageSize();
+        int pageSize = Math.min(list.pageSize(), list.maxResponseDataSize());
 
         Map<String, String> query = queryParams(request);
         String[] fieldNamesToList = getAppInfo().getModelInfo(request.getModel()).getFieldsToList();
@@ -202,6 +212,7 @@ class SuperAction {
 
     @ModelAction(
             code = Add.ACTION_CREATE, icon = "plus-sign",
+            head_action = true, order = "1",
             name = {"创建", "en:Create"},
             info = {"获得创建该组件的默认数据或界面。", "en:Get the default data or interface for creating this component."})
     public void create(Request request) {
@@ -212,7 +223,7 @@ class SuperAction {
 
     @ModelAction(
             code = Add.ACTION_ADD, icon = "save",
-            distribute = true,
+            distribute = true, order = "1",
             name = {"添加", "en:Add"},
             info = {"按配置要求创建一个模块。", "en:Create a module as configured."})
     public void add(Request request) throws Exception {
@@ -233,7 +244,7 @@ class SuperAction {
 
     @ModelAction(
             code = Update.ACTION_EDIT, icon = "edit",
-            list_action = true,
+            list_action = true, order = "1",
             name = {"编辑", "en:Edit"},
             info = {"获得可编辑的数据或界面。", "en:Get editable data or interfaces."})
     public void edit(Request request) throws Exception {
@@ -244,7 +255,7 @@ class SuperAction {
 
     @ModelAction(
             code = Update.ACTION_UPDATE, icon = "save",
-            distribute = true,
+            distribute = true, order = "1",
             name = {"更新", "en:Update"},
             info = {"更新这个模块的配置信息。", "en:Update the configuration information for this module."})
     public void update(Request request) throws Exception {
@@ -255,9 +266,7 @@ class SuperAction {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            head_action = true, batch_action = true, list_action = true,
-            distribute = true,
-            action_type = ActionType.action_list,
+            list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
             name = {"删除", "en:Delete"},
             info = {"删除本条数据，注：请谨慎操作，删除后不可恢复。",
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
@@ -267,7 +276,6 @@ class SuperAction {
 
     @ModelAction(
             code = List.ACTION_DEFAULT_SEARCH, icon = "trash",
-            distribute = true,
             action_type = ActionType.action_list,
             name = {"默认检索", "en:Default Search"},
             info = {"设置列表数据默认的检索条件。", "en:Set the default search conditions for list data."})
@@ -292,7 +300,7 @@ class SuperAction {
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
-            list_action = true,
+            list_action = true, order = "2",
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})
@@ -320,7 +328,7 @@ class SuperAction {
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            list_action = true,
+            list_action = true, order = "8",
             action_type = ActionType.download,
             name = {"下载", "en:Download"},
             info = {"获取该组件可下载文件的列表。",
@@ -524,18 +532,5 @@ class SuperAction {
         dashboardBuilder.transformData();// 转换为前端需要的格式
 
         request.getResponse().setData(dashboardBuilder);
-    }
-
-    @ModelAction(
-            code = MenuHealthCheck.ACTION_MENUHEALTHCHECK, icon = "chat-dot",
-            name = {"菜单健康检查", "en:Menu Health Check"},
-            info = {"为菜单配置健康检查提示信息。", "en:Configure health check prompts for menus."})
-    public void menuHealthCheck(Request request) throws Exception {
-        MenuHealthCheck menuHealthCheck = (MenuHealthCheck) instance;
-        String msg = menuHealthCheck.menuHealthCheck();
-        if (Utils.notBlank(msg)) {
-            request.getResponse().setMsg(msg);
-            request.getResponse().setMsgLevel(MsgLevel.ERROR);
-        }
     }
 }

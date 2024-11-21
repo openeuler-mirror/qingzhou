@@ -22,8 +22,7 @@ public class AddModelBase extends ModelBase implements General {
         ExampleMain.logger.info("deleteData:" + id);
     }
 
-    @Override
-    public String[] allIds(Map<String, String> query) {
+    private String[] allIds(Map<String, String> query) {
         return testData.allIds(query);
     }
 
