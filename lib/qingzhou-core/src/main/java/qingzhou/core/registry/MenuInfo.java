@@ -9,6 +9,8 @@ public class MenuInfo implements Serializable {
     private String icon;
     private int order;
     private String parent;
+    private String model;
+    private String action;
 
     public MenuInfo(String name, String[] i18n) {
         this.name = name;
@@ -66,5 +68,21 @@ public class MenuInfo implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(name);
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
     }
 }

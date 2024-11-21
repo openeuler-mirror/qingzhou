@@ -27,4 +27,16 @@ class MenuImpl implements Menu {
         this.newMenuInfo.setParent(parent);
         return this;
     }
+
+    @Override
+    public Menu model(String model) {
+        this.newMenuInfo.setModel(model);
+        return this;
+    }
+
+    @Override
+    public Menu action(String action) {
+        this.newMenuInfo.setAction(action);
+        return this;
+    }
 }

@@ -3,6 +3,7 @@ package qingzhou.console.page;
 import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
+import qingzhou.console.view.type.JsonView;
 import qingzhou.core.*;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.console.SecurityController;
@@ -243,7 +244,8 @@ public class PageUtil {
             menuItem.setIcon(menuInfo.getIcon());
             menuItem.setI18n(menuInfo.getI18n());
             menuItem.setOrder(menuInfo.getOrder());
-
+            menuItem.setModel(menuInfo.getModel());
+            menuItem.setAction(menuInfo.getAction());
             String parent = menuInfo.getParent();
             MenuItem foundParent = rootMenu.findMenu(parent);
             if (foundParent != null) {
@@ -305,9 +307,17 @@ public class PageUtil {
 
         // qingzhou.app.system.Main.XXX
         boolean isDefaultActive = "Business".equals(menuItem.getName());
-
+        String model = menuItem.getModel();
+        String action = menuItem.getAction();
         menuHtml.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append("\">");
-        menuHtml.append("   <a href=\"javascript:void(0);\" style=\"text-indent:").append(level).append("px;\">");
+        if (Utils.isBlank(model) && Utils.isBlank(action)) {
+            menuHtml.append("   <a href=\"javascript:void(0);\" style=\"text-indent:").append(level).append("px;\">");
+        } else {
+            //菜单添加action
+            String contextPath = request.getContextPath();
+            action = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + qzRequest.getApp() + "/" + model + "/" + action;
+            menuHtml.append("   <a href=\"javascript:void(0);\"  action=\""+ action + "\" style=\"text-indent:").append(level).append("px;\">");
+        }
         menuHtml.append("       <i class=\"icon icon-").append(menuItem.getIcon()).append("\"></i>");
         menuHtml.append("       <span>").append(I18n.getStringI18n(menuItem.getI18n())).append("</span>");
         menuHtml.append("       <span class=\"pull-right-container\"><i class=\"icon icon-angle-down\"></i></span>");

@@ -525,4 +525,14 @@ class SuperAction {
 
         request.getResponse().setData(dashboardBuilder);
     }
+
+    @ModelAction(
+            code = MenuHealthCheck.ACTION_MENUHEALTHCHECK, icon = "chat-dot",
+            name = {"菜单健康检查", "en:Menu Health Check"},
+            info = {"为菜单配置健康检查提示信息。", "en:Configure health check prompts for menus."})
+    public void menuHealthCheck(Request request) throws Exception {
+        MenuHealthCheck menuHealthCheck = (MenuHealthCheck) instance;
+        request.getResponse().setMsg(menuHealthCheck.menuHealthCheck());
+        request.getResponse().setMsgLevel(MsgLevel.ERROR);
+    }
 }
