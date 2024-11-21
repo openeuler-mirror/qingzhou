@@ -532,7 +532,10 @@ class SuperAction {
             info = {"为菜单配置健康检查提示信息。", "en:Configure health check prompts for menus."})
     public void menuHealthCheck(Request request) throws Exception {
         MenuHealthCheck menuHealthCheck = (MenuHealthCheck) instance;
-        request.getResponse().setMsg(menuHealthCheck.menuHealthCheck());
-        request.getResponse().setMsgLevel(MsgLevel.ERROR);
+        String msg = menuHealthCheck.menuHealthCheck();
+        if (Utils.notBlank(msg)) {
+            request.getResponse().setMsg(msg);
+            request.getResponse().setMsgLevel(MsgLevel.ERROR);
+        }
     }
 }
