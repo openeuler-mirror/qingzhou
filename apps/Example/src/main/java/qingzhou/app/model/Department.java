@@ -5,16 +5,19 @@ import qingzhou.api.Item;
 import qingzhou.api.Model;
 import qingzhou.api.ModelField;
 import qingzhou.api.type.Echo;
+import qingzhou.api.type.MenuHealthCheck;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 
 import java.util.Map;
 
-@Model(code = "department", icon = "sitemap",
+@Model(code = Department.code, icon = "sitemap",
         menu = qingzhou.app.ExampleMain.MENU_1, order = 2,
         name = {"部门", "en:Department"},
         info = {"对系统中的部门进行管理，以方便项目登录人员的管理。", "en:Manage departments in the system to facilitate the management of project logged in personnel."})
-public class Department extends AddModelBase implements Echo, Option {
+public class Department extends AddModelBase implements Echo, Option, MenuHealthCheck {
+    public static final String code = "department";
+
     @ModelField(
             required = true,
             search = true,
@@ -150,5 +153,10 @@ public class Department extends AddModelBase implements Echo, Option {
     @Override
     public Map<String, String> editData(String id) {
         return showData(id);
+    }
+
+    @Override
+    public String menuHealthCheck(){
+        return "success, Department MenuHealthCheck Action";
     }
 }

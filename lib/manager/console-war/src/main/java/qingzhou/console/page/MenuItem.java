@@ -14,6 +14,8 @@ class MenuItem {
     private String[] i18n = new String[0];
     private final List<MenuItem> subMenuList = new ArrayList<>();
     private final List<ModelInfo> subModelList = new ArrayList<>();
+    private String model;
+    private String action;
 
     MenuItem findMenu(String name) {
         if (Utils.isBlank(name)) return null;
@@ -73,5 +75,21 @@ class MenuItem {
 
     void setOrder(int order) {
         this.order = order;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
     }
 }
