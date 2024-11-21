@@ -177,7 +177,7 @@ class DeployerImpl implements Deployer {
         AppInfo appInfo = new AppInfo();
         appInfo.setName(appDir.getName());
         appInfo.setFilePath(appDir.getAbsolutePath());
-        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader);
+        Map<ModelBase, ModelInfo> modelInfos = getModelInfos(appLibs, loader, appProperties);
         modelInfos.values().forEach(appInfo::addModelInfo);
         app.setAppInfo(appInfo);
 
@@ -264,8 +264,45 @@ class DeployerImpl implements Deployer {
         }
     }
 
-    private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader) throws Exception {
+    private Collection<String> filterClasses(Collection<String> classNames, String filter, boolean include) {
+        if (filter == null || filter.isEmpty()) {
+            return classNames;
+        }
+        final Set<String> filterSet = Arrays.stream(filter.split(","))
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+
+        return classNames.stream()
+                .filter(className -> {
+                    boolean match = filterSet.stream().anyMatch(className.toLowerCase()::contains);
+                    return include ? match : !match;
+                })
+                .collect(Collectors.toSet());
+    }
+
+
+    private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader, Properties appProperties) throws Exception {
+        String filename = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_FILENAME);
+        String include = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_EXCLUDE);
+        String exclude = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_SCAN_INCLUDE);
+        //filename过滤扫描jar
+        if (filename != null && !filename.isEmpty()) {
+            Set<String> filenameSet = Arrays.stream(filename.split(","))
+                    .map(String::trim)
+                    .map(String::toLowerCase)
+                    .collect(Collectors.toSet());
+            appLibs = Arrays.stream(appLibs)
+                    .filter(appLib -> filenameSet.stream()
+                            .anyMatch(appLib.getName().toLowerCase()::contains))
+                    .toArray(File[]::new);
+        }
+
+
         Collection<String> modelClassName = Utils.detectAnnotatedClass(appLibs, Model.class, loader);
+        //include和exclude过滤类
+        modelClassName = filterClasses(modelClassName, include, true);
+        modelClassName = filterClasses(modelClassName, exclude, false);
 
         Map<ModelBase, ModelInfo> modelInfos = new HashMap<>();
 
