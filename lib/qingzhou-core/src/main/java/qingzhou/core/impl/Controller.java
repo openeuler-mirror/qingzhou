@@ -9,6 +9,7 @@ import qingzhou.engine.Resource;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.http.Http;
 import qingzhou.json.Json;
+import qingzhou.logger.LogService;
 import qingzhou.logger.Logger;
 import qingzhou.qr.QrGenerator;
 import qingzhou.serializer.Serializer;
@@ -18,6 +19,8 @@ import qingzhou.uml.Uml;
 public class Controller implements ModuleActivator {
     @Resource
     public static Logger logger;
+    @Resource
+    private LogService logService;
     @Resource
     private Json json;
     @Resource

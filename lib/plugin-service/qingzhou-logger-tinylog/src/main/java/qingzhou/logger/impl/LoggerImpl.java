@@ -1,8 +1,19 @@
 package qingzhou.logger.impl;
 
+import org.tinylog.path.DynamicSegment;
+import org.tinylog.provider.ProviderRegistry;
 import qingzhou.logger.Logger;
 
-class LoggerImpl implements Logger {
+import java.io.IOException;
+import java.net.URLClassLoader;
+
+public class LoggerImpl implements Logger {
+
+    static {
+        org.tinylog.Logger.isDebugEnabled(); // 此步骤预加载日志配置，下面的动态配置才生效
+        DynamicSegment.setText(System.getProperty(LogServiceImpl.APP_NAME));
+    }
+
     @Override
     public boolean isDebugEnabled() {
         return org.tinylog.Logger.isDebugEnabled();
@@ -63,11 +74,17 @@ class LoggerImpl implements Logger {
         org.tinylog.Logger.error(t, msg);
     }
 
-    void shutdown() {
+    @Override
+    public void shutdown() {
         try {
-            org.tinylog.provider.ProviderRegistry.getLoggingProvider().shutdown();
+            ProviderRegistry.getLoggingProvider().shutdown();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                ((URLClassLoader) LoggerImpl.class.getClassLoader()).close();
+            } catch (IOException ignored) {
+            }
         }
     }
 }

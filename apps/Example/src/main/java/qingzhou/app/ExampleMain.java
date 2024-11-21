@@ -3,6 +3,7 @@ package qingzhou.app;
 import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.QingzhouApp;
+import qingzhou.logger.LogService;
 import qingzhou.logger.Logger;
 
 import java.util.Properties;
@@ -21,7 +22,8 @@ public class ExampleMain implements QingzhouApp {
 
     @Override
     public void start(AppContext appContext) {
-        logger = appContext.getService(Logger.class);
+        LogService service = appContext.getService(LogService.class);
+        logger = service.getLogger(ExampleMain.class);
         logger.info("启动样例应用");
 
         appContext.addMenu(MENU_1, new String[]{"一级菜单", "en:1"}).icon("folder-open").order(1);
@@ -36,6 +38,6 @@ public class ExampleMain implements QingzhouApp {
 
     @Override
     public void stop() {
-        logger.info("停止样例应用");
+        System.out.println("停止样例应用");
     }
 }

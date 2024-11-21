@@ -13,6 +13,7 @@ import qingzhou.core.registry.*;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
+import qingzhou.logger.LogService;
 import qingzhou.logger.Logger;
 
 import java.io.File;
@@ -120,6 +121,7 @@ class DeployerImpl implements Deployer {
         }
 
         try {
+            moduleContext.getService(LogService.class).remove(app.getLoader());
             app.getLoader().close();
         } catch (Exception ignored) {
         }

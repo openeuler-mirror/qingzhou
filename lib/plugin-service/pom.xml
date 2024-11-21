@@ -14,6 +14,7 @@
 
     <modules>
         <module>qingzhou-ssh</module>
+        <module>qingzhou-logger-tinylog</module>
     </modules>
 
     <dependencies>
