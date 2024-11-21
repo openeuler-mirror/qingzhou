@@ -7,17 +7,15 @@ import qingzhou.ssh.SSHService;
 
 @Module
 public class Controller implements ModuleActivator {
-    private SSHServiceImpl sshService;
 
     @Override
     public void start(ModuleContext context) {
-        sshService = new SSHServiceImpl();
-        context.registerService(SSHService.class, sshService);
+        context.registerService(SSHService.class, SSHClientBuilderImpl::new);
     }
 
     @Override
     public void stop() {
-        sshService.getSshClientList().forEach(sshClient -> {
+        SSHClientBuilderImpl.getSshClientList().forEach(sshClient -> {
             try {
                 sshClient.closeInternal();
             } catch (Exception ignored) {

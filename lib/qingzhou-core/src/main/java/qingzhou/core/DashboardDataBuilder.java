@@ -185,7 +185,7 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
     }
 
     public static class MatrixHeatmap extends DashboardDataImpl implements Dashboard.MatrixHeatmap {
-        private final Map<String, String[]> data = new LinkedHashMap<>();
+        private transient final Map<String, String[]> data = new LinkedHashMap<>(); // 变换后这个不再需要返回到客户端
         public String[] xAxis;
         public String[] yAxis;
         public List<int[]> matrixData;

@@ -1,25 +1,20 @@
 package qingzhou.ssh.impl;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.security.GeneralSecurityException;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.sshd.client.ClientBuilder;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.client.session.ClientSession;
-import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
 import org.apache.sshd.core.CoreModuleProperties;
-import qingzhou.ssh.LifecycleListener;
 import qingzhou.ssh.SSHClient;
-import qingzhou.ssh.SSHConfig;
 import qingzhou.ssh.SSHResult;
 import qingzhou.ssh.SSHSession;
 
-class SSHClientImpl implements SSHClient {
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SSHClientImpl implements SSHClient {
     private final SSHConfig config;
     private final SshClient sshClient;
     private final List<SSHSessionImpl> sessionList = new ArrayList<>();
@@ -44,8 +39,7 @@ class SSHClientImpl implements SSHClient {
         return new SSHSessionImpl(createClientSession());
     }
 
-    @Override
-    public void addSessionListener(LifecycleListener listener) {
+    void addSessionListener(LifecycleListener listener) {
         lifecycleListeners.add(listener);
     }
 
@@ -104,22 +98,12 @@ class SSHClientImpl implements SSHClient {
 
     ClientSession createClientSession() throws IOException {
         long connectTimeout = 10000L;
-        ConnectFuture future = sshClient.connect(config.getUsername(), config.getHostname(), config.getPort()).verify(connectTimeout);
+        ConnectFuture future = sshClient.connect(config.username, config.hostname, config.port).verify(connectTimeout);
         if (!future.isConnected()) {
             throw new RuntimeException("Session connect failed after " + connectTimeout + " mill seconds.");
         }
         ClientSession session = future.getSession();
-        if (config.getPrivateKeyLocation() != null) {
-            // 基于秘钥登陆
-            try {
-                session.addPublicKeyIdentity(new FileKeyPairProvider(Paths.get(config.getPrivateKeyLocation()))
-                        .loadKey(session, config.getKeyPairType()));
-            } catch (GeneralSecurityException e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-        } else if (config.getPassword() != null) {
-            session.addPasswordIdentity(config.getPassword());
-        }
+        session.addPasswordIdentity(config.password);
 
         long authTimeout = 10000L;
         if (!session.auth().verify(authTimeout).isSuccess()) {
