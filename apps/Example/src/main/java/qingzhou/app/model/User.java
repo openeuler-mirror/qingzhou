@@ -14,7 +14,7 @@ import java.util.Map;
 
 
 @Model(code = User.code, icon = "user",
-        menu = ExampleMain.MENU_1, order = 1,
+        menu = ExampleMain.MENU_1, order = "1",
         name = {"用户", "en:User management"},
         info = {"用户管理", "en:User management."})
 public class User extends AddModelBase implements Delete, Group, Option, Echo {
@@ -62,13 +62,6 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     public String department;
 
     @ModelField(
-            input_type = InputType.sortable,
-            list = true, index = 3,
-            separator = "@",
-            name = {"项目1", "en:1"})
-    public String subjects1;
-
-    @ModelField(
             input_type = InputType.checkbox,
             separator = "@",
             reference = Post.class,
@@ -83,15 +76,22 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.sortable_checkbox,
-            separator = "#", index = 2,
+            separator = "#", order = "2",
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
             input_type = InputType.sortable_checkbox,
-            separator = "#", index = 1,
+            separator = "#", order = "3",
             name = {"项目3", "en:3"})
     public String subjects3;
+
+    @ModelField(
+            input_type = InputType.sortable,
+            list = true, order = "1",
+            separator = "@",
+            name = {"项目1", "en:1"})
+    public String subjects1;
 
     @ModelField(
             plain_text = true,
@@ -143,9 +143,24 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
             info = {"添加过滤条件2", "en:Add filters2"})
     public String comboQuery2;
 
+    @Override
+    public boolean showOrderNumber() {
+        return false;
+    }
+
+    @ModelAction(
+            code = "share", icon = "share-alt",
+            head_action = true, order = "3",
+            action_type = ActionType.action_list,
+            name = {"头部按钮", "en:Share"},
+            info = {"头部按钮", "en:Share"})
+    public void share(Request request) {
+        System.out.println("点击了头部按钮。。。");
+    }
+
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            head_action = true, list_action = true,
+            head_action = true, list_action = true, order = "2",
             sub_form_fields = {"id", "gender", "position", "checkbox", "notes", "b"},
             action_type = ActionType.sub_form, sub_form_submit_on_open = true,
             name = {"弹出表单", "en:test"},
@@ -190,24 +205,10 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
         }
     }
 
-    @Override
-    public boolean showOrderNumber() {
-        return false;
-    }
-
-    @ModelAction(
-            code = "share", icon = "share-alt",
-            head_action = true,
-            action_type = ActionType.action_list,
-            name = {"头部按钮", "en:Share"},
-            info = {"头部按钮", "en:Share"})
-    public void share(Request request) {
-        System.out.println("点击了头部按钮。。。");
-    }
-
     @ModelAction(
             code = "upload", icon = "upload-alt",
             head_action = true,
+            order = "4",
             action_type = ActionType.upload,
             name = {"上传", "en:upload"},
             info = {"将本地文件或数据发送到服务器进行存储和处理。",
@@ -218,7 +219,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelAction(
             code = "upload1", icon = "upload-alt",
-            head_action = true,
+            head_action = true, order = "41",
             action_type = ActionType.upload,
             name = {"上传1", "en:upload1"},
             info = {"将本地文件或数据发送到服务器进行存储和处理。",

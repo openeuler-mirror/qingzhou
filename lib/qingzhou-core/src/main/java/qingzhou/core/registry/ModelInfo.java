@@ -16,7 +16,7 @@ public class ModelInfo implements Serializable {
     private String[] info;
     private String icon;
     private String menu;
-    private int order;
+    private String order;
     private String entrance;
     private boolean hidden;
     private String idField;
@@ -209,11 +209,11 @@ public class ModelInfo implements Serializable {
         this.menu = menu;
     }
 
-    public int getOrder() {
+    public String getOrder() {
         return order;
     }
 
-    public void setOrder(int order) {
+    public void setOrder(String order) {
         this.order = order;
     }
 
@@ -238,17 +238,7 @@ public class ModelInfo implements Serializable {
     }
 
     public void setModelFieldInfos(ModelFieldInfo[] modelFieldInfos) {
-        Map<Integer, Integer> temp = new LinkedHashMap<>();
-        for (int i = 0; i < modelFieldInfos.length; i++) {
-            int index = modelFieldInfos[i].getIndex();
-            if (index >= 0 && index < modelFieldInfos.length) {
-                temp.put(i, index);
-            }
-        }
-        for (Map.Entry<Integer, Integer> e : temp.entrySet()) {
-            Utils.swap(modelFieldInfos, e.getKey(), e.getValue());
-        }
-
+        Arrays.sort(modelFieldInfos, Comparator.comparing(ModelFieldInfo::getOrder));
         this.modelFieldInfos = modelFieldInfos;
     }
 
@@ -257,6 +247,7 @@ public class ModelInfo implements Serializable {
     }
 
     public void setModelActionInfos(ModelActionInfo[] modelActionInfos) {
+        Arrays.sort(modelActionInfos, Comparator.comparing(ModelActionInfo::getOrder));
         this.modelActionInfos = modelActionInfos;
     }
 

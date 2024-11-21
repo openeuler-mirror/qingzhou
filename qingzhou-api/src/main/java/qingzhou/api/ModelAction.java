@@ -35,6 +35,8 @@ public @interface ModelAction {
 
     boolean form_action() default false;
 
+    String order() default "5"; // 排序符，按自然顺序
+
     String[] sub_form_fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
 
     boolean sub_form_submit_on_open() default false;    // 列表上的弹出表单加载后触发提交，列表头上的不会触发

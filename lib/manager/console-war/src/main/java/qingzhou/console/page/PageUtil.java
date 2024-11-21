@@ -3,14 +3,15 @@ package qingzhou.console.page;
 import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
-import qingzhou.console.view.type.JsonView;
-import qingzhou.core.*;
-import qingzhou.core.deployer.Deployer;
 import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.view.type.HtmlView;
+import qingzhou.console.view.type.JsonView;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.ItemInfo;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.*;
 import qingzhou.engine.util.Utils;
@@ -81,16 +82,16 @@ public class PageUtil {
     public static String buildRequestUrl(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
                                          Request request, String viewName, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + request.getModel() + "/" + actionName;
-        return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, request, url));
+        return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, url));
     }
 
     public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response,
                                         Request request, String viewName, String model, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;
-        return RESTController.encodeURL(response, appendQueryString(servletRequest, request, url));
+        return RESTController.encodeURL(response, appendQueryString(servletRequest, url));
     }
 
-    private static String appendQueryString(HttpServletRequest servletRequest, Request request, String url) {// 此方法只能给buildRequestUrl、buildCustomUrl这两个拼接url的方法使用
+    private static String appendQueryString(HttpServletRequest servletRequest, String url) {// 此方法只能给buildRequestUrl、buildCustomUrl这两个拼接url的方法使用
         String queryString = servletRequest.getQueryString();
         if (queryString == null || queryString.isEmpty()) {
             return url;
@@ -307,16 +308,14 @@ public class PageUtil {
 
         // qingzhou.app.system.Main.XXX
         boolean isDefaultActive = "Business".equals(menuItem.getName());
-        String model = menuItem.getModel();
-        String action = menuItem.getAction();
         menuHtml.append("<li class=\"treeview").append(isDefaultActive ? " menu-open expandsub" : "").append("\">");
-        if (Utils.isBlank(model) && Utils.isBlank(action)) {
-            menuHtml.append("   <a href=\"javascript:void(0);\" style=\"text-indent:").append(level).append("px;\">");
-        } else {
+        if (Utils.notBlank(menuItem.getModel()) && Utils.notBlank(menuItem.getAction())) {
             //菜单添加action
             String contextPath = request.getContextPath();
-            action = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + qzRequest.getApp() + "/" + model + "/" + action;
-            menuHtml.append("   <a href=\"javascript:void(0);\"  action=\""+ action + "\" style=\"text-indent:").append(level).append("px;\">");
+            String actionUrl = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + qzRequest.getApp() + "/" + menuItem.getModel() + "/" + menuItem.getAction();
+            menuHtml.append("   <a href=\"javascript:void(0);\"  action=\"" + actionUrl + "\" style=\"text-indent:").append(level).append("px;\">");
+        } else {
+            menuHtml.append("   <a href=\"javascript:void(0);\" style=\"text-indent:").append(level).append("px;\">");
         }
         menuHtml.append("       <i class=\"icon icon-").append(menuItem.getIcon()).append("\"></i>");
         menuHtml.append("       <span>").append(I18n.getStringI18n(menuItem.getI18n())).append("</span>");

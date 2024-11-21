@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>qingzhou</groupId>
-        <artifactId>plugin-service</artifactId>
+        <artifactId>addon-service</artifactId>
         <version>2.1.0</version>
     </parent>
 

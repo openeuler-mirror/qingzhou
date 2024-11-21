@@ -18,7 +18,7 @@ public @interface Model {
 
     String menu() default ""; // 模型所属的菜单名
 
-    int order() default 0; // 模型在菜单中的排序顺序，数值越小越靠前
+    String order() default "5"; // 排序符，按自然顺序
 
     String entrance() default "list"; // 模型的入口操作，即在菜单上的链接，默认为列表
 

@@ -7,7 +7,7 @@ public class MenuInfo implements Serializable {
     private String name;
     private String[] i18n;
     private String icon;
-    private int order;
+    private String order;
     private String parent;
     private String model;
     private String action;
@@ -41,11 +41,11 @@ public class MenuInfo implements Serializable {
         this.icon = icon;
     }
 
-    public int getOrder() {
+    public String getOrder() {
         return order;
     }
 
-    public void setOrder(int order) {
+    public void setOrder(String order) {
         this.order = order;
     }
 

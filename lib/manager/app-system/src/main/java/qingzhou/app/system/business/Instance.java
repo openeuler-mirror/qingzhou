@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_INSTANCE, icon = "stack",
-        menu = Main.Business, order = 2,
+        menu = Main.Business, order = "2",
         name = {"实例", "en:Instance"},
         info = {"实例是应用部署的载体，为应用提供运行时环境。预置的 " + DeployerConstants.INSTANCE_LOCAL + " 实例表示当前正在访问的服务所在的实例，如集中管理端就运行在此实例上。",
                 "en:An instance is the carrier of application deployment and provides a runtime environment for the application. The provisioned " + DeployerConstants.INSTANCE_LOCAL + " instance indicates the instance where the service is currently accessed, such as the centralized management side running on this instance."})
@@ -202,9 +202,19 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
         return ID_KEY;
     }
 
-    @Override
-    public String[] allIds(Map<String, String> query) {
+    private String[] allIds(Map<String, String> query) {
         return allInstanceIds(query);
+    }
+
+    @Override
+    public boolean contains(String id) {
+        String[] ids = allIds(null);
+        for (String s : ids) {
+            if (s.equals(id)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static String[] allInstanceIds(Map<String, String> query) {
@@ -259,7 +269,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Download.ACTION_FILES, icon = "download-alt",
-            list_action = true,
+            list_action = true, order = "8",
             action_type = ActionType.download,
             name = {"下载日志", "en:Download Log"},
             info = {"下载实例的日志信息。", "en:Download the log information of the instance."})
@@ -277,7 +287,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelAction(
             code = Monitor.ACTION_MONITOR, icon = "line-chart",
-            list_action = true,
+            list_action = true, order = "2",
             name = {"监视", "en:Monitor"},
             info = {"获取该组件的运行状态信息，该信息可反映组件的健康情况。",
                     "en:Obtain the operating status information of the component, which can reflect the health of the component."})

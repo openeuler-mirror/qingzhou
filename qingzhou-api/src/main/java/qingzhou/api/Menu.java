@@ -3,12 +3,10 @@ package qingzhou.api;
 public interface Menu {
     Menu icon(String icon);
 
-    Menu order(int order);
+    Menu order(String order);
 
     Menu parent(String parent);
 
-    Menu model(String model);
-
-    Menu action(String action);
-
+    // 展开菜单时候执行的 model action
+    Menu action(String model, String action);
 }

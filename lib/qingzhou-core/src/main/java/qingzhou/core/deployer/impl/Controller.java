@@ -33,7 +33,7 @@ public class Controller implements Process {
     public void exec() throws Exception {
         sequence = new ProcessSequence(
                 new RegisterService(moduleContext),
-                new InjectShareablePluginsForApp(moduleContext),
+                new InjectShareableAddonsForApp(moduleContext),
                 new InstallApp(moduleContext)
         );
         sequence.exec();
@@ -61,17 +61,17 @@ public class Controller implements Process {
         }
     }
 
-    private static class InjectShareablePluginsForApp implements Process {
+    private static class InjectShareableAddonsForApp implements Process {
         final ModuleContext moduleContext;
 
-        InjectShareablePluginsForApp(ModuleContext moduleContext) {
+        InjectShareableAddonsForApp(ModuleContext moduleContext) {
             this.moduleContext = moduleContext;
         }
 
         @Override
         public void exec() throws Exception {
-            File pluginsDir = FileUtil.newFile(moduleContext.getLibDir(), "plugins");
-            File[] listFiles = pluginsDir.listFiles();
+            File addonsDir = FileUtil.newFile(moduleContext.getLibDir(), "addons"); //保持一致：qingzhou.engine.impl.ModuleLoading.BuildModuleInfo
+            File[] listFiles = addonsDir.listFiles();
             if (listFiles == null || listFiles.length == 0) return;
 
             // hack into ModuleContextImpl:

@@ -93,25 +93,12 @@
                 <include>${project.groupId}:qingzhou-http</include>
                 <include>${project.groupId}:qingzhou-qr</include>
                 <include>${project.groupId}:qingzhou-crypto</include>
-                <include>${project.groupId}:qingzhou-uml</include>
             </includes>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
             <useProjectArtifact>false</useProjectArtifact>
             <useProjectAttachments>false</useProjectAttachments>
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <outputDirectory>lib/version${project.version}/module</outputDirectory>
-        </dependencySet>
-
-        <dependencySet>
-            <includes>
-                <include>${project.groupId}:qingzhou-ssh</include>
-                <include>${project.groupId}:qingzhou-logger-tinylog</include>
-            </includes>
-            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
-            <useProjectArtifact>false</useProjectArtifact>
-            <useProjectAttachments>false</useProjectAttachments>
-            <useTransitiveDependencies>false</useTransitiveDependencies>
-            <outputDirectory>lib/version${project.version}/plugins</outputDirectory>
         </dependencySet>
 
         <dependencySet>

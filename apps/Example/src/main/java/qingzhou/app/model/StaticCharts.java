@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Model(code = "charts", icon = "line-chart",
         entrance = Chart.ACTION_CHART,
-        menu = ExampleMain.MENU_1, order = 5,
+        menu = ExampleMain.MENU_1, order = "5",
         name = {"静态图表", "en:Static Charts"},
         info = {"静态图表", "en:Static Charts."})
 public class StaticCharts extends ModelBase implements Chart {

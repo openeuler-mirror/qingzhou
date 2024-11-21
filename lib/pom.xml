@@ -15,7 +15,7 @@
     <modules>
         <module>boot</module>
         <module>component</module>
-        <module>plugin-service</module>
+        <module>addon-service</module>
         <module>qingzhou-core</module>
         <module>manager</module>
     </modules>

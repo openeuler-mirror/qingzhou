@@ -9,12 +9,12 @@
         <version>2.1.0</version>
     </parent>
 
-    <artifactId>plugin-service</artifactId>
+    <artifactId>addon-service</artifactId>
     <packaging>pom</packaging>
 
     <modules>
         <module>qingzhou-ssh</module>
-        <module>qingzhou-logger-tinylog</module>
+        <module>qingzhou-uml</module>
     </modules>
 
     <dependencies>

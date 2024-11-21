@@ -17,7 +17,7 @@ class MenuImpl implements Menu {
     }
 
     @Override
-    public Menu order(int order) {
+    public Menu order(String order) {
         this.newMenuInfo.setOrder(order);
         return this;
     }
@@ -29,13 +29,8 @@ class MenuImpl implements Menu {
     }
 
     @Override
-    public Menu model(String model) {
+    public Menu action(String model, String action) {
         this.newMenuInfo.setModel(model);
-        return this;
-    }
-
-    @Override
-    public Menu action(String action) {
         this.newMenuInfo.setAction(action);
         return this;
     }

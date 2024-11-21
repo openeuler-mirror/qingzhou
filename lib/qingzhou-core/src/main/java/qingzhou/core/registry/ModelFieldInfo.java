@@ -50,8 +50,7 @@ public class ModelFieldInfo implements Serializable {
     private boolean sameLine;
     private String placeholder;
     private String[] combineFields;
-
-    private int index;
+    private String order;
 
     public String[] getCombineFields() {
         return combineFields;
@@ -69,12 +68,12 @@ public class ModelFieldInfo implements Serializable {
         this.placeholder = placeholder;
     }
 
-    public int getIndex() {
-        return index;
+    public String getOrder() {
+        return order;
     }
 
-    public void setIndex(int index) {
-        this.index = index;
+    public void setOrder(String order) {
+        this.order = order;
     }
 
     public boolean isHidden() {

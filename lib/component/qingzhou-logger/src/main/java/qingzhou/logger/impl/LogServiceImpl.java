@@ -2,7 +2,6 @@ package qingzhou.logger.impl;
 
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
-import qingzhou.logger.LogService;
 import qingzhou.logger.Logger;
 
 import java.io.File;
@@ -11,7 +10,7 @@ import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LogServiceImpl implements LogService {
+public class LogServiceImpl {
     public static final String APP_NAME = "qingzhou.appName";
 
     private final Map<ClassLoader, Logger> loggers = new HashMap<>();
@@ -21,7 +20,6 @@ public class LogServiceImpl implements LogService {
         this.context = context;
     }
 
-    @Override
     public Logger getLogger(Class<?> clazz) {
         ClassLoader classLoader = clazz.getClassLoader();
         return loggers.computeIfAbsent(classLoader, cl -> {
@@ -43,7 +41,6 @@ public class LogServiceImpl implements LogService {
         });
     }
 
-    @Override
     public void remove(ClassLoader classLoader) {
         loggers.remove(classLoader);
     }

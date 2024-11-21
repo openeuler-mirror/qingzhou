@@ -27,6 +27,4 @@ public interface Logger {
     void error(String msg);
 
     void error(String msg, Throwable t);
-
-    void shutdown();
 }

@@ -12,7 +12,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-@Model(code = "filemanage", icon = "file", menu = ExampleMain.MENU_11, order = 4, name = {"文件管理", "en:File Manage"}, info = {"对系统中的文件进行管理。", "en:Manage files in the system."})
+@Model(code = "filemanage", icon = "file", menu = ExampleMain.MENU_11,
+        order = "4", name = {"文件管理", "en:File Manage"}, info = {"对系统中的文件进行管理。", "en:Manage files in the system."})
 public class FileManage extends ModelBase implements Add, Show, List, Delete, Download {
     public static final String FILE_BASEDIR = "files";
 
@@ -54,7 +55,17 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
     }
 
     @Override
-    public String[] allIds(Map<String, String> query) {
+    public boolean contains(String id) {
+        String[] ids = allIds(null);
+        for (String s : ids) {
+            if (s.equals(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String[] allIds(Map<String, String> query) {
         File path = new File(getAppContext().getAppDir(), FILE_BASEDIR);
         java.util.List<String> ids = new ArrayList<>();
         if (path.exists()) {
@@ -105,7 +116,14 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
 
         String fileName = srcFile.getName();
 
-        File path = new File(new File(getAppContext().getAppDir(), FILE_BASEDIR), fileName.substring(0, fileName.indexOf(".")));
+        String pathName;
+        int typeIndex = fileName.indexOf(".");
+        if (typeIndex > 0) {
+            pathName = fileName.substring(0, typeIndex);
+        } else {
+            pathName = fileName;
+        }
+        File path = new File(new File(getAppContext().getAppDir(), FILE_BASEDIR), pathName);
         Files.createDirectories(path.toPath());
         Files.copy(srcFile.toPath(), new File(path, fileName).toPath());
     }
