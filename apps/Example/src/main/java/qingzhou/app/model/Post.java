@@ -49,6 +49,6 @@ public class Post extends AddModelBase {
     @ModelAction(
             name = {}, code = "listUpdate")
     public void show(Request request) throws Exception {
-        System.out.println();
+        request.getResponse().setMsg("岗位更新成功");
     }
 }
