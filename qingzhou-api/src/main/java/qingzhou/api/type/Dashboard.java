@@ -42,4 +42,18 @@ public interface Dashboard {
 
     interface ShareDataset extends Basic {
     }
+
+    interface MatrixHeatmap extends DashboardData {
+        MatrixHeatmap addData(String xData, String[] yData);
+    }
+
+    interface LineChart extends DashboardData {
+        LineChart addData(String name, String value);
+
+        LineChart xAxis(String xAxis);
+
+        LineChart yAxis(String yAxis);
+
+        LineChart unit(String unit);
+    }
 }

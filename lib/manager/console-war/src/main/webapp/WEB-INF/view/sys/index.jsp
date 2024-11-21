@@ -297,10 +297,15 @@
         "title": '<%=DashboardDataBuilder.DASHBOARD_FIELD_TITLE%>',
         "max": '<%=DashboardDataBuilder.DASHBOARD_FIELD_MAX%>',
         "used": '<%=DashboardDataBuilder.DASHBOARD_FIELD_USED%>',
+        "xAxis": '<%=DashboardDataBuilder.DASHBOARD_FIELD_XAXIS%>',
+        "yAxis": '<%=DashboardDataBuilder.DASHBOARD_FIELD_YAXIS%>',
+        "matrixData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_MATRIXDATA%>',
         "basicData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_BASIC_DATA%>',
         "gaugeData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_GAUGE_DATA%>',
         "histogramData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HISTOGRAM_DATA%>',
-        "shareDatasetData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_SHARE_DATASET_DATA%>'
+        "shareDatasetData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_SHARE_DATASET_DATA%>',
+        "matrixHeatmapData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HEATMAP_DATA%>',
+        "lineChartData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_LINE_CHART_DATA%>'
     };
 
     <%-- 显示第一个应用的管理页面--%>

@@ -108,6 +108,25 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
             shareDatasets[count] = shareDataset;
         }
         dataBuilder.addData(shareDatasets);
+
+        MatrixHeatmap matrixHeatmap = dataBuilder.buildData(MatrixHeatmap.class);
+        matrixHeatmap.title("应用实例部署图");
+        for (int i = 0; i < 10; i++) {
+            int count = random.nextInt(10);
+            String[] yAxis = new String[count];
+            for (int j = 0; j < count; j++) {
+                yAxis[j] = "应用" + j;
+            }
+            matrixHeatmap.addData("实例" + i, yAxis);
+        }
+        dataBuilder.addData(new MatrixHeatmap[]{matrixHeatmap});
+
+        LineChart lineChart = dataBuilder.buildData(LineChart.class);
+        lineChart.title("内存使用情况");
+        lineChart.yAxis("内存").xAxis("时间").unit("MB");
+        lineChart.addData("TongWeb", String.valueOf(random.nextInt(500)));
+        lineChart.addData("Tomcat", String.valueOf(random.nextInt(500)));
+        dataBuilder.addData(new LineChart[]{lineChart});
     }
 
     @Override
