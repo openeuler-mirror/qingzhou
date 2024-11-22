@@ -5,6 +5,7 @@ import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.core.deployer.impl.ParametersImpl;
 import qingzhou.core.registry.ModelInfo;
+import qingzhou.engine.util.Utils;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -85,6 +86,13 @@ public class RequestImpl implements Request, Serializable {
     @Override
     public String getParameter(String name) {
         return parameters.get(name);
+    }
+
+    @Override
+    public <T> T getParameterAsObject(Class<T> objectType) throws Exception {
+        T parameterObject = objectType.newInstance();
+        Utils.setPropertiesToObj(parameterObject, parameters);
+        return parameterObject;
     }
 
     @Override

@@ -16,6 +16,7 @@
             <groupId>net.sourceforge.plantuml</groupId>
             <artifactId>plantuml-asl</artifactId>
             <version>1.2024.5</version>
+            <optional>true</optional> <!-- 禁止其它模块依赖此传递项 -->
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>

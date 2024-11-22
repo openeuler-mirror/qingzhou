@@ -7,6 +7,9 @@ import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
+import qingzhou.ssh.SSHClient;
+import qingzhou.ssh.SSHResult;
+import qingzhou.ssh.SSHService;
 
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -226,6 +229,57 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
                     "en:Send local files or data to a server for storage and processing."})
     public void upload1(Request request) throws Exception {
         System.out.println("文件1已上传至临时目录：" + request.getParameter("upload1"));
+    }
+
+
+    @ModelField(field_type = FieldType.OTHER,
+            host = true,
+            required = true,
+            name = {"主机名", "en:hostname"})
+    public String hostname;
+    @ModelField(field_type = FieldType.OTHER,
+            port = true,
+            required = true,
+            name = {"端口", "en:port"})
+    public int port = 22;
+    @ModelField(field_type = FieldType.OTHER,
+            required = true,
+            name = {"用户名", "en:username"})
+    public String username;
+    @ModelField(field_type = FieldType.OTHER,
+            input_type = InputType.password,
+            required = true,
+            name = {"密码", "en:password"})
+    public String password;
+    @ModelField(field_type = FieldType.OTHER,
+            required = true,
+            name = {"命令", "en:command"})
+    public String command;
+
+    @ModelAction(code = "ssh", icon = "code",
+            head_action = true, action_type = ActionType.sub_form,
+            sub_form_fields = {"hostname", "port", "username", "password"},
+            name = {"SSH 测试", "en: SSH Test"})
+    public void ssh(Request request) throws Exception {
+        Object service; // 没有安装时，类会找不到，故使用 Object 类型
+        try {
+            service = getAppContext().getService(SSHService.class);
+        } catch (Throwable e) {
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg("The UML Generator service is not installed: " + e.getMessage());
+            return;
+        }
+
+        SSHService ssh = (SSHService) service;
+        User user = request.getParameterAsObject(User.class);
+        SSHClient sshClient = ssh.createSSHClientBuilder()
+                .host(user.hostname)
+                .port(user.port)
+                .username(user.username)
+                .password(user.password).build();
+        SSHResult result = sshClient.execCmd(user.command);
+        request.getResponse().setSuccess(result.isSuccess());
+        request.getResponse().setMsg(result.toString());
     }
 
     @Override

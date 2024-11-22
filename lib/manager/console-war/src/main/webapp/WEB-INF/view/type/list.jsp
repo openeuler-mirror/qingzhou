@@ -134,8 +134,8 @@
             %>
 
             <%
-                if (request.getAttribute(Const.PARAM_NAME_RETURNSID) != null && !"".equals(request.getAttribute(Const.PARAM_NAME_RETURNSID))) {
-                    out.print("<a href='javascript:void(0);' class='btn' linkId='" + request.getAttribute(Const.PARAM_NAME_RETURNSID) + "' onclick='backToList(this);'><i class='icon icon-reply'></i>" + I18n.getKeyI18n("page.return") + "</a>");
+                if (request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID) != null && !"".equals(request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID))) {
+                    out.print("<a href='javascript:void(0);' class='btn' linkId='" + request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID) + "' onclick='backToList(this);'><i class='icon icon-reply'></i>" + I18n.getKeyI18n("page.return") + "</a>");
                 }
             %>
         </div>
@@ -426,8 +426,8 @@
         if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
             String url = PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST);
             url += (url.contains("?") ? "&" : "?") + "markForAddCsrf";
-            if (request.getAttribute(Const.PARAM_NAME_RETURNSID) != null && !url.contains("&" + Const.PARAM_NAME_RETURNSID)) {
-                url += "&" + Const.PARAM_NAME_RETURNSID + "=" + request.getAttribute(Const.PARAM_NAME_RETURNSID);
+            if (request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID) != null && !url.contains("&" + DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID)) {
+                url += "&" + DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID + "=" + request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID);
             }            
             url += "&" + ListData.PAGE_NUM + "=";
     %>

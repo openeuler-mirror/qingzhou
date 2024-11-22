@@ -10,4 +10,12 @@
     </parent>
 
     <artifactId>Example</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>qingzhou</groupId>
+            <artifactId>qingzhou-ssh</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+    </dependencies>
 </project>

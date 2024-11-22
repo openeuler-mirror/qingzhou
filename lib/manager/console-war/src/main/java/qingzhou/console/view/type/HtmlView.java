@@ -4,12 +4,11 @@ import qingzhou.api.ActionType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.api.type.*;
-import qingzhou.console.constant.Const;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
-import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,9 +23,9 @@ public class HtmlView implements View {
         HttpServletRequest servletRequest = restContext.req;
 
         servletRequest.setAttribute(Request.class.getName(), request);
-        if (request.getParameter(Const.PARAM_NAME_RETURNSID) != null && !"".equals(request.getParameter(Const.PARAM_NAME_RETURNSID))) {
-            servletRequest.setAttribute(Const.PARAM_NAME_RETURNSID, request.getParameter(Const.PARAM_NAME_RETURNSID));
-        }      
+        if (request.getParameter(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID) != null && !"".equals(request.getParameter(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID))) {
+            servletRequest.setAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID, request.getParameter(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID));
+        }
         boolean isManageAction = isManageApp(request);
         if (isManageAction) {
             request.setAppName(request.getId());

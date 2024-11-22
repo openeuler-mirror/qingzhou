@@ -7,6 +7,7 @@ import qingzhou.app.ExampleMain;
 import java.util.Random;
 
 @Model(code = "dashboard", icon = "dashboard", menu = ExampleMain.MENU_1,
+        order = "0",
         entrance = Dashboard.ACTION_DASHBOARD,
         name = {"概览", "en:Dashboard"},
         info = {"监视信息概览。", "en:Overview of monitoring information."})
