@@ -323,7 +323,7 @@
                 %>
                 <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + URLEncoder.encode(refValue,"UTF-8"))%>'
                    class="dataid qz-action-link tooltips"
-                   action-type="<%=linkRefModelActionInfo.getActionType()%>"
+                   action-type="<%=fieldInfo.getActionType()%>"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
                    style="color:#4C638F;" onclick='actionModelMenu("<%=qzRequest.getModel()%>","<%=refModelName%>")'>
                     <%=PageUtil.styleFieldValue(value, qzRequest, fieldInfo)%>
