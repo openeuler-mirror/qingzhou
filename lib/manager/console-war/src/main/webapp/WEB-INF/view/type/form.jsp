@@ -9,9 +9,26 @@
     String[] formActions = PageUtil.filterActions(modelInfo.getFormActions(), qzApp, qzModel, currentUser);
 
     Map<String, String> modelData = (Map<String, String>) qzResponse.getInternalData();
+    if (isEdit){
+        //将plain_text加进去 并维持顺序
+        Map<String, String> formFieldDefaultValues = modelInfo.getFormFieldDefaultValues();
+        Map<String, String> newModelData = new LinkedHashMap<>();
+        for (Map.Entry<String,String> entry : formFieldDefaultValues.entrySet()){
+            if (modelData.containsKey(entry.getKey())){
+                newModelData.put(entry.getKey(),modelData.get(entry.getKey()));
+            }else{
+                boolean isPlainText = modelInfo.getModelFieldInfo(entry.getKey()).isPlainText();
+                if (isPlainText){
+                    newModelData.put(entry.getKey(),entry.getValue());
+                }
+            }
+        }
+        modelData = newModelData;
+    }
     Map<String, List<String>> sameLineMap = modelInfo.getSameLineMap();
     Map<String, String> sameLineModelData = new LinkedHashMap<>();
-    sameLineMap.values().stream().flatMap((Function<List<String>, Stream<String>>) Collection::stream).forEach((Consumer<String>) f -> sameLineModelData.put(f, modelData.remove(f)));
+    Map<String, String> finalModelData = modelData;
+    sameLineMap.values().stream().flatMap((Function<List<String>, Stream<String>>) Collection::stream).forEach((Consumer<String>) f -> sameLineModelData.put(f, finalModelData.remove(f)));
 
     Map<String, List<String>> groupedFields = PageUtil.groupedFields(modelData.keySet(), modelInfo);
     boolean hasGroup = PageUtil.hasGroup(groupedFields);
