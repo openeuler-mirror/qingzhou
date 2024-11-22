@@ -295,7 +295,7 @@ class DeployerImpl implements Deployer {
                     .map(String::toLowerCase)
                     .collect(Collectors.toSet());
             File[] additionalLib = loaderPolicy.getAdditionalLib();
-            if (additionalLib != null){
+            if (additionalLib != null) {
                 filenameSet.addAll(Arrays.stream(additionalLib).map(File::getName).collect(Collectors.toSet()));
             }
             appLibs = Arrays.stream(appLibs)

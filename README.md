@@ -58,6 +58,7 @@ JDK >= 1.8
 + marked ([https://github.com/markedjs/marked](https://github.com/markedjs/marked))
 + Multiple Select ([http://multiple-select.wenzhixin.net.cn](http://multiple-select.wenzhixin.net.cn))
 + Layui layer ([https://gitee.com/layui/layer](https://gitee.com/layui/layer))
++ Apache ECharts ([https://echarts.apache.org/](https://echarts.apache.org/))
 + ZUI ([https://openzui.com](https://openzui.com))
 + jQuery ([https://jquery.com](https://jquery.com))
 
