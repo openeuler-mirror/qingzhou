@@ -313,6 +313,9 @@ public class PageUtil {
             //菜单添加action
             String contextPath = request.getContextPath();
             String actionUrl = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + JsonView.FLAG + "/" + qzRequest.getApp() + "/" + menuItem.getModel() + "/" + menuItem.getAction();
+            if (Utils.notBlank(modelMenuParameter)) {
+                actionUrl += "?" + modelMenuParameter;
+            }
             menuHtml.append("   <a href=\"javascript:void(0);\"  action=\"" + actionUrl + "\" style=\"text-indent:").append(level).append("px;\">");
         } else {
             menuHtml.append("   <a href=\"javascript:void(0);\" style=\"text-indent:").append(level).append("px;\">");
