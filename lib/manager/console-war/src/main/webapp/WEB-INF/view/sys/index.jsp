@@ -305,6 +305,7 @@
         "histogramData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HISTOGRAM_DATA%>',
         "shareDatasetData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_SHARE_DATASET_DATA%>',
         "paramNameReturnsId": "<%=Const.PARAM_NAME_RETURNSID%>",
+        "actionTypeReturns": "<%=ActionType.returns_link%>",
         "matrixHeatmapData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HEATMAP_DATA%>',
         "lineChartData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_LINE_CHART_DATA%>'
     };
