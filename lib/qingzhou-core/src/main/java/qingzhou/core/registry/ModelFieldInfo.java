@@ -1,5 +1,6 @@
 package qingzhou.core.registry;
 
+import qingzhou.api.ActionType;
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 
@@ -14,7 +15,7 @@ public class ModelFieldInfo implements Serializable {
     private InputType inputType;
     private String refModel;
     private String separator;
-    private transient Class<?> refModelClass;
+    
     private String defaultValue;
     private boolean show;
     private boolean hidden;
@@ -42,7 +43,9 @@ public class ModelFieldInfo implements Serializable {
 
     private boolean multipleSearch;
     private boolean readonly;
-    private String linkList;
+    private String linkModel;
+    private transient Class<?> refModelClass;
+    private ActionType actionType;
     private String[] color;
     private String[] echoGroup;
     private boolean skipValidate;
@@ -263,14 +266,6 @@ public class ModelFieldInfo implements Serializable {
         this.refModel = refModel;
     }
 
-    public Class<?> getRefModelClass() {
-        return refModelClass;
-    }
-
-    public void setRefModelClass(Class<?> refModelClass) {
-        this.refModelClass = refModelClass;
-    }
-
     public String getSeparator() {
         return separator;
     }
@@ -383,12 +378,28 @@ public class ModelFieldInfo implements Serializable {
         this.email = email;
     }
 
-    public String getLinkList() {
-        return linkList;
+    public String getLinkModel() {
+        return linkModel;
     }
 
-    public void setLinkList(String linkList) {
-        this.linkList = linkList;
+    public void setLinkModel(String linkModel) {
+        this.linkModel = linkModel;
+    }
+
+    public Class<?> getRefModelClass() {
+        return refModelClass;
+    }
+
+    public void setRefModelClass(Class<?> refModelClass) {
+        this.refModelClass = refModelClass;
+    }
+
+    public ActionType getActionType() {
+        return actionType;
+    }
+
+    public void setActionType(ActionType actionType) {
+        this.actionType = actionType;
     }
 
     public String[] getEchoGroup() {

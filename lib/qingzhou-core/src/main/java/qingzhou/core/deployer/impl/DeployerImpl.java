@@ -425,7 +425,6 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setInfo(modelField.info());
             modelFieldInfo.setGroup(modelField.group());
             modelFieldInfo.setInputType(modelField.input_type());
-            modelFieldInfo.setRefModelClass(modelField.reference());
             modelFieldInfo.setSeparator(modelField.separator());
             modelFieldInfo.setDefaultValue(getDefaultValue(field, instance));
             modelFieldInfo.setShow(modelField.show());
@@ -457,7 +456,9 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setSkip(modelField.skip());
             modelFieldInfo.setEmail(modelField.email());
             modelFieldInfo.setFile(modelField.file());
-            modelFieldInfo.setLinkList(modelField.link_list());
+            modelFieldInfo.setLinkModel(modelField.link_model());
+            modelFieldInfo.setRefModelClass(modelField.ref_model());
+            modelFieldInfo.setActionType(modelField.action_type());
             modelFieldInfo.setColor(modelField.color());
             modelFieldInfo.setEchoGroup(modelField.echo_group());
             modelFieldInfo.setSkipValidate(modelField.skip_validate());

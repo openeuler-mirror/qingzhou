@@ -285,7 +285,7 @@
                 %>
                 <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , fieldInfo.getLinkAction() + "/" + encodedItemId)%>'
                    class="dataid qz-action-link tooltips"
-                   action-type="<%=linkActionInfo.getActionType()%>"
+                   action-type="<%=fieldInfo.getActionType()%>"
                    data-tip-arrow="top"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + linkActionInfo.getCode())%>'
                    style="color:#4C638F;">
@@ -296,9 +296,9 @@
                     String refModelName = null;
                     String refFieldName = null;
                     String refValue = null;
-                    if (Utils.notBlank(fieldInfo.getLinkList())) {
+                    if (Utils.notBlank(fieldInfo.getLinkModel())) {
                         //currentModelFieldName>targetModelName
-                        String[] split = fieldInfo.getLinkList().split(">");
+                        String[] split = fieldInfo.getLinkModel().split(">");
                         refFieldName = split[0];
                         refModelName = split[1];
                         //linkList传表达式指定的值
