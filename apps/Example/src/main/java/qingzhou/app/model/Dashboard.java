@@ -15,6 +15,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
     @Override
     public void dashboardData(String id, DataBuilder dataBuilder) {
         Random random = new Random();
+        // 基础数据
         Basic basic = dataBuilder.buildData(Basic.class);
         basic.title("基础数据");
         String[] units = new String[]{"GB", "MB", "KB"};
@@ -24,6 +25,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         Basic[] basics = new Basic[]{basic};
         dataBuilder.addData(basics);
 
+        // 仪表板
         Gauge[] gauges = new Gauge[5];
         for (int count = 0; count < 5; count++) {
             Gauge gauge = dataBuilder.buildData(Gauge.class);
@@ -41,6 +43,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         }
         dataBuilder.addData(gauges);
 
+        // 柱状图
         Histogram[] histograms = new Histogram[2];
         for (int count = 0; count < 2; count++) {
             Histogram histogram = dataBuilder.buildData(Histogram.class);
@@ -61,7 +64,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         }
         dataBuilder.addData(histograms);
 
-
+        // 仪表盘
         Gauge[] gauges1 = new Gauge[2];
         for (int count = 0; count < 2; count++) {
             Gauge gauge = dataBuilder.buildData(Gauge.class);
@@ -79,6 +82,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         }
         dataBuilder.addData(gauges1);
 
+        // 柱状图
         Histogram histogram = dataBuilder.buildData(Histogram.class);
         histogram.info("网络使用情况" + 3).title("网络" + 3);
         histogram.unit("MB");
@@ -90,6 +94,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         Histogram[] histograms1 = new Histogram[]{histogram};
         dataBuilder.addData(histograms1);
 
+        // 基础数据
         Basic basic1 = dataBuilder.buildData(Basic.class);
         basic1.title("销售数据");
         basic1.addData("销售额", random.nextInt(100) + "（万元）");
@@ -98,6 +103,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         Basic[] basics1 = new Basic[]{basic1};
         dataBuilder.addData(basics1);
 
+        // 数据集
         ShareDataset[] shareDatasets = new ShareDataset[2];
         for (int count = 0; count < 2; count++) {
             ShareDataset shareDataset = dataBuilder.buildData(ShareDataset.class);
@@ -109,18 +115,15 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         }
         dataBuilder.addData(shareDatasets);
 
+        // 热力图
         MatrixHeatmap matrixHeatmap = dataBuilder.buildData(MatrixHeatmap.class);
         matrixHeatmap.title("应用实例部署图");
-        for (int i = 0; i < 10; i++) {
-            int count = random.nextInt(10);
-            String[] yAxis = new String[count];
-            for (int j = 0; j < count; j++) {
-                yAxis[j] = "应用" + j;
-            }
-            matrixHeatmap.addData("实例" + i, yAxis);
+        for (int i = 0; i < 50; i++) {
+            matrixHeatmap.addData("实例" + random.nextInt(10), "应用" + random.nextInt(8), random.nextInt(10));
         }
         dataBuilder.addData(new MatrixHeatmap[]{matrixHeatmap});
 
+        // 折线图
         LineChart lineChart = dataBuilder.buildData(LineChart.class);
         lineChart.title("内存使用情况");
         lineChart.yAxis("内存").xAxis("时间").unit("MB");

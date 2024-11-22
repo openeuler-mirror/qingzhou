@@ -46,8 +46,6 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
             for (Dashboard.DashboardData dashboard : dashboardData) {
                 if (dashboard instanceof Gauge) {
                     sumUsedMax((Gauge) dashboard);
-                } else if (dashboard instanceof MatrixHeatmap) {
-                    ((MatrixHeatmap) dashboard).processMapData();
                 }
             }
         }
@@ -185,44 +183,45 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
     }
 
     public static class MatrixHeatmap extends DashboardDataImpl implements Dashboard.MatrixHeatmap {
-        private transient final Map<String, String[]> data = new LinkedHashMap<>(); // 变换后这个不再需要返回到客户端
-        public String[] xAxis;
-        public String[] yAxis;
-        public List<int[]> matrixData;
+        public List<String> xAxis = new LinkedList<>();
+        public List<String> yAxis = new LinkedList<>();
+        private List<int[]> matrixData = new LinkedList<>();
 
         @Override
-        public Dashboard.MatrixHeatmap addData(String xData, String[] yData) {
-            this.data.put(xData, yData);
+        public Dashboard.MatrixHeatmap addData(String xAxis, String yAxis, int value) {
+            int initialXSize = this.xAxis.size();
+            int initialYSize = this.yAxis.size();
+
+            int xIndex = insertAndGetIndex(this.xAxis, xAxis);
+            int yIndex = insertAndGetIndex(this.yAxis, yAxis);
+
+            // 检查是否已经存在相同的 xIndex 和 yIndex
+            if (xIndex < initialXSize && yIndex < initialYSize) {
+                for (int[] data : matrixData) {
+                    if (data[0] == xIndex && data[1] == yIndex) {
+                        // 更新现有的 value
+                        data[2] = value;
+                        return this;
+                    }
+                }
+            }
+
+            matrixData.add(new int[]{xIndex, yIndex, value});
             return this;
         }
 
-        public void processMapData() {
-            List<String> instances = new LinkedList<>(data.keySet());
-            xAxis = instances.toArray(new String[0]);
+        private int insertAndGetIndex(List<String> list, String value) {
+            int index = Collections.binarySearch(list, value);
 
-            Set<String> applicationSet = new LinkedHashSet<>();
-            for (String[] apps : data.values()) {
-                Collections.addAll(applicationSet, apps);
+            if (index < 0) {
+                index = -(index + 1);
+                list.add(index, value);
             }
-            yAxis = applicationSet.toArray(new String[0]);
 
-            // 初始化 matrixData 列表
-            matrixData = new LinkedList<>();
-
-            // 填充 matrixData
-            for (int i = 0; i < xAxis.length; i++) {
-                String instance = xAxis[i];
-                String[] apps = data.get(instance);
-
-                for (int j = 0; j < yAxis.length; j++) {
-                    String application = yAxis[j];
-                    // 检查应用程序是否在实例的应用列表中
-                    int value = Arrays.asList(apps).contains(application) ? 1 : 0;
-                    matrixData.add(new int[]{i, j, value});
-                }
-            }
+            return index;
         }
     }
+
 
     public static class LineChart extends DashboardDataImpl implements Dashboard.LineChart {
         public final List<Map<String, String>> data = new LinkedList<>();

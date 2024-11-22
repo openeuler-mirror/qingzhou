@@ -44,7 +44,7 @@ public interface Dashboard {
     }
 
     interface MatrixHeatmap extends DashboardData {
-        MatrixHeatmap addData(String xData, String[] yData);
+        MatrixHeatmap addData(String xAxis, String yAxis, int value);
     }
 
     interface LineChart extends DashboardData {
