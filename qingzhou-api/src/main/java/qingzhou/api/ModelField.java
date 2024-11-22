@@ -38,8 +38,6 @@ public @interface ModelField {
 
     boolean required() default false;
 
-    Class<? extends ModelBase> reference() default ModelBase.class; // 使用指定的模块的所有数据id作为字段的取值范围
-
     String separator() default ","; // 当使用 options() 或 refModel()，用以分割多值
 
     long min() default Long.MIN_VALUE;
@@ -103,8 +101,12 @@ public @interface ModelField {
     int ignore() default -1; // 列表页面上，最多显示的字符数，超出后隐藏并悬浮显示全值
 
     String link_action() default ""; // 链接到模块内部的 action 上
+    
+    ActionType action_type() default ActionType.link; // 列表字段连接类型
 
-    String link_list() default ""; // 链接到其他模块的 list action，格式：currentModelFieldName>targetModelName
+    String link_model() default ""; // 链接到其他模块的 list action，格式：currentModelFieldName>targetModelName
+    
+    Class<? extends ModelBase> ref_model() default ModelBase.class; // 使用指定的模块的所有数据id作为字段的取值范围
 
     String[] color() default {}; // 用于样式转换，形式：{"当前字段值:#f7f7f7", "当前字段值:#xxxxxx"}
 

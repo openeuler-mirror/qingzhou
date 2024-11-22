@@ -45,7 +45,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     @ModelField(
             group = "org",
             input_type = InputType.select, skip_validate = true,
-            // reference = Post.class,
+            // ref_model = Post.class,
             list = true, search = true,
             // update_action = "update",
             name = {"岗位", "en:Position"},
@@ -55,7 +55,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     @ModelField(
             group = "org",
             input_type = InputType.multiselect,
-            reference = Department.class,
+            ref_model = Department.class,
             list = true, search = true,
             update_action = "update",
             name = {"归属部门", "en:Department "})
@@ -64,7 +64,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     @ModelField(
             input_type = InputType.checkbox,
             separator = "@",
-            reference = Post.class,
+            ref_model = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
 

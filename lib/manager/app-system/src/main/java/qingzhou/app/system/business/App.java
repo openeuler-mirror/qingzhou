@@ -92,7 +92,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     @ModelField(
             input_type = InputType.checkbox,
             required = true,
-            reference = Instance.class,
+            ref_model = Instance.class,
             separator = App.INSTANCE_SP,
             list = true, search = true,
             name = {"安装实例", "en:Instance"},
