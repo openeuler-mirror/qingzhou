@@ -59,8 +59,7 @@ public class ViewManager {
             servletResponse.setContentType(view.getContentType());
         }
 
-        if (viewName.equals(HtmlView.FLAG)
-                || viewName.equals(JsonView.FLAG)) {
+        if (viewName.equals(HtmlView.FLAG) || viewName.equals(JsonView.FLAG)) {
             switch (request.getAction()) {
                 case Add.ACTION_CREATE:
                 case Update.ACTION_EDIT:

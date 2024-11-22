@@ -304,6 +304,7 @@
         "gaugeData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_GAUGE_DATA%>',
         "histogramData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HISTOGRAM_DATA%>',
         "shareDatasetData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_SHARE_DATASET_DATA%>',
+        "paramNameReturnsId": "<%=Const.PARAM_NAME_RETURNSID%>",
         "matrixHeatmapData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HEATMAP_DATA%>',
         "lineChartData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_LINE_CHART_DATA%>'
     };
@@ -312,9 +313,9 @@
     <%
 	String appName = PageUtil.getAppToShow();
 	if (appName != null) {
-		//获取系统应用菜单图标
-		String icon = SystemController.getModelInfo(DeployerConstants.APP_SYSTEM, DeployerConstants.MODEL_APP).getIcon();
-%>
+            //获取系统应用菜单图标
+            String icon = SystemController.getModelInfo(DeployerConstants.APP_SYSTEM, DeployerConstants.MODEL_APP).getIcon();
+    %>
     $(document).ready(function () {
         var firstAppId = "<%= DeployerConstants.MODEL_APP %>|<%= appName %>";
         var firstAppName = "<%= appName %>";
