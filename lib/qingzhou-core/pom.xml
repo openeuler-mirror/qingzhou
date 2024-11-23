@@ -67,6 +67,7 @@
             <groupId>org.eclipse.jdt</groupId>
             <artifactId>ecj</artifactId>
             <version>3.18.0</version>
+            <optional>true</optional>  <!-- 禁止其它模块依赖此传递项 -->
         </dependency>
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>

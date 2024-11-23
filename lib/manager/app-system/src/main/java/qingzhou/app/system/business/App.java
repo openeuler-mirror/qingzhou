@@ -159,7 +159,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
-            list_action = true,
+            list_action = true, order = "1",
             show = "state=" + DeployerConstants.APP_STARTED,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
@@ -206,7 +206,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = DeployerConstants.ACTION_START, icon = "play",
-            list_action = true,
+            list_action = true, order = "2",
             show = "state=" + DeployerConstants.APP_STOPPED,
             action_type = ActionType.action_list,
             name = {"启动", "en:start"},
@@ -220,7 +220,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @ModelAction(
             code = DeployerConstants.ACTION_STOP, icon = "stop",
-            list_action = true,
+            list_action = true, order = "2",
             show = "state=" + DeployerConstants.APP_STARTED,
             action_type = ActionType.action_list,
             name = {"停止", "en:end"},

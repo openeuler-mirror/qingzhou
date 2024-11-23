@@ -16,6 +16,7 @@
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
             <version>3.28.0-GA</version>
+            <optional>true</optional> <!-- 禁止其它模块依赖此传递项 -->
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>

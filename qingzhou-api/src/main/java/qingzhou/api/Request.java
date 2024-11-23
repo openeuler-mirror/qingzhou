@@ -52,6 +52,11 @@ public interface Request {
      */
     String getParameter(String name);
 
+    /**
+     * 使用 Java 自省技术，创建对象，并将请求参数赋给对象，以便于通过对象方式获取请求参数
+     */
+    <T> T getParameterAsObject(Class<T> objectType) throws Exception;
+
     Enumeration<String> getParameterNames();
 
     Parameters parametersForSession();

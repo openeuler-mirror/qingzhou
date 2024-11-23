@@ -4,7 +4,12 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -42,6 +47,93 @@ public class Utils {
         Object temp = array[index1];
         array[index1] = array[index2];
         array[index2] = temp;
+    }
+
+    public static void setPropertiesToObj(Object obj, Map<String, String> parameters) throws Exception {
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            setPropertyToObj(obj, entry.getKey(), entry.getValue());
+        }
+    }
+
+    public static void setPropertyToObj(Object obj, String key, String val) throws Exception {
+        if (obj == null || key == null || val == null) return;
+
+        Class<?> objClass = obj.getClass();
+        BeanInfo beanInfo = Introspector.getBeanInfo(objClass);
+        for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
+            if (!pd.getName().equals(key)) continue;
+
+            Method writeMethod = pd.getWriteMethod();
+            if (writeMethod == null) continue;
+
+            Class<?>[] parameterTypes = writeMethod.getParameterTypes();
+            if (parameterTypes.length == 1) {
+                Object arg = convert(parameterTypes[0], val);
+                writeMethod.invoke(obj, arg);
+                return;
+            }
+        }
+
+        // 类没有 getter setter，使用反射设值
+        Field field = objClass.getDeclaredField(key);
+        field.setAccessible(true);
+        Class<?> fieldType = field.getType();
+        if (fieldType == boolean.class || fieldType == Boolean.class) field.set(obj, Boolean.valueOf(val));
+        else if (fieldType == byte.class || fieldType == Byte.class) field.set(obj, Byte.valueOf(val));
+        else if (fieldType == short.class || fieldType == Short.class) field.set(obj, Short.valueOf(val));
+        else if (fieldType == int.class || fieldType == Integer.class) field.set(obj, Integer.valueOf(val));
+        else if (fieldType == long.class || fieldType == Long.class) field.set(obj, Long.valueOf(val));
+        else if (fieldType == float.class || fieldType == Float.class) field.set(obj, Float.valueOf(val));
+        else if (fieldType == double.class || fieldType == Double.class) field.set(obj, Double.valueOf(val));
+        else if (fieldType == char.class || fieldType == Character.class) field.set(obj, val.charAt(0));
+        else field.set(obj, val);
+    }
+
+    public static Object convert(Class<?> type, String value) throws Exception {
+        if (value == null) {
+            return null;
+        }
+
+        if (type.equals(String.class)) {
+            return value;
+        }
+        if (type.equals(boolean.class) || type.equals(Boolean.class)) {
+            return Boolean.parseBoolean(value);
+        }
+
+        if (type == InetAddress.class) {
+            if (Utils.isBlank(value)) {
+                return null; // value=“” 时，会报转化类型异常。
+            }
+            return InetAddress.getByName(value);
+        }
+
+        if (type.equals(int.class) || type.equals(Integer.class)) {
+            if (Utils.isBlank(value)) {
+                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
+            }
+            return Integer.parseInt(value);
+        }
+        if (type.equals(long.class) || type.equals(Long.class)) {
+            if (Utils.isBlank(value)) {
+                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
+            }
+            return Long.parseLong(value);
+        }
+        if (type.equals(float.class) || type.equals(Float.class)) {
+            if (Utils.isBlank(value)) {
+                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
+            }
+            return Float.parseFloat(value);
+        }
+        if (type.equals(double.class) || type.equals(Double.class)) {
+            if (Utils.isBlank(value)) {
+                return null; // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
+            }
+            return Double.parseDouble(value);
+        }
+
+        throw new IllegalArgumentException();
     }
 
     public static <T> T doInThreadContextClassLoader(ClassLoader useLoader, InvokeInThreadContextClassLoader<T> invoker) throws Exception {

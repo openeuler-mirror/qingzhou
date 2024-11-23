@@ -304,7 +304,7 @@
         "gaugeData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_GAUGE_DATA%>',
         "histogramData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HISTOGRAM_DATA%>',
         "shareDatasetData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_SHARE_DATASET_DATA%>',
-        "paramNameReturnsId": "<%=Const.PARAM_NAME_RETURNSID%>",
+        "paramNameReturnsId": "<%=DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID%>",
         "actionTypeReturns": "<%=ActionType.returns_link%>",
         "matrixHeatmapData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HEATMAP_DATA%>',
         "lineChartData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_LINE_CHART_DATA%>'
