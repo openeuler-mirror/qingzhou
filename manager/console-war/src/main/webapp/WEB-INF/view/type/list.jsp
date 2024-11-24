@@ -100,6 +100,9 @@
                action-type="<%=action.getActionType()%>"
                data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
+               <%if (action.getActionType()==ActionType.sub_form){%>
+                    isSubFormSubmitOnOpen="<%=action.isSubFormSubmitOnOpen()%>"
+                    <%}%>
             >
                 <i class="icon icon-<%=action.getIcon()%>"></i>
                 <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
