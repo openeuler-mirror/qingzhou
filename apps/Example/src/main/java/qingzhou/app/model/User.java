@@ -106,7 +106,7 @@ public class User extends AddModelBase implements Group, Option, Echo {
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
             form_fields = {"id", "gender", "position", "checkbox", "notes", "b"},
-            action_type = ActionType.sub_form, sub_form_submit_on_open = false,
+            action_type = ActionType.sub_form, sub_form_submit_on_open = true,
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) {
