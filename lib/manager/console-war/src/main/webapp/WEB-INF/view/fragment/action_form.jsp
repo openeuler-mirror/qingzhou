@@ -9,7 +9,6 @@
 			ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
 			java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
 			String echoGroup = "";
-
 	%>
 	<div class="form-group" id="form-item-<%=fieldName%>">
 		<label class="col-sm-4">

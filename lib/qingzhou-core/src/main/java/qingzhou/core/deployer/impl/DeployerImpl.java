@@ -621,7 +621,8 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setOrder(modelAction.order());
             modelActionInfo.setAppPage(modelAction.app_page());
             modelActionInfo.setSubFormFields(modelAction.sub_form_fields());
-            modelActionInfo.setSubFormSubmitOnOpen(modelAction.sub_form_submit_on_open());
+            modelActionInfo.setSubFormAutoload(modelAction.sub_form_autoload());
+            modelActionInfo.setSubFormAutoclose(modelAction.sub_form_autoclose());
             modelActionInfo.setSubMenuModels(modelAction.sub_menu_models());
             modelActionInfo.setActionType(modelAction.action_type());
             modelActionInfos.add(modelActionInfo);

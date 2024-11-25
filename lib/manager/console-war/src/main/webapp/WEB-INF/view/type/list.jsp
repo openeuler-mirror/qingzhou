@@ -42,9 +42,9 @@
     <%
         }
 
-        Set<String> actions = new LinkedHashSet<>(Arrays.asList(headActions));
-        actions.addAll(Arrays.asList(listActions));
-        for (String actionName : actions) {
+        Set<String> subFormActions = new LinkedHashSet<>(Arrays.asList(headActions));
+        subFormActions.addAll(Arrays.asList(listActions));
+        for (String actionName : subFormActions) {
             ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
             if (action.getActionType() == ActionType.sub_form) {
                 Map<String, String> actionFormData = new LinkedHashMap<>();
@@ -53,7 +53,11 @@
                         actionFormData.put(fieldName, "");
                     }
                 }
-                String popupActionId = " popup-action-id='" + qzApp + "-" + qzModel + "-" + actionName + "'";
+                String popupActionId = " sub_form_action_id='" + qzApp + "-" + qzModel + "-" + actionName + "'"
+                        + " sub_form_action_url=" + PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG , actionName)
+                        + " sub_form_action_title=" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)
+                        + " sub_form_autoload=" + action.isSubFormAutoload()
+                        + " sub_form_autoclose=" + action.isSubFormAutoclose();
     %>
     <div style="display: none" <%=popupActionId%>>
         <%@ include file="../fragment/action_form.jsp" %>
@@ -92,17 +96,15 @@
                     viewName = DownloadView.FLAG;
                 }
 
-                if (action.getActionType() == ActionType.sub_form) {
-                    viewName = JsonView.FLAG;
+                String dataTip = I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName);
+                if (Utils.isBlank(dataTip)) {
+                    dataTip = I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName);
                 }
             %>
             <a class="btn" data-tip-arrow="top" action-id="<%=qzApp + "-" + qzModel + "-" + actionName%>"
+               data-tip='<%=dataTip%>'
                action-type="<%=action.getActionType()%>"
-               data-tip='<%=I18n.getModelI18n(qzApp, "model.action.info." + qzModel + "." + actionName)%>'
                href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, viewName, actionName)%>"
-               <%if (action.getActionType()==ActionType.sub_form){%>
-                    isSubFormSubmitOnOpen="<%=action.isSubFormSubmitOnOpen()%>"
-                    <%}%>
             >
                 <i class="icon icon-<%=action.getIcon()%>"></i>
                 <%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)%>
@@ -381,8 +383,7 @@
                         }
                         if (!showAction) continue;
 
-                        boolean useJsonUri = action.getActionType() == ActionType.sub_form
-                                || action.getActionType() == ActionType.action_list
+                        boolean useJsonUri = action.getActionType() == ActionType.action_list
                                 || action.getActionType() == ActionType.download;
                 %>
                 <a href="<%=PageUtil.buildRequestUrl(request, response, qzRequest, useJsonUri ? JsonView.FLAG : HtmlView.FLAG, actionName + "/" + encodedItemId)%>"
@@ -395,8 +396,7 @@
                             if (action.getActionType() == ActionType.download) {
                                 out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
                             } else if (action.getActionType() == ActionType.sub_form) {
-                                out.print(" form-loaded-trigger=" + action.isSubFormSubmitOnOpen());
-                                out.print(" get-data-url='" + PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, Show.ACTION_SHOW + "/" + encodedItemId) + "'");
+                                out.print(" sub_form_load_url='" + PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, Show.ACTION_SHOW + "/" + encodedItemId) + "'");
                             } else if (action.getActionType() == ActionType.action_list) {
                                 out.print(" act-confirm='"
                                         + String.format(I18n.getKeyI18n("page.operationConfirm"),
@@ -431,7 +431,7 @@
             url += (url.contains("?") ? "&" : "?") + "markForAddCsrf";
             if (request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID) != null && !url.contains("&" + DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID)) {
                 url += "&" + DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID + "=" + request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID);
-            }            
+            }
             url += "&" + ListData.PAGE_NUM + "=";
     %>
     <div style="text-align: center; <%=(totalSize < 1) ? "display:none;" : ""%>">
