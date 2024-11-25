@@ -39,7 +39,9 @@ public @interface ModelAction {
 
     String[] sub_form_fields() default {}; // 在list页面上，弹出表单页面，指定表单页面里显示的字段
 
-    boolean sub_form_submit_on_open() default false;    // 列表上的弹出表单加载后触发提交，列表头上的不会触发
+    boolean sub_form_autoload() default false;    // 列表上的弹出表单加载后触发提交，列表头上的不会触发
+
+    boolean sub_form_autoclose() default false;
 
     String[] sub_menu_models() default {}; //  弹出子级管理页面
 

@@ -20,7 +20,8 @@ public class ModelActionInfo implements Serializable {
     private String order;
     private String appPage;
     private String[] subFormFields;
-    private boolean subFormSubmitOnOpen;
+    private boolean subFormAutoload;
+    private boolean subFormAutoclose;
     private String[] subMenuModels;
     private ActionType actionType;
 
@@ -136,12 +137,20 @@ public class ModelActionInfo implements Serializable {
         this.subFormFields = subFormFields;
     }
 
-    public boolean isSubFormSubmitOnOpen() {
-        return subFormSubmitOnOpen;
+    public boolean isSubFormAutoload() {
+        return subFormAutoload;
     }
 
-    public void setSubFormSubmitOnOpen(boolean subFormSubmitOnOpen) {
-        this.subFormSubmitOnOpen = subFormSubmitOnOpen;
+    public void setSubFormAutoload(boolean subFormAutoload) {
+        this.subFormAutoload = subFormAutoload;
+    }
+
+    public boolean isSubFormAutoclose() {
+        return subFormAutoclose;
+    }
+
+    public void setSubFormAutoclose(boolean subFormAutoclose) {
+        this.subFormAutoclose = subFormAutoclose;
     }
 
     public String[] getSubMenuModels() {

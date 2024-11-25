@@ -165,7 +165,9 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
             code = "test", icon = "circle-arrow-up",
             head_action = true, list_action = true, order = "2",
             sub_form_fields = {"id", "gender", "position", "checkbox", "notes", "b"},
-            action_type = ActionType.sub_form, sub_form_submit_on_open = true,
+            action_type = ActionType.sub_form,
+            sub_form_autoload = false,
+            sub_form_autoclose = true,
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
     public void test(Request request) throws Exception {
@@ -262,7 +264,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelAction(code = "ssh", icon = "code",
             head_action = true, action_type = ActionType.sub_form,
-            sub_form_fields = {"hostname", "port", "username", "password"},
+            sub_form_fields = {"hostname", "port", "username", "password", "command"},
             name = {"SSH 测试", "en: SSH Test"})
     public void ssh(Request request) throws Exception {
         Object service; // 没有安装时，类会找不到，故使用 Object 类型
@@ -270,7 +272,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
             service = getAppContext().getService(SSHService.class);
         } catch (Throwable e) {
             request.getResponse().setSuccess(false);
-            request.getResponse().setMsg("The UML Generator service is not installed: " + e.getMessage());
+            request.getResponse().setMsg("The   SSH service is not installed: " + e.getMessage());
             return;
         }
 
@@ -283,7 +285,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
                 .password(user.password).build();
         SSHResult result = sshClient.execCmd(user.command);
         request.getResponse().setSuccess(result.isSuccess());
-        request.getResponse().setMsg(result.toString());
+        request.getResponse().setData(result.getMessage());
     }
 
     @Override
@@ -363,24 +365,12 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     }
 
     @Override
-    public Map<String, String> defaultSearch() {
-        return new HashMap<String, String>() {{
-            put("gender", "1");
-        }};
-    }
-
-    @Override
     public Map<String, String> showData(String id) {
         Map<String, String> map = super.showData(id);
         if ("1".equals(id)) {
             map.put("position", "003");
         }
         return map;
-    }
-
-    @Override
-    public boolean useDynamicDefaultSearch() {
-        return true;
     }
 
     @Override
