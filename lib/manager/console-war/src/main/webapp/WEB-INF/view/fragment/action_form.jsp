@@ -2,12 +2,12 @@
 
 <div class="tab-content" style="padding-top: 12px; padding-bottom: 12px;">
 	<%
+		java.util.List<String> passwordFields = new ArrayList<>();
 		for (Map.Entry<String, String> afEntry : actionFormData.entrySet()) {
 			String fieldName = afEntry.getKey();
 			String fieldValue = afEntry.getValue();
 			ModelFieldInfo modelField = modelInfo.getModelFieldInfo(fieldName);
 			java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(modelField.getSeparator()));
-			java.util.List<String> passwordFields = new ArrayList<>();
 			String echoGroup = "";
 
 	%>
@@ -28,6 +28,8 @@
 	<%
 		}
 	%>
+	<div name="passwordFields" disabled="disabled" style="display:none;"><%=String.join(",", passwordFields)%></div>
+	<div name="pubkey" disabled="disabled" style="display:none;"><%=SystemController.getPublicKeyString()%></div>
 </div>
 <div style="margin-top: 15px; height: 64px; text-align: center;">
 	<div class="form-btn">
