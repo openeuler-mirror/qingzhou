@@ -168,7 +168,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
             action_type = ActionType.sub_form, sub_form_submit_on_open = true,
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
-    public void test(Request request) {
+    public void test(Request request) throws Exception {
         String gender = request.getParameter("gender");
         if (!"1".equals(gender)) {
             String checkbox = request.getParameter("checkbox");
@@ -180,7 +180,11 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
                     String value = request.getParameter(key);
                     map.put(key, value);
                 }
-                updateData(map);
+                if (contains(request.getParameter("id"))) {
+                    updateData(map);
+                } else {
+                    addData(map);
+                }
                 request.getResponse().setData(map);
             } else if ("python".equals(checkbox)) {
                 request.getResponse().setSuccess(false);
