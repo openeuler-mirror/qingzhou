@@ -416,7 +416,7 @@
                             if (action.getActionType() == ActionType.download) {
                                 out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
                             } else if (action.getActionType() == ActionType.sub_form) {
-                                out.print(" sub_form_id='" + encodedItemId);
+                                out.print(" sub_form_id='" + encodedItemId + "'");
                             } else if (action.getActionType() == ActionType.action_list) {
                                 out.print(" act-confirm='"
                                         + String.format(I18n.getKeyI18n("page.operationConfirm"),
