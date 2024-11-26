@@ -20,8 +20,11 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
     // 定义仪表盘字段最大值标识，前端返回值使用
     public static final String DASHBOARD_FIELD_MAX = "max";
     public static final String DASHBOARD_FIELD_MATRIXDATA = "matrixData";
+    public static final String DASHBOARD_FIELD_SHOWVALUE = "showValue";
     public static final String DASHBOARD_FIELD_XAXIS = "xAxis";
     public static final String DASHBOARD_FIELD_YAXIS = "yAxis";
+    public static final String DASHBOARD_FIELD_XAXIS_NAME = "xAxisName";
+    public static final String DASHBOARD_FIELD_YAXIS_NAME = "yAxisName";
     // 定义仪表盘图表的键值数据标识，前端返回值使用
     public static final String DASHBOARD_FIELD_BASIC_DATA = Basic.class.getSimpleName();
     // 定义仪表盘图表的仪表盘数据标识，前端返回值使用
@@ -186,11 +189,14 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
         public List<String> xAxis = new LinkedList<>();
         public List<String> yAxis = new LinkedList<>();
         public final List<int[]> matrixData = new LinkedList<>();
+        public boolean showValue;
+        public String xAxisName;
+        public String yAxisName;
 
         @Override
         public Dashboard.MatrixHeatmap addData(String xAxis, String yAxis, int value) {
-            int initialXSize = this.xAxis.size();
-            int initialYSize = this.yAxis.size();
+            int initialXSize = this.xAxis.size() - 1; // 这里-1是因为下边返回的是索引位置
+            int initialYSize = this.yAxis.size() - 1;
 
             int xIndex = insertAndGetIndex(this.xAxis, xAxis);
             int yIndex = insertAndGetIndex(this.yAxis, yAxis);
@@ -211,14 +217,30 @@ public class DashboardDataBuilder implements Dashboard.DataBuilder, Serializable
         }
 
         private int insertAndGetIndex(List<String> list, String value) {
-            int index = Collections.binarySearch(list, value);
-
-            if (index < 0) {
-                index = -(index + 1);
-                list.add(index, value);
+            int index = list.indexOf(value);
+            if (index == -1) {
+                list.add(value);
+                index = list.size() - 1;
             }
-
             return index;
+        }
+
+        @Override
+        public Dashboard.MatrixHeatmap showValue(boolean show) {
+            showValue = show;
+            return this;
+        }
+
+        @Override
+        public Dashboard.MatrixHeatmap xAxisName(String xAxisName) {
+            this.xAxisName = xAxisName;
+            return this;
+        }
+
+        @Override
+        public Dashboard.MatrixHeatmap yAxisName(String yAxisName) {
+            this.yAxisName = yAxisName;
+            return this;
         }
     }
 
