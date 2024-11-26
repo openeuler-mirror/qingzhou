@@ -25,8 +25,49 @@ import qingzhou.http.HttpResponse;
 public class HttpClientImpl implements HttpClient {
     @Override
     public HttpResponse send(String url, byte[] body) throws Exception {
+        return send(url, body, null, null);
+    }
+
+    @Override
+    public HttpResponse send(String url, Map<String, String> params) throws Exception {
+        return post(url, params, null);
+    }
+
+    @Override
+    public HttpResponse post(String url, Map<String, String> params, Map<String, String> headers) throws Exception {
+        StringBuilder bodyStr = new StringBuilder();
+        if (params != null) {
+            boolean isFirst = true;
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                String value = entry.getValue();
+                if (value == null) continue;
+                if (!isFirst) bodyStr.append('&');
+                isFirst = false;
+
+                bodyStr.append(entry.getKey()).append('=');
+                bodyStr.append(URLEncoder.encode(value, "UTF-8"));
+            }
+        }
+        return send(url, bodyStr.toString().getBytes(StandardCharsets.UTF_8), "POST", headers);
+    }
+
+    @Override
+    public HttpResponse get(String url, Map<String, String> headers) throws Exception {
+        return send(url, null, "GET", headers);
+    }
+
+    public HttpResponse send(String url, byte[] body, String method, Map<String, String> headers) throws Exception {
         HttpURLConnection conn = buildConnection(url);
         setDefaultHttpURLConnection(conn);
+        if (method != null) {
+            conn.setRequestMethod(method);
+        }
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                conn.setRequestProperty(entry.getKey(), entry.getValue());
+            }
+        }
+
         if (body != null) {
             conn.setRequestProperty("Content-Length", String.valueOf(body.length));
             OutputStream outputStream = conn.getOutputStream();
@@ -41,24 +82,6 @@ public class HttpClientImpl implements HttpClient {
         } finally {
             conn.disconnect();
         }
-    }
-
-    @Override
-    public HttpResponse send(String url, Map<String, String> params) throws Exception {
-        StringBuilder bodyStr = new StringBuilder();
-        if (params != null) {
-            boolean isFirst = true;
-            for (Map.Entry<String, String> entry : params.entrySet()) {
-                String value = entry.getValue();
-                if (value == null) continue;
-                if (!isFirst) bodyStr.append('&');
-                isFirst = false;
-
-                bodyStr.append(entry.getKey()).append('=');
-                bodyStr.append(URLEncoder.encode(value, "UTF-8"));
-            }
-        }
-        return send(url, bodyStr.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     private void setDefaultHttpURLConnection(HttpURLConnection conn) throws ProtocolException {
