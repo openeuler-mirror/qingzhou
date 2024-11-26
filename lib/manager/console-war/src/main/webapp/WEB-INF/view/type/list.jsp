@@ -326,7 +326,7 @@
                     }
                     if (linkRefModelActionInfo != null) {
                 %>
-                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + URLEncoder.encode(refValue,"UTF-8"))%>'
+                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + URLEncoder.encode(refValue,"UTF-8") + "&refFieldName=" + refFieldName)%>'
                    class="dataid qz-action-link tooltips"
                    action-type="<%=fieldInfo.getActionType()%>"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
@@ -431,6 +431,12 @@
             url += (url.contains("?") ? "&" : "?") + "markForAddCsrf";
             if (request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID) != null && !url.contains("&" + DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID)) {
                 url += "&" + DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID + "=" + request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID);
+            }
+            //追加link_model的参数
+            String refFieldName = request.getParameter("refFieldName");
+            if (refFieldName != null && !refFieldName.isEmpty()){
+                url += "&" + refFieldName + "=" +request.getParameter(refFieldName).replaceAll("\"", "&quot;");
+                url += "&refFieldName=" + refFieldName;
             }
             url += "&" + ListData.PAGE_NUM + "=";
     %>
