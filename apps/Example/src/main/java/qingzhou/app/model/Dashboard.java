@@ -119,6 +119,9 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         // 热力图
         MatrixHeatmap matrixHeatmap = dataBuilder.buildData(MatrixHeatmap.class);
         matrixHeatmap.title("应用实例部署图");
+        matrixHeatmap.showValue(false);
+        matrixHeatmap.xAxisName("实例");
+        matrixHeatmap.yAxisName("应用");
         for (int i = 0; i < 50; i++) {
             matrixHeatmap.addData("实例" + random.nextInt(10), "应用" + random.nextInt(8), random.nextInt(10));
         }
