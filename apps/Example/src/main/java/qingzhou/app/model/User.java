@@ -33,7 +33,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     @ModelField(
             group = "base",
             list = true, search = true,
-            pattern = "^\\+?[1-9]\\d{1,14}$",
+            pattern = "^1[3-9]\\d{9}$",
             name = {"手机号码", "en:Mobile Phone Number"})
     public String phoneNumber;
 
@@ -163,7 +163,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelAction(
             code = "test", icon = "circle-arrow-up",
-            head_action = true, list_action = true, order = "2",
+            head_action = true, list_action = true, order = "99",
             sub_form_fields = {"id", "gender", "position", "checkbox", "notes", "b"},
             action_type = ActionType.sub_form,
             sub_form_autoload = true,
