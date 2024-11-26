@@ -12,7 +12,7 @@ import qingzhou.console.controller.TrustIpCheck;
 import qingzhou.console.login.LoginManager;
 import qingzhou.engine.util.Utils;
 
-public class JMXAuthenticatorImpl implements JMXAuthenticator {
+public class JmxAuthenticatorImpl implements JMXAuthenticator {
 
     static {
         I18n.addKeyI18n("jmx.credentials.miss", new String[]{"请输入身份认证信息", "en:Please enter authentication information"});

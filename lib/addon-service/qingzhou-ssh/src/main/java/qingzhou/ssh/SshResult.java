@@ -1,6 +1,6 @@
 package qingzhou.ssh;
 
-public interface SSHResult {
+public interface SshResult {
     boolean isSuccess();
 
     int getCode();

@@ -7,9 +7,9 @@ import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
-import qingzhou.ssh.SSHClient;
-import qingzhou.ssh.SSHResult;
-import qingzhou.ssh.SSHService;
+import qingzhou.ssh.SshClient;
+import qingzhou.ssh.SshResult;
+import qingzhou.ssh.Ssh;
 
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -166,7 +166,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
             head_action = true, list_action = true, order = "2",
             sub_form_fields = {"id", "gender", "position", "checkbox", "notes", "b"},
             action_type = ActionType.sub_form,
-            sub_form_autoload = false,
+            sub_form_autoload = true,
             sub_form_autoclose = true,
             name = {"弹出表单", "en:test"},
             info = {"弹出表单", "en:test"})
@@ -269,21 +269,21 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     public void ssh(Request request) throws Exception {
         Object service; // 没有安装时，类会找不到，故使用 Object 类型
         try {
-            service = getAppContext().getService(SSHService.class);
+            service = getAppContext().getService(Ssh.class);
         } catch (Throwable e) {
             request.getResponse().setSuccess(false);
             request.getResponse().setMsg("The   SSH service is not installed: " + e.getMessage());
             return;
         }
 
-        SSHService ssh = (SSHService) service;
+        Ssh ssh = (Ssh) service;
         User user = request.getParameterAsObject(User.class);
-        SSHClient sshClient = ssh.createSSHClientBuilder()
+        SshClient sshClient = ssh.createSSHClientBuilder()
                 .host(user.hostname)
                 .port(user.port)
                 .username(user.username)
                 .password(user.password).build();
-        SSHResult result = sshClient.execCmd(user.command);
+        SshResult result = sshClient.execCmd(user.command);
         request.getResponse().setSuccess(result.isSuccess());
         request.getResponse().setData(result.getMessage());
     }

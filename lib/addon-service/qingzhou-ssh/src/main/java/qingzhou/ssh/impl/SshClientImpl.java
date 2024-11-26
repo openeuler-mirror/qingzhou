@@ -1,26 +1,25 @@
 package qingzhou.ssh.impl;
 
 import org.apache.sshd.client.ClientBuilder;
-import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.core.CoreModuleProperties;
-import qingzhou.ssh.SSHClient;
-import qingzhou.ssh.SSHResult;
-import qingzhou.ssh.SSHSession;
+import qingzhou.ssh.SshClient;
+import qingzhou.ssh.SshResult;
+import qingzhou.ssh.SshSession;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SSHClientImpl implements SSHClient {
-    private final SSHConfig config;
-    private final SshClient sshClient;
-    private final List<SSHSessionImpl> sessionList = new ArrayList<>();
+public class SshClientImpl implements SshClient {
+    private final SshConfig config;
+    private final org.apache.sshd.client.SshClient sshClient;
+    private final List<SshSessionImpl> sessionList = new ArrayList<>();
     private final List<LifecycleListener> lifecycleListeners = new ArrayList<>();
 
-    SSHClientImpl(SSHConfig config) {
+    SshClientImpl(SshConfig config) {
         this.config = config;
         this.sshClient = ClientBuilder.builder().build();
         CoreModuleProperties.IDLE_TIMEOUT.set(this.sshClient, Duration.ZERO);
@@ -28,15 +27,15 @@ public class SSHClientImpl implements SSHClient {
     }
 
     @Override
-    public SSHSession createSession() throws Exception {
-        SSHSessionImpl sshSession = createSessionInternal();
+    public SshSession createSession() throws Exception {
+        SshSessionImpl sshSession = createSessionInternal();
         sessionList.add(sshSession);
         sshSession.addSessionListener(() -> sessionList.remove(sshSession));
         return sshSession;
     }
 
-    private SSHSessionImpl createSessionInternal() throws Exception {
-        return new SSHSessionImpl(createClientSession());
+    private SshSessionImpl createSessionInternal() throws Exception {
+        return new SshSessionImpl(createClientSession());
     }
 
     void addSessionListener(LifecycleListener listener) {
@@ -44,12 +43,12 @@ public class SSHClientImpl implements SSHClient {
     }
 
     @Override
-    public SSHResult execCmd(String cmd) throws Exception {
+    public SshResult execCmd(String cmd) throws Exception {
         return withAutoCloseableSession(session -> session.execCmd(cmd));
     }
 
     @Override
-    public SSHResult execCmdAsLogin(String cmd) throws Exception {
+    public SshResult execCmdAsLogin(String cmd) throws Exception {
         return withAutoCloseableSession(session -> session.execCmdAsLogin(cmd));
     }
 
@@ -70,7 +69,7 @@ public class SSHClientImpl implements SSHClient {
     }
 
     private <T> T withAutoCloseableSession(UseSession<T> run) throws Exception {
-        try (SSHSession session = createSessionInternal()) {
+        try (SshSession session = createSessionInternal()) {
             return run.use(session);
         }
     }
@@ -115,6 +114,6 @@ public class SSHClientImpl implements SSHClient {
     }
 
     interface UseSession<T> {
-        T use(SSHSession session) throws Exception;
+        T use(SshSession session) throws Exception;
     }
 }

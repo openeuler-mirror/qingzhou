@@ -5,8 +5,8 @@ import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.apache.sshd.sftp.client.fs.SftpFileSystem;
-import qingzhou.ssh.SSHResult;
-import qingzhou.ssh.SSHSession;
+import qingzhou.ssh.SshResult;
+import qingzhou.ssh.SshSession;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class SSHSessionImpl implements SSHSession {
+class SshSessionImpl implements SshSession {
     private final ClientSession clientSession;
     private final List<LifecycleListener> lifecycleListeners = new ArrayList<>();
 
-    SSHSessionImpl(ClientSession clientSession) {
+    SshSessionImpl(ClientSession clientSession) {
         this.clientSession = clientSession;
     }
 
@@ -31,7 +31,7 @@ class SSHSessionImpl implements SSHSession {
     }
 
     @Override
-    public SSHResult execCmd(String cmd) throws Exception {
+    public SshResult execCmd(String cmd) throws Exception {
         try (ChannelExec channel = clientSession.createExecChannel(cmd);
              ByteArrayOutputStream out = new ByteArrayOutputStream();
              ByteArrayOutputStream error = new ByteArrayOutputStream()) {
@@ -59,7 +59,7 @@ class SSHSessionImpl implements SSHSession {
                 }
             }
 
-            SSHResultImp sshResult = new SSHResultImp();
+            SshResultImp sshResult = new SshResultImp();
             sshResult.setCode(exit);
             sshResult.setMessage(msg);
             return sshResult;
@@ -67,7 +67,7 @@ class SSHSessionImpl implements SSHSession {
     }
 
     @Override
-    public SSHResult execCmdAsLogin(String cmd) throws Exception {
+    public SshResult execCmdAsLogin(String cmd) throws Exception {
         return execCmd("source /etc/profile; source ~/.bash_profile; " + cmd);
     }
 

@@ -85,6 +85,12 @@ public class PageUtil {
         return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, url));
     }
 
+    public static String buildModelUrl(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+                                       String viewName, String appName, String modelName) {
+        String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + appName + "/" + modelName;
+        return RESTController.encodeURL(servletResponse, appendQueryString(servletRequest, url));
+    }
+
     public static String buildCustomUrl(HttpServletRequest servletRequest, HttpServletResponse response,
                                         Request request, String viewName, String model, String actionName) {
         String url = servletRequest.getContextPath() + DeployerConstants.REST_PREFIX + "/" + viewName + "/" + request.getApp() + "/" + model + "/" + actionName;

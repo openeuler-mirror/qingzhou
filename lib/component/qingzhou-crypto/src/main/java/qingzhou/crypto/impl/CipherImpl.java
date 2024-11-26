@@ -74,7 +74,7 @@ class CipherImpl implements Cipher {
     }
 
     private javax.crypto.Cipher getCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
-        try {
+        try {;
             return javax.crypto.Cipher.getInstance(transformation, "SunJCE");
         } catch (Exception e) {
             return javax.crypto.Cipher.getInstance(transformation);

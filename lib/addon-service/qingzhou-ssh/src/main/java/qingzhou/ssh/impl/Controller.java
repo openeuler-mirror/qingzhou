@@ -3,19 +3,19 @@ package qingzhou.ssh.impl;
 import qingzhou.engine.Module;
 import qingzhou.engine.ModuleActivator;
 import qingzhou.engine.ModuleContext;
-import qingzhou.ssh.SSHService;
+import qingzhou.ssh.Ssh;
 
 @Module
 public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) {
-        context.registerService(SSHService.class, SSHClientBuilderImpl::new);
+        context.registerService(Ssh.class, SshClientBuilderImpl::new);
     }
 
     @Override
     public void stop() {
-        SSHClientBuilderImpl.getSshClientList().forEach(sshClient -> {
+        SshClientBuilderImpl.getSshClientList().forEach(sshClient -> {
             try {
                 sshClient.closeInternal();
             } catch (Exception ignored) {
