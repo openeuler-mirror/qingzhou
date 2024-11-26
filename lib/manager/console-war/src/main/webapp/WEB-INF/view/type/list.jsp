@@ -388,7 +388,7 @@
                             if (action.getActionType() == ActionType.download) {
                                 out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
                             } else if (action.getActionType() == ActionType.sub_form) {
-                                out.print(" sub_form_id='" + encodedItemId);
+                                out.print(" sub_form_id='" + encodedItemId + "'");
                             } else if (action.getActionType() == ActionType.action_list) {
                                 out.print(" act-confirm='"
                                         + String.format(I18n.getKeyI18n("page.operationConfirm"),
@@ -426,8 +426,8 @@
             }
             //追加link_model的参数
             String refFieldName = request.getParameter("refFieldName");
-            if (refFieldName != null && !refFieldName.isEmpty()){
-                url += "&" + refFieldName + "=" +request.getParameter(refFieldName).replaceAll("\"", "&quot;");
+            if (refFieldName != null && !refFieldName.isEmpty()) {
+                url += "&" + refFieldName + "=" + request.getParameter(refFieldName).replaceAll("\"", "&quot;");
                 url += "&refFieldName=" + refFieldName;
             }
             url += "&" + ListData.PAGE_NUM + "=";
