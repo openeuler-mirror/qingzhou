@@ -104,7 +104,7 @@ public @interface ModelField {
     
     ActionType action_type() default ActionType.link; // 列表字段连接类型
 
-    String link_model() default ""; // 链接到其他模块的 list action，格式：currentModelFieldName>targetModelName
+    String link_model() default ""; // 链接到其他模块的 list action，格式：currentModelFieldName,xxxx,xxxx>targetModelName
     
     Class<? extends ModelBase> ref_model() default ModelBase.class; // 使用指定的模块的所有数据id作为字段的取值范围
 

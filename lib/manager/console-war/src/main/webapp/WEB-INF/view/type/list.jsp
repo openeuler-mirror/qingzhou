@@ -302,7 +302,15 @@
                         refFieldName = split[0];
                         refModelName = split[1];
                         //linkList传表达式指定的值
-                        refValue = modelData[Utils.getIndex(dataListFields, refFieldName)];
+                        if (refFieldName.contains(",")){
+                            List<String> refValueArr = new LinkedList<>();
+                            for(String name : refFieldName.split(",")){
+                                refValueArr.add(modelData[Utils.getIndex(dataListFields, name)]);
+                            }
+                            refValue = String.join("##",refValueArr);
+                        }else{
+                            refValue = modelData[Utils.getIndex(dataListFields, refFieldName)];
+                        }
                     } else if (Utils.notBlank(fieldInfo.getRefModel())) {
                         refModelName = fieldInfo.getRefModel();
                         refFieldName = SystemController.getModelInfo(qzApp, refModelName).getIdField();
@@ -320,8 +328,28 @@
                         }
                     }
                     if (linkRefModelActionInfo != null) {
+                        StringBuilder urlParams = new StringBuilder();
+                        if (refFieldName.contains(",")){
+                            String[] refFieldNameArr = refFieldName.split(",");
+                            String[] refValueArr = refValue.split("##");
+                            for (int i=0; i<refFieldNameArr.length; i++){
+                                urlParams.append(refFieldNameArr[i])
+                                        .append("=")
+                                        .append(URLEncoder.encode(refValueArr[i], "UTF-8"))
+                                        .append("&");
+                            }
+                            urlParams.append("refFieldName")
+                                    .append("=")
+                                    .append(refFieldName)
+                                    .append("&");
+                        }else{
+                            urlParams.append(refFieldName)
+                                    .append("=")
+                                    .append(URLEncoder.encode(refValue, "UTF-8"))
+                                    .append("&");
+                        }
                 %>
-                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + refFieldName + "=" + URLEncoder.encode(refValue,"UTF-8") + "&refFieldName=" + refFieldName)%>'
+                <a href='<%=PageUtil.buildCustomUrl(request, response, qzRequest,HtmlView.FLAG, refModelName, qingzhou.api.type.List.ACTION_LIST + "?" + urlParams)%>'
                    class="dataid qz-action-link tooltips"
                    action-type="<%=fieldInfo.getActionType()%>"
                    data-tip='<%=I18n.getModelI18n(qzApp, "model." + refModelName)%>' data-tip-arrow="top"
@@ -427,7 +455,14 @@
             //追加link_model的参数
             String refFieldName = request.getParameter("refFieldName");
             if (refFieldName != null && !refFieldName.isEmpty()){
-                url += "&" + refFieldName + "=" +request.getParameter(refFieldName).replaceAll("\"", "&quot;");
+                if (refFieldName.contains(",")){
+                    String[] refFieldNameArr = refFieldName.split(",");
+                    for (String refName : refFieldNameArr){
+                        url += "&" + refName + "=" +request.getParameter(refName).replaceAll("\"", "&quot;");
+                    }
+                }else{
+                    url += "&" + refFieldName + "=" +request.getParameter(refFieldName).replaceAll("\"", "&quot;");
+                }
                 url += "&refFieldName=" + refFieldName;
             }
             url += "&" + ListData.PAGE_NUM + "=";
