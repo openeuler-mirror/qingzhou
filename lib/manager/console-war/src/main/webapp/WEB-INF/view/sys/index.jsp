@@ -288,6 +288,7 @@
         "downloadView": '<%=DownloadView.FLAG%>',
         "htmlView": '<%=HtmlView.FLAG%>',
         "jsonView": '<%=JsonView.FLAG%>',
+        "showActionName": '<%=Show.ACTION_SHOW%>',
         "actionId_app_manage": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_MANAGE%>',
         "actionId_app_stop-delete": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + Delete.ACTION_DELETE%>' + ',' + '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_STOP%>',
         "data": '<%=DashboardDataBuilder.DASHBOARD_FIELD_DATA%>',

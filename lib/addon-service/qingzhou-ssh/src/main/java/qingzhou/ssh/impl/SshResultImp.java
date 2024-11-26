@@ -1,8 +1,8 @@
 package qingzhou.ssh.impl;
 
-import qingzhou.ssh.SSHResult;
+import qingzhou.ssh.SshResult;
 
-class SSHResultImp implements SSHResult {
+class SshResultImp implements SshResult {
     private String message;
     private int code;
 

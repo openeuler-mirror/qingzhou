@@ -54,7 +54,8 @@
                     }
                 }
                 String popupActionId = " sub_form_action_id='" + qzApp + "-" + qzModel + "-" + actionName + "'"
-                        + " sub_form_action_url=" + PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG , actionName)
+                        + " sub_form_base_url=" + PageUtil.buildModelUrl(request, response, JsonView.FLAG, qzApp, qzModel)
+                        + " sub_form_action_name=" + actionName
                         + " sub_form_action_title=" + I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + actionName)
                         + " sub_form_autoload=" + action.isSubFormAutoload()
                         + " sub_form_autoclose=" + action.isSubFormAutoclose();
@@ -71,9 +72,6 @@
         <div class="tools-group">
             <%
                 for (String actionName : headActions) {
-                    boolean actionPermitted = SecurityController.isActionPermitted(qzApp, qzModel, actionName, currentUser);
-                    if (!actionPermitted) continue;
-
                     ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                     String viewName = qzRequest.getView();
 
@@ -115,9 +113,6 @@
                 String randomId = UUID.randomUUID().toString();
                 // 支持批量操作的按钮
                 for (String actionKey : batchActions) {
-                    boolean actionPermitted = SecurityController.isActionPermitted(qzApp, qzModel, actionKey, currentUser);
-                    if (!actionPermitted) continue;
-
                     ModelActionInfo actionInfo = modelInfo.getModelActionInfo(actionKey);
 
                     String operationConfirm = String.format(I18n.getKeyI18n("page.operationConfirm"),
@@ -373,9 +368,6 @@
             <td>
                 <%
                     for (String actionName : listActions) {
-                        boolean actionPermitted = SecurityController.isActionPermitted(qzApp, qzModel, actionName, currentUser);
-                        if (!actionPermitted) continue;
-
                         ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                         boolean showAction = true;
                         if (Utils.notBlank(action.getShow())) {
@@ -396,7 +388,7 @@
                             if (action.getActionType() == ActionType.download) {
                                 out.print(" downloadfile='" + PageUtil.buildRequestUrl(request, response, qzRequest, DownloadView.FLAG, Download.ACTION_DOWNLOAD + "/" + encodedItemId) + "'");
                             } else if (action.getActionType() == ActionType.sub_form) {
-                                out.print(" sub_form_load_url='" + PageUtil.buildRequestUrl(request, response, qzRequest, JsonView.FLAG, Show.ACTION_SHOW + "/" + encodedItemId) + "'");
+                                out.print(" sub_form_id='" + encodedItemId);
                             } else if (action.getActionType() == ActionType.action_list) {
                                 out.print(" act-confirm='"
                                         + String.format(I18n.getKeyI18n("page.operationConfirm"),

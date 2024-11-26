@@ -6,7 +6,7 @@ import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Option;
-import qingzhou.console.controller.jmx.JMXAuthenticatorImpl;
+import qingzhou.console.controller.jmx.JmxAuthenticatorImpl;
 import qingzhou.console.controller.jmx.JmxInvokerImpl;
 import qingzhou.console.controller.jmx.NotificationListenerImpl;
 import qingzhou.console.login.LoginFreeFilter;
@@ -210,7 +210,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     public void contextInitialized(ServletContextEvent sce) {
         try {
             JmxServiceAdapter jmxServiceAdapter = SystemController.getService(JmxServiceAdapter.class);
-            jmxServiceAdapter.registerJMXAuthenticator(new JMXAuthenticatorImpl());
+            jmxServiceAdapter.registerJMXAuthenticator(new JmxAuthenticatorImpl());
             jmxServiceAdapter.registerJmxInvoker(new JmxInvokerImpl());
             jmxServiceAdapter.registerNotificationListener(new NotificationListenerImpl());
 
