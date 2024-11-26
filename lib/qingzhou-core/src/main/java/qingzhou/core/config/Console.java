@@ -1,6 +1,9 @@
 package qingzhou.core.config;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class Console {
     private boolean enabled;
@@ -8,10 +11,15 @@ public class Console {
     private Jmx jmx;
     private Security security;
     private User[] user;
+    private static final List<User> oauthUsers = new ArrayList<>();
 
     public User getUser(String name) {
         if (user == null) return null;
-        return Arrays.stream(user).filter(user -> user.getName().equals(name)).findAny().orElse(null);
+        return Stream.concat(Arrays.stream(user), oauthUsers.stream()).filter(user -> user.getName().equals(name)).findAny().orElse(null);
+    }
+
+    public List<User> getOauthUsers() {
+        return oauthUsers;
     }
 
     public User[] getUser() {

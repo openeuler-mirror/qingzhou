@@ -170,14 +170,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
         loginOk = lockOutRealm.filterLockedAccounts(user, loginOk);
 
         if (loginOk) {
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                logout(request);// logout old user
-            }
-            session = request.getSession(true);
-
-            // 登录成功，注册信息
-            setLoginUser(session, user);
+            loginOk(request, user);
             return null;
         } else {
             String msgKey = LOGIN_ERROR_MSG_KEY;
@@ -189,6 +182,17 @@ public class LoginManager implements Filter<SystemControllerContext> {
             }
             return new LoginFailedMsg(msgKey, null);
         }
+    }
+
+    public static void loginOk(HttpServletRequest request, String user) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            logout(request);// logout old user
+        }
+        session = request.getSession(true);
+
+        // 登录成功，注册信息
+        setLoginUser(session, user);
     }
 
     private static boolean checkOtp(HttpServletRequest request) throws Exception {

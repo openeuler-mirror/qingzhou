@@ -11,6 +11,7 @@ import qingzhou.console.controller.jmx.JmxInvokerImpl;
 import qingzhou.console.controller.jmx.NotificationListenerImpl;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
+import qingzhou.console.login.OAuth2Manager;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.ItemInfo;
@@ -198,6 +199,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new About(),
             new VerCode(),
             new LoginFreeFilter(),
+            new OAuth2Manager(),
             new LoginManager(),
             new Theme(),
             (Filter<SystemControllerContext>) context -> {
