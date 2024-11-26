@@ -1,5 +1,9 @@
 package qingzhou.http.impl;
 
+import qingzhou.http.HttpClient;
+import qingzhou.http.HttpResponse;
+
+import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -12,24 +16,15 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Map;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
-import qingzhou.http.HttpClient;
-import qingzhou.http.HttpResponse;
 
 public class HttpClientImpl implements HttpClient {
     @Override
-    public HttpResponse send(String url, byte[] body) throws Exception {
-        return send(url, body, null, null);
+    public HttpResponse get(String url, Map<String, String> headers) throws Exception {
+        return send(url, null, headers, "GET");
     }
 
     @Override
-    public HttpResponse send(String url, Map<String, String> params) throws Exception {
+    public HttpResponse post(String url, Map<String, String> params) throws Exception {
         return post(url, params, null);
     }
 
@@ -48,20 +43,22 @@ public class HttpClientImpl implements HttpClient {
                 bodyStr.append(URLEncoder.encode(value, "UTF-8"));
             }
         }
-        return send(url, bodyStr.toString().getBytes(StandardCharsets.UTF_8), "POST", headers);
+        return post(url, bodyStr.toString().getBytes(StandardCharsets.UTF_8), headers);
     }
 
     @Override
-    public HttpResponse get(String url, Map<String, String> headers) throws Exception {
-        return send(url, null, "GET", headers);
+    public HttpResponse post(String url, byte[] body, Map<String, String> headers) throws Exception {
+        return send(url, body, null, "POST");
     }
 
-    public HttpResponse send(String url, byte[] body, String method, Map<String, String> headers) throws Exception {
+    private HttpResponse send(String url, byte[] body, Map<String, String> headers, String method) throws Exception {
         HttpURLConnection conn = buildConnection(url);
         setDefaultHttpURLConnection(conn);
+
         if (method != null) {
             conn.setRequestMethod(method);
         }
+
         if (headers != null) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
                 conn.setRequestProperty(entry.getKey(), entry.getValue());

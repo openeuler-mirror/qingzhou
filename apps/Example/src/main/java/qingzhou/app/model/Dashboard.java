@@ -131,7 +131,7 @@ public class Dashboard extends ModelBase implements qingzhou.api.type.Dashboard 
         LineChart lineChart = dataBuilder.buildData(LineChart.class);
         lineChart.title("内存使用情况");
         lineChart.yAxis("内存").xAxis("时间").unit("MB");
-        lineChart.addData("TongWeb", String.valueOf(random.nextInt(500)));
+        lineChart.addData("Web", String.valueOf(random.nextInt(500)));
         lineChart.addData("Tomcat", String.valueOf(random.nextInt(500)));
         dataBuilder.addData(new LineChart[]{lineChart});
     }

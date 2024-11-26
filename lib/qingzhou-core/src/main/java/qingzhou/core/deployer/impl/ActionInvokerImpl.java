@@ -3,8 +3,8 @@ package qingzhou.core.deployer.impl;
 import qingzhou.api.ActionType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.core.DeployerConstants;
 import qingzhou.core.config.Config;
-import qingzhou.core.*;
 import qingzhou.core.deployer.*;
 import qingzhou.core.registry.*;
 import qingzhou.crypto.Cipher;
@@ -134,7 +134,7 @@ class ActionInvokerImpl implements ActionInvoker {
     private Response sendRemote(Request request, String remoteUrl, Cipher cipher) throws Exception {
         byte[] resultJson = moduleContext.getService(Json.class).toJson(request).getBytes(StandardCharsets.UTF_8);
         byte[] sendContent = cipher.encrypt(resultJson);
-        HttpResponse response = moduleContext.getService(Http.class).buildHttpClient().send(remoteUrl, sendContent);
+        HttpResponse response = moduleContext.getService(Http.class).buildHttpClient().post(remoteUrl, sendContent, null);
         byte[] responseBody = response.getResponseBody();
         byte[] decryptedData;
         try {

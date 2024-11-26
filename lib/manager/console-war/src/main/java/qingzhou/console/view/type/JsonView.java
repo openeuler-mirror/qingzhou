@@ -43,16 +43,17 @@ public class JsonView implements View {
             responseData = result;
         }
 
-        String writeJson;
+        String writeContent;
         if (responseData instanceof String) {
-            writeJson = (String) responseData;
+            writeContent = (String) responseData;
+            restContext.resp.setContentType("text/plain;charset=UTF-8");
         } else {
             Json json = SystemController.getService(Json.class);
-            writeJson = json.toJson(responseData);
+            writeContent = json.toJson(responseData);
         }
 
         PrintWriter writer = restContext.resp.getWriter();
-        writer.write(writeJson);
+        writer.write(writeContent);
         writer.flush();
     }
 

@@ -285,7 +285,6 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
                 .password(user.password).build();
         SshResult result = sshClient.execCmd(user.command);
         request.getResponse().setSuccess(result.isSuccess());
-        request.getResponse().setContentType("text/html;charset=UTF-8");
         request.getResponse().setData(result.getMessage());
     }
 

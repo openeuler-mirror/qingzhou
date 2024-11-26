@@ -94,7 +94,7 @@ class Heartbeat implements Process {
         Http http = moduleContext.getService(Http.class);
         Logger logger = moduleContext.getService(Logger.class);
         try {
-            response = http.buildHttpClient().send(checkUrl, new HashMap<String, String>() {{
+            response = http.buildHttpClient().post(checkUrl, new HashMap<String, String>() {{
                 put(DeployerConstants.CHECK_FINGERPRINT, fingerprint);
             }});
         } catch (Throwable e) {
@@ -110,7 +110,7 @@ class Heartbeat implements Process {
         if (registered) return;
 
         try {
-            http.buildHttpClient().send(registerUrl, new HashMap<String, String>() {{
+            http.buildHttpClient().post(registerUrl, new HashMap<String, String>() {{
                 put(DeployerConstants.DO_REGISTER, registerData);
             }});
         } catch (Exception e) {

@@ -2,7 +2,7 @@ package qingzhou.jdbc;
 
 import qingzhou.engine.Service;
 
-@Service(name = "Jdbc DB Connection", description = "Provides JDBC database connection pool services and supports XA data sources.")
+@Service(name = "Jdbc Connection Pool", description = "Provides JDBC database connection pool services and supports XA connections.")
 public interface Jdbc {
-    DataSourceBuilder createDataSourceBuilder();
+    ConnectionPoolBuilder createDataSourceBuilder();
 }

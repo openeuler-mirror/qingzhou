@@ -13,15 +13,13 @@ import java.util.Map;
 import java.util.Properties;
 
 public class OAuth2Client {
-
     private static final HttpClient httpClient = SystemController.getService(Http.class).buildHttpClient();
     private static final Json jsonService = SystemController.getService(Json.class);
 
     public static OAuth2Client getInstance(OAuthConfig config) {
-        if (!config.isEnabled()) {
-            return null;
-        }
-        ServerPolicy serverPolicy = null;
+        if (!config.isEnabled()) return null;
+
+        ServerPolicy serverPolicy;
         if (Utils.isBlank(config.getServerVendor())) {
             serverPolicy = new TongAuth();
         } else {
@@ -377,8 +375,7 @@ public class OAuth2Client {
         }
     }
 
-    public static interface Response {
-
+    public interface Response {
         default String getUsername() {
             return null;
         }
@@ -398,7 +395,6 @@ public class OAuth2Client {
         default boolean active() {
             return true;
         }
-
     }
 
     public static class TongResponse extends HashMap<String, Object> implements Response {
@@ -426,7 +422,7 @@ public class OAuth2Client {
         @Override
         public String getUsername() {
             if (success()) {
-                Map<String,Object> data = (Map<String, Object>) get("data");
+                Map<String, Object> data = (Map<String, Object>) get("data");
                 if (data != null) {
                     return (String) data.get("userName");
                 }
@@ -434,5 +430,4 @@ public class OAuth2Client {
             return null;
         }
     }
-
 }
