@@ -75,8 +75,8 @@ public class Index extends ModelBase implements Dashboard {
         Set<String> appNames = new HashSet<>();
         MatrixHeatmap matrixHeatmap = builder.buildData(MatrixHeatmap.class);
         matrixHeatmap.title(I18nTool.retrieveI18n(new String[]{"实例应用部署关系", "en:Instance application deployment relationship"}).get(lang));
-        matrixHeatmap.xAxisName("实例");
-        matrixHeatmap.yAxisName("应用");
+        matrixHeatmap.xAxisName(I18nTool.retrieveI18n(new String[]{"实例", "en:Instance"}).get(lang));
+        matrixHeatmap.yAxisName(I18nTool.retrieveI18n(new String[]{"应用", "en:App"}).get(lang));
 
         allInstanceNames.forEach(instanceName -> {
             InstanceInfo instanceInfo = registry.getInstanceInfo(instanceName);
