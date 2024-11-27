@@ -6,6 +6,10 @@
         <listener-class>qingzhou.console.controller.SystemController</listener-class>
     </listener>
 
+    <listener>
+        <listener-class>qingzhou.console.login.SessionListener</listener-class>
+    </listener>
+
     <filter>
         <filter-name>SystemController</filter-name>
         <filter-class>qingzhou.console.controller.SystemController</filter-class>

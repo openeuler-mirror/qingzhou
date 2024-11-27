@@ -1,6 +1,5 @@
 package qingzhou.console.login;
 
-import qingzhou.core.config.User;
 import qingzhou.console.IPUtil;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -9,9 +8,10 @@ import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.config.User;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.TotpCipher;
-import qingzhou.core.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.ServletException;
@@ -129,6 +129,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
     private static void setLoginUser(HttpSession session, String user) {
         if (user == null) return;
         session.setAttribute(LOGIN_USER, user);
+        SystemController.getOnlineUser().addUser(user, System.currentTimeMillis());
     }
 
     public static String getLoginUser(HttpServletRequest request) {
@@ -244,6 +245,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
     public static void logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
+            SystemController.getOnlineUser().removeUser((String) session.getAttribute(LOGIN_USER));
             session.invalidate();
         }
     }

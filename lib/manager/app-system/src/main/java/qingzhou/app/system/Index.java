@@ -5,11 +5,18 @@ import qingzhou.api.type.Dashboard;
 import qingzhou.api.type.Monitor;
 import qingzhou.api.type.Show;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.config.Config;
+import qingzhou.core.config.OnlineUser;
+import qingzhou.core.config.Security;
 import qingzhou.core.deployer.App;
 import qingzhou.core.deployer.*;
 import qingzhou.core.registry.*;
 import qingzhou.engine.util.Utils;
 
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_INDEX, icon = "home",
@@ -66,7 +73,6 @@ public class Index extends ModelBase implements Dashboard {
         ModelInfo modelInfo = app.getAppInfo().getModelInfo(DeployerConstants.MODEL_INDEX);
         basic.addData(I18nTool.retrieveI18n(modelInfo.getModelFieldInfo("name").getName()).get(lang), "Qingzhou（轻舟）");
         basic.addData(I18nTool.retrieveI18n(modelInfo.getModelFieldInfo("version").getName()).get(lang), getAppContext().getPlatformVersion());
-        basic.addData(I18nTool.retrieveI18n(modelInfo.getModelFieldInfo("javaHome").getName()).get(lang), System.getProperty("java.home"));
         builder.addData(new Basic[]{basic});
 
         // 应用
@@ -108,6 +114,32 @@ public class Index extends ModelBase implements Dashboard {
 
         basic.addData(I18nTool.retrieveI18n(new String[]{"实例数量", "en:Number Of Instance"}).get(lang), String.valueOf(allInstanceNames.size()));
         basic.addData(I18nTool.retrieveI18n(new String[]{"应用数量", "en:Number Of App"}).get(lang), String.valueOf(appNames.size()));
+        Config config = Main.getService(Config.class);
+        qingzhou.core.config.Web web = config.getCore().getConsole().getWeb();
+        basic.addData(I18nTool.retrieveI18n(new String[]{"Web 服务端口", "en:Web Service Port"}).get(lang), String.valueOf(web.getPort()));
+        qingzhou.core.config.Jmx jmx = config.getCore().getConsole().getJmx();
+        if (jmx.isEnabled()) {
+            basic.addData(I18nTool.retrieveI18n(new String[]{"JMX 服务端口", "en:JMX Service Port"}).get(lang), String.valueOf(jmx.getPort()));
+        } else {
+            basic.addData(I18nTool.retrieveI18n(new String[]{"JMX 服务", "en:JMX Service"}).get(lang), I18nTool.retrieveI18n(new String[]{"未启用", "en:Not Enabled"}).get(lang));
+        }
+        Security security = config.getCore().getConsole().getSecurity();
+        String trustedIp = security.getTrustedIp();
+        basic.addData(I18nTool.retrieveI18n(new String[]{"信任 IP", "en:Trusted IP"}).get(lang),Utils.isBlank(trustedIp) ? I18nTool.retrieveI18n(new String[]{"未设置", "en:Not Set"}).get(lang) : trustedIp);
+        basic.addData(I18nTool.retrieveI18n(new String[]{"登录验证码", "en:Login Verification Code"}).get(lang), security.isVerCodeEnabled() ? I18nTool.retrieveI18n(new String[]{"已启用", "en:Enabled"}).get(lang) : I18nTool.retrieveI18n(new String[]{"未启用", "en:Not Enabled"}).get(lang));
+        OnlineUser onlineUser = config.getOnlineUser();
+        StringBuilder onlineUserStr = new StringBuilder();
+        onlineUser.getOnlineUser().forEach((username, loginTime) -> {
+            LocalTime localTime = Instant.ofEpochMilli(loginTime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalTime();
+            String formattedTime = localTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+
+            onlineUserStr.append(username)
+                    .append("(").append(formattedTime).append(")")
+                    .append(" ");
+        });
+        basic.addData(I18nTool.retrieveI18n(new String[]{"在线用户", "en:Online User"}).get(lang), onlineUserStr.toString());
     }
 
     private LineChart createLineChart(String instanceName, ResponseImpl response, App app, Lang lang, DataBuilder builder) {
