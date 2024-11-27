@@ -10,6 +10,6 @@ public class Controller implements ModuleActivator {
 
     @Override
     public void start(ModuleContext context) {
-        context.registerService(Jdbc.class, DataSourceBuilderImpl::new);
+        context.registerService(Jdbc.class, ConnectionPoolBuilderImpl::new);
     }
 }

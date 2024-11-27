@@ -112,12 +112,12 @@ public class Department extends AddModelBase implements Echo, Option {
         if ("aa".equals(echoGroup)) {
             dataBuilder.addData("manager", "tt", new Item[]{Item.of("tt", new String[]{"天天"}), Item.of("lisa", new String[]{"丽莎"})});
             dataBuilder.addData("sortableCheckbox", "test", new Item[]{Item.of("test", new String[]{"测试"}), Item.of("test2", new String[]{"测试2"})});
-            dataBuilder.addData("emailSuffix", "@tongtech.com", new Item[]{Item.of("@tongtech.com", new String[]{"东方通"}), Item.of("@yahoo.com", new String[]{"雅虎"}), Item.of("@github.com", new String[]{"哈布"})});
+            dataBuilder.addData("emailSuffix", "@yahoo.com", new Item[]{Item.of("@yahoo.com", new String[]{"雅虎"}), Item.of("@github.com", new String[]{"哈布"})});
             dataBuilder.addData("multiselect", "multi6", new Item[]{Item.of("multi4", new String[]{"多选4"}), Item.of("multi5", new String[]{"多选5"}), Item.of("multi6", new String[]{"多选6"})});
         } else if ("bb".equals(echoGroup)) {
             dataBuilder.addData("superior", "a", new Item[]{Item.of("a", new String[]{"啊"}), Item.of("b", new String[]{"不"})});
             dataBuilder.addData("sortableCheckbox", "test2", new Item[]{Item.of("test", new String[]{"测试"}), Item.of("test2", new String[]{"测试2"})});
-            dataBuilder.addData("emailSuffix", "@yahoo.com", new Item[]{Item.of("@tongtech.com", new String[]{"东方通"}), Item.of("@yahoo.com", new String[]{"雅虎"}), Item.of("@github.com", new String[]{"哈布"})});
+            dataBuilder.addData("emailSuffix", "@yahoo.com", new Item[]{Item.of("@yahoo.com", new String[]{"雅虎"}), Item.of("@github.com", new String[]{"哈布"})});
         }
     }
 
@@ -139,7 +139,7 @@ public class Department extends AddModelBase implements Echo, Option {
         } else if ("manager".equals(fieldName)) {
             return new Item[]{Item.of("tt", new String[]{"天天"}), Item.of("lisa", new String[]{"丽莎"}), Item.of("jack", new String[]{"杰克"}), Item.of("tom", new String[]{"汤姆"})};
         } else if ("emailSuffix".equals(fieldName)) {
-            return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com", "@outlook.com", "@yahoo.com", "@tongtech.com", "@github.com"});
+            return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com", "@outlook.com", "@yahoo.com", "@github.com"});
         } else if ("multiselect".equals(fieldName)) {
             return new Item[]{Item.of("multi1", new String[]{"多选1"}), Item.of("multi2", new String[]{"多选2"}), Item.of("multi3", new String[]{"多选3"}), Item.of("multi4", new String[]{"多选4"}), Item.of("multi5", new String[]{"多选5"}), Item.of("multi6", new String[]{"多选6"})};
         }
