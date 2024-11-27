@@ -18,7 +18,6 @@ public class Main extends QingzhouSystemApp {
     public static final String QZ_VER_NAME = "version";
 
     public static final String Business = "Business";
-    public static final String User = "User";
     public static final String Setting = "Setting";
     public static final String Service = "Service";
     private static Main main;
@@ -31,9 +30,8 @@ public class Main extends QingzhouSystemApp {
         appContext.addI18n("validator.require", new String[]{"不支持为空", "en:Cannot be empty"});
 
         appContext.addMenu(Main.Business, new String[]{"业务管理", "en:" + Main.Business}).icon("th-large").order("1");
-        appContext.addMenu(Main.User, new String[]{"用户管理", "en:" + Main.User}).icon("group").order("2");
-        appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("3");
-        appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("cubes").order("4");
+        appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("2");
+        appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("cubes").order("3");
     }
 
     public static <T> T getService(Class<T> type) {

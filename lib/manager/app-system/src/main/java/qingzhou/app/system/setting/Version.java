@@ -19,7 +19,7 @@ import java.util.zip.ZipFile;
 
 @Model(code = "version", icon = "upload-alt",
         menu = Main.Setting,
-        order = "4",
+        order = "5",
         name = {"版本", "en:Product Version"},
         info = {"管理轻舟的运行版本，将轻舟升级到一个新的版本。注：升级包会立即下发，但在实例下次重启时生效。",
                 "en:Manage the running version of the light boat and upgrade the light boat to a new version. Note: The upgrade package is delivered immediately, but takes effect the next time the instance is restarted."})
