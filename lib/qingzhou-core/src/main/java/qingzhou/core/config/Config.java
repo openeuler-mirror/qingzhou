@@ -15,4 +15,6 @@ public interface Config {
     void setJmx(Jmx jmx) throws Exception;
 
     void setSecurity(Security security) throws Exception;
+
+    OnlineUser getOnlineUser();
 }

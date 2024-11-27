@@ -14,6 +14,7 @@ import java.util.Properties;
 class JsonFileConfig implements Config {
     private final Json json;
     private final File jsonFile;
+    private final OnlineUser onlineUser = new OnlineUser();
 
     JsonFileConfig(Json json, File jsonFile) {
         this.json = json;
@@ -48,6 +49,11 @@ class JsonFileConfig implements Config {
     @Override
     public void setSecurity(Security security) throws Exception {
         writeJson(security, false, "module", "core", "console", "security");
+    }
+
+    @Override
+    public OnlineUser getOnlineUser() {
+        return onlineUser;
     }
 
     private void deleteJson(String[] idValues, String... position) throws IOException {

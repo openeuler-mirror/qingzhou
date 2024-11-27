@@ -17,6 +17,7 @@ import qingzhou.core.DeployerConstants;
 import qingzhou.core.ItemInfo;
 import qingzhou.core.config.Config;
 import qingzhou.core.config.Console;
+import qingzhou.core.config.OnlineUser;
 import qingzhou.core.config.Security;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.JmxServiceAdapter;
@@ -186,6 +187,10 @@ public class SystemController implements ServletContextListener, javax.servlet.F
 
     public static Console getConsole() {
         return getService(Config.class).getCore().getConsole();
+    }
+
+    public static OnlineUser getOnlineUser() {
+        return getService(Config.class).getOnlineUser();
     }
 
     public static String getPublicKeyString() {
