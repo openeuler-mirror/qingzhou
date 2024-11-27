@@ -24,6 +24,10 @@ public class OAuth2Manager implements Filter<SystemControllerContext> {
 
     public OAuth2Manager() {
         OAuth2Client.OAuthConfig config = load();
+        if (config == null) {
+            oAuth2Client = null;
+            return;
+        }
         String serverUrl = config.getRedirectUrl();
         while (serverUrl.endsWith("/")) {
             serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
@@ -41,6 +45,9 @@ public class OAuth2Manager implements Filter<SystemControllerContext> {
             if (name.startsWith(PROPERTIES_PREFIX)) {
                 properties.put(name.substring(PROPERTIES_PREFIX.length()), System.getProperty(name));
             }
+        }
+        if (properties.isEmpty()) {
+            return null;
         }
         return new OAuth2Client.OAuthConfig(properties);
     }
