@@ -269,6 +269,8 @@
         "pageConfirmTitle": '<%=I18n.getKeyI18n("page.confirm.title")%>',
         "confirmBtnText": '<%=I18n.getKeyI18n("page.confirm")%>',
         "cancelBtnText": '<%=I18n.getKeyI18n("page.return")%>',
+        "addBtnText": '<%=I18n.getKeyI18n("page.info.add")%>',
+        "delBtnText": '<%=I18n.getKeyI18n("page.info.del")%>',
         "notLogin": '<%=I18n.getKeyI18n("page.login.need")%>',
         "encrypt_key_size": '<%=SystemController.getKeySize()%>',
         "reloginBtnText": '<%=I18n.getKeyI18n("page.relogin")%>',

@@ -72,6 +72,7 @@ public class I18n implements Filter<SystemControllerContext> {
         addKeyI18n("page.info.otp", new String[]{"动态密码，选填", "en:OTP, optional"});
         addKeyI18n("page.error.network", new String[]{"服务器连接错误，请确认服务器已启动或检查网络是否通畅", "en:Server connection error, please confirm that the server has been started or check whether the network is smooth"});
         addKeyI18n("page.info.add", new String[]{"添加", "en:Add"});
+        addKeyI18n("page.info.del", new String[]{"删除", "en:Del"});
         addKeyI18n("page.info.kv.name", new String[]{"变量名", "en:Name"});
         addKeyI18n("page.info.kv.value", new String[]{"值", "en:Value"});
         addKeyI18n("page.password.changed", new String[]{"密码修改成功，请重新登录", "en:Password changed successfully, please login again"});
