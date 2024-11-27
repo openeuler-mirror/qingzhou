@@ -90,7 +90,7 @@
                     continue;
                 }
 
-                if (action.getActionType() == ActionType.download) {
+                if (action.getActionType() == ActionType.download || action.getActionType() == ActionType.export) {
                     viewName = DownloadView.FLAG;
                 }
 
