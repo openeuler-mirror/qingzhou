@@ -382,4 +382,12 @@ public class Utils {
         }
         return map;
     }
+
+    public static String toUrl(Map<String, String> params) {
+        StringBuilder url = new StringBuilder();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            url.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+        }
+        return url.substring(0, url.length() - 1);
+    }
 }
