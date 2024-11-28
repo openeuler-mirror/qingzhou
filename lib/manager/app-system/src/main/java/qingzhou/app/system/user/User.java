@@ -143,6 +143,16 @@ public class User extends ModelBase implements General, Validate, Option {
     public Boolean active = true;
 
     @ModelField(
+            input_type = InputType.select,
+            required = true, search = true,
+            list = true,
+            ref_model = Role.class,
+            update_action = "update",
+            name = {"角色", "en:Role"},
+            info = {"为用户分配角色。", "en:Assign roles to users."})
+    public String role;
+
+    @ModelField(
             list = true, search = true,
             link_action = "show",
             name = {"描述", "en:Description"},

@@ -56,6 +56,16 @@ class JsonFileConfig implements Config {
         return onlineUser;
     }
 
+    @Override
+    public void addRole(Role role) throws Exception {
+        writeJson(role, true, "module", "core", "console", "role");
+    }
+
+    @Override
+    public void deleteRole(String... id) throws IOException {
+        deleteJson(id, "module", "core", "console", "role");
+    }
+
     private void deleteJson(String[] idValues, String... position) throws IOException {
         String jsonAll = FileUtil.fileToString(jsonFile);
         String result = json.deleteJson(jsonAll,

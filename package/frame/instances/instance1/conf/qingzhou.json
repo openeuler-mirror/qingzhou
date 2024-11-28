@@ -93,7 +93,17 @@
             "changePwd": "false",
             "enableOtp": "false",
             "keyForOtp": "",
-            "passwordLastModified": ""
+            "passwordLastModified": "",
+            "role": "admin"
+          }
+        ],
+        "role": [
+          {
+            "name": "admin",
+            "app": "*",
+            "info": "超级管理员",
+            "active": "true",
+            "uris": "*"
           }
         ]
       }
