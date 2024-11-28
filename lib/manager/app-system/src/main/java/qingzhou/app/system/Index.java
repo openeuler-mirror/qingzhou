@@ -6,7 +6,6 @@ import qingzhou.api.type.Monitor;
 import qingzhou.api.type.Show;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.config.Config;
-import qingzhou.core.config.OnlineUser;
 import qingzhou.core.config.Security;
 import qingzhou.core.deployer.App;
 import qingzhou.core.deployer.*;
@@ -127,19 +126,6 @@ public class Index extends ModelBase implements Dashboard {
         String trustedIp = security.getTrustedIp();
         basic.addData(I18nTool.retrieveI18n(new String[]{"信任 IP", "en:Trusted IP"}).get(lang),Utils.isBlank(trustedIp) ? I18nTool.retrieveI18n(new String[]{"未设置", "en:Not Set"}).get(lang) : trustedIp);
         basic.addData(I18nTool.retrieveI18n(new String[]{"登录验证码", "en:Login Verification Code"}).get(lang), security.isVerCodeEnabled() ? I18nTool.retrieveI18n(new String[]{"已启用", "en:Enabled"}).get(lang) : I18nTool.retrieveI18n(new String[]{"未启用", "en:Not Enabled"}).get(lang));
-        OnlineUser onlineUser = config.getOnlineUser();
-        StringBuilder onlineUserStr = new StringBuilder();
-        onlineUser.getOnlineUser().forEach((username, loginTime) -> {
-            LocalTime localTime = Instant.ofEpochMilli(loginTime)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalTime();
-            String formattedTime = localTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-
-            onlineUserStr.append(username)
-                    .append("(").append(formattedTime).append(")")
-                    .append(" ");
-        });
-        basic.addData(I18nTool.retrieveI18n(new String[]{"在线用户", "en:Online User"}).get(lang), onlineUserStr.toString());
     }
 
     private LineChart createLineChart(String instanceName, ResponseImpl response, App app, Lang lang, DataBuilder builder) {
