@@ -1,10 +1,15 @@
 <%@ page pageEncoding="UTF-8" %>
 
-<div onclick="addCombine(this,'<%=fieldName%>');"
+<div class="form-control" style="height: auto; min-height: 32px; display: inline-flex"
+     onclick="addCombine(this,'<%=fieldName%>');"
      data-tip="<%=I18n.getModelI18n(qzApp, "model.field.info." + qzModel + "." + fieldName)%>">
-    <input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
-           class="form-control"
-           placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>">
+    <input id="<%=fieldName%>" type="hidden" name="<%=fieldName%>" value='<%=fieldValue%>'
+           class="form-control" onchange="updateCombine(this)">
+    <div>
+        <span style="color: #999999"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%></span>
+        <ul>
+        </ul>
+    </div>
 </div>
 
 <div style="display: none" id="combine-group-<%=fieldName%>">
