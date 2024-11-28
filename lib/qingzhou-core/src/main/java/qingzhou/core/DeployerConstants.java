@@ -16,6 +16,7 @@ public interface DeployerConstants {
     String MODEL_APP = "app";
     String MODEL_INSTANCE = "instance";
     String MODEL_USER = "user";
+    String MODEL_ROLE = "role";
     String MODEL_PASSWORD = "password";
 
     // 系统内部 Action
