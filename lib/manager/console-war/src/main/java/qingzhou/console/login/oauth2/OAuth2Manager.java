@@ -1,8 +1,9 @@
-package qingzhou.console.login;
+package qingzhou.console.login.oauth2;
 
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.login.LoginManager;
 import qingzhou.core.config.User;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.logger.Logger;
@@ -23,7 +24,7 @@ public class OAuth2Manager implements Filter<SystemControllerContext> {
     private final Map<String, HttpSession> tokenSessionsCache = new WeakHashMap<>(); // 为避免内存泄漏，用了 WeakHashMap，可能会导致会话清理通知失效（后续还可依赖本地失效机制）
 
     public OAuth2Manager() {
-        OAuth2Client.OAuthConfig config = load();
+        OAuthConfig config = load();
         if (config == null) {
             oAuth2Client = null;
             return;
@@ -38,7 +39,7 @@ public class OAuth2Manager implements Filter<SystemControllerContext> {
         oAuth2Client = OAuth2Client.getInstance(config);
     }
 
-    private OAuth2Client.OAuthConfig load() {
+    private OAuthConfig load() {
         Properties properties = new Properties();
         for (String name : System.getProperties().stringPropertyNames()) {
             String PROPERTIES_PREFIX = "oauth2.";
@@ -49,7 +50,7 @@ public class OAuth2Manager implements Filter<SystemControllerContext> {
         if (properties.isEmpty()) {
             return null;
         }
-        return new OAuth2Client.OAuthConfig(properties);
+        return new OAuthConfig(properties);
     }
 
     @Override

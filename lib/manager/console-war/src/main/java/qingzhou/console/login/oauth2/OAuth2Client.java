@@ -1,4 +1,4 @@
-package qingzhou.console.login;
+package qingzhou.console.login.oauth2;
 
 import qingzhou.console.controller.SystemController;
 import qingzhou.engine.util.Utils;
@@ -10,13 +10,12 @@ import qingzhou.json.Json;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 public class OAuth2Client {
     private static final HttpClient httpClient = SystemController.getService(Http.class).buildHttpClient();
     private static final Json jsonService = SystemController.getService(Json.class);
 
-    public static OAuth2Client getInstance(OAuthConfig config) {
+    static OAuth2Client getInstance(OAuthConfig config) {
         if (!config.isEnabled()) return null;
 
         ServerPolicy serverPolicy;
@@ -37,21 +36,12 @@ public class OAuth2Client {
         this.serverVendor = serverVendor;
     }
 
-    public OAuthConfig getConfig() {
-        return config;
-    }
-
     private Response sendReq(String url, RequestBuilder requestBuilder) throws Exception {
         String method = requestBuilder.method();
         requestBuilder.header("Accept", "application/json");
         HttpResponse res;
         if ("GET".equals(method)) {
-            StringBuilder queryStr = new StringBuilder();
-            for (Map.Entry<String, String> entry : requestBuilder.params().entrySet()) {
-                queryStr.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
-            }
-
-            res = httpClient.get(url + "?" + queryStr, requestBuilder.headers());
+            res = httpClient.get(url + "?" + Utils.toUrl(requestBuilder.params()), requestBuilder.headers());
         } else {
             res = httpClient.post(url, requestBuilder.params(), requestBuilder.headers());
         }
@@ -64,8 +54,7 @@ public class OAuth2Client {
                 .accessToken(accessToken);
 
         serverVendor.logout(config, requestBuilder);
-        Response response = sendReq(config.getLogoutUrl(), requestBuilder);
-        return response.success();
+        return sendReq(config.getLogoutUrl(), requestBuilder).success();
     }
 
     public String getLoginUrl() {
@@ -74,15 +63,8 @@ public class OAuth2Client {
                 .clientId(config.getClientId())
                 .redirectUrl(config.getReceiveCodeUrl());
 
-        serverVendor.buildLoginUrl(config, builder);
         String baseUrl = config.getAuthorizeUrl();
-        String first = baseUrl.contains("?") ? "&" : "?";
-        StringBuilder url = new StringBuilder(baseUrl).append(first);
-        for (Map.Entry<String, String> entry : builder.params().entrySet()) {
-            url.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
-        }
-
-        return url.toString();
+        return baseUrl + (baseUrl.contains("?") ? "&" : "?") + Utils.toUrl(builder.params());
     }
 
     public String[] login(String code) throws Exception {
@@ -135,9 +117,6 @@ public class OAuth2Client {
 
         default void checkToken(OAuthConfig config, RequestBuilder builder, String accessToken) {
         }
-
-        default void buildLoginUrl(OAuthConfig config, RequestBuilder builder) {
-        }
     }
 
     private static class TongAuth implements ServerPolicy {
@@ -164,137 +143,6 @@ public class OAuth2Client {
         public void checkToken(OAuthConfig config, RequestBuilder builder, String accessToken) {
             builder.param("token", accessToken)
                     .responseType(TongResponse.class);
-        }
-    }
-
-
-    public static class OAuthConfig {
-        private boolean enabled;
-        private String redirectUrl;     // 当前应用域名
-        private String clientId;
-        private String clientSecret;
-        private String authorizeUrl;    // 授权地址
-        private String tokenUrl;        // 获取token地址
-        private String checkTokenUrl;   // 检验token地址
-        private String userInfoUrl;         // 获取用户信息地址
-        private String logoutUrl;       // 注销地址
-        private String listenLogout;    // 注销回调地址
-        private String receiveCodeUrl;
-        private final Properties properties;  // 配置属性，非公用的属性
-        private String serverVendor;
-
-        public OAuthConfig(Properties properties) {
-            this.enabled = Boolean.parseBoolean(properties.getProperty("enabled", "false"));
-            this.redirectUrl = properties.getProperty("redirectUrl");
-            this.clientId = properties.getProperty("clientId");
-            this.clientSecret = properties.getProperty("clientSecret");
-            this.authorizeUrl = properties.getProperty("authorizeUrl");
-            this.tokenUrl = properties.getProperty("tokenUrl");
-            this.checkTokenUrl = properties.getProperty("checkTokenUrl");
-            this.userInfoUrl = properties.getProperty("userInfoUrl");
-            this.logoutUrl = properties.getProperty("logoutUrl");
-            this.serverVendor = properties.getProperty("serverVendor");
-            this.properties = properties;
-        }
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-
-        public String getAuthorizeUrl() {
-            return authorizeUrl;
-        }
-
-        public void setAuthorizeUrl(String authorizeUrl) {
-            this.authorizeUrl = authorizeUrl;
-        }
-
-        public String getClientId() {
-            return clientId;
-        }
-
-        public void setClientId(String clientId) {
-            this.clientId = clientId;
-        }
-
-        public String getClientSecret() {
-            return clientSecret;
-        }
-
-        public void setClientSecret(String clientSecret) {
-            this.clientSecret = clientSecret;
-        }
-
-        public String getCheckTokenUrl() {
-            return checkTokenUrl;
-        }
-
-        public void setCheckTokenUrl(String checkTokenUrl) {
-            this.checkTokenUrl = checkTokenUrl;
-        }
-
-        public String getLogoutUrl() {
-            return logoutUrl;
-        }
-
-        public void setLogoutUrl(String logoutUrl) {
-            this.logoutUrl = logoutUrl;
-        }
-
-        public String getTokenUrl() {
-            return tokenUrl;
-        }
-
-        public void setTokenUrl(String tokenUrl) {
-            this.tokenUrl = tokenUrl;
-        }
-
-        public String getRedirectUrl() {
-            return redirectUrl;
-        }
-
-        public void setRedirectUrl(String redirectUrl) {
-            this.redirectUrl = redirectUrl;
-        }
-
-        public String getUserInfoUrl() {
-            return userInfoUrl;
-        }
-
-        public void setUserInfoUrl(String userInfoUrl) {
-            this.userInfoUrl = userInfoUrl;
-        }
-
-        public String getServerVendor() {
-            return serverVendor;
-        }
-
-        public void setServerVendor(String serverVendor) {
-            this.serverVendor = serverVendor;
-        }
-
-        public String getListenLogout() {
-            return listenLogout;
-        }
-
-        public void setListenLogout(String listenLogout) {
-            this.listenLogout = listenLogout;
-        }
-
-        public String getReceiveCodeUrl() {
-            return receiveCodeUrl;
-        }
-
-        public void setReceiveCodeUrl(String receiveCodeUrl) {
-            this.receiveCodeUrl = receiveCodeUrl;
-        }
-
-        public String getConfig(String key) {
-            return properties.getProperty(key);
         }
     }
 
