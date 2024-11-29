@@ -1546,7 +1546,6 @@ a.cancelfavorites:active {
 
 /* 标题样式 */
 .dashboardPage .chart-title {
-    background-color: #f5f5f5;
     padding: 5px 10px;
     font-weight: bold;
 }
