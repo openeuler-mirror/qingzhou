@@ -268,7 +268,11 @@
             %>
                 <%@ include file="../fragment/field_type/bool.jsp" %>
                 <%
-                } else if (ValidationFilter.isSingleSelect(fieldInfo)) {
+                }  else if (fieldInfo.getInputType().equals(InputType.grouped_multiselect)) {
+                %>
+                <%@ include file="../fragment/field_type/grouped_multiselect.jsp" %>
+                <%
+                }else if (ValidationFilter.isSingleSelect(fieldInfo)) {
                 %>
                 <%@ include file="../fragment/field_type/select.jsp" %>
                 <%

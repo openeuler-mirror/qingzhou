@@ -28,17 +28,19 @@ public class Post extends AddModelBase implements Option {
     public String name;
 
     @ModelField(
+            input_type = InputType.grouped_multiselect,
+            list = true, search = true,
+            update_action = "listUpdate",
+            name = {"分组多选下拉", "en:"})
+    public String groupedMultiselect;
+
+    @ModelField(
             input_type = InputType.bool,
             list = true, search = true,
             update_action = "listUpdate",
             name = {"岗位状态", "en:Post Status"})
     public String postStatus;
 
-    @ModelField(
-            input_type = InputType.grouped_multiselect,
-            list = true, search = true,
-            name = {"分组多选下拉", "en:"})
-    public String groupedMultiselect;
 
     @ModelField(
             input_type = InputType.textarea,

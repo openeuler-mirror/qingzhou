@@ -16,6 +16,8 @@
 					inputType = "multiselect";
 				}else if(ValidationFilter.isSingleSelect(searchFieldInfo)){
 					inputType = "select";
+				}else if(searchFieldInfo.getInputType().equals(InputType.grouped_multiselect)){
+					inputType = "grouped_multiselect";
 				}
 
 				String colClass = "col-md-2 col-sm-3 col-xs-4";
@@ -61,6 +63,11 @@
 				} else if (ValidationFilter.isSingleSelect(searchFieldInfo)) {
 				%>
 				<%@ include file="field_type/select.jsp" %>
+				<%
+				} else if (searchFieldInfo.getInputType().equals(InputType.grouped_multiselect)) {
+					java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
+				%>
+				<%@ include file="field_type/grouped_multiselect.jsp" %>
 				<%
 				} else if (searchFieldInfo.getInputType() == InputType.textarea) {
 				%>
