@@ -23,5 +23,6 @@ public enum InputType {
     sortable,           // 可排序输入框，允许用户通过拖放操作对输入内容进行排序。
     kv,                 // Key-Value 输入框，允许用户以键值对的形式输入数据。
     markdown,            // Markdown 样式，用于以Markdown格式显示文本内容。
-    combine
+    combine,
+    grouped_multiselect //分组 多选下拉
 }

@@ -39,14 +39,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
     private static String publicKey;
     public static PairCipher pairCipher;
     private static final ContextHelper CONTEXT_HELPER;
+
+    private static final String GROUP_SEPARATOR = "_";
 
     static {
         CONTEXT_HELPER = ContextHelper.GET_INSTANCE.get();
@@ -119,6 +120,51 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     public static ItemInfo[] getOptions(RequestImpl request, String fieldName) {
         ItemInfo[] options = getOptions0(request, fieldName);
         return options != null ? options : new ItemInfo[0];
+    }
+
+    public static void groupMultiselectOptions(
+            LinkedHashMap<String, String> parentGroupDescriptions,
+            LinkedHashMap<String, LinkedHashMap<String, String>> groupedOptions,
+            ItemInfo[] multiselectOptions) {
+
+        // 存储父组的键
+        Set<String> parentGroups = new HashSet<>();
+
+        // 处理父组关系
+        for (ItemInfo entry : multiselectOptions) {
+            String key = entry.getName();
+
+            // 查找是否有以当前key为前缀的子项，若有则标记当前key为父组
+            for (ItemInfo subEntry : multiselectOptions) {
+                String subKey = subEntry.getName();
+                if (!subKey.equals(key) && subKey.startsWith(key + GROUP_SEPARATOR)) {
+                    parentGroups.add(key);
+                    break; // 跳出内层循环，避免重复计算
+                }
+            }
+        }
+
+        // 处理每个选项，将其按组分类
+        for (ItemInfo entry : multiselectOptions) {
+            String value = entry.getName();
+            // 将父组选项存储到parentGroupDescriptions中
+            if (parentGroups.contains(value)) {
+                parentGroupDescriptions.put(value, I18n.getStringI18n(entry.getI18n()));
+            } else {
+                // 提取组名并将选项存入对应的组
+                int separatorIndex = value.lastIndexOf(GROUP_SEPARATOR);
+                String groupName;
+                if (separatorIndex != -1){
+                    groupName = value.substring(0, separatorIndex);
+                }else {
+                    groupName = "";
+                }
+
+                // 使用computeIfAbsent确保groupName对应的组存在
+                LinkedHashMap<String, String> groupItems = groupedOptions.computeIfAbsent(groupName, k -> new LinkedHashMap<>());
+                groupItems.put(value, I18n.getStringI18n(entry.getI18n()));
+            }
+        }
     }
 
     public static String getColorStyle(ModelInfo modelInfo, String fieldName, String value) {
