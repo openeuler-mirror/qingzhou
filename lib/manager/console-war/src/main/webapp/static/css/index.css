@@ -1618,6 +1618,15 @@ td{
 /***end dashboard***/
 
 .combine {
+    height: auto;
+    min-height: 32px;
+    max-height: 150px;
+    display: inline-flex;
+    overflow: auto;
+}
+
+
+.combine-item {
     position: relative;
     padding: 0 20px 0 5px;
     background-color: #f1f1f1;
@@ -1625,11 +1634,11 @@ td{
     border: 1px solid #ddd;
     border-radius: 3px;
     float: left;
-    margin: 2px 0;
+    margin: 2px 2px;
     overflow-wrap: anywhere;
 }
 
-.combine a {
+.combine-item-del {
     position: absolute;
     top: 3px;
     right: 0;
@@ -1643,6 +1652,6 @@ td{
     background: 0 0;
 }
 
-.combine a:hover{
+.combine-item-del:hover{
     color: #898989;
 }
