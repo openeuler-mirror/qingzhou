@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Model(code = DeployerConstants.MODEL_ROLE, icon = "check-sign",
-        menu = Main.User, order = "2",
+        menu = Main.Setting, order = "2",
         name = {"角色", "en:Role"},
         info = {"管理操作应用的系统管理员角色。", "en:The system administrator role of managing operation applications."})
 public class Role extends ModelBase implements General, Echo {
