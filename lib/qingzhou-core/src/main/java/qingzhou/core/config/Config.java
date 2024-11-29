@@ -16,8 +16,6 @@ public interface Config {
 
     void setSecurity(Security security) throws Exception;
 
-    OnlineUser getOnlineUser();
-
     void addRole(Role role) throws Exception;
 
     void deleteRole(String... id) throws Exception;

@@ -129,7 +129,6 @@ public class LoginManager implements Filter<SystemControllerContext> {
     private static void setLoginUser(HttpSession session, String user) {
         if (user == null) return;
         session.setAttribute(LOGIN_USER, user);
-        SystemController.getOnlineUser().addUser(user, System.currentTimeMillis());
     }
 
     public static String getLoginUser(HttpServletRequest request) {
@@ -245,7 +244,6 @@ public class LoginManager implements Filter<SystemControllerContext> {
     public static void logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
-            SystemController.getOnlineUser().removeUser((String) session.getAttribute(LOGIN_USER));
             session.invalidate();
         }
     }
