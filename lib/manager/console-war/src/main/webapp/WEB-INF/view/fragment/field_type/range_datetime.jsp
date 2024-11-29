@@ -13,8 +13,7 @@
         }
 %>
 <input type="text" name="<%=fieldName%>" value='<%=fieldValueForTemp%>'
-       placeholder="<%=modelField.getPlaceholder()%>"
-       placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"
+       placeholder="<%=modelField.getPlaceholder().isEmpty()?I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName):modelField.getPlaceholder()%>"
        id="<%=tempId%>"
        class="form-control"/>
 <script type="text/javascript">
@@ -40,7 +39,9 @@
             timePickerIncrement: 1,         // 每次增量选择的分钟数
             timePicker24Hour: true,        // 24小时制
             timePickerSeconds: true,       //启用秒
-            autoUpdateInput: true           // 自动更新输入框
+        }).on('cancel.daterangepicker', function(ev, picker) {
+            // 清空输入框
+            $(this).val('');
         });
         <%
             if (fieldValueForTemp.isEmpty()){
