@@ -52,6 +52,12 @@ public class Department extends AddModelBase implements Echo, Option {
             name = {"多选下拉", "en:Department Manager"},
             info = {"多选下拉。", "en:Name of the head of the department."})
     public String multiselect;
+
+    @ModelField(
+            input_type = InputType.grouped_multiselect,
+            list = true, search = true,
+            name = {"分组多选下拉", "en:"})
+    public String groupedMultiselect;
     @ModelField(
             list = true, search = true,
             echo_group = {"cc"}, placeholder = "写负责人的电话",
@@ -114,17 +120,21 @@ public class Department extends AddModelBase implements Echo, Option {
             dataBuilder.addData("sortableCheckbox", "test", new Item[]{Item.of("test", new String[]{"测试"}), Item.of("test2", new String[]{"测试2"})});
             dataBuilder.addData("emailSuffix", "@yahoo.com", new Item[]{Item.of("@yahoo.com", new String[]{"雅虎"}), Item.of("@github.com", new String[]{"哈布"})});
             dataBuilder.addData("multiselect", "multi6", new Item[]{Item.of("multi4", new String[]{"多选4"}), Item.of("multi5", new String[]{"多选5"}), Item.of("multi6", new String[]{"多选6"})});
+            dataBuilder.addData("groupedMultiselect", "1_001", new Item[]{ Item.of("1", new String[]{"开发分组", "en:Dev"}),
+                    Item.of("1_001", new String[]{"开发", "en:Dev"})});
         } else if ("bb".equals(echoGroup)) {
             dataBuilder.addData("superior", "a", new Item[]{Item.of("a", new String[]{"啊"}), Item.of("b", new String[]{"不"})});
             dataBuilder.addData("sortableCheckbox", "test2", new Item[]{Item.of("test", new String[]{"测试"}), Item.of("test2", new String[]{"测试2"})});
             dataBuilder.addData("emailSuffix", "@yahoo.com", new Item[]{Item.of("@yahoo.com", new String[]{"雅虎"}), Item.of("@github.com", new String[]{"哈布"})});
+            dataBuilder.addData("groupedMultiselect", "2_002", new Item[]{Item.of("2", new String[]{"测试分组", "en:Test"}),
+                    Item.of("2_002", new String[]{"测试", "en:Test"})});
         }
     }
 
 
     @Override
     public String[] staticOptionFields() {
-        return new String[]{"manager", "emailSuffix", "multiselect"};
+        return new String[]{"manager", "emailSuffix", "multiselect","groupedMultiselect"};
     }
 
     @Override
@@ -142,6 +152,15 @@ public class Department extends AddModelBase implements Echo, Option {
             return Item.of(new String[]{"@qq.com", "@163.com", "@gmail.com", "@outlook.com", "@yahoo.com", "@github.com"});
         } else if ("multiselect".equals(fieldName)) {
             return new Item[]{Item.of("multi1", new String[]{"多选1"}), Item.of("multi2", new String[]{"多选2"}), Item.of("multi3", new String[]{"多选3"}), Item.of("multi4", new String[]{"多选4"}), Item.of("multi5", new String[]{"多选5"}), Item.of("multi6", new String[]{"多选6"})};
+        } else if ("groupedMultiselect".equals(fieldName)) {
+            return new Item[]{
+                    Item.of("1", new String[]{"开发分组", "en:Dev"}),
+                    Item.of("1_001", new String[]{"开发", "en:Dev"}),
+                    Item.of("2", new String[]{"测试分组", "en:Test"}),
+                    Item.of("2_002", new String[]{"测试", "en:Test"}),
+                    Item.of("3", new String[]{"运维分组", "en:ops"}),
+                    Item.of("3_003", new String[]{"运维", "en:ops"}),
+            };
         }
         return new Item[0];
     }
