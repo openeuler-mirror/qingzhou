@@ -12,6 +12,8 @@ public class Console {
     private Security security;
     private User[] user;
     private static final List<User> oauthUsers = new ArrayList<>();
+    private Role[] role;
+
 
     public User getUser(String name) {
         if (user == null) return null;
@@ -61,4 +63,18 @@ public class Console {
     public void setSecurity(Security security) {
         this.security = security;
     }
+
+    public Role[] getRole() {
+        return role;
+    }
+
+    public void setRole(Role[] role) {
+        this.role = role;
+    }
+
+    public Role getRole(String name) {
+        if (role == null) return null;
+        return Arrays.stream(role).filter(role -> role.getName().equals(name)).findAny().orElse(null);
+    }
+
 }

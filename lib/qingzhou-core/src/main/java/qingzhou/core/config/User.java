@@ -10,6 +10,7 @@ public class User {
     private String keyForOtp;
     private String passwordLastModified;
     private String historyPasswords;
+    private String role;
 
     public String getName() {
         return name;
@@ -81,5 +82,13 @@ public class User {
 
     public void setPasswordLastModified(String passwordLastModified) {
         this.passwordLastModified = passwordLastModified;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

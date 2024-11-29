@@ -15,4 +15,9 @@ public interface Config {
     void setJmx(Jmx jmx) throws Exception;
 
     void setSecurity(Security security) throws Exception;
+
+    void addRole(Role role) throws Exception;
+
+    void deleteRole(String... id) throws Exception;
+
 }

@@ -99,6 +99,11 @@
 <%@ include file="field_type/multiselect.jsp" %>
 <%
         break;
+    case grouped_multiselect:
+%>
+<%@ include file="field_type/grouped_multiselect.jsp" %>
+<%
+        break;
     case checkbox:
 %>
 <%@ include file="field_type/checkbox.jsp" %>
