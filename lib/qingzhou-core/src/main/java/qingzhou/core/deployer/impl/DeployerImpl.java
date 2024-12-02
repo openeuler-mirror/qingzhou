@@ -393,7 +393,7 @@ class DeployerImpl implements Deployer {
         if (staticOptionFields != null) {
             modelInfo.setStaticOptionFields(staticOptionFields);
             for (String fieldName : staticOptionFields) {
-                Item[] items = option.optionData(fieldName);
+                Item[] items = option.optionData(null, fieldName);
                 if (items != null) {
                     infoList.put(fieldName, Arrays.stream(items).map(ItemInfo::new).toArray(ItemInfo[]::new));
                 }

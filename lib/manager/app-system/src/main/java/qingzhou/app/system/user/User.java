@@ -421,7 +421,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
-    public Item[] optionData(String fieldName) {
+    public Item[] optionData(String id, String fieldName) {
         if ("digestAlg".equals(fieldName)) {
             return Item.of(new String[]{"SHA-256", "SHA-384", "SHA-512"});
         }

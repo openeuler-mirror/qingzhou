@@ -72,7 +72,7 @@ public class Post extends AddModelBase implements Option {
     }
 
     @Override
-    public Item[] optionData(String fieldName) {
+    public Item[] optionData(String id, String fieldName) {
         if (fieldName.equals("groupedMultiselect")) {
             return new Item[]{
                 Item.of("1", new String[]{"开发分组", "en:Dev"}),
