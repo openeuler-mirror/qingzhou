@@ -9,9 +9,9 @@ import qingzhou.api.type.Option;
 import qingzhou.console.controller.jmx.JmxAuthenticatorImpl;
 import qingzhou.console.controller.jmx.JmxInvokerImpl;
 import qingzhou.console.controller.jmx.NotificationListenerImpl;
+import qingzhou.console.login.LoginFilter;
 import qingzhou.console.login.LoginFreeFilter;
 import qingzhou.console.login.LoginManager;
-import qingzhou.console.login.oauth2.OAuth2Manager;
 import qingzhou.console.login.vercode.VerCode;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.ItemInfo;
@@ -153,9 +153,9 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                 // 提取组名并将选项存入对应的组
                 int separatorIndex = value.lastIndexOf(GROUP_SEPARATOR);
                 String groupName;
-                if (separatorIndex != -1){
+                if (separatorIndex != -1) {
                     groupName = value.substring(0, separatorIndex);
-                }else {
+                } else {
                     groupName = "";
                 }
 
@@ -245,7 +245,8 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new About(),
             new VerCode(),
             new LoginFreeFilter(),
-            new OAuth2Manager(),
+            // new OAuth2Manager(),
+            new LoginFilter(),
             new LoginManager(),
             new Theme(),
             (Filter<SystemControllerContext>) context -> {
@@ -273,6 +274,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             } else {
                 throw new IllegalStateException();
             }
+
         } catch (Exception e) {
             getService(Logger.class).warn(e.getMessage(), e);
         }
