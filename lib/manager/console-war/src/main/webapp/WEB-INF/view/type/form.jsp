@@ -3,6 +3,7 @@
 
 <%
     boolean isEdit = Objects.equals(Update.ACTION_EDIT, qzAction);
+    boolean isForm = Objects.equals(Update.ACTION_EDIT, qzAction) || Objects.equals(Add.ACTION_CREATE, qzAction);
     String submitActionName = isEdit ? Update.ACTION_UPDATE : Add.ACTION_ADD;
     java.util.List<String> passwordFields = new ArrayList<>();
     String idField = modelInfo.getIdField();

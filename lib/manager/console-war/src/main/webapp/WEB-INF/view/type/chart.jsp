@@ -5,6 +5,7 @@
 	<%@ include file="../fragment/breadcrumb.jsp" %>
 
 	<%
+		boolean isForm = Objects.equals(Update.ACTION_EDIT, qzAction) || Objects.equals(Add.ACTION_CREATE, qzAction);
 		String[] fieldsToListSearch = modelInfo.getFieldsToListSearch();
 		if (fieldsToListSearch.length > 0) {
 	%>
