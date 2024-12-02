@@ -6,12 +6,13 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class Console {
+    private static final List<User> ssoUsers = new ArrayList<>();
+
     private boolean enabled;
     private Web web;
     private Jmx jmx;
     private Security security;
     private User[] user;
-    private static final List<User> ssoUsers = new ArrayList<>();
     private Role[] role;
 
 

@@ -38,8 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
@@ -127,7 +126,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             // 查找是否有以当前key为前缀的子项，若有则标记当前key为父组
             for (ItemInfo subEntry : multiselectOptions) {
                 String subKey = subEntry.getName();
-                if (!subKey.equals(key) && subKey.startsWith(key + GROUP_SEPARATOR)) {
+                if (!subKey.equals(key) && subKey.startsWith(key + DeployerConstants.MULTISELECT_GROUP_SEPARATOR)) {
                     parentGroups.add(key);
                     break; // 跳出内层循环，避免重复计算
                 }
@@ -142,7 +141,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                 parentGroupDescriptions.put(value, I18n.getStringI18n(entry.getI18n()));
             } else {
                 // 提取组名并将选项存入对应的组
-                int separatorIndex = value.lastIndexOf(GROUP_SEPARATOR);
+                int separatorIndex = value.lastIndexOf(DeployerConstants.MULTISELECT_GROUP_SEPARATOR);
                 String groupName;
                 if (separatorIndex != -1) {
                     groupName = value.substring(0, separatorIndex);
@@ -240,7 +239,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new About(),
             new VerCode(),
             new LoginFreeFilter(),
-            // new OAuth2Manager(),
             new LoginFilter(),
             new LoginManager(),
             new Theme(),
@@ -269,7 +267,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             } else {
                 throw new IllegalStateException();
             }
-
         } catch (Exception e) {
             getService(Logger.class).warn(e.getMessage(), e);
         }
