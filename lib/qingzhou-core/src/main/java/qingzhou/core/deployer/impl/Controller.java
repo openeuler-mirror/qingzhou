@@ -178,7 +178,7 @@ public class Controller implements Process {
 
         @Override
         public void undo() {
-            String[] apps = deployer.getAllApp().toArray(new String[0]);
+            String[] apps = deployer.getLocalApps().toArray(new String[0]);
             Arrays.stream(apps).forEach(appName -> {
                 try {
                     deployer.unInstallApp(appName);

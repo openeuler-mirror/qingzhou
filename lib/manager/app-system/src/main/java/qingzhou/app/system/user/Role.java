@@ -7,7 +7,6 @@ import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.app.system.business.App;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.config.Config;
 import qingzhou.core.deployer.Deployer;
@@ -40,13 +39,14 @@ public class Role extends ModelBase implements General, Echo, Option {
     @ModelField(
             input_type = InputType.select,
             required = true, search = true,
-            ref_model = App.class,
-            echo_group = "uri",
+            echo_group = "uri", dynamic_option = true,
             name = {"应用", "en:App"},
             info = {"指定该角色的权限作用到的应用。", "en:Specify the apps to which the role permissions apply."})
     public String app;
 
     @ModelField(input_type = InputType.grouped_multiselect,
+            required = true, search = true,
+            dynamic_option = true,
             name = {"权限", "en:Permissions"},
             info = {"角色的权限表示具有该角色的用户可以访问的资源（URI）集合。", "en:The permissions of a role represent a collection of resources (URI) that users with that role can access."})
     public String uris;
@@ -179,24 +179,30 @@ public class Role extends ModelBase implements General, Echo, Option {
     }
 
     @Override
-    public String[] staticOptionFields() {
-        return new String[0];
-    }
-
-    @Override
-    public String[] dynamicOptionFields() {
-        return new String[]{"uris"};
-    }
-
-    @Override
     public Item[] optionData(String id, String fieldName) {
-        Map<String, String> map = showData(id);
-        if (map == null) {
-            return new Item[0];
+        if ("app".equals(fieldName)) {
+            Deployer deployer = Main.getService(Deployer.class);
+            List<Item> appItems = new ArrayList<>();
+            for (String app : deployer.getAllApp()) {
+                if (app.equals(DeployerConstants.APP_SYSTEM)) {
+                    appItems.add(Item.of(app, new String[]{"集中管理", "en:Centralized Management"}));
+                } else {
+                    appItems.add(Item.of(app));
+                }
+            }
+            return appItems.toArray(new Item[0]);
         }
-        String app = map.get("app");
-        List<Item> list = getItems(app);
-        return list.toArray(new Item[0]);
+
+        if ("uris".equals(fieldName)) {
+            Map<String, String> map = showData(id);
+            if (map == null) {
+                return new Item[0];
+            }
+            String app = map.get("app");
+            List<Item> list = getItems(app);
+            return list.toArray(new Item[0]);
+        }
+        return null;
     }
 
     private List<Item> getItems(String app) {

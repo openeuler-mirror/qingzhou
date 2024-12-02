@@ -13,7 +13,7 @@
         }
 %>
 <input type="text" name="<%=fieldName%>" value='<%=fieldValueForTemp%>'
-       placeholder="<%=isForm?modelField.getPlaceholder():(modelField.getPlaceholder().isEmpty()?I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName):modelField.getPlaceholder())%>"
+       placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"
        id="<%=tempId%>"
        class="form-control"/>
 <script type="text/javascript">

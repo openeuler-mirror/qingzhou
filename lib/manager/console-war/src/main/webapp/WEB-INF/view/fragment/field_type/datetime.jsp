@@ -12,7 +12,7 @@
         }
 %>
 <input type="text" name="<%=fieldName%>" value='<%=fieldValueForFile%>' <%=echoGroup%>
-       placeholder="<%=isForm?modelField.getPlaceholder():(modelField.getPlaceholder().isEmpty()?I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName):modelField.getPlaceholder())%>"
+       placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"
        autocomplete="off"
        class="form-control form-datetime"
        data-date-format="yyyy-mm-dd hh:ii:ss" <%--须保持一致：DeployerConstants.FIELD_DATETIME_FORMAT--%>

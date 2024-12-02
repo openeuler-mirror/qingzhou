@@ -74,7 +74,7 @@ public class LoginFilter implements Filter<SystemControllerContext> {
 
     private static Collection<LoginInterceptor> getLoginPlugins() {
         Deployer deployer = SystemController.getService(Deployer.class);
-        List<String> allApp = deployer.getAllApp();
+        List<String> allApp = deployer.getLocalApps();
         Set<LoginInterceptor> loginServiceList = new HashSet<>();
         for (String app : allApp) {
             LoginInterceptor loginService = deployer.getApp(app).getAppContext().getService(LoginInterceptor.class);

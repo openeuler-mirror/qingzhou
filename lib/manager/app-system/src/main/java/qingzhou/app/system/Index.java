@@ -12,10 +12,6 @@ import qingzhou.core.deployer.*;
 import qingzhou.core.registry.*;
 import qingzhou.engine.util.Utils;
 
-import java.time.Instant;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_INDEX, icon = "home",
@@ -91,7 +87,7 @@ public class Index extends ModelBase implements Dashboard {
             }
         });
 
-        List<String> localApps = deployer.getAllApp();
+        List<String> localApps = deployer.getLocalApps();
         localApps.stream()
                 .filter(appName -> !DeployerConstants.APP_SYSTEM.equals(appName))
                 .forEach(appName -> {

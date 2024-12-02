@@ -92,8 +92,8 @@ public class User extends ModelBase implements General, Validate, Option {
     public String confirmPassword;
 
     @ModelField(
-            show = false,
-            input_type = InputType.select,
+            show = false, static_option = true,
+            input_type = InputType.radio,
             name = {"摘要算法", "en:Digest Algorithm"},
             info = {"进行摘要加密所采用的算法。", "en:The algorithm used for digest encryption."}
     )
@@ -143,7 +143,7 @@ public class User extends ModelBase implements General, Validate, Option {
     public Boolean active = true;
 
     @ModelField(
-            input_type = InputType.multiselect,
+            input_type = InputType.checkbox,
             required = true,
             list = true, search = true,
             ref_model = Role.class,
@@ -163,6 +163,9 @@ public class User extends ModelBase implements General, Validate, Option {
         if (data == null) return new HashMap<>();
         data.put("password", PASSWORD_FLAG);
         data.put("confirmPassword", PASSWORD_FLAG);
+        if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(data.get("type"))) {
+            data.remove("role"); // 不能编辑超级管理员的角色
+        }
         return data;
     }
 
@@ -275,6 +278,8 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     static void updateDataForUser(Map<String, String> data) throws Exception {
+        data.remove("type");// 用户的类型是初始化定的，不可通过api修改
+
         Config config = Main.getService(Config.class);
         String id = data.get(ID_KEY);
         qingzhou.core.config.User user = config.getCore().getConsole().getUser(id);
@@ -408,16 +413,6 @@ public class User extends ModelBase implements General, Validate, Option {
         }
 
         return errors;
-    }
-
-    @Override
-    public String[] staticOptionFields() {
-        return new String[]{"digestAlg"};
-    }
-
-    @Override
-    public String[] dynamicOptionFields() {
-        return null;
     }
 
     @Override

@@ -23,7 +23,7 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             input_type = InputType.radio,
-            required = true,
+            required = true, dynamic_option = true,
             list = true, search = true, echo_group = {"aa"},
             name = {"上级部门", "en:Superior Department"},
             color = {"a:red", "b:green", "c:blue", "e:yellow"},
@@ -32,7 +32,7 @@ public class Department extends AddModelBase implements Echo, Option {
     public String superior = "";
 
     @ModelField(
-            input_type = InputType.checkbox,
+            input_type = InputType.checkbox, static_option = true,
             list = true, search = true, echo_group = {"bb"},
             name = {"负责人", "en:Department Manager"},
             color = {"lisa:red", "jack:green", "tom:blue"},
@@ -48,14 +48,14 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             input_type = InputType.multiselect,
-            list = true, search = true,
+            list = true, search = true, static_option = true,
             name = {"多选下拉", "en:Department Manager"},
             info = {"多选下拉。", "en:Name of the head of the department."})
     public String multiselect;
 
     @ModelField(
             input_type = InputType.grouped_multiselect,
-            list = true, search = true,
+            list = true, search = true, static_option = true,
             name = {"分组多选下拉", "en:"})
     public String groupedMultiselect;
     @ModelField(
@@ -78,7 +78,7 @@ public class Department extends AddModelBase implements Echo, Option {
 
     @ModelField(
             input_type = InputType.select,
-            update_action = "update",
+            update_action = "update", static_option = true,
             same_line = true, required = true, placeholder = "aaaHolder",
             list = true, search = true, show_label = false,
             name = {"邮箱后缀", "en:Email Suffix"},
@@ -120,7 +120,7 @@ public class Department extends AddModelBase implements Echo, Option {
             dataBuilder.addData("sortableCheckbox", "test", new Item[]{Item.of("test", new String[]{"测试"}), Item.of("test2", new String[]{"测试2"})});
             dataBuilder.addData("emailSuffix", "@yahoo.com", new Item[]{Item.of("@yahoo.com", new String[]{"雅虎"}), Item.of("@github.com", new String[]{"哈布"})});
             dataBuilder.addData("multiselect", "multi6", new Item[]{Item.of("multi4", new String[]{"多选4"}), Item.of("multi5", new String[]{"多选5"}), Item.of("multi6", new String[]{"多选6"})});
-            dataBuilder.addData("groupedMultiselect", "1_001", new Item[]{ Item.of("1", new String[]{"开发分组", "en:Dev"}),
+            dataBuilder.addData("groupedMultiselect", "1_001", new Item[]{Item.of("1", new String[]{"开发分组", "en:Dev"}),
                     Item.of("1_001", new String[]{"开发", "en:Dev"})});
         } else if ("bb".equals(echoGroup)) {
             dataBuilder.addData("superior", "a", new Item[]{Item.of("a", new String[]{"啊"}), Item.of("b", new String[]{"不"})});
@@ -129,17 +129,6 @@ public class Department extends AddModelBase implements Echo, Option {
             dataBuilder.addData("groupedMultiselect", "2_002", new Item[]{Item.of("2", new String[]{"测试分组", "en:Test"}),
                     Item.of("2_002", new String[]{"测试", "en:Test"})});
         }
-    }
-
-
-    @Override
-    public String[] staticOptionFields() {
-        return new String[]{"manager", "emailSuffix", "multiselect","groupedMultiselect"};
-    }
-
-    @Override
-    public String[] dynamicOptionFields() {
-        return new String[]{"superior"};
     }
 
     @Override

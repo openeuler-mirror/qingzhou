@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 
 <select <%=echoGroup%> name="<%=fieldName%>" multiple="multiple" style="width:100%;"
-                       placeholder="<%=isForm?modelField.getPlaceholder():(modelField.getPlaceholder().isEmpty()?I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName):modelField.getPlaceholder())%>">
+                       placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>">
     <%
         for (ItemInfo itemInfo : SystemController.getOptions(qzRequest, fieldName)) {
             String option = itemInfo.getName();

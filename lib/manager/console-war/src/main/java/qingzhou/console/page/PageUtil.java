@@ -25,6 +25,13 @@ import java.util.stream.Stream;
 public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
 
+    public static String getPlaceholder(ModelFieldInfo modelField, String qzApp, String qzModel, boolean isForm) {
+        return isForm ? modelField.getPlaceholder() : (
+                Utils.notBlank(modelField.getPlaceholder())
+                        ? modelField.getPlaceholder()
+                        : I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + modelField.getCode()));
+    }
+
     public static Map<String, List<String>> groupedFields(Collection<String> fieldNames, ModelInfo modelInfo) {
         Map<String, List<String>> groupedFields = new LinkedHashMap<>();
         List<String> defaultGroup = new LinkedList<>();
@@ -66,7 +73,7 @@ public class PageUtil {
     }
 
     public static String getAppToShow() {
-        List<String> allApp = SystemController.getService(Deployer.class).getAllApp();
+        List<String> allApp = SystemController.getService(Deployer.class).getLocalApps();
         for (String s : allApp) {
             if (!s.equals(DeployerConstants.APP_SYSTEM)) {
                 return s;
