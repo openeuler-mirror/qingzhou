@@ -299,7 +299,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     }
 
     @Override
-    public Item[] optionData(String fieldName) {
+    public Item[] optionData(String id, String fieldName) {
         switch (fieldName) {
             case "gender":
                 return new Item[]{

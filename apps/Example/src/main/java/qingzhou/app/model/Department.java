@@ -143,7 +143,7 @@ public class Department extends AddModelBase implements Echo, Option {
     }
 
     @Override
-    public Item[] optionData(String fieldName) {
+    public Item[] optionData(String id, String fieldName) {
         if ("superior".equals(fieldName)) {
             return Item.of(new String[]{"a", "b", "c", "d", "e"});
         } else if ("manager".equals(fieldName)) {

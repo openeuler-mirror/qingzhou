@@ -121,7 +121,7 @@ class SuperAction {
             info = {"列出指定字段的候选值。", "en:Lists the candidate values for the specified field."})
     public void option(Request request) throws Exception {
         Option option = (Option) instance;
-        Item[] items = option.optionData(request.getParameter(Option.FIELD_NAME_PARAMETER));
+        Item[] items = option.optionData(request.getId(), request.getParameter(Option.FIELD_NAME_PARAMETER));
         if (items == null) return;
 
         ItemInfo[] itemInfos = new ItemInfo[items.length];

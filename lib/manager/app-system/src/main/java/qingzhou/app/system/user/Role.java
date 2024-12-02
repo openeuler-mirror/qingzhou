@@ -4,6 +4,7 @@ import qingzhou.api.*;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.General;
+import qingzhou.api.type.Option;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.app.system.business.App;
@@ -13,6 +14,7 @@ import qingzhou.core.deployer.Deployer;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
+import qingzhou.engine.util.Utils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,7 +26,7 @@ import java.util.Map;
         menu = Main.Setting, order = "2",
         name = {"角色", "en:Role"},
         info = {"定义应用的操作权限。", "en:Define the operation permissions of the app."})
-public class Role extends ModelBase implements General, Echo {
+public class Role extends ModelBase implements General, Echo, Option {
     public static final String MODEL_NAME = "role";
     static final String ID_KEY = "name";
 
@@ -112,9 +114,12 @@ public class Role extends ModelBase implements General, Echo {
 
     @Override
     public Map<String, String> showData(String id) {
-        for (qingzhou.core.config.Role role : Main.getService(Config.class).getCore().getConsole().getRole()) {
-            if (role.getName().equals(id)) {
-                return ModelUtil.getPropertiesFromObj(role);
+        qingzhou.core.config.Role[] roles = Main.getService(Config.class).getCore().getConsole().getRole();
+        if (roles != null) {
+            for (qingzhou.core.config.Role role : roles) {
+                if (role.getName().equals(id)) {
+                    return ModelUtil.getPropertiesFromObj(role);
+                }
             }
         }
         return null;
@@ -157,20 +162,58 @@ public class Role extends ModelBase implements General, Echo {
     @Override
     public void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder) {
         String appName = params.get("app");
-        Deployer deployer = Main.getService(Deployer.class);
-        AppInfo appInfo = deployer.getAppInfo(appName);
-        if (appInfo == null) return;
-
-        List<Item> itemList = new ArrayList<>();
-        for (ModelInfo model : appInfo.getModelInfos()) {
-            //分组
-            Item modelItem = Item.of(model.getCode(), model.getName());
-            itemList.add(modelItem);
-            for (ModelActionInfo action : model.getModelActionInfos()) {
-                Item item = Item.of(model.getCode() + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + action.getCode(), action.getName());
-                itemList.add(item);
+        if (Utils.isBlank(appName)) {
+            return;
+        }
+        List<Item> items = getItems(appName);
+        String value = "";
+        qingzhou.core.config.Role[] roles = Main.getService(Config.class).getCore().getConsole().getRole();
+        if (roles != null) {
+            for (qingzhou.core.config.Role role : roles) {
+                if (role.getApp().equals(appName)) {
+                    value = role.getUris();
+                }
             }
         }
-        dataBuilder.addData("uris", "", itemList.toArray(new Item[0]));
+        dataBuilder.addData("uris", value, items.toArray(new Item[0]));
+    }
+
+    @Override
+    public String[] staticOptionFields() {
+        return new String[0];
+    }
+
+    @Override
+    public String[] dynamicOptionFields() {
+        return new String[]{"uris"};
+    }
+
+    @Override
+    public Item[] optionData(String id, String fieldName) {
+        Map<String, String> map = showData(id);
+        if (map == null) {
+            return new Item[0];
+        }
+        String app = map.get("app");
+        List<Item> list = getItems(app);
+        return list.toArray(new Item[0]);
+    }
+
+    private List<Item> getItems(String app) {
+        List<Item> list = new ArrayList<>();
+        Deployer deployer = Main.getService(Deployer.class);
+        AppInfo appInfo = deployer.getAppInfo(app);
+        if (appInfo == null) {
+            return list;
+        }
+        for (ModelInfo modelInfo : appInfo.getModelInfos()) {
+            String modelName = modelInfo.getCode();
+            list.add(Item.of(modelName, modelInfo.getName()));
+            ModelActionInfo[] modelActionInfos = modelInfo.getModelActionInfos();
+            Arrays.stream(modelActionInfos).forEach(modelActionInfo -> {
+                list.add(Item.of(modelName + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + modelActionInfo.getCode(), modelActionInfo.getName()));
+            });
+        }
+        return list;
     }
 }
