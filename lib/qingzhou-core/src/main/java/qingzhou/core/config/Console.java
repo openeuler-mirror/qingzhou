@@ -11,17 +11,17 @@ public class Console {
     private Jmx jmx;
     private Security security;
     private User[] user;
-    private static final List<User> oauthUsers = new ArrayList<>();
+    private static final List<User> ssoUsers = new ArrayList<>();
     private Role[] role;
 
 
     public User getUser(String name) {
         if (user == null) return null;
-        return Stream.concat(Arrays.stream(user), oauthUsers.stream()).filter(user -> user.getName().equals(name)).findAny().orElse(null);
+        return Stream.concat(Arrays.stream(user), ssoUsers.stream()).filter(user -> user.getName().equals(name)).findAny().orElse(null);
     }
 
-    public List<User> getOauthUsers() {
-        return oauthUsers;
+    public List<User> getSsoUsers() {
+        return ssoUsers;
     }
 
     public User[] getUser() {

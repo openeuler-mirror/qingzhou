@@ -12,8 +12,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class OAuth2Client {
+
     private static final HttpClient httpClient = SystemController.getService(Http.class).buildHttpClient();
-    private static final Json jsonService = SystemController.getService(Json.class);
+    public static final Json jsonService = SystemController.getService(Json.class);
 
     static OAuth2Client getInstance(OAuthConfig config) {
         if (!config.isEnabled()) return null;
@@ -50,62 +51,38 @@ public class OAuth2Client {
     }
 
     public boolean logout(String accessToken) throws Exception {
-        RequestBuilder requestBuilder = RequestBuilder.builder()
-                .accessToken(accessToken);
-
-        serverVendor.logout(config, requestBuilder);
-        return sendReq(config.getLogoutUrl(), requestBuilder).success();
+        RequestBuilder requestBuilder = RequestBuilder.builder().param("access_token", accessToken);
+        return serverVendor.logout(config, requestBuilder).success();
     }
 
     public String getLoginUrl() {
         RequestBuilder builder = RequestBuilder.builder()
                 .param("response_type", "code")
-                .clientId(config.getClientId())
-                .redirectUrl(config.getReceiveCodeUrl());
+                .param("client_id", config.getClientId())
+                .param("redirect_uri", config.getReceiveCodeUrl());
 
         String baseUrl = config.getAuthorizeUrl();
         return baseUrl + (baseUrl.contains("?") ? "&" : "?") + toUrl(builder.params());
     }
 
-    public String[] login(String code) throws Exception {
+    public String login(String code) throws Exception {
         if (code == null) return null;
         RequestBuilder builder = RequestBuilder.builder()
-                .clientId(config.getClientId())
-                .clientSecret(config.getClientSecret())
-                .grantType("authorization_code")
-                .code(code);
+                .param("client_id", config.getClientId())
+                .param("client_secret", config.getClientSecret())
+                .param("grant_type", "authorization_code")
+                .param("code", code);
 
-        serverVendor.accessToken(config, builder);
-        Response response = sendReq(config.getTokenUrl(), builder);
-        String accessToken = response.getAccessToken();
-
-        String userId = getUserInfo(accessToken);
-        String expiresIn = String.valueOf(response.getExpiresIn());
-        return new String[]{accessToken, userId, expiresIn};
+        return serverVendor.accessToken(config, builder).getAccessToken();
     }
 
     public String getUserInfo(String accessToken) throws Exception {
-        RequestBuilder builder = RequestBuilder.builder()
-                .clientId(config.getClientId());
-        serverVendor.userInfo(config, builder, accessToken);
-        Response response = sendReq(config.getUserInfoUrl(), builder);
-        return response.getUsername();
+        RequestBuilder builder = RequestBuilder.builder().param("client_id", config.getClientId());
+        return serverVendor.userInfo(config, builder, accessToken).getUsername();
     }
 
     public boolean checkToken(String token) throws Exception {
-        RequestBuilder builder = RequestBuilder.builder()
-                .clientId(config.getClientId())
-                .clientSecret(config.getClientSecret());
-
-        serverVendor.checkToken(config, builder, token);
-
-        String checkTokenUrl = config.getCheckTokenUrl();
-        if (Utils.notBlank(checkTokenUrl)) {
-            Response response = sendReq(checkTokenUrl, builder);
-            return response.active();
-        } else {
-            return true;
-        }
+        return serverVendor.checkToken(config, token);
     }
 
     public static String toUrl(Map<String, String> params) {
@@ -117,40 +94,67 @@ public class OAuth2Client {
     }
 
     private interface ServerPolicy {
-        void logout(OAuthConfig config, RequestBuilder builder);
+        Response logout(OAuthConfig config, RequestBuilder builder) throws Exception;
 
-        void accessToken(OAuthConfig config, RequestBuilder builder);
+        Response accessToken(OAuthConfig config, RequestBuilder builder) throws Exception;
 
-        void userInfo(OAuthConfig config, RequestBuilder builder, String accessToken);
+        Response userInfo(OAuthConfig config, RequestBuilder builder, String accessToken) throws Exception;
 
-        default void checkToken(OAuthConfig config, RequestBuilder builder, String accessToken) {
+        default boolean checkToken(OAuthConfig config, String accessToken) throws Exception {
+            return true;
         }
     }
 
     private static class TongAuth implements ServerPolicy {
 
         @Override
-        public void logout(OAuthConfig config, RequestBuilder builder) {
+        public Response logout(OAuthConfig config, RequestBuilder builder) throws Exception {
             builder.responseType(TongResponse.class);
+            return sendReq(config.getLogoutUrl(), builder);
         }
 
         @Override
-        public void accessToken(OAuthConfig config, RequestBuilder builder) {
+        public Response accessToken(OAuthConfig config, RequestBuilder builder) throws Exception {
             builder.responseType(TongResponse.class);
+            return sendReq(config.getTokenUrl(), builder);
         }
 
         @Override
-        public void userInfo(OAuthConfig config, RequestBuilder builder, String accessToken) {
+        public Response userInfo(OAuthConfig config, RequestBuilder builder, String accessToken) throws Exception {
             builder.method("GET")
                     .param("listen_logout", config.getListenLogout())
                     .header("Authorization", "Bearer " + accessToken)
                     .responseType(TongResponse.class);
+            return sendReq(config.getUserInfoUrl(), builder);
         }
 
         @Override
-        public void checkToken(OAuthConfig config, RequestBuilder builder, String accessToken) {
-            builder.param("token", accessToken)
-                    .responseType(TongResponse.class);
+        public boolean checkToken(OAuthConfig config, String accessToken) throws Exception {
+            String checkTokenUrl = config.getCheckTokenUrl();
+            if (Utils.notBlank(checkTokenUrl)) {
+                RequestBuilder builder = RequestBuilder.builder()
+                        .param("client_id", config.getClientId())
+                        .param("client_secret", config.getClientSecret())
+                        .param("token", accessToken)
+                        .responseType(TongResponse.class);
+                TongResponse response = (TongResponse) sendReq(checkTokenUrl, builder);
+                return Boolean.parseBoolean(String.valueOf(response.get("active")));
+            } else {
+                return true;
+            }
+        }
+
+        private Response sendReq(String url, RequestBuilder requestBuilder) throws Exception {
+            String method = requestBuilder.method();
+            requestBuilder.header("Accept", "application/json");
+            HttpResponse res;
+            if ("GET".equals(method)) {
+                res = httpClient.get(url + "?" + Utils.toUrl(requestBuilder.params()), requestBuilder.headers());
+            } else {
+                res = httpClient.post(url, requestBuilder.params(), requestBuilder.headers());
+            }
+
+            return jsonService.fromJson(new String(res.getResponseBody(), StandardCharsets.UTF_8), requestBuilder.responseType());
         }
     }
 
@@ -166,36 +170,6 @@ public class OAuth2Client {
 
         public RequestBuilder method(String method) {
             this.method = method;
-            return this;
-        }
-
-        public RequestBuilder clientId(String clientId) {
-            params.put("client_id", clientId);
-            return this;
-        }
-
-        public RequestBuilder clientSecret(String clientSecret) {
-            params.put("client_secret", clientSecret);
-            return this;
-        }
-
-        public RequestBuilder grantType(String grantType) {
-            params.put("grant_type", grantType);
-            return this;
-        }
-
-        public RequestBuilder accessToken(String accessToken) {
-            params.put("access_token", accessToken);
-            return this;
-        }
-
-        public RequestBuilder code(String code) {
-            params.put("code", code);
-            return this;
-        }
-
-        public RequestBuilder redirectUrl(String redirectUrl) {
-            params.put("redirect_uri", redirectUrl);
             return this;
         }
 
@@ -247,10 +221,6 @@ public class OAuth2Client {
         default boolean success() {
             return false;
         }
-
-        default boolean active() {
-            return true;
-        }
     }
 
     public static class TongResponse extends HashMap<String, Object> implements Response {
@@ -268,11 +238,6 @@ public class OAuth2Client {
         @Override
         public boolean success() {
             return Boolean.parseBoolean(String.valueOf(get("success")));
-        }
-
-        @Override
-        public boolean active() {
-            return Boolean.parseBoolean(String.valueOf(get("active")));
         }
 
         @Override
