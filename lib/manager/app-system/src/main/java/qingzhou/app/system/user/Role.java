@@ -44,7 +44,7 @@ public class Role extends ModelBase implements General, Echo {
             info = {"指定该角色的权限作用到的应用。", "en:Specify the apps to which the role permissions apply."})
     public String app;
 
-    @ModelField(input_type = InputType.multiselect,
+    @ModelField(input_type = InputType.grouped_multiselect,
             name = {"权限", "en:Permissions"},
             info = {"角色的权限表示具有该角色的用户可以访问的资源（URI）集合。", "en:The permissions of a role represent a collection of resources (URI) that users with that role can access."})
     public String uris;
@@ -163,6 +163,9 @@ public class Role extends ModelBase implements General, Echo {
 
         List<Item> itemList = new ArrayList<>();
         for (ModelInfo model : appInfo.getModelInfos()) {
+            //分组
+            Item modelItem = Item.of(model.getCode(), model.getName());
+            itemList.add(modelItem);
             for (ModelActionInfo action : model.getModelActionInfos()) {
                 Item item = Item.of(model.getCode() + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + action.getCode(), action.getName());
                 itemList.add(item);

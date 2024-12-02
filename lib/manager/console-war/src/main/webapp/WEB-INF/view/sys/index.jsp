@@ -313,7 +313,8 @@
         "paramNameReturnsId": "<%=DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID%>",
         "actionTypeReturns": "<%=ActionType.returns_link%>",
         "matrixHeatmapData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HEATMAP_DATA%>',
-        "lineChartData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_LINE_CHART_DATA%>'
+        "lineChartData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_LINE_CHART_DATA%>',
+        "multiselectGroupSeparator": '<%=DeployerConstants.MULTISELECT_GROUP_SEPARATOR%>'
     };
 
     <%-- 显示第一个应用的管理页面--%>
