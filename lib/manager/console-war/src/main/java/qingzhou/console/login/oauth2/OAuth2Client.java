@@ -149,7 +149,7 @@ public class OAuth2Client {
             requestBuilder.header("Accept", "application/json");
             HttpResponse res;
             if ("GET".equals(method)) {
-                res = httpClient.get(url + "?" + Utils.toUrl(requestBuilder.params()), requestBuilder.headers());
+                res = httpClient.get(url + "?" + toUrl(requestBuilder.params()), requestBuilder.headers());
             } else {
                 res = httpClient.post(url, requestBuilder.params(), requestBuilder.headers());
             }
