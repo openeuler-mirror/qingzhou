@@ -52,7 +52,7 @@ public interface DeployerConstants {
     String APP_STARTED = "Started";
     String APP_STOPPED = "Stopped";
     String DEFAULT_DATA_SEPARATOR = ",";
-    String MULTISELECT_GROUP_SEPARATOR = "_";
+    String MULTISELECT_GROUP_SEPARATOR = "@";
     String SUB_MENU_PARAMETER_FLAG = ActionType.sub_menu.name() + "_parameter_flag_";
     String RETURNS_LINK_PARAM_NAME_RETURNSID = "PARAM_NAME_RETURNSID";
 
