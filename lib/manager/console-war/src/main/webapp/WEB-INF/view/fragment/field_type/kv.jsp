@@ -11,7 +11,7 @@
 			<th style="width: 32px"></th>
 		</tr>
 		<%
-			Map<String, String> map = Utils.stringToMap(fieldValue, modelField.getSeparator());
+			Map<String, String> map = PageUtil.stringToMap(fieldValue, modelField.getSeparator());
 			for (Map.Entry<String, String> kvEntry : map.entrySet()) {
 		%>
 		<tr>

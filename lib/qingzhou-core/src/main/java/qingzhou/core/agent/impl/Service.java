@@ -1,10 +1,10 @@
 package qingzhou.core.agent.impl;
 
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.deployer.RequestImpl;
-import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.core.deployer.App;
 import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.crypto.Cipher;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
@@ -51,7 +51,7 @@ class Service implements Process {
                 try (InputStream inputStream = exchange.getRequestBody()) {
                     result = process(inputStream);
                     exchange.setStatus(200);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Throwable cause = Utils.getCause(e);
                     String error = Utils.exceptionToString(cause);
                     logger.error(error);
@@ -87,7 +87,7 @@ class Service implements Process {
         }
     }
 
-    private byte[] process(InputStream in) throws Exception {
+    private byte[] process(InputStream in) throws Throwable {
         ByteArrayOutputStream bos = new ByteArrayOutputStream(in.available());
         FileUtil.copyStream(in, bos);
 

@@ -22,9 +22,9 @@ public class ServletContainerImpl implements ServletContainer {
     private Tomcat tomcat;
 
     @Override
-    public void start(int port, File baseDir, Properties properties) throws Exception {
+    public void start(int port, File baseDir, Properties properties) throws Throwable {
         // doInThreadContextClassLoader 为了 接管 tomcat 的日志系统
-        Utils.doInThreadContextClassLoader(TomcatLogDelegate.class.getClassLoader(), (Utils.InvokeInThreadContextClassLoader<Void>) () -> {
+        Utils.doInThreadContextClassLoader(TomcatLogDelegate.class.getClassLoader(), () -> {
             Registry.disableRegistry(); // 禁用 tomcat 的 Jmx MBean
             tomcat = new Tomcat();
             tomcat.setBaseDir(baseDir.getAbsolutePath());
@@ -43,8 +43,6 @@ public class ServletContainerImpl implements ServletContainer {
             connector.setMaxPostSize(setMaxPostSize);
 
             tomcat.start(); // 启动服务器
-
-            return null;
         });
     }
 

@@ -373,4 +373,94 @@ public class PageUtil {
         menuHtml.append("</li>");
         return menuHtml.toString();
     }
+
+    public static void groupMultiselectOptions(
+            LinkedHashMap<String, String> parentGroupDescriptions,
+            LinkedHashMap<String, LinkedHashMap<String, String>> groupedOptions,
+            ItemInfo[] multiselectOptions) {
+
+        // 存储父组的键
+        Set<String> parentGroups = new HashSet<>();
+
+        // 处理父组关系
+        for (ItemInfo entry : multiselectOptions) {
+            String key = entry.getName();
+
+            // 查找是否有以当前key为前缀的子项，若有则标记当前key为父组
+            for (ItemInfo subEntry : multiselectOptions) {
+                String subKey = subEntry.getName();
+                if (!subKey.equals(key) && subKey.startsWith(key + DeployerConstants.MULTISELECT_GROUP_SEPARATOR)) {
+                    parentGroups.add(key);
+                    break; // 跳出内层循环，避免重复计算
+                }
+            }
+        }
+
+        // 处理每个选项，将其按组分类
+        for (ItemInfo entry : multiselectOptions) {
+            String value = entry.getName();
+            // 将父组选项存储到parentGroupDescriptions中
+            if (parentGroups.contains(value)) {
+                parentGroupDescriptions.put(value, I18n.getStringI18n(entry.getI18n()));
+            } else {
+                // 提取组名并将选项存入对应的组
+                int separatorIndex = value.lastIndexOf(DeployerConstants.MULTISELECT_GROUP_SEPARATOR);
+                String groupName;
+                if (separatorIndex != -1) {
+                    groupName = value.substring(0, separatorIndex);
+                } else {
+                    groupName = "";
+                }
+
+                // 使用computeIfAbsent确保groupName对应的组存在
+                LinkedHashMap<String, String> groupItems = groupedOptions.computeIfAbsent(groupName, k -> new LinkedHashMap<>());
+                groupItems.put(value, I18n.getStringI18n(entry.getI18n()));
+            }
+        }
+    }
+
+    public static String getColorStyle(ModelInfo modelInfo, String fieldName, String value) {
+        ModelFieldInfo modelFieldInfo = modelInfo.getModelFieldInfo(fieldName);
+        String[] color = modelFieldInfo.getColor();
+        if (color != null) {
+            for (String condition : color) {
+                String[] array = condition.split(":");
+                if (array.length != 2) {
+                    continue;
+                }
+                if (array[0].equals(value)) {
+                    return "color:" + array[1];
+                }
+            }
+        }
+        return "";
+    }
+
+    public static Map<String, String> stringToMap(String str, String SP) {
+        Map<String, String> map = new LinkedHashMap<>();
+        if (Utils.isBlank(str)) {
+            return map;
+        }
+        String[] envArr = str.split(SP);
+        for (String env : envArr) {
+            int i = env.indexOf("=");
+            if (i < 0) {
+                map.put(env, "");
+            } else {
+                String name = env.substring(0, i);
+                String value = env.substring(i + 1);
+                map.put(name, value);
+            }
+        }
+        return map;
+    }
+
+    public static int getIndex(Object[] objects, Object object) {
+        for (int i = 0; i < objects.length; i++) {
+            if (objects[i].equals(object)) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("not found");
+    }
 }

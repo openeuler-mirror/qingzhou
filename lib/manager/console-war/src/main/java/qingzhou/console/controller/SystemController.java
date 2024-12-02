@@ -38,15 +38,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
     private static String publicKey;
     public static PairCipher pairCipher;
     private static final ContextHelper CONTEXT_HELPER;
-
-    private static final String GROUP_SEPARATOR = "_";
 
     static {
         CONTEXT_HELPER = ContextHelper.GET_INSTANCE.get();
@@ -106,14 +105,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         AppInfo appInfo = getAppInfo(appName);
         if (appInfo != null) return appInfo.getModelInfo(model);
         return null;
-    }
-
-    private static String[] getAllIds(RequestImpl request, String model) {
-        RequestImpl req = new RequestImpl(request);
-        req.setModelName(model);
-        req.setActionName(List.ACTION_ALL);
-        ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
-        return (String[]) res.getInternalData();
     }
 
     public static ItemInfo[] getOptions(RequestImpl request, String fieldName) {
@@ -213,7 +204,11 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(fieldName);
         String refModel = fieldInfo.getRefModel();
         if (Utils.notBlank(refModel)) {
-            String[] allIds = getAllIds(request, refModel);
+            RequestImpl req = new RequestImpl(request);
+            req.setModelName(refModel);
+            req.setActionName(List.ACTION_ALL);
+            ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
+            String[] allIds = (String[]) res.getInternalData();
             if (allIds != null) {
                 return Arrays.stream(allIds).map(s -> new ItemInfo(s, new String[]{s, "en:" + s})).toArray(ItemInfo[]::new);
             }

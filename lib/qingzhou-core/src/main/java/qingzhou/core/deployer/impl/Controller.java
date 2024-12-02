@@ -30,7 +30,7 @@ public class Controller implements Process {
     }
 
     @Override
-    public void exec() throws Exception {
+    public void exec() throws Throwable {
         sequence = new ProcessSequence(
                 new RegisterService(moduleContext),
                 new InjectShareableAddonsForApp(moduleContext),
@@ -92,7 +92,7 @@ public class Controller implements Process {
                         injectedServices.put(serviceClass, service);
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 moduleContext.getService(Logger.class).warn(e.getMessage(), e);
             }
         }
@@ -135,7 +135,7 @@ public class Controller implements Process {
         }
 
         @Override
-        public void exec() throws Exception {
+        public void exec() throws Throwable {
             deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {
                 @Override
                 public ClassLoader getClassLoader() {
@@ -169,7 +169,7 @@ public class Controller implements Process {
                     if (!file.isDirectory()) continue;
                     try {
                         deployer.installApp(file);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         moduleContext.getService(Logger.class).error("failed to install app " + file.getName(), e);
                     }
                 }

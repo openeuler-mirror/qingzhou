@@ -21,7 +21,7 @@ public class Controller implements Process {
     }
 
     @Override
-    public void exec() throws Exception {
+    public void exec() throws Throwable {
         Map<String, String> config = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("agent");
         if (config == null || !Boolean.parseBoolean(config.get("enabled"))) return;
 

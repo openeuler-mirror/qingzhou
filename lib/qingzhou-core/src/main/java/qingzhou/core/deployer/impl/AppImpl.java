@@ -33,19 +33,17 @@ class AppImpl implements App {
     }
 
     @Override
-    public void invoke(Request request) throws Exception {
-        Utils.doInThreadContextClassLoader(getLoader(), (Utils.InvokeInThreadContextClassLoader<Void>) () -> {
+    public void invoke(Request request) throws Throwable {
+        Utils.doInThreadContextClassLoader(getLoader(), () -> {
             for (ActionFilter actionFilter : appContext.getActionFilters()) {
                 String msg = actionFilter.doFilter(request);
                 if (msg != null) {
                     request.getResponse().setSuccess(false);
                     request.getResponse().setMsg(msg);
-                    return null;
                 }
             }
 
             invokeDirectly(request);
-            return null;
         });
     }
 

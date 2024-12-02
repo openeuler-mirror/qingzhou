@@ -12,7 +12,7 @@
 				ModelFieldInfo searchFieldInfo = modelInfo.getModelFieldInfo(fieldName);
 				ModelFieldInfo modelField = searchFieldInfo; // range_datetime.jsp 使用
 				String inputType = "";
-				if (ValidationFilter.isMultipleSelect(searchFieldInfo) || (ValidationFilter.isSingleSelect(searchFieldInfo) && searchFieldInfo.isMultipleSearch())){
+				if (ValidationFilter.isMultipleSelect(searchFieldInfo) || (ValidationFilter.isSingleSelect(searchFieldInfo) && searchFieldInfo.isSearchMultiple())){
 					inputType = "multiselect";
 				}else if(ValidationFilter.isSingleSelect(searchFieldInfo)){
 					inputType = "select";
@@ -55,7 +55,7 @@
 						String echoGroups = String.join(",", modelField.getEchoGroup());
 						echoGroup = "echoGroup=" + echoGroups ;
 					}
-					if (ValidationFilter.isMultipleSelect(searchFieldInfo) || (ValidationFilter.isSingleSelect(searchFieldInfo) && searchFieldInfo.isMultipleSearch())) {
+					if (ValidationFilter.isMultipleSelect(searchFieldInfo) || (ValidationFilter.isSingleSelect(searchFieldInfo) && searchFieldInfo.isSearchMultiple())) {
 						java.util.List<String> fieldValues = Arrays.asList(fieldValue.split(searchFieldInfo.getSeparator()));
 				%>
 				<%@ include file="field_type/multiselect.jsp" %>

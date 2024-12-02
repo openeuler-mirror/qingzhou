@@ -1,4 +1,4 @@
-package qingzhou.app.system.setting;
+package qingzhou.app.system.system;
 
 import java.util.Map;
 
@@ -12,7 +12,7 @@ import qingzhou.app.system.ModelUtil;
 import qingzhou.core.config.Config;
 
 @Model(code = "web", icon = "link",
-        menu = Main.Setting, order = "3",
+        menu = Main.Setting, order = "4",
         entrance = Update.ACTION_EDIT,
         name = {"Web", "en:Web"},
         info = {"设置控制台相关参数，如 HTTP、Servlet 等。注：这些参数变更后，在下次启动后生效。",

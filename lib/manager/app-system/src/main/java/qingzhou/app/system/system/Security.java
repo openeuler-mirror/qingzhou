@@ -1,4 +1,4 @@
-package qingzhou.app.system.setting;
+package qingzhou.app.system.system;
 
 import java.util.Map;
 
@@ -12,7 +12,7 @@ import qingzhou.app.system.ModelUtil;
 import qingzhou.core.config.Config;
 
 @Model(code = "security", icon = "shield",
-        menu = Main.Setting, order = "2",
+        menu = Main.Setting, order = "3",
         entrance = Update.ACTION_EDIT,
         name = {"安全", "en:Security"},
         info = {"配置轻舟管理控制台的安全策略。", "en:Configure the security policy of Qingzhou management console."})

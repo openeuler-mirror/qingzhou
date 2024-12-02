@@ -71,7 +71,7 @@ class ActionInvokerImpl implements ActionInvoker {
                             cipher);
                     responseList.put(instance, response);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 responseList.put(instance, buildErrorResponse(instance, e));
             }
         }
@@ -146,7 +146,7 @@ class ActionInvokerImpl implements ActionInvoker {
         return moduleContext.getService(Serializer.class).deserialize(decryptedData, ResponseImpl.class);
     }
 
-    private Response buildErrorResponse(String instance, Exception e) {
+    private Response buildErrorResponse(String instance, Throwable e) {
         ResponseImpl response = new ResponseImpl();
         response.setSuccess(false);
 

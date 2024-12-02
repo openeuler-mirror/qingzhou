@@ -207,7 +207,7 @@
             } else {
                 int listOrder = (pageNum - 1) * pageSize;
                 for (String[] modelData : modelDataList) {
-                    String originUnEncodedId = modelData[Utils.getIndex(dataListFields, idField)];
+                    String originUnEncodedId = modelData[PageUtil.getIndex(dataListFields, idField)];
                     String encodedItemId = RESTController.encodeId(originUnEncodedId);
         %>
         <tr>
@@ -233,7 +233,7 @@
                         needHidden = "display:none";
                     }
 
-                    String value = modelData[Utils.getIndex(dataListFields, field)];
+                    String value = modelData[PageUtil.getIndex(dataListFields, field)];
                     if (value == null) {
                         value = "";
                     }
@@ -309,11 +309,11 @@
                         if (refFieldName.contains(",")){
                             List<String> refValueArr = new LinkedList<>();
                             for(String name : refFieldName.split(",")){
-                                refValueArr.add(modelData[Utils.getIndex(dataListFields, name)]);
+                                refValueArr.add(modelData[PageUtil.getIndex(dataListFields, name)]);
                             }
                             refValue = String.join("##",refValueArr);
                         }else{
-                            refValue = modelData[Utils.getIndex(dataListFields, refFieldName)];
+                            refValue = modelData[PageUtil.getIndex(dataListFields, refFieldName)];
                         }
                     } else if (Utils.notBlank(fieldInfo.getRefModel())) {
                         refModelName = fieldInfo.getRefModel();
@@ -366,7 +366,7 @@
                     ModelActionInfo showActionInfo = modelInfo.getModelActionInfo(Show.ACTION_SHOW);
                     String condition = showActionInfo.getShow();
                     if (Utils.notBlank(condition)) {
-                        if (!SecurityController.checkRule(condition, fieldName -> modelData[Utils.getIndex(dataListFields, fieldName)])) {
+                        if (!SecurityController.checkRule(condition, fieldName -> modelData[PageUtil.getIndex(dataListFields, fieldName)])) {
                             showActionInfo = null;
                         }
                     }
@@ -403,7 +403,7 @@
                         ModelActionInfo action = modelInfo.getModelActionInfo(actionName);
                         boolean showAction = true;
                         if (Utils.notBlank(action.getShow())) {
-                            showAction = SecurityController.checkRule(action.getShow(), fieldName -> modelData[Utils.getIndex(dataListFields, fieldName)]);
+                            showAction = SecurityController.checkRule(action.getShow(), fieldName -> modelData[PageUtil.getIndex(dataListFields, fieldName)]);
                         }
                         if (!showAction) continue;
 

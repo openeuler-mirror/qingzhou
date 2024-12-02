@@ -16,7 +16,6 @@ public interface DeployerConstants {
     String MODEL_APP = "app";
     String MODEL_INSTANCE = "instance";
     String MODEL_USER = "user";
-    String MODEL_ROLE = "role";
     String MODEL_PASSWORD = "password";
 
     // 系统内部 Action
@@ -53,6 +52,7 @@ public interface DeployerConstants {
     String APP_STARTED = "Started";
     String APP_STOPPED = "Stopped";
     String DEFAULT_DATA_SEPARATOR = ",";
+    String MULTISELECT_GROUP_SEPARATOR = "/";
     String SUB_MENU_PARAMETER_FLAG = ActionType.sub_menu.name() + "_parameter_flag_";
     String RETURNS_LINK_PARAM_NAME_RETURNSID = "PARAM_NAME_RETURNSID";
 

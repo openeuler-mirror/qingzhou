@@ -19,5 +19,4 @@ public interface Config {
     void addRole(Role role) throws Exception;
 
     void deleteRole(String... id) throws Exception;
-
 }

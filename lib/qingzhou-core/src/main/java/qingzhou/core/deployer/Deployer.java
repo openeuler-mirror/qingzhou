@@ -10,11 +10,11 @@ import java.util.List;
 public interface Deployer {
     void addAppListener(AppListener appListener);
 
-    void installApp(File appDir) throws Exception;
+    void installApp(File appDir) throws Throwable;
 
     void unInstallApp(String appName) throws Exception;
 
-    void startApp(String appName) throws Exception;
+    void startApp(String appName) throws Throwable;
 
     void stopApp(String appName) throws Exception;
 
