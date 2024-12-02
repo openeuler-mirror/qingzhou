@@ -64,10 +64,4 @@ public class TransactionCombination extends AddModelBase implements Combined {
         listData2.addFieldValues(new String[]{"2024-10-28 09:00:00", "transaction22222", "第2条日志"});
         dataBuilder.addData(listData2);
     }
-
-    @Override
-    public boolean showOrderNumber() {
-        return true;
-    }
-
 }

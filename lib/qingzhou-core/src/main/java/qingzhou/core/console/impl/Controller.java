@@ -1,8 +1,8 @@
 package qingzhou.core.console.impl;
 
+import qingzhou.core.AppPageData;
 import qingzhou.core.config.Config;
 import qingzhou.core.config.Console;
-import qingzhou.core.AppPageData;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.servlet.ServletContainer;
 import qingzhou.core.console.servlet.impl.ServletContainerImpl;
@@ -26,7 +26,7 @@ public class Controller implements Process {
     }
 
     @Override
-    public void exec() throws Exception {
+    public void exec() throws Throwable {
         console = moduleContext.getService(Config.class).getCore().getConsole();
 
         if (console == null || !console.isEnabled()) return;
@@ -47,7 +47,7 @@ public class Controller implements Process {
 
     private class StartServletContainer implements Process {
         @Override
-        public void exec() throws Exception {
+        public void exec() throws Throwable {
             servletContainer = new ServletContainerImpl();
             servletContainer.start(console.getWeb().getPort(),
                     new File(moduleContext.getTemp(), "servlet"),

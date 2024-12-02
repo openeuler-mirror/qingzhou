@@ -10,7 +10,7 @@ import java.util.Map;
 public interface Echo {
     String ACTION_ECHO = "echo";
 
-    void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder) throws Exception;
+    void echoData(String echoGroup, Map<String, String> params, DataBuilder dataBuilder);
 
     interface DataBuilder {
         void addData(String field, String value);

@@ -13,7 +13,7 @@ public class ProcessSequence implements Process {
     }
 
     @Override
-    public void exec() throws Exception {
+    public void exec() throws Throwable {
         for (Process process : processList) {
             process.exec();
             index++;

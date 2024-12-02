@@ -41,7 +41,7 @@ public class OAuth2Client {
         requestBuilder.header("Accept", "application/json");
         HttpResponse res;
         if ("GET".equals(method)) {
-            res = httpClient.get(url + "?" + Utils.toUrl(requestBuilder.params()), requestBuilder.headers());
+            res = httpClient.get(url + "?" + toUrl(requestBuilder.params()), requestBuilder.headers());
         } else {
             res = httpClient.post(url, requestBuilder.params(), requestBuilder.headers());
         }
@@ -64,7 +64,7 @@ public class OAuth2Client {
                 .redirectUrl(config.getReceiveCodeUrl());
 
         String baseUrl = config.getAuthorizeUrl();
-        return baseUrl + (baseUrl.contains("?") ? "&" : "?") + Utils.toUrl(builder.params());
+        return baseUrl + (baseUrl.contains("?") ? "&" : "?") + toUrl(builder.params());
     }
 
     public String[] login(String code) throws Exception {
@@ -106,6 +106,14 @@ public class OAuth2Client {
         } else {
             return true;
         }
+    }
+
+    public static String toUrl(Map<String, String> params) {
+        StringBuilder url = new StringBuilder();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            url.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+        }
+        return url.substring(0, url.length() - 1);
     }
 
     private interface ServerPolicy {

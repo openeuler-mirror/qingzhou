@@ -1,35 +1,26 @@
 package qingzhou.app.system;
 
+import qingzhou.api.*;
+import qingzhou.api.type.Download;
+import qingzhou.api.type.Monitor;
+import qingzhou.core.AppPageData;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.App;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
+import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
+
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.RuntimeMXBean;
-import java.lang.management.ThreadMXBean;
+import java.lang.management.*;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Download;
-import qingzhou.api.type.Monitor;
-import qingzhou.core.deployer.App;
-import qingzhou.core.AppPageData;
-import qingzhou.core.deployer.Deployer;
-import qingzhou.core.DeployerConstants;
-import qingzhou.core.deployer.RequestImpl;
-import qingzhou.core.deployer.ResponseImpl;
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
 
 @Model(code = DeployerConstants.MODEL_AGENT,
         hidden = true,
@@ -51,7 +42,7 @@ public class Agent extends ModelBase implements Download {
     @ModelAction(
             code = DeployerConstants.ACTION_INSTALL_APP,
             name = {"", "en:"})
-    public void installApp(Request request) throws Exception {
+    public void installApp(Request request) throws Throwable {
         String appFile = Boolean.parseBoolean(request.getParameter("upload"))
                 ? request.getParameter("file")
                 : request.getParameter("path");
@@ -93,7 +84,7 @@ public class Agent extends ModelBase implements Download {
 
         try {
             deployer.installApp(app);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             FileUtil.forceDelete(app);
             throw e;
         }
@@ -229,15 +220,8 @@ public class Agent extends ModelBase implements Download {
             code = DeployerConstants.ACTION_INSTALL_VERSION,
             name = {"", "en:"})
     public void installVersion(Request request) throws Exception {
-        String appFile = Boolean.parseBoolean(request.getParameter("upload"))
-                ? request.getParameter("file")
-                : request.getParameter("path");
-        File srcFile = new File(appFile);
-        if (!srcFile.exists()) {
-            request.getResponse().setSuccess(false);
-            request.getResponse().setMsg(getAppContext().getI18n("file.not.found"));
-            return;
-        }
+        File srcFile = getUploadedFile(request);
+        if (srcFile == null) return;
 
         String fileName = srcFile.getName();
         if (!fileName.startsWith(Main.QZ_VER_NAME)) {
@@ -254,6 +238,20 @@ public class Agent extends ModelBase implements Download {
         FileUtil.copyFileOrDirectory(srcFile, targetFile);
     }
 
+    private File getUploadedFile(Request request) {
+        String appFile = Boolean.parseBoolean(request.getParameter("upload"))
+                ? request.getParameter("file")
+                : request.getParameter("path");
+        File srcFile = new File(appFile);
+        if (!srcFile.exists()) {
+            request.getResponse().setSuccess(false);
+            request.getResponse().setMsg(getAppContext().getI18n("file.not.found"));
+            return null;
+        }
+
+        return srcFile;
+    }
+
     @ModelAction(
             code = DeployerConstants.ACTION_UNINSTALL_VERSION,
             name = {"", "en:"})
@@ -268,7 +266,7 @@ public class Agent extends ModelBase implements Download {
     @ModelAction(
             code = DeployerConstants.ACTION_START_APP,
             name = {"", "en:"})
-    public void startApp(Request request) throws Exception {
+    public void startApp(Request request) throws Throwable {
         String name = request.getId();
         Deployer deployer = Main.getService(Deployer.class);
         deployer.startApp(name);

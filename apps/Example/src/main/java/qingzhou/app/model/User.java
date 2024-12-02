@@ -103,7 +103,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.textarea,
-            skip = {">", "("},
+            xss_skip = {">", "("},
             name = {"备注", "en:Notes"})
     public String notes = "只读控制";
 
@@ -131,7 +131,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     @ModelField(
             input_type = InputType.combine,
             combine_fields = {"field", "operator", "value", "customLabel"},
-            skip = {"[", "]", "\"", ">", "<", "'"},
+            xss_skip = {"[", "]", "\"", ">", "<", "'"},
             search = true,
             name = {"组合查询", "en:comboQuery"},
             info = {"添加过滤条件", "en:Add filters"})
@@ -140,7 +140,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     @ModelField(
             input_type = InputType.combine,
             combine_fields = {"field", "operator", "value", "customLabel"},
-            skip = {"[", "]", "\"", ">", "<", "'"},
+            xss_skip = {"[", "]", "\"", ">", "<", "'"},
             search = true,
             name = {"组合查询2", "en:comboQuery2"},
             info = {"添加过滤条件2", "en:Add filters2"})

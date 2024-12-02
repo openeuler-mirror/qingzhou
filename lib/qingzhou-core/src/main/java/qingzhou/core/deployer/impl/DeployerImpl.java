@@ -53,16 +53,15 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public void installApp(File appDir) throws Exception {
+    public void installApp(File appDir) throws Throwable {
         if (!appDir.isDirectory()) throw new IllegalArgumentException("The app file must be a directory");
 
         AppImpl app = buildApp(appDir);
 
         // 加载应用
-        Utils.doInThreadContextClassLoader(app.getLoader(), (Utils.InvokeInThreadContextClassLoader<Void>) () -> {
+        Utils.doInThreadContextClassLoader(app.getLoader(), () -> {
             startApp(app);
             startModel(app);
-            return null;
         });
 
         // 注册完成
@@ -101,7 +100,7 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public void startApp(String appName) throws Exception {
+    public void startApp(String appName) throws Throwable {
         File appDir = FileUtil.newFile(appsBase, appName);
         installApp(appDir);
     }
@@ -147,7 +146,7 @@ class DeployerImpl implements Deployer {
         return registry.getAppInfo(appName);
     }
 
-    private AppImpl buildApp(File appDir) throws Exception {
+    private AppImpl buildApp(File appDir) throws Throwable {
         AppImpl app = new AppImpl();
 
         java.util.List<File> scanAppLibFiles = new ArrayList<>();
@@ -279,7 +278,7 @@ class DeployerImpl implements Deployer {
                 }).collect(Collectors.toSet());
     }
 
-    private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader, Properties appProperties) throws Exception {
+    private Map<ModelBase, ModelInfo> getModelInfos(File[] appLibs, URLClassLoader loader, Properties appProperties) throws Throwable {
         String filename = null;
         String include = null;
         String exclude = null;
@@ -450,10 +449,10 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setPort(modelField.port());
             modelFieldInfo.setPlainText(modelField.plain_text());
             modelFieldInfo.setPlaceholder(modelField.placeholder());
-            modelFieldInfo.setMultipleSearch(modelField.multiple_search());
+            modelFieldInfo.setSearchMultiple(modelField.search_multiple());
             modelFieldInfo.setReadonly(modelField.readonly());
             modelFieldInfo.setForbid(modelField.forbid());
-            modelFieldInfo.setSkip(modelField.skip());
+            modelFieldInfo.setXssSkip(modelField.xss_skip());
             modelFieldInfo.setEmail(modelField.email());
             modelFieldInfo.setFile(modelField.file());
             modelFieldInfo.setLinkModel(modelField.link_model());
@@ -493,7 +492,7 @@ class DeployerImpl implements Deployer {
         }
     }
 
-    private QingzhouApp buildQingzhouApp(File[] appLibs, URLClassLoader loader, Properties appProperties) throws Exception {
+    private QingzhouApp buildQingzhouApp(File[] appLibs, URLClassLoader loader, Properties appProperties) throws Throwable {
         String mainClass = null;
         if (appProperties != null) {
             mainClass = appProperties.getProperty(DeployerConstants.QINGZHOU_PROPERTIES_APP_MAIN_CLASS);

@@ -339,7 +339,7 @@ public class ValidationFilter implements Filter<RestContext> {
             String[] checks = {"vbscript:", "eval(", "(", ")", "<", ">", "[", "]", "\"", "'"};
             for (String check : checks) {
                 if (context.parameterVal.contains(check)) {
-                    if (Arrays.stream(context.fieldInfo.getSkip()).noneMatch(s -> s.equals(check))) {
+                    if (Arrays.stream(context.fieldInfo.getXssSkip()).noneMatch(s -> s.equals(check))) {
                         return new String[]{"validation_xss"};
                     }
                 }

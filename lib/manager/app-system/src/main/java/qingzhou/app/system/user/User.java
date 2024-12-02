@@ -143,18 +143,16 @@ public class User extends ModelBase implements General, Validate, Option {
     public Boolean active = true;
 
     @ModelField(
-            input_type = InputType.select,
-            required = true, search = true,
-            list = true,
+            input_type = InputType.multiselect,
+            required = true,
+            list = true, search = true,
             ref_model = Role.class,
-            update_action = "update",
             name = {"角色", "en:Role"},
-            info = {"为用户分配角色。", "en:Assign roles to users."})
+            info = {"为用户分配访问系统的权限。", "en:Assign users access to the system."})
     public String role;
 
     @ModelField(
             list = true, search = true,
-            link_action = "show",
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;
@@ -162,6 +160,7 @@ public class User extends ModelBase implements General, Validate, Option {
     @Override
     public Map<String, String> showData(String id) {
         Map<String, String> data = showDataForUserInternal(id);
+        if (data == null) return new HashMap<>();
         data.put("password", PASSWORD_FLAG);
         data.put("confirmPassword", PASSWORD_FLAG);
         return data;
@@ -200,6 +199,7 @@ public class User extends ModelBase implements General, Validate, Option {
         String password = data.remove("password");
         if (passwordChanged(password)) {
             Map<String, String> originUser = showDataForUserInternal(data.get(ID_KEY));
+            if (originUser == null) return;
 
             String[] splitOriginPwd = splitPwd(originUser.get("password"));
             String digestAlg = data.getOrDefault("digestAlg", splitOriginPwd[0]);
@@ -228,7 +228,9 @@ public class User extends ModelBase implements General, Validate, Option {
     public void deleteData(String id) throws Exception {
         String[] batchId = getAppContext().getCurrentRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
-            Main.getService(Config.class).deleteUser(batchId);
+            for (String bId : batchId) {
+                Main.getService(Config.class).deleteUser(bId);
+            }
         } else {
             Main.getService(Config.class).deleteUser(id);
         }
@@ -424,10 +426,5 @@ public class User extends ModelBase implements General, Validate, Option {
             return Item.of(new String[]{"SHA-256", "SHA-384", "SHA-512"});
         }
         return null;
-    }
-
-    @Override
-    public boolean showOrderNumber() {
-        return false;
     }
 }

@@ -1,4 +1,4 @@
-package qingzhou.app.system.setting;
+package qingzhou.app.system.system;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Add;
@@ -91,7 +91,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Add, S
 
     @Override
     public boolean contains(String id) {
-        String[] ids = allIds(null);
+        String[] ids = allIds();
         for (String s : ids) {
             if (s.equals(id)) {
                 return true;
@@ -100,7 +100,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Add, S
         return false;
     }
 
-    private String[] allIds(Map<String, String> query) {
+    private String[] allIds() {
         Set<String> ids = new HashSet<>();
         File[] listFiles = Main.getLibBase().listFiles();
         for (File file : Objects.requireNonNull(listFiles)) {
@@ -117,7 +117,7 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Add, S
 
     @Override
     public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws IOException {
-        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
+        return ModelUtil.listData(allIds(), this::showData, pageNum, pageSize, showFields);
     }
 
     @ModelAction(

@@ -15,7 +15,7 @@ public class ModelFieldInfo implements Serializable {
     private InputType inputType;
     private String refModel;
     private String separator;
-    
+
     private String defaultValue;
     private boolean show;
     private boolean hidden;
@@ -37,11 +37,11 @@ public class ModelFieldInfo implements Serializable {
     private boolean host;
     private boolean port;
     private String[] forbid;
-    private String[] skip;
+    private String[] xssSkip;
     private String pattern;
     private boolean plainText;
 
-    private boolean multipleSearch;
+    private boolean searchMultiple;
     private boolean readonly;
     private String linkModel;
     private transient Class<?> refModelClass;
@@ -87,12 +87,12 @@ public class ModelFieldInfo implements Serializable {
         this.hidden = hidden;
     }
 
-    public boolean isMultipleSearch() {
-        return multipleSearch;
+    public boolean isSearchMultiple() {
+        return searchMultiple;
     }
 
-    public void setMultipleSearch(boolean multipleSearch) {
-        this.multipleSearch = multipleSearch;
+    public void setSearchMultiple(boolean searchMultiple) {
+        this.searchMultiple = searchMultiple;
     }
 
     public boolean isReadonly() {
@@ -346,12 +346,12 @@ public class ModelFieldInfo implements Serializable {
         this.port = port;
     }
 
-    public String[] getSkip() {
-        return skip;
+    public String[] getXssSkip() {
+        return xssSkip;
     }
 
-    public void setSkip(String[] skip) {
-        this.skip = skip;
+    public void setXssSkip(String[] xssSkip) {
+        this.xssSkip = xssSkip;
     }
 
     public String[] getForbid() {

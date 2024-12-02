@@ -89,7 +89,7 @@ class SuperAction {
             name = {"回显", "en:Echo"},
             info = {"处理业务逻辑上的数据级联关系。",
                     "en:Handle data cascading relationships in business logic."})
-    public void echo(Request req) throws Exception {
+    public void echo(Request req) {
         RequestImpl request = (RequestImpl) req;
         ModelInfo modelInfo = request.getCachedModelInfo();
 

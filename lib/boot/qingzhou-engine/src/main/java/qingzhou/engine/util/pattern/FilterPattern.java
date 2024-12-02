@@ -23,7 +23,7 @@ public class FilterPattern {
         ProcessSequence sequence = new ProcessSequence(processes);
         try {
             sequence.exec();
-        } catch (InterruptedException e) {
+        } catch (Throwable e) {
             // 为了中断调用链，这里忽略错误即可
         }
         sequence.undo();

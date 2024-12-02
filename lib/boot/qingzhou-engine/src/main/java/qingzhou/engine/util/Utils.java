@@ -18,43 +18,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Utils {
-    public static int getIndex(Object[] objects, Object object) {
-        for (int i = 0; i < objects.length; i++) {
-            if (objects[i].equals(object)) {
-                return i;
-            }
-        }
-        throw new IllegalArgumentException("not found");
-    }
-
-    /**
-     * 交换数组中两个元素的位置
-     *
-     * @param array  待交换元素的数组
-     * @param index1 第一个元素的下标
-     * @param index2 第二个元素的下标
-     */
-    public static void swap(Object[] array, int index1, int index2) {
-        // 如果入参为空，则返回null
-        if (array == null || array.length == 0) {
-            return;
-        }
-        // 如果下标越界，则返回原数组
-        if (index1 < 0 || index1 >= array.length || index2 < 0 || index2 >= array.length) {
-            return;
-        }
-        // 交换数组中两个元素的位置
-        Object temp = array[index1];
-        array[index1] = array[index2];
-        array[index2] = temp;
-    }
-
-    public static void setPropertiesToObj(Object obj, Map<String, String> parameters) throws Exception {
-        for (Map.Entry<String, String> entry : parameters.entrySet()) {
-            setPropertyToObj(obj, entry.getKey(), entry.getValue());
-        }
-    }
-
     public static void setPropertyToObj(Object obj, String key, String val) throws Exception {
         if (obj == null || key == null || val == null) return;
 
@@ -136,32 +99,19 @@ public class Utils {
         throw new IllegalArgumentException();
     }
 
-    public static <T> T doInThreadContextClassLoader(ClassLoader useLoader, InvokeInThreadContextClassLoader<T> invoker) throws Exception {
-        if (useLoader == null) return invoker.invoke();
+    public static void doInThreadContextClassLoader(ClassLoader useLoader, GeneralCallback callback) throws Throwable {
+        if (useLoader == null) {
+            callback.callback();
+            return;
+        }
 
         ClassLoader originLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(useLoader);
-            return invoker.invoke();
+            callback.callback();
         } finally {
             Thread.currentThread().setContextClassLoader(originLoader);
         }
-    }
-
-    public interface InvokeInThreadContextClassLoader<T> {
-        T invoke() throws Exception;
-    }
-
-    public static boolean contains(Object[] array, Object obj) {
-        if (array == null) {
-            return false;
-        }
-        for (Object o : array) {
-            if (Objects.equals(o, obj)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public static boolean notBlank(String value) {
@@ -288,9 +238,9 @@ public class Utils {
         return msg.toString();
     }
 
-    public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, ClassLoader classLoader) throws Exception {
-        return Utils.doInThreadContextClassLoader(classLoader, () -> {
-            Collection<String> targetClasses = new HashSet<>();
+    public static Collection<String> detectAnnotatedClass(File[] libs, Class<?> annotationClass, ClassLoader classLoader) throws Throwable {
+        Collection<String> targetClasses = new HashSet<>();
+        Utils.doInThreadContextClassLoader(classLoader, () -> {
             ClassPool classPool;
             if (classLoader != null) {
                 classPool = new ClassPool(true);
@@ -309,8 +259,9 @@ public class Utils {
                 } catch (Exception ignored) {
                 }
             });
-            return targetClasses;
         });
+
+        return targetClasses;
     }
 
     private static Collection<String> getScopeClasses(File[] libs) throws IOException {
@@ -362,32 +313,5 @@ public class Utils {
             }
         }
         return data;
-    }
-
-    public static Map<String, String> stringToMap(String str, String SP) {
-        Map<String, String> map = new LinkedHashMap<>();
-        if (Utils.isBlank(str)) {
-            return map;
-        }
-        String[] envArr = str.split(SP);
-        for (String env : envArr) {
-            int i = env.indexOf("=");
-            if (i < 0) {
-                map.put(env, "");
-            } else {
-                String name = env.substring(0, i);
-                String value = env.substring(i + 1);
-                map.put(name, value);
-            }
-        }
-        return map;
-    }
-
-    public static String toUrl(Map<String, String> params) {
-        StringBuilder url = new StringBuilder();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            url.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
-        }
-        return url.substring(0, url.length() - 1);
     }
 }

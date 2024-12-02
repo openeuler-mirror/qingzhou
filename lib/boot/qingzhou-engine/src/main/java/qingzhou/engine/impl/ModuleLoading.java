@@ -35,7 +35,7 @@ public class ModuleLoading implements Process {
     }
 
     @Override
-    public void exec() throws Exception {
+    public void exec() throws Throwable {
         sequence.exec();
     }
 
@@ -121,7 +121,7 @@ public class ModuleLoading implements Process {
     private class BuildModuleActivator implements Process {
 
         @Override
-        public void exec() throws Exception {
+        public void exec() throws Throwable {
             for (ModuleInfo moduleInfo : engineContext.moduleInfoList) {
                 Collection<String> annotatedClasses = Utils.detectAnnotatedClass(
                         new File[]{moduleInfo.getFile()},
@@ -143,7 +143,7 @@ public class ModuleLoading implements Process {
     private class StartModule implements Process {
 
         @Override
-        public void exec() throws Exception {
+        public void exec() throws Throwable {
             Collection<ModuleInfo> toStartList = engineContext.moduleInfoList;
             while (true) {
                 Map<ModuleInfo, Set<Class<?>>> missingServiceModule = startModule(toStartList);
@@ -172,7 +172,7 @@ public class ModuleLoading implements Process {
             moduleStartedOrderCache.clear();
         }
 
-        Map<ModuleInfo, Set<Class<?>>> startModule(Collection<ModuleInfo> toStartList) throws Exception {
+        Map<ModuleInfo, Set<Class<?>>> startModule(Collection<ModuleInfo> toStartList) throws Throwable {
             Map<ModuleInfo, Set<Class<?>>> missingServiceModule = new HashMap<>();
             for (ModuleInfo moduleInfo : toStartList) {
                 Set<Class<?>> missing = injectRequiredService(moduleInfo);

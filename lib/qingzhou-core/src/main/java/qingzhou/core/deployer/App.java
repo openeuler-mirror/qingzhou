@@ -12,5 +12,5 @@ public interface App {
 
     AppInfo getAppInfo();
 
-    void invoke(Request request) throws Exception;
+    void invoke(Request request) throws Throwable;
 }

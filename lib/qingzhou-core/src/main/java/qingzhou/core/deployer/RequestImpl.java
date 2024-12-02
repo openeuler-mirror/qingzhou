@@ -91,7 +91,9 @@ public class RequestImpl implements Request, Serializable {
     @Override
     public <T> T getParameterAsObject(Class<T> objectType) throws Exception {
         T parameterObject = objectType.newInstance();
-        Utils.setPropertiesToObj(parameterObject, parameters);
+        for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            Utils.setPropertyToObj(parameterObject, entry.getKey(), entry.getValue());
+        }
         return parameterObject;
     }
 

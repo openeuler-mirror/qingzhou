@@ -31,7 +31,7 @@ public class Controller implements ModuleActivator {
     private ProcessSequence processSequence;
 
     @Override
-    public void start(ModuleContext context) throws Exception {
+    public void start(ModuleContext context) throws Throwable {
         processSequence = new ProcessSequence(
                 new qingzhou.core.config.impl.Controller(context),
                 new qingzhou.core.registry.impl.Controller(context),
