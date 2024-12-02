@@ -26,6 +26,7 @@
     int pageSize = listData.pageSize;
 
     boolean isEdit = false; // for field_type.jsp
+    boolean isForm = false;  // for field_type.jsp
     boolean isDisabled = false; // for field_type.jsp
 %>
 
@@ -263,6 +264,7 @@
                     String fieldValue = value;
                     List<String> fieldValues = Arrays.asList(fieldValue.split(fieldInfo.getSeparator()));
                     String fieldName = field;
+                    ModelFieldInfo modelField = fieldInfo;
 
                     if (fieldInfo.getInputType() == InputType.bool) {
             %>
