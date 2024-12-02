@@ -37,19 +37,6 @@ public class OAuth2Client {
         this.serverVendor = serverVendor;
     }
 
-    private Response sendReq(String url, RequestBuilder requestBuilder) throws Exception {
-        String method = requestBuilder.method();
-        requestBuilder.header("Accept", "application/json");
-        HttpResponse res;
-        if ("GET".equals(method)) {
-            res = httpClient.get(url + "?" + toUrl(requestBuilder.params()), requestBuilder.headers());
-        } else {
-            res = httpClient.post(url, requestBuilder.params(), requestBuilder.headers());
-        }
-
-        return jsonService.fromJson(new String(res.getResponseBody(), StandardCharsets.UTF_8), requestBuilder.responseType());
-    }
-
     public boolean logout(String accessToken) throws Exception {
         RequestBuilder requestBuilder = RequestBuilder.builder().param("access_token", accessToken);
         return serverVendor.logout(config, requestBuilder).success();
