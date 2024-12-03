@@ -3,7 +3,6 @@ package qingzhou.console.controller.rest;
 import java.util.Map;
 
 import qingzhou.api.type.Show;
-import qingzhou.console.SecurityController;
 import qingzhou.console.controller.SystemController;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;

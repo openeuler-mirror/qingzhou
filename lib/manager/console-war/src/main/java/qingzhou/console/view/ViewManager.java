@@ -9,7 +9,7 @@ import qingzhou.api.type.Add;
 import qingzhou.api.type.Monitor;
 import qingzhou.api.type.Show;
 import qingzhou.api.type.Update;
-import qingzhou.console.SecurityController;
+import qingzhou.console.controller.rest.SecurityController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.type.DownloadView;
 import qingzhou.console.view.type.HtmlView;

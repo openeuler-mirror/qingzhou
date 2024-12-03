@@ -1,7 +1,6 @@
 package qingzhou.console.controller.rest;
 
 import qingzhou.api.type.Show;
-import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.engine.util.Utils;

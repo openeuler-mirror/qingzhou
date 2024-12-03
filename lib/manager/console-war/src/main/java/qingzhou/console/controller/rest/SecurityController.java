@@ -1,14 +1,19 @@
-package qingzhou.console;
+package qingzhou.console.controller.rest;
 
+import qingzhou.config.Role;
+import qingzhou.config.User;
 import qingzhou.console.controller.SystemController;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
+import qingzhou.engine.util.pattern.Filter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class SecurityController {
+public class SecurityController implements Filter<RestContext> {
     public static boolean isActionPermitted(String app, String model, String action, String user) {
         // model 是否存在
         ModelInfo modelInfo = SystemController.getModelInfo(app, model);
@@ -19,7 +24,25 @@ public class SecurityController {
         if (actionInfo == null) return false;
 
         // 检查用户的权限
-        return user != null;
+        User currentUser = SystemController.getConsole().getUser(user);
+        //超管直接放行
+        if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(currentUser.getType())) {
+            return true;
+        }
+
+        String[] userRoles = currentUser.getRole().split(DeployerConstants.DEFAULT_DATA_SEPARATOR);
+        if (userRoles.length > 0) {
+            for (int i = 0; i < userRoles.length; i++) {
+                Role role = SystemController.getConsole().getRole(userRoles[i]);
+                String roleApp = role.getApp();
+                String roleUris = role.getUris();
+                String currentUri = model + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + action;
+                if (roleApp.equals(action) && roleUris.contains(currentUri)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static boolean checkRule(String condition, FieldValueRetriever retriever) {
@@ -59,6 +82,34 @@ public class SecurityController {
         }
 
         return queue.compare();
+    }
+
+    @Override
+    public boolean doFilter(RestContext context) throws Exception {
+        RequestImpl request = context.request;
+        String user = request.getUser();
+        String action = request.getAction();
+        String model = request.getModel();
+        // 检查用户的权限
+        User currentUser = SystemController.getConsole().getUser(user);
+
+        //超管直接放行
+        if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(currentUser.getType())) {
+            return true;
+        }
+        String[] userRoles = currentUser.getRole().split(DeployerConstants.DEFAULT_DATA_SEPARATOR);
+        if (userRoles.length > 0) {
+            for (String userRole : userRoles) {
+                Role role = SystemController.getConsole().getRole(userRole);
+                String roleApp = role.getApp();
+                String roleUris = role.getUris();
+                String currentUri = model + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + action;
+                if (roleApp.equals(action) && roleUris.contains(currentUri)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public interface FieldValueRetriever {

@@ -11,6 +11,7 @@ public class User {
     private String passwordLastModified;
     private String historyPasswords;
     private String role;
+    private String type;
 
     public String getName() {
         return name;
@@ -90,5 +91,13 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
