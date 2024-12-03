@@ -14,13 +14,10 @@
         Map<String, String> formFieldDefaultValues = modelInfo.getFormFieldDefaultValues();
         Map<String, String> newModelData = new LinkedHashMap<>();
         for (Map.Entry<String,String> entry : formFieldDefaultValues.entrySet()){
-            if (modelData.containsKey(entry.getKey())){
-                newModelData.put(entry.getKey(),modelData.get(entry.getKey()));
-            }else{
-                boolean isPlainText = modelInfo.getModelFieldInfo(entry.getKey()).isPlainText();
-                if (isPlainText){
-                    newModelData.put(entry.getKey(),entry.getValue());
-                }
+            if (modelData.containsKey(entry.getKey())) {
+                newModelData.put(entry.getKey(), modelData.get(entry.getKey()));
+            } else {
+                newModelData.put(entry.getKey(), entry.getValue());
             }
         }
         modelData = newModelData;

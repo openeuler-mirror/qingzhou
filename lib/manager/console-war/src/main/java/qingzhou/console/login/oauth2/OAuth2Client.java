@@ -39,7 +39,11 @@ public class OAuth2Client {
 
     public boolean logout(String accessToken) throws Exception {
         RequestBuilder requestBuilder = RequestBuilder.builder().param("access_token", accessToken);
-        return serverVendor.logout(config, requestBuilder).success();
+        if (config.getLogoutUrl() != null) {
+            return serverVendor.logout(config, requestBuilder).success();
+        } else {
+            return true;
+        }
     }
 
     public String getLoginUrl() {
@@ -69,7 +73,11 @@ public class OAuth2Client {
     }
 
     public boolean checkToken(String token) throws Exception {
-        return serverVendor.checkToken(config, token);
+        if (Utils.notBlank(config.getCheckTokenUrl())) {
+            return serverVendor.checkToken(config, token);
+        } else {
+            return true;
+        }
     }
 
     public static String toUrl(Map<String, String> params) {
@@ -118,17 +126,13 @@ public class OAuth2Client {
         @Override
         public boolean checkToken(OAuthConfig config, String accessToken) throws Exception {
             String checkTokenUrl = config.getCheckTokenUrl();
-            if (Utils.notBlank(checkTokenUrl)) {
-                RequestBuilder builder = RequestBuilder.builder()
-                        .param("client_id", config.getClientId())
-                        .param("client_secret", config.getClientSecret())
-                        .param("token", accessToken)
-                        .responseType(TongResponse.class);
-                TongResponse response = (TongResponse) sendReq(checkTokenUrl, builder);
-                return Boolean.parseBoolean(String.valueOf(response.get("active")));
-            } else {
-                return true;
-            }
+            RequestBuilder builder = RequestBuilder.builder()
+                    .param("client_id", config.getClientId())
+                    .param("client_secret", config.getClientSecret())
+                    .param("token", accessToken)
+                    .responseType(TongResponse.class);
+            TongResponse response = (TongResponse) sendReq(checkTokenUrl, builder);
+            return Boolean.parseBoolean(String.valueOf(response.get("active")));
         }
 
         private Response sendReq(String url, RequestBuilder requestBuilder) throws Exception {
