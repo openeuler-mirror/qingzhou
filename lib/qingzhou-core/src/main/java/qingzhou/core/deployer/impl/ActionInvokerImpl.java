@@ -4,7 +4,7 @@ import qingzhou.api.ActionType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.config.Config;
+import qingzhou.config.Config;
 import qingzhou.core.deployer.*;
 import qingzhou.core.registry.*;
 import qingzhou.crypto.Cipher;

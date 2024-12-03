@@ -1,4 +1,4 @@
-package qingzhou.core.impl;
+package qingzhou.impl;
 
 
 import qingzhou.crypto.CryptoService;
@@ -33,7 +33,7 @@ public class Controller implements ModuleActivator {
     @Override
     public void start(ModuleContext context) throws Throwable {
         processSequence = new ProcessSequence(
-                new qingzhou.core.config.impl.Controller(context),
+                new qingzhou.config.impl.Controller(context),
                 new qingzhou.core.registry.impl.Controller(context),
                 new qingzhou.core.deployer.impl.Controller(context),
                 new qingzhou.core.agent.impl.Controller(context),

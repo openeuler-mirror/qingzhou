@@ -10,7 +10,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.webresources.DirResourceSet;
 import org.apache.tomcat.util.modeler.Registry;
 import qingzhou.core.console.servlet.ServletContainer;
-import qingzhou.core.impl.Controller;
+import qingzhou.impl.Controller;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 

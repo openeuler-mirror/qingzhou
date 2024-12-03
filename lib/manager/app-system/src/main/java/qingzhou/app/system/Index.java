@@ -4,9 +4,11 @@ import qingzhou.api.*;
 import qingzhou.api.type.Dashboard;
 import qingzhou.api.type.Monitor;
 import qingzhou.api.type.Show;
+import qingzhou.config.Jmx;
+import qingzhou.config.Web;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.config.Config;
-import qingzhou.core.config.Security;
+import qingzhou.config.Config;
+import qingzhou.config.Security;
 import qingzhou.core.deployer.App;
 import qingzhou.core.deployer.*;
 import qingzhou.core.registry.*;
@@ -110,9 +112,9 @@ public class Index extends ModelBase implements Dashboard {
         basic.addData(I18nTool.retrieveI18n(new String[]{"实例数量", "en:Number Of Instance"}).get(lang), String.valueOf(allInstanceNames.size()));
         basic.addData(I18nTool.retrieveI18n(new String[]{"应用数量", "en:Number Of App"}).get(lang), String.valueOf(appNames.size()));
         Config config = Main.getService(Config.class);
-        qingzhou.core.config.Web web = config.getCore().getConsole().getWeb();
+        Web web = config.getCore().getConsole().getWeb();
         basic.addData(I18nTool.retrieveI18n(new String[]{"Web 服务端口", "en:Web Service Port"}).get(lang), String.valueOf(web.getPort()));
-        qingzhou.core.config.Jmx jmx = config.getCore().getConsole().getJmx();
+        Jmx jmx = config.getCore().getConsole().getJmx();
         if (jmx.isEnabled()) {
             basic.addData(I18nTool.retrieveI18n(new String[]{"JMX 服务端口", "en:JMX Service Port"}).get(lang), String.valueOf(jmx.getPort()));
         } else {

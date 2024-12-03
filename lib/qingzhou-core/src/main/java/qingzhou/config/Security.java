@@ -1,4 +1,4 @@
-package qingzhou.core.config;
+package qingzhou.config;
 
 public class Security {
     private String publicKey;

@@ -1,6 +1,7 @@
-package qingzhou.core.config.impl;
+package qingzhou.config.impl;
 
-import qingzhou.core.config.*;
+import qingzhou.config.*;
+import qingzhou.engine.util.CallbackArgs;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.json.Json;
 
@@ -94,15 +95,11 @@ class JsonFileConfig implements Config {
         FileUtil.writeFile(jsonFile, result);
     }
 
-    private <T> T readJsonFile(UseReaderCallback<T> callback) {
+    private <T> T readJsonFile(CallbackArgs<Reader, T> callback) {
         try (BufferedReader reader = Files.newBufferedReader(jsonFile.toPath())) {
-            return callback.accept(reader);
-        } catch (Exception e) {
+            return callback.callback(reader);
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private interface UseReaderCallback<T> {
-        T accept(Reader reader) throws Exception;
     }
 }

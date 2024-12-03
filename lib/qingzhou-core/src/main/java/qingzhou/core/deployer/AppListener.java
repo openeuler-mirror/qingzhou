@@ -1,7 +1,9 @@
 package qingzhou.core.deployer;
 
 public interface AppListener {
-    void onInstalled(String appName);
+    default void onInstalled(String appName) {
+    }
 
-    void onUninstalled(String appName);
+    default void onUninstalled(String appName) {
+    }
 }

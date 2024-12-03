@@ -1,6 +1,6 @@
-package qingzhou.core.config.impl;
+package qingzhou.config.impl;
 
-import qingzhou.core.config.Config;
+import qingzhou.config.Config;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.json.Json;

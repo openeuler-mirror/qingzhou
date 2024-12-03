@@ -61,10 +61,6 @@ class AppPageUtil {
                 FileUtil.unZipToDir(tempFile, appPageCacheDir);
                 SystemController.getService(Deployer.class).addAppListener(new AppListener() {
                     @Override
-                    public void onInstalled(String appName) {
-                    }
-
-                    @Override
                     public void onUninstalled(String appName) {
                         if (appName.equals(targetAppName)) {
                             try {

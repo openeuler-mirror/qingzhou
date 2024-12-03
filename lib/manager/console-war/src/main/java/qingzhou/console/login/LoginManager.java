@@ -9,7 +9,7 @@ import qingzhou.console.login.vercode.VerCode;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.config.User;
+import qingzhou.config.User;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.TotpCipher;
 import qingzhou.engine.util.pattern.Filter;

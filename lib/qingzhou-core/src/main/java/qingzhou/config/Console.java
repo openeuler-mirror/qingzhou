@@ -1,4 +1,4 @@
-package qingzhou.core.config;
+package qingzhou.config;
 
 import java.util.ArrayList;
 import java.util.Arrays;

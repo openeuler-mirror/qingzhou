@@ -8,7 +8,7 @@ import qingzhou.api.type.Validate;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.core.DeployerConstants;
-import qingzhou.core.config.Config;
+import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.engine.util.Utils;
@@ -55,7 +55,7 @@ public class User extends ModelBase implements General, Validate, Option {
                         return ModelUtil.getPropertiesFromObj(user);
                     }
                 }))
-                .map(qingzhou.core.config.User::getName)
+                .map(qingzhou.config.User::getName)
                 .toArray(String[]::new);
     }
 
@@ -188,7 +188,7 @@ public class User extends ModelBase implements General, Validate, Option {
         // 添加密码更新时间戳
         insertPasswordModifiedTime(data);
 
-        qingzhou.core.config.User u = new qingzhou.core.config.User();
+        qingzhou.config.User u = new qingzhou.config.User();
         ModelUtil.setPropertiesToObj(u, data);
         Main.getService(Config.class).addUser(u);
     }
@@ -261,7 +261,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     static Map<String, String> showDataForUserInternal(String userId) {
-        for (qingzhou.core.config.User user : Main.getService(Config.class).getCore().getConsole().getUser()) {
+        for (qingzhou.config.User user : Main.getService(Config.class).getCore().getConsole().getUser()) {
             if (user.getName().equals(userId)) {
                 Map<String, String> data = ModelUtil.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
@@ -282,7 +282,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
         Config config = Main.getService(Config.class);
         String id = data.get(ID_KEY);
-        qingzhou.core.config.User user = config.getCore().getConsole().getUser(id);
+        qingzhou.config.User user = config.getCore().getConsole().getUser(id);
         config.deleteUser(id);
         if (PASSWORD_FLAG.equals(data.get("password"))) {
             data.remove("password");
