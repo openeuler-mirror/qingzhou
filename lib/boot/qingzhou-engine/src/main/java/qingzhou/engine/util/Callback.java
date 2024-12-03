@@ -1,5 +1,5 @@
 package qingzhou.engine.util;
 
-public interface GeneralCallback {
+public interface Callback {
     void callback() throws Throwable;
 }

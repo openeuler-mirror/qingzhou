@@ -1,7 +1,7 @@
 package qingzhou.core.console.servlet.impl;
 
 import org.apache.juli.logging.Log;
-import qingzhou.core.impl.Controller;
+import qingzhou.impl.Controller;
 
 public class TomcatLogDelegate implements Log {
     public TomcatLogDelegate() {

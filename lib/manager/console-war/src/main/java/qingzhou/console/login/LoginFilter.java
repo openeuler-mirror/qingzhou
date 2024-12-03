@@ -5,7 +5,7 @@ import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
 import qingzhou.console.login.oauth2.Oauth2Login;
 import qingzhou.core.LoginInterceptor;
-import qingzhou.core.config.User;
+import qingzhou.config.User;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.engine.util.pattern.Filter;
 

@@ -99,7 +99,7 @@ public class Utils {
         throw new IllegalArgumentException();
     }
 
-    public static void doInThreadContextClassLoader(ClassLoader useLoader, GeneralCallback callback) throws Throwable {
+    public static void doInThreadContextClassLoader(ClassLoader useLoader, Callback callback) throws Throwable {
         if (useLoader == null) {
             callback.callback();
             return;

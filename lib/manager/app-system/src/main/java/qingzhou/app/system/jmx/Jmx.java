@@ -9,8 +9,8 @@ import qingzhou.api.ModelField;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.core.config.Config;
-import qingzhou.core.config.Console;
+import qingzhou.config.Config;
+import qingzhou.config.Console;
 import qingzhou.core.console.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
 import qingzhou.logger.Logger;
@@ -50,7 +50,7 @@ public class Jmx extends ModelBase implements Update {
         Console console = Main.getService(Config.class).getCore().getConsole();
         if (console == null) return;
         try {
-            qingzhou.core.config.Jmx jmx = console.getJmx();
+            qingzhou.config.Jmx jmx = console.getJmx();
             if (jmx.isEnabled()) {
                 ServiceManager.getInstance().init(jmx);
             }
@@ -73,20 +73,20 @@ public class Jmx extends ModelBase implements Update {
     @Override
     public Map<String, String> editData(String id) {
         Config config = Main.getService(Config.class);
-        qingzhou.core.config.Jmx jmx = config.getCore().getConsole().getJmx();
+        qingzhou.config.Jmx jmx = config.getCore().getConsole().getJmx();
         return ModelUtil.getPropertiesFromObj(jmx);
     }
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
         Config config = Main.getService(Config.class);
-        qingzhou.core.config.Jmx jmx = config.getCore().getConsole().getJmx();
+        qingzhou.config.Jmx jmx = config.getCore().getConsole().getJmx();
         ModelUtil.setPropertiesToObj(jmx, data);
         doJmxService(jmx); // 生效 jmx 服务
         config.setJmx(jmx); // 最后没问题再写入配置文件
     }
 
-    private void doJmxService(qingzhou.core.config.Jmx jmx) throws Exception {
+    private void doJmxService(qingzhou.config.Jmx jmx) throws Exception {
         ServiceManager.getInstance().destroy();
         if (jmx.isEnabled()) {
             ServiceManager.getInstance().init(jmx);

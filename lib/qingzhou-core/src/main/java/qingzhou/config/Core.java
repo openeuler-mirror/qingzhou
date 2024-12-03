@@ -1,9 +1,10 @@
-package qingzhou.core.config;
+package qingzhou.config;
 
 public class Core {
+    private Console console;
+    private Deployer deployer;
     private Registry registry;
     private Agent agent;
-    private Console console;
 
     public Registry getRegistry() {
         return registry;
@@ -27,5 +28,13 @@ public class Core {
 
     public void setConsole(Console console) {
         this.console = console;
+    }
+
+    public Deployer getDeployer() {
+        return deployer;
+    }
+
+    public void setDeployer(Deployer deployer) {
+        this.deployer = deployer;
     }
 }

@@ -1,9 +1,16 @@
 package qingzhou.core.deployer.impl;
 
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Delete;
+import qingzhou.config.Config;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.AppListener;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.QingzhouSystemApp;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.core.registry.ModelInfo;
 import qingzhou.core.registry.Registry;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
@@ -32,9 +39,10 @@ public class Controller implements Process {
     @Override
     public void exec() throws Throwable {
         sequence = new ProcessSequence(
-                new RegisterService(moduleContext),
-                new InjectShareableAddonsForApp(moduleContext),
-                new InstallApp(moduleContext)
+                new InitDeployer(),
+                new RegisterService(),
+                new InjectShareableAddonsForApp(),
+                new InstallApp()
         );
         sequence.exec();
     }
@@ -44,30 +52,43 @@ public class Controller implements Process {
         sequence.undo();
     }
 
-    private class RegisterService implements Process {
-        final ModuleContext moduleContext;
-
-        RegisterService(ModuleContext moduleContext) {
-            this.moduleContext = moduleContext;
-        }
+    private class InitDeployer implements Process {
 
         @Override
         public void exec() {
             deployer = new DeployerImpl(moduleContext, moduleContext.getService(Registry.class));
             deployer.appsBase = FileUtil.newFile(moduleContext.getInstanceDir(), "apps");
 
+            deployer.addAppListener(new AppListener() {
+                @Override
+                public void onInstalled(String appName) {
+                    if (DeployerConstants.APP_SYSTEM.equals(appName)) {
+                        boolean singleAppMode = moduleContext.getService(Config.class).getCore().getDeployer().isSingleAppMode();
+                        if (singleAppMode) { // 单应用模式下，不能进行应用的“卸载”和“添加”
+                            AppInfo appInfo = deployer.getAppInfo(DeployerConstants.APP_SYSTEM);
+                            ModelInfo appModel = appInfo.getModelInfo(DeployerConstants.MODEL_APP);
+                            ModelActionInfo[] actionInfos = Arrays.stream(appModel.getModelActionInfos()).filter(action ->
+                                            !action.getCode().equals(Delete.ACTION_DELETE)
+                                                    && !action.getCode().equals(Add.ACTION_CREATE)
+                                                    && !action.getCode().equals(Add.ACTION_ADD))
+                                    .toArray(ModelActionInfo[]::new);
+                            appModel.setModelActionInfos(actionInfos);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    private class RegisterService implements Process {
+        @Override
+        public void exec() {
             moduleContext.registerService(Deployer.class, deployer);
             moduleContext.registerService(ActionInvoker.class, new ActionInvokerImpl(moduleContext));
         }
     }
 
-    private static class InjectShareableAddonsForApp implements Process {
-        final ModuleContext moduleContext;
-
-        InjectShareableAddonsForApp(ModuleContext moduleContext) {
-            this.moduleContext = moduleContext;
-        }
-
+    private class InjectShareableAddonsForApp implements Process {
         @Override
         public void exec() throws Exception {
             File addonsDir = FileUtil.newFile(moduleContext.getLibDir(), "addons"); //保持一致：qingzhou.engine.impl.ModuleLoading.BuildModuleInfo
@@ -128,12 +149,6 @@ public class Controller implements Process {
     }
 
     private class InstallApp implements Process {
-        final ModuleContext moduleContext;
-
-        private InstallApp(ModuleContext moduleContext) {
-            this.moduleContext = moduleContext;
-        }
-
         @Override
         public void exec() throws Throwable {
             deployer.setLoaderPolicy(new DeployerImpl.LoaderPolicy() {

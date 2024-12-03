@@ -1,8 +1,8 @@
 package qingzhou.core.console.impl;
 
 import qingzhou.core.AppPageData;
-import qingzhou.core.config.Config;
-import qingzhou.core.config.Console;
+import qingzhou.config.Config;
+import qingzhou.config.Console;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.servlet.ServletContainer;
 import qingzhou.core.console.servlet.impl.ServletContainerImpl;
