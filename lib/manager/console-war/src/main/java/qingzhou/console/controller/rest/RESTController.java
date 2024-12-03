@@ -102,6 +102,7 @@ public class RESTController extends HttpServlet {
 
     private static RESTController thisInstance;
     private final Filter<RestContext>[] filters = new Filter[]{
+            new SecurityController(),
             new ResetPassword(),
 //            new BackFilter(), // 因前端 子菜单跳转 等功能支持，暂无法结合后端历史请求处理，会导致前端控制不到显示区域和菜单定位等问题
             new ParameterFilter(), // 解密前端的 password 类型的表单域

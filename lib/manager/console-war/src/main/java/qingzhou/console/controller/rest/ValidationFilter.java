@@ -5,7 +5,6 @@ import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Update;
 import qingzhou.api.type.Validate;
-import qingzhou.console.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.core.deployer.ActionInvoker;

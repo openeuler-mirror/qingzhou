@@ -3,7 +3,7 @@ package qingzhou.console.page;
 import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
-import qingzhou.console.SecurityController;
+import qingzhou.console.controller.rest.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
