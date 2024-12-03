@@ -42,8 +42,9 @@
             selectText = fieldValue;
         }
 
+        String combineHolder = modelField.getPlaceholder().isEmpty()?I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + modelField.getCode()):modelField.getPlaceholder();
         String showText = ((selectText == null || "".equals(selectText.trim())) ? selectVal : selectText);
-        selectHtml = "<input type=\"text\" value=\"" + selectText + "\" text=\"" + selectText + "\"" + echoGroup + " autocomplete=\"off\" style=\"background-color: rgba(0, 0, 0, 0);\"  placeholder=\"" + (PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)) + "\">"
+        selectHtml = "<input type=\"text\" value=\"" + selectText + "\" text=\"" + selectText + "\"" + echoGroup + " autocomplete=\"off\" style=\"background-color: rgba(0, 0, 0, 0);\"  placeholder=\"" + (modelField.getInputType().equals(InputType.combine)?combineHolder:(PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm))) + "\">"
                 + "<input type=\"hidden\" name=\"" + fieldName + "\" value=\"" + selectVal + "\"" + " format=\"" + showText + "\">" + selectHtml;
         selectHtml = "<div class=\"form-control nice-select wide\" style='height: 32px' tabindex=\"" + tabIndex + "\">" + selectHtml + "</div>";
 

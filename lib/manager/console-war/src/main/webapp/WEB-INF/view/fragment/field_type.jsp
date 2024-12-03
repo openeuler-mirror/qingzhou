@@ -17,14 +17,14 @@
         }
 %>
 <input type="text" disabled="disabled" name="<%=fieldName%>"
-       placeholder="<%=modelField.getPlaceholder()%>"
+       placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"
        value='<%=fieldValue%>' <%=echoGroup%>
        class="form-control"/>
 <%
 } else if (modelField.isReadonly()) {
 %>
 <input type="text" readonly name="<%=fieldName%>"
-       placeholder="<%=modelField.getPlaceholder()%>"
+       placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"
        style="cursor: not-allowed;border: 1px solid #DCDCDC;background-color: #e5e5e5;"
        value='<%=fieldValue%>' <%=echoGroup%>
        class="form-control"/>
@@ -36,7 +36,7 @@
         case text:
 %>
 <input type="text"
-       placeholder="<%=modelField.getPlaceholder()%>"
+       placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"
        name="<%=fieldName%>" value='<%=fieldValue%>' <%=echoGroup%>
        class="form-control">
 <%
@@ -44,7 +44,7 @@
     case number:
 %>
 <input type="number" min="<%=modelField.getMin()%>"
-       placeholder="<%=modelField.getPlaceholder()%>"
+       placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"
        max="<%=(modelField.isPort()?"65535":modelField.getMax())%>"
        name="<%=fieldName%>" value='<%=fieldValue%>' <%=echoGroup%> class="form-control">
 <%
@@ -57,7 +57,7 @@
         passwordFields.add(fieldName);
 %>
 <input type="password"
-       placeholder="<%=modelField.getPlaceholder()%>"
+       placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"
        name="<%=fieldName%>" value='<%=fieldValue%>' data-type="password"
        class="form-control">
 <label password_label_right="<%=fieldName%>_eye" class="input-control-icon-right"
@@ -67,7 +67,7 @@
     case textarea:
 %>
 <textarea name="<%=fieldName%>"
-          placeholder="<%=modelField.getPlaceholder()%>"
+          placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"
           value='<%=fieldValue%>' <%=echoGroup%> class="form-control"
           rows="3"><%=fieldValue%></textarea>
 <%
@@ -76,7 +76,7 @@
 %>
 <div class="markedview"></div>
 <textarea name="<%=fieldName%>"
-          placeholder="<%=modelField.getPlaceholder()%>"
+          placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"
           class="markedviewText" rows="3"><%=fieldValue%></textarea>
 <%
         break;

@@ -26,10 +26,15 @@ public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
 
     public static String getPlaceholder(ModelFieldInfo modelField, String qzApp, String qzModel, boolean isForm) {
-        return isForm ? modelField.getPlaceholder() : (
-                Utils.notBlank(modelField.getPlaceholder())
-                        ? modelField.getPlaceholder()
-                        : I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + modelField.getCode()));
+        String placeholder = modelField.getPlaceholder();
+        String i18nPlaceholder = I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + modelField.getCode());
+
+        if (isForm && modelField.isShowLabel()) {
+            return placeholder;
+        }
+
+        return Utils.notBlank(placeholder) ? placeholder : i18nPlaceholder;
+
     }
 
     public static Map<String, List<String>> groupedFields(Collection<String> fieldNames, ModelInfo modelInfo) {

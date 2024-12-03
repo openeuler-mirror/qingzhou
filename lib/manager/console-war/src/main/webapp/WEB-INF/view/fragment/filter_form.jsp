@@ -73,7 +73,7 @@
 				%>
 				<textarea name="<%=fieldName%>" value='<%=fieldValue%>' class="form-control"
 						  rows="2"
-						  placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>"><%=fieldValue%></textarea>
+						  placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>"><%=fieldValue%></textarea>
 				<%
 				} else if (searchFieldInfo.getInputType() == InputType.range_datetime) {
 				%>
@@ -87,7 +87,7 @@
 				%>
 				<input id="<%=fieldName%>" type="text" name="<%=fieldName%>" value='<%=fieldValue%>'
 					   class="form-control"
-					   placeholder="<%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%>">
+					   placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>">
 				<%
 					}
 				%>

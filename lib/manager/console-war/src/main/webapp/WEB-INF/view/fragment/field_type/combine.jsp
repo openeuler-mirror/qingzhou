@@ -5,7 +5,7 @@
      onclick="openCombine(this,'<%=fieldName%>');">
     <input type="hidden" name="<%=fieldName%>" value='<%=fieldValue%>'>
     <div>
-        <span style="color: #999999;"><%=I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName)%></span>
+        <span style="color: #999999;"><%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%></span>
         <ul>
         </ul>
     </div>
