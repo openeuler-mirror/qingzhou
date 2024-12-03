@@ -1,5 +1,6 @@
 package qingzhou.console.login.oauth2;
 
+import qingzhou.config.Security;
 import qingzhou.console.controller.SystemController;
 import qingzhou.core.LoginInterceptor;
 import qingzhou.logger.Logger;
@@ -7,8 +8,8 @@ import qingzhou.logger.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.WeakHashMap;
 
 public class Oauth2Login implements LoginInterceptor {
@@ -29,6 +30,10 @@ public class Oauth2Login implements LoginInterceptor {
         while (serverUrl.endsWith("/")) {
             serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
         }
+        String contextRoot = SystemController.getConsole().getWeb().getContextRoot();
+
+        serverUrl += contextRoot.startsWith("/") ? contextRoot : ("/" + contextRoot);
+
         config.setListenLogout(serverUrl + this_listen_logout_path);
         config.setReceiveCodeUrl(serverUrl + this_receive_code_path);
 
@@ -36,13 +41,27 @@ public class Oauth2Login implements LoginInterceptor {
     }
 
     private OAuthConfig load() {
-        Properties properties = new Properties();
+        Map<String, String> properties = new HashMap<>();
         for (String name : System.getProperties().stringPropertyNames()) {
             String PROPERTIES_PREFIX = "oauth2.";
             if (name.startsWith(PROPERTIES_PREFIX)) {
                 properties.put(name.substring(PROPERTIES_PREFIX.length()), System.getProperty(name));
             }
         }
+
+        Security security = SystemController.getConsole().getSecurity();
+        if (security.isEnabledOAuth2()) {
+            properties.put("enabled", "true");
+            properties.put("redirectUrl", security.getRedirectUrl());
+            properties.put("clientId", security.getClientId());
+            properties.put("clientSecret", security.getClientSecret());
+            properties.put("authorizeUrl", security.getAuthorizeUrl());
+            properties.put("tokenUrl", security.getTokenUrl());
+            properties.put("userInfoUrl", security.getUserInfoUrl());
+            properties.put("logoutUrl", security.getLogoutUrl());
+            properties.put("checkTokenUrl", security.getCheckTokenUrl());
+        }
+
         if (properties.isEmpty()) {
             return null;
         }

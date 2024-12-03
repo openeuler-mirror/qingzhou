@@ -11,6 +11,16 @@ public class Security {
     private int passwordLimitRepeats;
     private int maxFileUpload;
 
+    private boolean enabledOAuth2;
+    private String clientId;
+    private String clientSecret;
+    private String redirectUrl;
+    private String authorizeUrl;
+    private String tokenUrl;
+    private String userInfoUrl;
+    private String checkTokenUrl;
+    private String logoutUrl;
+
     public int getMaxFileUpload() {
         return maxFileUpload;
     }
@@ -81,5 +91,77 @@ public class Security {
 
     public void setVerCodeEnabled(boolean verCodeEnabled) {
         this.verCodeEnabled = verCodeEnabled;
+    }
+
+    public boolean isEnabledOAuth2() {
+        return enabledOAuth2;
+    }
+
+    public void setEnabledOAuth2(boolean enabledOAuth2) {
+        this.enabledOAuth2 = enabledOAuth2;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+    }
+
+    public String getRedirectUrl() {
+        return redirectUrl;
+    }
+
+    public void setRedirectUrl(String redirectUrl) {
+        this.redirectUrl = redirectUrl;
+    }
+
+    public String getAuthorizeUrl() {
+        return authorizeUrl;
+    }
+
+    public void setAuthorizeUrl(String authorizeUrl) {
+        this.authorizeUrl = authorizeUrl;
+    }
+
+    public String getTokenUrl() {
+        return tokenUrl;
+    }
+
+    public void setTokenUrl(String tokenUrl) {
+        this.tokenUrl = tokenUrl;
+    }
+
+    public String getUserInfoUrl() {
+        return userInfoUrl;
+    }
+
+    public void setUserInfoUrl(String userInfoUrl) {
+        this.userInfoUrl = userInfoUrl;
+    }
+
+    public String getCheckTokenUrl() {
+        return checkTokenUrl;
+    }
+
+    public void setCheckTokenUrl(String checkTokenUrl) {
+        this.checkTokenUrl = checkTokenUrl;
+    }
+
+    public String getLogoutUrl() {
+        return logoutUrl;
+    }
+
+    public void setLogoutUrl(String logoutUrl) {
+        this.logoutUrl = logoutUrl;
     }
 }

@@ -1,6 +1,6 @@
 package qingzhou.console.login.oauth2;
 
-import java.util.Properties;
+import java.util.Map;
 
 class OAuthConfig {
         private boolean enabled;
@@ -16,17 +16,17 @@ class OAuthConfig {
         private String receiveCodeUrl;
         private String serverVendor;
 
-        public OAuthConfig(Properties properties) {
-            this.enabled = Boolean.parseBoolean(properties.getProperty("enabled", "false"));
-            this.redirectUrl = properties.getProperty("redirectUrl");
-            this.clientId = properties.getProperty("clientId");
-            this.clientSecret = properties.getProperty("clientSecret");
-            this.authorizeUrl = properties.getProperty("authorizeUrl");
-            this.tokenUrl = properties.getProperty("tokenUrl");
-            this.checkTokenUrl = properties.getProperty("checkTokenUrl");
-            this.userInfoUrl = properties.getProperty("userInfoUrl");
-            this.logoutUrl = properties.getProperty("logoutUrl");
-            this.serverVendor = properties.getProperty("serverVendor");
+        public OAuthConfig(Map<String, String> properties) {
+            this.enabled = Boolean.parseBoolean(properties.get("enabled"));
+            this.redirectUrl = properties.get("redirectUrl");
+            this.clientId = properties.get("clientId");
+            this.clientSecret = properties.get("clientSecret");
+            this.authorizeUrl = properties.get("authorizeUrl");
+            this.tokenUrl = properties.get("tokenUrl");
+            this.checkTokenUrl = properties.get("checkTokenUrl");
+            this.userInfoUrl = properties.get("userInfoUrl");
+            this.logoutUrl = properties.get("logoutUrl");
+            this.serverVendor = properties.get("serverVendor");
         }
 
         public boolean isEnabled() {

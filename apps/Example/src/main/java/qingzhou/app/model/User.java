@@ -100,7 +100,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
     @ModelField(
             plain_text = true,
             name = {"创建后不可编辑", "en:"})
-    public String noEdit;
+    public String noEdit = "创建后不可编辑";
 
     @ModelField(
             input_type = InputType.textarea,
