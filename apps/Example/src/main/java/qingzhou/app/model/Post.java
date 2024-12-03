@@ -29,7 +29,7 @@ public class Post extends AddModelBase implements Option {
 
     @ModelField(
             input_type = InputType.grouped_multiselect,
-            list = true, search = true,
+            list = true, search = true, static_option = true,
             update_action = "listUpdate",
             name = {"分组多选下拉", "en:"})
     public String groupedMultiselect;
@@ -62,25 +62,15 @@ public class Post extends AddModelBase implements Option {
     }
 
     @Override
-    public String[] staticOptionFields() {
-        return new String[]{"groupedMultiselect"};
-    }
-
-    @Override
-    public String[] dynamicOptionFields() {
-        return new String[]{};
-    }
-
-    @Override
     public Item[] optionData(String id, String fieldName) {
         if (fieldName.equals("groupedMultiselect")) {
             return new Item[]{
-                Item.of("1", new String[]{"开发分组", "en:Dev"}),
-                Item.of("1_001", new String[]{"开发", "en:Dev"}),
-                Item.of("2", new String[]{"测试分组", "en:Test"}),
-                Item.of("2_002", new String[]{"测试", "en:Test"}),
-                Item.of("3", new String[]{"运维分组", "en:ops"}),
-                Item.of("3_003", new String[]{"运维", "en:ops"}),
+                    Item.of("1", new String[]{"开发分组", "en:Dev"}),
+                    Item.of("1_001", new String[]{"开发", "en:Dev"}),
+                    Item.of("2", new String[]{"测试分组", "en:Test"}),
+                    Item.of("2_002", new String[]{"测试", "en:Test"}),
+                    Item.of("3", new String[]{"运维分组", "en:ops"}),
+                    Item.of("3_003", new String[]{"运维", "en:ops"}),
             };
         }
         return new Item[0];

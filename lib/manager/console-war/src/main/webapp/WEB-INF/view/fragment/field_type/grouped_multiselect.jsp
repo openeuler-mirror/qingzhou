@@ -5,7 +5,7 @@
     PageUtil.groupMultiselectOptions(parentGroupDescriptions,groupedOptions,SystemController.getOptions(qzRequest, fieldName));
 %>
 <select <%=echoGroup%> name="<%=fieldName%>" multiple="multiple" style="width:100%;"
-                       placeholder="<%=isForm?modelField.getPlaceholder():(modelField.getPlaceholder().isEmpty()?I18n.getModelI18n(qzApp, "model.field." + qzModel + "." + fieldName):modelField.getPlaceholder())%>">
+                       placeholder="<%=PageUtil.getPlaceholder(modelField, qzApp, qzModel, isForm)%>">
     <%
         for (Map.Entry<String, String> entry : parentGroupDescriptions.entrySet()) {
     %>

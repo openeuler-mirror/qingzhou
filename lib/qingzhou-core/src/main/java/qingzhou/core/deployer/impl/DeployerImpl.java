@@ -127,13 +127,20 @@ class DeployerImpl implements Deployer {
     }
 
     @Override
-    public java.util.List<String> getAllApp() {
+    public java.util.List<String> getLocalApps() {
         return new ArrayList<>(apps.keySet());
     }
 
     @Override
     public App getApp(String appName) {
         return apps.get(appName);
+    }
+
+    @Override
+    public java.util.List<String> getAllApp() {
+        java.util.List<String> localApps = getLocalApps();
+        localApps.addAll(registry.getAllAppNames());
+        return localApps;
     }
 
     @Override
@@ -389,9 +396,15 @@ class DeployerImpl implements Deployer {
         Option option = (Option) instance;
 
         LinkedHashMap<String, ItemInfo[]> infoList = new LinkedHashMap<>();
-        String[] staticOptionFields = option.staticOptionFields();
-        if (staticOptionFields != null) {
-            modelInfo.setStaticOptionFields(staticOptionFields);
+
+        java.util.List<String> staticOptionFields = new ArrayList<>();
+        java.util.List<String> dynamicOptionFields = new ArrayList<>();
+        for (ModelFieldInfo modelFieldInfo : modelInfo.getModelFieldInfos()) {
+            if (modelFieldInfo.isStaticOption()) staticOptionFields.add(modelFieldInfo.getCode());
+            if (modelFieldInfo.isDynamicOption()) dynamicOptionFields.add(modelFieldInfo.getCode());
+        }
+        if (!staticOptionFields.isEmpty()) {
+            modelInfo.setStaticOptionFields(staticOptionFields.toArray(new String[0]));
             for (String fieldName : staticOptionFields) {
                 Item[] items = option.optionData(null, fieldName);
                 if (items != null) {
@@ -401,7 +414,7 @@ class DeployerImpl implements Deployer {
         }
         modelInfo.setOptionInfos(infoList);
 
-        modelInfo.setDynamicOptionFields(option.dynamicOptionFields());
+        modelInfo.setDynamicOptionFields(dynamicOptionFields.toArray(new String[0]));
     }
 
     private ItemInfo[] getGroupInfo(ModelBase instance) {
@@ -461,6 +474,8 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setColor(modelField.color());
             modelFieldInfo.setEchoGroup(modelField.echo_group());
             modelFieldInfo.setSkipValidate(modelField.skip_validate());
+            modelFieldInfo.setStaticOption(modelField.static_option());
+            modelFieldInfo.setDynamicOption(modelField.dynamic_option());
             modelFieldInfo.setOrder(modelField.order());
             modelFieldInfo.setSameLine(modelField.same_line());
             modelFieldInfo.setShowLabel(modelField.show_label());

@@ -58,6 +58,10 @@ public @interface ModelField {
 
     boolean skip_validate() default false;  // 跳过轻舟框架校验
 
+    boolean static_option() default false;
+
+    boolean dynamic_option() default false;
+
     String[] echo_group() default {};
 
     // 列表类型的相关信息

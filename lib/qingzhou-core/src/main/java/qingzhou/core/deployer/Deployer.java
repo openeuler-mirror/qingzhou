@@ -18,9 +18,11 @@ public interface Deployer {
 
     void stopApp(String appName) throws Exception;
 
-    List<String> getAllApp();
+    List<String> getLocalApps();
 
-    App getApp(String appName);
+    App getApp(String appName); // 返回 Local 的 App 对象
+
+    List<String> getAllApp();
 
     AppInfo getAppInfo(String appName);
 }

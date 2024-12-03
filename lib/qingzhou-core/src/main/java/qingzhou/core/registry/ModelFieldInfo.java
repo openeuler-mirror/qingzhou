@@ -49,6 +49,8 @@ public class ModelFieldInfo implements Serializable {
     private String[] color;
     private String[] echoGroup;
     private boolean skipValidate;
+    private boolean staticOption;
+    private boolean dynamicOption;
     private boolean showLabel;
     private boolean sameLine;
     private String placeholder;
@@ -416,6 +418,22 @@ public class ModelFieldInfo implements Serializable {
 
     public void setSkipValidate(boolean skipValidate) {
         this.skipValidate = skipValidate;
+    }
+
+    public boolean isStaticOption() {
+        return staticOption;
+    }
+
+    public void setStaticOption(boolean staticOption) {
+        this.staticOption = staticOption;
+    }
+
+    public boolean isDynamicOption() {
+        return dynamicOption;
+    }
+
+    public void setDynamicOption(boolean dynamicOption) {
+        this.dynamicOption = dynamicOption;
     }
 
     public boolean isSameLine() {

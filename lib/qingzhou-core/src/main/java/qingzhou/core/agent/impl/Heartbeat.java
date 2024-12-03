@@ -78,7 +78,7 @@ class Heartbeat implements Process {
     void register0() throws Exception {
         List<AppInfo> appInfos = new ArrayList<>();
         Deployer deployer = moduleContext.getService(Deployer.class);
-        for (String a : deployer.getAllApp()) {
+        for (String a : deployer.getLocalApps()) {
             if (!DeployerConstants.APP_SYSTEM.equals(a)) {
                 AppInfo appInfo = deployer.getApp(a).getAppInfo();
                 appInfos.add(appInfo);

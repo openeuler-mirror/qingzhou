@@ -36,4 +36,5 @@
     ResponseImpl qzResponse = (ResponseImpl) qzRequest.getResponse();
     String themeMode = (String) session.getAttribute(Theme.KEY_THEME_MODE);
     String randBindingId = java.util.UUID.randomUUID().toString();
+    boolean isForm = Objects.equals(Update.ACTION_EDIT, qzAction) || Objects.equals(Add.ACTION_CREATE, qzAction);
 %>

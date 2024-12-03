@@ -30,7 +30,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         Set<String> allAppNames = new HashSet<>();
 
         Deployer deployer = Main.getService(Deployer.class);
-        deployer.getAllApp().forEach(a -> {
+        deployer.getLocalApps().forEach(a -> {
             if (DeployerConstants.APP_SYSTEM.equals(a)) return;
             allAppNames.add(a);
         });

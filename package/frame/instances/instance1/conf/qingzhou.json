@@ -87,6 +87,7 @@
         "user": [
           {
             "name": "qingzhou",
+            "type": "Qingzhou_Manager",
             "info": "系统预置管理员",
             "password": "SHA-256$zQA=$2$QtAiP41cVQj6RHzYqK3VqJ9cL2w7Gpa5sNNvMv2tF1s=",
             "active": "true",

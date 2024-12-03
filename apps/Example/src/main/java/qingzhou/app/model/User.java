@@ -7,9 +7,9 @@ import qingzhou.api.type.Group;
 import qingzhou.api.type.Option;
 import qingzhou.app.AddModelBase;
 import qingzhou.app.ExampleMain;
+import qingzhou.ssh.Ssh;
 import qingzhou.ssh.SshClient;
 import qingzhou.ssh.SshResult;
-import qingzhou.ssh.Ssh;
 
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelField(
             group = "base",
-            required = true,
+            required = true, static_option = true,
             input_type = InputType.radio, echo_group = "aa",
             list = true, search = true,
             name = {"用户性别", "en:User Gender"})
@@ -49,7 +49,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
             group = "org",
             input_type = InputType.select, skip_validate = true,
             // ref_model = Post.class,
-            list = true, search = true,
+            list = true, search = true, static_option = true,
             // update_action = "update",
             name = {"岗位", "en:Position"},
             info = {"岗位", "en:Position"})
@@ -66,7 +66,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.checkbox,
-            separator = "@",
+            separator = "@", static_option = true,
             ref_model = Post.class,
             name = {"checkbox", "en:1"})
     public String checkbox;
@@ -79,12 +79,13 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.sortable_checkbox,
-            separator = "#", order = "2",
+            separator = "#", order = "2", dynamic_option = true,
             name = {"项目2", "en:2"})
     public String subjects2;
 
     @ModelField(
             input_type = InputType.sortable_checkbox,
+            dynamic_option = true,
             separator = "#", order = "3",
             name = {"项目3", "en:3"})
     public String subjects3;
@@ -109,11 +110,13 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelField(
             input_type = InputType.select, create = false, edit = false,
+            static_option = true,
             name = {"字段", "en:field"})
     public String field;
 
     @ModelField(
             input_type = InputType.select, create = false, edit = false,
+            static_option = true,
             name = {"操作符", "en:operator"})
     public String operator;
 
@@ -124,7 +127,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
 
     @ModelField(
             create = false, edit = false,
-            input_type = InputType.bool,
+            input_type = InputType.bool, static_option = true,
             name = {"自定义标签", "en:Custom labels"})
     public boolean customLabel;
 
@@ -286,16 +289,6 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
         SshResult result = sshClient.execCmd(user.command);
         request.getResponse().setSuccess(result.isSuccess());
         request.getResponse().setData(result.getMessage());
-    }
-
-    @Override
-    public String[] staticOptionFields() {
-        return new String[]{"gender", "checkbox", "position", "field", "operator", "customLabel"};
-    }
-
-    @Override
-    public String[] dynamicOptionFields() {
-        return new String[]{"subjects2", "subjects3"};
     }
 
     @Override
