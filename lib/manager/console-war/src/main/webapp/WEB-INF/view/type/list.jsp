@@ -16,9 +16,9 @@
         displayListFields = temp.toArray(new String[0]);
     }
 
-    String[] listActions = PageUtil.filterActions(modelInfo.getListActions(), qzApp, qzModel, currentUser);
-    String[] headActions = PageUtil.filterActions(modelInfo.getHeadActions(), qzApp, qzModel, currentUser);
-    String[] batchActions = PageUtil.filterActions(modelInfo.getBatchActions(), qzApp, qzModel, currentUser);
+    String[] listActions = PageUtil.filterActions(modelInfo.getListActions(), qzApp, qzModel, request);
+    String[] headActions = PageUtil.filterActions(modelInfo.getHeadActions(), qzApp, qzModel, request);
+    String[] batchActions = PageUtil.filterActions(modelInfo.getBatchActions(), qzApp, qzModel, request);
 
     ListData listData = (ListData) qzResponse.getInternalData();
     int totalSize = listData.totalSize;
@@ -240,7 +240,7 @@
 
                     String fieldUpdateAction = null;
                     if (Utils.notBlank(fieldInfo.getUpdateAction())
-                            && SecurityController.isActionPermitted(qzApp, qzModel, fieldInfo.getUpdateAction(), currentUser)) {
+                            && SecurityController.isActionPermitted(qzApp, qzModel, fieldInfo.getUpdateAction(), request)) {
                         fieldUpdateAction = fieldInfo.getUpdateAction();
                     }
                     if (fieldUpdateAction != null) {
@@ -285,7 +285,7 @@
                         out.print("<div class=\"input-class\"> <input type=\"text\" name=\"" + fieldName + "\" value=\"" + fieldValue + "\" class=\"form-control\"></div>");
                     }
                 } else if (Utils.notBlank(fieldInfo.getLinkAction())
-                        && SecurityController.isActionPermitted(qzApp, qzModel, fieldInfo.getLinkAction(), currentUser)) {
+                        && SecurityController.isActionPermitted(qzApp, qzModel, fieldInfo.getLinkAction(), request)) {
                     ModelActionInfo linkActionInfo = modelInfo.getModelActionInfo(fieldInfo.getLinkAction());
                 %>
                 <a href='<%=PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG , fieldInfo.getLinkAction() + "/" + encodedItemId)%>'
@@ -328,7 +328,7 @@
 
                     ModelActionInfo linkRefModelActionInfo = null;
                     if (refModelName != null && refFieldName != null && refValue != null) {
-                        if (SecurityController.isActionPermitted(qzApp, refModelName, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
+                        if (SecurityController.isActionPermitted(qzApp, refModelName, qingzhou.api.type.List.ACTION_LIST, request)) {
                             linkRefModelActionInfo = SystemController.getModelInfo(qzApp, refModelName).getModelActionInfo(qingzhou.api.type.List.ACTION_LIST);
                         }
                     }
@@ -363,7 +363,7 @@
                 </a>
                 <%
                 } else if (field.equals(idField)
-                        && SecurityController.isActionPermitted(qzApp, qzModel, Show.ACTION_SHOW, currentUser)) {
+                        && SecurityController.isActionPermitted(qzApp, qzModel, Show.ACTION_SHOW, request)) {
                     ModelActionInfo showActionInfo = modelInfo.getModelActionInfo(Show.ACTION_SHOW);
                     String condition = showActionInfo.getShow();
                     if (Utils.notBlank(condition)) {
@@ -451,7 +451,7 @@
     </table>
 
     <%
-        if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
+        if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, request)) {
             String url = PageUtil.buildRequestUrl(request, response, qzRequest, HtmlView.FLAG, qingzhou.api.type.List.ACTION_LIST);
             url += (url.contains("?") ? "&" : "?") + "markForAddCsrf";
             if (request.getAttribute(DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID) != null && !url.contains("&" + DeployerConstants.RETURNS_LINK_PARAM_NAME_RETURNSID)) {

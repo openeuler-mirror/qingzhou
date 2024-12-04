@@ -1,16 +1,23 @@
 package qingzhou.config.impl;
 
-import qingzhou.config.*;
-import qingzhou.engine.util.CallbackArgs;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.json.Json;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.util.Properties;
+
+import qingzhou.config.Config;
+import qingzhou.config.Core;
+import qingzhou.config.Jmx;
+import qingzhou.config.OAuth2;
+import qingzhou.config.Role;
+import qingzhou.config.Security;
+import qingzhou.config.User;
+import qingzhou.config.Web;
+import qingzhou.engine.util.CallbackArgs;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.json.Json;
 
 class JsonFileConfig implements Config {
     private final Json json;
@@ -49,6 +56,11 @@ class JsonFileConfig implements Config {
     @Override
     public void setSecurity(Security security) throws Exception {
         writeJson(security, false, "module", "core", "console", "security");
+    }
+
+    @Override
+    public void setOAuth2(OAuth2 oAuth2) throws Exception {
+        writeJson(oAuth2, false, "module", "core", "console", "oauth2");
     }
 
     @Override

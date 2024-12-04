@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-public class Oauth2Login implements LoginInterceptor {
+public class OAuth2Login implements LoginInterceptor {
     private final String this_receive_code_path = "/oauth2/code_callback";
     private final String this_listen_logout_path = "/oauth2/logout_callback";
     private final String SESSION_TOKEN_FLAG = "SESSION_TOKEN_FLAG";
@@ -20,7 +20,7 @@ public class Oauth2Login implements LoginInterceptor {
     private final Map<String, HttpSession> tokenSessionsCache = new WeakHashMap<>(); // 为避免内存泄漏，用了 WeakHashMap，可能会导致会话清理通知失效（后续还可依赖本地失效机制）
     private final ThreadLocal<String> tokenCache = new ThreadLocal<>();
 
-    public Oauth2Login() {
+    public OAuth2Login() {
         OAuthConfig config = load();
         if (config == null) {
             oAuth2Client = null;
@@ -50,10 +50,10 @@ public class Oauth2Login implements LoginInterceptor {
         }
 
         Security security = SystemController.getConsole().getSecurity();
-        if (security.isEnabledOAuth2()) {
+        if (security.isOauthEnabled()) {
             properties.put("enabled", "true");
             properties.put("redirectUrl", security.getRedirectUrl());
-            properties.put("clientId", security.getClientId());
+            properties.put("client_id", security.getClient_id());
             properties.put("clientSecret", security.getClientSecret());
             properties.put("authorizeUrl", security.getAuthorizeUrl());
             properties.put("tokenUrl", security.getTokenUrl());

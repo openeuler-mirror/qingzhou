@@ -67,10 +67,10 @@ public class PageUtil {
         return false;
     }
 
-    public static String[] filterActions(String[] checkActions, String qzApp, String qzModel, String currentUser) {
+    public static String[] filterActions(String[] checkActions, String qzApp, String qzModel, HttpServletRequest request) {
         List<String> filteredActions = new ArrayList<>();
         for (String action : checkActions) {
-            if (SecurityController.isActionPermitted(qzApp, qzModel, action, currentUser)) {
+            if (SecurityController.isActionPermitted(qzApp, qzModel, action, request)) {
                 filteredActions.add(action);
             }
         }

@@ -6,7 +6,7 @@
     String submitActionName = isEdit ? Update.ACTION_UPDATE : Add.ACTION_ADD;
     java.util.List<String> passwordFields = new ArrayList<>();
     String idField = modelInfo.getIdField();
-    String[] formActions = PageUtil.filterActions(modelInfo.getFormActions(), qzApp, qzModel, currentUser);
+    String[] formActions = PageUtil.filterActions(modelInfo.getFormActions(), qzApp, qzModel, request);
 
     Map<String, String> modelData = (Map<String, String>) qzResponse.getInternalData();
     if (isEdit){
@@ -186,7 +186,7 @@
         <div style="margin-top: 15px; height: 64px; text-align: center;">
             <div class="form-btn">
                 <%
-                    if (SecurityController.isActionPermitted(qzApp, qzModel, submitActionName, currentUser)) {
+                    if (SecurityController.isActionPermitted(qzApp, qzModel, submitActionName, request)) {
                 %>
                 <input type="submit" class="btn"
                        value='<%=I18n.getModelI18n(qzApp, "model.action." + qzModel + "." + submitActionName)%>'>
@@ -194,7 +194,7 @@
                     }
 
                     for (String formAction : formActions) {
-                        boolean actionPermitted = SecurityController.isActionPermitted(qzApp, qzModel, formAction, currentUser);
+                        boolean actionPermitted = SecurityController.isActionPermitted(qzApp, qzModel, formAction, request);
                         if (!actionPermitted) continue;
                         ModelActionInfo formActionInfo = modelInfo.getModelActionInfo(formAction);
                         if (formActionInfo.getActionType() == ActionType.qr) {
@@ -219,7 +219,7 @@
                     }
 
 
-                    if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, currentUser)) {
+                    if (SecurityController.isActionPermitted(qzApp, qzModel, qingzhou.api.type.List.ACTION_LIST, request)) {
                 %>
                 <a class="btn" modelname="<%=qzModel%>"
                    href="javascript:void(0);" onclick="returnHref(this);">

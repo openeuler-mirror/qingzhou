@@ -1,22 +1,34 @@
 package qingzhou.app.system.user;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
 import qingzhou.api.type.Validate;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.core.DeployerConstants;
 import qingzhou.config.Config;
+import qingzhou.core.DeployerConstants;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.engine.util.Utils;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Pattern;
 
 @Model(code = DeployerConstants.MODEL_USER, icon = "user",
         menu = Main.Setting, order = "1",
@@ -25,6 +37,7 @@ import java.util.regex.Pattern;
 public class User extends ModelBase implements General, Validate, Option {
     static final String ID_KEY = "name";
     static final String PASSWORD_FLAG = "***************";
+    static final String PASSWORD_SP = ";";
 
     @Override
     public String idField() {
@@ -147,6 +160,7 @@ public class User extends ModelBase implements General, Validate, Option {
             required = true,
             list = true, search = true,
             ref_model = Role.class,
+            separator = DeployerConstants.USER_ROLE_SP,
             name = {"角色", "en:Role"},
             info = {"为用户分配访问系统的权限。", "en:Assign users access to the system."})
     public String role;
@@ -156,6 +170,11 @@ public class User extends ModelBase implements General, Validate, Option {
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;
+
+    @Override
+    public Map<String, String> editData(String id) {
+        return showData(id);
+    }
 
     @Override
     public Map<String, String> showData(String id) {
@@ -219,7 +238,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
             String historyPasswords = originUser.get("historyPasswords");
             int limitRepeats = Main.getService(Config.class).getCore().getConsole().getSecurity().getPasswordLimitRepeats();
-            String cutOldPasswords = cutOldPasswords(historyPasswords, limitRepeats, data.get("password"));
+            String cutOldPasswords = cutOldPasswords(historyPasswords, PASSWORD_SP, limitRepeats, data.get("password"));
             data.put("historyPasswords", cutOldPasswords);
         }
 
@@ -327,9 +346,7 @@ public class User extends ModelBase implements General, Validate, Option {
         return pwdArray;
     }
 
-    static String cutOldPasswords(String historyPasswords, int limitRepeats, String newPwd) {
-        String DATA_SEPARATOR = DeployerConstants.DEFAULT_DATA_SEPARATOR;
-
+    static String cutOldPasswords(String historyPasswords, String DATA_SEPARATOR, int limitRepeats, String newPwd) {
         if (historyPasswords == null) {
             historyPasswords = "";
         }

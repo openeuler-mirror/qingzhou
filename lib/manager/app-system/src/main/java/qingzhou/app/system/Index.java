@@ -123,7 +123,6 @@ public class Index extends ModelBase implements Dashboard {
         Security security = config.getCore().getConsole().getSecurity();
         String trustedIp = security.getTrustedIp();
         basic.addData(I18nTool.retrieveI18n(new String[]{"信任 IP", "en:Trusted IP"}).get(lang),Utils.isBlank(trustedIp) ? I18nTool.retrieveI18n(new String[]{"未设置", "en:Not Set"}).get(lang) : trustedIp);
-        basic.addData(I18nTool.retrieveI18n(new String[]{"登录验证码", "en:Login Verification Code"}).get(lang), security.isVerCodeEnabled() ? I18nTool.retrieveI18n(new String[]{"已启用", "en:Enabled"}).get(lang) : I18nTool.retrieveI18n(new String[]{"未启用", "en:Not Enabled"}).get(lang));
     }
 
     private LineChart createLineChart(String instanceName, ResponseImpl response, App app, Lang lang, DataBuilder builder) {

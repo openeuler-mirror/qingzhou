@@ -1,28 +1,20 @@
 package qingzhou.config;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Stream;
 
 public class Console {
-    private static final List<User> ssoUsers = new ArrayList<>();
-
     private boolean enabled;
+    private Security security;
     private Web web;
     private Jmx jmx;
-    private Security security;
+    private OAuth2 oAuth2;
     private User[] user;
     private Role[] role;
 
 
     public User getUser(String name) {
         if (user == null) return null;
-        return Stream.concat(Arrays.stream(user), ssoUsers.stream()).filter(user -> user.getName().equals(name)).findAny().orElse(null);
-    }
-
-    public List<User> getSsoUsers() {
-        return ssoUsers;
+        return Arrays.stream(user).filter(user -> user.getName().equals(name)).findAny().orElse(null);
     }
 
     public User[] getUser() {
@@ -65,6 +57,14 @@ public class Console {
         this.security = security;
     }
 
+    public OAuth2 getOAuth2() {
+        return oAuth2;
+    }
+
+    public void setOAuth2(OAuth2 oAuth2) {
+        this.oAuth2 = oAuth2;
+    }
+
     public Role[] getRole() {
         return role;
     }
@@ -77,5 +77,4 @@ public class Console {
         if (role == null) return null;
         return Arrays.stream(role).filter(role -> role.getName().equals(name)).findAny().orElse(null);
     }
-
 }

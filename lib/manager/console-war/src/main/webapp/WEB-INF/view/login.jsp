@@ -2,7 +2,6 @@
 
 <%@ page import="qingzhou.console.controller.I18n" %>
 <%@ page import="qingzhou.console.login.LoginManager" %>
-<%@ page import="qingzhou.console.login.vercode.VerCode" %>
 <%@ page import="qingzhou.console.controller.About" %>
 <%@ page import="qingzhou.console.controller.rest.RESTController" %>
 <%@ page import="qingzhou.console.controller.SystemController" %>
@@ -86,24 +85,6 @@
 				<label class="input-control-icon-left"
 					   style="line-height: 44px;"><i class="icon icon-shield"></i></label>
 			</div>
-
-			<%
-				if (request.getParameter(VerCode.SHOW_CAPTCHA_FLAG) != null) {
-			%>
-			<div class="input-control has-icon-left">
-				<input type="text" id="<%=VerCode.LOGIN_CAPTCHA%>" name="<%=VerCode.LOGIN_CAPTCHA%>"
-					   class="form-control"
-					   style="width:250px;display:inline-block;float:left;"
-					   placeholder="<%=I18n.getKeyI18n( "page.vercode")%>">
-				<label class="input-control-icon-left" style="line-height: 44px;"><i
-						class="icon icon-shield"></i></label>
-				<img src="<%=RESTController.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>"
-					 class="captcha"
-					 onclick="this.src = '<%=RESTController.encodeURL( response, contextPath + VerCode.CAPTCHA_URI)%>' + '?v=' + new Date().getTime()">
-			</div>
-			<%
-				}
-			%>
 
 			<input type="submit" value='<%=I18n.getKeyI18n( "page.login")%>'
 				   class="login_btn">

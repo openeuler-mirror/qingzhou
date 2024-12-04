@@ -7,7 +7,6 @@ import javax.servlet.http.HttpSession;
 
 import qingzhou.api.Lang;
 import qingzhou.api.type.Update;
-import qingzhou.config.Console;
 import qingzhou.config.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
@@ -42,7 +41,7 @@ public class ResetPassword implements Filter<RestContext> {
         if (session.getAttribute(RESET_OK_FLAG) != null) return true;
 
         String user = LoginManager.getLoginUser(servletRequest);
-        String resetPwdInfo = checkResetPwdInfo(user);
+        String resetPwdInfo = checkResetPwdInfo(user, session);
         if (resetPwdInfo == null) {
             session.setAttribute(RESET_OK_FLAG, RESET_OK_FLAG);// 成功登录
             return true;
@@ -82,13 +81,11 @@ public class ResetPassword implements Filter<RestContext> {
         return false;
     }
 
-    private String checkResetPwdInfo(String user) throws Exception {
-        Console console = SystemController.getConsole();
-
-        User u = console.getUser(user);
+    private String checkResetPwdInfo(String user, HttpSession session) throws Exception {
+        User u = SystemController.getUser(user, session);
         if (u.isChangePwd()) return "page.warn.setpassword";
 
-        int maxAge = console.getSecurity().getPasswordMaxAge();
+        int maxAge = SystemController.getConsole().getSecurity().getPasswordMaxAge();
         if (maxAge > 0) {
             String passwordLastModified = u.getPasswordLastModified();
             if (passwordLastModified != null && !passwordLastModified.isEmpty()) {

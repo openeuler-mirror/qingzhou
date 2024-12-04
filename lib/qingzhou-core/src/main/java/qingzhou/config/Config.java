@@ -16,6 +16,8 @@ public interface Config {
 
     void setSecurity(Security security) throws Exception;
 
+    void setOAuth2(OAuth2 oAuth2) throws Exception;
+
     void addRole(Role role) throws Exception;
 
     void deleteRole(String... id) throws Exception;

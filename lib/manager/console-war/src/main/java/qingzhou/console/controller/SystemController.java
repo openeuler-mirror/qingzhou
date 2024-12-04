@@ -1,26 +1,45 @@
 package qingzhou.console.controller;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Option;
-import qingzhou.console.controller.jmx.JmxAuthenticatorImpl;
-import qingzhou.console.controller.jmx.JmxInvokerImpl;
-import qingzhou.console.controller.jmx.NotificationListenerImpl;
-import qingzhou.console.login.LoginFilter;
-import qingzhou.console.login.LoginFreeFilter;
-import qingzhou.console.login.LoginManager;
-import qingzhou.console.login.vercode.VerCode;
-import qingzhou.core.DeployerConstants;
-import qingzhou.core.ItemInfo;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.config.Security;
+import qingzhou.config.User;
+import qingzhou.console.controller.jmx.JmxAuthenticatorImpl;
+import qingzhou.console.controller.jmx.JmxInvokerImpl;
+import qingzhou.console.controller.jmx.NotificationListenerImpl;
+import qingzhou.console.login.LoginAdapter;
+import qingzhou.console.login.LoginFreeFilter;
+import qingzhou.console.login.LoginManager;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.ItemInfo;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.JmxServiceAdapter;
-import qingzhou.core.deployer.*;
+import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.App;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;
@@ -33,18 +52,12 @@ import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.*;
-
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
     private static String publicKey;
     public static PairCipher pairCipher;
     private static final ContextHelper CONTEXT_HELPER;
+    private static final String SSO_SESSION_KEY = "SSO_SESSION_KEY";
 
     static {
         CONTEXT_HELPER = ContextHelper.GET_INSTANCE.get();
@@ -111,68 +124,6 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return options != null ? options : new ItemInfo[0];
     }
 
-    public static void groupMultiselectOptions(
-            LinkedHashMap<String, String> parentGroupDescriptions,
-            LinkedHashMap<String, LinkedHashMap<String, String>> groupedOptions,
-            ItemInfo[] multiselectOptions) {
-
-        // 存储父组的键
-        Set<String> parentGroups = new HashSet<>();
-
-        // 处理父组关系
-        for (ItemInfo entry : multiselectOptions) {
-            String key = entry.getName();
-
-            // 查找是否有以当前key为前缀的子项，若有则标记当前key为父组
-            for (ItemInfo subEntry : multiselectOptions) {
-                String subKey = subEntry.getName();
-                if (!subKey.equals(key) && subKey.startsWith(key + DeployerConstants.MULTISELECT_GROUP_SEPARATOR)) {
-                    parentGroups.add(key);
-                    break; // 跳出内层循环，避免重复计算
-                }
-            }
-        }
-
-        // 处理每个选项，将其按组分类
-        for (ItemInfo entry : multiselectOptions) {
-            String value = entry.getName();
-            // 将父组选项存储到parentGroupDescriptions中
-            if (parentGroups.contains(value)) {
-                parentGroupDescriptions.put(value, I18n.getStringI18n(entry.getI18n()));
-            } else {
-                // 提取组名并将选项存入对应的组
-                int separatorIndex = value.lastIndexOf(DeployerConstants.MULTISELECT_GROUP_SEPARATOR);
-                String groupName;
-                if (separatorIndex != -1) {
-                    groupName = value.substring(0, separatorIndex);
-                } else {
-                    groupName = "";
-                }
-
-                // 使用computeIfAbsent确保groupName对应的组存在
-                LinkedHashMap<String, String> groupItems = groupedOptions.computeIfAbsent(groupName, k -> new LinkedHashMap<>());
-                groupItems.put(value, I18n.getStringI18n(entry.getI18n()));
-            }
-        }
-    }
-
-    public static String getColorStyle(ModelInfo modelInfo, String fieldName, String value) {
-        ModelFieldInfo modelFieldInfo = modelInfo.getModelFieldInfo(fieldName);
-        String[] color = modelFieldInfo.getColor();
-        if (color != null) {
-            for (String condition : color) {
-                String[] array = condition.split(":");
-                if (array.length != 2) {
-                    continue;
-                }
-                if (array[0].equals(value)) {
-                    return "color:" + array[1];
-                }
-            }
-        }
-        return "";
-    }
-
     private static ItemInfo[] getOptions0(RequestImpl request, String fieldName) {
         ModelInfo modelInfo = request.getCachedModelInfo();
         String[] dynamicOptionFields = modelInfo.getDynamicOptionFields();
@@ -224,6 +175,14 @@ public class SystemController implements ServletContextListener, javax.servlet.F
         return CONTEXT_HELPER.getModuleContext();
     }
 
+    public static User getUser(String name, HttpSession session) {
+        if (session != null) {
+            User user = (User) session.getAttribute(SSO_SESSION_KEY);
+            if (user != null && user.getName().equals(name)) return user;
+        }
+        return getConsole().getUser(name);
+    }
+
     public static Console getConsole() {
         return getService(Config.class).getCore().getConsole();
     }
@@ -237,9 +196,8 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new JspInterceptor(),
             new I18n(),
             new About(),
-            new VerCode(),
+            new LoginAdapter(),
             new LoginFreeFilter(),
-            new LoginFilter(),
             new LoginManager(),
             new Theme(),
             (Filter<SystemControllerContext>) context -> {

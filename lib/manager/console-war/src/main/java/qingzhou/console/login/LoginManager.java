@@ -1,29 +1,28 @@
 package qingzhou.console.login;
 
-import qingzhou.console.IPUtil;
-import qingzhou.console.controller.I18n;
-import qingzhou.console.controller.SystemController;
-import qingzhou.console.controller.SystemControllerContext;
-import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.login.vercode.VerCode;
-import qingzhou.console.view.type.HtmlView;
-import qingzhou.console.view.type.JsonView;
-import qingzhou.core.DeployerConstants;
-import qingzhou.config.User;
-import qingzhou.crypto.CryptoService;
-import qingzhou.crypto.TotpCipher;
-import qingzhou.engine.util.pattern.Filter;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import qingzhou.config.User;
+import qingzhou.console.IPUtil;
+import qingzhou.console.controller.I18n;
+import qingzhou.console.controller.SystemController;
+import qingzhou.console.controller.SystemControllerContext;
+import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.view.type.HtmlView;
+import qingzhou.console.view.type.JsonView;
+import qingzhou.core.DeployerConstants;
+import qingzhou.crypto.CryptoService;
+import qingzhou.crypto.TotpCipher;
+import qingzhou.engine.util.pattern.Filter;
 
 public class LoginManager implements Filter<SystemControllerContext> {
     public static final String LOGIN_PATH = "/login";
@@ -39,12 +38,10 @@ public class LoginManager implements Filter<SystemControllerContext> {
 
     private static final String LOGIN_ERROR_MSG_KEY = "page.login.invalid";
     private static final String LOCKED_MSG_KEY = "page.login.locked";
-    private static final String LOGIN_CAPTCHA_ERROR = "page.login.captchaError";
 
     private static final String[] STATIC_RES_SUFFIX = {".html", ".js", ".css", ".ico", ".jpg", ".png", ".gif", ".ttf", ".woff", ".eot", ".svg", ".pdf"};
 
     static {
-        I18n.addKeyI18n(LOGIN_CAPTCHA_ERROR, new String[]{"登录失败，验证码错误", "en:Login failed, verification code error"});
         I18n.addKeyI18n(LOGIN_ERROR_MSG_KEY, new String[]{"登录失败，用户名或密码错误。当前登录失败 %s 次，连续失败 %s 次，账户将锁定", "en:Login failed, wrong username or password. The current login failed %s times, and the account will be locked after %s consecutive failures"});
         I18n.addKeyI18n(LOCKED_MSG_KEY, new String[]{"连续登录失败 %s 次，账户已经锁定，请 %s 分钟后重试", "en:Login failed %s times in a row, account is locked, please try again in %s minutes"});
     }
@@ -69,12 +66,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
     }
 
     private static void webLogin(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        // 对于浏览器的 web 登录，需要验证码校验
-        LoginFailedMsg failedMsg = checkVerCode(request);
-        if (failedMsg == null) {
-            failedMsg = login(request);
-        }
-
+        LoginFailedMsg failedMsg = login(request);
         if (failedMsg == null) {
             try {
                 // web 页面，设置默认的中文 i18n
@@ -97,33 +89,9 @@ public class LoginManager implements Filter<SystemControllerContext> {
                     redirectUri = LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + failedMsgKey;
                 }
 
-                String SP = redirectUri.contains("?") ? "&" : "?";
-                if (!VerCode.isVerCodeDisabled()) {
-                    redirectUri += (SP + VerCode.SHOW_CAPTCHA_FLAG); // 只要错误就要求输入验证码，命令行登录是不需要的，命令行设备5次登录失败拦截的，验证码只是前端拦截用户，本质没啥大用，因为命令行可以绕过验证码
-                }
                 response.sendRedirect(request.getContextPath() + redirectUri);
             }
         }
-    }
-
-    private static LoginManager.LoginFailedMsg checkVerCode(HttpServletRequest request) {
-        if (VerCode.isVerCodeDisabled()) return null;
-
-        String user = request.getParameter(LoginManager.LOGIN_USER);
-        LockOutRealm.LockRecord lockRecord = LoginManager.getLockOutRealm(request).getLockRecord(user);
-        if (lockRecord != null) {
-            int failureCount = lockRecord.getFailures();
-            int verCodeCount = 1;
-            if (failureCount >= verCodeCount) {
-                if (!VerCode.validate(request)) {
-                    // login.jsp 已经在 application.xml 中配置了过滤，
-                    // 因此，不需要加：encodeRedirectURL，否则会在登录后的浏览器上显示出 csrf 的令牌值，反而有安全风险
-                    return new LoginManager.LoginFailedMsg(LOGIN_CAPTCHA_ERROR,
-                            LoginManager.LOGIN_PATH + "?" + RESTController.MSG_FLAG + "=" + LOGIN_CAPTCHA_ERROR);
-                }
-            }
-        }
-        return null;
     }
 
     private static void setLoginUser(HttpSession session, String user) {

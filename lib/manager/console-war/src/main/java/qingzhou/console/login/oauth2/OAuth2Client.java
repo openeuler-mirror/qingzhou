@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class OAuth2Client {
-
     private static final HttpClient httpClient = SystemController.getService(Http.class).buildHttpClient();
     public static final Json jsonService = SystemController.getService(Json.class);
 
@@ -49,7 +48,7 @@ public class OAuth2Client {
     public String getLoginUrl() {
         RequestBuilder builder = RequestBuilder.builder()
                 .param("response_type", "code")
-                .param("client_id", config.getClientId())
+                .param("client_id", config.getClient_id())
                 .param("redirect_uri", config.getReceiveCodeUrl());
 
         String baseUrl = config.getAuthorizeUrl();
@@ -59,7 +58,7 @@ public class OAuth2Client {
     public String login(String code) throws Exception {
         if (code == null) return null;
         RequestBuilder builder = RequestBuilder.builder()
-                .param("client_id", config.getClientId())
+                .param("client_id", config.getClient_id())
                 .param("client_secret", config.getClientSecret())
                 .param("grant_type", "authorization_code")
                 .param("code", code);
@@ -68,7 +67,7 @@ public class OAuth2Client {
     }
 
     public String getUserInfo(String accessToken) throws Exception {
-        RequestBuilder builder = RequestBuilder.builder().param("client_id", config.getClientId());
+        RequestBuilder builder = RequestBuilder.builder().param("client_id", config.getClient_id());
         return serverVendor.userInfo(config, builder, accessToken).getUsername();
     }
 
@@ -127,7 +126,7 @@ public class OAuth2Client {
         public boolean checkToken(OAuthConfig config, String accessToken) throws Exception {
             String checkTokenUrl = config.getCheckTokenUrl();
             RequestBuilder builder = RequestBuilder.builder()
-                    .param("client_id", config.getClientId())
+                    .param("client_id", config.getClient_id())
                     .param("client_secret", config.getClientSecret())
                     .param("token", accessToken)
                     .responseType(TongResponse.class);

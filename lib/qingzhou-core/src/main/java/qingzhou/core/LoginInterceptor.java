@@ -1,11 +1,8 @@
 package qingzhou.core;
 
-import qingzhou.engine.Service;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@Service(name = "Login Service", description = "Provide login implementation.")
 public interface LoginInterceptor {
 
     Result login(HttpServletRequest request, HttpServletResponse response) throws Exception;

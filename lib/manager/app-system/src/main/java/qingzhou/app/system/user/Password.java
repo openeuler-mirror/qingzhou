@@ -1,26 +1,31 @@
 package qingzhou.app.system.user;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
-import qingzhou.core.DeployerConstants;
 import qingzhou.config.Config;
 import qingzhou.config.Console;
+import qingzhou.core.DeployerConstants;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.crypto.TotpCipher;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
-        hidden = true,
-        menu = Main.Setting,
+        menu = Main.Setting, hidden = true,
         entrance = Update.ACTION_EDIT,
         name = {"密码", "en:Password"},
         info = {"用于修改当前登录用户的密码、动态密码等。",
@@ -207,7 +212,7 @@ public class Password extends ModelBase implements Update, Export {
             User.insertPasswordModifiedTime(baseData);
             Console console = Main.getService(Config.class).getCore().getConsole();
             String historyPasswords = User.cutOldPasswords(
-                    baseData.remove("historyPasswords"),
+                    baseData.remove("historyPasswords"), User.PASSWORD_SP,
                     console.getSecurity().getPasswordLimitRepeats(), baseData.get("password"));
             baseData.put("historyPasswords", historyPasswords);
         }

@@ -1,27 +1,17 @@
 package qingzhou.console.login;
 
+import java.util.Collection;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import qingzhou.config.User;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.SystemControllerContext;
 import qingzhou.console.controller.rest.RESTController;
-import qingzhou.console.login.oauth2.Oauth2Login;
 import qingzhou.core.LoginInterceptor;
-import qingzhou.config.User;
-import qingzhou.core.deployer.Deployer;
 import qingzhou.engine.util.pattern.Filter;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-public class LoginFilter implements Filter<SystemControllerContext> {
-
-    static {
-        SystemController.getModuleContext().registerService(LoginInterceptor.class, new Oauth2Login());
-    }
-
+public class LoginAdapter implements Filter<SystemControllerContext> {
     @Override
     public boolean doFilter(SystemControllerContext context) throws Exception {
         HttpServletRequest request = context.req;
@@ -72,18 +62,6 @@ public class LoginFilter implements Filter<SystemControllerContext> {
         return true;
     }
 
-    private static Collection<LoginInterceptor> getLoginPlugins() {
-        Deployer deployer = SystemController.getService(Deployer.class);
-        List<String> allApp = deployer.getLocalApps();
-        Set<LoginInterceptor> loginServiceList = new HashSet<>();
-        for (String app : allApp) {
-            LoginInterceptor loginService = deployer.getApp(app).getAppContext().getService(LoginInterceptor.class);
-            loginServiceList.add(loginService);
-        }
-        return loginServiceList;
-    }
-
-
     // 加入原系统内部的验证机制
     private void mergeUserInfoAndRole(String username) {
         User user = new User();
@@ -93,7 +71,7 @@ public class LoginFilter implements Filter<SystemControllerContext> {
         user.setChangePwd(false);
         user.setEnableOtp(false);
 
-        // 并入内部的权限体系
-        SystemController.getConsole().getSsoUsers().add(user);
+        // 记录 sso 登录的用户信息
+        SystemController.getSsoUsers().put(username, user);
     }
 }

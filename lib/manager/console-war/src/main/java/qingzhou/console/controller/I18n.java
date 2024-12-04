@@ -52,7 +52,6 @@ public class I18n implements Filter<SystemControllerContext> {
         addKeyI18n("page.userlogin", new String[]{"用户登录", "en:User Login"});
         addKeyI18n("page.login", new String[]{"登录", "en:Login"});
         addKeyI18n("page.relogin", new String[]{"重新登录", "en:Re Login"});
-        addKeyI18n("page.vercode", new String[]{"验证码", "en:Ver Code"});
         addKeyI18n("page.none", new String[]{"未查询到数据", "en:No data found"});
         addKeyI18n("page.login.need", new String[]{"用户未登录或会话已超时，请重新登录", "en:User is not logged in or the session has timed out, please log in again"});
 

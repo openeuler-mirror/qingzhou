@@ -1,25 +1,32 @@
 package qingzhou.app.system.user;
 
-import qingzhou.api.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.core.DeployerConstants;
 import qingzhou.config.Config;
+import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 @Model(code = Role.MODEL_NAME, icon = "check-sign",
         menu = Main.Setting, order = "2",
@@ -47,6 +54,7 @@ public class Role extends ModelBase implements General, Echo, Option {
     @ModelField(input_type = InputType.grouped_multiselect,
             required = true, search = true,
             dynamic_option = true,
+            separator = DeployerConstants.ROLE_URI_SP,
             name = {"权限", "en:Permissions"},
             info = {"角色的权限表示具有该角色的用户可以访问的资源（URI）集合。", "en:The permissions of a role represent a collection of resources (URI) that users with that role can access."})
     public String uris;
