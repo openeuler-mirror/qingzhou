@@ -1,18 +1,18 @@
-package qingzhou.console.login.oauth2;
+package qingzhou.app.system.oauth2;
 
-import qingzhou.config.Security;
-import qingzhou.console.controller.SystemController;
-import qingzhou.core.LoginInterceptor;
+import qingzhou.api.AuthAdapter;
+import qingzhou.config.OAuth2;
 import qingzhou.logger.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-public class OAuth2Login implements LoginInterceptor {
+public class OAuth2Adapter implements AuthAdapter {
+    private final OAuth2 oAuth2;
+
     private final String this_receive_code_path = "/oauth2/code_callback";
     private final String this_listen_logout_path = "/oauth2/logout_callback";
     private final String SESSION_TOKEN_FLAG = "SESSION_TOKEN_FLAG";
@@ -20,8 +20,12 @@ public class OAuth2Login implements LoginInterceptor {
     private final Map<String, HttpSession> tokenSessionsCache = new WeakHashMap<>(); // 为避免内存泄漏，用了 WeakHashMap，可能会导致会话清理通知失效（后续还可依赖本地失效机制）
     private final ThreadLocal<String> tokenCache = new ThreadLocal<>();
 
-    public OAuth2Login() {
-        OAuthConfig config = load();
+    public OAuth2Adapter(OAuth2 oAuth2) {
+        this.oAuth2 = oAuth2;
+    }
+
+
+    public OAuth2Adapter() {
         if (config == null) {
             oAuth2Client = null;
             return;
@@ -38,34 +42,6 @@ public class OAuth2Login implements LoginInterceptor {
         config.setReceiveCodeUrl(serverUrl + this_receive_code_path);
 
         oAuth2Client = OAuth2Client.getInstance(config);
-    }
-
-    private OAuthConfig load() {
-        Map<String, String> properties = new HashMap<>();
-        for (String name : System.getProperties().stringPropertyNames()) {
-            String PROPERTIES_PREFIX = "oauth2.";
-            if (name.startsWith(PROPERTIES_PREFIX)) {
-                properties.put(name.substring(PROPERTIES_PREFIX.length()), System.getProperty(name));
-            }
-        }
-
-        Security security = SystemController.getConsole().getSecurity();
-        if (security.isOauthEnabled()) {
-            properties.put("enabled", "true");
-            properties.put("redirectUrl", security.getRedirectUrl());
-            properties.put("client_id", security.getClient_id());
-            properties.put("clientSecret", security.getClientSecret());
-            properties.put("authorizeUrl", security.getAuthorizeUrl());
-            properties.put("tokenUrl", security.getTokenUrl());
-            properties.put("userInfoUrl", security.getUserInfoUrl());
-            properties.put("logoutUrl", security.getLogoutUrl());
-            properties.put("checkTokenUrl", security.getCheckTokenUrl());
-        }
-
-        if (properties.isEmpty()) {
-            return null;
-        }
-        return new OAuthConfig(properties);
     }
 
     @Override
@@ -193,5 +169,15 @@ public class OAuth2Login implements LoginInterceptor {
 
     public static String getReqUri(HttpServletRequest request) {
         return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
+    }
+
+    @Override
+    public void authRequest(AuthContext context) throws Exception {
+
+    }
+
+    @Override
+    public void requestComplete(AuthContext context) {
+
     }
 }

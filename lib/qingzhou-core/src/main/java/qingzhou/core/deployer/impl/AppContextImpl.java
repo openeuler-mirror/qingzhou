@@ -1,28 +1,19 @@
 package qingzhou.core.deployer.impl;
 
 import qingzhou.api.*;
-import qingzhou.core.deployer.I18nTool;
 import qingzhou.core.registry.MenuInfo;
-import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
-class AppContextImpl implements AppContext {
-    private final ModuleContext moduleContext;
-    private final List<ActionFilter> actionFilters = new ArrayList<>();
-    private final I18nTool i18nTool = new I18nTool();
+public class AppContextImpl implements AppContext {
     private final AppImpl app;
 
-    private File appTemp;
-    private File appDir;
-
-    private Request currentRequest;
-
-    AppContextImpl(ModuleContext moduleContext, AppImpl app) {
-        this.moduleContext = moduleContext;
+    AppContextImpl(AppImpl app) {
         this.app = app;
     }
 
@@ -33,44 +24,33 @@ class AppContextImpl implements AppContext {
 
     @Override
     public Request getCurrentRequest() {
-        return currentRequest;
+        return app.getThreadLocalRequest();
     }
 
     @Override
     public File getAppDir() {
-        return appDir;
-    }
-
-    public void setAppDir(File appDir) {
-        this.appDir = appDir;
+        return app.getAppDir();
     }
 
     @Override
     public synchronized File getTemp() {
-        if (appTemp == null) {
-            appTemp = new File(moduleContext.getTemp(), app.getAppInfo().getName());
-        }
-        return appTemp;
+        return app.getAppTemp();
     }
 
     @Override
     public void addI18n(String key, String[] i18n) {
-        this.i18nTool.addI18n(key, i18n);
+        app.getI18nTool().addI18n(key, i18n);
     }
 
     @Override
     public String getI18n(Lang lang, String key, Object... args) {
-        return this.i18nTool.getI18n(lang, key, args);
+        return app.getI18nTool().getI18n(lang, key, args);
     }
 
     @Override
     public String getI18n(String key, Object... args) {
         return getI18n(getCurrentRequest().getLang(),
                 key, args);
-    }
-
-    public void setCurrentRequest(Request currentRequest) {
-        this.currentRequest = currentRequest;
     }
 
     @Override
@@ -83,7 +63,7 @@ class AppContextImpl implements AppContext {
     @Override
     public <T> T getService(Class<T> clazz) {
         if (getServiceTypes().contains(clazz)) { // 安全拦截，防止调用到系统私有服务
-            return moduleContext.getService(clazz);
+            return app.getModuleContext().getService(clazz);
         } else {
             throw new IllegalArgumentException("No service available for " + clazz);
         }
@@ -91,7 +71,7 @@ class AppContextImpl implements AppContext {
 
     @Override
     public Collection<Class<?>> getServiceTypes() {
-        return moduleContext.getAvailableServiceTypes().stream().filter(aClass -> {
+        return app.getModuleContext().getAvailableServiceTypes().stream().filter(aClass -> {
             Service annotation = aClass.getAnnotation(Service.class);
             return annotation == null || annotation.shareable();
         }).sorted(Comparator.comparing(o -> o.getAnnotation(Service.class).name())).collect(Collectors.toList());
@@ -104,15 +84,16 @@ class AppContextImpl implements AppContext {
 
     @Override
     public String getPlatformVersion() {
-        return moduleContext.getPlatformVersion();
+        return app.getModuleContext().getPlatformVersion();
     }
 
     @Override
-    public void addActionFilter(ActionFilter actionFilter) {
-        actionFilters.add(actionFilter);
+    public void setActionFilter(ActionFilter actionFilter) {
+        app.setAppActionFilter(actionFilter);
     }
 
-    List<ActionFilter> getActionFilters() {
-        return actionFilters;
+    @Override
+    public void setAuthAdapter(AuthAdapter authAdapter) {
+        app.setAuthAdapter(authAdapter);
     }
 }

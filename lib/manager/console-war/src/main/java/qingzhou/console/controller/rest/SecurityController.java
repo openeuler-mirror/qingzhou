@@ -1,11 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import javax.servlet.http.HttpServletRequest;
-
 import qingzhou.config.Role;
 import qingzhou.config.User;
 import qingzhou.console.controller.SystemController;
@@ -15,6 +9,12 @@ import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.pattern.Filter;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 public class SecurityController implements Filter<RestContext> {
     public static boolean isActionPermitted(String app, String model, String action, HttpServletRequest request) {
@@ -27,7 +27,9 @@ public class SecurityController implements Filter<RestContext> {
         if (actionInfo == null) return false;
 
         // 检查用户的权限
-        User currentUser = SystemController.getUser(LoginManager.getLoginUser(request), request.getSession(false));
+        User currentUser = LoginManager.getLoggedUser(request.getSession(false));
+        if (currentUser == null) return false;
+
         //超管直接放行
         if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(currentUser.getType())) {
             return true;

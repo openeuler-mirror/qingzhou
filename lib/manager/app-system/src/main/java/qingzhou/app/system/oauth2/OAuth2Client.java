@@ -1,5 +1,6 @@
-package qingzhou.console.login.oauth2;
+package qingzhou.app.system.oauth2;
 
+import qingzhou.config.OAuth2;
 import qingzhou.console.controller.SystemController;
 import qingzhou.engine.util.Utils;
 import qingzhou.http.Http;
@@ -12,26 +13,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class OAuth2Client {
-    private static final HttpClient httpClient = SystemController.getService(Http.class).buildHttpClient();
-    public static final Json jsonService = SystemController.getService(Json.class);
+    private final HttpClient httpClient = SystemController.getService(Http.class).buildHttpClient();
+    private final Json jsonService = SystemController.getService(Json.class);
 
-    static OAuth2Client getInstance(OAuthConfig config) {
+    static OAuth2Client getInstance(OAuth2 config) {
         if (!config.isEnabled()) return null;
 
-        ServerPolicy serverPolicy;
-        if (Utils.isBlank(config.getServerVendor())) {
-            serverPolicy = new TongAuth();
-        } else {
-            return null;
-        }
-
-        return new OAuth2Client(config, serverPolicy);
+        AuthPolicy authPolicy = new DefaultAuthPolicy();
+        return new OAuth2Client(config, authPolicy);
     }
 
-    private final OAuthConfig config;
-    private final ServerPolicy serverVendor;
+    private final OAuth2 config;
+    private final AuthPolicy serverVendor;
 
-    private OAuth2Client(OAuthConfig config, ServerPolicy serverVendor) {
+    private OAuth2Client(OAuth2 config, AuthPolicy serverVendor) {
         this.config = config;
         this.serverVendor = serverVendor;
     }
@@ -79,7 +74,7 @@ public class OAuth2Client {
         }
     }
 
-    public static String toUrl(Map<String, String> params) {
+    public String toUrl(Map<String, String> params) {
         StringBuilder url = new StringBuilder();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             url.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
@@ -87,34 +82,34 @@ public class OAuth2Client {
         return url.substring(0, url.length() - 1);
     }
 
-    private interface ServerPolicy {
-        Response logout(OAuthConfig config, RequestBuilder builder) throws Exception;
+    private interface AuthPolicy {
+        Response logout(OAuth2 config, RequestBuilder builder) throws Exception;
 
-        Response accessToken(OAuthConfig config, RequestBuilder builder) throws Exception;
+        Response accessToken(OAuth2 config, RequestBuilder builder) throws Exception;
 
-        Response userInfo(OAuthConfig config, RequestBuilder builder, String accessToken) throws Exception;
+        Response userInfo(OAuth2 config, RequestBuilder builder, String accessToken) throws Exception;
 
-        default boolean checkToken(OAuthConfig config, String accessToken) throws Exception {
+        default boolean checkToken(OAuth2 config, String accessToken) throws Exception {
             return true;
         }
     }
 
-    private static class TongAuth implements ServerPolicy {
+    private class DefaultAuthPolicy implements AuthPolicy {
 
         @Override
-        public Response logout(OAuthConfig config, RequestBuilder builder) throws Exception {
+        public Response logout(AuthPolicy config, RequestBuilder builder) throws Exception {
             builder.responseType(TongResponse.class);
             return sendReq(config.getLogoutUrl(), builder);
         }
 
         @Override
-        public Response accessToken(OAuthConfig config, RequestBuilder builder) throws Exception {
+        public Response accessToken(AuthPolicy config, RequestBuilder builder) throws Exception {
             builder.responseType(TongResponse.class);
             return sendReq(config.getTokenUrl(), builder);
         }
 
         @Override
-        public Response userInfo(OAuthConfig config, RequestBuilder builder, String accessToken) throws Exception {
+        public Response userInfo(AuthPolicy config, RequestBuilder builder, String accessToken) throws Exception {
             builder.method("GET")
                     .param("listen_logout", config.getListenLogout())
                     .header("Authorization", "Bearer " + accessToken)
@@ -123,7 +118,7 @@ public class OAuth2Client {
         }
 
         @Override
-        public boolean checkToken(OAuthConfig config, String accessToken) throws Exception {
+        public boolean checkToken(AuthPolicy config, String accessToken) throws Exception {
             String checkTokenUrl = config.getCheckTokenUrl();
             RequestBuilder builder = RequestBuilder.builder()
                     .param("client_id", config.getClient_id())
@@ -148,72 +143,7 @@ public class OAuth2Client {
         }
     }
 
-    public static class RequestBuilder {
-        private final Map<String, String> params = new HashMap<>();
-        private final Map<String, String> headers = new HashMap<>();
-        private Class<? extends Response> clazz;
-        private String method = "POST";
-
-        public static RequestBuilder builder() {
-            return new RequestBuilder();
-        }
-
-        public RequestBuilder method(String method) {
-            this.method = method;
-            return this;
-        }
-
-        public RequestBuilder param(String key, String value) {
-            params.put(key, value);
-            return this;
-        }
-
-        public RequestBuilder header(String key, String value) {
-            headers.put(key, value);
-            return this;
-        }
-
-        public RequestBuilder responseType(Class<? extends Response> clazz) {
-            this.clazz = clazz;
-            return this;
-        }
-
-        public String method() {
-            return method;
-        }
-
-        public Map<String, String> params() {
-            return params;
-        }
-
-        public Map<String, String> headers() {
-            return headers;
-        }
-
-        public Class<? extends Response> responseType() {
-            return clazz;
-        }
-    }
-
-    public interface Response {
-        default String getUsername() {
-            return null;
-        }
-
-        default String getAccessToken() {
-            return null;
-        }
-
-        default long getExpiresIn() {
-            return 0;
-        }
-
-        default boolean success() {
-            return false;
-        }
-    }
-
-    public static class TongResponse extends HashMap<String, Object> implements Response {
+    public class TongResponse extends HashMap<String, Object> implements Response {
 
         @Override
         public String getAccessToken() {

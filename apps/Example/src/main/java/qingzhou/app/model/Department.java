@@ -86,7 +86,7 @@ public class Department extends AddModelBase implements Echo, Option {
     public String emailSuffix;
 
     @ModelField(
-            same_line = true, placeholder = "备注", show_label = false,
+            same_line = true, show_label = false,
             name = {"备注", "en:remark"},
             info = {"备注。", "en:remark."})
     public String remark;

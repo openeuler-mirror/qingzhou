@@ -1,16 +1,17 @@
 package qingzhou.console.controller.jmx;
 
-import java.rmi.server.RemoteServer;
-import java.rmi.server.ServerNotActiveException;
-import java.util.Properties;
-import javax.management.remote.JMXAuthenticator;
-import javax.management.remote.JMXPrincipal;
-import javax.security.auth.Subject;
-
+import qingzhou.config.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.TrustIpCheck;
 import qingzhou.console.login.LoginManager;
 import qingzhou.engine.util.Utils;
+
+import javax.management.remote.JMXAuthenticator;
+import javax.management.remote.JMXPrincipal;
+import javax.security.auth.Subject;
+import java.rmi.server.RemoteServer;
+import java.rmi.server.ServerNotActiveException;
+import java.util.Properties;
 
 public class JmxAuthenticatorImpl implements JMXAuthenticator {
 
@@ -55,7 +56,6 @@ public class JmxAuthenticatorImpl implements JMXAuthenticator {
         }
 
         JmxHttpServletRequest request = null;
-        LoginManager.LoginFailedMsg loginFailedMsg = null;
         try {
             Properties jmxProperties = new Properties();
             jmxProperties.setProperty(LoginManager.LOGIN_USER, username);
@@ -65,13 +65,16 @@ public class JmxAuthenticatorImpl implements JMXAuthenticator {
             }
 
             request = new JmxHttpServletRequest("", "", "", jmxProperties);
-            loginFailedMsg = LoginManager.login(request);
+            Object result = LoginManager.login(request::getParameter);
+            if (result instanceof User) {
+                LoginManager.loginSession(request, (User) result);
+            } else {
+                LoginManager.LoginFailedMsg loginFailedMsg = (LoginManager.LoginFailedMsg) result;
+                String headerMsg = loginFailedMsg.getHeaderMsg();
+                authenticationFailure(LoginManager.retrieveI18nMsg(headerMsg));
+            }
         } catch (Exception e) {
             authenticationFailure(e.getMessage());
-        }
-        if (loginFailedMsg != null) {
-            String headerMsg = loginFailedMsg.getHeaderMsg();
-            authenticationFailure(LoginManager.retrieveI18nMsg(headerMsg));
         }
         Subject subject = new Subject();
         String id = request.getSession().getId();

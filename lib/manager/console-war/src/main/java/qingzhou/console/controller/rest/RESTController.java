@@ -9,18 +9,18 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.ViewManager;
 import qingzhou.console.view.type.JsonView;
-import qingzhou.crypto.Base32Coder;
-import qingzhou.crypto.Base64Coder;
-import qingzhou.crypto.CryptoService;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.core.registry.ModelInfo;
+import qingzhou.crypto.Base32Coder;
+import qingzhou.crypto.Base64Coder;
+import qingzhou.crypto.CryptoService;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
-import qingzhou.core.registry.ModelFieldInfo;
-import qingzhou.core.registry.ModelInfo;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
@@ -247,12 +247,13 @@ public class RESTController extends HttpServlet {
         }
 
         RequestImpl request = new RequestImpl();
-        request.addSessionParameterListener((key, val) -> req.getSession().setAttribute(key, val));
+        HttpSession session = req.getSession();
+        request.addSessionParameterListener(session::setAttribute);
         request.setViewName(rest.get(0));
         request.setAppName(rest.get(1));
         request.setModelName(rest.get(2));
         request.setActionName(rest.get(3));
-        request.setUserName(LoginManager.getLoginUser(req));
+        request.setUserName(LoginManager.getLoggedUser(session).getName());
         request.setI18nLang(I18n.getI18nLang());
 
         ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());

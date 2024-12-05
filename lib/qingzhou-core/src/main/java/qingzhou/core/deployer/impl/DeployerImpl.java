@@ -59,7 +59,7 @@ class DeployerImpl implements Deployer {
         AppImpl app = buildApp(appDir);
 
         // 加载应用
-        Utils.doInThreadContextClassLoader(app.getLoader(), () -> {
+        Utils.doInThreadContextClassLoader(app.getAppLoader(), () -> {
             startApp(app);
             startModel(app);
         });
@@ -119,7 +119,7 @@ class DeployerImpl implements Deployer {
         }
 
         try {
-            app.getLoader().close();
+            app.getAppLoader().close();
         } catch (Exception ignored) {
         }
 
@@ -154,18 +154,21 @@ class DeployerImpl implements Deployer {
     }
 
     private AppImpl buildApp(File appDir) throws Throwable {
-        AppImpl app = new AppImpl();
+        AppImpl app = new AppImpl(moduleContext);
+        app.setAppDir(appDir);
 
         java.util.List<File> scanAppLibFiles = new ArrayList<>();
-        findLib(appDir, scanAppLibFiles);
+        // 1. 只将“根目录”下的 jar 文件加入应用加载路径
+        Arrays.stream(Objects.requireNonNull(appDir.listFiles())).filter(f -> f.getName().endsWith(".jar")).forEach(scanAppLibFiles::add);
+        // 2. 探测“根目录/lib” 下所有的 jar 文件加入应用加载路径
+        findLib(new File(appDir, "lib"), scanAppLibFiles);
+        // 3. 轻舟为应用扩展的 jar 文件加入应用加载路径
         File[] additionalLib = loaderPolicy.getAdditionalLib();
-        if (additionalLib != null) {
-            scanAppLibFiles.addAll(Arrays.asList(additionalLib));
-        }
-        File[] appLibs = scanAppLibFiles.toArray(new File[0]);
+        if (additionalLib != null) scanAppLibFiles.addAll(Arrays.asList(additionalLib));
 
+        File[] appLibs = scanAppLibFiles.toArray(new File[0]);
         URLClassLoader loader = buildLoader(appLibs);
-        app.setLoader(loader);
+        app.setAppLoader(loader);
 
         // 解析应用的配置文件
         Properties appProperties = buildAppProperties(appDir);
@@ -186,7 +189,6 @@ class DeployerImpl implements Deployer {
         app.setAppInfo(appInfo);
 
         AppContextImpl appContext = buildAppContext(app);
-        appContext.setAppDir(appDir);
         app.setAppContext(appContext);
 
         modelInfos.forEach((key, value) -> app.getModelBaseMap().put(value.getCode(), key));
@@ -556,7 +558,7 @@ class DeployerImpl implements Deployer {
 
     private AppContextImpl buildAppContext(AppImpl app) {
         //        appContext.addActionFilter(new UniqueFilter(appContext));
-        return new AppContextImpl(moduleContext, app);
+        return new AppContextImpl(app);
     }
 
     private void findLib(File libFile, java.util.List<File> libs) throws IOException {

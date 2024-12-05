@@ -4,6 +4,9 @@ import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.app.system.oauth2.OAuth2Adapter;
+import qingzhou.config.Config;
+import qingzhou.config.OAuth2;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.QingzhouSystemApp;
@@ -32,6 +35,12 @@ public class Main extends QingzhouSystemApp {
         appContext.addMenu(Main.Business, new String[]{"业务管理", "en:" + Main.Business}).icon("th-large").order("1");
         appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("2");
         appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("cubes").order("3");
+
+        Config config = Main.getService(Config.class);
+        OAuth2 oAuth2 = config.getCore().getConsole().getOAuth2();
+        if (oAuth2 != null && oAuth2.isEnabled()) {
+            appContext.setAuthAdapter(new OAuth2Adapter(oAuth2));
+        }
     }
 
     public static <T> T getService(Class<T> type) {

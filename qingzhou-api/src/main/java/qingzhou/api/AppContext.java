@@ -32,7 +32,13 @@ public interface AppContext {
      *
      * @param actionFilter 操作过滤器实例。
      */
-    void addActionFilter(ActionFilter actionFilter);
+    void setActionFilter(ActionFilter actionFilter);
+
+    /**
+     * 设置轻舟使用应用自定义的登录认证插件，拦截处理轻舟的登陆流程。
+     * 注意：设置的插件仅在应用安装到本地实例上时有效！如果多个应用设置，则随机选择一个。
+     */
+    void setAuthAdapter(AuthAdapter authAdapter);
 
     /**
      * 添加国际化信息。

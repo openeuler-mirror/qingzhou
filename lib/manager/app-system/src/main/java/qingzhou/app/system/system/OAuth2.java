@@ -1,7 +1,5 @@
 package qingzhou.app.system.system;
 
-import java.util.Map;
-
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
@@ -10,6 +8,8 @@ import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.config.Config;
+
+import java.util.Map;
 
 @Model(code = "oauth2", icon = "shield",
         menu = Main.Setting, order = "6",
@@ -59,7 +59,7 @@ public class OAuth2 extends ModelBase implements Update {
             required = true,
             name = {"获取用户信息地址", "en:Get User Info Address"},
             info = {"设置从 OAuth2 服务器获取用户账号等信息的 url 地址。", "en:Set the url to obtain information such as user accounts from the OAuth2 server."})
-    public String data_uri;
+    public String user_uri;
 
     @Override
     public Map<String, String> editData(String id) {
