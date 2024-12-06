@@ -5,6 +5,7 @@ import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.LoginMethod;
 import qingzhou.console.login.Parameter;
+import qingzhou.core.DeployerConstants;
 import qingzhou.crypto.CryptoService;
 
 public class OtpLogin implements LoginMethod {
@@ -12,7 +13,7 @@ public class OtpLogin implements LoginMethod {
     @Override
     public User authorize(Parameter parameter) throws Throwable {
         String user = parameter.get(LoginManager.LOGIN_USER);
-        String otp = parameter.get(LoginManager.LOGIN_OTP);
+        String otp = parameter.get(DeployerConstants.LOGIN_OTP);
         try {
             otp = SystemController.decryptWithConsolePrivateKey(otp, true);
         } catch (Exception ignored) {

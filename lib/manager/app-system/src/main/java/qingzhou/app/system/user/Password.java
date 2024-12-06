@@ -1,21 +1,9 @@
 package qingzhou.app.system.user;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
-import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.core.DeployerConstants;
 import qingzhou.crypto.CryptoService;
@@ -23,6 +11,11 @@ import qingzhou.crypto.MessageDigest;
 import qingzhou.crypto.TotpCipher;
 import qingzhou.engine.util.Utils;
 import qingzhou.qr.QrGenerator;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @Model(code = DeployerConstants.MODEL_PASSWORD, icon = "key",
         menu = Main.Setting, hidden = true,
@@ -72,7 +65,7 @@ public class Password extends ModelBase implements Update, Export {
 
     @Override
     public void start() {
-        getAppContext().addI18n("keyForOtp.bind", new String[]{"请先刷新动态密码",
+        getAppContext().addI18n("refresh.key.need", new String[]{"请先刷新动态密码",
                 "en:Please refresh the one-time password"});
         getAppContext().addI18n("password.confirm.failed", new String[]{"确认密码与新密码不一致",
                 "en:Confirm that the password does not match the new password"});
@@ -118,15 +111,15 @@ public class Password extends ModelBase implements Update, Export {
             info = {"验证并刷新动态密码。", "en:Verify and refresh the OTP."})
     public void confirmKey(Request request) throws Exception {
         boolean result = false;
-        String reqCode = request.getParameter("otp");
+        String reqCode = request.getParameter(DeployerConstants.LOGIN_OTP);
         if (Utils.notBlank(reqCode)) {
-            String keyForOtp = request.parametersForSession().get(KEY_IN_SESSION_FLAG);
+            String keyInSession = request.parametersForSession().get(KEY_IN_SESSION_FLAG);
             TotpCipher totpCipher = getAppContext().getService(CryptoService.class).getTotpCipher();
-            result = totpCipher.verifyCode(keyForOtp, reqCode);
+            result = totpCipher.verifyCode(keyInSession, reqCode);
             if (result) {
                 Map<String, String> data = new HashMap<>();
                 data.put(User.ID_KEY, request.getUser());
-                data.put("keyForOtp", keyForOtp);
+                data.put("keyForOtp", keyInSession);
                 User.updateDataForUser(data);
                 request.parametersForSession().remove(KEY_IN_SESSION_FLAG);
             }
@@ -154,13 +147,13 @@ public class Password extends ModelBase implements Update, Export {
             @Override
             public byte[] read(long offset) throws IOException {
                 TotpCipher totpCipher = Main.getService(CryptoService.class).getTotpCipher();
-                String keyForOtp = totpCipher.generateKey();
-                request.parametersForSession().put(KEY_IN_SESSION_FLAG, keyForOtp);
+                String genKey = totpCipher.generateKey();
+                request.parametersForSession().put(KEY_IN_SESSION_FLAG, genKey);
 
                 request.getResponse().setContentType("image/" + format);
 
                 String loginUser = request.getUser();
-                String qrCode = "otpauth://totp/" + loginUser + "?secret=" + keyForOtp;
+                String qrCode = "otpauth://totp/" + loginUser + "?secret=" + genKey;
                 QrGenerator qrGenerator = Main.getService(QrGenerator.class);
                 return qrGenerator.generateQrImage(qrCode, format, 9, 4, 0xE0F0FF, 0x404040);
             }
@@ -172,7 +165,7 @@ public class Password extends ModelBase implements Update, Export {
 
             @Override
             public String name() {
-                return "keyForOtp." + format;
+                return "key." + format;
             }
         };
     }
@@ -210,7 +203,7 @@ public class Password extends ModelBase implements Update, Export {
             baseData.put("password", digest.digest(request.getParameter("newPassword"), digestAlg, saltLength, iterations));
             baseData.put("changePwd", "false");
             User.insertPasswordModifiedTime(baseData);
-            Console console = Main.getService(Config.class).getCore().getConsole();
+            Console console = Main.getConsole();
             String historyPasswords = User.cutOldPasswords(
                     baseData.remove("historyPasswords"), User.PASSWORD_SP,
                     console.getSecurity().getPasswordLimitRepeats(), baseData.get("password"));
@@ -219,13 +212,13 @@ public class Password extends ModelBase implements Update, Export {
 
         String enableOtpFlag = request.getParameter("enableOtp");
         if (enableOtpFlag != null) {
-            boolean parsedBoolean = Boolean.parseBoolean(enableOtpFlag);
-            baseData.put("enableOtp", String.valueOf(parsedBoolean));
+            boolean enabled = Boolean.parseBoolean(enableOtpFlag);
+            baseData.put("enableOtp", String.valueOf(enabled));
 
-            String keyForOtp = baseData.get("keyForOtp");
-            if (parsedBoolean && Utils.isBlank(keyForOtp)) {
+            String oldKey = baseData.get("keyForOtp");
+            if (enabled && Utils.isBlank(oldKey)) {
                 request.getResponse().setSuccess(false);
-                request.getResponse().setMsg(getAppContext().getI18n("keyForOtp.bind"));
+                request.getResponse().setMsg(getAppContext().getI18n("refresh.key.need"));
                 return;
             }
         }

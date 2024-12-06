@@ -78,10 +78,10 @@
 				</label>
 			</div>
 			<div class="input-control has-icon-left">
-				<input type="text" id="<%=LoginManager.LOGIN_OTP%>_txt" class="form-control"
-					   placeholder="<%=I18n.getKeyI18n( "page.info.otp")%>"
-					   onchange="document.getElementById('<%=LoginManager.LOGIN_OTP%>').value = this.value;">
-				<input type="hidden" id="<%=LoginManager.LOGIN_OTP%>" name="<%=LoginManager.LOGIN_OTP%>">
+				<input type="text" id="<%=DeployerConstants.LOGIN_OTP%>_txt" class="form-control"
+                       placeholder="<%=I18n.getKeyI18n( "page.info.otp")%>"
+                       onchange="document.getElementById('<%=DeployerConstants.LOGIN_OTP%>').value = this.value;">
+				<input type="hidden" id="<%=DeployerConstants.LOGIN_OTP%>" name="<%=DeployerConstants.LOGIN_OTP%>">
 				<label class="input-control-icon-left"
 					   style="line-height: 44px;"><i class="icon icon-shield"></i></label>
 			</div>
@@ -125,7 +125,7 @@
         for (var i = 0; i < inputs.length; i++) {
             var input = inputs[i];
             $(input).change();
-            if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=LoginManager.LOGIN_OTP%>") {
+            if (input.id === "<%=LoginManager.LOGIN_PASSWORD%>" || input.id === "<%=DeployerConstants.LOGIN_OTP%>") {
                 $(input).val(encrypt.encryptLong2($(input).val()));
             }
         }

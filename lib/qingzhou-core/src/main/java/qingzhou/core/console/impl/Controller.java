@@ -1,8 +1,7 @@
 package qingzhou.core.console.impl;
 
-import qingzhou.core.AppPageData;
-import qingzhou.config.Config;
 import qingzhou.config.Console;
+import qingzhou.core.AppPageData;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.servlet.ServletContainer;
 import qingzhou.core.console.servlet.impl.ServletContainerImpl;
@@ -10,9 +9,11 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
+import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Properties;
 
 public class Controller implements Process {
@@ -27,8 +28,9 @@ public class Controller implements Process {
 
     @Override
     public void exec() throws Throwable {
-        console = moduleContext.getService(Config.class).getCore().getConsole();
-
+        Json json = moduleContext.getService(Json.class);
+        String consoleJson = json.toJson(((Map<String, Object>) moduleContext.getConfig()).get("console"));
+        console = json.fromJson(consoleJson, Console.class);
         if (console == null || !console.isEnabled()) return;
 
         sequence = new ProcessSequence(

@@ -64,4 +64,5 @@ public interface DeployerConstants {
     String QINGZHOU_PROPERTIES_APP_SCAN_FILENAME = "qingzhou.app.scan.filename";
     String QINGZHOU_PROPERTIES_APP_SCAN_INCLUDE = "qingzhou.app.scan.include";
     String QINGZHOU_PROPERTIES_APP_SCAN_EXCLUDE = "qingzhou.app.scan.exclude";
+    String LOGIN_OTP = "otp";
 }

@@ -10,10 +10,10 @@ import qingzhou.core.deployer.impl.AppImpl;
 import qingzhou.engine.util.pattern.Filter;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public class AuthAdapterManager implements Filter<SystemControllerContext> {
     private AuthAdapter authAdapter;
-    private final ThreadLocal<AuthContextImpl> currentAuthAdapter = new ThreadLocal<>();
 
     {
         Deployer deployer = SystemController.getService(Deployer.class);
@@ -28,20 +28,30 @@ public class AuthAdapterManager implements Filter<SystemControllerContext> {
         if (authAdapter == null) return true;
 
         HttpServletRequest request = context.req;
+        HttpServletResponse response = context.resp;
+
         // 已登录
         if (LoginManager.getLoggedUser(request.getSession(false)) != null) return true;
-        // 交由 LoginManager 处理：带了 LoginManager.LOGIN_USER 和 LoginManager.LOGIN_PASSWORD，很可能是要登录
-        String reqUri = RESTController.getReqUri(request);
-        if (reqUri.equals(LoginManager.LOGIN_URI)) return true;
 
+        String reqUri = RESTController.getReqUri(request);
+        if (LoginManager.isOpenUris(reqUri)) return true; // 开放的 uri，不需要处理
+
+        // 准备“认证”过程的上下文环境
         AuthContextImpl authContext = new AuthContextImpl(request::getParameter);
-        currentAuthAdapter.set(authContext);
-        authAdapter.authRequest(authContext);
-        if (authContext.getAuthState() == AuthAdapter.AuthState.LOGGED_IN) {
-            User user = buildUser(authContext.getUser());
-            LoginManager.loginSession(context.req, user);
-            return true;
+
+        // 是否要监听特定的登录请求
+        String listenUri = authAdapter.getLoginUri();
+        if (listenUri == null || listenUri.equals(reqUri)) {
+            boolean success = authAdapter.login(authContext);
+            if (success) {
+                String user = authContext.getUser();
+                LoginManager.loginSession(request, buildUser(user));
+                // 进入主页
+                response.sendRedirect(RESTController.encodeURL(response, request.getContextPath() + LoginManager.INDEX_PATH)); // to welcome page
+                return true;
+            }
         }
+
         return false;
     }
 
@@ -52,16 +62,5 @@ public class AuthAdapterManager implements Filter<SystemControllerContext> {
         user.setChangePwd(false);
         user.setEnableOtp(false);
         return user;
-    }
-
-    @Override
-    public void afterFilter(SystemControllerContext context) {
-        AuthContextImpl authContext = currentAuthAdapter.get();
-        if (authContext == null) return;
-
-        authAdapter.requestComplete(authContext);
-        if (authContext.getAuthState() == AuthAdapter.AuthState.LOGGED_OUT) {
-            LoginManager.logoutSession(context.req);
-        }
     }
 }

@@ -3,8 +3,8 @@ package qingzhou.core.deployer.impl;
 import qingzhou.api.ActionType;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.config.Console;
 import qingzhou.core.DeployerConstants;
-import qingzhou.config.Config;
 import qingzhou.core.deployer.*;
 import qingzhou.core.registry.*;
 import qingzhou.crypto.Cipher;
@@ -24,9 +24,12 @@ import java.util.*;
 
 class ActionInvokerImpl implements ActionInvoker {
     private final ModuleContext moduleContext;
+    private final Json json;
+    private String privateKey;
 
     ActionInvokerImpl(ModuleContext moduleContext) {
         this.moduleContext = moduleContext;
+        this.json = moduleContext.getService(Json.class);
     }
 
     @Override
@@ -60,7 +63,11 @@ class ActionInvokerImpl implements ActionInvoker {
                             }
                         }
 
-                        String privateKey = moduleContext.getService(Config.class).getCore().getConsole().getSecurity().getPrivateKey();
+                        if (privateKey == null) {
+                            String consoleJson = json.toJson(((Map<String, Object>) moduleContext.getConfig()).get("console"));
+                            Console console = json.fromJson(consoleJson, Console.class);
+                            privateKey = console.getSecurity().getPrivateKey();
+                        }
                         String agentKey = moduleContext.getService(CryptoService.class).getPairCipher(null, privateKey).decryptWithPrivateKey(instanceInfo.getKey());
                         cipher = moduleContext.getService(CryptoService.class).getCipher(agentKey);
                     }
@@ -132,7 +139,7 @@ class ActionInvokerImpl implements ActionInvoker {
     }
 
     private Response sendRemote(Request request, String remoteUrl, Cipher cipher) throws Exception {
-        byte[] resultJson = moduleContext.getService(Json.class).toJson(request).getBytes(StandardCharsets.UTF_8);
+        byte[] resultJson = json.toJson(request).getBytes(StandardCharsets.UTF_8);
         byte[] sendContent = cipher.encrypt(resultJson);
         HttpResponse response = moduleContext.getService(Http.class).buildHttpClient().post(remoteUrl, sendContent, null);
         byte[] responseBody = response.getResponseBody();

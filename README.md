@@ -33,12 +33,12 @@ JDK >= 1.8
 
 > 看到类似如下的日志输出，则表示启动完成：
 >
-> Open a browser to access the Qingzhou console: http://localhost:9000/console
+> Open a browser to access the Qingzhou console: http://localhost:9900/console
 
 3. **访问控制台**
 
 打开浏览器访问轻舟的管理平台：
-[http://localhost:9000/console](http://localhost:9000/console)
+[http://localhost:9900/console](http://localhost:9900/console)
 
 > 注：
 >

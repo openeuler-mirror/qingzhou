@@ -6,9 +6,9 @@ import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Option;
-import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.config.Security;
+import qingzhou.config.impl.Config;
 import qingzhou.console.controller.jmx.JmxAuthenticatorImpl;
 import qingzhou.console.controller.jmx.JmxInvokerImpl;
 import qingzhou.console.controller.jmx.NotificationListenerImpl;
@@ -29,11 +29,13 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
+import qingzhou.json.Json;
 import qingzhou.logger.Logger;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -162,7 +164,9 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     public static Console getConsole() {
-        return getService(Config.class).getCore().getConsole();
+        Config fileConfig = new Config(getService(Json.class),
+                new File(new File(getModuleContext().getInstanceDir(), "conf"), "qingzhou.json"));
+        return fileConfig.getCore().getConsole();
     }
 
     public static String getPublicKeyString() {
@@ -186,24 +190,29 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         try {
-            JmxServiceAdapter jmxServiceAdapter = SystemController.getService(JmxServiceAdapter.class);
-            jmxServiceAdapter.registerJMXAuthenticator(new JmxAuthenticatorImpl());
-            jmxServiceAdapter.registerJmxInvoker(new JmxInvokerImpl());
-            jmxServiceAdapter.registerNotificationListener(new NotificationListenerImpl());
-
-            ApplicationContext context = getApplicationContext(sce);
-            Field field = context.getClass().getDeclaredField("context");
-            boolean accessible = field.isAccessible();
-            field.setAccessible(true);
-            StandardContext sc = (StandardContext) field.get(context);
-            field.setAccessible(accessible);
-            if (sc != null) {
-                SESSIONS_MANAGER = sc.getManager();
-            } else {
-                throw new IllegalStateException();
-            }
+            forJmx(sce);
         } catch (Exception e) {
             getService(Logger.class).warn(e.getMessage(), e);
+        }
+    }
+
+    private void forJmx(ServletContextEvent sce) throws Exception {
+        JmxServiceAdapter jmxServiceAdapter = SystemController.getService(JmxServiceAdapter.class);
+        if (jmxServiceAdapter == null) return;
+        jmxServiceAdapter.registerJMXAuthenticator(new JmxAuthenticatorImpl());
+        jmxServiceAdapter.registerJmxInvoker(new JmxInvokerImpl());
+        jmxServiceAdapter.registerNotificationListener(new NotificationListenerImpl());
+
+        ApplicationContext context = getApplicationContext(sce);
+        Field field = context.getClass().getDeclaredField("context");
+        boolean accessible = field.isAccessible();
+        field.setAccessible(true);
+        StandardContext sc = (StandardContext) field.get(context);
+        field.setAccessible(accessible);
+        if (sc != null) {
+            SESSIONS_MANAGER = sc.getManager();
+        } else {
+            throw new IllegalStateException();
         }
     }
 
@@ -223,6 +232,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         JmxServiceAdapter jmxServiceAdapter = SystemController.getService(JmxServiceAdapter.class);
+        if (jmxServiceAdapter == null) return;
         jmxServiceAdapter.registerJMXAuthenticator(null);
         jmxServiceAdapter.registerJmxInvoker(null);
         jmxServiceAdapter.registerNotificationListener(null);

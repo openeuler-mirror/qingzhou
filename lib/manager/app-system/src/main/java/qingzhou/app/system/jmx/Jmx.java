@@ -1,7 +1,5 @@
 package qingzhou.app.system.jmx;
 
-import java.util.Map;
-
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
@@ -9,11 +7,12 @@ import qingzhou.api.ModelField;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.config.Config;
 import qingzhou.config.Console;
 import qingzhou.core.console.JmxServiceAdapter;
 import qingzhou.engine.ModuleContext;
 import qingzhou.logger.Logger;
+
+import java.util.Map;
 
 @Model(code = "jmx", icon = "coffee",
         menu = Main.Setting, order = "5",
@@ -29,35 +28,27 @@ public class Jmx extends ModelBase implements Update {
                     "en:Function switch, configure whether to enable Qingzhou JMX interface service."})
     public Boolean enabled = false;
 
-    @ModelField(
-            display = "enabled=true",
+    @ModelField(display = "enabled=true",
             host = true,
             name = {"服务 IP", "en:Service IP"},
             info = {"指定 JMX 监听服务绑定的 IP 地址，为空表示绑定到 127.0.0.1。",
                     "en:Specifies the IP address to which the JMX listener service is bound, and if it is empty, it is bound to 127.0.0.1 ."})
     public String host = "127.0.0.1";
 
-    @ModelField(
-            display = "enabled=true",
+    @ModelField(display = "enabled=true",
             port = true,
             name = {"服务端口", "en:Service Port"},
-            info = {"指定 JMX 监听服务绑定的端口。", "en:Specifies the port to which the JMX listening service is bound."}
-    )
+            info = {"指定 JMX 监听服务绑定的端口。", "en:Specifies the port to which the JMX listening service is bound."})
     public Integer port = 7200;
 
     @Override
-    public void start() {
-        Console console = Main.getService(Config.class).getCore().getConsole();
-        if (console == null) return;
-        try {
-            qingzhou.config.Jmx jmx = console.getJmx();
-            if (jmx.isEnabled()) {
-                ServiceManager.getInstance().init(jmx);
-            }
-        } catch (Exception e) {
-            getAppContext().getService(Logger.class).error(e.getMessage(), e);
-        }
+    public void start() throws Exception {
+        Console console = Main.getConsole();
+        if (console == null || !console.isEnabled()) return;
+        qingzhou.config.Jmx jmx = console.getJmx();
+        if (jmx == null || !jmx.isEnabled()) return;
 
+        ServiceManager.getInstance().init(jmx);
         Main.getService(ModuleContext.class).registerService(JmxServiceAdapter.class, JmxServiceAdapterImpl.getInstance());
     }
 
@@ -66,24 +57,27 @@ public class Jmx extends ModelBase implements Update {
         try {
             ServiceManager.getInstance().destroy();
         } catch (Exception e) {
-            getAppContext().getService(Logger.class).error(e.getMessage(), e);
+            getAppContext().getService(Logger.class).warn(e.getMessage(), e);
         }
     }
 
     @Override
     public Map<String, String> editData(String id) {
-        Config config = Main.getService(Config.class);
-        qingzhou.config.Jmx jmx = config.getCore().getConsole().getJmx();
-        return ModelUtil.getPropertiesFromObj(jmx);
+        qingzhou.config.Jmx jmx = Main.getConsole().getJmx();
+        if (jmx != null) {
+            return ModelUtil.getPropertiesFromObj(jmx);
+        } else {
+            return ModelUtil.getPropertiesFromObj(new Jmx());
+        }
     }
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        Config config = Main.getService(Config.class);
-        qingzhou.config.Jmx jmx = config.getCore().getConsole().getJmx();
+        qingzhou.config.Jmx jmx = Main.getConsole().getJmx();
+        if (jmx == null) jmx = new qingzhou.config.Jmx();
         ModelUtil.setPropertiesToObj(jmx, data);
         doJmxService(jmx); // 生效 jmx 服务
-        config.setJmx(jmx); // 最后没问题再写入配置文件
+        Main.getConfig().setJmx(jmx); // 最后没问题再写入配置文件
     }
 
     private void doJmxService(qingzhou.config.Jmx jmx) throws Exception {

@@ -261,7 +261,7 @@
         "DOWNLOAD_FILE_NAMES_SP": '<%=DownloadData.DOWNLOAD_FILE_NAMES_SP%>',
         "downdloadGroupSepara": '<%=DownloadData.DOWNLOAD_FILE_GROUP_SP%>',
         "downloadFileNames": '<%=DownloadData.DOWNLOAD_FILE_NAMES%>',
-        "checkOtp": '<%=LoginManager.LOGIN_OTP%>',
+        "otp": '<%=DeployerConstants.LOGIN_OTP%>',
         "locale": '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',
         "pageLang": '<%=(I18n.isZH() ? "zh_cn" : "en")%>',
         "langFlag": '<%=I18n.getI18nLang().flag%>',
@@ -314,7 +314,8 @@
         "actionTypeReturns": "<%=ActionType.returns_link%>",
         "matrixHeatmapData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HEATMAP_DATA%>',
         "lineChartData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_LINE_CHART_DATA%>',
-        "multiselectGroupSeparator": '<%=DeployerConstants.MULTISELECT_GROUP_SEPARATOR%>'
+        "multiselectGroupSeparator": '<%=DeployerConstants.MULTISELECT_GROUP_SEPARATOR%>',
+        "confirmKey": '<%=DeployerConstants.ACTION_CONFIRMKEY%>'
     };
 
     <%-- 显示第一个应用的管理页面--%>

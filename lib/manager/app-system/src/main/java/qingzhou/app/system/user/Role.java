@@ -1,32 +1,24 @@
 package qingzhou.app.system.user;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.Echo;
 import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.config.Config;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 @Model(code = Role.MODEL_NAME, icon = "check-sign",
         menu = Main.Setting, order = "2",
@@ -101,7 +93,7 @@ public class Role extends ModelBase implements General, Echo, Option {
     }
 
     private String[] allIds(Map<String, String> query) {
-        qingzhou.config.Role[] roles = Main.getService(Config.class).getCore().getConsole().getRole();
+        qingzhou.config.Role[] roles = Main.getConsole().getRole();
         if (roles == null) return new String[0];
 
         return Arrays.stream(roles)
@@ -122,7 +114,7 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @Override
     public Map<String, String> showData(String id) {
-        qingzhou.config.Role[] roles = Main.getService(Config.class).getCore().getConsole().getRole();
+        qingzhou.config.Role[] roles = Main.getConsole().getRole();
         if (roles != null) {
             for (qingzhou.config.Role role : roles) {
                 if (role.getName().equals(id)) {
@@ -137,17 +129,16 @@ public class Role extends ModelBase implements General, Echo, Option {
     public void addData(Map<String, String> data) throws Exception {
         qingzhou.config.Role role = new qingzhou.config.Role();
         ModelUtil.setPropertiesToObj(role, data);
-        Main.getService(Config.class).addRole(role);
+        Main.getConfig().addRole(role);
     }
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        Config config = Main.getService(Config.class);
         String id = data.get(ID_KEY);
-        qingzhou.config.Role role = config.getCore().getConsole().getRole(id);
-        config.deleteRole(id);
+        qingzhou.config.Role role = Main.getConsole().getRole(id);
+        Main.getConfig().deleteRole(id);
         ModelUtil.setPropertiesToObj(role, data);
-        config.addRole(role);
+        Main.getConfig().addRole(role);
     }
 
     @Override
@@ -155,10 +146,10 @@ public class Role extends ModelBase implements General, Echo, Option {
         String[] batchId = getAppContext().getCurrentRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
             for (String bId : batchId) {
-                Main.getService(Config.class).deleteRole(bId);
+                Main.getConfig().deleteRole(bId);
             }
         } else {
-            Main.getService(Config.class).deleteRole(id);
+            Main.getConfig().deleteRole(id);
         }
     }
 
@@ -175,7 +166,7 @@ public class Role extends ModelBase implements General, Echo, Option {
         }
         List<Item> items = getItems(appName);
         String value = "";
-        qingzhou.config.Role[] roles = Main.getService(Config.class).getCore().getConsole().getRole();
+        qingzhou.config.Role[] roles = Main.getConsole().getRole();
         if (roles != null) {
             for (qingzhou.config.Role role : roles) {
                 if (role.getApp().equals(appName)) {

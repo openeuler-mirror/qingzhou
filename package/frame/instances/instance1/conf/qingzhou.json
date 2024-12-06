@@ -53,14 +53,9 @@
       "console": {
         "enabled": "true",
         "web": {
-          "port": "9000",
+          "port": "9900",
           "contextRoot": "/console",
           "maxPostSize": "1048576000"
-        },
-        "jmx": {
-          "enabled": "false",
-          "host": "",
-          "port": "7000"
         },
         "security": {
           "publicKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCh4JpnxULijNi2GUa8wQfMGSWdGQLwscYNkHirc+A3rWIVTIvbjbdKkay0cNsclO4C0y/eN7lFwlkTDz1kvI3zrNajYdXD55QXzYdpVdHwlh+MoX0AHvoNwNtE1SqZTUcxlcixD3NMGYNcSq3D5dgD42C3pzY2TsMkQs1VSeBcZwIDAQAB",
@@ -95,9 +90,9 @@
       "agent": {
         "enabled": "false",
         "agentHost": "",
-        "agentPort": "5000",
+        "agentPort": "5500",
         "registerInterval": "2",
-        "masterUrl": "http://localhost:9000/console",
+        "masterUrl": "http://localhost:9900/console",
         "masterKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCh4JpnxULijNi2GUa8wQfMGSWdGQLwscYNkHirc+A3rWIVTIvbjbdKkay0cNsclO4C0y/eN7lFwlkTDz1kvI3zrNajYdXD55QXzYdpVdHwlh+MoX0AHvoNwNtE1SqZTUcxlcixD3NMGYNcSq3D5dgD42C3pzY2TsMkQs1VSeBcZwIDAQAB"
       }
     },

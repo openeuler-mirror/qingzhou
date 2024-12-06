@@ -1,7 +1,5 @@
 package qingzhou.app.system.system;
 
-import java.util.Map;
-
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
 import qingzhou.api.ModelBase;
@@ -9,7 +7,8 @@ import qingzhou.api.ModelField;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.config.Config;
+
+import java.util.Map;
 
 @Model(code = "web", icon = "link",
         menu = Main.Setting, order = "4",
@@ -45,16 +44,14 @@ public class Web extends ModelBase implements Update {
 
     @Override
     public Map<String, String> editData(String id) {
-        Config config = Main.getService(Config.class);
-        qingzhou.config.Web web = config.getCore().getConsole().getWeb();
+        qingzhou.config.Web web = Main.getConsole().getWeb();
         return ModelUtil.getPropertiesFromObj(web);
     }
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        Config config = Main.getService(Config.class);
-        qingzhou.config.Web web = config.getCore().getConsole().getWeb();
+        qingzhou.config.Web web = Main.getConsole().getWeb();
         ModelUtil.setPropertiesToObj(web, data);
-        config.setWeb(web); // 最后没问题再写入配置文件
+        Main.getConfig().setWeb(web); // 最后没问题再写入配置文件
     }
 }

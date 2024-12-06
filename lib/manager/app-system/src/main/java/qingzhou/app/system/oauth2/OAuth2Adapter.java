@@ -1,183 +1,69 @@
 package qingzhou.app.system.oauth2;
 
 import qingzhou.api.AuthAdapter;
+import qingzhou.app.system.Main;
 import qingzhou.config.OAuth2;
-import qingzhou.logger.Logger;
+import qingzhou.http.Http;
+import qingzhou.http.HttpClient;
+import qingzhou.http.HttpResponse;
+import qingzhou.json.Json;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 public class OAuth2Adapter implements AuthAdapter {
-    private final OAuth2 oAuth2;
+    private final HttpClient httpClient = Main.getService(Http.class).buildHttpClient();
+    private final Json json = Main.getService(Json.class);
+    private final OAuth2 config;
 
-    private final String this_receive_code_path = "/oauth2/code_callback";
-    private final String this_listen_logout_path = "/oauth2/logout_callback";
-    private final String SESSION_TOKEN_FLAG = "SESSION_TOKEN_FLAG";
-    private final OAuth2Client oAuth2Client;
-    private final Map<String, HttpSession> tokenSessionsCache = new WeakHashMap<>(); // 为避免内存泄漏，用了 WeakHashMap，可能会导致会话清理通知失效（后续还可依赖本地失效机制）
-    private final ThreadLocal<String> tokenCache = new ThreadLocal<>();
-
-    public OAuth2Adapter(OAuth2 oAuth2) {
-        this.oAuth2 = oAuth2;
-    }
-
-
-    public OAuth2Adapter() {
-        if (config == null) {
-            oAuth2Client = null;
-            return;
-        }
-        String serverUrl = config.getRedirectUrl();
-        while (serverUrl.endsWith("/")) {
-            serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
-        }
-        String contextRoot = SystemController.getConsole().getWeb().getContextRoot();
-
-        serverUrl += contextRoot.startsWith("/") ? contextRoot : ("/" + contextRoot);
-
-        config.setListenLogout(serverUrl + this_listen_logout_path);
-        config.setReceiveCodeUrl(serverUrl + this_receive_code_path);
-
-        oAuth2Client = OAuth2Client.getInstance(config);
+    public OAuth2Adapter(OAuth2 config) {
+        this.config = config;
     }
 
     @Override
-    public Result login(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        if (oAuth2Client == null) return null;
-
-        String checkPath = getReqUri(request);
-        if (checkPath.equals(this_listen_logout_path)) {
-            doOAuthServerLogout(request);
-            return null;
-        }
-
-        if (checkPath.equals(this_receive_code_path)) {
-            return doReceiveCode(request);
-        }
-
-        String accessToken = request.getParameter("access_token");
-        if (accessToken != null) { // 携带 token，直接登录
-            return getUserInfo(accessToken);
-        }
-
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            String token = (String) session.getAttribute(SESSION_TOKEN_FLAG);
-            if (token != null) {
-                return doRefreshToken(request);
-            }
-        }
-
-        // 去往认证中心的登录页面
-        Result result = new Result();
-        result.setRedirectUrl(oAuth2Client.getLoginUrl());
-        return result;
-    }
-
-    private Result getUserInfo(String accessToken) {
-        Result result = new Result();
-        try {
-            String username = oAuth2Client.getUserInfo(accessToken);
-            result.setUsername(username);
-            return result;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public String getLoginUri() {
+        return "oauth2/code_callback";
     }
 
     @Override
-    public Result logout(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            String token = (String) session.getAttribute(SESSION_TOKEN_FLAG);
-            if (token != null) {
-                tokenSessionsCache.remove(token);
-                if (oAuth2Client.logout(token)) {
-                    Result result = new Result();
-                    result.setRedirectUrl(oAuth2Client.getLoginUrl());
-                    return result;
-                }
-            }
-        }
+    public boolean login(AuthContext context) throws Exception {
+        String code = context.getParameter("code");
+        String accessToken = getToken(code);
 
-        return null;
+        String user = getUser(accessToken);
+        if (user != null) {
+            context.setUser(user);
+            return true;
+        }
+        return false;
     }
 
-    @Override
-    public void afterLogin(HttpServletRequest request, HttpServletResponse response) {
-        String token = tokenCache.get();
-        if (token != null) {
-            HttpSession session = request.getSession(false);
-            session.setAttribute(SESSION_TOKEN_FLAG, token);
-            tokenSessionsCache.put(token, session);
-            tokenCache.remove();
-        }
-    }
+    private String getUser(String token) throws Exception {
+        String tokenUrl = config.getUser_uri() + "?client_id=" + config.getClient_id();
+        HttpResponse httpResponse = httpClient.get(tokenUrl, new HashMap<String, String>() {{
+            put("Authorization", "Bearer " + token);
+            put("accept", "application/json");
+        }});
+        String responseText = new String(httpResponse.getResponseBody(), StandardCharsets.UTF_8);
+        Map<String, Object> result = json.fromJson(responseText, Map.class);
 
-    private void doOAuthServerLogout(HttpServletRequest request) {
-        String token = request.getParameter("token");
-        if (token != null && !token.isEmpty()) {
-            HttpSession s = tokenSessionsCache.remove(token);
-            if (s != null) {
-                s.invalidate();
-            }
-        }
-    }
-
-    private Result doReceiveCode(HttpServletRequest request) {
-        String code = request.getParameter("code");
-        try {
-            String accessToken = oAuth2Client.login(code);
-            if (accessToken != null) {
-                tokenCache.set(accessToken);
-                String username = oAuth2Client.getUserInfo(accessToken);
-                Result result = new Result();
-                result.setUsername(username);
-                return result;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (Boolean.parseBoolean(String.valueOf(result.get("success")))) {
+            Map<String, String> data = (Map<String, String>) result.get("data");
+            return data.get("userName");
         }
         return null;
     }
 
-    private Result doRefreshToken(HttpServletRequest request) {
-        try {
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                String token = (String) session.getAttribute(SESSION_TOKEN_FLAG);
-                String SESSION_TOKEN_INTROSPECT_TIME = "SESSION_TOKEN_INTROSPECT_TIME";
-                Long lastTime = (Long) session.getAttribute(SESSION_TOKEN_INTROSPECT_TIME);
-                if (lastTime == null || (System.currentTimeMillis() - lastTime > 2 * 60 * 1000)) { // 简单实现，两次间隔 2 分钟
-                    if (oAuth2Client.checkToken(token)) {
-                        session.setAttribute(SESSION_TOKEN_INTROSPECT_TIME, System.currentTimeMillis());
-                    } else {
-                        Result result = new Result();
-                        result.setRedirectUrl(oAuth2Client.getLoginUrl());
-                        return result;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            SystemController.getService(Logger.class).warn(e.getMessage(), e);
-        }
-        return null;
-    }
-
-    public static String getReqUri(HttpServletRequest request) {
-        return request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo() : "");
-    }
-
-    @Override
-    public void authRequest(AuthContext context) throws Exception {
-
-    }
-
-    @Override
-    public void requestComplete(AuthContext context) {
-
+    private String getToken(String code) throws Exception {
+        Map<String, String> params = new HashMap<>();
+        params.put("grant_type", "authorization_code");
+        params.put("client_id", config.getClient_id());
+        params.put("client_secret", config.getClient_secret());
+        params.put("code", code);
+        HttpResponse httpResponse = httpClient.post(config.getToken_uri(), params);
+        String responseText = new String(httpResponse.getResponseBody(), StandardCharsets.UTF_8);
+        Map<String, String> result = json.fromJson(responseText, Map.class);
+        return result.get("access_token");
     }
 }

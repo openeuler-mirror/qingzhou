@@ -299,15 +299,12 @@ public class RESTController extends HttpServlet {
 
         data.forEach((k, v) -> request.getParameters().put(k, v));
 
-        HttpSession session = req.getSession(false);
-        if (session != null) {
-            Enumeration<String> attributeNames = session.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                String key = attributeNames.nextElement();
-                Object value = session.getAttribute(key);
-                if (value instanceof String) {
-                    request.parametersForSession().put(key, (String) value);
-                }
+        Enumeration<String> attributeNames = session.getAttributeNames();
+        while (attributeNames.hasMoreElements()) {
+            String key = attributeNames.nextElement();
+            Object value = session.getAttribute(key);
+            if (value instanceof String) {
+                request.parametersForSession().put(key, (String) value);
             }
         }
 

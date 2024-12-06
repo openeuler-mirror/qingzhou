@@ -4,11 +4,11 @@ import qingzhou.api.*;
 import qingzhou.api.type.Dashboard;
 import qingzhou.api.type.Monitor;
 import qingzhou.api.type.Show;
+import qingzhou.config.Console;
 import qingzhou.config.Jmx;
+import qingzhou.config.Security;
 import qingzhou.config.Web;
 import qingzhou.core.DeployerConstants;
-import qingzhou.config.Config;
-import qingzhou.config.Security;
 import qingzhou.core.deployer.App;
 import qingzhou.core.deployer.*;
 import qingzhou.core.registry.*;
@@ -111,18 +111,18 @@ public class Index extends ModelBase implements Dashboard {
 
         basic.addData(I18nTool.retrieveI18n(new String[]{"实例数量", "en:Number Of Instance"}).get(lang), String.valueOf(allInstanceNames.size()));
         basic.addData(I18nTool.retrieveI18n(new String[]{"应用数量", "en:Number Of App"}).get(lang), String.valueOf(appNames.size()));
-        Config config = Main.getService(Config.class);
-        Web web = config.getCore().getConsole().getWeb();
+        Console console = Main.getConsole();
+        Web web = console.getWeb();
         basic.addData(I18nTool.retrieveI18n(new String[]{"Web 服务端口", "en:Web Service Port"}).get(lang), String.valueOf(web.getPort()));
-        Jmx jmx = config.getCore().getConsole().getJmx();
+        Jmx jmx = console.getJmx();
         if (jmx.isEnabled()) {
             basic.addData(I18nTool.retrieveI18n(new String[]{"JMX 服务端口", "en:JMX Service Port"}).get(lang), String.valueOf(jmx.getPort()));
         } else {
             basic.addData(I18nTool.retrieveI18n(new String[]{"JMX 服务", "en:JMX Service"}).get(lang), I18nTool.retrieveI18n(new String[]{"未启用", "en:Not Enabled"}).get(lang));
         }
-        Security security = config.getCore().getConsole().getSecurity();
+        Security security = console.getSecurity();
         String trustedIp = security.getTrustedIp();
-        basic.addData(I18nTool.retrieveI18n(new String[]{"信任 IP", "en:Trusted IP"}).get(lang),Utils.isBlank(trustedIp) ? I18nTool.retrieveI18n(new String[]{"未设置", "en:Not Set"}).get(lang) : trustedIp);
+        basic.addData(I18nTool.retrieveI18n(new String[]{"信任 IP", "en:Trusted IP"}).get(lang), Utils.isBlank(trustedIp) ? I18nTool.retrieveI18n(new String[]{"未设置", "en:Not Set"}).get(lang) : trustedIp);
     }
 
     private LineChart createLineChart(String instanceName, ResponseImpl response, App app, Lang lang, DataBuilder builder) {

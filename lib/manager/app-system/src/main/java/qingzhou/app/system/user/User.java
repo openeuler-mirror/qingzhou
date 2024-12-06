@@ -1,34 +1,21 @@
 package qingzhou.app.system.user;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.regex.Pattern;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.General;
 import qingzhou.api.type.Option;
 import qingzhou.api.type.Validate;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
-import qingzhou.config.Config;
 import qingzhou.core.DeployerConstants;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.engine.util.Utils;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Pattern;
 
 @Model(code = DeployerConstants.MODEL_USER, icon = "user",
         menu = Main.Setting, order = "1",
@@ -56,7 +43,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     private String[] allIds(Map<String, String> query) {
-        return Arrays.stream(Main.getService(Config.class).getCore().getConsole().getUser())
+        return Arrays.stream(Main.getConsole().getUser())
                 .filter(user -> ModelUtil.query(query, new ModelUtil.Supplier() {
                     @Override
                     public String getModelName() {
@@ -157,7 +144,6 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             input_type = InputType.checkbox,
-            required = true,
             list = true, search = true,
             ref_model = Role.class,
             separator = DeployerConstants.USER_ROLE_SP,
@@ -209,7 +195,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
         qingzhou.config.User u = new qingzhou.config.User();
         ModelUtil.setPropertiesToObj(u, data);
-        Main.getService(Config.class).addUser(u);
+        Main.getConfig().addUser(u);
     }
 
     @Override
@@ -237,7 +223,7 @@ public class User extends ModelBase implements General, Validate, Option {
             insertPasswordModifiedTime(data);
 
             String historyPasswords = originUser.get("historyPasswords");
-            int limitRepeats = Main.getService(Config.class).getCore().getConsole().getSecurity().getPasswordLimitRepeats();
+            int limitRepeats = Main.getConsole().getSecurity().getPasswordLimitRepeats();
             String cutOldPasswords = cutOldPasswords(historyPasswords, PASSWORD_SP, limitRepeats, data.get("password"));
             data.put("historyPasswords", cutOldPasswords);
         }
@@ -251,10 +237,10 @@ public class User extends ModelBase implements General, Validate, Option {
         String[] batchId = getAppContext().getCurrentRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
             for (String bId : batchId) {
-                Main.getService(Config.class).deleteUser(bId);
+                Main.getConfig().deleteUser(bId);
             }
         } else {
-            Main.getService(Config.class).deleteUser(id);
+            Main.getConfig().deleteUser(id);
         }
     }
 
@@ -280,7 +266,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     static Map<String, String> showDataForUserInternal(String userId) {
-        for (qingzhou.config.User user : Main.getService(Config.class).getCore().getConsole().getUser()) {
+        for (qingzhou.config.User user : Main.getConsole().getUser()) {
             if (user.getName().equals(userId)) {
                 Map<String, String> data = ModelUtil.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
@@ -299,15 +285,14 @@ public class User extends ModelBase implements General, Validate, Option {
     static void updateDataForUser(Map<String, String> data) throws Exception {
         data.remove("type");// 用户的类型是初始化定的，不可通过api修改
 
-        Config config = Main.getService(Config.class);
         String id = data.get(ID_KEY);
-        qingzhou.config.User user = config.getCore().getConsole().getUser(id);
-        config.deleteUser(id);
+        qingzhou.config.User user = Main.getConsole().getUser(id);
+        Main.getConfig().deleteUser(id);
         if (PASSWORD_FLAG.equals(data.get("password"))) {
             data.remove("password");
         }
         ModelUtil.setPropertiesToObj(user, data);
-        config.addUser(user);
+        Main.getConfig().addUser(user);
     }
 
     static String checkPwd(String password, String userId) {

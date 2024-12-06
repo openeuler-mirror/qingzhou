@@ -84,7 +84,11 @@ class DeployerImpl implements Deployer {
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
-            modelBase.start();
+            try {
+                modelBase.start();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 

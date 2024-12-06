@@ -29,7 +29,6 @@ public class LoginManager implements Filter<SystemControllerContext> {
     public static final String LOGGED_SESSION_KEY = "LOGGED_SESSION_KEY";
     public static final String LOGIN_USER = "j_username";
     public static final String LOGIN_PASSWORD = "j_password";
-    public static final String LOGIN_OTP = "otp";
     private static final LockOutRealm lockOutRealm = new LockOutRealm();
 
     public static final String RESPONSE_HEADER_MSG_KEY = "HEADER_MSG_KEY";
@@ -153,16 +152,7 @@ public class LoginManager implements Filter<SystemControllerContext> {
         HttpServletResponse response = context.resp;
         HttpSession session = request.getSession(false);
 
-        // 已登录，进入业务系统
-        User loggedUser = getLoggedUser(session);
-        if (loggedUser != null) return true;
-
-        // 检查是否拦截要访问的资源
         String checkPath = RESTController.getReqUri(request);
-
-        // 未登录，是开放资源，放行
-        if (isOpenUris(checkPath)) return true;
-
         switch (checkPath) {
             case LOGIN_URI: // 登录
                 try {
@@ -188,6 +178,13 @@ public class LoginManager implements Filter<SystemControllerContext> {
                 }
                 return false;
         }
+
+        // 已登录，进入业务系统，注意：需要放在“注销”链接后面
+        User loggedUser = getLoggedUser(session);
+        if (loggedUser != null) return true;
+
+        // 未登录，是开放资源，放行
+        if (isOpenUris(checkPath)) return true;
 
         // 拦截未登录的请求
         if (!response.isCommitted()) {

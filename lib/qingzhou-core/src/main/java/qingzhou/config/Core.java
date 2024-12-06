@@ -3,24 +3,6 @@ package qingzhou.config;
 public class Core {
     private Console console;
     private Deployer deployer;
-    private Registry registry;
-    private Agent agent;
-
-    public Registry getRegistry() {
-        return registry;
-    }
-
-    public void setRegistry(Registry registry) {
-        this.registry = registry;
-    }
-
-    public Agent getAgent() {
-        return agent;
-    }
-
-    public void setAgent(Agent agent) {
-        this.agent = agent;
-    }
 
     public Console getConsole() {
         return console;

@@ -2,7 +2,6 @@ package qingzhou.core.deployer.impl;
 
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
-import qingzhou.config.Config;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.AppListener;
@@ -63,8 +62,8 @@ public class Controller implements Process {
                 @Override
                 public void onInstalled(String appName) {
                     if (DeployerConstants.APP_SYSTEM.equals(appName)) {
-                        boolean singleAppMode = moduleContext.getService(Config.class).getCore().getDeployer().isSingleAppMode();
-                        if (singleAppMode) { // 单应用模式下，不能进行应用的“卸载”和“添加”
+                        Map<String, String> config = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("deployer");
+                        if (Boolean.parseBoolean(config.get("singleAppMode"))) { // 单应用模式下，不能进行应用的“卸载”和“添加”
                             AppInfo appInfo = deployer.getAppInfo(DeployerConstants.APP_SYSTEM);
                             ModelInfo appModel = appInfo.getModelInfo(DeployerConstants.MODEL_APP);
                             ModelActionInfo[] actionInfos = Arrays.stream(appModel.getModelActionInfos()).filter(action ->
