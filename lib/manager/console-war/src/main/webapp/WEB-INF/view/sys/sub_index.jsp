@@ -3,4 +3,4 @@
 <%@include file="../fragment/common.jsp" %>
 
 <%-- 初始化管理后的菜单页面 --%>
-<%@ include file="../fragment/menu.jsp" %>
+<%@ include file="../fragment/tab.jsp" %>

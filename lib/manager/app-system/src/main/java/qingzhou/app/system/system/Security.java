@@ -38,12 +38,6 @@ public class Security extends ModelBase implements Update {
     public Integer lockOutTime = 300;
 
     @ModelField(
-            input_type = InputType.bool,
-            name = {"启用验证码", "en:Enable Verification Code"},
-            info = {"开启用户登录时的验证码校验，当首次登录失败后，再次登录需要输入验证码。", "en:Enable authentication code verification during user login, when the first login fails, you need to enter the authentication code to login again."})
-    public Boolean verCodeEnabled = true;
-
-    @ModelField(
             input_type = InputType.number,
             min = 0, max = 90,
             name = {"密码最长使用期限", "en:Maximum Password Age"},

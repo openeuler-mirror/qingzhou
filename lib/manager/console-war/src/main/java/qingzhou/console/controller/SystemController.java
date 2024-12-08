@@ -1,5 +1,20 @@
 package qingzhou.console.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
@@ -18,7 +33,11 @@ import qingzhou.core.DeployerConstants;
 import qingzhou.core.ItemInfo;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.JmxServiceAdapter;
-import qingzhou.core.deployer.*;
+import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.App;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;
@@ -31,15 +50,6 @@ import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
@@ -166,7 +176,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     public static Console getConsole() {
         Config fileConfig = new Config(getService(Json.class),
                 new File(new File(getModuleContext().getInstanceDir(), "conf"), "qingzhou.json"));
-        return fileConfig.getCore().getConsole();
+        return fileConfig.getConsole();
     }
 
     public static String getPublicKeyString() {

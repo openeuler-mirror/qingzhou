@@ -1,4 +1,4 @@
-package qingzhou.app.system.jmx;
+package qingzhou.app.system.system.jmx;
 
 import qingzhou.api.InputType;
 import qingzhou.api.Model;
@@ -15,7 +15,7 @@ import qingzhou.logger.Logger;
 import java.util.Map;
 
 @Model(code = "jmx", icon = "coffee",
-        menu = Main.Setting, order = "5",
+        menu = Main.Setting, order = "4",
         entrance = Update.ACTION_EDIT,
         name = {"JMX", "en:JMX"},
         info = {"JMX 是 Java Management Extensions（Java管理扩展） 的缩写，它是 Java 平台上用于管理和监控应用程序、系统和网络资源的一种标准化的管理和监控框架。JMX 提供了一种标准的方式，通过这种方式，开发人员可以暴露应用程序中的各种管理和监控信息，然后可以使用 JMX 客户端工具或应用程序来访问和操作这些信息。开启 JMX 接口服务后，客户端可以通过 java jmx 协议来管理 Qingzhou 平台。",

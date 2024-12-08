@@ -246,7 +246,7 @@
         <ul>
             <li id="defaultTabBox" class="active" fixed="true">
                 <%-- 左侧菜单 --%>
-                <%@ include file="../fragment/menu.jsp" %>
+                <%@ include file="../fragment/tab.jsp" %>
             </li>
         </ul>
     </section>
@@ -291,6 +291,7 @@
         "htmlView": '<%=HtmlView.FLAG%>',
         "jsonView": '<%=JsonView.FLAG%>',
         "showActionName": '<%=Show.ACTION_SHOW%>',
+        "qrActionName": '<%=ActionType.qr%>',
         "actionId_app_manage": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_MANAGE%>',
         "actionId_app_stop-delete": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + Delete.ACTION_DELETE%>' + ',' + '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_STOP%>',
         "data": '<%=DashboardDataBuilder.DASHBOARD_FIELD_DATA%>',

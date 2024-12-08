@@ -1,6 +1,6 @@
 package qingzhou.config;
 
-public class OAuth2 {
+public class OAuth {
     private boolean enabled = false;
     private String client_id;
     private String client_secret;

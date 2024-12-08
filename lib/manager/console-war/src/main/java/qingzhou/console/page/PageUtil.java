@@ -1,26 +1,42 @@
 package qingzhou.console.page;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
-import qingzhou.console.controller.rest.SecurityController;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RESTController;
+import qingzhou.console.controller.rest.SecurityController;
 import qingzhou.console.view.type.HtmlView;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.ItemInfo;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
-import qingzhou.core.registry.*;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.MenuInfo;
+import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.core.registry.ModelInfo;
+import qingzhou.core.registry.Registry;
 import qingzhou.engine.util.Utils;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Stream;
 
 public class PageUtil {
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
@@ -285,6 +301,9 @@ public class PageUtil {
                 if (modelInfo.isHidden()) continue;
             }
 
+            boolean actionPermitted = SecurityController.isActionPermitted(appInfo.getName(), modelInfo.getCode(), modelInfo.getEntrance(), request);
+            if (!actionPermitted) continue;
+
             String menu = modelInfo.getMenu();
             MenuItem foundParent = rootMenu.findMenu(menu);
             if (foundParent != null) {
@@ -371,16 +390,20 @@ public class PageUtil {
     }
 
     private static String buildModelMenu(int menuTextLeft, ModelInfo modelInfo, Request qzRequest, HttpServletRequest request, HttpServletResponse response, String urlParameter) {
+        String app = qzRequest.getApp();
+        String model = modelInfo.getCode();
+        String action = modelInfo.getEntrance();
+
         StringBuilder menuHtml = new StringBuilder();
         menuHtml.append("<li class=\"treeview ").append("\">");
         String contextPath = request.getContextPath();
-        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + qzRequest.getApp() + "/" + modelInfo.getCode() + "/" + modelInfo.getEntrance();
+        String url = contextPath.endsWith("/") ? contextPath.substring(0, contextPath.length() - 1) : contextPath + DeployerConstants.REST_PREFIX + "/" + HtmlView.FLAG + "/" + qzRequest.getApp() + "/" + model + "/" + action;
         if (Utils.notBlank(urlParameter)) {
             url += "?" + urlParameter;
         }
-        menuHtml.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(modelInfo.getCode()).append("'").append("style=\" text-indent:").append(menuTextLeft).append("px;\"").append(">");
+        menuHtml.append("<a href='").append(RESTController.encodeURL(response, url)).append("' modelName='").append(model).append("'").append("style=\" text-indent:").append(menuTextLeft).append("px;\"").append(">");
         menuHtml.append("<i class='icon icon-").append(modelInfo.getIcon()).append("'></i>");
-        menuHtml.append("<span>").append(I18n.getModelI18n(qzRequest.getApp(), "model." + modelInfo.getCode())).append("</span>");
+        menuHtml.append("<span>").append(I18n.getModelI18n(app, "model." + model)).append("</span>");
         menuHtml.append("</a>");
         menuHtml.append("</li>");
         return menuHtml.toString();

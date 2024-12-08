@@ -1,20 +1,5 @@
 package qingzhou.core.deployer.impl;
 
-import qingzhou.api.*;
-import qingzhou.api.type.List;
-import qingzhou.api.type.*;
-import qingzhou.core.DeployerConstants;
-import qingzhou.core.ItemInfo;
-import qingzhou.core.deployer.App;
-import qingzhou.core.deployer.AppListener;
-import qingzhou.core.deployer.Deployer;
-import qingzhou.core.deployer.QingzhouSystemApp;
-import qingzhou.core.registry.*;
-import qingzhou.engine.ModuleContext;
-import qingzhou.engine.util.FileUtil;
-import qingzhou.engine.util.Utils;
-import qingzhou.logger.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,13 +8,49 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+
+import qingzhou.api.AppContext;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelBase;
+import qingzhou.api.QingzhouApp;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Group;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Validate;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.ItemInfo;
+import qingzhou.core.deployer.App;
+import qingzhou.core.deployer.AppListener;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.deployer.QingzhouSystemApp;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.core.registry.ModelInfo;
+import qingzhou.core.registry.Registry;
+import qingzhou.engine.ModuleContext;
+import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
+import qingzhou.logger.Logger;
 
 class DeployerImpl implements Deployer {
     // 同 qingzhou.registry.impl.RegistryImpl.registryInfo 使用自然排序，以支持分页
@@ -40,7 +61,7 @@ class DeployerImpl implements Deployer {
     private LoaderPolicy loaderPolicy;
     File appsBase = null;
 
-    private final java.util.List<AppListener> appListeners = new ArrayList<>();
+    private final java.util.List<AppListener> appListeners = new CopyOnWriteArrayList<>();
 
     DeployerImpl(ModuleContext moduleContext, Registry registry) {
         this.moduleContext = moduleContext;
@@ -50,6 +71,11 @@ class DeployerImpl implements Deployer {
     @Override
     public void addAppListener(AppListener appListener) {
         appListeners.add(appListener);
+    }
+
+    @Override
+    public void removeAppListener(AppListener appListener) {
+        appListeners.remove(appListener);
     }
 
     @Override
@@ -633,7 +659,8 @@ class DeployerImpl implements Deployer {
             modelActionInfo.setInfo(modelAction.info());
             modelActionInfo.setIcon(modelAction.icon());
             modelActionInfo.setDistribute(modelAction.distribute());
-            modelActionInfo.setShow(modelAction.show());
+            modelActionInfo.setDisplay(modelAction.display());
+            modelActionInfo.setShowAction(modelAction.show_action());
             modelActionInfo.setListAction(modelAction.list_action());
             modelActionInfo.setHeadAction(modelAction.head_action());
             modelActionInfo.setBatchAction(modelAction.batch_action());

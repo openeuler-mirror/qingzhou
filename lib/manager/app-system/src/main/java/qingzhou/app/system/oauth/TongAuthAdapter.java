@@ -1,8 +1,8 @@
-package qingzhou.app.system.oauth2;
+package qingzhou.app.system.oauth;
 
 import qingzhou.api.AuthAdapter;
 import qingzhou.app.system.Main;
-import qingzhou.config.OAuth2;
+import qingzhou.config.OAuth;
 import qingzhou.http.Http;
 import qingzhou.http.HttpClient;
 import qingzhou.http.HttpResponse;
@@ -12,18 +12,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OAuth2Adapter implements AuthAdapter {
+public class TongAuthAdapter implements AuthAdapter {
     private final HttpClient httpClient = Main.getService(Http.class).buildHttpClient();
     private final Json json = Main.getService(Json.class);
-    private final OAuth2 config;
+    private final OAuth config;
 
-    public OAuth2Adapter(OAuth2 config) {
+    public TongAuthAdapter(OAuth config) {
         this.config = config;
     }
 
     @Override
     public String getLoginUri() {
-        return "oauth2/code_callback";
+        return "oauth/code_callback";
     }
 
     @Override

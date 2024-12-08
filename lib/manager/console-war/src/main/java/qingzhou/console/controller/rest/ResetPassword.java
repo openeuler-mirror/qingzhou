@@ -1,5 +1,11 @@
 package qingzhou.console.controller.rest;
 
+import java.text.SimpleDateFormat;
+import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import qingzhou.api.Lang;
 import qingzhou.api.type.Update;
 import qingzhou.config.User;
@@ -9,11 +15,6 @@ import qingzhou.console.login.LoginManager;
 import qingzhou.console.view.type.JsonView;
 import qingzhou.core.DeployerConstants;
 import qingzhou.engine.util.pattern.Filter;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.text.SimpleDateFormat;
 
 public class ResetPassword implements Filter<RestContext> {
     static {
@@ -40,17 +41,17 @@ public class ResetPassword implements Filter<RestContext> {
         String RESET_OK_FLAG = "RESET_OK_FLAG";
         if (session.getAttribute(RESET_OK_FLAG) != null) return true;
 
-        // 不重置密码，允许进入主页
-        if (DeployerConstants.MODEL_INDEX.equals(context.request.getModel())) {
-            if (DeployerConstants.ACTION_INDEX.equals(context.request.getAction())) {
+        String model = context.request.getModel();
+        if (DeployerConstants.APP_SYSTEM.equals(context.request.getApp())) {
+            if (DeployerConstants.OPEN_SYSTEM_MODELS.contains(model)) {
                 return true;
             }
-        }
-
-        // 不重置密码，允许进入修改密码页
-        if (DeployerConstants.MODEL_PASSWORD.equals(context.request.getModel())) {
-            if (Update.ACTION_EDIT.equals(context.request.getAction())
-                    || Update.ACTION_UPDATE.equals(context.request.getAction())) { // 允许访问重置密码的 uri
+            Set<String> actions = DeployerConstants.OPEN_SYSTEM_MODEL_ACTIONS.get(model);
+            if (actions != null && actions.contains(context.request.getAction())) {
+                return true;
+            }
+        } else {
+            if (DeployerConstants.OPEN_NONE_SYSTEM_MODELS.contains(model)) {
                 return true;
             }
         }

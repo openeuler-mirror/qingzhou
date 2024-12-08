@@ -4,10 +4,12 @@ import java.util.Arrays;
 
 public class Console {
     private boolean enabled;
+    private int port;
+    private String contextRoot;
+    private int maxPostSize;
     private Security security;
-    private Web web;
     private Jmx jmx;
-    private OAuth2 oAuth2;
+    private OAuth oauth;
     private User[] user;
     private Role[] role;
 
@@ -23,14 +25,6 @@ public class Console {
 
     public void setUser(User[] user) {
         this.user = user;
-    }
-
-    public Web getWeb() {
-        return web;
-    }
-
-    public void setWeb(Web web) {
-        this.web = web;
     }
 
     public Jmx getJmx() {
@@ -49,6 +43,30 @@ public class Console {
         this.enabled = enabled;
     }
 
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public String getContextRoot() {
+        return contextRoot;
+    }
+
+    public void setContextRoot(String contextRoot) {
+        this.contextRoot = contextRoot;
+    }
+
+    public int getMaxPostSize() {
+        return maxPostSize;
+    }
+
+    public void setMaxPostSize(int maxPostSize) {
+        this.maxPostSize = maxPostSize;
+    }
+
     public Security getSecurity() {
         return security;
     }
@@ -57,12 +75,12 @@ public class Console {
         this.security = security;
     }
 
-    public OAuth2 getOAuth2() {
-        return oAuth2;
+    public OAuth getOauth() {
+        return oauth;
     }
 
-    public void setOAuth2(OAuth2 oAuth2) {
-        this.oAuth2 = oAuth2;
+    public void setOauth(OAuth oauth) {
+        this.oauth = oauth;
     }
 
     public Role[] getRole() {

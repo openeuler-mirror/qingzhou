@@ -8,6 +8,8 @@ import java.util.Properties;
  * 应用上下文接口，提供应用元数据、平台信息获取，以及服务定位、临时文件管理、国际化信息、菜单管理和动作过滤器管理等功能。
  */
 public interface AppContext {
+    String APP_HOME_MODEL = "home";
+
     // 应用自带的 "qingzhou.properties" 文件
     Properties getAppProperties();
 

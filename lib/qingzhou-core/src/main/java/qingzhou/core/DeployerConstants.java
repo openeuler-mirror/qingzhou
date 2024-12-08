@@ -1,6 +1,13 @@
 package qingzhou.core;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import qingzhou.api.ActionType;
+import qingzhou.api.AppContext;
 
 public interface DeployerConstants {
     // 系统环境
@@ -17,6 +24,18 @@ public interface DeployerConstants {
     String MODEL_INSTANCE = "instance";
     String MODEL_USER = "user";
     String MODEL_PASSWORD = "password";
+    Set<String> OPEN_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
+        add(DeployerConstants.MODEL_PASSWORD);
+        add(DeployerConstants.MODEL_INDEX);
+    }});
+    Map<String, Set<String>> OPEN_SYSTEM_MODEL_ACTIONS = Collections.unmodifiableMap(new HashMap<String, Set<String>>() {{
+        put(DeployerConstants.MODEL_APP, Collections.unmodifiableSet(new HashSet<String>() {{
+            add(DeployerConstants.ACTION_MANAGE);
+        }}));
+    }});
+    Set<String> OPEN_NONE_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
+        add(AppContext.APP_HOME_MODEL);
+    }});
 
     // 系统内部 Action
     String ACTION_CHECK = "check";

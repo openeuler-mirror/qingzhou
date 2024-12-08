@@ -1,4 +1,4 @@
-package qingzhou.app.system.user;
+package qingzhou.app.system.system.user;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Delete;
@@ -251,7 +251,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            show = "name!=qingzhou",
+            display = "name!=qingzhou",
             batch_action = true,
             list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
             name = {"删除", "en:Delete"},

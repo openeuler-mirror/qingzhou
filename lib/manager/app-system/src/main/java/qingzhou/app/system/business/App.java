@@ -14,7 +14,7 @@ import qingzhou.core.registry.Registry;
 import java.util.*;
 
 @Model(code = DeployerConstants.MODEL_APP, icon = "cube-alt",
-        menu = Main.Business, order = "1",
+        menu = Main.Business, order = "2",
         name = {"应用", "en:App"},
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",
                 "en:Application is a software package written in accordance with the \"Qingzhou Application Development Specification\", which can be deployed on the Qingzhou platform and used to manage specific business systems."})
@@ -160,7 +160,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     @ModelAction(
             code = DeployerConstants.ACTION_MANAGE, icon = "location-arrow",
             list_action = true, order = "1",
-            show = "state=" + DeployerConstants.APP_STARTED,
+            display = "state=" + DeployerConstants.APP_STARTED,
             name = {"管理", "en:Manage"},
             info = {"转到此应用的管理页面。", "en:Go to the administration page for this app."})
     public void manage(Request request) {
@@ -207,7 +207,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     @ModelAction(
             code = DeployerConstants.ACTION_START, icon = "play",
             list_action = true, order = "2",
-            show = "state=" + DeployerConstants.APP_STOPPED,
+            display = "state=" + DeployerConstants.APP_STOPPED,
             action_type = ActionType.action_list,
             name = {"启动", "en:start"},
             info = {"启动应用", "en:Launch the application."})
@@ -221,7 +221,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
     @ModelAction(
             code = DeployerConstants.ACTION_STOP, icon = "stop",
             list_action = true, order = "2",
-            show = "state=" + DeployerConstants.APP_STARTED,
+            display = "state=" + DeployerConstants.APP_STARTED,
             action_type = ActionType.action_list,
             name = {"停止", "en:end"},
             info = {"停止应用", "en:stop the application."})

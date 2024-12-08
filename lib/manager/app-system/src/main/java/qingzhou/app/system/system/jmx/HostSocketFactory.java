@@ -1,4 +1,4 @@
-package qingzhou.app.system.jmx;
+package qingzhou.app.system.system.jmx;
 
 import java.io.IOException;
 import java.net.InetAddress;

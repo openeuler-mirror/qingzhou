@@ -29,7 +29,7 @@ public class ActionFilter implements Filter<RestContext> {
         if (modelInfo.getModelActionInfo(Show.ACTION_SHOW) == null) return true;
 
         ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
-        String condition = actionInfo.getShow();
+        String condition = actionInfo.getDisplay();
         if (Utils.isBlank(condition)) return true;
 
         java.util.List<String> checkIds = new ArrayList<>();

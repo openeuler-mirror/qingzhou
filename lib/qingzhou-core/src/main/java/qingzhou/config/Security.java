@@ -1,23 +1,13 @@
 package qingzhou.config;
 
 public class Security {
+    private String trustedIp;
+    private int failureCount;
+    private int lockOutTime;
     private String publicKey;
     private String privateKey;
-    private String trustedIp;
-    private boolean verCodeEnabled;
-    private int lockOutTime;
-    private int failureCount;
     private int passwordMaxAge;
     private int passwordLimitRepeats;
-    private int maxFileUpload;
-
-    public int getMaxFileUpload() {
-        return maxFileUpload;
-    }
-
-    public void setMaxFileUpload(int maxFileUpload) {
-        this.maxFileUpload = maxFileUpload;
-    }
 
     public String getPublicKey() {
         return publicKey;
@@ -73,13 +63,5 @@ public class Security {
 
     public void setTrustedIp(String trustedIp) {
         this.trustedIp = trustedIp;
-    }
-
-    public boolean isVerCodeEnabled() {
-        return verCodeEnabled;
-    }
-
-    public void setVerCodeEnabled(boolean verCodeEnabled) {
-        this.verCodeEnabled = verCodeEnabled;
     }
 }

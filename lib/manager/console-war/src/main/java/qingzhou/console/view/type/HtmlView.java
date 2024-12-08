@@ -1,17 +1,25 @@
 package qingzhou.console.view.type;
 
+import javax.servlet.http.HttpServletRequest;
+
 import qingzhou.api.ActionType;
+import qingzhou.api.AppContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.api.type.*;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.Chart;
+import qingzhou.api.type.Combined;
+import qingzhou.api.type.Dashboard;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Monitor;
+import qingzhou.api.type.Show;
+import qingzhou.api.type.Update;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.console.view.View;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;
-
-import javax.servlet.http.HttpServletRequest;
 
 public class HtmlView implements View {
     public static final String HTML_PAGE_BASE = "/WEB-INF/view/";
@@ -28,12 +36,7 @@ public class HtmlView implements View {
         }
         boolean isManageAction = isManageApp(request);
         if (isManageAction) {
-            request.setAppName(request.getId());
-            request.setModelName("home"); // qingzhou.app.common.Home 的 code
-            request.setCachedModelInfo(SystemController.getModelInfo(request.getApp(), request.getModel())); // 重新缓存
-            request.setActionName(Show.ACTION_SHOW);
-            Response response = SystemController.getService(ActionInvoker.class).invokeSingle(request);
-            request.setResponse(response);// 用远端的请求替换本地的，如果是本地实例，它俩是等效的
+            switchToManagedAction(request);
         }
 
         String forwardView = isManageAction ? "sys/manage" : getForwardView(request);
@@ -45,6 +48,15 @@ public class HtmlView implements View {
         if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) return false;
         if (!DeployerConstants.APP_SYSTEM.equals(request.getApp())) return false;
         return DeployerConstants.MODEL_APP.equals(request.getModel());
+    }
+
+    private void switchToManagedAction(RequestImpl request) {
+        request.setAppName(request.getId());
+        request.setModelName(AppContext.APP_HOME_MODEL); // qingzhou.app.common.Home 的 code
+        request.setActionName(Show.ACTION_SHOW);
+        request.setCachedModelInfo(SystemController.getModelInfo(request.getId(), AppContext.APP_HOME_MODEL)); // 重新缓存
+        Response response = SystemController.getService(ActionInvoker.class).invokeSingle(request);
+        request.setResponse(response);// 用远端的请求替换本地的，如果是本地实例，它俩是等效的
     }
 
     @Override

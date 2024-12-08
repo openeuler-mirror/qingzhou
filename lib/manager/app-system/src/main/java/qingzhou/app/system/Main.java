@@ -1,12 +1,15 @@
 package qingzhou.app.system;
 
+import java.io.File;
+import java.util.Map;
+
 import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
-import qingzhou.app.system.oauth2.OAuth2Adapter;
+import qingzhou.app.system.oauth.TongAuthAdapter;
 import qingzhou.config.Console;
-import qingzhou.config.OAuth2;
+import qingzhou.config.OAuth;
 import qingzhou.config.impl.Config;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
@@ -14,9 +17,6 @@ import qingzhou.core.deployer.QingzhouSystemApp;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.engine.ModuleContext;
 import qingzhou.json.Json;
-
-import java.io.File;
-import java.util.Map;
 
 @App
 public class Main extends QingzhouSystemApp {
@@ -41,9 +41,9 @@ public class Main extends QingzhouSystemApp {
         appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("2");
         appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("cubes").order("3");
 
-        OAuth2 oAuth2 = Main.getConsole().getOAuth2();
-        if (oAuth2 != null && oAuth2.isEnabled()) {
-            appContext.setAuthAdapter(new OAuth2Adapter(oAuth2));
+        OAuth oAuth = Main.getConsole().getOauth();
+        if (oAuth != null && oAuth.isEnabled()) {
+            appContext.setAuthAdapter(new TongAuthAdapter(oAuth));
         }
     }
 
@@ -52,7 +52,7 @@ public class Main extends QingzhouSystemApp {
     }
 
     public static Console getConsole() {
-        return fileConfig.getCore().getConsole();
+        return fileConfig.getConsole();
     }
 
     public static <T> T getService(Class<T> type) {

@@ -11,6 +11,10 @@ public class AppInfo implements Serializable {
     private final Set<ModelInfo> modelInfos = new LinkedHashSet<>();
     private final Set<MenuInfo> menuInfos = new LinkedHashSet<>();
 
+    public void removeModelInfo(ModelInfo modelInfo) {
+        modelInfos.remove(modelInfo);
+    }
+
     public void addModelInfo(ModelInfo modelInfo) {
         boolean added = modelInfos.add(modelInfo);
         if (!added) {

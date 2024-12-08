@@ -1,4 +1,4 @@
-package qingzhou.app.system.user;
+package qingzhou.app.system.system.user;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Export;
