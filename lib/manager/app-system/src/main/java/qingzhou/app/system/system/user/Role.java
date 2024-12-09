@@ -1,25 +1,33 @@
-package qingzhou.app.system.user;
-
-import qingzhou.api.*;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Echo;
-import qingzhou.api.type.General;
-import qingzhou.api.type.Option;
-import qingzhou.app.system.Main;
-import qingzhou.app.system.ModelUtil;
-import qingzhou.core.DeployerConstants;
-import qingzhou.config.Config;
-import qingzhou.core.deployer.Deployer;
-import qingzhou.core.registry.AppInfo;
-import qingzhou.core.registry.ModelActionInfo;
-import qingzhou.core.registry.ModelInfo;
-import qingzhou.engine.util.Utils;
+package qingzhou.app.system.system.user;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import qingzhou.api.ActionType;
+import qingzhou.api.InputType;
+import qingzhou.api.Item;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Delete;
+import qingzhou.api.type.Echo;
+import qingzhou.api.type.General;
+import qingzhou.api.type.Option;
+import qingzhou.api.type.Update;
+import qingzhou.app.system.Main;
+import qingzhou.app.system.ModelUtil;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.core.registry.ModelInfo;
+import qingzhou.engine.util.Utils;
 
 @Model(code = Role.MODEL_NAME, icon = "check-sign",
         menu = Main.Setting, order = "2",
@@ -47,14 +55,16 @@ public class Role extends ModelBase implements General, Echo, Option {
     @ModelField(input_type = InputType.grouped_multiselect,
             required = true, search = true,
             dynamic_option = true,
+            separator = DeployerConstants.ROLE_URI_SP,
             name = {"权限", "en:Permissions"},
             info = {"角色的权限表示具有该角色的用户可以访问的资源（URI）集合。", "en:The permissions of a role represent a collection of resources (URI) that users with that role can access."})
     public String uris;
 
     @ModelField(input_type = InputType.bool,
             list = true, search = true,
+            update_action = Update.ACTION_UPDATE,
             color = {"true:Green", "false:Gray"},
-            name = {"是否激活", "en:Is Active"},
+            name = {"激活", "en:Active"},
             info = {"是否激活该角色，激活后，拥有该角色的用户将可以访问该角色对应的资源，否则用户将无法访问对应的资源。",
                     "en:Whether to activate the role, after activation, users with this role will be able to access the resources corresponding to the role, otherwise the users will not be able to access the corresponding resources."})
     public Boolean active = true;
@@ -93,7 +103,7 @@ public class Role extends ModelBase implements General, Echo, Option {
     }
 
     private String[] allIds(Map<String, String> query) {
-        qingzhou.config.Role[] roles = Main.getService(Config.class).getCore().getConsole().getRole();
+        qingzhou.config.Role[] roles = Main.getConsole().getRole();
         if (roles == null) return new String[0];
 
         return Arrays.stream(roles)
@@ -114,7 +124,7 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @Override
     public Map<String, String> showData(String id) {
-        qingzhou.config.Role[] roles = Main.getService(Config.class).getCore().getConsole().getRole();
+        qingzhou.config.Role[] roles = Main.getConsole().getRole();
         if (roles != null) {
             for (qingzhou.config.Role role : roles) {
                 if (role.getName().equals(id)) {
@@ -129,17 +139,16 @@ public class Role extends ModelBase implements General, Echo, Option {
     public void addData(Map<String, String> data) throws Exception {
         qingzhou.config.Role role = new qingzhou.config.Role();
         ModelUtil.setPropertiesToObj(role, data);
-        Main.getService(Config.class).addRole(role);
+        Main.getConfig().addRole(role);
     }
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        Config config = Main.getService(Config.class);
         String id = data.get(ID_KEY);
-        qingzhou.config.Role role = config.getCore().getConsole().getRole(id);
-        config.deleteRole(id);
+        qingzhou.config.Role role = Main.getConsole().getRole(id);
+        Main.getConfig().deleteRole(id);
         ModelUtil.setPropertiesToObj(role, data);
-        config.addRole(role);
+        Main.getConfig().addRole(role);
     }
 
     @Override
@@ -147,10 +156,10 @@ public class Role extends ModelBase implements General, Echo, Option {
         String[] batchId = getAppContext().getCurrentRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
             for (String bId : batchId) {
-                Main.getService(Config.class).deleteRole(bId);
+                Main.getConfig().deleteRole(bId);
             }
         } else {
-            Main.getService(Config.class).deleteRole(id);
+            Main.getConfig().deleteRole(id);
         }
     }
 
@@ -167,7 +176,7 @@ public class Role extends ModelBase implements General, Echo, Option {
         }
         List<Item> items = getItems(appName);
         String value = "";
-        qingzhou.config.Role[] roles = Main.getService(Config.class).getCore().getConsole().getRole();
+        qingzhou.config.Role[] roles = Main.getConsole().getRole();
         if (roles != null) {
             for (qingzhou.config.Role role : roles) {
                 if (role.getApp().equals(appName)) {
@@ -209,15 +218,34 @@ public class Role extends ModelBase implements General, Echo, Option {
         List<Item> list = new ArrayList<>();
         Deployer deployer = Main.getService(Deployer.class);
         AppInfo appInfo = deployer.getAppInfo(app);
-        if (appInfo == null) {
-            return list;
-        }
+        if (appInfo == null) return list;
         for (ModelInfo modelInfo : appInfo.getModelInfos()) {
+            if (modelInfo.isHidden()) continue;
+
             String modelName = modelInfo.getCode();
+            if (DeployerConstants.APP_SYSTEM.equals(appInfo.getName())) {
+                if (modelName.equals(DeployerConstants.MODEL_AGENT)) continue;
+                if (DeployerConstants.OPEN_SYSTEM_MODELS.contains(modelName)) continue;
+            } else {
+                if (DeployerConstants.OPEN_NONE_SYSTEM_MODELS.contains(modelName)) continue;
+            }
+
             list.add(Item.of(modelName, modelInfo.getName()));
             ModelActionInfo[] modelActionInfos = modelInfo.getModelActionInfos();
             Arrays.stream(modelActionInfos).forEach(modelActionInfo -> {
-                list.add(Item.of(modelName + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + modelActionInfo.getCode(), modelActionInfo.getName()));
+                if (DeployerConstants.APP_SYSTEM.equals(appInfo.getName())) {
+                    Set<String> actions = DeployerConstants.OPEN_SYSTEM_MODEL_ACTIONS.get(modelName);
+                    if (actions != null && actions.contains(modelActionInfo.getCode())) {
+                        return;
+                    }
+                }
+
+                String[] nameI18n = modelActionInfo.getName();
+                if (nameI18n != null && nameI18n.length > 0) {
+                    list.add(Item.of(modelName
+                            + DeployerConstants.MULTISELECT_GROUP_SEPARATOR
+                            + modelActionInfo.getCode(), nameI18n));
+                }
             });
         }
         return list;

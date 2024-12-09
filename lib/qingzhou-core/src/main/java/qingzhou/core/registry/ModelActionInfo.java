@@ -12,7 +12,8 @@ public class ModelActionInfo implements Serializable {
     private String[] info;
     private String icon;
     private boolean distribute;
-    private String show;
+    private String display;
+    private boolean showAction;
     private boolean listAction;
     private boolean headAction;
     private boolean batchAction;
@@ -57,12 +58,20 @@ public class ModelActionInfo implements Serializable {
         this.info = info;
     }
 
-    public String getShow() {
-        return show;
+    public String getDisplay() {
+        return display;
     }
 
-    public void setShow(String show) {
-        this.show = show;
+    public void setDisplay(String display) {
+        this.display = display;
+    }
+
+    public boolean isShowAction() {
+        return showAction;
+    }
+
+    public void setShowAction(boolean showAction) {
+        this.showAction = showAction;
     }
 
     public boolean isListAction() {

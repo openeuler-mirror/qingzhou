@@ -1,14 +1,16 @@
 package qingzhou.core.deployer;
 
-import qingzhou.core.registry.AppInfo;
-import qingzhou.engine.Service;
-
 import java.io.File;
 import java.util.List;
+
+import qingzhou.core.registry.AppInfo;
+import qingzhou.engine.Service;
 
 @Service(shareable = false)
 public interface Deployer {
     void addAppListener(AppListener appListener);
+
+    void removeAppListener(AppListener appListener);
 
     void installApp(File appDir) throws Throwable;
 

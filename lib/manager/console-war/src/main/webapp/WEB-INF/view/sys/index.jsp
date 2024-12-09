@@ -246,7 +246,7 @@
         <ul>
             <li id="defaultTabBox" class="active" fixed="true">
                 <%-- 左侧菜单 --%>
-                <%@ include file="../fragment/menu.jsp" %>
+                <%@ include file="../fragment/tab.jsp" %>
             </li>
         </ul>
     </section>
@@ -261,7 +261,7 @@
         "DOWNLOAD_FILE_NAMES_SP": '<%=DownloadData.DOWNLOAD_FILE_NAMES_SP%>',
         "downdloadGroupSepara": '<%=DownloadData.DOWNLOAD_FILE_GROUP_SP%>',
         "downloadFileNames": '<%=DownloadData.DOWNLOAD_FILE_NAMES%>',
-        "checkOtp": '<%=LoginManager.LOGIN_OTP%>',
+        "otp": '<%=DeployerConstants.LOGIN_OTP%>',
         "locale": '<%=(I18n.isZH() ? "zh-CN" : "en-US")%>',
         "pageLang": '<%=(I18n.isZH() ? "zh_cn" : "en")%>',
         "langFlag": '<%=I18n.getI18nLang().flag%>',
@@ -291,6 +291,7 @@
         "htmlView": '<%=HtmlView.FLAG%>',
         "jsonView": '<%=JsonView.FLAG%>',
         "showActionName": '<%=Show.ACTION_SHOW%>',
+        "qrActionName": '<%=ActionType.qr%>',
         "actionId_app_manage": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_MANAGE%>',
         "actionId_app_stop-delete": '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + Delete.ACTION_DELETE%>' + ',' + '<%=DeployerConstants.APP_SYSTEM + "-" + DeployerConstants.MODEL_APP + "-" + DeployerConstants.ACTION_STOP%>',
         "data": '<%=DashboardDataBuilder.DASHBOARD_FIELD_DATA%>',
@@ -314,7 +315,8 @@
         "actionTypeReturns": "<%=ActionType.returns_link%>",
         "matrixHeatmapData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_HEATMAP_DATA%>',
         "lineChartData": '<%=DashboardDataBuilder.DASHBOARD_FIELD_LINE_CHART_DATA%>',
-        "multiselectGroupSeparator": '<%=DeployerConstants.MULTISELECT_GROUP_SEPARATOR%>'
+        "multiselectGroupSeparator": '<%=DeployerConstants.MULTISELECT_GROUP_SEPARATOR%>',
+        "confirmKey": '<%=DeployerConstants.ACTION_CONFIRMKEY%>'
     };
 
     <%-- 显示第一个应用的管理页面--%>

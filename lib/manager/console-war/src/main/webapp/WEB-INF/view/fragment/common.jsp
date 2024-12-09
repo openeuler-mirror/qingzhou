@@ -13,7 +13,6 @@
 <%@ page import="qingzhou.console.controller.*" %>
 <%@ page import="qingzhou.console.controller.rest.*" %>
 <%@ page import="qingzhou.console.login.*" %>
-<%@ page import="qingzhou.console.login.vercode.*" %>
 <%@ page import="qingzhou.console.view.*" %>
 <%@ page import="qingzhou.console.view.type.*" %>
 <%@ page import="qingzhou.console.page.*" %>
@@ -25,7 +24,6 @@
 <%@ page import="qingzhou.core.registry.ModelInfo" %>
 
 <%
-    String currentUser = LoginManager.getLoginUser(request);
     RequestImpl qzRequest = (RequestImpl) request.getAttribute(Request.class.getName());
     String qzApp = qzRequest.getApp();
     String qzModel = qzRequest.getModel();

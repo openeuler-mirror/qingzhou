@@ -1,6 +1,13 @@
 package qingzhou.core;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import qingzhou.api.ActionType;
+import qingzhou.api.AppContext;
 
 public interface DeployerConstants {
     // 系统环境
@@ -17,6 +24,18 @@ public interface DeployerConstants {
     String MODEL_INSTANCE = "instance";
     String MODEL_USER = "user";
     String MODEL_PASSWORD = "password";
+    Set<String> OPEN_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
+        add(DeployerConstants.MODEL_PASSWORD);
+        add(DeployerConstants.MODEL_INDEX);
+    }});
+    Map<String, Set<String>> OPEN_SYSTEM_MODEL_ACTIONS = Collections.unmodifiableMap(new HashMap<String, Set<String>>() {{
+        put(DeployerConstants.MODEL_APP, Collections.unmodifiableSet(new HashSet<String>() {{
+            add(DeployerConstants.ACTION_MANAGE);
+        }}));
+    }});
+    Set<String> OPEN_NONE_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
+        add(AppContext.APP_HOME_MODEL);
+    }});
 
     // 系统内部 Action
     String ACTION_CHECK = "check";
@@ -44,6 +63,8 @@ public interface DeployerConstants {
     String UPLOAD_FILE_TEMP_SUB_DIR = "UPLOAD_FILE_TEMP_SUB_DIR";
 
     String QINGZHOU_MANAGER_USER_TYP = "Qingzhou_Manager";
+    String USER_ROLE_SP = ";";
+    String ROLE_URI_SP = ";";
     String REST_PREFIX = "/rest";
     String JSON_VIEW_FLAG = "json";
     String CHECK_FINGERPRINT = "fingerprint";
@@ -52,7 +73,6 @@ public interface DeployerConstants {
     String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     String APP_STARTED = "Started";
     String APP_STOPPED = "Stopped";
-    String DEFAULT_DATA_SEPARATOR = ",";
     String MULTISELECT_GROUP_SEPARATOR = ":";
     String SUB_MENU_PARAMETER_FLAG = ActionType.sub_menu.name() + "_parameter_flag_";
     String RETURNS_LINK_PARAM_NAME_RETURNSID = "PARAM_NAME_RETURNSID";
@@ -63,4 +83,5 @@ public interface DeployerConstants {
     String QINGZHOU_PROPERTIES_APP_SCAN_FILENAME = "qingzhou.app.scan.filename";
     String QINGZHOU_PROPERTIES_APP_SCAN_INCLUDE = "qingzhou.app.scan.include";
     String QINGZHOU_PROPERTIES_APP_SCAN_EXCLUDE = "qingzhou.app.scan.exclude";
+    String LOGIN_OTP = "otp";
 }

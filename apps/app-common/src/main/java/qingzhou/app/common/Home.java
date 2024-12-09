@@ -1,12 +1,17 @@
 package qingzhou.app.common;
 
-import qingzhou.api.*;
-import qingzhou.api.type.Show;
-
 import java.util.HashMap;
 import java.util.Map;
 
-@Model(code = "home", icon = "home",
+import qingzhou.api.AppContext;
+import qingzhou.api.Model;
+import qingzhou.api.ModelAction;
+import qingzhou.api.ModelBase;
+import qingzhou.api.ModelField;
+import qingzhou.api.Request;
+import qingzhou.api.type.Show;
+
+@Model(code = AppContext.APP_HOME_MODEL, icon = "home",
         entrance = "show",
         name = {"首页", "en:Home"},
         info = {"展示应用的默认首页信息。",
@@ -24,18 +29,8 @@ public class Home extends ModelBase implements Show {
 
     @ModelField(
             name = {"Java 环境", "en:Java Env"},
-            info = {"运行 Qingzhou 实例的 Java 环境。", "en:The Java environment in which Qingzhou instance is running."})
+            info = {"运行此应用的 Java 环境。", "en:The Java environment in which the app is running."})
     public String javaHome;
-
-    @ModelField(
-            name = {"平台名称", "en:Platform Name"},
-            info = {"Qingzhou 平台的名称。", "en:The name of Qingzhou platform."})
-    public String platformName;
-
-    @ModelField(
-            name = {"平台版本", "en:Platform Version"},
-            info = {"Qingzhou 平台的版本。", "en:This version of this Qingzhou platform."})
-    public String platformVersion;
 
     @ModelAction(
             code = Show.ACTION_SHOW,
@@ -52,8 +47,6 @@ public class Home extends ModelBase implements Show {
             put("appName", getAppContext().getCurrentRequest().getApp());
             put("appDir", getAppContext().getAppDir().getAbsolutePath());
             put("javaHome", System.getProperty("java.home"));
-            put("platformName", "Qingzhou（轻舟）");
-            put("platformVersion", getAppContext().getPlatformVersion());
         }};
     }
 }

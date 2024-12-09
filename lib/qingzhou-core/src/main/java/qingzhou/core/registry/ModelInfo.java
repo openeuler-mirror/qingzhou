@@ -1,14 +1,22 @@
 package qingzhou.core.registry;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 import qingzhou.core.ItemInfo;
 import qingzhou.engine.util.Utils;
-
-import java.io.Serializable;
-import java.util.*;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class ModelInfo implements Serializable {
     private String code;
@@ -53,6 +61,10 @@ public class ModelInfo implements Serializable {
 
     public String[] getHeadActions() {
         return existsActions(Arrays.stream(modelActionInfos).filter(ModelActionInfo::isHeadAction).collect(Collectors.toList()));
+    }
+
+    public String[] getShowActions() {
+        return existsActions(Arrays.stream(modelActionInfos).filter(ModelActionInfo::isShowAction).collect(Collectors.toList()));
     }
 
     public String[] getListActions() {
@@ -137,9 +149,9 @@ public class ModelInfo implements Serializable {
         Map<String, String> data = new HashMap<>();
         for (String field : getFormFieldNames()) {
             ModelFieldInfo modelFieldInfo = getModelFieldInfo(field);
-            String show = modelFieldInfo.getDisplay();
-            if (Utils.notBlank(show)) {
-                data.put(field, show);
+            String display = modelFieldInfo.getDisplay();
+            if (Utils.notBlank(display)) {
+                data.put(field, display);
             }
         }
         return data;

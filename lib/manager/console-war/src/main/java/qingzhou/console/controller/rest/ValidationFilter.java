@@ -1,23 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import qingzhou.api.InputType;
-import qingzhou.api.type.Add;
-import qingzhou.api.type.List;
-import qingzhou.api.type.Update;
-import qingzhou.api.type.Validate;
-import qingzhou.console.controller.I18n;
-import qingzhou.console.controller.SystemController;
-import qingzhou.core.deployer.ActionInvoker;
-import qingzhou.core.DeployerConstants;
-import qingzhou.core.deployer.RequestImpl;
-import qingzhou.core.deployer.ResponseImpl;
-import qingzhou.engine.util.Utils;
-import qingzhou.engine.util.pattern.Filter;
-import qingzhou.core.ItemInfo;
-import qingzhou.core.registry.ModelActionInfo;
-import qingzhou.core.registry.ModelFieldInfo;
-import qingzhou.core.registry.ModelInfo;
-
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -28,6 +10,24 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import qingzhou.api.InputType;
+import qingzhou.api.type.Add;
+import qingzhou.api.type.List;
+import qingzhou.api.type.Update;
+import qingzhou.api.type.Validate;
+import qingzhou.console.controller.I18n;
+import qingzhou.console.controller.SystemController;
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.ItemInfo;
+import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.RequestImpl;
+import qingzhou.core.deployer.ResponseImpl;
+import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.core.registry.ModelInfo;
+import qingzhou.engine.util.Utils;
+import qingzhou.engine.util.pattern.Filter;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
@@ -322,7 +322,7 @@ public class ValidationFilter implements Filter<RestContext> {
         @Override
         public String[] validate(ValidationContext context) {
             for (String forbidString : context.fieldInfo.getForbid()) {
-                for (String param : context.parameterVal.split(DeployerConstants.DEFAULT_DATA_SEPARATOR)) {
+                for (String param : context.parameterVal.split(context.fieldInfo.getSeparator())) {
                     if (param.equals(forbidString)) {
                         return new String[]{"validation_forbid", forbidString};
                     }

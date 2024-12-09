@@ -1,22 +1,24 @@
 package qingzhou.app.system;
 
-import qingzhou.core.deployer.Deployer;
-import qingzhou.core.DeployerConstants;
-import qingzhou.engine.util.Utils;
-import qingzhou.core.registry.AppInfo;
-import qingzhou.core.registry.ModelFieldInfo;
-
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelFieldInfo;
+import qingzhou.engine.util.Utils;
 
 public class ModelUtil {
-    private static final String STRING_PROPERTIES_SP = DeployerConstants.DEFAULT_DATA_SEPARATOR;
-
     public static void setPropertiesToObj(Object obj, Map<String, String> data) throws Exception {
         for (Map.Entry<String, String> entry : data.entrySet()) {
             setPropertyToObj(obj, entry.getKey(), String.valueOf(entry.getValue()));
@@ -65,17 +67,6 @@ public class ModelUtil {
             return InetAddress.getByName(value);
         }
 
-        if (type == Properties.class) {
-            Properties properties = new Properties();
-            for (String kv : value.split(STRING_PROPERTIES_SP)) {
-                int i = kv.indexOf("=");
-                if (i > 0) {
-                    properties.setProperty(kv.substring(0, i), kv.substring(i + 1));
-                }
-            }
-            return properties;
-        }
-
         if (type.equals(int.class) || type.equals(Integer.class)) {
             // 如果字符串转化数字时，value=“” 时，会报转化类型异常。
             return Integer.parseInt(value);
@@ -110,14 +101,10 @@ public class ModelUtil {
                         if (val instanceof InetAddress) {
                             val = ((InetAddress) val).getHostAddress();
                         }
-                        if (val instanceof Properties) {
-                            val = propertiesToString((Properties) val);
-                        } else {
-                            Class<?> typeClass = readMethod.getReturnType();
-                            if (typeClass != String.class
-                                    && !Utils.isPrimitive(typeClass)) {
-                                continue;
-                            }
+                        Class<?> typeClass = readMethod.getReturnType();
+                        if (typeClass != String.class
+                                && !Utils.isPrimitive(typeClass)) {
+                            continue;
                         }
                         properties.put(p.getName(), String.valueOf(val));
                     }
@@ -127,20 +114,6 @@ public class ModelUtil {
             throw new RuntimeException(e);
         }
         return properties;
-    }
-
-    private static String propertiesToString(Properties properties) {
-        if (properties == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-            sb.append(entry.getKey())
-                    .append("=")
-                    .append(entry.getValue())
-                    .append(STRING_PROPERTIES_SP);
-        }
-        return sb.toString();
     }
 
     public static boolean query(Map<String, String> query, Supplier supplier) {

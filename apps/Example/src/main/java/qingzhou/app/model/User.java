@@ -34,6 +34,7 @@ public class User extends AddModelBase implements Delete, Group, Option, Echo {
             group = "base",
             list = true, search = true,
             pattern = "^1[3-9]\\d{9}$",
+            update_action = "update",
             name = {"手机号码", "en:Mobile Phone Number"})
     public String phoneNumber;
 

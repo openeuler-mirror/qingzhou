@@ -14,7 +14,7 @@ public abstract class ModelBase {
     /**
      * 初始化函数，子类可以在此进行定制化初始化，例如 i18n 等。
      */
-    public void start() {
+    public void start() throws Exception {
     }
 
     public void stop() {

@@ -520,8 +520,8 @@ class SuperAction {
     @ModelAction(
             code = Dashboard.ACTION_DASHBOARD, icon = "dashboard",
             name = {"监视概览", "en:Monitoring Overview"},
-            info = {"获取该组件的组合监视概览信息。",
-                    "en:Obtain an overview of the combined monitoring of the component."})
+            info = {"获取该组件的统计概览信息。",
+                    "en:Obtain the statistical overview of the component."})
     public void dashboard(Request request) {
         Dashboard instance = (Dashboard) this.instance;
         DashboardDataBuilder dashboardBuilder = new DashboardDataBuilder();

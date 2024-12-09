@@ -1,28 +1,22 @@
 package qingzhou.config;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Stream;
 
 public class Console {
-    private static final List<User> ssoUsers = new ArrayList<>();
-
     private boolean enabled;
-    private Web web;
-    private Jmx jmx;
+    private int port;
+    private String contextRoot;
+    private int maxPostSize;
     private Security security;
+    private Jmx jmx;
+    private OAuth oauth;
     private User[] user;
     private Role[] role;
 
 
     public User getUser(String name) {
         if (user == null) return null;
-        return Stream.concat(Arrays.stream(user), ssoUsers.stream()).filter(user -> user.getName().equals(name)).findAny().orElse(null);
-    }
-
-    public List<User> getSsoUsers() {
-        return ssoUsers;
+        return Arrays.stream(user).filter(user -> user.getName().equals(name)).findAny().orElse(null);
     }
 
     public User[] getUser() {
@@ -31,14 +25,6 @@ public class Console {
 
     public void setUser(User[] user) {
         this.user = user;
-    }
-
-    public Web getWeb() {
-        return web;
-    }
-
-    public void setWeb(Web web) {
-        this.web = web;
     }
 
     public Jmx getJmx() {
@@ -57,12 +43,44 @@ public class Console {
         this.enabled = enabled;
     }
 
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public String getContextRoot() {
+        return contextRoot;
+    }
+
+    public void setContextRoot(String contextRoot) {
+        this.contextRoot = contextRoot;
+    }
+
+    public int getMaxPostSize() {
+        return maxPostSize;
+    }
+
+    public void setMaxPostSize(int maxPostSize) {
+        this.maxPostSize = maxPostSize;
+    }
+
     public Security getSecurity() {
         return security;
     }
 
     public void setSecurity(Security security) {
         this.security = security;
+    }
+
+    public OAuth getOauth() {
+        return oauth;
+    }
+
+    public void setOauth(OAuth oauth) {
+        this.oauth = oauth;
     }
 
     public Role[] getRole() {
@@ -77,5 +95,4 @@ public class Console {
         if (role == null) return null;
         return Arrays.stream(role).filter(role -> role.getName().equals(name)).findAny().orElse(null);
     }
-
 }

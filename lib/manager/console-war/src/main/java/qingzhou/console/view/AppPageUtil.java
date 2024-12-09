@@ -1,23 +1,23 @@
 package qingzhou.console.view;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import qingzhou.api.Response;
-import qingzhou.core.deployer.ActionInvoker;
-import qingzhou.core.deployer.AppListener;
-import qingzhou.core.deployer.Deployer;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.rest.RestContext;
 import qingzhou.core.AppPageData;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.ActionInvoker;
+import qingzhou.core.deployer.AppListener;
+import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.logger.Logger;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
 
 class AppPageUtil {
     static void doPage(String actionPage, RestContext restContext) throws Exception {
@@ -59,22 +59,28 @@ class AppPageUtil {
             try {
                 FileUtil.writeFile(tempFile, (byte[]) res.getInternalData(), false);
                 FileUtil.unZipToDir(tempFile, appPageCacheDir);
-                SystemController.getService(Deployer.class).addAppListener(new AppListener() {
-                    @Override
-                    public void onUninstalled(String appName) {
-                        if (appName.equals(targetAppName)) {
-                            try {
-                                FileUtil.forceDelete(appPageCacheDir);
-                            } catch (IOException e) {
-                                SystemController.getService(Logger.class).warn(e.getMessage(), e);
-                            }
-                        }
-                    }
-                });
+                deleteOnUninstall(targetAppName, appPageCacheDir);
             } finally {
                 FileUtil.forceDelete(tempFile);
             }
         }
+    }
+
+    private static void deleteOnUninstall(String app, File appPageCacheDir) {
+        Deployer deployer = SystemController.getService(Deployer.class);
+        deployer.addAppListener(new AppListener() {
+            @Override
+            public void onUninstalled(String appName) {
+                if (appName.equals(app)) {
+                    deployer.removeAppListener(this);
+                    try {
+                        FileUtil.forceDelete(appPageCacheDir);
+                    } catch (IOException e) {
+                        SystemController.getService(Logger.class).warn(e.getMessage(), e);
+                    }
+                }
+            }
+        });
     }
 
     private static String getPageRootDirName(String path) {

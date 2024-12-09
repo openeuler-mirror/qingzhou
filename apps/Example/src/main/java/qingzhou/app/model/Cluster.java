@@ -19,7 +19,7 @@ public class Cluster extends AddModelBase {
     @ModelAction(
             code = "user", icon = "location-arrow",
             list_action = true,
-            sub_menu_models = {"user"},
+            sub_menu_models = {User.code},
             action_type = ActionType.sub_menu,
             name = {"跳1菜单", "en:User"},
             info = {"打开只有用户菜单的管理页面。", "en:Go to the page."})

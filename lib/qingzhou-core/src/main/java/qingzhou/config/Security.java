@@ -1,33 +1,13 @@
 package qingzhou.config;
 
 public class Security {
+    private String trustedIp;
+    private int failureCount;
+    private int lockOutTime;
     private String publicKey;
     private String privateKey;
-    private String trustedIp;
-    private boolean verCodeEnabled;
-    private int lockOutTime;
-    private int failureCount;
     private int passwordMaxAge;
     private int passwordLimitRepeats;
-    private int maxFileUpload;
-
-    private boolean enabledOAuth2;
-    private String clientId;
-    private String clientSecret;
-    private String redirectUrl;
-    private String authorizeUrl;
-    private String tokenUrl;
-    private String userInfoUrl;
-    private String checkTokenUrl;
-    private String logoutUrl;
-
-    public int getMaxFileUpload() {
-        return maxFileUpload;
-    }
-
-    public void setMaxFileUpload(int maxFileUpload) {
-        this.maxFileUpload = maxFileUpload;
-    }
 
     public String getPublicKey() {
         return publicKey;
@@ -83,85 +63,5 @@ public class Security {
 
     public void setTrustedIp(String trustedIp) {
         this.trustedIp = trustedIp;
-    }
-
-    public boolean isVerCodeEnabled() {
-        return verCodeEnabled;
-    }
-
-    public void setVerCodeEnabled(boolean verCodeEnabled) {
-        this.verCodeEnabled = verCodeEnabled;
-    }
-
-    public boolean isEnabledOAuth2() {
-        return enabledOAuth2;
-    }
-
-    public void setEnabledOAuth2(boolean enabledOAuth2) {
-        this.enabledOAuth2 = enabledOAuth2;
-    }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public String getClientSecret() {
-        return clientSecret;
-    }
-
-    public void setClientSecret(String clientSecret) {
-        this.clientSecret = clientSecret;
-    }
-
-    public String getRedirectUrl() {
-        return redirectUrl;
-    }
-
-    public void setRedirectUrl(String redirectUrl) {
-        this.redirectUrl = redirectUrl;
-    }
-
-    public String getAuthorizeUrl() {
-        return authorizeUrl;
-    }
-
-    public void setAuthorizeUrl(String authorizeUrl) {
-        this.authorizeUrl = authorizeUrl;
-    }
-
-    public String getTokenUrl() {
-        return tokenUrl;
-    }
-
-    public void setTokenUrl(String tokenUrl) {
-        this.tokenUrl = tokenUrl;
-    }
-
-    public String getUserInfoUrl() {
-        return userInfoUrl;
-    }
-
-    public void setUserInfoUrl(String userInfoUrl) {
-        this.userInfoUrl = userInfoUrl;
-    }
-
-    public String getCheckTokenUrl() {
-        return checkTokenUrl;
-    }
-
-    public void setCheckTokenUrl(String checkTokenUrl) {
-        this.checkTokenUrl = checkTokenUrl;
-    }
-
-    public String getLogoutUrl() {
-        return logoutUrl;
-    }
-
-    public void setLogoutUrl(String logoutUrl) {
-        this.logoutUrl = logoutUrl;
     }
 }

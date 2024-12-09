@@ -1,4 +1,4 @@
-package qingzhou.app.system.user;
+package qingzhou.app.system.system.user;
 
 import qingzhou.api.*;
 import qingzhou.api.type.Delete;
@@ -8,7 +8,6 @@ import qingzhou.api.type.Validate;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.core.DeployerConstants;
-import qingzhou.config.Config;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
 import qingzhou.engine.util.Utils;
@@ -25,6 +24,7 @@ import java.util.regex.Pattern;
 public class User extends ModelBase implements General, Validate, Option {
     static final String ID_KEY = "name";
     static final String PASSWORD_FLAG = "***************";
+    static final String PASSWORD_SP = ";";
 
     @Override
     public String idField() {
@@ -43,7 +43,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     private String[] allIds(Map<String, String> query) {
-        return Arrays.stream(Main.getService(Config.class).getCore().getConsole().getUser())
+        return Arrays.stream(Main.getConsole().getUser())
                 .filter(user -> ModelUtil.query(query, new ModelUtil.Supplier() {
                     @Override
                     public String getModelName() {
@@ -144,9 +144,9 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelField(
             input_type = InputType.checkbox,
-            required = true,
             list = true, search = true,
             ref_model = Role.class,
+            separator = DeployerConstants.USER_ROLE_SP,
             name = {"角色", "en:Role"},
             info = {"为用户分配访问系统的权限。", "en:Assign users access to the system."})
     public String role;
@@ -156,6 +156,11 @@ public class User extends ModelBase implements General, Validate, Option {
             name = {"描述", "en:Description"},
             info = {"此账户的说明信息。", "en:Description of this account."})
     public String info;
+
+    @Override
+    public Map<String, String> editData(String id) {
+        return showData(id);
+    }
 
     @Override
     public Map<String, String> showData(String id) {
@@ -190,7 +195,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
         qingzhou.config.User u = new qingzhou.config.User();
         ModelUtil.setPropertiesToObj(u, data);
-        Main.getService(Config.class).addUser(u);
+        Main.getConfig().addUser(u);
     }
 
     @Override
@@ -218,8 +223,8 @@ public class User extends ModelBase implements General, Validate, Option {
             insertPasswordModifiedTime(data);
 
             String historyPasswords = originUser.get("historyPasswords");
-            int limitRepeats = Main.getService(Config.class).getCore().getConsole().getSecurity().getPasswordLimitRepeats();
-            String cutOldPasswords = cutOldPasswords(historyPasswords, limitRepeats, data.get("password"));
+            int limitRepeats = Main.getConsole().getSecurity().getPasswordLimitRepeats();
+            String cutOldPasswords = cutOldPasswords(historyPasswords, PASSWORD_SP, limitRepeats, data.get("password"));
             data.put("historyPasswords", cutOldPasswords);
         }
 
@@ -232,10 +237,10 @@ public class User extends ModelBase implements General, Validate, Option {
         String[] batchId = getAppContext().getCurrentRequest().getBatchId();
         if (batchId != null && batchId.length > 0) {
             for (String bId : batchId) {
-                Main.getService(Config.class).deleteUser(bId);
+                Main.getConfig().deleteUser(bId);
             }
         } else {
-            Main.getService(Config.class).deleteUser(id);
+            Main.getConfig().deleteUser(id);
         }
     }
 
@@ -246,7 +251,7 @@ public class User extends ModelBase implements General, Validate, Option {
 
     @ModelAction(
             code = Delete.ACTION_DELETE, icon = "trash",
-            show = "name!=qingzhou",
+            display = "name!=qingzhou",
             batch_action = true,
             list_action = true, order = "9", action_type = ActionType.action_list, distribute = true,
             name = {"删除", "en:Delete"},
@@ -261,7 +266,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     static Map<String, String> showDataForUserInternal(String userId) {
-        for (qingzhou.config.User user : Main.getService(Config.class).getCore().getConsole().getUser()) {
+        for (qingzhou.config.User user : Main.getConsole().getUser()) {
             if (user.getName().equals(userId)) {
                 Map<String, String> data = ModelUtil.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
@@ -280,15 +285,14 @@ public class User extends ModelBase implements General, Validate, Option {
     static void updateDataForUser(Map<String, String> data) throws Exception {
         data.remove("type");// 用户的类型是初始化定的，不可通过api修改
 
-        Config config = Main.getService(Config.class);
         String id = data.get(ID_KEY);
-        qingzhou.config.User user = config.getCore().getConsole().getUser(id);
-        config.deleteUser(id);
+        qingzhou.config.User user = Main.getConsole().getUser(id);
+        Main.getConfig().deleteUser(id);
         if (PASSWORD_FLAG.equals(data.get("password"))) {
             data.remove("password");
         }
         ModelUtil.setPropertiesToObj(user, data);
-        config.addUser(user);
+        Main.getConfig().addUser(user);
     }
 
     static String checkPwd(String password, String userId) {
@@ -327,9 +331,7 @@ public class User extends ModelBase implements General, Validate, Option {
         return pwdArray;
     }
 
-    static String cutOldPasswords(String historyPasswords, int limitRepeats, String newPwd) {
-        String DATA_SEPARATOR = DeployerConstants.DEFAULT_DATA_SEPARATOR;
-
+    static String cutOldPasswords(String historyPasswords, String DATA_SEPARATOR, int limitRepeats, String newPwd) {
         if (historyPasswords == null) {
             historyPasswords = "";
         }

@@ -19,6 +19,4 @@ public interface CryptoService {
     Base64Coder getBase64Coder();
 
     Base32Coder getBase32Coder();
-
-    Base16Coder getBase16Coder();
 }

@@ -1,8 +1,11 @@
 package qingzhou.core.console.impl;
 
-import qingzhou.core.AppPageData;
-import qingzhou.config.Config;
+import java.io.File;
+import java.util.Map;
+import java.util.Properties;
+
 import qingzhou.config.Console;
+import qingzhou.core.AppPageData;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.servlet.ServletContainer;
 import qingzhou.core.console.servlet.impl.ServletContainerImpl;
@@ -10,10 +13,8 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
+import qingzhou.json.Json;
 import qingzhou.logger.Logger;
-
-import java.io.File;
-import java.util.Properties;
 
 public class Controller implements Process {
     public final ModuleContext moduleContext;
@@ -27,8 +28,9 @@ public class Controller implements Process {
 
     @Override
     public void exec() throws Throwable {
-        console = moduleContext.getService(Config.class).getCore().getConsole();
-
+        Json json = moduleContext.getService(Json.class);
+        String consoleJson = json.toJson(((Map<String, Object>) moduleContext.getConfig()).get("console"));
+        console = json.fromJson(consoleJson, Console.class);
         if (console == null || !console.isEnabled()) return;
 
         sequence = new ProcessSequence(
@@ -49,10 +51,10 @@ public class Controller implements Process {
         @Override
         public void exec() throws Throwable {
             servletContainer = new ServletContainerImpl();
-            servletContainer.start(console.getWeb().getPort(),
+            servletContainer.start(console.getPort(),
                     new File(moduleContext.getTemp(), "servlet"),
                     new Properties() {{
-                        setProperty("maxPostSize", String.valueOf(console.getWeb().getMaxPostSize()));
+                        setProperty("maxPostSize", String.valueOf(console.getMaxPostSize()));
                     }});
         }
 
@@ -78,11 +80,11 @@ public class Controller implements Process {
         private void exec0() {
             File consoleApp = FileUtil.newFile(moduleContext.getLibDir(), "module", "console");
             String docBase = consoleApp.getAbsolutePath();
-            contextPath = console.getWeb().getContextRoot();
+            contextPath = console.getContextRoot();
             servletContainer.addWebapp(contextPath, docBase, new Properties() {{
                 setProperty("webResources", "/=" + FileUtil.newFile(moduleContext.getTemp(), AppPageData.DOWNLOAD_PAGE_ROOT_DIR).getAbsoluteFile());
             }});
-            moduleContext.getService(Logger.class).info("Open a browser to access the Qingzhou console: http://localhost:" + console.getWeb().getPort() + contextPath);
+            moduleContext.getService(Logger.class).info("Open a browser to access the Qingzhou console: http://localhost:" + console.getPort() + contextPath);
         }
 
         @Override

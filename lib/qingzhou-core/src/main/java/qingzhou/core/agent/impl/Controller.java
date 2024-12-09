@@ -1,5 +1,7 @@
 package qingzhou.core.agent.impl;
 
+import java.util.Map;
+
 import qingzhou.core.deployer.AppListener;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.crypto.Cipher;
@@ -9,8 +11,6 @@ import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
-
-import java.util.Map;
 
 public class Controller implements Process {
     private final ModuleContext moduleContext;
@@ -22,6 +22,12 @@ public class Controller implements Process {
 
     @Override
     public void exec() throws Throwable {
+        Map<String, String> deployer = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("deployer");
+        if (Boolean.parseBoolean(deployer.get("staticMode"))) {
+            // 静态模式下，不能进行应用和实例的“卸载”和“添加”，注册服务也会关闭
+            return;
+        }
+
         Map<String, String> config = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("agent");
         if (config == null || !Boolean.parseBoolean(config.get("enabled"))) return;
 
@@ -37,9 +43,8 @@ public class Controller implements Process {
         Cipher agentCipher = cryptoService.getCipher(generateKey);
 
         Heartbeat heartbeat = new Heartbeat(moduleContext, agentHost, agentPort, encryptedAgentKey, config);
-        Deployer deployer = moduleContext.getService(Deployer.class);
         sequence = new ProcessSequence(
-                () -> deployer.addAppListener(new AppListenerImpl(heartbeat)),
+                () -> moduleContext.getService(Deployer.class).addAppListener(new AppListenerImpl(heartbeat)),
                 new Service(moduleContext, agentCipher, agentHost, agentPort),
                 heartbeat
         );

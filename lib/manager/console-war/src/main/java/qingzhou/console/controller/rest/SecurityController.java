@@ -1,20 +1,52 @@
 package qingzhou.console.controller.rest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
+
 import qingzhou.config.Role;
 import qingzhou.config.User;
 import qingzhou.console.controller.SystemController;
+import qingzhou.console.login.LoginManager;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
+import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 public class SecurityController implements Filter<RestContext> {
-    public static boolean isActionPermitted(String app, String model, String action, String user) {
+    public static boolean isActionPermitted(String app, String model, String action, HttpServletRequest request, String[] dataListFields, String[] dataValues) {
+        Map<String, String> modelData = new HashMap<>();
+        for (int i = 0; i < dataListFields.length; i++) {
+            modelData.put(dataListFields[i], dataValues[i]);
+        }
+        return isActionPermitted(app, model, action, request, modelData);
+    }
+
+    public static boolean isActionPermitted(String app, String model, String action, HttpServletRequest request) {
+        return isActionPermitted(app, model, action, request, null);
+    }
+
+    public static boolean isActionPermitted(String app, String model, String action, HttpServletRequest request, Map<String, String> modelData) {
+        boolean actionPermitted = isActionPermitted0(app, model, action, request);
+        if (actionPermitted && modelData != null) {
+            ModelInfo modelInfo = SystemController.getModelInfo(app, model);
+            ModelActionInfo actionInfo = Objects.requireNonNull(modelInfo).getModelActionInfo(action);
+            String display = actionInfo.getDisplay();
+            if (Utils.notBlank(display)) {
+                actionPermitted = SecurityController.checkRule(display, modelData::get);
+            }
+        }
+        return actionPermitted;
+    }
+
+    private static boolean isActionPermitted0(String app, String model, String action, HttpServletRequest request) {
         // model 是否存在
         ModelInfo modelInfo = SystemController.getModelInfo(app, model);
         if (modelInfo == null) return false;
@@ -24,22 +56,39 @@ public class SecurityController implements Filter<RestContext> {
         if (actionInfo == null) return false;
 
         // 检查用户的权限
-        User currentUser = SystemController.getConsole().getUser(user);
+        User currentUser = LoginManager.getLoggedUser(request.getSession(false));
+        if (currentUser == null) return false;
+
         //超管直接放行
         if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(currentUser.getType())) {
             return true;
         }
 
-        String[] userRoles = currentUser.getRole().split(DeployerConstants.DEFAULT_DATA_SEPARATOR);
-        if (userRoles.length > 0) {
-            for (int i = 0; i < userRoles.length; i++) {
-                Role role = SystemController.getConsole().getRole(userRoles[i]);
-                String roleApp = role.getApp();
-                String roleUris = role.getUris();
-                String currentUri = model + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + action;
-                if (roleApp.equals(action) && roleUris.contains(currentUri)) {
-                    return true;
-                }
+        // 是否是开放的 model
+        if (DeployerConstants.APP_SYSTEM.equals(app)) {
+            if (DeployerConstants.OPEN_SYSTEM_MODELS.contains(model)) return true;
+
+            Set<String> actions = DeployerConstants.OPEN_SYSTEM_MODEL_ACTIONS.get(model);
+            if (actions != null && actions.contains(actionInfo.getCode())) {
+                return true;
+            }
+        } else {
+            if (DeployerConstants.OPEN_NONE_SYSTEM_MODELS.contains(model)) {
+                return true;
+            }
+        }
+
+        String roles = currentUser.getRole();
+        if (roles == null) return false;
+
+        String checkUri = model + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + action;
+        for (String r : roles.split(DeployerConstants.USER_ROLE_SP)) {
+            Role role = SystemController.getConsole().getRole(r);
+            String roleApp = role.getApp();
+            if (!roleApp.equals(app)) continue;
+            String[] roleUris = role.getUris().split(DeployerConstants.ROLE_URI_SP);
+            if (Arrays.asList(roleUris).contains(checkUri)) {
+                return true;
             }
         }
         return false;
@@ -87,29 +136,7 @@ public class SecurityController implements Filter<RestContext> {
     @Override
     public boolean doFilter(RestContext context) throws Exception {
         RequestImpl request = context.request;
-        String user = request.getUser();
-        String action = request.getAction();
-        String model = request.getModel();
-        // 检查用户的权限
-        User currentUser = SystemController.getConsole().getUser(user);
-
-        //超管直接放行
-        if (DeployerConstants.QINGZHOU_MANAGER_USER_TYP.equals(currentUser.getType())) {
-            return true;
-        }
-        String[] userRoles = currentUser.getRole().split(DeployerConstants.DEFAULT_DATA_SEPARATOR);
-        if (userRoles.length > 0) {
-            for (String userRole : userRoles) {
-                Role role = SystemController.getConsole().getRole(userRole);
-                String roleApp = role.getApp();
-                String roleUris = role.getUris();
-                String currentUri = model + DeployerConstants.MULTISELECT_GROUP_SEPARATOR + action;
-                if (roleApp.equals(action) && roleUris.contains(currentUri)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return isActionPermitted(request.getApp(), request.getModel(), request.getAction(), context.req);
     }
 
     public interface FieldValueRetriever {

@@ -1,26 +1,37 @@
 package qingzhou.core.deployer.impl;
 
-import qingzhou.api.ActionFilter;
-import qingzhou.api.ModelBase;
-import qingzhou.api.QingzhouApp;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.core.deployer.App;
+import qingzhou.core.deployer.I18nTool;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
+import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.Utils;
 
+import java.io.File;
 import java.net.URLClassLoader;
 import java.util.*;
 
-class AppImpl implements App {
-    private Properties appProperties;
-    private URLClassLoader loader;
-    private AppInfo appInfo;
-    private AppContextImpl appContext;
+public class AppImpl implements App {
+    private final ModuleContext moduleContext;
+    private File appDir;
+    private URLClassLoader appLoader;
     private QingzhouApp qingzhouApp;
+    private ActionFilter appActionFilter;
+    private AuthAdapter authAdapter;
+    private Properties appProperties;
+    private AppContextImpl appContext;
+    private AppInfo appInfo;
     private final Map<String, ModelBase> modelBaseMap = new HashMap<>();
     private final Map<String, Map<String, ActionMethod>> modelActionMap = new HashMap<>();
     private final Map<String, Map<String, ActionMethod>> addedSuperActions = new HashMap<>();
+    private File appTemp;
+    private final I18nTool i18nTool = new I18nTool();
+    private final ThreadLocal<Request> threadLocalRequest = new ThreadLocal<>();
+
+    AppImpl(ModuleContext moduleContext) {
+        this.moduleContext = moduleContext;
+    }
 
     @Override
     public AppContextImpl getAppContext() {
@@ -34,12 +45,13 @@ class AppImpl implements App {
 
     @Override
     public void invoke(Request request) throws Throwable {
-        Utils.doInThreadContextClassLoader(getLoader(), () -> {
-            for (ActionFilter actionFilter : appContext.getActionFilters()) {
-                String msg = actionFilter.doFilter(request);
+        Utils.doInThreadContextClassLoader(getAppLoader(), () -> {
+            if (appActionFilter != null) {
+                String msg = appActionFilter.doFilter(request);
                 if (msg != null) {
                     request.getResponse().setSuccess(false);
                     request.getResponse().setMsg(msg);
+                    return;
                 }
             }
 
@@ -55,8 +67,21 @@ class AppImpl implements App {
         String actionName = request.getAction();
         ActionMethod actionMethod = methodMap.get(actionName);
         if (actionMethod == null) return;
-        getAppContext().setCurrentRequest(request);
-        actionMethod.invoke(request);
+
+        threadLocalRequest.set(request);
+        try {
+            actionMethod.invoke(request);
+        } finally {
+            threadLocalRequest.remove();
+        }
+    }
+
+    Request getThreadLocalRequest() {
+        return threadLocalRequest.get();
+    }
+
+    ModuleContext getModuleContext() {
+        return moduleContext;
     }
 
     void invokeDefault(Request request) throws Exception {
@@ -96,8 +121,7 @@ class AppImpl implements App {
         this.appContext = appContext;
     }
 
-    @Override
-    public QingzhouApp getQingzhouApp() {
+    QingzhouApp getQingzhouApp() {
         return qingzhouApp;
     }
 
@@ -105,12 +129,12 @@ class AppImpl implements App {
         this.qingzhouApp = qingzhouApp;
     }
 
-    URLClassLoader getLoader() {
-        return loader;
+    URLClassLoader getAppLoader() {
+        return appLoader;
     }
 
-    void setLoader(URLClassLoader loader) {
-        this.loader = loader;
+    void setAppLoader(URLClassLoader appLoader) {
+        this.appLoader = appLoader;
     }
 
     void setAppInfo(AppInfo appInfo) {
@@ -121,11 +145,42 @@ class AppImpl implements App {
         return modelBaseMap;
     }
 
-    public Properties getAppProperties() {
+    Properties getAppProperties() {
         return appProperties;
     }
 
-    public void setAppProperties(Properties appProperties) {
+    void setAppProperties(Properties appProperties) {
         this.appProperties = appProperties;
+    }
+
+    void setAppActionFilter(ActionFilter appActionFilter) {
+        this.appActionFilter = appActionFilter;
+    }
+
+    void setAuthAdapter(AuthAdapter authAdapter) {
+        this.authAdapter = authAdapter;
+    }
+
+    public AuthAdapter getAuthAdapter() {
+        return authAdapter;
+    }
+
+    File getAppDir() {
+        return appDir;
+    }
+
+    void setAppDir(File appDir) {
+        this.appDir = appDir;
+    }
+
+    File getAppTemp() {
+        if (appTemp == null) {
+            appTemp = new File(moduleContext.getTemp(), appInfo.getName());
+        }
+        return appTemp;
+    }
+
+    I18nTool getI18nTool() {
+        return i18nTool;
     }
 }

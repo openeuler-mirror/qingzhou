@@ -1,21 +1,11 @@
 package qingzhou.crypto.impl;
 
-import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.util.UUID;
-
-import qingzhou.crypto.Base16Coder;
-import qingzhou.crypto.Base32Coder;
-import qingzhou.crypto.Base64Coder;
-import qingzhou.crypto.Cipher;
-import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
-import qingzhou.crypto.PairCipher;
-import qingzhou.crypto.TotpCipher;
+import qingzhou.crypto.*;
+
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.util.UUID;
 
 public class CryptoServiceImpl implements CryptoService {
     private final Base64Coder base64Coder = new Base64CoderImpl();
@@ -76,11 +66,6 @@ public class CryptoServiceImpl implements CryptoService {
     @Override
     public Base32Coder getBase32Coder() {
         return base32Coder;
-    }
-
-    @Override
-    public Base16Coder getBase16Coder() {
-        return base16Coder;
     }
 
     private KeyPair genKeyPair(String seedKey) throws Exception {

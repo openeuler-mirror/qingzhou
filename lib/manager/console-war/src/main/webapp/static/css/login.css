@@ -147,17 +147,6 @@ html, body {
     color: #595959;
 }
 
-.page-login form .captcha {
-    width: 100px;
-    height: 40px;
-    float: right;
-    margin-top: 1px;
-    margin-right: 30px;
-    display: inline-block;
-    border-radius: 2px;
-    cursor: pointer;
-}
-
 .page-login .login_btn {
     width: 360px;
     height: 44px;

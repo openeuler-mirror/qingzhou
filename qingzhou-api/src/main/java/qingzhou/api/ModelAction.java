@@ -25,7 +25,9 @@ public @interface ModelAction {
 
     ActionType action_type() default ActionType.link;
 
-    String show() default ""; // 设置该操作的可用条件
+    String display() default ""; // 设置该操作的可用条件
+
+    boolean show_action() default false;
 
     boolean list_action() default false;
 

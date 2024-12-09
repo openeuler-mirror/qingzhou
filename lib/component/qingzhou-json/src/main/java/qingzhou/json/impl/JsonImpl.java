@@ -45,8 +45,16 @@ public class JsonImpl implements Json {
         JsonElement root = JsonParser.parseString(from);
 
         JsonObject jsonObject = root.getAsJsonObject();
+
         for (String path : position) {
-            jsonObject = jsonObject.get(path).getAsJsonObject();
+            JsonElement element = jsonObject.get(path);
+            if (element != null) {
+                jsonObject = element.getAsJsonObject();
+            } else {
+                JsonObject newObject = new JsonObject();
+                jsonObject.add(path, newObject);
+                jsonObject = newObject;
+            }
         }
         for (String k : toJson.stringPropertyNames()) {
             jsonObject.addProperty(k, toJson.getProperty(k));
