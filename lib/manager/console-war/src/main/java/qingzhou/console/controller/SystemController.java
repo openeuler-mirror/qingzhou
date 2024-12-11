@@ -21,13 +21,13 @@ import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
 import qingzhou.api.type.List;
 import qingzhou.api.type.Option;
-import qingzhou.config.Console;
-import qingzhou.config.Security;
-import qingzhou.config.impl.Config;
+import qingzhou.config.console.Console;
+import qingzhou.config.console.Security;
+import qingzhou.config.console.impl.Config;
 import qingzhou.console.controller.jmx.JmxAuthenticatorImpl;
 import qingzhou.console.controller.jmx.JmxInvokerImpl;
 import qingzhou.console.controller.jmx.NotificationListenerImpl;
-import qingzhou.console.login.AuthAdapterManager;
+import qingzhou.console.login.AuthManager;
 import qingzhou.console.login.LoginManager;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.ItemInfo;
@@ -188,7 +188,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             new JspInterceptor(),
             new I18n(),
             new About(),
-            new AuthAdapterManager(),
+            new AuthManager(),
             new LoginManager(),
             new Theme(),
             (Filter<SystemControllerContext>) context -> {

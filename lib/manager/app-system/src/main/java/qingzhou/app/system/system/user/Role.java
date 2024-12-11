@@ -103,7 +103,7 @@ public class Role extends ModelBase implements General, Echo, Option {
     }
 
     private String[] allIds(Map<String, String> query) {
-        qingzhou.config.Role[] roles = Main.getConsole().getRole();
+        qingzhou.config.console.Role[] roles = Main.getConsole().getRole();
         if (roles == null) return new String[0];
 
         return Arrays.stream(roles)
@@ -118,15 +118,15 @@ public class Role extends ModelBase implements General, Echo, Option {
                         return ModelUtil.getPropertiesFromObj(role);
                     }
                 }))
-                .map(qingzhou.config.Role::getName)
+                .map(qingzhou.config.console.Role::getName)
                 .toArray(String[]::new);
     }
 
     @Override
     public Map<String, String> showData(String id) {
-        qingzhou.config.Role[] roles = Main.getConsole().getRole();
+        qingzhou.config.console.Role[] roles = Main.getConsole().getRole();
         if (roles != null) {
-            for (qingzhou.config.Role role : roles) {
+            for (qingzhou.config.console.Role role : roles) {
                 if (role.getName().equals(id)) {
                     return ModelUtil.getPropertiesFromObj(role);
                 }
@@ -137,7 +137,7 @@ public class Role extends ModelBase implements General, Echo, Option {
 
     @Override
     public void addData(Map<String, String> data) throws Exception {
-        qingzhou.config.Role role = new qingzhou.config.Role();
+        qingzhou.config.console.Role role = new qingzhou.config.console.Role();
         ModelUtil.setPropertiesToObj(role, data);
         Main.getConfig().addRole(role);
     }
@@ -145,7 +145,7 @@ public class Role extends ModelBase implements General, Echo, Option {
     @Override
     public void updateData(Map<String, String> data) throws Exception {
         String id = data.get(ID_KEY);
-        qingzhou.config.Role role = Main.getConsole().getRole(id);
+        qingzhou.config.console.Role role = Main.getConsole().getRole(id);
         Main.getConfig().deleteRole(id);
         ModelUtil.setPropertiesToObj(role, data);
         Main.getConfig().addRole(role);
@@ -176,9 +176,9 @@ public class Role extends ModelBase implements General, Echo, Option {
         }
         List<Item> items = getItems(appName);
         String value = "";
-        qingzhou.config.Role[] roles = Main.getConsole().getRole();
+        qingzhou.config.console.Role[] roles = Main.getConsole().getRole();
         if (roles != null) {
-            for (qingzhou.config.Role role : roles) {
+            for (qingzhou.config.console.Role role : roles) {
                 if (role.getApp().equals(appName)) {
                     value = role.getUris();
                 }

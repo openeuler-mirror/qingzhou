@@ -55,7 +55,7 @@ public class User extends ModelBase implements General, Validate, Option {
                         return ModelUtil.getPropertiesFromObj(user);
                     }
                 }))
-                .map(qingzhou.config.User::getName)
+                .map(qingzhou.config.console.User::getName)
                 .toArray(String[]::new);
     }
 
@@ -193,7 +193,7 @@ public class User extends ModelBase implements General, Validate, Option {
         // 添加密码更新时间戳
         insertPasswordModifiedTime(data);
 
-        qingzhou.config.User u = new qingzhou.config.User();
+        qingzhou.config.console.User u = new qingzhou.config.console.User();
         ModelUtil.setPropertiesToObj(u, data);
         Main.getConfig().addUser(u);
     }
@@ -266,7 +266,7 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     static Map<String, String> showDataForUserInternal(String userId) {
-        for (qingzhou.config.User user : Main.getConsole().getUser()) {
+        for (qingzhou.config.console.User user : Main.getConsole().getUser()) {
             if (user.getName().equals(userId)) {
                 Map<String, String> data = ModelUtil.getPropertiesFromObj(user);
                 String[] passwords = splitPwd(data.get("password"));
@@ -286,7 +286,7 @@ public class User extends ModelBase implements General, Validate, Option {
         data.remove("type");// 用户的类型是初始化定的，不可通过api修改
 
         String id = data.get(ID_KEY);
-        qingzhou.config.User user = Main.getConsole().getUser(id);
+        qingzhou.config.console.User user = Main.getConsole().getUser(id);
         Main.getConfig().deleteUser(id);
         if (PASSWORD_FLAG.equals(data.get("password"))) {
             data.remove("password");

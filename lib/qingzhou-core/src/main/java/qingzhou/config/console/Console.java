@@ -1,4 +1,4 @@
-package qingzhou.config;
+package qingzhou.config.console;
 
 import java.util.Arrays;
 
@@ -9,7 +9,6 @@ public class Console {
     private int maxPostSize;
     private Security security;
     private Jmx jmx;
-    private OAuth oauth;
     private User[] user;
     private Role[] role;
 
@@ -73,14 +72,6 @@ public class Console {
 
     public void setSecurity(Security security) {
         this.security = security;
-    }
-
-    public OAuth getOauth() {
-        return oauth;
-    }
-
-    public void setOauth(OAuth oauth) {
-        this.oauth = oauth;
     }
 
     public Role[] getRole() {

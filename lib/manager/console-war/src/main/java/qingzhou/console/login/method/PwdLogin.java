@@ -1,6 +1,6 @@
 package qingzhou.console.login.method;
 
-import qingzhou.config.User;
+import qingzhou.config.console.User;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.console.login.LoginMethod;

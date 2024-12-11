@@ -1,22 +1,11 @@
 package qingzhou.core.deployer.impl;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import qingzhou.api.type.Add;
-import qingzhou.api.type.Delete;
 import qingzhou.core.DeployerConstants;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.AppListener;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.QingzhouSystemApp;
 import qingzhou.core.registry.AppInfo;
-import qingzhou.core.registry.ModelActionInfo;
-import qingzhou.core.registry.ModelInfo;
 import qingzhou.core.registry.Registry;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.Service;
@@ -25,6 +14,13 @@ import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.engine.util.pattern.ProcessSequence;
 import qingzhou.logger.Logger;
+
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class Controller implements Process {
     private final ModuleContext moduleContext;
@@ -71,31 +67,21 @@ public class Controller implements Process {
 
         private void disableSysActions() {
             Map<String, String> config = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("deployer");
-            boolean staticMode = Boolean.parseBoolean(config.get("staticMode"));
-            if (staticMode) { // 静态模式下，不能进行应用和实例的“卸载”和“添加”，注册服务也会关闭
-                AppInfo sysApp = deployer.getAppInfo(DeployerConstants.APP_SYSTEM);
-                Arrays.stream(new String[]{
-                        DeployerConstants.MODEL_APP,
-                        DeployerConstants.MODEL_INSTANCE}).forEach(model -> {
-                    ModelInfo modelInfo = sysApp.getModelInfo(model);
-                    ModelActionInfo[] leftActions = Arrays.stream(modelInfo.getModelActionInfos()).filter(action ->
-                                    !action.getCode().equals(Delete.ACTION_DELETE)
-                                            && !action.getCode().equals(Add.ACTION_CREATE)
-                                            && !action.getCode().equals(Add.ACTION_ADD))
-                            .toArray(ModelActionInfo[]::new);
-                    modelInfo.setModelActionInfos(leftActions);
-                });
+            boolean singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
+            if (singleAppMode) {
+                removeSysModel(DeployerConstants.MODEL_APP);
             }
 
-            boolean disableMaster = staticMode;
-            if (!staticMode) {
-                Map<String, String> registry = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("registry");
-                disableMaster = registry == null || !Boolean.parseBoolean(registry.get("enabled"));
-            }
+            Map<String, String> registry = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("registry");
+            boolean disableMaster = registry == null || !Boolean.parseBoolean(registry.get("enabled"));
             if (disableMaster) {
-                AppInfo sysApp = deployer.getAppInfo(DeployerConstants.APP_SYSTEM);
-                sysApp.removeModelInfo(sysApp.getModelInfo(DeployerConstants.MODEL_MASTER));
+                removeSysModel(DeployerConstants.MODEL_MASTER);
             }
+        }
+
+        private void removeSysModel(String modelName) {
+            AppInfo sysApp = deployer.getAppInfo(DeployerConstants.APP_SYSTEM);
+            sysApp.removeModelInfo(sysApp.getModelInfo(modelName));
         }
     }
 

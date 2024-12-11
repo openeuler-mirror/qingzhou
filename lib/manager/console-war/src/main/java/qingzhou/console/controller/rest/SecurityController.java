@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 
-import qingzhou.config.Role;
-import qingzhou.config.User;
+import qingzhou.config.console.Role;
+import qingzhou.config.console.User;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
 import qingzhou.core.DeployerConstants;

@@ -1,6 +1,7 @@
 package qingzhou.http.impl;
 
 import qingzhou.http.HttpClient;
+import qingzhou.http.HttpMethod;
 import qingzhou.http.HttpResponse;
 
 import javax.net.ssl.*;
@@ -19,17 +20,12 @@ import java.util.Map;
 
 public class HttpClientImpl implements HttpClient {
     @Override
-    public HttpResponse get(String url, Map<String, String> headers) throws Exception {
-        return send(url, null, headers, "GET");
+    public HttpResponse request(String url, HttpMethod httpMethod, Map<String, String> params) throws Exception {
+        return request(url, httpMethod, null, params);
     }
 
     @Override
-    public HttpResponse post(String url, Map<String, String> params) throws Exception {
-        return post(url, params, null);
-    }
-
-    @Override
-    public HttpResponse post(String url, Map<String, String> params, Map<String, String> headers) throws Exception {
+    public HttpResponse request(String url, HttpMethod httpMethod, Map<String, String> headers, Map<String, String> params) throws Exception {
         StringBuilder bodyStr = new StringBuilder();
         if (params != null) {
             boolean isFirst = true;
@@ -43,31 +39,24 @@ public class HttpClientImpl implements HttpClient {
                 bodyStr.append(URLEncoder.encode(value, "UTF-8"));
             }
         }
-        return post(url, bodyStr.toString().getBytes(StandardCharsets.UTF_8), headers);
+        byte[] bytes = bodyStr.toString().getBytes(StandardCharsets.UTF_8);
+        return send(url, httpMethod, headers, bytes);
     }
 
     @Override
-    public HttpResponse post(String url, byte[] body, Map<String, String> headers) throws Exception {
-        return send(url, body, headers, "POST");
+    public HttpResponse request(String url, HttpMethod httpMethod, Map<String, String> headers, byte[] body) throws Exception {
+        return send(url, httpMethod, headers, body);
     }
 
-    @Override
-    public HttpResponse delete(String url, Map<String, String> headers) throws Exception {
-        return send(url, null, headers, "DELETE");
-    }
+    private HttpResponse send(String url, HttpMethod httpMethod, Map<String, String> headers, byte[] body) throws Exception {
+        if (url == null || url.trim().isEmpty()) throw new IllegalArgumentException("url is null or empty");
 
-    @Override
-    public HttpResponse put(String url, byte[] body, Map<String, String> headers) throws Exception {
-        return send(url, body, headers, "PUT");
-    }
-
-    private HttpResponse send(String url, byte[] body, Map<String, String> headers, String method) throws Exception {
         HttpURLConnection conn = buildConnection(url);
         setDefaultHttpURLConnection(conn);
 
-        if (method != null) {
-            conn.setRequestMethod(method);
-        }
+        if (httpMethod == null) httpMethod = HttpMethod.GET;
+        conn.setRequestMethod(httpMethod.name());
+
 
         if (headers != null) {
             for (Map.Entry<String, String> entry : headers.entrySet()) {
@@ -105,6 +94,22 @@ public class HttpClientImpl implements HttpClient {
         conn.setInstanceFollowRedirects(false);
     }
 
+    private SSLSocketFactory ssf;
+    private final X509TrustManager TRUST_ALL_MANAGER = new X509TrustManager() {
+        @Override
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+    };
+
     private HttpURLConnection buildConnection(String url) throws NoSuchAlgorithmException, IOException, KeyManagementException {
         HttpURLConnection conn;
         URL http = new URL(url);
@@ -124,20 +129,4 @@ public class HttpClientImpl implements HttpClient {
 
         return conn;
     }
-
-    private SSLSocketFactory ssf;
-    private final X509TrustManager TRUST_ALL_MANAGER = new X509TrustManager() {
-        @Override
-        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
-    };
 }

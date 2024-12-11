@@ -1,4 +1,4 @@
-package qingzhou.config;
+package qingzhou.config.console;
 
 public class Jmx {
     private boolean enabled;

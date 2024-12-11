@@ -69,14 +69,6 @@
           "host": "",
           "port": "7700"
         },
-        "oauth": {
-          "enabled": "false",
-          "client_id": "",
-          "client_secret": "",
-          "authorize_uri": "",
-          "token_uri": "",
-          "user_uri": ""
-        },
         "user": [
           {
             "name": "qingzhou",
@@ -92,7 +84,7 @@
         ]
       },
       "deployer": {
-        "staticMode": "false"
+        "singleAppMode": "false"
       },
       "registry": {
         "enabled": "true",

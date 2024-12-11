@@ -1,6 +1,6 @@
 package qingzhou.console.login;
 
-import qingzhou.config.User;
+import qingzhou.config.console.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.controller.SystemControllerContext;

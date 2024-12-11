@@ -3,7 +3,6 @@ package qingzhou.app.model;
 import qingzhou.api.*;
 import qingzhou.api.type.*;
 import qingzhou.app.ExampleMain;
-import qingzhou.engine.util.FileUtil;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -138,9 +137,21 @@ public class FileManage extends ModelBase implements Add, Show, List, Delete, Do
                 }
                 String fileName = file.getName();
                 if (id.equals(fileName)) {
-                    FileUtil.forceDelete(file);
+                    delDir(file);
                 }
             }
+        }
+    }
+
+    private static void delDir(File file) {
+        if (file.isDirectory()) {
+            File[] zFiles = file.listFiles();
+            for (File file2 : zFiles) {
+                delDir(file2);
+            }
+            file.delete();
+        } else {
+            file.delete();
         }
     }
 }

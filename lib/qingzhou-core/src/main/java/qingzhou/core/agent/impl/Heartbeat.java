@@ -1,13 +1,14 @@
 package qingzhou.core.agent.impl;
 
-import qingzhou.core.registry.AppInfo;
-import qingzhou.core.deployer.Deployer;
 import qingzhou.core.DeployerConstants;
+import qingzhou.core.deployer.Deployer;
+import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.InstanceInfo;
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.ModuleContext;
 import qingzhou.engine.util.pattern.Process;
 import qingzhou.http.Http;
+import qingzhou.http.HttpMethod;
 import qingzhou.http.HttpResponse;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
@@ -94,7 +95,7 @@ class Heartbeat implements Process {
         Http http = moduleContext.getService(Http.class);
         Logger logger = moduleContext.getService(Logger.class);
         try {
-            response = http.buildHttpClient().post(checkUrl, new HashMap<String, String>() {{
+            response = http.buildHttpClient().request(checkUrl, HttpMethod.POST, new HashMap<String, String>() {{
                 put(DeployerConstants.CHECK_FINGERPRINT, fingerprint);
             }});
         } catch (Throwable e) {
@@ -110,7 +111,7 @@ class Heartbeat implements Process {
         if (registered) return;
 
         try {
-            http.buildHttpClient().post(registerUrl, new HashMap<String, String>() {{
+            http.buildHttpClient().request(registerUrl, HttpMethod.POST, new HashMap<String, String>() {{
                 put(DeployerConstants.DO_REGISTER, registerData);
             }});
         } catch (Exception e) {

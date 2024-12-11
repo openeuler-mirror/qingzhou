@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.Properties;
 
-import qingzhou.config.Console;
+import qingzhou.config.console.Console;
 import qingzhou.core.AppPageData;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.servlet.ServletContainer;

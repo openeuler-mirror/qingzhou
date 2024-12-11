@@ -64,13 +64,13 @@ public class Security extends ModelBase implements Update {
 
     @Override
     public Map<String, String> editData(String id) {
-        qingzhou.config.Security security = Main.getConsole().getSecurity();
+        qingzhou.config.console.Security security = Main.getConsole().getSecurity();
         return ModelUtil.getPropertiesFromObj(security);
     }
 
     @Override
     public void updateData(Map<String, String> data) throws Exception {
-        qingzhou.config.Security security = Main.getConsole().getSecurity();
+        qingzhou.config.console.Security security = Main.getConsole().getSecurity();
         ModelUtil.setPropertiesToObj(security, data);
         Main.getConfig().setSecurity(security);
     }

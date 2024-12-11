@@ -4,6 +4,7 @@ import qingzhou.api.App;
 import qingzhou.api.AppContext;
 import qingzhou.api.QingzhouApp;
 import qingzhou.app.model.Department;
+import qingzhou.app.oauth.TongAuthAdapter;
 import qingzhou.logger.Logger;
 
 @App
@@ -14,7 +15,7 @@ public class ExampleMain implements QingzhouApp {
     public static Logger logger;
 
     @Override
-    public void start(AppContext appContext) {
+    public void start(AppContext appContext) throws Exception {
         logger = appContext.getService(Logger.class);
         logger.info("启动样例应用");
 
@@ -26,6 +27,10 @@ public class ExampleMain implements QingzhouApp {
             logger.debug(msg);
             return null; // null 表示无异常
         });
+
+        if (Boolean.parseBoolean(appContext.getAppProperties().getProperty("oauth_enabled"))) {
+            appContext.setAuthAdapter(new TongAuthAdapter(appContext));
+        }
     }
 
     @Override

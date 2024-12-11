@@ -4,7 +4,7 @@ import qingzhou.api.*;
 import qingzhou.api.type.Export;
 import qingzhou.api.type.Update;
 import qingzhou.app.system.Main;
-import qingzhou.config.Console;
+import qingzhou.config.console.Console;
 import qingzhou.core.DeployerConstants;
 import qingzhou.crypto.CryptoService;
 import qingzhou.crypto.MessageDigest;
