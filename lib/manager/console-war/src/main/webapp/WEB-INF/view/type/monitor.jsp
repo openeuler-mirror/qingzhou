@@ -25,8 +25,8 @@
 
 	<div class="infoPage" chartMonitor="true" autoRefresh="true" data-url="<%=url%>">
 		<input type="hidden" name="monitorName" value="<%=(Utils.notBlank(encodedId) ? encodedId : "")%>">
-		<div class="panel" style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
-			<div class="panel-body" style="word-break: break-all">
+		<div class="panel"  style="border-radius: 2px; border-color:#EFEEEE; background-color: #FFFFFF;">
+			<div class="panel-body" monitorTop="top" style="word-break: break-all">
 				<div container="chart" style="height: 600px;width: 100%;"></div>
 			</div>
 		</div>
