@@ -48,7 +48,17 @@ public class HttpClientImpl implements HttpClient {
 
     @Override
     public HttpResponse post(String url, byte[] body, Map<String, String> headers) throws Exception {
-        return send(url, body, null, "POST");
+        return send(url, body, headers, "POST");
+    }
+
+    @Override
+    public HttpResponse delete(String url, Map<String, String> headers) throws Exception {
+        return send(url, null, headers, "DELETE");
+    }
+
+    @Override
+    public HttpResponse put(String url, byte[] body, Map<String, String> headers) throws Exception {
+        return send(url, body, headers, "PUT");
     }
 
     private HttpResponse send(String url, byte[] body, Map<String, String> headers, String method) throws Exception {
