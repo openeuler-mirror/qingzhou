@@ -1,22 +1,5 @@
 package qingzhou.console.page;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import qingzhou.api.ActionType;
 import qingzhou.api.InputType;
 import qingzhou.api.Request;
@@ -30,15 +13,17 @@ import qingzhou.core.DeployerConstants;
 import qingzhou.core.ItemInfo;
 import qingzhou.core.deployer.Deployer;
 import qingzhou.core.deployer.RequestImpl;
-import qingzhou.core.registry.AppInfo;
-import qingzhou.core.registry.MenuInfo;
-import qingzhou.core.registry.ModelActionInfo;
-import qingzhou.core.registry.ModelFieldInfo;
-import qingzhou.core.registry.ModelInfo;
-import qingzhou.core.registry.Registry;
+import qingzhou.core.registry.*;
 import qingzhou.engine.util.Utils;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Stream;
+
 public class PageUtil {
+    private static Boolean singleAppMode;
     public static final ItemInfo OTHER_GROUP = new ItemInfo("OTHERS", new String[]{"其他", "en:Other"});
 
     public static String getPlaceholder(ModelFieldInfo modelField, String qzApp, String qzModel, boolean isForm) {
@@ -50,7 +35,6 @@ public class PageUtil {
         }
 
         return Utils.notBlank(placeholder) ? placeholder : i18nPlaceholder;
-
     }
 
     public static Map<String, List<String>> groupedFields(Collection<String> fieldNames, ModelInfo modelInfo) {
@@ -299,6 +283,12 @@ public class PageUtil {
             } else {
                 // 未使用子菜单，需要判断是否 hidden
                 if (modelInfo.isHidden()) continue;
+
+                if (singleAppMode == null) {
+                    Map<String, String> config = (Map<String, String>) ((Map<String, Object>) SystemController.getModuleContext().getConfig()).get("deployer");
+                    singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
+                }
+                if (singleAppMode) continue;
             }
 
             boolean actionPermitted = SecurityController.isActionPermitted(appInfo.getName(), modelInfo.getCode(), modelInfo.getEntrance(), request);

@@ -26,6 +26,8 @@ public class Main extends QingzhouSystemApp {
     private static Main main;
     private static Config fileConfig;
 
+    private Boolean singleAppMode;
+
     public static Config getConfig() {
         return fileConfig;
     }
@@ -67,7 +69,28 @@ public class Main extends QingzhouSystemApp {
                 new File(new File(main.moduleContext.getInstanceDir(), "conf"), "qingzhou.json"));
 
         appContext.addMenu(Main.Business, new String[]{"业务管理", "en:" + Main.Business}).icon("th-large").order("1");
-        appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("2");
-        appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("cubes").order("3");
+        appContext.addMenu(Main.Service, new String[]{"开放服务", "en:" + Main.Service}).icon("folder-open").order("2");
+        appContext.addMenu(Main.Setting, new String[]{"系统设置", "en:" + Main.Setting}).icon("cog").order("3");
+
+        appContext.setActionFilter(this::doSingleAppMode);
+    }
+
+    private String doSingleAppMode(Request request) {
+        if (singleAppMode == null) {
+            Map<String, String> config = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("deployer");
+            singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
+        }
+
+        if (singleAppMode) {
+            if (DeployerConstants.APP_SYSTEM.equals(request.getApp())) {
+                if (DeployerConstants.MODEL_APP.equals(request.getModel())) {
+                    if (!DeployerConstants.ACTION_MANAGE.equals(request.getAction())) {
+                        return "This action is not supported in single-app mode";
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }

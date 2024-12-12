@@ -381,12 +381,11 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @Override
-    public Map<String, String> validate(Request request) {
+    public Map<String, String> validate(Request request, ValidationContext context) {
         Map<String, String> errors = new HashMap<>();
         String password = request.getParameter("password");
 
-        boolean isAddOrUpdate = Boolean.parseBoolean(request.getParameter(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER));
-        if (isAddOrUpdate) {
+        if (context.isAdd()) {
             String msg = checkPwd(password, request.getUser());
             if (msg != null) {
                 errors.put("password", getAppContext().getI18n(msg));

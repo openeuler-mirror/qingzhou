@@ -25,8 +25,7 @@ public class TrustIpCheck implements Filter<SystemControllerContext> {
         HttpServletRequest request = context.req;
         HttpServletResponse response = context.resp;
 
-        String checkPath = RESTController.getReqUri(request);
-        if (checkPath.equals(LoginManager.LOGIN_URI) && notTrustedIp(request.getRemoteAddr())) {
+        if (notTrustedIp(request.getRemoteAddr())) {
             String msgKey = "client.trusted.not";
             String toJson = JsonView.responseErrorJson(response, I18n.getKeyI18n(msgKey));
             if (I18n.getI18nLang() == Lang.en) { // header里只能英文

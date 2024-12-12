@@ -4,6 +4,7 @@ import qingzhou.api.InputType;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Request;
 import qingzhou.api.Response;
+import qingzhou.config.console.User;
 import qingzhou.console.controller.I18n;
 import qingzhou.console.controller.SystemController;
 import qingzhou.console.login.LoginManager;
@@ -21,8 +22,8 @@ import qingzhou.engine.util.FileUtil;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
+import qingzhou.logger.Logger;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.*;
 import java.io.File;
 import java.io.IOException;
@@ -183,8 +184,7 @@ public class RESTController extends HttpServlet {
     private final ViewManager viewManager = new ViewManager();
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init() {
         thisInstance = this;
     }
 
@@ -216,7 +216,7 @@ public class RESTController extends HttpServlet {
             FilterPattern.doFilter(context, filters);// filters 里面不能放入 view，因为 validator 失败后不会继续流入 view 里执行
             viewManager.render(context); // 最后作出响应
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            SystemController.getService(Logger.class).error(e.getMessage(), e);
         } finally {
             if (fileAttachments != null) {
                 for (String fa : fileAttachments.values()) {
@@ -253,7 +253,10 @@ public class RESTController extends HttpServlet {
         request.setAppName(rest.get(1));
         request.setModelName(rest.get(2));
         request.setActionName(rest.get(3));
-        request.setUserName(LoginManager.getLoggedUser(session).getName());
+        User loggedUser = LoginManager.getLoggedUser(session);
+        if (loggedUser != null) {
+            request.setUserName(loggedUser.getName());
+        }
         request.setI18nLang(I18n.getI18nLang());
 
         ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());

@@ -1,20 +1,5 @@
 package qingzhou.console.controller;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.catalina.Manager;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
@@ -33,11 +18,7 @@ import qingzhou.core.DeployerConstants;
 import qingzhou.core.ItemInfo;
 import qingzhou.core.console.ContextHelper;
 import qingzhou.core.console.JmxServiceAdapter;
-import qingzhou.core.deployer.ActionInvoker;
-import qingzhou.core.deployer.App;
-import qingzhou.core.deployer.Deployer;
-import qingzhou.core.deployer.RequestImpl;
-import qingzhou.core.deployer.ResponseImpl;
+import qingzhou.core.deployer.*;
 import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;
@@ -50,6 +31,13 @@ import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.json.Json;
 import qingzhou.logger.Logger;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 public class SystemController implements ServletContextListener, javax.servlet.Filter {
     public static Manager SESSIONS_MANAGER;
@@ -130,7 +118,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
                 if (fieldName.equals(dynamicOptionField)) {
                     RequestImpl req = new RequestImpl(request);
                     req.setActionName(Option.ACTION_OPTION);
-                    req.getParameters().put(Option.FIELD_NAME_PARAMETER, fieldName);
+                    req.getParameters().put(DeployerConstants.DYNAMIC_OPTION_FIELD, fieldName);
                     ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
                     return (ItemInfo[]) res.getInternalData();
                 }
@@ -155,10 +143,11 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             RequestImpl req = new RequestImpl(request);
             req.setModelName(refModel);
             req.setActionName(List.ACTION_ALL);
+            req.getParameters().put(DeployerConstants.LIST_ALL_FIELDS, fieldInfo.getRefModelDisplayField());
             ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
-            String[] allIds = (String[]) res.getInternalData();
-            if (allIds != null) {
-                return Arrays.stream(allIds).map(s -> new ItemInfo(s, new String[]{s, "en:" + s})).toArray(ItemInfo[]::new);
+            java.util.List<String[]> result = (java.util.List<String[]>) res.getInternalData();
+            if (result != null && !result.isEmpty()) {
+                return result.stream().map(s -> new ItemInfo(s[0], new String[]{s[1], "en:" + s[1]})).toArray(ItemInfo[]::new);
             }
         }
 
@@ -249,7 +238,7 @@ public class SystemController implements ServletContextListener, javax.servlet.F
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         SystemControllerContext context = new SystemControllerContext(httpServletRequest, httpServletResponse, chain);

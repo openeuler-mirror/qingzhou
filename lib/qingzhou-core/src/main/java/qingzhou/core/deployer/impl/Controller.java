@@ -66,22 +66,12 @@ public class Controller implements Process {
         }
 
         private void disableSysActions() {
-            Map<String, String> config = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("deployer");
-            boolean singleAppMode = config != null && Boolean.parseBoolean(config.get("singleAppMode")); // 单应用模式 == tw8.0模式
-            if (singleAppMode) {
-                removeSysModel(DeployerConstants.MODEL_APP);
-            }
-
             Map<String, String> registry = (Map<String, String>) ((Map<String, Object>) moduleContext.getConfig()).get("registry");
             boolean disableMaster = registry == null || !Boolean.parseBoolean(registry.get("enabled"));
             if (disableMaster) {
-                removeSysModel(DeployerConstants.MODEL_MASTER);
+                AppInfo sysApp = deployer.getAppInfo(DeployerConstants.APP_SYSTEM);
+                sysApp.removeModelInfo(sysApp.getModelInfo(DeployerConstants.MODEL_MASTER));
             }
-        }
-
-        private void removeSysModel(String modelName) {
-            AppInfo sysApp = deployer.getAppInfo(DeployerConstants.APP_SYSTEM);
-            sysApp.removeModelInfo(sysApp.getModelInfo(modelName));
         }
     }
 

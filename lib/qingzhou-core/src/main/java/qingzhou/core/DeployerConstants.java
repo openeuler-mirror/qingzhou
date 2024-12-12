@@ -1,13 +1,9 @@
 package qingzhou.core;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import qingzhou.api.ActionType;
 import qingzhou.api.AppContext;
+
+import java.util.*;
 
 public interface DeployerConstants {
     // 系统环境
@@ -31,6 +27,10 @@ public interface DeployerConstants {
     Map<String, Set<String>> OPEN_SYSTEM_MODEL_ACTIONS = Collections.unmodifiableMap(new HashMap<String, Set<String>>() {{
         put(DeployerConstants.MODEL_APP, Collections.unmodifiableSet(new HashSet<String>() {{
             add(DeployerConstants.ACTION_MANAGE);
+        }}));
+        put(DeployerConstants.MODEL_MASTER, Collections.unmodifiableSet(new HashSet<String>() {{
+            add(DeployerConstants.ACTION_CHECK);
+            add(DeployerConstants.ACTION_REGISTER);
         }}));
     }});
     Set<String> OPEN_NONE_SYSTEM_MODELS = Collections.unmodifiableSet(new HashSet<String>() {{
@@ -84,4 +84,7 @@ public interface DeployerConstants {
     String QINGZHOU_PROPERTIES_APP_SCAN_INCLUDE = "qingzhou.app.scan.include";
     String QINGZHOU_PROPERTIES_APP_SCAN_EXCLUDE = "qingzhou.app.scan.exclude";
     String LOGIN_OTP = "otp";
+    String VALIDATION_ADD_FLAG = "VALIDATION_ADD_FLAG";
+    String DYNAMIC_OPTION_FIELD = "DYNAMIC_OPTION_FIELD";
+    String LIST_ALL_FIELDS = "LIST_ALL_FIELDS";
 }

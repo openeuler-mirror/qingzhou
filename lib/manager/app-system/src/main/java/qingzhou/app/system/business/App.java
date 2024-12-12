@@ -13,7 +13,7 @@ import qingzhou.core.registry.Registry;
 
 import java.util.*;
 
-@Model(code = DeployerConstants.MODEL_APP, icon = "file-code",
+@Model(code = DeployerConstants.MODEL_APP, icon = "stack",
         menu = Main.Business, order = "2",
         name = {"应用", "en:App"},
         info = {"应用，是一种按照“轻舟应用开发规范”编写的软件包，可安装在轻舟平台上，用于管理特定的业务系统。",

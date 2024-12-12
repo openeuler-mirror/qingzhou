@@ -12,6 +12,7 @@ import qingzhou.core.registry.ModelInfo;
 import qingzhou.crypto.Base64Coder;
 import qingzhou.crypto.CryptoService;
 import qingzhou.engine.util.FileUtil;
+import qingzhou.engine.util.Utils;
 import qingzhou.logger.Logger;
 
 import java.io.File;
@@ -121,7 +122,7 @@ class SuperAction {
             info = {"列出指定字段的候选值。", "en:Lists the candidate values for the specified field."})
     public void option(Request request) throws Exception {
         Option option = (Option) instance;
-        Item[] items = option.optionData(request.getId(), request.getParameter(Option.FIELD_NAME_PARAMETER));
+        Item[] items = option.optionData(request.getId(), request.getParameter(DeployerConstants.DYNAMIC_OPTION_FIELD));
         if (items == null) return;
 
         ItemInfo[] itemInfos = new ItemInfo[items.length];
@@ -148,7 +149,18 @@ class SuperAction {
     public void validate(Request request) throws Exception {
         Validate validate = (Validate) instance;
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        Map<String, String> errors = validate.validate(request);
+        boolean isAdd = Boolean.parseBoolean(request.getParameter(DeployerConstants.VALIDATION_ADD_FLAG));
+        Map<String, String> errors = validate.validate(request, new Validate.ValidationContext() {
+            @Override
+            public boolean isAdd() {
+                return isAdd;
+            }
+
+            @Override
+            public boolean isUpdate() {
+                return !isAdd;
+            }
+        });
         response.setInternalData(new HashMap<>(errors));
         response.setSuccess(errors.isEmpty());
     }
@@ -159,10 +171,11 @@ class SuperAction {
             info = {"获取该模块的所有ID数据。", "en:Get all the ID data for the module."})
     public void all(Request request) throws Exception {
         List list = (List) instance;
-        java.util.List<String[]> result = list.listData(1, list.maxResponseDataSize(), new String[]{list.idField()}, null);
-        String[] ids = result.stream().map(fields -> fields[0]).toArray(String[]::new);
+        String parameter = request.getParameter(DeployerConstants.LIST_ALL_FIELDS);
+        String[] getFields = Utils.notBlank(parameter) ? new String[]{list.idField(), parameter} : new String[]{list.idField()};
+        java.util.ArrayList<String[]> result = new ArrayList<>(list.listData(1, list.maxResponseDataSize(), getFields, null));
         ResponseImpl response = (ResponseImpl) request.getResponse();
-        response.setInternalData(ids);
+        response.setInternalData(result);
     }
 
     @ModelAction(

@@ -45,6 +45,7 @@ public class ModelFieldInfo implements Serializable {
     private boolean readonly;
     private String linkModel;
     private transient Class<?> refModelClass;
+    private String refModelDisplayField;
     private ActionType actionType;
     private String[] color;
     private String[] echoGroup;
@@ -394,6 +395,14 @@ public class ModelFieldInfo implements Serializable {
 
     public void setRefModelClass(Class<?> refModelClass) {
         this.refModelClass = refModelClass;
+    }
+
+    public String getRefModelDisplayField() {
+        return refModelDisplayField;
+    }
+
+    public void setRefModelDisplayField(String refModelDisplayField) {
+        this.refModelDisplayField = refModelDisplayField;
     }
 
     public ActionType getActionType() {

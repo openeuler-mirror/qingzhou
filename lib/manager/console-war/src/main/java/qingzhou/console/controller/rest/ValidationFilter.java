@@ -1,16 +1,5 @@
 package qingzhou.console.controller.rest;
 
-import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import qingzhou.api.InputType;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.List;
@@ -28,6 +17,17 @@ import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ValidationFilter implements Filter<RestContext> {
     static {
@@ -102,7 +102,7 @@ public class ValidationFilter implements Filter<RestContext> {
                 RequestImpl tmp = new RequestImpl(context.request);
                 tmp.setActionName(Validate.ACTION_VALIDATE);
                 context.request.getParameters().forEach((k, v) -> tmp.getParameters().put(k, v));
-                tmp.getParameters().put(Validate.IS_ADD_OR_UPDATE_NON_MODEL_PARAMETER, String.valueOf(isAddAction));
+                tmp.getParameters().put(DeployerConstants.VALIDATION_ADD_FLAG, String.valueOf(isAddAction));
                 ResponseImpl tmpResp = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeSingle(tmp);
                 Map<String, String> result = (Map<String, String>) tmpResp.getInternalData();
                 errorMsg.putAll(result);

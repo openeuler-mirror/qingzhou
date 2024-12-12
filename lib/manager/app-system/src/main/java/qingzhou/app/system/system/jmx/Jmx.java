@@ -14,7 +14,7 @@ import qingzhou.logger.Logger;
 
 import java.util.Map;
 
-@Model(code = "jmx", icon = "coffee",
+@Model(code = "jmx", icon = "exchange",
         menu = Main.Setting, order = "4",
         entrance = Update.ACTION_EDIT,
         name = {"JMX", "en:JMX"},
