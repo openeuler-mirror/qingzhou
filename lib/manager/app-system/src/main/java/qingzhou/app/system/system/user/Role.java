@@ -1,25 +1,7 @@
 package qingzhou.app.system.system.user;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Item;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
-import qingzhou.api.type.Delete;
-import qingzhou.api.type.Echo;
-import qingzhou.api.type.General;
-import qingzhou.api.type.Option;
-import qingzhou.api.type.Update;
+import qingzhou.api.*;
+import qingzhou.api.type.*;
 import qingzhou.app.system.Main;
 import qingzhou.app.system.ModelUtil;
 import qingzhou.core.DeployerConstants;
@@ -28,6 +10,10 @@ import qingzhou.core.registry.AppInfo;
 import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.engine.util.Utils;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.*;
 
 @Model(code = Role.MODEL_NAME, icon = "check-sign",
         menu = Main.Setting, order = "2",
@@ -38,8 +24,8 @@ public class Role extends ModelBase implements General, Echo, Option {
     static final String ID_KEY = "name";
 
     @ModelField(
-            required = true,
-            search = true,
+            required = true, search = true,
+            id = true,
             name = {"名称", "en:Name"},
             info = {"该角色的唯一标识。", "en:Unique identifier of the role."})
     public String name;
@@ -84,11 +70,6 @@ public class Role extends ModelBase implements General, Echo, Option {
                     "en:Delete this data, note: Please operate with caution, it cannot be restored after deletion."})
     public void delete(Request request) throws Exception {
         getAppContext().invokeSuperAction(request);
-    }
-
-    @Override
-    public String idField() {
-        return ID_KEY;
     }
 
     @Override

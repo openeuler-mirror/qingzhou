@@ -172,7 +172,8 @@ class SuperAction {
     public void all(Request request) throws Exception {
         List list = (List) instance;
         String parameter = request.getParameter(DeployerConstants.LIST_ALL_FIELDS);
-        String[] getFields = Utils.notBlank(parameter) ? new String[]{list.idField(), parameter} : new String[]{list.idField()};
+        String idField = ((RequestImpl) request).getCachedModelInfo().getIdField();
+        String[] getFields = Utils.notBlank(parameter) ? new String[]{idField, parameter} : new String[]{idField};
         java.util.ArrayList<String[]> result = new ArrayList<>(list.listData(1, list.maxResponseDataSize(), getFields, null));
         ResponseImpl response = (ResponseImpl) request.getResponse();
         response.setInternalData(result);

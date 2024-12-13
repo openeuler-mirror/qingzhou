@@ -8,7 +8,11 @@ import java.util.Map;
 
 public class AddModelBase extends ModelBase implements General {
 
-    private final MemoryDataStoreDemo testData = new MemoryDataStoreDemo(idField());
+    private final MemoryDataStoreDemo testData;
+
+    public AddModelBase(String idField) {
+        testData = new MemoryDataStoreDemo(idField);
+    }
 
     @Override
     public void addData(Map<String, String> data) {

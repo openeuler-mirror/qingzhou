@@ -23,8 +23,8 @@ import java.util.Map;
 public class Component extends ModelBase implements qingzhou.api.type.List {
     public static final String MODEL_NAME = "component";
 
-    @ModelField(
-            hidden = true,
+    @ModelField(hidden = true,
+            id = true,
             name = {"ID", "en:ID"})
     public String id;
 

@@ -1,25 +1,6 @@
 package qingzhou.app.system.system;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import qingzhou.api.ActionType;
-import qingzhou.api.InputType;
-import qingzhou.api.Model;
-import qingzhou.api.ModelAction;
-import qingzhou.api.ModelBase;
-import qingzhou.api.ModelField;
-import qingzhou.api.Request;
+import qingzhou.api.*;
 import qingzhou.api.type.Add;
 import qingzhou.api.type.Delete;
 import qingzhou.api.type.Show;
@@ -29,6 +10,13 @@ import qingzhou.app.system.business.Instance;
 import qingzhou.core.DeployerConstants;
 import qingzhou.engine.util.FileUtil;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
 @Model(code = "version", icon = "upload-alt",
         menu = Main.Setting, order = "5",
         name = {"版本", "en:Product Version"},
@@ -36,22 +24,20 @@ import qingzhou.engine.util.FileUtil;
                 "en:Manage the running version of the Qingzhou and upgrade the Qingzhou to a new version. Note: The upgrade package is delivered immediately, but takes effect the next time the instance is restarted."})
 public class Version extends ModelBase implements qingzhou.api.type.List, Add, Show {
     @ModelField(
-            create = false,
-            search = true,
+            create = false, search = true,
+            id = true,
             name = {"产品版本", "en:Product Version"},
             info = {"产品的版本号。", "en:Version number of the product."})
     public String version;
 
     @ModelField(
-            create = false,
-            list = true,
+            create = false, list = true,
             name = {"构建日期", "en:Build Date"},
             info = {"此版本的构建日期。", "en:The build date of this release."})
     public String buildDate;
 
     @ModelField(
-            create = false,
-            list = true, search = true,
+            create = false, list = true, search = true,
             color = {"true:Green", "false:Gray"},
             name = {"生效中", "en:Running"},
             info = {"此版本是否处于生效状态。", "en:Whether this version is in effect."})
@@ -89,11 +75,6 @@ public class Version extends ModelBase implements qingzhou.api.type.List, Add, S
             info = {"上传一个文件到服务器，文件须是 version*.zip 类型的文件，否则可能会导致升级失败。",
                     "en:Upload a file to the server that must be of type version*.zip or the upgrade may fail."})
     public String file;
-
-    @Override
-    public String idField() {
-        return "version";
-    }
 
     @Override
     public boolean showOrderNumber() {

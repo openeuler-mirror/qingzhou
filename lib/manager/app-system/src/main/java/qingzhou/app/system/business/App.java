@@ -21,12 +21,7 @@ import java.util.*;
 public class App extends ModelBase implements qingzhou.api.type.List, Add {
     public static final String INSTANCE_SP = ";";
 
-    @Override
-    public String idField() {
-        return "name";
-    }
-
-    private String[] allIds(Map<String, String> query) {
+    public static String[] allIds(Map<String, String> query) {
         Set<String> allAppNames = new HashSet<>();
 
         Deployer deployer = Main.getService(Deployer.class);
@@ -59,6 +54,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
             create = false, edit = false,
             forbid = {DeployerConstants.APP_SYSTEM},
             search = true,
+            id = true,
             name = {"应用名称", "en:App Name"},
             info = {"应用包的名称，表示该应用的业务系统种类，一种业务系统可安装在多个轻舟实例上，每一次的安装都会有唯一的 ID 与之对应。",
                     "en:The name of the application package indicates the type of business system of the application, and a business system can be deployed on multiple Qingzhou instances, and each deployment will have a unique ID corresponding to it."})
@@ -112,7 +108,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
         getAppContext().addI18n("app.id.not.exist", new String[]{"应用文件不存在", "en:The app file does not exist"});
     }
 
-    public Map<String, String> showData(String id) {
+    private static Map<String, String> showData(String id) {
         AppInfo appInfo = null;
         List<String> instances = new ArrayList<>();
 
@@ -131,7 +127,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
         if (appInfo != null) {
             Map<String, String> appMap = new HashMap<>();
-            appMap.put(idField(), id);
+            appMap.put("name", id);
             appMap.put("path", appInfo.getFilePath());
             appMap.put("instances", String.join(App.INSTANCE_SP, instances));
             appMap.put("state", appInfo.getState());
@@ -143,7 +139,7 @@ public class App extends ModelBase implements qingzhou.api.type.List, Add {
 
     @Override
     public List<String[]> listData(int pageNum, int pageSize, String[] showFields, Map<String, String> query) throws Exception {
-        return ModelUtil.listData(allIds(query), this::showData, pageNum, pageSize, showFields);
+        return ModelUtil.listData(allIds(query), App::showData, pageNum, pageSize, showFields);
     }
 
     @Override

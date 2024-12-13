@@ -30,15 +30,18 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
     private static final String ID_KEY = "name";
 
     @ModelField(
-            required = true,
-            search = true,
-            name = {"实例名称", "en:Instance Name"},
+            required = true, search = true,
+            id = true,
+            width_percent = 25,
+            name = {"实例ID", "en:Instance ID"},
             info = {"表示该实例的名称，用于识别和管理该实例。",
                     "en:Indicates the name of the instance, which is used to identify and manage the instance."})
     public String name;
 
     @ModelField(
             list = true, search = true,
+            width_percent = 15,
+            idMask = true,
             name = {"主机IP", "en:Host IP"},
             info = {"该实例所在服务器的域名或 IP 地址。",
                     "en:The domain name or IP address of the server where the instance resides."})
@@ -46,6 +49,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelField(
             list = true, search = true,
+            width_percent = 10,
             name = {"管理端口", "en:Management Port"},
             info = {"该实例所开放的管理端口，用以受理轻舟集中管理端发来的业务请求。",
                     "en:The management port opened by the instance is used to accept business requests from the centralized management end of Qingzhou."})
@@ -53,6 +57,7 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
 
     @ModelField(
             list = true, search = true,
+            width_percent = 15,
             name = {"平台版本", "en:Version"},
             info = {"该实例运行的轻舟版本。", "en:The Qingzhou version that the instance runs."})
     public String version;
@@ -84,8 +89,8 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
     @ModelField(
             group = group_os,
             field_type = FieldType.MONITOR,
-            name = {"硬盘（GB）", "en:Disk (GB)"},
-            info = {"硬盘总空间大小，单位GB。", "en:The total size of the hard disk, in GB."})
+            name = {"硬盘", "en:Disk"},
+            info = {"硬盘总空间大小，单位：GB。", "en:The total size of the hard disk, in GB."})
     public double disk;
 
     @ModelField(
@@ -98,8 +103,8 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
     @ModelField(
             group = group_os,
             field_type = FieldType.MONITOR, numeric = true,
-            name = {"使用硬盘（GB）", "en:Disk Used (GB)"},
-            info = {"当前已使用的硬盘空间，单位GB。", "en:The disk currently used, in GB."})
+            name = {"硬盘使用量", "en:Disk Used"},
+            info = {"当前已使用的硬盘空间，单位：GB。", "en:The disk currently used, in GB."})
     public double diskUsed;
 
     @ModelField(
@@ -154,8 +159,8 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
     @ModelField(
             group = group_jvm,
             field_type = FieldType.MONITOR,
-            name = {"最大堆内存（MB）", "en:Heap Memory Max (MB)"},
-            info = {"可使用的最大堆内存，单位MB。", "en:The maximum heap memory that can be used, in MB."})
+            name = {"最大堆内存", "en:Heap Memory Max"},
+            info = {"可使用的最大堆内存，单位：MB。", "en:The maximum heap memory that can be used, in MB."})
     public Double heapCommitted;
 
     @ModelField(
@@ -195,11 +200,6 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
                 Item.of(group_os, new String[]{"操作系统", "en:Operating System"}),
                 Item.of(group_jvm, new String[]{"Java 虚拟机", "en:Java VM"})
         };
-    }
-
-    @Override
-    public String idField() {
-        return ID_KEY;
     }
 
     private String[] allIds(Map<String, String> query) {
@@ -248,8 +248,16 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
         if (DeployerConstants.INSTANCE_LOCAL.equals(id)) {
             return new HashMap<String, String>() {{
                 put(ID_KEY, DeployerConstants.INSTANCE_LOCAL);
-                put("host", "--");
-                put("port", "--");
+                put("host", "localhost");
+
+                String agentPort;
+                Map<String, String> config = (Map<String, String>) ((Map<String, Object>) Main.getService(ModuleContext.class).getConfig()).get("agent");
+                if (config != null) {
+                    agentPort = config.get("agentPort");
+                } else {
+                    agentPort = "--";
+                }
+                put("port", agentPort);
                 put("version", Main.getService(ModuleContext.class).getPlatformVersion());
             }};
         }

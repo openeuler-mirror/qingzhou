@@ -8,7 +8,7 @@ import java.util.*;
 public interface DeployerConstants {
     // 系统环境
     String APP_SYSTEM = "-";
-    String INSTANCE_LOCAL = "local";
+    String INSTANCE_LOCAL = "localhost";
     String ACTION_INVOKE_CHARSET = "UTF-8";
     String DEFAULT_USER_QINGZHOU = "qingzhou";
 

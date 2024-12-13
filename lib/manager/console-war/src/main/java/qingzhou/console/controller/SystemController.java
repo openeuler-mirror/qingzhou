@@ -143,7 +143,11 @@ public class SystemController implements ServletContextListener, javax.servlet.F
             RequestImpl req = new RequestImpl(request);
             req.setModelName(refModel);
             req.setActionName(List.ACTION_ALL);
-            req.getParameters().put(DeployerConstants.LIST_ALL_FIELDS, fieldInfo.getRefModelDisplayField());
+
+            ModelInfo refModelInfo = getAppInfo(request.getApp()).getModelInfo(refModel);
+            req.setCachedModelInfo(refModelInfo);
+            req.getParameters().put(DeployerConstants.LIST_ALL_FIELDS, refModelInfo.getIdMaskField());
+
             ResponseImpl res = (ResponseImpl) getService(ActionInvoker.class).invokeSingle(req); // 续传
             java.util.List<String[]> result = (java.util.List<String[]>) res.getInternalData();
             if (result != null && !result.isEmpty()) {

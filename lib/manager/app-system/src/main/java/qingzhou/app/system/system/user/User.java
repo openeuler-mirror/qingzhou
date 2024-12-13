@@ -27,11 +27,6 @@ public class User extends ModelBase implements General, Validate, Option {
     static final String PASSWORD_SP = ";";
 
     @Override
-    public String idField() {
-        return ID_KEY;
-    }
-
-    @Override
     public boolean contains(String id) {
         String[] ids = allIds(null);
         for (String s : ids) {
@@ -69,8 +64,8 @@ public class User extends ModelBase implements General, Validate, Option {
     }
 
     @ModelField(
-            required = true,
-            search = true,
+            required = true, search = true,
+            id = true,
             name = {"账户名称", "en:User Name"},
             info = {"用于登录系统的用户名。", "en:The username used to log in to the system."})
     public String name;

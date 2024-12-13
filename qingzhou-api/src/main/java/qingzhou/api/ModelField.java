@@ -30,6 +30,10 @@ public @interface ModelField {
 
     String display() default ""; // 在页面上显示或隐藏的条件
 
+    boolean id() default false; // 当 Model 为 List 类型时，用此字段作 ID
+
+    boolean idMask() default false; // 当 Model 为 List 类型时，用此字段作 ID 的替代显示字段
+
     boolean required() default false;
 
     long min() default Long.MIN_VALUE;
@@ -101,8 +105,6 @@ public @interface ModelField {
     int ignore() default -1; // 列表页面上，最多显示的字符数，超出后隐藏并悬浮显示全值
 
     Class<? extends ModelBase> ref_model() default ModelBase.class; // 使用指定的模块的所有数据id作为字段的取值范围
-
-    String ref_model_display_field() default ""; // ref_model 引用模块时，显示在页面上的字段值，默认为模块的 ID
 
     String link_action() default ""; // 链接到模块内部的 action 上
 

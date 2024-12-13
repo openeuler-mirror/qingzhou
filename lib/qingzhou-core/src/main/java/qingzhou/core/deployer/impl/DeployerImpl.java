@@ -358,9 +358,6 @@ class DeployerImpl implements Deployer {
             } catch (InstantiationException e) {
                 throw new IllegalArgumentException("The class annotated by the @Model needs to have a public parameter-free constructor.", e);
             }
-            if (instance instanceof List) {
-                modelInfo.setIdField(((List) instance).idField());
-            }
             modelInfo.setModelFieldInfos(getModelFieldInfos(annotation, instance));
             java.util.List<ModelActionInfo> methodModelActionInfoMap = parseModelActionInfos(annotation);
             modelInfo.setModelActionInfos(methodModelActionInfoMap.toArray(new ModelActionInfo[0]));
@@ -465,6 +462,8 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setNumeric(modelField.numeric());
             modelFieldInfo.setDisplay(modelField.display());
             modelFieldInfo.setRequired(modelField.required());
+            modelFieldInfo.setId(modelField.id());
+            modelFieldInfo.setIdMask(modelField.idMask());
             modelFieldInfo.setMin(modelField.min());
             modelFieldInfo.setMax(modelField.max());
             modelFieldInfo.setLengthMin(modelField.min_length());
@@ -482,7 +481,6 @@ class DeployerImpl implements Deployer {
             modelFieldInfo.setFile(modelField.file());
             modelFieldInfo.setLinkModel(modelField.link_model());
             modelFieldInfo.setRefModelClass(modelField.ref_model());
-            modelFieldInfo.setRefModelDisplayField(modelField.ref_model_display_field());
             modelFieldInfo.setActionType(modelField.action_type());
             modelFieldInfo.setColor(modelField.color());
             modelFieldInfo.setEchoGroup(modelField.echo_group());

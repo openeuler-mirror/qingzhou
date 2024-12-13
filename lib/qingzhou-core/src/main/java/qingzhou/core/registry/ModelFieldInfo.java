@@ -30,6 +30,8 @@ public class ModelFieldInfo implements Serializable {
     private boolean numeric;
     private String display;
     private boolean required;
+    private boolean id;
+    private boolean idMask;
     private long min;
     private long max;
     private int lengthMin;
@@ -45,7 +47,6 @@ public class ModelFieldInfo implements Serializable {
     private boolean readonly;
     private String linkModel;
     private transient Class<?> refModelClass;
-    private String refModelDisplayField;
     private ActionType actionType;
     private String[] color;
     private String[] echoGroup;
@@ -301,6 +302,22 @@ public class ModelFieldInfo implements Serializable {
         this.required = required;
     }
 
+    public boolean isId() {
+        return id;
+    }
+
+    public void setId(boolean id) {
+        this.id = id;
+    }
+
+    public boolean isIdMask() {
+        return idMask;
+    }
+
+    public void setIdMask(boolean idMask) {
+        this.idMask = idMask;
+    }
+
     public long getMin() {
         return min;
     }
@@ -395,14 +412,6 @@ public class ModelFieldInfo implements Serializable {
 
     public void setRefModelClass(Class<?> refModelClass) {
         this.refModelClass = refModelClass;
-    }
-
-    public String getRefModelDisplayField() {
-        return refModelDisplayField;
-    }
-
-    public void setRefModelDisplayField(String refModelDisplayField) {
-        this.refModelDisplayField = refModelDisplayField;
     }
 
     public ActionType getActionType() {

@@ -105,7 +105,6 @@ public class RESTController extends HttpServlet {
     private final Filter<RestContext>[] filters = new Filter[]{
             new SecurityController(),
             new ResetPassword(),
-//            new BackFilter(), // 因前端 子菜单跳转 等功能支持，暂无法结合后端历史请求处理，会导致前端控制不到显示区域和菜单定位等问题
             new ParameterFilter(), // 解密前端的 password 类型的表单域
             new ActionFilter(),
             new ValidationFilter(), // 参数校验
@@ -155,7 +154,7 @@ public class RESTController extends HttpServlet {
             for (Map.Entry<String, ResponseImpl> e : failed.entrySet()) {
                 String instance = e.getKey();
                 String msg = e.getValue().getMsg();
-                errorMsg.append(instance).append(": ").append(msg);
+                errorMsg.append("<br/>").append(instance).append(": ").append(msg);
             }
             response.setMsg(errorMsg.toString());
         }

@@ -1,22 +1,14 @@
 package qingzhou.core.registry;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
 import qingzhou.api.FieldType;
 import qingzhou.api.InputType;
 import qingzhou.core.ItemInfo;
 import qingzhou.engine.util.Utils;
+
+import java.io.Serializable;
+import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ModelInfo implements Serializable {
     private String code;
@@ -27,7 +19,6 @@ public class ModelInfo implements Serializable {
     private String order;
     private String entrance;
     private boolean hidden;
-    private String idField;
     private boolean validate;
     private boolean showOrderNumber;
 
@@ -116,6 +107,7 @@ public class ModelInfo implements Serializable {
     }
 
     public String[] getFieldsToList() {
+        String idField = getIdField();
         List<String> list = new LinkedList<>();
         for (String formFieldName : getFormFieldNames()) {
             ModelFieldInfo modelFieldInfo = getModelFieldInfo(formFieldName);
@@ -206,11 +198,21 @@ public class ModelInfo implements Serializable {
     }
 
     public String getIdField() {
-        return idField;
+        if (modelFieldInfos != null) {
+            for (ModelFieldInfo modelFieldInfo : modelFieldInfos) {
+                if (modelFieldInfo.isId()) return modelFieldInfo.getCode();
+            }
+        }
+        return null;
     }
 
-    public void setIdField(String idField) {
-        this.idField = idField;
+    public String getIdMaskField() {
+        if (modelFieldInfos != null) {
+            for (ModelFieldInfo modelFieldInfo : modelFieldInfos) {
+                if (modelFieldInfo.isIdMask()) return modelFieldInfo.getCode();
+            }
+        }
+        return null;
     }
 
     public String getMenu() {
