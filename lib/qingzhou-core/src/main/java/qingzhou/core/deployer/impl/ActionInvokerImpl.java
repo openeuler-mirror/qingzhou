@@ -53,7 +53,7 @@ class ActionInvokerImpl implements ActionInvoker {
                         AppInfo appInfo = moduleContext.getService(Registry.class).getAppInfo(request.getApp());
                         if (appInfo == null && request.getApp().equals(DeployerConstants.APP_SYSTEM)) {
                             // 调用远程实例上的 system app，这个不是注册来的，故需从本地获取其元数据，如远程上传文件
-                            appInfo = moduleContext.getService(Deployer.class).getApp(request.getApp()).getAppInfo();
+                            appInfo = moduleContext.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
                         }
                         ModelInfo modelInfo = Objects.requireNonNull(appInfo).getModelInfo(request.getModel());
                         List<String> uploadFieldNames = getUploadFieldNames(modelInfo);

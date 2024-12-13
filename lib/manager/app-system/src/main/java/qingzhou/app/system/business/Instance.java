@@ -180,15 +180,15 @@ public class Instance extends ModelBase implements List, Monitor, Group, Downloa
     @ModelField(
             group = group_jvm,
             field_type = FieldType.MONITOR, numeric = true,
-            name = {"使用中堆内存（MB）", "en:Heap Memory Used (MB)"},
-            info = {"正在使用的堆内存的大小，单位MB。", "en:The size of the heap memory in use, in MB."})
+            name = {"使用中堆内存", "en:Heap Memory Used"},
+            info = {"正在使用的堆内存的大小，单位：MB。", "en:The size of the heap memory in use, in MB."})
     public Double heapUsed;
 
     @ModelField(
             group = group_jvm,
             field_type = FieldType.MONITOR, numeric = true,
-            name = {"使用中非堆内存（MB）", "en:Non-Heap Memory Used (MB)"},
-            info = {"正在使用的非堆内存的大小，单位MB。", "en:The size of the non-heap memory in use, in MB."})
+            name = {"使用中非堆内存", "en:Non-Heap Memory Used"},
+            info = {"正在使用的非堆内存的大小，单位：MB。", "en:The size of the non-heap memory in use, in MB."})
     public Double nonHeapUsed;
 
     public final String group_os = "os";

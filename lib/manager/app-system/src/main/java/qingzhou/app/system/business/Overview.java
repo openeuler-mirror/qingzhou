@@ -95,8 +95,12 @@ public class Overview extends ModelBase implements Dashboard {
         String maxKey = "max";
 
         Gauge gauge = builder.buildData(Gauge.class);
-        gauge.info(getAppContext().getI18n(lang, "model.field.info." + DeployerConstants.MODEL_INSTANCE + "." + field))
-                .title(getAppContext().getI18n(lang, "model.field." + DeployerConstants.MODEL_INSTANCE + "." + field));
+
+        AppInfo appInfo = Main.getService(Deployer.class).getApp(DeployerConstants.APP_SYSTEM).getAppInfo();
+        ModelInfo modelInfo = appInfo.getModelInfo(DeployerConstants.MODEL_INSTANCE);
+        ModelFieldInfo fieldInfo = modelInfo.getModelFieldInfo(field);
+        gauge.info(I18nTool.retrieveI18n(fieldInfo.getInfo()).get(lang))
+                .title(I18nTool.retrieveI18n(fieldInfo.getName()).get(lang));
         gauge.fields(new String[]{ipKey, usedKey, maxKey}).usedKey(usedKey).maxKey(maxKey).unit(unit);
         return gauge;
     }
