@@ -1,5 +1,27 @@
 package qingzhou.console.controller.rest;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
+
 import qingzhou.api.InputType;
 import qingzhou.api.MsgLevel;
 import qingzhou.api.Request;
@@ -13,6 +35,8 @@ import qingzhou.console.view.type.JsonView;
 import qingzhou.core.deployer.ActionInvoker;
 import qingzhou.core.deployer.RequestImpl;
 import qingzhou.core.deployer.ResponseImpl;
+import qingzhou.core.registry.AppInfo;
+import qingzhou.core.registry.ModelActionInfo;
 import qingzhou.core.registry.ModelFieldInfo;
 import qingzhou.core.registry.ModelInfo;
 import qingzhou.crypto.Base32Coder;
@@ -23,18 +47,6 @@ import qingzhou.engine.util.Utils;
 import qingzhou.engine.util.pattern.Filter;
 import qingzhou.engine.util.pattern.FilterPattern;
 import qingzhou.logger.Logger;
-
-import javax.servlet.http.*;
-import java.io.File;
-import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.StandardOpenOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
 
 public class RESTController extends HttpServlet {
     public static final String MSG_FLAG = "MSG_FLAG";
@@ -253,12 +265,17 @@ public class RESTController extends HttpServlet {
         request.setModelName(rest.get(2));
         request.setActionName(rest.get(3));
         User loggedUser = LoginManager.getLoggedUser(session);
-        if (loggedUser != null) {
+        if (loggedUser != null) { // 远程注册时候不需要登录，没有登录用户
             request.setUserName(loggedUser.getName());
         }
         request.setI18nLang(I18n.getI18nLang());
 
-        ModelInfo modelInfo = SystemController.getAppInfo(request.getApp()).getModelInfo(request.getModel());
+        AppInfo appInfo = SystemController.getAppInfo(request.getApp());
+        if (appInfo == null) return null; // 应用卸载后，继续在原先的“管理”页面点击
+        ModelInfo modelInfo = appInfo.getModelInfo(request.getModel());
+        if (modelInfo == null) return null;
+        ModelActionInfo actionInfo = modelInfo.getModelActionInfo(request.getAction());
+        if (actionInfo == null) return null;// rest 接口可以任意输入不存在的action
 
         StringBuilder id = new StringBuilder();
         if (rest.size() > restDepth) {

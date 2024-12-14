@@ -1,6 +1,17 @@
 package qingzhou.engine.util;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
@@ -327,6 +338,13 @@ public class FileUtil {
                 list.add(line);
             }
             return list;
+        }
+    }
+
+    public static void forceDeleteQuietly(File file) {
+        try {
+            forceDelete(file);
+        } catch (IOException ignored) {
         }
     }
 

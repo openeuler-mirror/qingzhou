@@ -54,7 +54,8 @@ public class DownloadView implements View {
             req.getParameters().put(DownloadData.DOWNLOAD_OFFSET, String.valueOf(offset));
             ResponseImpl res = (ResponseImpl) SystemController.getService(ActionInvoker.class).invokeOnce(req);
             if (res.isSuccess()) {
-                content = (byte[]) res.getInternalData();
+                DownloadData downloadDataNext = ((DownloadData) res.getInternalData());
+                content = downloadDataNext.block;
                 result = res.getParameters();
             } else {
                 response.setSuccess(false);

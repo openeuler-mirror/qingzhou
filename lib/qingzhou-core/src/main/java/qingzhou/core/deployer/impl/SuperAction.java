@@ -424,7 +424,7 @@ class SuperAction {
                     raf.seek(offset);
 
                     byte[] byteRead;
-                    byte[] block = new byte[1024 * 1024 * 15];
+                    byte[] block = new byte[1024 * 1024 * 5];
                     int read = raf.read(block);
                     if (read == block.length) {
                         byteRead = block;
